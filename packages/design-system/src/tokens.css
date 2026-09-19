@@ -1,0 +1,45 @@
+/* Placeholder primitives. Replace values only after design references are approved. */
+:root {
+  --ks-font-sans: ui-sans-serif, system-ui, sans-serif;
+
+  --ks-space-unit: 0.25rem;
+
+  --ks-radius-control: 0.5rem;
+  --ks-radius-surface: 0.75rem;
+
+  --ks-shadow-surface: 0 1px 2px rgb(0 0 0 / 0.05);
+
+  --ks-color-canvas: #ffffff;
+  --ks-color-surface: #ffffff;
+  --ks-color-text: #171717;
+  --ks-color-text-muted: #737373;
+  --ks-color-border: #e5e5e5;
+
+  --background: var(--ks-color-canvas);
+  --surface: var(--ks-color-surface);
+  --surface-muted: #f5f5f5;
+  --primary: #171717;
+  --primary-foreground: #ffffff;
+  --primary-soft: #f5f5f5;
+  --text: var(--ks-color-text);
+  --text-muted: var(--ks-color-text-muted);
+  --border: var(--ks-color-border);
+  --ring: #737373;
+  --destructive: #b91c1c;
+  --destructive-foreground: #ffffff;
+
+  --accent-mint: #f5f5f5;
+  --accent-blue: #f5f5f5;
+  --accent-lilac: #f5f5f5;
+  --accent-peach: #f5f5f5;
+  --accent-rose: #f5f5f5;
+
+  --radius-control: var(--ks-radius-control);
+  --radius-surface: var(--ks-radius-surface);
+  --shadow-surface: var(--ks-shadow-surface);
+  --shadow-overlay: 0 12px 32px rgb(0 0 0 / 0.12);
+}
+
+@theme inline {
+  --font-sans: var(--ks-font-sans);
+}

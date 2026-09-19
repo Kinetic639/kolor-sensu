@@ -1,0 +1,21 @@
+@import "tailwindcss";
+@import "@repo/ui/styles.css";
+@source "../../../../packages/ui/src";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--ks-color-canvas);
+    color: var(--ks-color-text);
+    font-family: var(--ks-font-sans);
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "@repo/app-runtime",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./query-provider": "./src/query-provider.tsx",
+    "./create-disclosure-store": "./src/create-disclosure-store.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@repo/config": "workspace:*",
+    "@types/node": "26.4.1",
+    "@types/react": "19.3.0",
+    "eslint": "10.10.0",
+    "react": "19.3.0",
+    "typescript": "7.0.2",
+    "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.103.1",
+    "@tanstack/react-query-devtools": "^5.103.1",
+    "zustand": "^5.0.15"
+  }
+}

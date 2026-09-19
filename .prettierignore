@@ -1,0 +1,10 @@
+node_modules
+.next
+.turbo
+.playwright-mcp
+artifacts
+dist
+build
+out
+storybook-static
+pnpm-lock.yaml

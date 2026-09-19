@@ -10,8 +10,24 @@
     "lint": {
       "dependsOn": ["^lint"]
     },
-    "check-types": {
-      "dependsOn": ["^check-types"]
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "outputs": [".next/types/**", "tsconfig.tsbuildinfo", "dist/**"]
+    },
+    "test": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:run": {
+      "dependsOn": ["^test:run"]
+    },
+    "storybook": {
+      "cache": false,
+      "persistent": true
+    },
+    "storybook:build": {
+      "dependsOn": ["^storybook:build"],
+      "outputs": ["storybook-static/**"]
     },
     "dev": {
       "cache": false,

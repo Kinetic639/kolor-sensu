@@ -1,0 +1,27 @@
+{
+  "name": "@repo/mock-api",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./src/handlers.ts",
+    "./browser": "./src/browser.ts",
+    "./server": "./src/server.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "dependencies": {
+    "@repo/mock-data": "workspace:*",
+    "msw": "^2.15.0"
+  },
+  "devDependencies": {
+    "@repo/config": "workspace:*",
+    "eslint": "10.10.0",
+    "typescript": "7.0.2",
+    "vitest": "^5.0.1"
+  }
+}
