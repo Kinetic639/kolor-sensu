@@ -25,6 +25,22 @@ export const WithLabel: Story = {
   ),
 };
 
+export const Error: Story = {
+  args: {
+    "aria-invalid": true,
+    defaultValue: "niepoprawny adres",
+  },
+  render: (args) => (
+    <div className="grid max-w-sm gap-2">
+      <Label htmlFor="storybook-email">Adres e-mail</Label>
+      <Input id="storybook-email" {...args} />
+      <p className="text-xs text-[var(--danger)]">
+        Podaj poprawny adres e-mail.
+      </p>
+    </div>
+  ),
+};
+
 export const Disabled: Story = {
   args: {
     disabled: true,

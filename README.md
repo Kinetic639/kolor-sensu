@@ -22,9 +22,13 @@ pnpm lint
 pnpm typecheck
 pnpm format
 pnpm format:check
+pnpm supabase:migrations
+pnpm supabase:types
 ```
 
 Copy `.env.example` to an app-local `.env.local` only when a feature needs
 environment variables. Never commit secrets.
 
 See `docs/architecture/monorepo.md` for ownership and dependency rules.
+See `docs/architecture/supabase-foundation.md` for database workflows, secrets,
+generated types, RLS, and multi-client boundaries.

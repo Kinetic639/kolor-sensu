@@ -1,1 +1,1 @@
-export const designTokenStatus = "placeholder" as const;
+export const designTokenStatus = "reference-derived" as const;

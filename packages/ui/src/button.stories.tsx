@@ -11,7 +11,7 @@ const meta = {
   argTypes: {
     variant: {
       control: "select",
-      options: ["default", "outline", "ghost", "destructive"],
+      options: ["default", "secondary", "outline", "ghost", "destructive"],
     },
     size: {
       control: "select",
@@ -27,12 +27,32 @@ export const Primary: Story = {};
 
 export const Secondary: Story = {
   args: {
-    variant: "outline",
+    variant: "secondary",
+  },
+};
+
+export const Ghost: Story = {
+  args: {
+    variant: "ghost",
+  },
+};
+
+export const Destructive: Story = {
+  args: {
+    children: "Usuń termin",
+    variant: "destructive",
   },
 };
 
 export const Disabled: Story = {
   args: {
     disabled: true,
+  },
+};
+
+export const Loading: Story = {
+  args: {
+    loading: true,
+    children: "Zapisywanie",
   },
 };

@@ -17,7 +17,7 @@ export function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        "flex h-10 w-full items-center justify-between rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-10 w-full items-center justify-between rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-sm text-[var(--text)] shadow-[0_1px_2px_rgb(15_39_71/0.03)] transition-[border-color,box-shadow] outline-none focus-visible:border-[var(--ring)] focus-visible:ring-3 focus-visible:ring-[color-mix(in_srgb,var(--ring)_18%,transparent)] disabled:cursor-not-allowed disabled:bg-[var(--surface-muted)] disabled:opacity-60 data-[placeholder]:text-[var(--text-subtle)]",
         className,
       )}
       {...props}
@@ -40,7 +40,7 @@ export function SelectContent({
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         className={cn(
-          "z-50 max-h-96 min-w-32 overflow-hidden rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-[var(--shadow-overlay)]",
+          "z-50 max-h-96 min-w-32 overflow-hidden rounded-[var(--radius-surface)] border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-[var(--shadow-raised)]",
           position === "popper" &&
             "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
           className,
@@ -82,7 +82,7 @@ export function SelectItem({
   return (
     <SelectPrimitive.Item
       className={cn(
-        "relative flex w-full cursor-default items-center rounded-[calc(var(--radius-control)-0.125rem)] py-1.5 pr-2 pl-8 text-sm outline-none select-none focus:bg-[var(--surface-muted)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full cursor-default items-center rounded-[calc(var(--radius-control)-0.125rem)] py-2 pr-2 pl-8 text-sm outline-none select-none focus:bg-[var(--primary-soft)] focus:text-[var(--primary)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,
       )}
       {...props}

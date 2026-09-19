@@ -11,15 +11,16 @@ export const SheetTrigger = DialogPrimitive.Trigger;
 export const SheetClose = DialogPrimitive.Close;
 
 const sheetVariants = cva(
-  "fixed z-50 bg-[var(--surface)] p-6 text-[var(--text)] shadow-[var(--shadow-overlay)] outline-none",
+  "fixed z-50 overflow-y-auto bg-[var(--surface)] p-6 text-[var(--text)] shadow-[var(--shadow-overlay)] outline-none",
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 border-b border-[var(--border)]",
-        bottom: "inset-x-0 bottom-0 border-t border-[var(--border)]",
+        top: "inset-x-0 top-0 max-h-[92vh] rounded-b-[var(--radius-panel)] border-b border-[var(--border)]",
+        bottom:
+          "inset-x-0 bottom-0 max-h-[92vh] rounded-t-[var(--radius-panel)] border-t border-[var(--border)]",
         left: "inset-y-0 left-0 h-full w-3/4 border-r border-[var(--border)] sm:max-w-sm",
         right:
-          "inset-y-0 right-0 h-full w-3/4 border-l border-[var(--border)] sm:max-w-sm",
+          "inset-y-0 right-0 h-full w-full border-l border-[var(--border)] sm:max-w-md",
       },
     },
     defaultVariants: {
@@ -41,7 +42,7 @@ export function SheetContent({
 }: SheetContentProps) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[color-mix(in_srgb,var(--text)_42%,transparent)] backdrop-blur-[2px]" />
       <DialogPrimitive.Content
         className={cn(sheetVariants({ side }), className)}
         {...props}
@@ -60,5 +61,32 @@ export function SheetHeader({ className, ...props }: ComponentProps<"div">) {
   return <div className={cn("grid gap-1.5", className)} {...props} />;
 }
 
-export const SheetTitle = DialogPrimitive.Title;
-export const SheetDescription = DialogPrimitive.Description;
+export function SheetTitle({
+  className,
+  ...props
+}: ComponentProps<typeof DialogPrimitive.Title>) {
+  return (
+    <DialogPrimitive.Title
+      className={cn(
+        "font-heading text-2xl leading-tight font-semibold text-[var(--text)]",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function SheetDescription({
+  className,
+  ...props
+}: ComponentProps<typeof DialogPrimitive.Description>) {
+  return (
+    <DialogPrimitive.Description
+      className={cn(
+        "text-sm leading-relaxed text-[var(--text-muted)]",
+        className,
+      )}
+      {...props}
+    />
+  );
+}

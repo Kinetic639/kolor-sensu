@@ -19,7 +19,7 @@ export function PopoverContent({
       <PopoverPrimitive.Content
         align={align}
         className={cn(
-          "z-50 w-72 rounded-[var(--radius-surface)] border border-[var(--border)] bg-[var(--surface)] p-4 text-[var(--text)] shadow-[var(--shadow-overlay)] outline-none",
+          "z-50 w-72 rounded-[var(--radius-surface)] border border-[var(--border)] bg-[var(--surface)] p-4 text-[var(--text)] shadow-[var(--shadow-raised)] outline-none",
           className,
         )}
         sideOffset={sideOffset}

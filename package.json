@@ -10,12 +10,19 @@
     "test:run": "turbo run test:run",
     "storybook": "turbo run storybook --filter=@kolor-sensu/storybook",
     "storybook:build": "turbo run storybook:build --filter=@kolor-sensu/storybook",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
+    "supabase:types": "supabase gen types typescript --linked --schema public | prettier --parser typescript > packages/contracts/src/database.types.ts",
+    "supabase:migration:new": "supabase migration new",
+    "supabase:migrations": "supabase migration list --linked",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "devDependencies": {
     "prettier": "3.9.7",
     "prettier-plugin-tailwindcss": "0.8.1",
+    "supabase": "2.117.0",
     "turbo": "^2.10.13",
     "typescript": "7.0.2"
   },

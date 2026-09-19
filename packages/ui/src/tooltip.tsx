@@ -17,7 +17,7 @@ export function TooltipContent({
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
         className={cn(
-          "z-50 rounded-[var(--radius-control)] bg-[var(--text)] px-3 py-1.5 text-xs text-[var(--background)] shadow-[var(--shadow-overlay)]",
+          "z-50 rounded-[var(--radius-control)] bg-[var(--text)] px-3 py-1.5 text-xs font-medium text-white shadow-[var(--shadow-raised)]",
           className,
         )}
         sideOffset={sideOffset}

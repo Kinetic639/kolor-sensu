@@ -25,6 +25,9 @@ that owns them.
   as the TanStack Query provider and local UI-store factories.
 - `packages/mock-api` contains MSW transport handlers backed by fixtures from
   `packages/mock-data`.
+- `packages/supabase` contains typed, application-independent Supabase client
+  factories and environment validation. Applications retain their own session
+  adapters and authorization policy.
 - `packages/config` contains shared TypeScript and ESLint configuration.
 
 ## Import boundaries
@@ -39,6 +42,7 @@ apps/* -> contracts
 apps/* -> mock-data -> contracts
 apps/* -> scheduling -> contracts
 apps/* -> app-runtime
+apps/* -> supabase -> contracts
 mock-api -> mock-data -> contracts
 apps/* -> config
 ```
@@ -53,5 +57,6 @@ route handlers, screens, app navigation, authorization decisions, data-access
 adapters, and feature-specific business rules in their owning application
 until a stable cross-app contract is proven.
 
-Infrastructure integrations such as authentication, database access, payments,
-and notifications require separate architectural decisions in later phases.
+Application-specific data adapters, authentication, payments, and
+notifications require separate architectural decisions in later phases. The
+shared Supabase foundation is documented in `supabase-foundation.md`.

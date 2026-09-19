@@ -1,5 +1,15 @@
+export { Avatar, AvatarFallback, AvatarImage } from "./avatar";
+export { Badge, badgeVariants, type BadgeProps } from "./badge";
 export { Button, buttonVariants, type ButtonProps } from "./button";
-export { Card, type CardProps } from "./card";
+export {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  type CardProps,
+} from "./card";
 export { Checkbox } from "./checkbox";
 export { Container, type ContainerProps } from "./container";
 export {
@@ -16,11 +26,42 @@ export { Input, type InputProps } from "./input";
 export { Label, type LabelProps } from "./label";
 export { cn } from "./lib/utils";
 export {
+  NotificationDrawer,
+  NotificationItem,
+  type NotificationDrawerProps,
+  type NotificationItemProps,
+} from "./notification";
+export {
   Popover,
   PopoverAnchor,
   PopoverContent,
   PopoverTrigger,
 } from "./popover";
+export {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  MetricCard,
+  PageHeader,
+  SectionHeader,
+  StatusBadge,
+  type MetricCardProps,
+  type PageHeaderProps,
+  type SectionHeaderProps,
+  type StatusBadgeProps,
+} from "./portal-content";
+export {
+  AppHeader,
+  AppShell,
+  AppSidebar,
+  MobileBottomNav,
+  type AppHeaderProps,
+  type AppShellProps,
+  type AppSidebarProps,
+  type MobileBottomNavProps,
+  type PortalNavigationItem,
+  type PortalNavigationSection,
+} from "./portal-layout";
 export {
   Select,
   SelectContent,
@@ -43,6 +84,7 @@ export {
 } from "./sheet";
 export { Switch } from "./switch";
 export { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
+export { Textarea, type TextareaProps } from "./textarea";
 export { AppToaster, type AppToasterProps } from "./toaster";
 export {
   Tooltip,

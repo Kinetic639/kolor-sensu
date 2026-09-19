@@ -25,3 +25,21 @@ export const Default: Story = {
     </Tabs>
   ),
 };
+
+export const NarrowMobile: Story = {
+  globals: {
+    viewport: { value: "mobile", isRotated: false },
+  },
+  render: () => (
+    <Tabs className="w-full" defaultValue="details">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="details">Szczegóły</TabsTrigger>
+        <TabsTrigger value="notes">Notatki</TabsTrigger>
+        <TabsTrigger value="history">Historia</TabsTrigger>
+      </TabsList>
+      <TabsContent value="details">Informacje o spotkaniu.</TabsContent>
+      <TabsContent value="notes">Miejsce na notatki.</TabsContent>
+      <TabsContent value="history">Historia zmian.</TabsContent>
+    </Tabs>
+  ),
+};

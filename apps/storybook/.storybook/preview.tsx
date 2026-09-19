@@ -41,8 +41,14 @@ const viewportOptions = {
 
 const preview: Preview = {
   decorators: [
-    (Story) => (
-      <div className="min-h-screen bg-[var(--background)] p-6 text-[var(--text)]">
+    (Story, context) => (
+      <div
+        className={
+          context.parameters.canvasPadding === false
+            ? "min-h-screen bg-[var(--background)] text-[var(--text)]"
+            : "min-h-screen bg-[var(--background)] p-6 text-[var(--text)]"
+        }
+      >
         <Story />
       </div>
     ),
