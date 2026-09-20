@@ -91,8 +91,8 @@ export function SectionHeader({
 const metricToneClasses = {
   mint: "bg-[var(--accent-mint)] text-[var(--success)]",
   blue: "bg-[var(--accent-blue)] text-[var(--info)]",
-  lilac: "bg-[var(--accent-lilac)] text-[#6848d7]",
-  peach: "bg-[var(--accent-peach)] text-[#c45f18]",
+  lilac: "bg-[var(--accent-lilac)] text-[var(--accent-lilac-foreground)]",
+  peach: "bg-[var(--accent-peach)] text-[var(--accent-peach-foreground)]",
   rose: "bg-[var(--accent-rose)] text-[var(--danger)]",
 } as const;
 
@@ -219,6 +219,24 @@ function StateFrame({
 
 export function EmptyState(props: StateProps) {
   return <StateFrame icon={<Inbox className="size-6" />} {...props} />;
+}
+
+export function PortalRoutePlaceholder({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="space-y-5">
+      <PageHeader title={title} description={description} />
+      <EmptyState
+        title="Moduł jest przygotowywany"
+        description="Ta trasa korzysta już ze wspólnej powłoki portalu. Funkcjonalność zostanie dodana w osobnym zadaniu."
+      />
+    </div>
+  );
 }
 
 export function LoadingState({

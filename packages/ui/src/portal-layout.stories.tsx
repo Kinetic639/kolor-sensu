@@ -1,69 +1,59 @@
-import {
-  CalendarDays,
-  Clock3,
-  Home,
-  Settings,
-  Tag,
-  UserRound,
-} from "lucide-react";
 import type { Meta, StoryObj } from "@storybook/react";
+import { CalendarDays, Clock3 } from "lucide-react";
 import { MetricCard, PageHeader } from "./portal-content";
-import {
-  AppHeader,
-  AppShell,
-  AppSidebar,
-  MobileBottomNav,
-  type PortalNavigationItem,
-  type PortalNavigationSection,
+import type {
+  PortalNavigationItem,
+  PortalNavigationSection,
 } from "./portal-layout";
+import { PortalShell } from "./portal-shell";
 
-const sections: PortalNavigationSection[] = [
+const navigation: PortalNavigationSection[] = [
   {
-    label: "Praca",
+    label: "PRACA",
     items: [
-      { label: "Panel główny", href: "#", icon: Home, active: true },
-      { label: "Mój kalendarz", href: "#", icon: CalendarDays },
-      { label: "Dostępność", href: "#", icon: Clock3 },
+      { label: "Dashboard", href: "/", icon: "dashboard" },
+      { label: "Mój kalendarz", href: "/kalendarz", icon: "calendar" },
+      { label: "Dostępność", href: "/dostepnosc", icon: "clock" },
     ],
   },
   {
-    label: "Oferta",
-    items: [{ label: "Usługi i stawki", href: "#", icon: Tag }],
+    label: "OFERTA",
+    items: [
+      { label: "Moje usługi i stawki", href: "/uslugi", icon: "services" },
+    ],
   },
   {
-    label: "Profil",
-    items: [{ label: "Mój profil", href: "#", icon: UserRound }],
-  },
-  {
-    label: "Konto",
-    items: [{ label: "Ustawienia", href: "#", icon: Settings }],
+    label: "KONTO",
+    items: [{ label: "Ustawienia", href: "/ustawienia", icon: "settings" }],
   },
 ];
 
-const mobileItems: PortalNavigationItem[] = [
-  { label: "Panel", href: "#", icon: Home, active: true },
-  { label: "Kalendarz", href: "#", icon: CalendarDays },
-  { label: "Dostępność", href: "#", icon: Clock3 },
-  { label: "Profil", href: "#", icon: UserRound },
-  { label: "Więcej", href: "#", icon: Settings },
+const mobileNavigation: PortalNavigationItem[] = [
+  { label: "Dashboard", href: "/", icon: "dashboard" },
+  { label: "Kalendarz", href: "/kalendarz", icon: "calendar" },
+  { label: "Dostępność", href: "/dostepnosc", icon: "clock" },
+  { label: "Profil", href: "/profil", icon: "specialist" },
+  { label: "Więcej", href: "/ustawienia", icon: "settings" },
 ];
 
-function PortalShellExample() {
+function PortalShellExample({
+  defaultSidebarOpen = true,
+}: {
+  defaultSidebarOpen?: boolean;
+}) {
   return (
-    <AppShell
-      sidebar={<AppSidebar sections={sections} />}
-      header={
-        <AppHeader
-          notificationCount={3}
-          userName="Anna Kowalska"
-          userRole="Psychoterapeutka"
-        />
-      }
-      mobileNavigation={<MobileBottomNav items={mobileItems} />}
+    <PortalShell
+      brandSubtitle="Panel specjalisty"
+      defaultSidebarOpen={defaultSidebarOpen}
+      mobileNavigation={mobileNavigation}
+      navigation={navigation}
+      notificationCount={3}
+      profileHref="/profil"
+      user={{ name: "Anna Kowalska", role: "Psychoterapeutka" }}
     >
       <PageHeader
         title="Panel główny"
-        description="Wspólna hierarchia portalu bez implementowania konkretnej strony produktu."
+        description="Wspólny produkcyjny shell portalu bez logiki konkretnej funkcji."
       />
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
@@ -83,34 +73,49 @@ function PortalShellExample() {
           value="8 h"
         />
       </div>
-    </AppShell>
+    </PortalShell>
   );
 }
 
 const meta = {
   title: "Portal/AppShell",
-  component: AppShell,
-  args: { children: null, header: null, sidebar: null },
+  component: PortalShell,
   parameters: {
     canvasPadding: false,
     controls: { disable: true },
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: "/" },
+    },
   },
-} satisfies Meta<typeof AppShell>;
+} satisfies Meta<typeof PortalShell>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Desktop: Story = {
+export const DesktopExpanded: Story = {
+  args: {
+    brandSubtitle: "Panel specjalisty",
+    children: null,
+    mobileNavigation,
+    navigation,
+    user: { name: "Anna Kowalska", role: "Psychoterapeutka" },
+  },
   globals: { viewport: { value: "desktop", isRotated: false } },
   render: () => <PortalShellExample />,
 };
 
+export const DesktopCollapsed: Story = {
+  ...DesktopExpanded,
+  render: () => <PortalShellExample defaultSidebarOpen={false} />,
+};
+
 export const Tablet: Story = {
+  ...DesktopExpanded,
   globals: { viewport: { value: "tablet", isRotated: false } },
-  render: () => <PortalShellExample />,
 };
 
 export const Mobile: Story = {
+  ...DesktopExpanded,
   globals: { viewport: { value: "mobile", isRotated: false } },
-  render: () => <PortalShellExample />,
 };

@@ -1,56 +1,121 @@
-import { logout } from "@/app/actions/auth";
-import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
+  getCenterSettings,
+  listLocations,
   listPendingSpecialistDrafts,
+  listServicesAdmin,
+  listSpecialistOffersAdmin,
   listSpecialistsForAdmin,
 } from "@repo/supabase";
-import { Badge } from "@repo/ui/badge";
-import { Button } from "@repo/ui/button";
-import { Card } from "@repo/ui/card";
-import { Container } from "@repo/ui/container";
+import { AdminDashboard } from "@repo/ui/portal-dashboards";
+import {
+  AlertTriangle,
+  BedDouble,
+  CalendarDays,
+  Tags,
+  Users,
+} from "@repo/ui/portal-icons";
 
 export default async function Home() {
-  const authorization = await requirePortalRole();
   const client = await createClient();
-  const [specialists, pendingDrafts] = await Promise.all([
+  const [
+    specialists,
+    pendingDrafts,
+    centerSettings,
+    locations,
+    services,
+    specialistOffers,
+  ] = await Promise.all([
     listSpecialistsForAdmin(client),
     listPendingSpecialistDrafts(client),
+    getCenterSettings(client),
+    listLocations(client),
+    listServicesAdmin(client),
+    listSpecialistOffersAdmin(client),
   ]);
-  const displayName = [
-    authorization.profile.first_name,
-    authorization.profile.last_name,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const activeSpecialists = specialists.filter(
+    (specialist) => specialist.active,
+  );
+  const acceptingSpecialists = activeSpecialists.filter(
+    (specialist) => specialist.acceptingNewClients,
+  );
+  const activeServices = services.filter((service) => service.active);
+  const attention = pendingDrafts.length
+    ? [
+        {
+          id: "pending-specialist-drafts",
+          title: `${pendingDrafts.length} ${pendingDrafts.length === 1 ? "profil oczekuje" : "profile oczekują"} na weryfikację`,
+          description:
+            "Szkice profili specjalistów wymagają decyzji administratora.",
+          icon: AlertTriangle,
+          tone: "warning" as const,
+        },
+      ]
+    : [];
 
   return (
-    <main className="flex min-h-screen items-center py-16">
-      <Container>
-        <Card>
-          <p className="text-sm text-[var(--ks-color-text-muted)]">
-            KOLOR SENSU · Centrum Psychoterapii
-          </p>
-          <h1 className="mt-2 text-2xl font-semibold">Admin Portal</h1>
-          <p className="mt-3 text-sm text-[var(--text-muted)]">
-            Zalogowano jako {displayName || authorization.user.email}.
-          </p>
-          <div
-            className="mt-5 flex flex-wrap gap-3"
-            aria-label="Status domeny specjalistów"
-          >
-            <Badge variant="info">Specjaliści: {specialists.length}</Badge>
-            <Badge variant={pendingDrafts.length > 0 ? "warning" : "neutral"}>
-              Oczekujące szkice: {pendingDrafts.length}
-            </Badge>
-          </div>
-          <form action={logout} className="mt-6">
-            <Button type="submit" variant="secondary">
-              Wyloguj się
-            </Button>
-          </form>
-        </Card>
-      </Container>
-    </main>
+    <AdminDashboard
+      title="Centrum zarządzania ośrodkiem"
+      description={`${centerSettings.businessName} · dane operacyjne dostępne w bieżących modułach`}
+      dateLabel={new Intl.DateTimeFormat("pl-PL", {
+        dateStyle: "long",
+      }).format(new Date())}
+      metrics={[
+        {
+          id: "appointments",
+          label: "Dzisiejsze wizyty",
+          value: 0,
+          icon: CalendarDays,
+          tone: "blue",
+          detail: "Dane pojawią się po wdrożeniu kalendarza",
+        },
+        {
+          id: "specialists",
+          label: "Aktywni specjaliści",
+          value: activeSpecialists.length,
+          icon: Users,
+          tone: "mint",
+          detail: `${acceptingSpecialists.length} przyjmuje nowych klientów`,
+        },
+        {
+          id: "services",
+          label: "Aktywne usługi",
+          value: activeServices.length,
+          icon: Tags,
+          tone: "lilac",
+          detail: `${specialistOffers.length} ofert specjalistów`,
+        },
+        {
+          id: "locations",
+          label: "Lokalizacje",
+          value: locations.length,
+          icon: BedDouble,
+          tone: "peach",
+          detail: "Obłożenie po wdrożeniu grafików gabinetów",
+        },
+      ]}
+      appointments={[]}
+      attention={attention}
+      rooms={[]}
+      team={[
+        {
+          id: "active-specialists",
+          title: "Aktywni specjaliści",
+          description: `${specialists.length} wszystkich kont specjalistów`,
+          value: String(activeSpecialists.length),
+          icon: Users,
+          tone: "success",
+        },
+        {
+          id: "accepting-specialists",
+          title: "Przyjmują nowych klientów",
+          description: "Na podstawie aktualnego statusu profilu",
+          value: String(acceptingSpecialists.length),
+          icon: Users,
+          tone: "info",
+        },
+      ]}
+      events={[]}
+    />
   );
 }

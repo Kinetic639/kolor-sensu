@@ -41,8 +41,8 @@
   --ks-container-md: 56rem;
   --ks-container-lg: 72rem;
   --ks-container-xl: 90rem;
-  --ks-sidebar-width: 15rem;
-  --ks-header-height: 4.5rem;
+  --ks-sidebar-width: 13.5rem;
+  --ks-header-height: 4rem;
 
   --background: #fbfaf6;
   --surface: #ffffff;
@@ -77,7 +77,9 @@
   --accent-mint: #e4f5ed;
   --accent-blue: #eaf1ff;
   --accent-lilac: #f0ecff;
+  --accent-lilac-foreground: #6848d7;
   --accent-peach: #fff0e5;
+  --accent-peach-foreground: #b85b17;
   --accent-rose: #ffedf0;
 
   --ks-color-canvas: var(--background);
