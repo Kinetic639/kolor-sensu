@@ -188,6 +188,56 @@ export type Database = {
         };
         Relationships: [];
       };
+      rooms: {
+        Row: {
+          active: boolean;
+          capacity: number;
+          created_at: string;
+          description: string | null;
+          id: string;
+          location_id: string;
+          name: string;
+          publicly_visible: boolean;
+          slug: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          capacity?: number;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          location_id: string;
+          name: string;
+          publicly_visible?: boolean;
+          slug: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          capacity?: number;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          location_id?: string;
+          name?: string;
+          publicly_visible?: boolean;
+          slug?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "rooms_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       services: {
         Row: {
           active: boolean;

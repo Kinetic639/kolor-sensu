@@ -62,15 +62,22 @@ export type {
 } from "@repo/contracts/services";
 export { homePageContentSchema } from "@repo/contracts/cms";
 export type { HomeContentAdmin, HomePageContent } from "@repo/contracts/cms";
+export {
+  roomCapacitySchema,
+  roomCreateSchema,
+  roomSlugSchema,
+  roomUpdateSchema,
+} from "@repo/contracts/rooms";
+export type {
+  AdminRoomSummary,
+  Room,
+  RoomCreate,
+  RoomUpdate,
+} from "@repo/contracts/rooms";
 
 export const userRoleSchema = z.enum(["admin", "specialist", "client"]);
 
 export type UserRole = z.infer<typeof userRoleSchema>;
-
-export interface Room {
-  id: string;
-  name: string;
-}
 
 export interface Appointment {
   id: string;
