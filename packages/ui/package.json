@@ -27,6 +27,7 @@
     "./portal-shell": "./src/portal-shell.tsx",
     "./notification": "./src/notification.tsx",
     "./select": "./src/select.tsx",
+    "./service-admin": "./src/service-admin.tsx",
     "./sidebar": "./src/sidebar.tsx",
     "./sheet": "./src/sheet.tsx",
     "./styles.css": "./src/styles.css",

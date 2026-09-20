@@ -54,8 +54,11 @@ export {
   listPublicServices,
   listPublicSpecialistOffersForService,
   listServicesAdmin,
+  listServiceSummariesAdmin,
   listSpecialistOffersAdmin,
+  listSpecialistOffersForServiceAdmin,
   serviceMappers,
   updateService,
   upsertMySpecialistService,
 } from "./services";
+export type { AdminServiceOfferSummary, AdminServiceSummary } from "./services";

@@ -43,3 +43,22 @@ Add the backend/domain contract first, expose focused data-access helpers, creat
 ## 10. Backend and UI advance together
 
 A backend domain is not complete from the product perspective until its authorized portal workflow is integrated and verified. Conversely, portal UI must not simulate nonexistent backend semantics. Backend capability and user-facing integration should advance together through the same documented pipeline.
+
+## 11. Admin Oferta vertical slice
+
+Admin Oferta is the second real Admin vertical slice after Specialists. The existing
+Services Domain and shared Zod contracts remain authoritative. Server loaders compose
+catalog summaries and per-service specialist offers into route-specific view models;
+raw database rows do not reach presentation components.
+
+`servicesKeys` scopes list, detail, and offer queries. Server-rendered initial data
+prevents blank client loading, while TanStack Query owns refreshes and mutations.
+Create and edit forms use React Hook Form with `serviceCreateSchema`; lifecycle
+mutations update only the affected service and invalidate service list/detail keys.
+
+The list summary loads offer counts in one joined query and never fetches every offer
+payload. Detail loading fetches one service and its specialist offers in parallel.
+Specialist prices, modality, duration overrides, and client acceptance remain in
+`specialist_services` and are displayed read-only. Playwright covers the real Admin
+workflow, responsive widths, duplicate-safe errors, and role boundaries when secure
+credentials are available.
