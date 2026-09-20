@@ -74,3 +74,12 @@ export {
   publishHomeContent,
   updateHomeDraft,
 } from "./cms";
+export {
+  createRoom,
+  disableRoom,
+  getRoomByIdAdmin,
+  listActiveRoomsForSpecialist,
+  listRoomsAdmin,
+  roomMappers,
+  updateRoom,
+} from "./rooms";
