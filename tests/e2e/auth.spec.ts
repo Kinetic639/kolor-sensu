@@ -60,17 +60,53 @@ test.describe("authenticated dual-role account", () => {
     await page.getByLabel("Hasło").fill(annaPassword!);
     await page.getByRole("button", { name: "Zaloguj się" }).click();
     await expect(
-      page.getByRole("heading", { name: "Admin Portal" }),
+      page.getByRole("heading", { name: "Centrum zarządzania ośrodkiem" }),
     ).toBeVisible();
-    await expect(page.getByText(/Specjaliści: \d+/)).toBeVisible();
+    await expect(
+      page.getByRole("navigation", { name: "Nawigacja portalu" }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.getByRole("button", { name: "Przełącz nawigację" }).click();
+    await expect(page.locator('[data-state="collapsed"]')).toBeVisible();
+    await page.getByRole("link", { name: "Specjaliści" }).click();
+    await expect(page).toHaveURL(`${adminUrl}/specjalisci`);
+    await expect(
+      page.getByRole("heading", { name: "Specjaliści" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Specjaliści" }),
+    ).toHaveAttribute("aria-current", "page");
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(adminUrl);
+    await expect(
+      page.getByRole("navigation", { name: "Nawigacja mobilna" }),
+    ).toBeVisible();
 
     await page.goto(specialistUrl);
     await expect(
-      page.getByRole("heading", { name: "Specialist Portal" }),
+      page.getByRole("heading", { name: "Panel główny" }),
     ).toBeVisible();
-    await expect(page.getByText("Połączona")).toBeVisible();
+    await expect(
+      page.getByRole("navigation", { name: "Nawigacja mobilna" }),
+    ).toBeVisible();
 
-    await page.getByRole("button", { name: "Wyloguj się" }).click();
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.reload();
+    await page.getByRole("button", { name: "Przełącz nawigację" }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Nawigacja portalu" }),
+    ).toBeVisible();
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(specialistUrl);
+    await page.getByRole("button", { name: "Menu użytkownika" }).click();
+    await page.getByRole("menuitem", { name: "Wyloguj się" }).click();
     await page.goto(adminUrl);
     await expect(page).toHaveURL(`${adminUrl}/login`);
 

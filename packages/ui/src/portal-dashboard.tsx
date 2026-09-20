@@ -1,4 +1,4 @@
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { ChevronRight, Inbox, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { Avatar, AvatarFallback } from "./avatar";
 import { Button } from "./button";
@@ -45,6 +45,24 @@ export function DashboardSection({
       />
       <div className={cn("mt-4", contentClassName)}>{children}</div>
     </Card>
+  );
+}
+
+export function DashboardEmptyState({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex min-h-28 flex-col items-center justify-center rounded-[var(--radius-control)] bg-[var(--surface-subtle)] px-4 py-6 text-center">
+      <Inbox className="size-5 text-[var(--text-subtle)]" aria-hidden="true" />
+      <p className="mt-2 text-sm font-semibold text-[var(--text)]">{title}</p>
+      <p className="mt-1 max-w-sm text-xs leading-relaxed text-[var(--text-muted)]">
+        {description}
+      </p>
+    </div>
   );
 }
 

@@ -8,53 +8,49 @@ import {
   CalendarClock,
   CalendarDays,
   Clock3,
-  FileText,
-  Home,
-  LayoutDashboard,
-  Settings,
-  Tag,
   UserRound,
   Users,
 } from "lucide-react";
-import { AppHeader } from "./app-header";
 import {
   AdminDashboard,
   SpecialistDashboard,
   type AdminDashboardProps,
   type SpecialistDashboardProps,
 } from "./portal-dashboards";
-import {
-  AppShell,
-  AppSidebar,
-  MobileBottomNav,
-  type PortalNavigationItem,
-  type PortalNavigationSection,
+import type {
+  PortalNavigationItem,
+  PortalNavigationSection,
 } from "./portal-layout";
+import { PortalShell } from "./portal-shell";
 
 const adminNavigation: PortalNavigationSection[] = [
   {
     label: "OPERACJE",
     items: [
-      { label: "Dashboard", href: "#", icon: LayoutDashboard, active: true },
-      { label: "Kalendarz i rezerwacje", href: "#", icon: CalendarDays },
+      { label: "Dashboard", href: "/", icon: "dashboard" },
+      {
+        label: "Kalendarz i rezerwacje",
+        href: "/kalendarz",
+        icon: "calendar",
+      },
     ],
   },
   {
     label: "ZESPÓŁ I ZASOBY",
     items: [
-      { label: "Specjaliści", href: "#", icon: Users },
-      { label: "Gabinety", href: "#", icon: BedDouble },
-      { label: "Oferta", href: "#", icon: Tag },
-      { label: "Klienci", href: "#", icon: UserRound },
+      { label: "Specjaliści", href: "/specjalisci", icon: "specialists" },
+      { label: "Gabinety", href: "/gabinety", icon: "rooms" },
+      { label: "Oferta", href: "/oferta", icon: "services" },
+      { label: "Klienci", href: "/klienci", icon: "clients" },
     ],
   },
   {
     label: "STRONA",
-    items: [{ label: "CMS", href: "#", icon: FileText }],
+    items: [{ label: "CMS", href: "/cms", icon: "cms" }],
   },
   {
     label: "SYSTEM",
-    items: [{ label: "Ustawienia", href: "#", icon: Settings }],
+    items: [{ label: "Ustawienia", href: "/ustawienia", icon: "settings" }],
   },
 ];
 
@@ -62,39 +58,41 @@ const specialistNavigation: PortalNavigationSection[] = [
   {
     label: "PRACA",
     items: [
-      { label: "Dashboard", href: "#", icon: LayoutDashboard, active: true },
-      { label: "Mój kalendarz", href: "#", icon: CalendarDays },
-      { label: "Dostępność", href: "#", icon: Clock3 },
+      { label: "Dashboard", href: "/", icon: "dashboard" },
+      { label: "Mój kalendarz", href: "/kalendarz", icon: "calendar" },
+      { label: "Dostępność", href: "/dostepnosc", icon: "clock" },
     ],
   },
   {
     label: "OFERTA",
-    items: [{ label: "Moje usługi i stawki", href: "#", icon: Tag }],
+    items: [
+      { label: "Moje usługi i stawki", href: "/uslugi", icon: "services" },
+    ],
   },
   {
     label: "PROFIL",
-    items: [{ label: "Mój profil", href: "#", icon: UserRound }],
+    items: [{ label: "Mój profil", href: "/profil", icon: "specialist" }],
   },
   {
     label: "KONTO",
-    items: [{ label: "Ustawienia", href: "#", icon: Settings }],
+    items: [{ label: "Ustawienia", href: "/ustawienia", icon: "settings" }],
   },
 ];
 
 const adminMobileNavigation: PortalNavigationItem[] = [
-  { label: "Dashboard", href: "#", icon: Home, active: true },
-  { label: "Kalendarz", href: "#", icon: CalendarDays },
-  { label: "Zespół", href: "#", icon: Users },
-  { label: "Gabinety", href: "#", icon: BedDouble },
-  { label: "Więcej", href: "#", icon: Settings },
+  { label: "Dashboard", href: "/", icon: "dashboard" },
+  { label: "Kalendarz", href: "/kalendarz", icon: "calendar" },
+  { label: "Zespół", href: "/specjalisci", icon: "specialists" },
+  { label: "Gabinety", href: "/gabinety", icon: "rooms" },
+  { label: "Więcej", href: "/ustawienia", icon: "settings" },
 ];
 
 const specialistMobileNavigation: PortalNavigationItem[] = [
-  { label: "Dashboard", href: "#", icon: Home, active: true },
-  { label: "Kalendarz", href: "#", icon: CalendarDays },
-  { label: "Dostępność", href: "#", icon: Clock3 },
-  { label: "Profil", href: "#", icon: UserRound },
-  { label: "Więcej", href: "#", icon: Settings },
+  { label: "Dashboard", href: "/", icon: "dashboard" },
+  { label: "Kalendarz", href: "/kalendarz", icon: "calendar" },
+  { label: "Dostępność", href: "/dostepnosc", icon: "clock" },
+  { label: "Profil", href: "/profil", icon: "specialist" },
+  { label: "Więcej", href: "/ustawienia", icon: "settings" },
 ];
 
 const appointments = [
@@ -377,57 +375,30 @@ const specialistDashboardProps: SpecialistDashboardProps = {
 
 function AdminDashboardStory() {
   return (
-    <AppShell
-      sidebar={
-        <AppSidebar
-          sections={adminNavigation}
-          brandSubtitle="Panel administracyjny"
-        />
-      }
-      header={
-        <AppHeader
-          user={{ name: "Michał Stępień", role: "Administrator centrum" }}
-          notificationCount={3}
-          tabletNavigation={
-            <AppSidebar
-              sections={adminNavigation}
-              brandSubtitle="Panel administracyjny"
-            />
-          }
-        />
-      }
-      mobileNavigation={<MobileBottomNav items={adminMobileNavigation} />}
+    <PortalShell
+      brandSubtitle="Panel administracyjny"
+      mobileNavigation={adminMobileNavigation}
+      navigation={adminNavigation}
+      notificationCount={3}
+      user={{ name: "Michał Stępień", role: "Administrator centrum" }}
     >
       <AdminDashboard {...adminDashboardProps} />
-    </AppShell>
+    </PortalShell>
   );
 }
 
 function SpecialistDashboardStory() {
   return (
-    <AppShell
-      sidebar={
-        <AppSidebar
-          sections={specialistNavigation}
-          brandSubtitle="Panel specjalisty"
-        />
-      }
-      header={
-        <AppHeader
-          user={{ name: "Anna Kowalska", role: "Psychoterapeutka" }}
-          notificationCount={2}
-          tabletNavigation={
-            <AppSidebar
-              sections={specialistNavigation}
-              brandSubtitle="Panel specjalisty"
-            />
-          }
-        />
-      }
-      mobileNavigation={<MobileBottomNav items={specialistMobileNavigation} />}
+    <PortalShell
+      brandSubtitle="Panel specjalisty"
+      mobileNavigation={specialistMobileNavigation}
+      navigation={specialistNavigation}
+      notificationCount={2}
+      profileHref="/profil"
+      user={{ name: "Anna Kowalska", role: "Psychoterapeutka" }}
     >
       <SpecialistDashboard {...specialistDashboardProps} />
-    </AppShell>
+    </PortalShell>
   );
 }
 
@@ -436,6 +407,10 @@ const meta = {
   parameters: {
     canvasPadding: false,
     controls: { disable: true },
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: "/" },
+    },
   },
 } satisfies Meta;
 

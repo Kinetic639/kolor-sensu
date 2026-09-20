@@ -78,7 +78,7 @@ test("tablet navigation opens as an accessible drawer", async ({ page }) => {
     "/iframe.html?id=portal-dashboard-compositions--admin-desktop&viewMode=story",
   );
 
-  await page.getByRole("button", { name: "Otwórz nawigację" }).click();
+  await page.getByRole("button", { name: "Przełącz nawigację" }).click();
   const navigationDrawer = page.getByRole("dialog", {
     name: "Nawigacja portalu",
   });

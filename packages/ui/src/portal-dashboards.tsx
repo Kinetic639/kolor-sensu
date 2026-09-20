@@ -4,6 +4,7 @@ import {
   AppointmentList,
   AttentionList,
   AvailabilitySummary,
+  DashboardEmptyState,
   DashboardSection,
   EventList,
   SummaryList,
@@ -76,20 +77,41 @@ export function AdminDashboard({
           title="Dzisiejsze wizyty"
           actionLabel="Pełny kalendarz"
         >
-          <AppointmentList items={appointments} />
+          {appointments.length > 0 ? (
+            <AppointmentList items={appointments} />
+          ) : (
+            <DashboardEmptyState
+              title="Brak wizyt na dziś"
+              description="Wizyty pojawią się tutaj po uruchomieniu kalendarza."
+            />
+          )}
         </DashboardSection>
         <DashboardSection
           className="order-1 xl:order-2 xl:col-span-3"
           title="Wymaga uwagi"
         >
-          <AttentionList items={attention} />
+          {attention.length > 0 ? (
+            <AttentionList items={attention} />
+          ) : (
+            <DashboardEmptyState
+              title="Nic nie wymaga uwagi"
+              description="Wszystkie dostępne dane są aktualne."
+            />
+          )}
         </DashboardSection>
         <DashboardSection
           className="order-3 xl:col-span-3"
           title="Gabinety dzisiaj"
           actionLabel="Zobacz gabinety"
         >
-          <SummaryList ariaLabel="Status gabinetów" items={rooms} />
+          {rooms.length > 0 ? (
+            <SummaryList ariaLabel="Status gabinetów" items={rooms} />
+          ) : (
+            <DashboardEmptyState
+              title="Brak danych o gabinetach"
+              description="Statusy pojawią się po wdrożeniu zarządzania gabinetami."
+            />
+          )}
         </DashboardSection>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
@@ -97,10 +119,24 @@ export function AdminDashboard({
           title="Nasz zespół dziś"
           actionLabel="Zobacz specjalistów"
         >
-          <SummaryList ariaLabel="Dostępność zespołu" items={team} />
+          {team.length > 0 ? (
+            <SummaryList ariaLabel="Dostępność zespołu" items={team} />
+          ) : (
+            <DashboardEmptyState
+              title="Brak danych zespołu"
+              description="Podsumowanie pojawi się, gdy będą dostępne dane grafików."
+            />
+          )}
         </DashboardSection>
         <DashboardSection title="Nadchodzące warsztaty i wydarzenia">
-          <EventList items={events} />
+          {events.length > 0 ? (
+            <EventList items={events} />
+          ) : (
+            <DashboardEmptyState
+              title="Brak nadchodzących wydarzeń"
+              description="Nowe wydarzenia pojawią się w tym miejscu."
+            />
+          )}
         </DashboardSection>
       </div>
     </div>
@@ -144,17 +180,38 @@ export function SpecialistDashboard({
           title="Dzisiejszy grafik"
           actionLabel="Mój kalendarz"
         >
-          <AppointmentList items={appointments} />
+          {appointments.length > 0 ? (
+            <AppointmentList items={appointments} />
+          ) : (
+            <DashboardEmptyState
+              title="Brak wizyt na dziś"
+              description="Wizyty pojawią się tutaj po uruchomieniu kalendarza."
+            />
+          )}
         </DashboardSection>
         <DashboardSection className="xl:col-span-3" title="Wymaga uwagi">
-          <AttentionList items={attention} />
+          {attention.length > 0 ? (
+            <AttentionList items={attention} />
+          ) : (
+            <DashboardEmptyState
+              title="Nic nie wymaga uwagi"
+              description="Wszystkie dostępne dane są aktualne."
+            />
+          )}
         </DashboardSection>
         <DashboardSection
           className="xl:col-span-3"
           title="Dostępność w tym tygodniu"
           actionLabel="Edytuj"
         >
-          <AvailabilitySummary items={availability} />
+          {availability.length > 0 ? (
+            <AvailabilitySummary items={availability} />
+          ) : (
+            <DashboardEmptyState
+              title="Brak danych o dostępności"
+              description="Dostępność pojawi się po wdrożeniu grafików."
+            />
+          )}
         </DashboardSection>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
@@ -162,10 +219,24 @@ export function SpecialistDashboard({
           title="Moje usługi i stawki"
           actionLabel="Zarządzaj ofertą"
         >
-          <SummaryList ariaLabel="Usługi specjalisty" items={services} />
+          {services.length > 0 ? (
+            <SummaryList ariaLabel="Usługi specjalisty" items={services} />
+          ) : (
+            <DashboardEmptyState
+              title="Brak przypisanych usług"
+              description="Usługi przypisane do Twojego profilu pojawią się tutaj."
+            />
+          )}
         </DashboardSection>
         <DashboardSection title="Najbliższe wydarzenia">
-          <EventList items={events} />
+          {events.length > 0 ? (
+            <EventList items={events} />
+          ) : (
+            <DashboardEmptyState
+              title="Brak nadchodzących wydarzeń"
+              description="Nowe wydarzenia pojawią się w tym miejscu."
+            />
+          )}
         </DashboardSection>
       </div>
     </div>

@@ -221,6 +221,24 @@ export function EmptyState(props: StateProps) {
   return <StateFrame icon={<Inbox className="size-6" />} {...props} />;
 }
 
+export function PortalRoutePlaceholder({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="space-y-5">
+      <PageHeader title={title} description={description} />
+      <EmptyState
+        title="Moduł jest przygotowywany"
+        description="Ta trasa korzysta już ze wspólnej powłoki portalu. Funkcjonalność zostanie dodana w osobnym zadaniu."
+      />
+    </div>
+  );
+}
+
 export function LoadingState({
   title = "Ładowanie danych",
   description = "To potrwa tylko chwilę.",

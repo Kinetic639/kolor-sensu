@@ -1,16 +1,37 @@
 "use client";
 
-import { Bell, ChevronDown, Menu, Search, Sprout } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Bell,
+  ChevronDown,
+  LogOut,
+  Search,
+  Sprout,
+  UserRound,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 import { Button } from "./button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./dropdown-menu";
 import { cn } from "./lib/utils";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./sheet";
 
 export interface AppHeaderUser {
   name: string;
   role: string;
+  email?: string;
   imageUrl?: string;
+}
+
+export interface PortalSwitchLink {
+  label: string;
+  href: string;
 }
 
 export interface AppHeaderProps {
@@ -18,8 +39,10 @@ export interface AppHeaderProps {
   searchPlaceholder?: string;
   systemStatus?: string;
   notificationCount?: number;
-  tabletNavigation?: ReactNode;
-  onMenuClick?: () => void;
+  navigationTrigger?: ReactNode;
+  profileHref?: string;
+  portalSwitch?: PortalSwitchLink;
+  logoutAction?: (formData: FormData) => void | Promise<void>;
   onNotificationsClick?: () => void;
   className?: string;
 }
@@ -29,8 +52,10 @@ export function AppHeader({
   searchPlaceholder = "Szukaj klientów, wizyt, notatek...",
   systemStatus = "Wszystkie systemy działają",
   notificationCount = 0,
-  tabletNavigation,
-  onMenuClick,
+  navigationTrigger,
+  profileHref,
+  portalSwitch,
+  logoutAction,
   onNotificationsClick,
   className,
 }: AppHeaderProps) {
@@ -39,6 +64,30 @@ export function AppHeader({
     .map((part) => part[0])
     .join("")
     .slice(0, 2);
+  const hasUserMenu = Boolean(profileHref || portalSwitch || logoutAction);
+
+  const userIdentity = (
+    <>
+      <Avatar className="size-9">
+        {user.imageUrl ? <AvatarImage alt="" src={user.imageUrl} /> : null}
+        <AvatarFallback>{initials}</AvatarFallback>
+      </Avatar>
+      <span className="hidden min-w-0 text-left sm:block">
+        <span className="block max-w-36 truncate text-xs font-semibold text-[var(--text)]">
+          {user.name}
+        </span>
+        <span className="block text-[0.6875rem] text-[var(--text-muted)]">
+          {user.role}
+        </span>
+      </span>
+      {hasUserMenu ? (
+        <ChevronDown
+          className="hidden size-4 text-[var(--text-muted)] sm:block"
+          aria-hidden="true"
+        />
+      ) : null}
+    </>
+  );
 
   return (
     <header
@@ -47,40 +96,7 @@ export function AppHeader({
         className,
       )}
     >
-      {tabletNavigation ? (
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              className="hidden md:inline-flex lg:hidden"
-              size="icon"
-              variant="ghost"
-              aria-label="Otwórz nawigację"
-              onClick={onMenuClick}
-            >
-              <Menu className="size-5" aria-hidden="true" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent
-            className="w-[var(--ks-sidebar-width)] p-0 sm:max-w-[var(--ks-sidebar-width)]"
-            side="left"
-          >
-            <SheetTitle className="sr-only">Nawigacja portalu</SheetTitle>
-            <div className="h-full [&>aside]:static [&>aside]:h-full [&>aside]:w-full [&>aside]:border-r-0">
-              {tabletNavigation}
-            </div>
-          </SheetContent>
-        </Sheet>
-      ) : onMenuClick ? (
-        <Button
-          className="hidden md:inline-flex lg:hidden"
-          size="icon"
-          variant="ghost"
-          aria-label="Otwórz nawigację"
-          onClick={onMenuClick}
-        >
-          <Menu className="size-5" aria-hidden="true" />
-        </Button>
-      ) : null}
+      {navigationTrigger}
 
       <div className="flex min-w-0 items-center gap-2.5 md:hidden">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-white">
@@ -130,22 +146,61 @@ export function AppHeader({
           className="hidden h-8 w-px bg-[var(--border)] sm:block"
           aria-hidden="true"
         />
-        <Avatar className="size-9">
-          {user.imageUrl ? <AvatarImage alt="" src={user.imageUrl} /> : null}
-          <AvatarFallback>{initials}</AvatarFallback>
-        </Avatar>
-        <span className="hidden min-w-0 sm:block">
-          <span className="block max-w-36 truncate text-xs font-semibold text-[var(--text)]">
-            {user.name}
-          </span>
-          <span className="block text-[0.6875rem] text-[var(--text-muted)]">
-            {user.role}
-          </span>
-        </span>
-        <ChevronDown
-          className="hidden size-4 text-[var(--text-muted)] sm:block"
-          aria-hidden="true"
-        />
+        {hasUserMenu ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className="h-auto gap-2 px-1.5 py-1 hover:bg-[var(--surface-muted)]"
+                variant="ghost"
+                aria-label="Menu użytkownika"
+              >
+                {userIdentity}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>
+                <span className="block text-[var(--text)]">{user.name}</span>
+                {user.email ? (
+                  <span className="mt-0.5 block font-normal text-[var(--text-muted)]">
+                    {user.email}
+                  </span>
+                ) : null}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {profileHref ? (
+                <DropdownMenuItem asChild>
+                  <a href={profileHref}>
+                    <UserRound className="size-4" aria-hidden="true" />
+                    Profil i konto
+                  </a>
+                </DropdownMenuItem>
+              ) : null}
+              {portalSwitch ? (
+                <DropdownMenuItem asChild>
+                  <a href={portalSwitch.href}>
+                    <ArrowLeftRight className="size-4" aria-hidden="true" />
+                    {portalSwitch.label}
+                  </a>
+                </DropdownMenuItem>
+              ) : null}
+              {logoutAction ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <form action={logoutAction}>
+                    <DropdownMenuItem asChild>
+                      <button className="w-full" type="submit">
+                        <LogOut className="size-4" aria-hidden="true" />
+                        Wyloguj się
+                      </button>
+                    </DropdownMenuItem>
+                  </form>
+                </>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="flex items-center gap-2">{userIdentity}</div>
+        )}
       </div>
     </header>
   );

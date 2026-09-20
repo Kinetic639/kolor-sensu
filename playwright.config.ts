@@ -12,7 +12,7 @@ export default defineConfig({
   webServer: [
     {
       command: "pnpm --filter @kolor-sensu/web dev",
-      url: "http://localhost:3000",
+      url: "http://localhost:3000/icon.svg",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },

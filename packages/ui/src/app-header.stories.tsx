@@ -5,8 +5,17 @@ const meta = {
   title: "Portal/AppHeader",
   component: AppHeader,
   args: {
-    user: { name: "Anna Kowalska", role: "Psychoterapeutka" },
+    user: {
+      name: "Anna Kowalska",
+      role: "Psychoterapeutka",
+      email: "anna@example.com",
+    },
     notificationCount: 3,
+    profileHref: "/profil",
+    portalSwitch: {
+      label: "Przejdź do panelu administratora",
+      href: "http://localhost:3001",
+    },
   },
   parameters: { canvasPadding: false },
 } satisfies Meta<typeof AppHeader>;
