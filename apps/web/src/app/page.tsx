@@ -30,7 +30,7 @@ export default async function Home() {
 
   if (!content) {
     return (
-      <main className="flex min-h-screen items-center py-16">
+      <div className="flex min-h-[60vh] items-center py-16">
         <Container>
           <p className="text-sm text-[var(--ks-color-text-muted)]">
             KOLOR SENSU · Centrum Psychoterapii
@@ -39,12 +39,12 @@ export default async function Home() {
             Strona w przygotowaniu
           </h1>
         </Container>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="py-10">
+    <div className="py-10">
       <Container>
         <TestContentBlock
           body={content.body}
@@ -52,6 +52,6 @@ export default async function Home() {
           heading={content.heading}
         />
       </Container>
-    </main>
+    </div>
   );
 }

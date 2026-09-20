@@ -28,7 +28,7 @@ export default async function SpecjalisciPage() {
   );
 
   return (
-    <main className="py-10">
+    <div className="py-10">
       <Container>
         <h1 className="font-heading mb-6 text-3xl font-semibold text-[var(--text)] sm:text-4xl">
           Specjaliści
@@ -75,6 +75,6 @@ export default async function SpecjalisciPage() {
           </ul>
         )}
       </Container>
-    </main>
+    </div>
   );
 }

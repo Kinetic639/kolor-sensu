@@ -120,6 +120,15 @@ export {
   type PortalNavigationSection,
 } from "./portal-layout";
 export { PortalShell, type PortalShellProps } from "./portal-shell";
+export {
+  PublicSiteFooter,
+  PublicSiteHeader,
+  isPublicPathActive,
+  type PublicNavigationItem,
+  type PublicSiteFooterCenterProfile,
+  type PublicSiteFooterProps,
+  type PublicSiteHeaderProps,
+} from "./public-site-shell";
 export { Separator } from "./separator";
 export {
   Select,
@@ -132,6 +141,7 @@ export {
   SelectValue,
 } from "./select";
 export { ServiceStatusBadges, SpecialistOfferSummary } from "./service-admin";
+export { RoomAvailabilityExceptionItem, RoomStatusBadges } from "./room-admin";
 export {
   Sheet,
   SheetClose,

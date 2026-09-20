@@ -62,3 +62,18 @@ Specialist prices, modality, duration overrides, and client acceptance remain in
 `specialist_services` and are displayed read-only. Playwright covers the real Admin
 workflow, responsive widths, duplicate-safe errors, and role boundaries when secure
 credentials are available.
+
+## 12. Admin Gabinety vertical slice
+
+Admin Gabinety is a complete resource-management slice. `/gabinety` composes
+location management, room creation, search and lifecycle filters from server-loaded
+initial data and focused TanStack Query invalidation. `/gabinety/[id]` independently
+loads operational room data, public presentation, recurring opening hours and
+date-specific resource exceptions.
+
+RHF forms use the shared Location/Room Zod contracts. Opening hours are replaced by
+one atomic database operation; availability exceptions remain a date-oriented list,
+not a calendar. The UI intentionally says “resource availability” and never models
+specialist working time. Reusable status/exception presentation lives in
+`packages/ui`; permissions, mutations and room-domain behavior remain in the feature
+and Supabase packages.

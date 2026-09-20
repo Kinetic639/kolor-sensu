@@ -218,4 +218,154 @@ $$;
 
 RESET ROLE;
 
+-- Complete room-management slice: profile, recurring hours, and exceptions.
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"60000000-0000-4000-8000-000000000001","role":"authenticated"}',
+  true
+);
+SET LOCAL ROLE authenticated;
+
+INSERT INTO public.room_public_profiles (
+  room_id, display_name, short_description, amenities, published
+)
+VALUES (
+  (SELECT id FROM public.rooms WHERE slug = 'test-room-1' LIMIT 1),
+  'Public Test Room', 'Safe public copy', ARRAY['winda'], false
+);
+
+SELECT public.replace_room_opening_hours(
+  (SELECT id FROM public.rooms WHERE slug = 'test-room-1' LIMIT 1),
+  '[{"weekday":1,"starts_at":"08:00","ends_at":"12:00"},{"weekday":1,"starts_at":"13:00","ends_at":"18:00"}]'::jsonb
+);
+
+DO $$
+DECLARE
+  test_room_id uuid := (SELECT id FROM public.rooms WHERE slug = 'test-room-1' LIMIT 1);
+BEGIN
+  IF (SELECT count(*) FROM public.room_opening_hours WHERE room_id = test_room_id) <> 2 THEN
+    RAISE EXCEPTION 'H: admin could not define recurring opening hours';
+  END IF;
+
+  BEGIN
+    PERFORM public.replace_room_opening_hours(
+      test_room_id,
+      '[{"weekday":1,"starts_at":"09:00","ends_at":"14:00"},{"weekday":1,"starts_at":"12:00","ends_at":"16:00"}]'::jsonb
+    );
+    RAISE EXCEPTION 'J: overlapping recurring intervals were accepted';
+  EXCEPTION
+    WHEN exclusion_violation THEN NULL;
+  END;
+
+  IF (SELECT count(*) FROM public.room_opening_hours WHERE room_id = test_room_id) <> 2 THEN
+    RAISE EXCEPTION 'K: failed weekly replacement was not atomic';
+  END IF;
+
+  BEGIN
+    INSERT INTO public.room_opening_hours (room_id, weekday, starts_at, ends_at)
+    VALUES (test_room_id, 2, '18:00', '08:00');
+    RAISE EXCEPTION 'I: reversed recurring interval was accepted';
+  EXCEPTION
+    WHEN check_violation OR data_exception THEN NULL;
+  END;
+
+  INSERT INTO public.room_availability_exceptions (room_id, date, type, reason)
+  VALUES (test_room_id, current_date + 10, 'closed_all_day', 'Holiday');
+
+  INSERT INTO public.room_availability_exceptions (
+    room_id, date, type, starts_at, ends_at, reason
+  ) VALUES (
+    test_room_id, current_date + 11, 'blocked_interval', '12:00', '15:00', 'Maintenance'
+  );
+
+  BEGIN
+    INSERT INTO public.room_availability_exceptions (
+      room_id, date, type, starts_at, ends_at
+    ) VALUES (
+      test_room_id, current_date + 12, 'closed_all_day', '12:00', '13:00'
+    );
+    RAISE EXCEPTION 'N: invalid all-day exception time combination was accepted';
+  EXCEPTION
+    WHEN check_violation THEN NULL;
+  END;
+
+  UPDATE public.rooms
+  SET publicly_visible = true
+  WHERE id = test_room_id;
+END;
+$$;
+
+RESET ROLE;
+
+-- Specialist can read active resource schedule but cannot mutate it.
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"60000000-0000-4000-8000-000000000002","role":"authenticated"}',
+  true
+);
+SET LOCAL ROLE authenticated;
+
+DO $$
+DECLARE
+  test_room_id uuid := (SELECT id FROM public.rooms WHERE slug = 'test-room-1' LIMIT 1);
+BEGIN
+  IF (SELECT count(*) FROM public.room_opening_hours WHERE room_id = test_room_id) <> 2 THEN
+    RAISE EXCEPTION 'O: specialist could not read active-room opening hours';
+  END IF;
+  IF (SELECT count(*) FROM public.room_availability_exceptions WHERE room_id = test_room_id) <> 2 THEN
+    RAISE EXCEPTION 'O: specialist could not read active-room exceptions';
+  END IF;
+  BEGIN
+    INSERT INTO public.room_opening_hours (room_id, weekday, starts_at, ends_at)
+    VALUES (test_room_id, 2, '08:00', '10:00');
+    RAISE EXCEPTION 'D: specialist unexpectedly mutated room schedule';
+  EXCEPTION
+    WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$$;
+
+RESET ROLE;
+
+-- Anon sees the profile only when all three publication flags are true.
+SELECT set_config('request.jwt.claims', '', true);
+SET LOCAL ROLE anon;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.room_public_profiles WHERE display_name = 'Public Test Room') THEN
+    RAISE EXCEPTION 'F: anon saw an unpublished room profile';
+  END IF;
+END;
+$$;
+
+RESET ROLE;
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"60000000-0000-4000-8000-000000000001","role":"authenticated"}',
+  true
+);
+SET LOCAL ROLE authenticated;
+UPDATE public.room_public_profiles SET published = true
+WHERE display_name = 'Public Test Room';
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '', true);
+SET LOCAL ROLE anon;
+DO $$
+BEGIN
+  IF (SELECT count(*) FROM public.room_public_profiles WHERE display_name = 'Public Test Room') <> 1 THEN
+    RAISE EXCEPTION 'G: anon could not see fully published room profile';
+  END IF;
+  BEGIN
+    PERFORM 1 FROM public.room_opening_hours LIMIT 1;
+    RAISE EXCEPTION 'RLS: anon unexpectedly read room schedule';
+  EXCEPTION
+    WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$$;
+
+RESET ROLE;
+
 ROLLBACK;

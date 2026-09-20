@@ -1,10 +1,12 @@
 import {
+  roomAvailabilityExceptionCreateSchema,
   roomCapacitySchema,
   roomCreateSchema,
+  roomOpeningHoursIntervalSchema,
   roomSlugSchema,
 } from "@repo/contracts";
 import { describe, expect, it } from "vitest";
-import { roomMappers } from "./rooms";
+import { calculateRoomAvailabilityForDate, roomMappers } from "./rooms";
 
 describe("room domain schemas", () => {
   it("accepts stable URL-safe room slugs and rejects unsafe values", () => {
@@ -27,6 +29,66 @@ describe("room domain schemas", () => {
     expect(result.active).toBe(true);
     expect(result.publiclyVisible).toBe(false);
     expect(result.capacity).toBe(1);
+  });
+
+  it("rejects reversed opening hours and invalid exception time shapes", () => {
+    expect(
+      roomOpeningHoursIntervalSchema.safeParse({
+        weekday: 1,
+        startsAt: "18:00",
+        endsAt: "08:00",
+      }).success,
+    ).toBe(false);
+    expect(
+      roomAvailabilityExceptionCreateSchema.safeParse({
+        roomId: "20000000-0000-4000-8000-000000000001",
+        date: "2026-12-24",
+        type: "blocked_interval",
+        startsAt: "12:00",
+        endsAt: "10:00",
+        reason: null,
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("effective room availability", () => {
+  const openingHours = [{ weekday: 1, startsAt: "08:00", endsAt: "18:00" }];
+
+  it("subtracts blocked intervals and merges extra availability", () => {
+    expect(
+      calculateRoomAvailabilityForDate({
+        roomActive: true,
+        weekday: 1,
+        openingHours,
+        exceptions: [
+          {
+            type: "blocked_interval",
+            startsAt: "12:00",
+            endsAt: "14:00",
+          },
+          {
+            type: "extra_available_interval",
+            startsAt: "18:00",
+            endsAt: "20:00",
+          },
+        ],
+      }),
+    ).toEqual([
+      { startsAt: "08:00", endsAt: "12:00" },
+      { startsAt: "14:00", endsAt: "20:00" },
+    ]);
+  });
+
+  it("lets an all-day closure override the recurring schedule", () => {
+    expect(
+      calculateRoomAvailabilityForDate({
+        roomActive: true,
+        weekday: 1,
+        openingHours,
+        exceptions: [{ type: "closed_all_day", startsAt: null, endsAt: null }],
+      }),
+    ).toEqual([]);
   });
 });
 

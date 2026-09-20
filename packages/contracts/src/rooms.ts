@@ -73,8 +73,7 @@ export const roomAvailabilityExceptionCreateSchema = z
     roomTimedExceptionSchema,
   ])
   .refine(
-    (value) =>
-      value.type === "closed_all_day" || value.startsAt < value.endsAt,
+    (value) => value.type === "closed_all_day" || value.startsAt < value.endsAt,
     { message: "Start time must be before end time.", path: ["endsAt"] },
   );
 
@@ -130,8 +129,7 @@ export interface RoomPublicProfile extends RoomPublicProfileInput {
   updatedAt: string;
 }
 
-export interface RoomOpeningHoursInterval
-  extends RoomOpeningHoursIntervalInput {
+export interface RoomOpeningHoursInterval extends RoomOpeningHoursIntervalInput {
   id: string;
   roomId: string;
   createdAt: string;
@@ -139,9 +137,7 @@ export interface RoomOpeningHoursInterval
 }
 
 export type RoomAvailabilityExceptionType =
-  | "closed_all_day"
-  | "blocked_interval"
-  | "extra_available_interval";
+  "closed_all_day" | "blocked_interval" | "extra_available_interval";
 
 export interface RoomAvailabilityException {
   id: string;
@@ -159,10 +155,7 @@ export interface EffectiveRoomAvailabilityInput {
   roomActive: boolean;
   weekday: number;
   openingHours: RoomOpeningHoursIntervalInput[];
-  exceptions: Pick<
-    RoomAvailabilityException,
-    "type" | "startsAt" | "endsAt"
-  >[];
+  exceptions: Pick<RoomAvailabilityException, "type" | "startsAt" | "endsAt">[];
 }
 
 export interface RoomTimeInterval {

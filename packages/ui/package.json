@@ -27,6 +27,8 @@
     "./portal-layout": "./src/portal-layout.tsx",
     "./portal-shell": "./src/portal-shell.tsx",
     "./notification": "./src/notification.tsx",
+    "./public-site-shell": "./src/public-site-shell.tsx",
+    "./room-admin": "./src/room-admin.tsx",
     "./select": "./src/select.tsx",
     "./service-admin": "./src/service-admin.tsx",
     "./separator": "./src/separator.tsx",

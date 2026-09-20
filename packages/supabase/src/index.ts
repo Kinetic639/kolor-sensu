@@ -78,11 +78,21 @@ export {
   updateHomeDraft,
 } from "./cms";
 export {
+  calculateRoomAvailabilityForDate,
+  createRoomAvailabilityException,
   createRoom,
   disableRoom,
+  getActiveRoomResourceData,
   getRoomByIdAdmin,
+  getRoomOpeningHours,
+  getRoomPublicProfileAdmin,
   listActiveRoomsForSpecialist,
+  listRoomAvailabilityExceptions,
   listRoomsAdmin,
+  removeRoomAvailabilityException,
+  replaceRoomOpeningHours,
   roomMappers,
+  updateRoomAvailabilityException,
+  updateRoomPublicProfile,
   updateRoom,
 } from "./rooms";
