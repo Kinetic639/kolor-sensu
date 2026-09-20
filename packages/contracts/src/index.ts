@@ -63,15 +63,33 @@ export type {
 export { homePageContentSchema } from "@repo/contracts/cms";
 export type { HomeContentAdmin, HomePageContent } from "@repo/contracts/cms";
 export {
+  roomAvailabilityExceptionCreateSchema,
+  roomAvailabilityExceptionUpdateSchema,
   roomCapacitySchema,
   roomCreateSchema,
+  roomOpeningHoursIntervalSchema,
+  roomOpeningHoursReplaceSchema,
+  roomPublicProfileSchema,
   roomSlugSchema,
+  roomTimeSchema,
   roomUpdateSchema,
 } from "@repo/contracts/rooms";
 export type {
+  AdminRoomDetail,
   AdminRoomSummary,
+  EffectiveRoomAvailabilityInput,
   Room,
+  RoomAvailabilityException,
+  RoomAvailabilityExceptionCreate,
+  RoomAvailabilityExceptionType,
+  RoomAvailabilityExceptionUpdate,
   RoomCreate,
+  RoomOpeningHoursInterval,
+  RoomOpeningHoursIntervalInput,
+  RoomOpeningHoursReplace,
+  RoomPublicProfile,
+  RoomPublicProfileInput,
+  RoomTimeInterval,
   RoomUpdate,
 } from "@repo/contracts/rooms";
 
