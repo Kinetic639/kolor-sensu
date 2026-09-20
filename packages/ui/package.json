@@ -28,6 +28,7 @@
     "./portal-shell": "./src/portal-shell.tsx",
     "./notification": "./src/notification.tsx",
     "./select": "./src/select.tsx",
+    "./service-admin": "./src/service-admin.tsx",
     "./separator": "./src/separator.tsx",
     "./sidebar": "./src/sidebar.tsx",
     "./specialist-admin": "./src/specialist-admin.tsx",

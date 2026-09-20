@@ -1,10 +1,6 @@
-import { PortalRoutePlaceholder } from "@repo/ui/portal-content";
+import { ServicesList } from "@/features/services/services-list";
+import { loadAdminServices } from "@/features/services/loaders";
 
-export default function OfferPage() {
-  return (
-    <PortalRoutePlaceholder
-      title="Oferta"
-      description="Katalog usług centrum i oferty specjalistów."
-    />
-  );
+export default async function OfferPage() {
+  return <ServicesList initialData={await loadAdminServices()} />;
 }

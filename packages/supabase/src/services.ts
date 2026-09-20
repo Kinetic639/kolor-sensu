@@ -19,6 +19,16 @@ type ServiceRow = Database["public"]["Tables"]["services"]["Row"];
 type SpecialistServiceRow =
   Database["public"]["Tables"]["specialist_services"]["Row"];
 
+export interface AdminServiceSummary extends Service {
+  specialistOfferCount: number;
+}
+
+export interface AdminServiceOfferSummary extends SpecialistService {
+  specialistName: string;
+  specialistPublicSlug: string;
+  specialistProfessionalTitle: string | null;
+}
+
 type PublicServiceQueryRow = Pick<
   ServiceRow,
   | "id"
@@ -125,6 +135,25 @@ export async function listServicesAdmin(
   return data.map(mapService);
 }
 
+export async function listServiceSummariesAdmin(
+  client: SupabaseClient<Database>,
+): Promise<AdminServiceSummary[]> {
+  const { data, error } = await client
+    .from("services")
+    .select("*, specialist_services(id)")
+    .order("sort_order");
+
+  if (error) throw error;
+  return (
+    data as unknown as Array<
+      ServiceRow & { specialist_services: { id: string }[] }
+    >
+  ).map((row) => ({
+    ...mapService(row),
+    specialistOfferCount: row.specialist_services.length,
+  }));
+}
+
 export async function getServiceByIdAdmin(
   client: SupabaseClient<Database>,
   id: string,
@@ -210,6 +239,46 @@ export async function listSpecialistOffersAdmin(
 
   if (error) throw error;
   return data.map(mapSpecialistService);
+}
+
+export async function listSpecialistOffersForServiceAdmin(
+  client: SupabaseClient<Database>,
+  serviceId: string,
+): Promise<AdminServiceOfferSummary[]> {
+  const { data, error } = await client
+    .from("specialist_services")
+    .select(
+      `
+        *,
+        specialists!inner (
+          public_slug,
+          professional_title,
+          specialist_public_profiles (display_name)
+        )
+      `,
+    )
+    .eq("service_id", serviceId)
+    .order("created_at");
+
+  if (error) throw error;
+  return (
+    data as unknown as Array<
+      SpecialistServiceRow & {
+        specialists: {
+          public_slug: string;
+          professional_title: string | null;
+          specialist_public_profiles: { display_name: string } | null;
+        };
+      }
+    >
+  ).map((row) => ({
+    ...mapSpecialistService(row),
+    specialistName:
+      row.specialists.specialist_public_profiles?.display_name ??
+      row.specialists.public_slug,
+    specialistPublicSlug: row.specialists.public_slug,
+    specialistProfessionalTitle: row.specialists.professional_title,
+  }));
 }
 
 export async function listSpecialistOffersForAdmin(

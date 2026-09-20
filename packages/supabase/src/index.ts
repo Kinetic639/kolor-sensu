@@ -61,13 +61,16 @@ export {
   listPublicServices,
   listPublicSpecialistOffersForService,
   listServicesAdmin,
+  listServiceSummariesAdmin,
   listSpecialistOffersAdmin,
+  listSpecialistOffersForServiceAdmin,
   listSpecialistOffersForAdmin,
   serviceMappers,
   updateService,
   updateSpecialistOfferStateAdmin,
   upsertMySpecialistService,
 } from "./services";
+export type { AdminServiceOfferSummary, AdminServiceSummary } from "./services";
 export {
   getHomeContentAdmin,
   getPublishedHomeContent,

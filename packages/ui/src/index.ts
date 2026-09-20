@@ -131,6 +131,7 @@ export {
   SelectTrigger,
   SelectValue,
 } from "./select";
+export { ServiceStatusBadges, SpecialistOfferSummary } from "./service-admin";
 export {
   Sheet,
   SheetClose,
