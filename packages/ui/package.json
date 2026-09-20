@@ -5,6 +5,7 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
+    "./app-header": "./src/app-header.tsx",
     "./avatar": "./src/avatar.tsx",
     "./auth-shell": "./src/auth-shell.tsx",
     "./badge": "./src/badge.tsx",
@@ -18,6 +19,8 @@
     "./lib/utils": "./src/lib/utils.ts",
     "./popover": "./src/popover.tsx",
     "./portal-content": "./src/portal-content.tsx",
+    "./portal-dashboard": "./src/portal-dashboard.tsx",
+    "./portal-dashboards": "./src/portal-dashboards.tsx",
     "./portal-layout": "./src/portal-layout.tsx",
     "./notification": "./src/notification.tsx",
     "./select": "./src/select.tsx",

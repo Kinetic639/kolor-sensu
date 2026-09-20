@@ -91,8 +91,8 @@ export function SectionHeader({
 const metricToneClasses = {
   mint: "bg-[var(--accent-mint)] text-[var(--success)]",
   blue: "bg-[var(--accent-blue)] text-[var(--info)]",
-  lilac: "bg-[var(--accent-lilac)] text-[#6848d7]",
-  peach: "bg-[var(--accent-peach)] text-[#c45f18]",
+  lilac: "bg-[var(--accent-lilac)] text-[var(--accent-lilac-foreground)]",
+  peach: "bg-[var(--accent-peach)] text-[var(--accent-peach-foreground)]",
   rose: "bg-[var(--accent-rose)] text-[var(--danger)]",
 } as const;
 

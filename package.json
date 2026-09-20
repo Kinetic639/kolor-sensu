@@ -9,6 +9,7 @@
     "test": "turbo run test",
     "test:run": "turbo run test:run",
     "test:e2e:auth": "playwright test tests/e2e/auth.spec.ts",
+    "test:visual:portal": "playwright test --config=playwright.storybook.config.ts",
     "storybook": "turbo run storybook --filter=@kolor-sensu/storybook",
     "storybook:build": "turbo run storybook:build --filter=@kolor-sensu/storybook",
     "supabase:start": "supabase start",

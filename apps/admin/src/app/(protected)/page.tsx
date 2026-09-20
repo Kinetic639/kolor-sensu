@@ -2,7 +2,11 @@ import { logout } from "@/app/actions/auth";
 import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
+  getCenterSettings,
+  listLocations,
   listPendingSpecialistDrafts,
+  listServicesAdmin,
+  listSpecialistOffersAdmin,
   listSpecialistsForAdmin,
 } from "@repo/supabase";
 import { Badge } from "@repo/ui/badge";
@@ -13,10 +17,24 @@ import { Container } from "@repo/ui/container";
 export default async function Home() {
   const authorization = await requirePortalRole();
   const client = await createClient();
-  const [specialists, pendingDrafts] = await Promise.all([
+  const [
+    specialists,
+    pendingDrafts,
+    centerSettings,
+    locations,
+    services,
+    specialistOffers,
+  ] = await Promise.all([
     listSpecialistsForAdmin(client),
     listPendingSpecialistDrafts(client),
+    getCenterSettings(client),
+    listLocations(client),
+    listServicesAdmin(client),
+    listSpecialistOffersAdmin(client),
   ]);
+  const activeServiceCount = services.filter(
+    (service) => service.active,
+  ).length;
   const displayName = [
     authorization.profile.first_name,
     authorization.profile.last_name,
@@ -42,6 +60,14 @@ export default async function Home() {
             <Badge variant="info">Specjaliści: {specialists.length}</Badge>
             <Badge variant={pendingDrafts.length > 0 ? "warning" : "neutral"}>
               Oczekujące szkice: {pendingDrafts.length}
+            </Badge>
+            <Badge variant="info">Centrum: {centerSettings.businessName}</Badge>
+            <Badge variant="info">Lokalizacje: {locations.length}</Badge>
+            <Badge variant="info">
+              Usługi: {services.length} (aktywne: {activeServiceCount})
+            </Badge>
+            <Badge variant="info">
+              Oferty specjalistów: {specialistOffers.length}
             </Badge>
           </div>
           <form action={logout} className="mt-6">

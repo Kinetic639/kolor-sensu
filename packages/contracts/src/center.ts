@@ -1,0 +1,146 @@
+import { z } from "zod";
+
+const ianaTimezones = new Set(Intl.supportedValuesOf("timeZone"));
+
+export const timezoneSchema = z
+  .string()
+  .refine((value) => ianaTimezones.has(value), "Use a valid IANA timezone.");
+
+export const localeSchema = z
+  .string()
+  .regex(/^[a-z]{2}(-[A-Z]{2})?$/, "Use a BCP 47 locale like pl-PL.");
+
+export const currencyCodeSchema = z
+  .string()
+  .regex(/^[A-Z]{3}$/, "Use a 3-letter ISO 4217 currency code.");
+
+export const countryCodeSchema = z
+  .string()
+  .regex(/^[A-Z]{2}$/, "Use a 2-letter ISO 3166-1 country code.");
+
+export const locationSlugSchema = z
+  .string()
+  .min(3)
+  .max(100)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be URL safe.");
+
+export const centerSettingsUpdateSchema = z
+  .object({
+    businessName: z.string().trim().min(1).max(200),
+    timezone: timezoneSchema,
+    defaultLocale: localeSchema,
+    defaultCurrency: currencyCodeSchema,
+    bookingEnabled: z.boolean(),
+    defaultVisitBufferMinutes: z.number().int().min(0).max(240),
+    minBookingLeadMinutes: z.number().int().min(0).max(10_080),
+    maxBookingHorizonDays: z.number().int().min(1).max(730),
+    cancellationWindowHours: z.number().int().min(0).max(720),
+    phone: z.string().trim().max(40).nullable(),
+    email: z.email().max(320).nullable(),
+  })
+  .partial();
+
+export const centerPublicProfileUpdateSchema = z
+  .object({
+    displayName: z.string().trim().min(1).max(200),
+    shortDescription: z.string().trim().max(500).nullable(),
+    logoPath: z.string().max(2048).nullable(),
+    publicEmail: z.email().max(320).nullable(),
+    publicPhone: z.string().trim().max(40).nullable(),
+    websiteUrl: z.url().max(2048).nullable(),
+    instagramUrl: z.url().max(2048).nullable(),
+    facebookUrl: z.url().max(2048).nullable(),
+    published: z.boolean(),
+  })
+  .partial();
+
+export const locationCreateSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  slug: locationSlugSchema,
+  addressLine1: z.string().trim().max(200).nullable().default(null),
+  addressLine2: z.string().trim().max(200).nullable().default(null),
+  postalCode: z.string().trim().max(20).nullable().default(null),
+  city: z.string().trim().max(100).nullable().default(null),
+  countryCode: countryCodeSchema.default("PL"),
+  active: z.boolean().default(true),
+  publiclyVisible: z.boolean().default(true),
+  sortOrder: z.number().int().min(0).max(10_000).default(0),
+});
+
+export const locationUpdateSchema = locationCreateSchema.partial();
+
+export type CenterSettingsUpdate = z.infer<typeof centerSettingsUpdateSchema>;
+export type CenterPublicProfileUpdate = z.infer<
+  typeof centerPublicProfileUpdateSchema
+>;
+export type LocationCreate = z.infer<typeof locationCreateSchema>;
+export type LocationUpdate = z.infer<typeof locationUpdateSchema>;
+
+export interface CenterSettings {
+  businessName: string;
+  timezone: string;
+  defaultLocale: string;
+  defaultCurrency: string;
+  bookingEnabled: boolean;
+  defaultVisitBufferMinutes: number;
+  minBookingLeadMinutes: number;
+  maxBookingHorizonDays: number;
+  cancellationWindowHours: number;
+  phone: string | null;
+  email: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CenterPublicProfile {
+  displayName: string;
+  shortDescription: string | null;
+  logoPath: string | null;
+  publicEmail: string | null;
+  publicPhone: string | null;
+  websiteUrl: string | null;
+  instagramUrl: string | null;
+  facebookUrl: string | null;
+  published: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublicCenterProfile {
+  displayName: string;
+  shortDescription: string | null;
+  logoPath: string | null;
+  publicEmail: string | null;
+  publicPhone: string | null;
+  websiteUrl: string | null;
+  instagramUrl: string | null;
+  facebookUrl: string | null;
+}
+
+export interface Location {
+  id: string;
+  name: string;
+  slug: string;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  postalCode: string | null;
+  city: string | null;
+  countryCode: string;
+  active: boolean;
+  publiclyVisible: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublicLocation {
+  id: string;
+  name: string;
+  slug: string;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  postalCode: string | null;
+  city: string | null;
+  countryCode: string;
+  sortOrder: number;
+}

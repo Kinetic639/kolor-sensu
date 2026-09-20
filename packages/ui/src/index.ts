@@ -1,4 +1,9 @@
 export { Avatar, AvatarFallback, AvatarImage } from "./avatar";
+export {
+  AppHeader,
+  type AppHeaderProps,
+  type AppHeaderUser,
+} from "./app-header";
 export { AuthShell, type AuthShellProps } from "./auth-shell";
 export { Badge, badgeVariants, type BadgeProps } from "./badge";
 export { Button, buttonVariants, type ButtonProps } from "./button";
@@ -52,11 +57,35 @@ export {
   type StatusBadgeProps,
 } from "./portal-content";
 export {
-  AppHeader,
+  AppointmentList,
+  AppointmentListItem,
+  AttentionItem,
+  AttentionList,
+  AvailabilitySummary,
+  DashboardSection,
+  EventList,
+  SummaryList,
+  type AppointmentItemData,
+  type AppointmentListItemProps,
+  type AppointmentListProps,
+  type AttentionItemData,
+  type AttentionListProps,
+  type AvailabilityDayData,
+  type DashboardSectionProps,
+  type EventItemData,
+  type SummaryItemData,
+  type SummaryListProps,
+} from "./portal-dashboard";
+export {
+  AdminDashboard,
+  SpecialistDashboard,
+  type AdminDashboardProps,
+  type SpecialistDashboardProps,
+} from "./portal-dashboards";
+export {
   AppShell,
   AppSidebar,
   MobileBottomNav,
-  type AppHeaderProps,
   type AppShellProps,
   type AppSidebarProps,
   type MobileBottomNavProps,

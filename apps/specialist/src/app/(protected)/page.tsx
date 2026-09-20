@@ -2,9 +2,13 @@ import { logout } from "@/app/actions/auth";
 import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
+  getCenterPublicProfile,
   getMyDraft,
   getMyPublishedProfile,
   getMySpecialist,
+  listAvailableServicesForSpecialist,
+  listLocations,
+  listMySpecialistServices,
 } from "@repo/supabase";
 import { Badge } from "@repo/ui/badge";
 import { Button } from "@repo/ui/button";
@@ -15,12 +19,21 @@ export default async function Home() {
   const authorization = await requirePortalRole();
   const client = await createClient();
   const specialist = await getMySpecialist(client, authorization.user.id);
-  const [publishedProfile, draft] = specialist
-    ? await Promise.all([
-        getMyPublishedProfile(client, specialist.id),
-        getMyDraft(client, specialist.id),
-      ])
-    : [null, null];
+  const [
+    publishedProfile,
+    draft,
+    centerProfile,
+    locations,
+    availableServices,
+    myServices,
+  ] = await Promise.all([
+    specialist ? getMyPublishedProfile(client, specialist.id) : null,
+    specialist ? getMyDraft(client, specialist.id) : null,
+    getCenterPublicProfile(client),
+    listLocations(client),
+    listAvailableServicesForSpecialist(client),
+    listMySpecialistServices(client, specialist?.id),
+  ]);
   const displayName = [
     authorization.profile.first_name,
     authorization.profile.last_name,
@@ -67,6 +80,33 @@ export default async function Home() {
                 }
               >
                 {draft?.status ?? "Brak"}
+              </Badge>
+            </div>
+            <div>
+              <p className="text-[var(--text-muted)]">Tożsamość centrum</p>
+              <Badge
+                className="mt-2"
+                variant={centerProfile ? "success" : "neutral"}
+              >
+                {centerProfile?.displayName ?? "Brak"}
+              </Badge>
+            </div>
+            <div>
+              <p className="text-[var(--text-muted)]">Lokalizacje</p>
+              <Badge className="mt-2" variant="info">
+                {locations.length}
+              </Badge>
+            </div>
+            <div>
+              <p className="text-[var(--text-muted)]">Katalog usług</p>
+              <Badge className="mt-2" variant="info">
+                {availableServices.length}
+              </Badge>
+            </div>
+            <div>
+              <p className="text-[var(--text-muted)]">Moje usługi</p>
+              <Badge className="mt-2" variant="info">
+                {myServices.length}
               </Badge>
             </div>
           </div>

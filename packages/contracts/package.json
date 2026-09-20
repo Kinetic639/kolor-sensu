@@ -5,7 +5,9 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
+    "./center": "./src/center.ts",
     "./database": "./src/database.types.ts",
+    "./services": "./src/services.ts",
     "./specialist": "./src/specialist.ts"
   },
   "scripts": {

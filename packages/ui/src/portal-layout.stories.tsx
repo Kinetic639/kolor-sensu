@@ -7,9 +7,9 @@ import {
   UserRound,
 } from "lucide-react";
 import type { Meta, StoryObj } from "@storybook/react";
+import { AppHeader } from "./app-header";
 import { MetricCard, PageHeader } from "./portal-content";
 import {
-  AppHeader,
   AppShell,
   AppSidebar,
   MobileBottomNav,
@@ -55,8 +55,7 @@ function PortalShellExample() {
       header={
         <AppHeader
           notificationCount={3}
-          userName="Anna Kowalska"
-          userRole="Psychoterapeutka"
+          user={{ name: "Anna Kowalska", role: "Psychoterapeutka" }}
         />
       }
       mobileNavigation={<MobileBottomNav items={mobileItems} />}

@@ -14,6 +14,150 @@ export type Database = {
   };
   public: {
     Tables: {
+      center_public_profile: {
+        Row: {
+          created_at: string;
+          display_name: string;
+          facebook_url: string | null;
+          id: number;
+          instagram_url: string | null;
+          logo_path: string | null;
+          public_email: string | null;
+          public_phone: string | null;
+          published: boolean;
+          short_description: string | null;
+          updated_at: string;
+          website_url: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          display_name: string;
+          facebook_url?: string | null;
+          id?: number;
+          instagram_url?: string | null;
+          logo_path?: string | null;
+          public_email?: string | null;
+          public_phone?: string | null;
+          published?: boolean;
+          short_description?: string | null;
+          updated_at?: string;
+          website_url?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          display_name?: string;
+          facebook_url?: string | null;
+          id?: number;
+          instagram_url?: string | null;
+          logo_path?: string | null;
+          public_email?: string | null;
+          public_phone?: string | null;
+          published?: boolean;
+          short_description?: string | null;
+          updated_at?: string;
+          website_url?: string | null;
+        };
+        Relationships: [];
+      };
+      center_settings: {
+        Row: {
+          booking_enabled: boolean;
+          business_name: string;
+          cancellation_window_hours: number;
+          created_at: string;
+          default_currency: string;
+          default_locale: string;
+          default_visit_buffer_minutes: number;
+          email: string | null;
+          id: number;
+          max_booking_horizon_days: number;
+          min_booking_lead_minutes: number;
+          phone: string | null;
+          timezone: string;
+          updated_at: string;
+        };
+        Insert: {
+          booking_enabled?: boolean;
+          business_name: string;
+          cancellation_window_hours?: number;
+          created_at?: string;
+          default_currency?: string;
+          default_locale?: string;
+          default_visit_buffer_minutes?: number;
+          email?: string | null;
+          id?: number;
+          max_booking_horizon_days?: number;
+          min_booking_lead_minutes?: number;
+          phone?: string | null;
+          timezone?: string;
+          updated_at?: string;
+        };
+        Update: {
+          booking_enabled?: boolean;
+          business_name?: string;
+          cancellation_window_hours?: number;
+          created_at?: string;
+          default_currency?: string;
+          default_locale?: string;
+          default_visit_buffer_minutes?: number;
+          email?: string | null;
+          id?: number;
+          max_booking_horizon_days?: number;
+          min_booking_lead_minutes?: number;
+          phone?: string | null;
+          timezone?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      locations: {
+        Row: {
+          active: boolean;
+          address_line1: string | null;
+          address_line2: string | null;
+          city: string | null;
+          country_code: string;
+          created_at: string;
+          id: string;
+          name: string;
+          postal_code: string | null;
+          publicly_visible: boolean;
+          slug: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          address_line1?: string | null;
+          address_line2?: string | null;
+          city?: string | null;
+          country_code?: string;
+          created_at?: string;
+          id?: string;
+          name: string;
+          postal_code?: string | null;
+          publicly_visible?: boolean;
+          slug: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          address_line1?: string | null;
+          address_line2?: string | null;
+          city?: string | null;
+          country_code?: string;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          postal_code?: string | null;
+          publicly_visible?: boolean;
+          slug?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           active: boolean;
@@ -40,6 +184,54 @@ export type Database = {
           first_name?: string;
           id?: string;
           last_name?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      services: {
+        Row: {
+          active: boolean;
+          booking_enabled: boolean;
+          category: Database["public"]["Enums"]["service_category"];
+          created_at: string;
+          default_duration_minutes: number;
+          description: string | null;
+          id: string;
+          name: string;
+          publicly_visible: boolean;
+          short_description: string | null;
+          slug: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          booking_enabled?: boolean;
+          category?: Database["public"]["Enums"]["service_category"];
+          created_at?: string;
+          default_duration_minutes: number;
+          description?: string | null;
+          id?: string;
+          name: string;
+          publicly_visible?: boolean;
+          short_description?: string | null;
+          slug: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          booking_enabled?: boolean;
+          category?: Database["public"]["Enums"]["service_category"];
+          created_at?: string;
+          default_duration_minutes?: number;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          publicly_visible?: boolean;
+          short_description?: string | null;
+          slug?: string;
+          sort_order?: number;
           updated_at?: string;
         };
         Relationships: [];
@@ -203,6 +395,66 @@ export type Database = {
           },
         ];
       };
+      specialist_services: {
+        Row: {
+          accepting_new_clients: boolean;
+          active: boolean;
+          created_at: string;
+          currency_code: string;
+          duration_minutes: number | null;
+          id: string;
+          price_minor: number;
+          service_id: string;
+          specialist_id: string;
+          supports_in_person: boolean;
+          supports_online: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          accepting_new_clients?: boolean;
+          active?: boolean;
+          created_at?: string;
+          currency_code?: string;
+          duration_minutes?: number | null;
+          id?: string;
+          price_minor: number;
+          service_id: string;
+          specialist_id: string;
+          supports_in_person?: boolean;
+          supports_online?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          accepting_new_clients?: boolean;
+          active?: boolean;
+          created_at?: string;
+          currency_code?: string;
+          duration_minutes?: number | null;
+          id?: string;
+          price_minor?: number;
+          service_id?: string;
+          specialist_id?: string;
+          supports_in_person?: boolean;
+          supports_online?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "specialist_services_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "specialist_services_specialist_id_fkey";
+            columns: ["specialist_id"];
+            isOneToOne: false;
+            referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       specialists: {
         Row: {
           accepting_new_clients: boolean;
@@ -315,6 +567,13 @@ export type Database = {
       app_role: "admin" | "specialist";
       profile_publication_status:
         "draft" | "pending_review" | "published" | "rejected";
+      service_category:
+        | "consultation"
+        | "psychotherapy"
+        | "couples_therapy"
+        | "assessment"
+        | "workshop_related"
+        | "other";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -448,6 +707,14 @@ export const Constants = {
         "pending_review",
         "published",
         "rejected",
+      ],
+      service_category: [
+        "consultation",
+        "psychotherapy",
+        "couples_therapy",
+        "assessment",
+        "workshop_related",
+        "other",
       ],
     },
   },
