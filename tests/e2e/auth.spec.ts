@@ -82,6 +82,22 @@ test.describe("authenticated dual-role account", () => {
       page.getByRole("link", { name: "Specjaliści" }),
     ).toHaveAttribute("aria-current", "page");
 
+    const firstSpecialist = page
+      .getByRole("link", { name: /Szczegóły/ })
+      .first();
+    if (await firstSpecialist.isVisible()) {
+      await firstSpecialist.click();
+      await expect(page.getByRole("tab", { name: "Przegląd" })).toBeVisible();
+      await page.getByRole("tab", { name: "Usługi i cennik" }).click();
+      await expect(
+        page.getByRole("tabpanel", { name: "Usługi i cennik" }),
+      ).toBeVisible();
+      await page.getByRole("tab", { name: "Profil publiczny" }).click();
+      await expect(
+        page.getByRole("tabpanel", { name: "Profil publiczny" }),
+      ).toBeVisible();
+    }
+
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(adminUrl);
     await expect(

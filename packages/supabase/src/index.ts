@@ -8,6 +8,7 @@ export type { PublicSupabaseEnv, SecretSupabaseEnv } from "./env";
 export {
   forgotPasswordSchema,
   getCurrentProfile,
+  getProfileByIdAdmin,
   getCurrentRoles,
   getCurrentUser,
   getPortalAuthorization,
@@ -34,15 +35,21 @@ export {
   getMyDraft,
   getMyPublishedProfile,
   getMySpecialist,
+  getLatestSpecialistDraftAdmin,
+  getSpecialistByIdAdmin,
+  getSpecialistPublicProfileAdmin,
   getPublishedSpecialistBySlug,
   listPendingSpecialistDrafts,
   listPublishedSpecialists,
   listSpecialistsForAdmin,
+  listSpecialistSummariesForAdmin,
   reviewSpecialistProfileDraft,
   saveMySpecialistProfileDraft,
   specialistMappers,
   submitProfileForReview,
+  createSpecialistMediaSignedUrl,
 } from "./specialists";
+export type { AdminSpecialistSummary } from "./specialists";
 export {
   createService,
   disableMySpecialistService,
@@ -57,8 +64,16 @@ export {
   listServiceSummariesAdmin,
   listSpecialistOffersAdmin,
   listSpecialistOffersForServiceAdmin,
+  listSpecialistOffersForAdmin,
   serviceMappers,
   updateService,
+  updateSpecialistOfferStateAdmin,
   upsertMySpecialistService,
 } from "./services";
 export type { AdminServiceOfferSummary, AdminServiceSummary } from "./services";
+export {
+  getHomeContentAdmin,
+  getPublishedHomeContent,
+  publishHomeContent,
+  updateHomeDraft,
+} from "./cms";

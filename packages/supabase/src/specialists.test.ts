@@ -63,4 +63,45 @@ describe("specialist domain mapping", () => {
       acceptingNewClients: false,
     });
   });
+
+  it("maps the lightweight admin summary", () => {
+    expect(
+      specialistMappers.adminSummary({
+        id: "specialist-id",
+        user_id: "user-id",
+        active: true,
+        accepting_new_clients: true,
+        public_slug: "anna-kowalska",
+        professional_title: "Psychoterapeutka",
+        joined_at: "2026-09-01T00:00:00Z",
+        created_at: "2026-09-01T00:00:00Z",
+        updated_at: "2026-09-01T00:00:00Z",
+        profile: {
+          id: "user-id",
+          first_name: "Anna",
+          last_name: "Kowalska",
+          avatar_url: null,
+          active: true,
+        },
+        public_profile: {
+          display_name: "Anna Kowalska",
+          profile_photo_url: null,
+          publication_status: "published",
+        },
+        drafts: [
+          {
+            id: "draft-id",
+            status: "pending_review",
+            submitted_at: "2026-09-20T00:00:00Z",
+          },
+        ],
+        offers: [{ id: "offer-1" }, { id: "offer-2" }],
+      }),
+    ).toMatchObject({
+      id: "specialist-id",
+      publicDisplayName: "Anna Kowalska",
+      pendingDraftId: "draft-id",
+      serviceCount: 2,
+    });
+  });
 });

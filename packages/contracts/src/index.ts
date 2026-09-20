@@ -60,6 +60,8 @@ export type {
   SpecialistService,
   SpecialistServiceUpsert,
 } from "@repo/contracts/services";
+export { homePageContentSchema } from "@repo/contracts/cms";
+export type { HomeContentAdmin, HomePageContent } from "@repo/contracts/cms";
 
 export const userRoleSchema = z.enum(["admin", "specialist", "client"]);
 
