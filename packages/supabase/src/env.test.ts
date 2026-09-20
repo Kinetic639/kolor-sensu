@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePublicSupabaseEnv, parseSecretSupabaseEnv } from "./env.js";
+import { parsePublicSupabaseEnv, parseSecretSupabaseEnv } from "./env";
 
 describe("Supabase environment validation", () => {
   it("validates public configuration independently from server secrets", () => {

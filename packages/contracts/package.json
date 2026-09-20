@@ -5,7 +5,8 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./database": "./src/database.types.ts"
+    "./database": "./src/database.types.ts",
+    "./specialist": "./src/specialist.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

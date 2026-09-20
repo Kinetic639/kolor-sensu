@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@repo/contracts/database";
-import type { PublicSupabaseEnv } from "./env.js";
+import type { PublicSupabaseEnv } from "./env";
 
 type ServerCookieMethods = NonNullable<
   NonNullable<Parameters<typeof createServerClient>[2]>["cookies"]

@@ -1,6 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "@repo/contracts/database";
-import type { PublicSupabaseEnv } from "./env.js";
+import type { PublicSupabaseEnv } from "./env";
 
 export function createSupabaseBrowserClient(environment: PublicSupabaseEnv) {
   return createBrowserClient<Database>(

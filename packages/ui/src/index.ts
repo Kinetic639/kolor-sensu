@@ -1,4 +1,5 @@
 export { Avatar, AvatarFallback, AvatarImage } from "./avatar";
+export { AuthShell, type AuthShellProps } from "./auth-shell";
 export { Badge, badgeVariants, type BadgeProps } from "./badge";
 export { Button, buttonVariants, type ButtonProps } from "./button";
 export {

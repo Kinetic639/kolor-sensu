@@ -1,0 +1,294 @@
+BEGIN;
+
+INSERT INTO auth.users (
+  id, aud, role, email, raw_app_meta_data, raw_user_meta_data,
+  created_at, updated_at, is_sso_user, is_anonymous
+)
+VALUES
+  (
+    '20000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated',
+    'domain-test-reviewer-specialist@example.invalid',
+    '{"provider":"email","providers":["email"]}',
+    '{"first_name":"Reviewer","last_name":"Specialist"}',
+    now(), now(), false, false
+  ),
+  (
+    '20000000-0000-4000-8000-000000000002', 'authenticated', 'authenticated',
+    'domain-test-specialist@example.invalid',
+    '{"provider":"email","providers":["email"]}',
+    '{"first_name":"Second","last_name":"Specialist"}',
+    now(), now(), false, false
+  ),
+  (
+    '20000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated',
+    'domain-test-admin@example.invalid',
+    '{"provider":"email","providers":["email"]}',
+    '{"first_name":"Domain","last_name":"Admin"}',
+    now(), now(), false, false
+  ),
+  (
+    '20000000-0000-4000-8000-000000000004', 'authenticated', 'authenticated',
+    'domain-test-dual@example.invalid',
+    '{"provider":"email","providers":["email"]}',
+    '{"first_name":"Dual","last_name":"Reviewer"}',
+    now(), now(), false, false
+  );
+
+INSERT INTO public.user_roles (user_id, role)
+VALUES
+  ('20000000-0000-4000-8000-000000000001', 'specialist'),
+  ('20000000-0000-4000-8000-000000000002', 'specialist'),
+  ('20000000-0000-4000-8000-000000000003', 'admin'),
+  ('20000000-0000-4000-8000-000000000004', 'specialist'),
+  ('20000000-0000-4000-8000-000000000004', 'admin');
+
+CREATE TEMP TABLE domain_test_ids AS
+SELECT
+  (SELECT id FROM public.specialists WHERE user_id = '20000000-0000-4000-8000-000000000001') AS first_specialist_id,
+  (SELECT id FROM public.specialists WHERE user_id = '20000000-0000-4000-8000-000000000002') AS second_specialist_id,
+  (SELECT id FROM public.specialists WHERE user_id = '20000000-0000-4000-8000-000000000004') AS dual_specialist_id;
+
+GRANT SELECT ON domain_test_ids TO authenticated, anon;
+
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"20000000-0000-4000-8000-000000000001","role":"authenticated"}',
+  true
+);
+SET LOCAL ROLE authenticated;
+
+DO $$
+DECLARE
+  own_draft_id uuid;
+BEGIN
+  IF (SELECT count(*) FROM public.specialists) <> 1 THEN
+    RAISE EXCEPTION 'A/B: specialist did not see exactly their own internal specialist record';
+  END IF;
+
+  SELECT public.save_my_specialist_profile_draft(
+    p_display_name => 'Approved Specialist',
+    p_short_bio => 'Pending biography',
+    p_languages => ARRAY['pl']
+  ) INTO own_draft_id;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialist_profile_drafts
+    WHERE id = own_draft_id AND display_name = 'Approved Specialist'
+  ) THEN
+    RAISE EXCEPTION 'C: specialist could not create and read their own draft';
+  END IF;
+
+  BEGIN
+    UPDATE public.specialist_profile_drafts
+    SET display_name = 'Unsafe edit'
+    WHERE specialist_id = (SELECT second_specialist_id FROM domain_test_ids);
+    RAISE EXCEPTION 'D: specialist unexpectedly received direct draft update permission';
+  EXCEPTION
+    WHEN insufficient_privilege THEN NULL;
+  END;
+
+  BEGIN
+    UPDATE public.specialist_public_profiles
+    SET publication_status = 'published', published_at = now()
+    WHERE specialist_id = (SELECT first_specialist_id FROM domain_test_ids);
+    RAISE EXCEPTION 'E: specialist unexpectedly published directly';
+  EXCEPTION
+    WHEN insufficient_privilege THEN NULL;
+  END;
+
+  PERFORM public.submit_my_specialist_profile_draft(own_draft_id);
+
+  IF (
+    SELECT display_name
+    FROM public.specialist_public_profiles
+    WHERE specialist_id = (SELECT first_specialist_id FROM domain_test_ids)
+  ) <> 'Reviewer Specialist' THEN
+    RAISE EXCEPTION 'M: pending draft changed the canonical published profile';
+  END IF;
+
+END;
+$$;
+
+RESET ROLE;
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"20000000-0000-4000-8000-000000000004","role":"authenticated"}',
+  true
+);
+SET LOCAL ROLE authenticated;
+
+DO $$
+DECLARE
+  own_draft_id uuid;
+BEGIN
+  SELECT public.save_my_specialist_profile_draft(
+    p_display_name => 'Dual Role Specialist'
+  ) INTO own_draft_id;
+  PERFORM public.submit_my_specialist_profile_draft(own_draft_id);
+
+  BEGIN
+    PERFORM public.approve_specialist_profile_draft(own_draft_id, 'self review');
+    RAISE EXCEPTION 'F: specialist/admin unexpectedly approved their own draft';
+  EXCEPTION
+    WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$$;
+
+RESET ROLE;
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"20000000-0000-4000-8000-000000000002","role":"authenticated"}',
+  true
+);
+SET LOCAL ROLE authenticated;
+
+DO $$
+DECLARE
+  own_draft_id uuid;
+BEGIN
+  SELECT public.save_my_specialist_profile_draft(
+    p_display_name => 'Rejected Specialist',
+    p_short_bio => 'Needs revision'
+  ) INTO own_draft_id;
+  PERFORM public.submit_my_specialist_profile_draft(own_draft_id);
+
+  IF (SELECT count(*) FROM public.specialist_profile_drafts) <> 1 THEN
+    RAISE EXCEPTION 'B/D: specialist could read another specialist draft';
+  END IF;
+END;
+$$;
+
+DO $$
+DECLARE
+  own_path text;
+  other_path text;
+BEGIN
+  SELECT first_specialist_id::text || '/own.webp', second_specialist_id::text || '/cross.webp'
+  INTO other_path, own_path
+  FROM domain_test_ids;
+
+  INSERT INTO storage.objects (bucket_id, name, owner_id, metadata)
+  VALUES ('specialist-profile-media', own_path, auth.uid()::text, '{"mimetype":"image/webp","size":100}');
+
+  BEGIN
+    INSERT INTO storage.objects (bucket_id, name, owner_id, metadata)
+    VALUES ('specialist-profile-media', other_path, auth.uid()::text, '{"mimetype":"image/webp","size":100}');
+    RAISE EXCEPTION 'P: specialist unexpectedly wrote media into another specialist path';
+  EXCEPTION
+    WHEN insufficient_privilege THEN NULL;
+    WHEN check_violation THEN NULL;
+  END;
+END;
+$$;
+
+RESET ROLE;
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"20000000-0000-4000-8000-000000000003","role":"authenticated"}',
+  true
+);
+SET LOCAL ROLE authenticated;
+
+DO $$
+DECLARE
+  approval_draft_id uuid;
+  rejection_draft_id uuid;
+BEGIN
+  IF (SELECT count(*) FROM public.specialist_profile_drafts WHERE status = 'pending_review') <> 3 THEN
+    RAISE EXCEPTION 'G: admin could not read all pending drafts';
+  END IF;
+
+  SELECT id INTO approval_draft_id
+  FROM public.specialist_profile_drafts
+  WHERE specialist_id = (SELECT first_specialist_id FROM domain_test_ids)
+    AND status = 'pending_review';
+
+  PERFORM public.approve_specialist_profile_draft(approval_draft_id, 'Approved in test');
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.specialist_public_profiles AS profile
+    JOIN public.specialist_profile_drafts AS draft
+      ON draft.specialist_id = profile.specialist_id
+    WHERE profile.specialist_id = (SELECT first_specialist_id FROM domain_test_ids)
+      AND profile.display_name = 'Approved Specialist'
+      AND profile.publication_status = 'published'
+      AND profile.published_at IS NOT NULL
+      AND draft.id = approval_draft_id
+      AND draft.status = 'published'
+      AND draft.reviewed_by = auth.uid()
+      AND draft.reviewed_at IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'H/N: approval did not atomically publish and resolve the draft';
+  END IF;
+
+  SELECT id INTO rejection_draft_id
+  FROM public.specialist_profile_drafts
+  WHERE specialist_id = (SELECT second_specialist_id FROM domain_test_ids)
+    AND status = 'pending_review';
+
+  PERFORM public.reject_specialist_profile_draft(rejection_draft_id, 'Please revise');
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialist_profile_drafts
+    WHERE id = rejection_draft_id
+      AND status = 'rejected'
+      AND reviewed_by = auth.uid()
+      AND review_comment = 'Please revise'
+  ) THEN
+    RAISE EXCEPTION 'I: admin rejection did not preserve review metadata';
+  END IF;
+END;
+$$;
+
+RESET ROLE;
+SET LOCAL ROLE anon;
+
+DO $$
+BEGIN
+  IF (SELECT count(*) FROM public.specialist_public_profiles) <> 1 THEN
+    RAISE EXCEPTION 'J: anonymous user did not see exactly the active published profile';
+  END IF;
+
+  BEGIN
+    PERFORM 1 FROM public.specialist_profile_drafts;
+    RAISE EXCEPTION 'K: anonymous user unexpectedly read drafts';
+  EXCEPTION
+    WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$$;
+
+RESET ROLE;
+UPDATE public.specialists
+SET active = false
+WHERE id = (SELECT first_specialist_id FROM domain_test_ids);
+SET LOCAL ROLE anon;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.specialist_public_profiles) THEN
+    RAISE EXCEPTION 'L: anonymous user read an inactive specialist profile';
+  END IF;
+END;
+$$;
+
+RESET ROLE;
+
+DO $$
+BEGIN
+  BEGIN
+    INSERT INTO public.specialists (user_id, public_slug)
+    VALUES (
+      '20000000-0000-4000-8000-000000000003',
+      (SELECT public_slug FROM public.specialists WHERE id = (SELECT first_specialist_id FROM domain_test_ids))
+    );
+    RAISE EXCEPTION 'O: duplicate specialist slug was accepted';
+  EXCEPTION
+    WHEN unique_violation THEN NULL;
+  END;
+END;
+$$;
+
+ROLLBACK;

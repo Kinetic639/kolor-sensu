@@ -3,6 +3,7 @@ node_modules
 .turbo
 .playwright-mcp
 artifacts
+test-results
 dist
 build
 out

@@ -1,6 +1,6 @@
 /** @type {import("next").NextConfig} */
 const nextConfig = {
-  transpilePackages: ["@repo/app-runtime", "@repo/ui"],
+  transpilePackages: ["@repo/app-runtime", "@repo/supabase", "@repo/ui"],
   typedRoutes: true,
 };
 

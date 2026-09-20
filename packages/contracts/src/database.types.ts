@@ -14,16 +14,307 @@ export type Database = {
   };
   public: {
     Tables: {
-      [_ in never]: never;
+      profiles: {
+        Row: {
+          active: boolean;
+          avatar_url: string | null;
+          created_at: string;
+          first_name: string;
+          id: string;
+          last_name: string;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          avatar_url?: string | null;
+          created_at?: string;
+          first_name?: string;
+          id: string;
+          last_name?: string;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          avatar_url?: string | null;
+          created_at?: string;
+          first_name?: string;
+          id?: string;
+          last_name?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      specialist_profile_drafts: {
+        Row: {
+          certificates: string[];
+          created_at: string;
+          display_name: string;
+          education: string[];
+          id: string;
+          languages: string[];
+          long_bio: string;
+          modalities: string[];
+          portrait_photo_url: string | null;
+          profile_photo_url: string | null;
+          review_comment: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          short_bio: string;
+          specialist_id: string;
+          specializations: string[];
+          status: Database["public"]["Enums"]["profile_publication_status"];
+          submitted_at: string | null;
+          submitted_by: string | null;
+          therapy_approaches: string[];
+          updated_at: string;
+        };
+        Insert: {
+          certificates?: string[];
+          created_at?: string;
+          display_name?: string;
+          education?: string[];
+          id?: string;
+          languages?: string[];
+          long_bio?: string;
+          modalities?: string[];
+          portrait_photo_url?: string | null;
+          profile_photo_url?: string | null;
+          review_comment?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          short_bio?: string;
+          specialist_id: string;
+          specializations?: string[];
+          status?: Database["public"]["Enums"]["profile_publication_status"];
+          submitted_at?: string | null;
+          submitted_by?: string | null;
+          therapy_approaches?: string[];
+          updated_at?: string;
+        };
+        Update: {
+          certificates?: string[];
+          created_at?: string;
+          display_name?: string;
+          education?: string[];
+          id?: string;
+          languages?: string[];
+          long_bio?: string;
+          modalities?: string[];
+          portrait_photo_url?: string | null;
+          profile_photo_url?: string | null;
+          review_comment?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          short_bio?: string;
+          specialist_id?: string;
+          specializations?: string[];
+          status?: Database["public"]["Enums"]["profile_publication_status"];
+          submitted_at?: string | null;
+          submitted_by?: string | null;
+          therapy_approaches?: string[];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "specialist_profile_drafts_reviewed_by_fkey";
+            columns: ["reviewed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "specialist_profile_drafts_specialist_id_fkey";
+            columns: ["specialist_id"];
+            isOneToOne: false;
+            referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "specialist_profile_drafts_submitted_by_fkey";
+            columns: ["submitted_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      specialist_public_profiles: {
+        Row: {
+          certificates: string[];
+          created_at: string;
+          display_name: string;
+          education: string[];
+          languages: string[];
+          long_bio: string;
+          modalities: string[];
+          portrait_photo_url: string | null;
+          profile_photo_url: string | null;
+          publication_status: Database["public"]["Enums"]["profile_publication_status"];
+          published_at: string | null;
+          short_bio: string;
+          specialist_id: string;
+          specializations: string[];
+          therapy_approaches: string[];
+          updated_at: string;
+        };
+        Insert: {
+          certificates?: string[];
+          created_at?: string;
+          display_name?: string;
+          education?: string[];
+          languages?: string[];
+          long_bio?: string;
+          modalities?: string[];
+          portrait_photo_url?: string | null;
+          profile_photo_url?: string | null;
+          publication_status?: Database["public"]["Enums"]["profile_publication_status"];
+          published_at?: string | null;
+          short_bio?: string;
+          specialist_id: string;
+          specializations?: string[];
+          therapy_approaches?: string[];
+          updated_at?: string;
+        };
+        Update: {
+          certificates?: string[];
+          created_at?: string;
+          display_name?: string;
+          education?: string[];
+          languages?: string[];
+          long_bio?: string;
+          modalities?: string[];
+          portrait_photo_url?: string | null;
+          profile_photo_url?: string | null;
+          publication_status?: Database["public"]["Enums"]["profile_publication_status"];
+          published_at?: string | null;
+          short_bio?: string;
+          specialist_id?: string;
+          specializations?: string[];
+          therapy_approaches?: string[];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "specialist_public_profiles_specialist_id_fkey";
+            columns: ["specialist_id"];
+            isOneToOne: true;
+            referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      specialists: {
+        Row: {
+          accepting_new_clients: boolean;
+          active: boolean;
+          created_at: string;
+          id: string;
+          joined_at: string | null;
+          professional_title: string | null;
+          public_slug: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          accepting_new_clients?: boolean;
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          joined_at?: string | null;
+          professional_title?: string | null;
+          public_slug: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          accepting_new_clients?: boolean;
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          joined_at?: string | null;
+          professional_title?: string | null;
+          public_slug?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "specialists_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      user_roles: {
+        Row: {
+          created_at: string;
+          role: Database["public"]["Enums"]["app_role"];
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          role: Database["public"]["Enums"]["app_role"];
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          role?: Database["public"]["Enums"]["app_role"];
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      approve_specialist_profile_draft: {
+        Args: { p_draft_id: string; p_review_comment?: string };
+        Returns: undefined;
+      };
+      has_role: {
+        Args: { required_role: Database["public"]["Enums"]["app_role"] };
+        Returns: boolean;
+      };
+      reject_specialist_profile_draft: {
+        Args: { p_draft_id: string; p_review_comment: string };
+        Returns: undefined;
+      };
+      save_my_specialist_profile_draft: {
+        Args: {
+          p_certificates?: string[];
+          p_display_name: string;
+          p_education?: string[];
+          p_languages?: string[];
+          p_long_bio?: string;
+          p_modalities?: string[];
+          p_portrait_photo_url?: string;
+          p_profile_photo_url?: string;
+          p_short_bio?: string;
+          p_specializations?: string[];
+          p_therapy_approaches?: string[];
+        };
+        Returns: string;
+      };
+      submit_my_specialist_profile_draft: {
+        Args: { p_draft_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
-      [_ in never]: never;
+      app_role: "admin" | "specialist";
+      profile_publication_status:
+        "draft" | "pending_review" | "published" | "rejected";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -150,6 +441,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "specialist"],
+      profile_publication_status: [
+        "draft",
+        "pending_review",
+        "published",
+        "rejected",
+      ],
+    },
   },
 } as const;

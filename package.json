@@ -8,6 +8,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:run": "turbo run test:run",
+    "test:e2e:auth": "playwright test tests/e2e/auth.spec.ts",
     "storybook": "turbo run storybook --filter=@kolor-sensu/storybook",
     "storybook:build": "turbo run storybook:build --filter=@kolor-sensu/storybook",
     "supabase:start": "supabase start",
@@ -20,6 +21,7 @@
     "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "prettier": "3.9.7",
     "prettier-plugin-tailwindcss": "0.8.1",
     "supabase": "2.117.0",

@@ -1,13 +1,27 @@
 import { z } from "zod";
 
+export {
+  profilePublicationStatusSchema,
+  specialistImageMetadataSchema,
+  specialistProfileDraftInputSchema,
+  specialistProfileReviewInputSchema,
+  specialistPublicProfileInputSchema,
+  specialistSlugSchema,
+} from "@repo/contracts/specialist";
+export type {
+  ProfilePublicationStatus,
+  Specialist,
+  SpecialistImageMetadata,
+  SpecialistProfileDraft,
+  SpecialistProfileDraftInput,
+  SpecialistProfileReviewInput,
+  SpecialistPublicProfile,
+  SpecialistPublicProfileInput,
+} from "@repo/contracts/specialist";
+
 export const userRoleSchema = z.enum(["admin", "specialist", "client"]);
 
 export type UserRole = z.infer<typeof userRoleSchema>;
-
-export interface Specialist {
-  id: string;
-  name: string;
-}
 
 export interface Room {
   id: string;
@@ -21,7 +35,7 @@ export interface Service {
 
 export interface Appointment {
   id: string;
-  specialistId: Specialist["id"];
+  specialistId: string;
   serviceId: Service["id"];
   startsAt: string;
 }
