@@ -212,6 +212,39 @@ export async function listSpecialistOffersAdmin(
   return data.map(mapSpecialistService);
 }
 
+export async function listSpecialistOffersForAdmin(
+  client: SupabaseClient<Database>,
+  specialistId: string,
+): Promise<SpecialistService[]> {
+  const { data, error } = await client
+    .from("specialist_services")
+    .select("*")
+    .eq("specialist_id", specialistId)
+    .order("created_at");
+
+  if (error) throw error;
+  return data.map(mapSpecialistService);
+}
+
+export async function updateSpecialistOfferStateAdmin(
+  client: SupabaseClient<Database>,
+  offerId: string,
+  state: { active: boolean; acceptingNewClients: boolean },
+): Promise<SpecialistService> {
+  const { data, error } = await client
+    .from("specialist_services")
+    .update({
+      active: state.active,
+      accepting_new_clients: state.acceptingNewClients,
+    })
+    .eq("id", offerId)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return mapSpecialistService(data);
+}
+
 export async function listAvailableServicesForSpecialist(
   client: SupabaseClient<Database>,
 ): Promise<Service[]> {

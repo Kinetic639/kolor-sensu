@@ -236,6 +236,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      site_content: {
+        Row: {
+          created_at: string;
+          draft_payload: Json;
+          key: string;
+          published_at: string | null;
+          published_payload: Json | null;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          draft_payload: Json;
+          key: string;
+          published_at?: string | null;
+          published_payload?: Json | null;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          draft_payload?: Json;
+          key?: string;
+          published_at?: string | null;
+          published_payload?: Json | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       specialist_profile_drafts: {
         Row: {
           certificates: string[];
@@ -538,6 +565,7 @@ export type Database = {
         Args: { required_role: Database["public"]["Enums"]["app_role"] };
         Returns: boolean;
       };
+      publish_site_content: { Args: { p_key: string }; Returns: undefined };
       reject_specialist_profile_draft: {
         Args: { p_draft_id: string; p_review_comment: string };
         Returns: undefined;

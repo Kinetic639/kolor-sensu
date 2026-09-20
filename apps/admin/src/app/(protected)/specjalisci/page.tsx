@@ -1,10 +1,6 @@
-import { PortalRoutePlaceholder } from "@repo/ui/portal-content";
+import { SpecialistsList } from "@/features/specialists/specialists-list";
+import { loadAdminSpecialists } from "@/features/specialists/loaders";
 
-export default function SpecialistsPage() {
-  return (
-    <PortalRoutePlaceholder
-      title="Specjaliści"
-      description="Zespół, profile publiczne i statusy współpracy."
-    />
-  );
+export default async function SpecialistsPage() {
+  return <SpecialistsList initialData={await loadAdminSpecialists()} />;
 }

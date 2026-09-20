@@ -15,6 +15,40 @@ type PublicProfileRow =
   Database["public"]["Tables"]["specialist_public_profiles"]["Row"];
 type DraftRow =
   Database["public"]["Tables"]["specialist_profile_drafts"]["Row"];
+type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+
+type AdminSpecialistSummaryRow = SpecialistRow & {
+  profile: Pick<
+    ProfileRow,
+    "id" | "first_name" | "last_name" | "avatar_url" | "active"
+  >;
+  public_profile: Pick<
+    PublicProfileRow,
+    "display_name" | "profile_photo_url" | "publication_status"
+  > | null;
+  drafts: Pick<DraftRow, "id" | "status" | "submitted_at">[];
+  offers: { id: string }[];
+};
+
+export interface AdminSpecialistSummary {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
+  accountActive: boolean;
+  active: boolean;
+  acceptingNewClients: boolean;
+  publicSlug: string;
+  professionalTitle: string | null;
+  joinedAt: string | null;
+  publicDisplayName: string | null;
+  publicProfilePhotoUrl: string | null;
+  publicationStatus: SpecialistPublicProfile["publicationStatus"] | null;
+  pendingDraftId: string | null;
+  pendingDraftSubmittedAt: string | null;
+  serviceCount: number;
+}
 
 type PublicProfileQueryRow = PublicProfileRow & {
   specialists: Pick<
@@ -91,6 +125,34 @@ function mapDraft(row: DraftRow): SpecialistProfileDraft {
     reviewComment: row.review_comment,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+function mapAdminSpecialistSummary(
+  row: AdminSpecialistSummaryRow,
+): AdminSpecialistSummary {
+  const pendingDraft = row.drafts.find(
+    (draft) => draft.status === "pending_review",
+  );
+
+  return {
+    id: row.id,
+    userId: row.user_id,
+    firstName: row.profile.first_name,
+    lastName: row.profile.last_name,
+    avatarUrl: row.profile.avatar_url,
+    accountActive: row.profile.active,
+    active: row.active,
+    acceptingNewClients: row.accepting_new_clients,
+    publicSlug: row.public_slug,
+    professionalTitle: row.professional_title,
+    joinedAt: row.joined_at,
+    publicDisplayName: row.public_profile?.display_name ?? null,
+    publicProfilePhotoUrl: row.public_profile?.profile_photo_url ?? null,
+    publicationStatus: row.public_profile?.publication_status ?? null,
+    pendingDraftId: pendingDraft?.id ?? null,
+    pendingDraftSubmittedAt: pendingDraft?.submitted_at ?? null,
+    serviceCount: row.offers.length,
   };
 }
 
@@ -268,6 +330,136 @@ export async function listSpecialistsForAdmin(
   return data.map(mapSpecialist);
 }
 
+export async function listSpecialistSummariesForAdmin(
+  client: SupabaseClient<Database>,
+): Promise<AdminSpecialistSummary[]> {
+  const { data, error } = await client
+    .from("specialists")
+    .select(
+      `
+        id,
+        user_id,
+        active,
+        accepting_new_clients,
+        public_slug,
+        professional_title,
+        joined_at,
+        created_at,
+        updated_at,
+        profile:profiles!specialists_user_id_fkey (
+          id,
+          first_name,
+          last_name,
+          avatar_url,
+          active
+        ),
+        public_profile:specialist_public_profiles (
+          display_name,
+          profile_photo_url,
+          publication_status
+        ),
+        drafts:specialist_profile_drafts (
+          id,
+          status,
+          submitted_at
+        ),
+        offers:specialist_services (id)
+      `,
+    )
+    .order("created_at");
+
+  if (error) throw error;
+  return (data as unknown as AdminSpecialistSummaryRow[]).map(
+    mapAdminSpecialistSummary,
+  );
+}
+
+export async function getSpecialistByIdAdmin(
+  client: SupabaseClient<Database>,
+  specialistId: string,
+): Promise<Specialist | null> {
+  const { data, error } = await client
+    .from("specialists")
+    .select("*")
+    .eq("id", specialistId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapSpecialist(data) : null;
+}
+
+export async function getSpecialistPublicProfileAdmin(
+  client: SupabaseClient<Database>,
+  specialistId: string,
+  existingSpecialist?: Specialist,
+): Promise<SpecialistPublicProfile | null> {
+  const specialist =
+    existingSpecialist ?? (await getSpecialistByIdAdmin(client, specialistId));
+  if (!specialist) return null;
+
+  const { data, error } = await client
+    .from("specialist_public_profiles")
+    .select("*")
+    .eq("specialist_id", specialistId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return {
+    specialistId: data.specialist_id,
+    publicSlug: specialist.publicSlug,
+    active: specialist.active,
+    acceptingNewClients: specialist.acceptingNewClients,
+    professionalTitle: specialist.professionalTitle,
+    joinedAt: specialist.joinedAt,
+    displayName: data.display_name,
+    shortBio: data.short_bio,
+    longBio: data.long_bio,
+    profilePhotoUrl: data.profile_photo_url,
+    portraitPhotoUrl: data.portrait_photo_url,
+    languages: data.languages,
+    therapyApproaches: data.therapy_approaches,
+    specializations: data.specializations,
+    education: data.education,
+    certificates: data.certificates,
+    modalities: data.modalities,
+    publicationStatus: data.publication_status,
+    publishedAt: data.published_at,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
+export async function getLatestSpecialistDraftAdmin(
+  client: SupabaseClient<Database>,
+  specialistId: string,
+): Promise<SpecialistProfileDraft | null> {
+  const { data, error } = await client
+    .from("specialist_profile_drafts")
+    .select("*")
+    .eq("specialist_id", specialistId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapDraft(data) : null;
+}
+
+export async function createSpecialistMediaSignedUrl(
+  client: SupabaseClient<Database>,
+  path: string | null,
+): Promise<string | null> {
+  if (!path) return null;
+  const { data, error } = await client.storage
+    .from("specialist-profile-media")
+    .createSignedUrl(path, 60 * 30);
+
+  if (error) throw error;
+  return data.signedUrl;
+}
+
 export async function listPendingSpecialistDrafts(
   client: SupabaseClient<Database>,
 ): Promise<SpecialistProfileDraft[]> {
@@ -299,6 +491,7 @@ export async function reviewSpecialistProfileDraft(
 }
 
 export const specialistMappers = {
+  adminSummary: mapAdminSpecialistSummary,
   draft: mapDraft,
   publicProfile: mapPublicProfile,
   specialist: mapSpecialist,

@@ -61,8 +61,22 @@ DO $$
 DECLARE
   own_draft_id uuid;
 BEGIN
-  IF (SELECT count(*) FROM public.specialists) <> 1 THEN
-    RAISE EXCEPTION 'A/B: specialist did not see exactly their own internal specialist record';
+  -- Not a bare count(*): DEV now permanently carries real published
+  -- specialists (see 20260920101323_dev_publish_seed_specialist_profiles.sql),
+  -- so a fresh specialist's visible set legitimately includes those. The
+  -- actual invariant under test is "own row visible, another draft
+  -- specialist's row is not".
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialists
+    WHERE id = (SELECT first_specialist_id FROM domain_test_ids)
+  ) THEN
+    RAISE EXCEPTION 'A/B: specialist could not see their own internal specialist record';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.specialists
+    WHERE id = (SELECT second_specialist_id FROM domain_test_ids)
+  ) THEN
+    RAISE EXCEPTION 'A/B: specialist unexpectedly saw another draft specialist''s record';
   END IF;
 
   SELECT public.save_my_specialist_profile_draft(
@@ -247,8 +261,16 @@ SET LOCAL ROLE anon;
 
 DO $$
 BEGIN
-  IF (SELECT count(*) FROM public.specialist_public_profiles) <> 1 THEN
-    RAISE EXCEPTION 'J: anonymous user did not see exactly the active published profile';
+  -- Not a bare count(*): DEV now permanently carries real published
+  -- specialists (see 20260920101323_dev_publish_seed_specialist_profiles.sql).
+  -- Assert the test's own newly-published profile is visible, not the
+  -- table's total size.
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialist_public_profiles
+    WHERE specialist_id = (SELECT first_specialist_id FROM domain_test_ids)
+      AND publication_status = 'published'
+  ) THEN
+    RAISE EXCEPTION 'J: anonymous user did not see the active published profile';
   END IF;
 
   BEGIN
@@ -268,7 +290,13 @@ SET LOCAL ROLE anon;
 
 DO $$
 BEGIN
-  IF EXISTS (SELECT 1 FROM public.specialist_public_profiles) THEN
+  -- Not a bare EXISTS on the whole table: real published specialists
+  -- remain visible regardless. Assert specifically that the now-inactive
+  -- test specialist's profile disappeared.
+  IF EXISTS (
+    SELECT 1 FROM public.specialist_public_profiles
+    WHERE specialist_id = (SELECT first_specialist_id FROM domain_test_ids)
+  ) THEN
     RAISE EXCEPTION 'L: anonymous user read an inactive specialist profile';
   END IF;
 END;

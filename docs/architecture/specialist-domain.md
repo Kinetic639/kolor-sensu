@@ -69,3 +69,23 @@ Public reads use `listPublishedSpecialists` and `getPublishedSpecialistBySlug` f
 `@repo/supabase`. Internal callers use explicit specialist and review helpers. These
 helpers map generated database rows to client-agnostic domain contracts, so the same
 contracts can be consumed by Next.js and a future Expo application.
+
+## Admin management vertical slice
+
+The admin specialist feature lives under `apps/admin/src/features/specialists` and
+keeps route files thin. Server loaders compose RLS-protected data-access helpers into
+list and detail view models. Client components own local filters and TanStack Query
+state, while server actions re-check the admin role before every read or mutation.
+
+The list query uses a lightweight joined summary and does not load complete profile
+drafts or service records. Detail loading fetches the specialist, identity, canonical
+profile, latest draft, services, and offers, then creates short-lived signed media
+URLs. Query keys are scoped to the specialist feature; draft review invalidates the
+affected detail and list summary, while offer changes invalidate only that detail.
+
+Admin review continues to use the atomic approval and rejection RPCs. Rejection
+comments are required by the shared Zod contract and database operation, not only by
+the dialog. Operational specialist and account flags remain read-only because the
+current authorization model does not grant direct admin updates to those records.
+Existing specialist offers can be activated or paused through the dedicated helper
+and their current row-level security policy.

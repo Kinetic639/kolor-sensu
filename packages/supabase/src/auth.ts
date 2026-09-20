@@ -95,6 +95,13 @@ export async function getCurrentProfile(
   return data;
 }
 
+export async function getProfileByIdAdmin(
+  client: SupabaseClient<Database>,
+  userId: string,
+) {
+  return getCurrentProfile(client, userId);
+}
+
 export async function getCurrentRoles(
   client: SupabaseClient<Database>,
   userId: string,

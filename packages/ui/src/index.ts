@@ -1,3 +1,14 @@
+export {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./alert-dialog";
 export { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 export {
   AppHeader,
@@ -109,6 +120,7 @@ export {
   type PortalNavigationSection,
 } from "./portal-layout";
 export { PortalShell, type PortalShellProps } from "./portal-shell";
+export { Separator } from "./separator";
 export {
   Select,
   SelectContent,
@@ -150,7 +162,19 @@ export {
   type SidebarProviderProps,
 } from "./sidebar";
 export { Switch } from "./switch";
+export {
+  ProfileReviewDiff,
+  SpecialistOfferRow,
+  SpecialistStatusSummary,
+  type ProfileReviewDiffField,
+  type SpecialistOfferRowProps,
+  type SpecialistStatusSummaryProps,
+} from "./specialist-admin";
 export { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
+export {
+  TestContentBlock,
+  type TestContentBlockProps,
+} from "./test-content-block";
 export { Textarea, type TextareaProps } from "./textarea";
 export { AppToaster, type AppToasterProps } from "./toaster";
 export {
