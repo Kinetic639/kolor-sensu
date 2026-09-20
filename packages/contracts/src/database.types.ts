@@ -188,6 +188,138 @@ export type Database = {
         };
         Relationships: [];
       };
+      room_availability_exceptions: {
+        Row: {
+          created_at: string;
+          date: string;
+          ends_at: string | null;
+          id: string;
+          reason: string | null;
+          room_id: string;
+          starts_at: string | null;
+          type: Database["public"]["Enums"]["room_availability_exception_type"];
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          date: string;
+          ends_at?: string | null;
+          id?: string;
+          reason?: string | null;
+          room_id: string;
+          starts_at?: string | null;
+          type: Database["public"]["Enums"]["room_availability_exception_type"];
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          date?: string;
+          ends_at?: string | null;
+          id?: string;
+          reason?: string | null;
+          room_id?: string;
+          starts_at?: string | null;
+          type?: Database["public"]["Enums"]["room_availability_exception_type"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "room_availability_exceptions_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      room_opening_hours: {
+        Row: {
+          created_at: string;
+          ends_at: string;
+          id: string;
+          room_id: string;
+          starts_at: string;
+          time_span: unknown;
+          updated_at: string;
+          weekday: number;
+        };
+        Insert: {
+          created_at?: string;
+          ends_at: string;
+          id?: string;
+          room_id: string;
+          starts_at: string;
+          time_span?: unknown;
+          updated_at?: string;
+          weekday: number;
+        };
+        Update: {
+          created_at?: string;
+          ends_at?: string;
+          id?: string;
+          room_id?: string;
+          starts_at?: string;
+          time_span?: unknown;
+          updated_at?: string;
+          weekday?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "room_opening_hours_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      room_public_profiles: {
+        Row: {
+          accessibility_notes: string | null;
+          amenities: string[];
+          created_at: string;
+          display_name: string;
+          image_path: string | null;
+          long_description: string | null;
+          published: boolean;
+          room_id: string;
+          short_description: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          accessibility_notes?: string | null;
+          amenities?: string[];
+          created_at?: string;
+          display_name: string;
+          image_path?: string | null;
+          long_description?: string | null;
+          published?: boolean;
+          room_id: string;
+          short_description?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          accessibility_notes?: string | null;
+          amenities?: string[];
+          created_at?: string;
+          display_name?: string;
+          image_path?: string | null;
+          long_description?: string | null;
+          published?: boolean;
+          room_id?: string;
+          short_description?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "room_public_profiles_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: true;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       rooms: {
         Row: {
           active: boolean;
@@ -620,6 +752,25 @@ export type Database = {
         Args: { p_draft_id: string; p_review_comment: string };
         Returns: undefined;
       };
+      replace_room_opening_hours: {
+        Args: { p_intervals: Json; p_room_id: string };
+        Returns: {
+          created_at: string;
+          ends_at: string;
+          id: string;
+          room_id: string;
+          starts_at: string;
+          time_span: unknown;
+          updated_at: string;
+          weekday: number;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "room_opening_hours";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
       save_my_specialist_profile_draft: {
         Args: {
           p_certificates?: string[];
@@ -645,6 +796,8 @@ export type Database = {
       app_role: "admin" | "specialist";
       profile_publication_status:
         "draft" | "pending_review" | "published" | "rejected";
+      room_availability_exception_type:
+        "closed_all_day" | "blocked_interval" | "extra_available_interval";
       service_category:
         | "consultation"
         | "psychotherapy"
@@ -785,6 +938,11 @@ export const Constants = {
         "pending_review",
         "published",
         "rejected",
+      ],
+      room_availability_exception_type: [
+        "closed_all_day",
+        "blocked_interval",
+        "extra_available_interval",
       ],
       service_category: [
         "consultation",
