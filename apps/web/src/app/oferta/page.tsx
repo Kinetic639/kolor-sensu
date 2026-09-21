@@ -6,9 +6,11 @@ import {
 } from "@repo/contracts";
 import { listPublicServices, listPublicSpecialistOffers } from "@repo/supabase";
 import { Badge } from "@repo/ui/badge";
+import { Button } from "@repo/ui/button";
 import { Card } from "@repo/ui/card";
 import { Container } from "@repo/ui/container";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Oferta | Kolor Sensu",
@@ -44,7 +46,12 @@ export default async function OfertaPage() {
                 <Card className="space-y-3 p-5">
                   <div>
                     <h2 className="font-heading text-lg font-semibold text-[var(--text)]">
-                      {summary.name}
+                      <Link
+                        className="hover:underline"
+                        href={`/oferta/${summary.slug}`}
+                      >
+                        {summary.name}
+                      </Link>
                     </h2>
                     {summary.shortDescription ? (
                       <p className="mt-1 text-sm text-[var(--text-muted)]">
@@ -82,6 +89,9 @@ export default async function OfertaPage() {
                       {formatSpecialistCountLabel(summary.specialistCount)}
                     </Badge>
                   </div>
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/oferta/${summary.slug}`}>Szczegóły</Link>
+                  </Button>
                 </Card>
               </li>
             ))}

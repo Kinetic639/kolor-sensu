@@ -7,6 +7,7 @@ import {
   type AdminRoomDetail,
   type AdminRoomSummary,
   type EffectiveRoomAvailabilityInput,
+  type PublicRoom,
   type Room,
   type RoomAvailabilityException,
   type RoomAvailabilityExceptionCreate,
@@ -451,6 +452,87 @@ export function calculateRoomAvailabilityForDate({
   }));
 }
 
+type PublicRoomLocationRow = {
+  room_id: string;
+  room_slug: string;
+  location_id: string;
+  location_name: string;
+  location_slug: string;
+};
+
+function mapPublicRoom(
+  profile: PublicProfileRow,
+  location: PublicRoomLocationRow,
+): PublicRoom {
+  return {
+    roomId: profile.room_id,
+    roomSlug: location.room_slug,
+    displayName: profile.display_name,
+    shortDescription: profile.short_description,
+    longDescription: profile.long_description,
+    imagePath: profile.image_path,
+    accessibilityNotes: profile.accessibility_notes,
+    amenities: profile.amenities,
+    locationId: location.location_id,
+    locationName: location.location_name,
+    locationSlug: location.location_slug,
+  };
+}
+
+/**
+ * Every publicly-eligible room, with its location resolved. Anon has no
+ * grant on `rooms` at all, so location context comes from the narrow
+ * `list_public_room_locations()` bridge instead -- exactly two queries
+ * total (Promise.all), never one per room. A published profile whose room
+ * turns out not to be in the location bridge (e.g. its location itself
+ * isn't active/publicly_visible) is excluded rather than shown without
+ * location context.
+ */
+export async function listPublicRooms(
+  client: SupabaseClient<Database>,
+): Promise<PublicRoom[]> {
+  const [profilesResult, locationsResult] = await Promise.all([
+    client.from("room_public_profiles").select("*"),
+    client.rpc("list_public_room_locations"),
+  ]);
+
+  if (profilesResult.error) throw profilesResult.error;
+  if (locationsResult.error) throw locationsResult.error;
+
+  const locationByRoomId = new Map(
+    (locationsResult.data as PublicRoomLocationRow[]).map((location) => [
+      location.room_id,
+      location,
+    ]),
+  );
+
+  return (profilesResult.data as PublicProfileRow[])
+    .filter((profile) => locationByRoomId.has(profile.room_id))
+    .map((profile) =>
+      mapPublicRoom(profile, locationByRoomId.get(profile.room_id)!),
+    )
+    .sort(
+      (a, b) =>
+        a.locationName.localeCompare(b.locationName, "pl") ||
+        a.displayName.localeCompare(b.displayName, "pl"),
+    );
+}
+
+/**
+ * One publicly-eligible room by its slug, for the room detail page.
+ * There is no anon-safe way to filter by slug at the query layer (anon
+ * cannot read `rooms` at all, and `room_public_profiles` carries no slug
+ * of its own), so this reuses `listPublicRooms()` -- still exactly two
+ * queries, the same as the list page -- and matches in memory.
+ */
+export async function getPublicRoomBySlug(
+  client: SupabaseClient<Database>,
+  slug: string,
+): Promise<PublicRoom | null> {
+  const rooms = await listPublicRooms(client);
+  return rooms.find((room) => room.roomSlug === slug) ?? null;
+}
+
 export const roomMappers = {
   room: mapRoom,
   adminRoomSummary: mapAdminRoomSummary,
@@ -458,4 +540,5 @@ export const roomMappers = {
   publicProfile: mapPublicProfile,
   openingHours: mapOpeningHours,
   availabilityException: mapAvailabilityException,
+  publicRoom: mapPublicRoom,
 };

@@ -67,6 +67,23 @@ export type {
 export { homePageContentSchema } from "@repo/contracts/cms";
 export type { HomeContentAdmin, HomePageContent } from "@repo/contracts/cms";
 export {
+  emptyRichTextDocument,
+  isRichTextEmpty,
+  isSafeRichTextHref,
+  parseRichText,
+  plainTextFromRichText,
+  richTextDocumentSchema,
+  richTextDocumentWithMaxCharacters,
+  serializeRichText,
+} from "@repo/contracts/rich-text";
+export type {
+  RichTextBlockNode,
+  RichTextDocument,
+  RichTextInlineNode,
+  RichTextMark,
+} from "@repo/contracts/rich-text";
+export {
+  groupPublicRoomsByLocation,
   roomAvailabilityExceptionCreateSchema,
   roomAvailabilityExceptionUpdateSchema,
   roomCapacitySchema,
@@ -82,6 +99,8 @@ export type {
   AdminRoomDetail,
   AdminRoomSummary,
   EffectiveRoomAvailabilityInput,
+  PublicRoom,
+  PublicRoomLocationGroup,
   Room,
   RoomAvailabilityException,
   RoomAvailabilityExceptionCreate,

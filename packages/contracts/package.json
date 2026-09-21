@@ -8,18 +8,22 @@
     "./center": "./src/center.ts",
     "./cms": "./src/cms.ts",
     "./database": "./src/database.types.ts",
+    "./rich-text": "./src/rich-text.ts",
     "./rooms": "./src/rooms.ts",
     "./services": "./src/services.ts",
     "./specialist": "./src/specialist.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
     "eslint": "10.10.0",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "vitest": "^5.0.1"
   },
   "dependencies": {
     "zod": "^4.6.5"

@@ -112,7 +112,11 @@ describe("public offer summary derivation", () => {
   ): PublicSpecialistOffer {
     return {
       serviceId: "service-1",
+      serviceSlug: "terapia-dla-par",
+      serviceName: "Terapia dla par",
       specialistPublicSlug: "anna",
+      specialistDisplayName: "Anna Kowalska",
+      specialistProfilePhotoUrl: null,
       specialistProfessionalTitle: null,
       priceMinor: 20000,
       currencyCode: "PLN",
@@ -251,11 +255,25 @@ describe("service domain mapping", () => {
         supports_in_person: true,
         supports_online: true,
         accepting_new_clients: true,
-        specialists: { public_slug: "anna-maria", professional_title: null },
-        services: { default_duration_minutes: 50 },
+        specialists: {
+          public_slug: "anna-maria",
+          professional_title: null,
+          specialist_public_profiles: {
+            display_name: "Anna Maria",
+            profile_photo_url: null,
+          },
+        },
+        services: {
+          slug: "psychoterapia-indywidualna",
+          name: "Psychoterapia indywidualna",
+          default_duration_minutes: 50,
+        },
       }),
     ).toMatchObject({
+      serviceSlug: "psychoterapia-indywidualna",
+      serviceName: "Psychoterapia indywidualna",
       specialistPublicSlug: "anna-maria",
+      specialistDisplayName: "Anna Maria",
       effectiveDurationMinutes: 50,
     });
   });

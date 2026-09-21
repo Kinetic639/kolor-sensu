@@ -51,8 +51,14 @@ type PublicSpecialistOfferQueryRow = {
   specialists: {
     public_slug: string;
     professional_title: string | null;
+    specialist_public_profiles: {
+      display_name: string;
+      profile_photo_url: string | null;
+    };
   };
   services: {
+    slug: string;
+    name: string;
     default_duration_minutes: number;
   };
 };
@@ -109,7 +115,13 @@ function mapPublicSpecialistOffer(
 ): PublicSpecialistOffer {
   return {
     serviceId: row.service_id,
+    serviceSlug: row.services.slug,
+    serviceName: row.services.name,
     specialistPublicSlug: row.specialists.public_slug,
+    specialistDisplayName:
+      row.specialists.specialist_public_profiles.display_name,
+    specialistProfilePhotoUrl:
+      row.specialists.specialist_public_profiles.profile_photo_url,
     specialistProfessionalTitle: row.specialists.professional_title,
     priceMinor: row.price_minor,
     currencyCode: row.currency_code,
@@ -431,6 +443,11 @@ export async function getPublicServiceBySlug(
   return data ? mapPublicService(data as PublicServiceQueryRow) : null;
 }
 
+// specialist_public_profiles is embedded with !inner, so RLS on that table
+// (published-only for anon) excludes the whole offer row when the
+// specialist's public profile isn't published -- not just when the offer
+// itself is inactive. This keeps every public offer resolvable to a real,
+// linkable /specjalisci/[slug] and /oferta/[slug] page.
 const publicSpecialistOfferSelection = `
   service_id,
   price_minor,
@@ -441,10 +458,15 @@ const publicSpecialistOfferSelection = `
   accepting_new_clients,
   specialists!inner (
     public_slug,
-    professional_title
+    professional_title,
+    specialist_public_profiles!inner (
+      display_name,
+      profile_photo_url
+    )
   ),
   services!inner (
     slug,
+    name,
     default_duration_minutes
   )
 `;
@@ -458,6 +480,26 @@ export async function listPublicSpecialistOffersForService(
     .select(publicSpecialistOfferSelection)
     .eq("active", true)
     .eq("services.slug", slug);
+
+  if (error) throw error;
+  return (data as unknown as PublicSpecialistOfferQueryRow[]).map(
+    mapPublicSpecialistOffer,
+  );
+}
+
+/**
+ * Every public offer belonging to one specialist, in one query -- for the
+ * specialist detail page's "services offered" section.
+ */
+export async function listPublicSpecialistOffersForSpecialist(
+  client: SupabaseClient<Database>,
+  specialistSlug: string,
+): Promise<PublicSpecialistOffer[]> {
+  const { data, error } = await client
+    .from("specialist_services")
+    .select(publicSpecialistOfferSelection)
+    .eq("active", true)
+    .eq("specialists.public_slug", specialistSlug);
 
   if (error) throw error;
   return (data as unknown as PublicSpecialistOfferQueryRow[]).map(

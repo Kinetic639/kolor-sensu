@@ -4,6 +4,8 @@ import { afterEach } from "vitest";
 
 afterEach(() => {
   cleanup();
-  document.body.removeAttribute("data-scroll-locked");
-  document.body.style.removeProperty("pointer-events");
+  if (typeof document !== "undefined") {
+    document.body.removeAttribute("data-scroll-locked");
+    document.body.style.removeProperty("pointer-events");
+  }
 });

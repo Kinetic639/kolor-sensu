@@ -104,7 +104,12 @@ export interface PublicService {
 
 export interface PublicSpecialistOffer {
   serviceId: string;
+  serviceSlug: string;
+  serviceName: string;
   specialistPublicSlug: string;
+  specialistDisplayName: string;
+  /** Raw private-bucket storage path, not a resolvable URL -- sign with createSpecialistMediaSignedUrl. */
+  specialistProfilePhotoUrl: string | null;
   specialistProfessionalTitle: string | null;
   priceMinor: number;
   currencyCode: string;

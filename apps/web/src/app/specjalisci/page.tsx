@@ -5,9 +5,11 @@ import {
 } from "@repo/supabase";
 import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/avatar";
 import { Badge } from "@repo/ui/badge";
+import { Button } from "@repo/ui/button";
 import { Card } from "@repo/ui/card";
 import { Container } from "@repo/ui/container";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Specjaliści | Kolor Sensu",
@@ -51,9 +53,12 @@ export default async function SpecjalisciPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-semibold text-[var(--text)]">
+                      <Link
+                        className="font-semibold text-[var(--text)] hover:underline"
+                        href={`/specjalisci/${specialist.publicSlug}`}
+                      >
                         {specialist.displayName}
-                      </p>
+                      </Link>
                       {specialist.professionalTitle ? (
                         <p className="text-sm text-[var(--text-muted)]">
                           {specialist.professionalTitle}
@@ -69,6 +74,11 @@ export default async function SpecjalisciPage() {
                   {specialist.acceptingNewClients ? (
                     <Badge variant="success">Przyjmuje nowych klientów</Badge>
                   ) : null}
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/specjalisci/${specialist.publicSlug}`}>
+                      Szczegóły
+                    </Link>
+                  </Button>
                 </Card>
               </li>
             ))}

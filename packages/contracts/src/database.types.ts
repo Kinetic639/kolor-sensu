@@ -747,6 +747,16 @@ export type Database = {
         Args: { required_role: Database["public"]["Enums"]["app_role"] };
         Returns: boolean;
       };
+      list_public_room_locations: {
+        Args: never;
+        Returns: {
+          location_id: string;
+          location_name: string;
+          location_slug: string;
+          room_id: string;
+          room_slug: string;
+        }[];
+      };
       publish_site_content: { Args: { p_key: string }; Returns: undefined };
       reject_specialist_profile_draft: {
         Args: { p_draft_id: string; p_review_comment: string };

@@ -142,6 +142,7 @@ export {
 } from "./select";
 export { ServiceStatusBadges, SpecialistOfferSummary } from "./service-admin";
 export { RoomAvailabilityExceptionItem, RoomStatusBadges } from "./room-admin";
+export { Prose, RichTextRenderer } from "./rich-text-renderer";
 export {
   Sheet,
   SheetClose,

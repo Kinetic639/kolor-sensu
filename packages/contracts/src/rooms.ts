@@ -162,3 +162,59 @@ export interface RoomTimeInterval {
   startsAt: string;
   endsAt: string;
 }
+
+/**
+ * The public-safe projection of a room: only fields a published room
+ * public profile actually carries, plus the location context resolved
+ * through the narrow `list_public_room_locations()` bridge (anon has no
+ * direct grant on `rooms` at all). Deliberately excludes capacity,
+ * internal descriptions, and anything from opening hours or availability
+ * exceptions -- none of those are public-safe under the current domain.
+ */
+export interface PublicRoom {
+  roomId: string;
+  roomSlug: string;
+  displayName: string;
+  shortDescription: string | null;
+  longDescription: string | null;
+  imagePath: string | null;
+  accessibilityNotes: string | null;
+  amenities: string[];
+  locationId: string;
+  locationName: string;
+  locationSlug: string;
+}
+
+export interface PublicRoomLocationGroup {
+  locationId: string;
+  locationName: string;
+  locationSlug: string;
+  rooms: PublicRoom[];
+}
+
+/**
+ * Groups already-location-resolved public rooms by their location,
+ * preserving input order within and across groups (a Map iterates in
+ * insertion order). Callers should pass rooms pre-sorted the way they
+ * want groups and rooms-within-a-group to appear -- this function does
+ * no sorting of its own.
+ */
+export function groupPublicRoomsByLocation(
+  rooms: PublicRoom[],
+): PublicRoomLocationGroup[] {
+  const groups = new Map<string, PublicRoomLocationGroup>();
+  for (const room of rooms) {
+    const existing = groups.get(room.locationId);
+    if (existing) {
+      existing.rooms.push(room);
+    } else {
+      groups.set(room.locationId, {
+        locationId: room.locationId,
+        locationName: room.locationName,
+        locationSlug: room.locationSlug,
+        rooms: [room],
+      });
+    }
+  }
+  return Array.from(groups.values());
+}
