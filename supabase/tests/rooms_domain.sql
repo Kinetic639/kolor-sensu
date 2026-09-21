@@ -226,22 +226,27 @@ SELECT set_config(
 );
 SET LOCAL ROLE authenticated;
 
+-- 'test-room-1' deliberately exists in both test locations (see F above,
+-- proving slug uniqueness is scoped per-location) -- every lookup below
+-- must disambiguate by location_a_id, since a bare LIMIT 1 across two
+-- same-slug rows has no defined order and can silently resolve to either
+-- one depending on the query plan.
 INSERT INTO public.room_public_profiles (
   room_id, display_name, short_description, amenities, published
 )
 VALUES (
-  (SELECT id FROM public.rooms WHERE slug = 'test-room-1' LIMIT 1),
+  (SELECT id FROM public.rooms WHERE slug = 'test-room-1' AND location_id = (SELECT location_a_id FROM rooms_test_ids)),
   'Public Test Room', 'Safe public copy', ARRAY['winda'], false
 );
 
 SELECT public.replace_room_opening_hours(
-  (SELECT id FROM public.rooms WHERE slug = 'test-room-1' LIMIT 1),
+  (SELECT id FROM public.rooms WHERE slug = 'test-room-1' AND location_id = (SELECT location_a_id FROM rooms_test_ids)),
   '[{"weekday":1,"starts_at":"08:00","ends_at":"12:00"},{"weekday":1,"starts_at":"13:00","ends_at":"18:00"}]'::jsonb
 );
 
 DO $$
 DECLARE
-  test_room_id uuid := (SELECT id FROM public.rooms WHERE slug = 'test-room-1' LIMIT 1);
+  test_room_id uuid := (SELECT id FROM public.rooms WHERE slug = 'test-room-1' AND location_id = (SELECT location_a_id FROM rooms_test_ids));
 BEGIN
   IF (SELECT count(*) FROM public.room_opening_hours WHERE room_id = test_room_id) <> 2 THEN
     RAISE EXCEPTION 'H: admin could not define recurring opening hours';
@@ -307,7 +312,7 @@ SET LOCAL ROLE authenticated;
 
 DO $$
 DECLARE
-  test_room_id uuid := (SELECT id FROM public.rooms WHERE slug = 'test-room-1' LIMIT 1);
+  test_room_id uuid := (SELECT id FROM public.rooms WHERE slug = 'test-room-1' AND location_id = (SELECT location_a_id FROM rooms_test_ids));
 BEGIN
   IF (SELECT count(*) FROM public.room_opening_hours WHERE room_id = test_room_id) <> 2 THEN
     RAISE EXCEPTION 'O: specialist could not read active-room opening hours';

@@ -734,6 +734,101 @@ export type Database = {
           },
         ];
       };
+      workshops: {
+        Row: {
+          capacity: number;
+          cover_image_path: string | null;
+          created_at: string;
+          currency_code: string;
+          ends_at: string;
+          id: string;
+          location_id: string | null;
+          long_description: string | null;
+          modality: Database["public"]["Enums"]["workshop_modality"];
+          price_minor: number;
+          registration_enabled: boolean;
+          room_id: string | null;
+          short_description: string | null;
+          slug: string;
+          specialist_id: string;
+          starts_at: string;
+          status: Database["public"]["Enums"]["workshop_status"];
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          capacity: number;
+          cover_image_path?: string | null;
+          created_at?: string;
+          currency_code?: string;
+          ends_at: string;
+          id?: string;
+          location_id?: string | null;
+          long_description?: string | null;
+          modality?: Database["public"]["Enums"]["workshop_modality"];
+          price_minor: number;
+          registration_enabled?: boolean;
+          room_id?: string | null;
+          short_description?: string | null;
+          slug: string;
+          specialist_id: string;
+          starts_at: string;
+          status?: Database["public"]["Enums"]["workshop_status"];
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          capacity?: number;
+          cover_image_path?: string | null;
+          created_at?: string;
+          currency_code?: string;
+          ends_at?: string;
+          id?: string;
+          location_id?: string | null;
+          long_description?: string | null;
+          modality?: Database["public"]["Enums"]["workshop_modality"];
+          price_minor?: number;
+          registration_enabled?: boolean;
+          room_id?: string | null;
+          short_description?: string | null;
+          slug?: string;
+          specialist_id?: string;
+          starts_at?: string;
+          status?: Database["public"]["Enums"]["workshop_status"];
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "workshops_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workshops_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workshops_room_location_fkey";
+            columns: ["room_id", "location_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id", "location_id"];
+          },
+          {
+            foreignKeyName: "workshops_specialist_id_fkey";
+            columns: ["specialist_id"];
+            isOneToOne: false;
+            referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -815,6 +910,8 @@ export type Database = {
         | "assessment"
         | "workshop_related"
         | "other";
+      workshop_modality: "in_person" | "online";
+      workshop_status: "draft" | "published" | "cancelled" | "completed";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -962,6 +1059,8 @@ export const Constants = {
         "workshop_related",
         "other",
       ],
+      workshop_modality: ["in_person", "online"],
+      workshop_status: ["draft", "published", "cancelled", "completed"],
     },
   },
 } as const;

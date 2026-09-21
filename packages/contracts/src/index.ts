@@ -115,6 +115,35 @@ export type {
   RoomTimeInterval,
   RoomUpdate,
 } from "@repo/contracts/rooms";
+export {
+  DEFAULT_CENTER_TIMEZONE,
+  combineDateTimeToIso,
+  formatWorkshopDate,
+  formatWorkshopTimeRange,
+  isWorkshopUpcoming,
+  splitIsoToDateTime,
+  workshopCapacitySchema,
+  workshopCreateSchema,
+  workshopModalityLabels,
+  workshopModalitySchema,
+  workshopSlugSchema,
+  workshopStatusLabels,
+  workshopStatusSchema,
+  workshopUpdateSchema,
+  workshopDurationMinutes,
+} from "@repo/contracts/workshops";
+export type {
+  PublicWorkshopDetail,
+  PublicWorkshopLocation,
+  PublicWorkshopRoom,
+  PublicWorkshopSpecialist,
+  PublicWorkshopSummary,
+  Workshop,
+  WorkshopCreate,
+  WorkshopModality,
+  WorkshopStatus,
+  WorkshopUpdate,
+} from "@repo/contracts/workshops";
 
 export const userRoleSchema = z.enum(["admin", "specialist", "client"]);
 

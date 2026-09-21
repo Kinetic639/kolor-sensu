@@ -10,4 +10,5 @@ export const publicNavigation: PublicNavigationItem[] = [
   { label: "Specjaliści", href: "/specjalisci" },
   { label: "Oferta", href: "/oferta" },
   { label: "Gabinety", href: "/gabinety" },
+  { label: "Warsztaty", href: "/warsztaty" },
 ];

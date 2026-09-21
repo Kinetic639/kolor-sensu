@@ -11,7 +11,8 @@
     "./rich-text": "./src/rich-text.ts",
     "./rooms": "./src/rooms.ts",
     "./services": "./src/services.ts",
-    "./specialist": "./src/specialist.ts"
+    "./specialist": "./src/specialist.ts",
+    "./workshops": "./src/workshops.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

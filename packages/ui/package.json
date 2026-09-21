@@ -42,7 +42,8 @@
     "./test-content-block": "./src/test-content-block.tsx",
     "./textarea": "./src/textarea.tsx",
     "./toaster": "./src/toaster.tsx",
-    "./tooltip": "./src/tooltip.tsx"
+    "./tooltip": "./src/tooltip.tsx",
+    "./workshop-admin": "./src/workshop-admin.tsx"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

@@ -77,3 +77,37 @@ not a calendar. The UI intentionally says “resource availability” and never 
 specialist working time. Reusable status/exception presentation lives in
 `packages/ui`; permissions, mutations and room-domain behavior remain in the feature
 and Supabase packages.
+
+## 13. Workshops vertical slice
+
+Workshops is the first full end-to-end vertical slice built in one task: canonical
+domain, Admin management, and public list + detail together. See
+[workshops-domain.md](./workshops-domain.md) for the domain model itself (lifecycle,
+specialist/room/location invariants, public visibility rule). This section covers
+only the Admin/portal integration shape.
+
+`apps/admin/src/features/warsztaty` follows the exact `query-keys`/`types`/
+`view-model`/`loaders`/`actions` shape as Services and Rooms -- no new pattern was
+introduced. The list (`/warsztaty`) reuses the same server-rendered-initial-data +
+TanStack Query refresh/invalidate approach, with the same search/status/modality/date
+filters as the other catalog lists. The specialist/location/room pickers in the
+create/edit form (`workshop-form.tsx`) read from the existing
+`listSpecialistSummariesForAdmin`/`listLocations`/`listRoomsAdmin` helpers -- no
+workshop-specific copies of specialist or resource data were created, and the room
+picker is scoped client-side to the selected location from one batch-loaded list
+(no per-location query).
+
+Because a Workshop's publication has real invariants (a valid specialist, and for
+in-person events a valid location, already enforced as NOT NULL/CHECK constraints at
+all times, not just at publish time), publishing/cancelling/completing are three
+dedicated guarded mutations (`publishWorkshopAction`/`cancelWorkshopAction`/
+`completeWorkshopAction`) rather than a raw status field on the edit form -- mirroring
+the "prefer a canonical backend operation over a disabled frontend button" principle
+already used for Specialist Domain draft submission/review. Cancelling requires an
+explicit confirmation dialog, consistent with the "do not hard-delete, use lifecycle"
+principle applied to Services/Rooms deactivation.
+
+`WorkshopStatusBadge`/`WorkshopModalityBadge` (`packages/ui/src/workshop-admin.tsx`)
+are the reusable Storybook-covered pieces, following the same
+`ServiceStatusBadges`-style pattern; the list/detail table and card markup itself
+stays inline in the feature components, matching how Services and Rooms are built.

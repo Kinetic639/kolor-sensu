@@ -21,6 +21,7 @@ export const adminNavigation: PortalNavigationSection[] = [
       { label: "Specjaliści", href: "/specjalisci", icon: "specialists" },
       { label: "Gabinety", href: "/gabinety", icon: "rooms" },
       { label: "Oferta", href: "/oferta", icon: "services" },
+      { label: "Warsztaty", href: "/warsztaty", icon: "workshops" },
       { label: "Klienci", href: "/klienci", icon: "clients" },
     ],
   },

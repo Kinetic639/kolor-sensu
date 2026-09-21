@@ -4,6 +4,7 @@ import {
   Clock3,
   ContactRound,
   FileText,
+  GraduationCap,
   LayoutDashboard,
   Settings,
   Tags,
@@ -39,6 +40,7 @@ const portalIcons = {
   settings: Settings,
   specialist: UserRound,
   specialists: Users,
+  workshops: GraduationCap,
 } satisfies Record<string, LucideIcon>;
 
 export type PortalNavigationIcon = keyof typeof portalIcons;

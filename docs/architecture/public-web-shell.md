@@ -7,13 +7,14 @@
 that matters here is the same one: no dynamic/CMS-created routes, no
 placeholder pages created just to fill out navigation. The routes that
 exist today are `/` (Home), `/specjalisci` (Specialists), `/oferta`
-(Offer), `/gabinety` (Rooms), and their three detail route families
-(`/specjalisci/[slug]`, `/oferta/[slug]`, `/gabinety/[slug]`) — each a
-real, code-defined `page.tsx`, never a CMS-created page. `[slug]` here is
-an **application-owned dynamic segment**, not a CMS mechanism: the slug
-identifies one real domain entity (a specialist, a service, or a room),
-and there is no generic "any slug renders a page" route anywhere in the
-app.
+(Offer), `/gabinety` (Rooms), `/warsztaty` (Workshops), and their four
+detail route families (`/specjalisci/[slug]`, `/oferta/[slug]`,
+`/gabinety/[slug]`, `/warsztaty/[slug]`) — each a real, code-defined
+`page.tsx`, never a CMS-created page. `[slug]` here is an
+**application-owned dynamic segment**, not a CMS mechanism: the slug
+identifies one real domain entity (a specialist, a service, a room, or a
+workshop), and there is no generic "any slug renders a page" route
+anywhere in the app.
 
 ## One shared public shell
 
@@ -291,6 +292,48 @@ architecture — the existing, already-proven `Avatar`/`AvatarImage`
 (specialist list, specialist detail, service detail) and a plain `<img>`
 (the specialist detail page's portrait, the one place without an existing
 `Avatar`-based precedent) are used instead, with `alt` text on every image.
+
+## Public Workshops pages (`/warsztaty`, `/warsztaty/[slug]`)
+
+Full domain model, lifecycle, and RLS are documented in
+[workshops-domain.md](./workshops-domain.md); this section covers only the
+public route shape.
+
+**List (`/warsztaty`).** `listPublicWorkshops()` returns upcoming
+(`starts_at > now()`), published workshops, nearest-first, with the
+leading specialist and location embedded in the same query (no N+1).
+Cards show title, short description, date/time, price, capacity,
+modality, and — for in-person workshops whose location is currently
+public — the location name. Every card has both a text link and a
+dedicated "Szczegóły" button to `/warsztaty/[slug]`, matching the same
+pattern the other three list pages already use.
+
+**Detail (`/warsztaty/[slug]`).** `getPublicWorkshopBySlug()` resolves any
+non-draft workshop (published, cancelled, or completed) — a draft or
+unknown slug both `notFound()` identically. Renders title, description,
+date/time, price, capacity, modality, registration status ("Zapisy
+wkrótce" / "Zapisy jeszcze niedostępne" — never a link to registration,
+which doesn't exist yet), a leader section linking to
+`/specjalisci/[slug]` when the specialist is currently public, and — for
+in-person workshops — a location section (plus a `/gabinety/[slug]` room
+link when the room has a public profile). A cancelled workshop shows an
+explicit "Odwołany" status badge next to its title.
+
+**SSR/SEO.** `generateMetadata()` on both routes: list is fixed
+(`"Warsztaty | Kolor Sensu"`), detail is
+`"{workshop title} | Kolor Sensu"` with `shortDescription` (or a generic
+fallback) as the description.
+
+**Caching: the one deliberate exception to "static where possible".**
+`/warsztaty/[slug]` is dynamic (`ƒ`), the same as every other detail
+route, for the same no-revalidation-webhook reason. `/warsztaty` itself
+is **explicitly forced dynamic** (`export const dynamic =
+"force-dynamic"`) — unlike `/specjalisci`, `/oferta`, and `/gabinety`,
+which build as static (`○`). Its query filters by `starts_at > now()`;
+under static prerendering, "now" would freeze at build time and the
+upcoming list would never advance between deploys. None of the other
+public list pages filter by a moving instant, so this is a one-off, not a
+sign the general static-by-default approach was wrong.
 
 ## Navigation link element choice
 

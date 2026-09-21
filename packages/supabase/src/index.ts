@@ -100,3 +100,17 @@ export {
   updateRoomPublicProfile,
   updateRoom,
 } from "./rooms";
+export {
+  cancelWorkshop,
+  completeWorkshop,
+  createWorkshop,
+  getPublicWorkshopBySlug,
+  getWorkshopByIdAdmin,
+  listMyLedWorkshops,
+  listPublicWorkshops,
+  listWorkshopsAdmin,
+  publishWorkshop,
+  updateWorkshop,
+  workshopMappers,
+} from "./workshops";
+export type { AdminWorkshopSummary } from "./workshops";
