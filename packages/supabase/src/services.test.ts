@@ -1,11 +1,16 @@
 import {
+  buildPublicOfferSummary,
   durationMinutesSchema,
+  formatPriceMinor,
+  formatSpecialistCountLabel,
   priceMinorSchema,
   resolveEffectiveDurationMinutes,
   serviceCategorySchema,
   serviceCreateSchema,
   serviceSlugSchema,
   specialistServiceUpsertSchema,
+  type PublicService,
+  type PublicSpecialistOffer,
 } from "@repo/contracts";
 import { describe, expect, it } from "vitest";
 import { serviceMappers } from "./services";
@@ -88,6 +93,102 @@ describe("effective duration resolution", () => {
         { durationMinutes: 45 },
       ),
     ).toBe(45);
+  });
+});
+
+describe("public offer summary derivation", () => {
+  const service: PublicService = {
+    id: "service-1",
+    name: "Terapia dla par",
+    slug: "terapia-dla-par",
+    shortDescription: "Pomoc w związku.",
+    description: null,
+    category: "couples_therapy",
+    defaultDurationMinutes: 50,
+  };
+
+  function offer(
+    overrides: Partial<PublicSpecialistOffer>,
+  ): PublicSpecialistOffer {
+    return {
+      serviceId: "service-1",
+      specialistPublicSlug: "anna",
+      specialistProfessionalTitle: null,
+      priceMinor: 20000,
+      currencyCode: "PLN",
+      effectiveDurationMinutes: 50,
+      supportsInPerson: true,
+      supportsOnline: false,
+      acceptingNewClients: true,
+      ...overrides,
+    };
+  }
+
+  it("invents nothing when a public service has zero public offers", () => {
+    expect(buildPublicOfferSummary(service, [])).toMatchObject({
+      specialistCount: 0,
+      supportsOnline: false,
+      supportsInPerson: false,
+      minPriceMinor: null,
+      minPriceCurrencyCode: null,
+    });
+  });
+
+  it("ignores offers that belong to a different service", () => {
+    const otherServiceOffer = offer({ serviceId: "service-2", priceMinor: 1 });
+    expect(buildPublicOfferSummary(service, [otherServiceOffer])).toMatchObject(
+      { specialistCount: 0, minPriceMinor: null },
+    );
+  });
+
+  it("derives the minimum price as a plain integer, never floating point math", () => {
+    const summary = buildPublicOfferSummary(service, [
+      offer({ specialistPublicSlug: "anna", priceMinor: 25000 }),
+      offer({ specialistPublicSlug: "bartek", priceMinor: 18000 }),
+      offer({ specialistPublicSlug: "celina", priceMinor: 30000 }),
+    ]);
+    expect(summary.minPriceMinor).toBe(18000);
+    expect(summary.minPriceCurrencyCode).toBe("PLN");
+    expect(Number.isInteger(summary.minPriceMinor)).toBe(true);
+  });
+
+  it("aggregates modalities as true if any public offer supports them", () => {
+    const summary = buildPublicOfferSummary(service, [
+      offer({
+        specialistPublicSlug: "anna",
+        supportsInPerson: true,
+        supportsOnline: false,
+      }),
+      offer({
+        specialistPublicSlug: "bartek",
+        supportsInPerson: false,
+        supportsOnline: true,
+      }),
+    ]);
+    expect(summary.supportsInPerson).toBe(true);
+    expect(summary.supportsOnline).toBe(true);
+  });
+
+  it("counts each offer as one specialist, matching the DB's one-offer-per-specialist-per-service constraint", () => {
+    const summary = buildPublicOfferSummary(service, [
+      offer({ specialistPublicSlug: "anna" }),
+      offer({ specialistPublicSlug: "bartek" }),
+    ]);
+    expect(summary.specialistCount).toBe(2);
+  });
+});
+
+describe("public offer presentation formatting", () => {
+  it("formats an integer minor-unit price as a localized currency string", () => {
+    expect(formatPriceMinor(18000, "PLN")).toContain("180");
+    expect(formatPriceMinor(18000, "PLN")).toMatch(/zł/);
+  });
+
+  it("uses the singular Polish form only for exactly one specialist", () => {
+    expect(formatSpecialistCountLabel(0)).toBe("0 specjalistów");
+    expect(formatSpecialistCountLabel(1)).toBe("1 specjalista");
+    expect(formatSpecialistCountLabel(2)).toBe("2 specjalistów");
+    expect(formatSpecialistCountLabel(5)).toBe("5 specjalistów");
   });
 });
 

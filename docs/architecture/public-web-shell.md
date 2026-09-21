@@ -5,8 +5,9 @@
 `apps/web`'s public route surface is code-owned and fixed. See
 [cms-domain.md](./cms-domain.md) for the full rationale; the restatement
 that matters here is the same one: no dynamic/CMS-created routes, no
-placeholder pages created just to fill out navigation. The only routes
-that exist today are `/` (Home) and `/specjalisci` (Specialists).
+placeholder pages created just to fill out navigation. The routes that
+exist today are `/` (Home), `/specjalisci` (Specialists), and `/oferta`
+(Offer) — each a real, code-defined `page.tsx`, never a CMS-created page.
 
 ## One shared public shell
 
@@ -39,7 +40,8 @@ maintained list of route labels anywhere. Extend this array only once a
 route is actually implemented and reachable; it must never contain a
 `href` that doesn't resolve to a real page. `tests/e2e/public-web-shell.spec.ts`
 (test F) asserts this live: every link rendered inside `<header nav>` and
-`<footer nav>` resolves to a route in the known set (`/`, `/specjalisci`).
+`<footer nav>` resolves to a route in the known set (`/`, `/specjalisci`,
+`/oferta`).
 
 ## SSR/RSC requirement
 
@@ -63,6 +65,64 @@ Home's and Specialists' own data fetching is unchanged: both still fetch
 directly in their Server Component page (`getPublishedHomeContent`,
 `listPublishedSpecialists`), still server-rendered, still no client fetch
 for their core content.
+
+## Public Offer page (`/oferta`)
+
+`apps/web/src/app/oferta/page.tsx` is a fixed, code-owned `async` Server
+Component — not a CMS-created page, and CMS is not touched by this route
+at all. Its content comes entirely from the existing Services Domain, read
+through the already-existing public data-access helpers
+(`listPublicServices`, and the new `listPublicSpecialistOffers` described
+below) — never from `site_content` or any other CMS table, and never
+duplicated into one.
+
+**Source of truth and query strategy.** The page issues exactly two
+queries in parallel (`Promise.all`): `listPublicServices()` for the
+catalog, and `listPublicSpecialistOffers()` — a new helper in
+`packages/supabase/src/services.ts` that returns every currently-public
+specialist offer across _all_ public services in one query (the existing
+`listPublicSpecialistOffersForService(slug)` only fetches one service's
+offers, which would mean one query per service — an N+1 pattern the page
+deliberately avoids). Grouping happens in memory afterward
+(`buildPublicOfferSummary`), not via a third query or a materialized view.
+
+**View model.** `packages/contracts/src/services.ts` exports
+`buildPublicOfferSummary(service, offers)`, a pure function (tested in
+`packages/supabase/src/services.test.ts`, the same file that already
+tests `resolveEffectiveDurationMinutes` — `packages/contracts` itself has
+no test runner, so its pure functions are tested from the consuming
+package, matching existing precedent) that derives, strictly from a
+service's own public offers and never invented:
+
+- `specialistCount` — simply `offers.length`, not a deduplicated set:
+  `specialist_services_specialist_service_key` is `UNIQUE(specialist_id,
+service_id)`, so each offer already represents exactly one distinct
+  specialist.
+- `supportsOnline` / `supportsInPerson` — `true` if _any_ public offer for
+  that service supports it.
+- `minPriceMinor` / `minPriceCurrencyCode` — the cheapest public offer's
+  integer minor-unit price, compared with plain integer `<`, never
+  floating point; `null` when there are no public offers for that
+  service. `formatPriceMinor` (also new, same file) converts to a
+  localized string (`Intl.NumberFormat("pl-PL", { style: "currency" })`)
+  only at render time, the same pattern already used inline by the Admin
+  Specialists view for the identical reason.
+
+**No-offer fallback.** A public service with zero public specialist
+offers renders `"Cena ustalana indywidualnie"` instead of a price, and no
+modality badges at all — chosen over omitting the price line entirely
+because it's more informative to a visitor (explains _why_ no price
+shows, rather than looking like a missing field) while still inventing
+nothing. As of this writing this is the live DEV state for both real
+services (`specialist_services` is empty), which is the honest state, not
+a bug.
+
+**SSR/SEO.** Fixed `generateMetadata()` (`"Oferta | Kolor Sensu"` / a
+generic, non-clinical description). Zero public specialist offers today
+means the whole page is static-prerenderable (`next build` emits `/oferta`
+as `○` — static — the same as `/` and `/specjalisci`); it will become
+request-time-rendered automatically once real offers make the data
+genuinely dynamic per request, with no code change required.
 
 ## Navigation link element choice
 

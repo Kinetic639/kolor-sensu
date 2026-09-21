@@ -59,6 +59,7 @@ export {
   listAvailableServicesForSpecialist,
   listMySpecialistServices,
   listPublicServices,
+  listPublicSpecialistOffers,
   listPublicSpecialistOffersForService,
   listServicesAdmin,
   listServiceSummariesAdmin,

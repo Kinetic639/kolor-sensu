@@ -125,3 +125,69 @@ export function resolveEffectiveDurationMinutes(
 ): number {
   return specialistService.durationMinutes ?? service.defaultDurationMinutes;
 }
+
+export interface PublicOfferSummary {
+  id: string;
+  name: string;
+  slug: string;
+  shortDescription: string | null;
+  defaultDurationMinutes: number;
+  specialistCount: number;
+  supportsOnline: boolean;
+  supportsInPerson: boolean;
+  minPriceMinor: number | null;
+  minPriceCurrencyCode: string | null;
+}
+
+/**
+ * Derives what a public /oferta card may safely claim about a service,
+ * strictly from its own active public specialist offers -- never invented.
+ * A service with zero public offers yields nulls/zeros/false throughout,
+ * not a guessed price or modality.
+ *
+ * specialistCount is simply the offer count, not a deduplicated set: the
+ * specialist_services_specialist_service_key UNIQUE constraint guarantees
+ * at most one offer per specialist per service, so each offer already
+ * represents exactly one distinct specialist.
+ */
+export function buildPublicOfferSummary(
+  service: PublicService,
+  offers: PublicSpecialistOffer[],
+): PublicOfferSummary {
+  const serviceOffers = offers.filter(
+    (offer) => offer.serviceId === service.id,
+  );
+  const cheapestOffer = serviceOffers.reduce<PublicSpecialistOffer | null>(
+    (lowest, offer) =>
+      lowest === null || offer.priceMinor < lowest.priceMinor ? offer : lowest,
+    null,
+  );
+
+  return {
+    id: service.id,
+    name: service.name,
+    slug: service.slug,
+    shortDescription: service.shortDescription,
+    defaultDurationMinutes: service.defaultDurationMinutes,
+    specialistCount: serviceOffers.length,
+    supportsOnline: serviceOffers.some((offer) => offer.supportsOnline),
+    supportsInPerson: serviceOffers.some((offer) => offer.supportsInPerson),
+    minPriceMinor: cheapestOffer?.priceMinor ?? null,
+    minPriceCurrencyCode: cheapestOffer?.currencyCode ?? null,
+  };
+}
+
+/** Formats an integer minor-unit amount as a localized currency string. */
+export function formatPriceMinor(
+  priceMinor: number,
+  currencyCode: string,
+): string {
+  return new Intl.NumberFormat("pl-PL", {
+    style: "currency",
+    currency: currencyCode,
+  }).format(priceMinor / 100);
+}
+
+export function formatSpecialistCountLabel(count: number): string {
+  return count === 1 ? "1 specjalista" : `${count} specjalistów`;
+}

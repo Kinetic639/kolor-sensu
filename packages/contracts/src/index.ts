@@ -41,7 +41,10 @@ export type {
   SpecialistPublicProfileInput,
 } from "@repo/contracts/specialist";
 export {
+  buildPublicOfferSummary,
   durationMinutesSchema,
+  formatPriceMinor,
+  formatSpecialistCountLabel,
   priceMinorSchema,
   resolveEffectiveDurationMinutes,
   serviceCategorySchema,
@@ -51,6 +54,7 @@ export {
   specialistServiceUpsertSchema,
 } from "@repo/contracts/services";
 export type {
+  PublicOfferSummary,
   PublicService,
   PublicSpecialistOffer,
   Service,

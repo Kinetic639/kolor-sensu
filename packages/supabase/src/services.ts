@@ -465,6 +465,25 @@ export async function listPublicSpecialistOffersForService(
   );
 }
 
+/**
+ * Every currently-public specialist offer across every public service, in
+ * one query -- for a list page (like /oferta) that needs to summarize many
+ * services at once without an N+1 query per service.
+ */
+export async function listPublicSpecialistOffers(
+  client: SupabaseClient<Database>,
+): Promise<PublicSpecialistOffer[]> {
+  const { data, error } = await client
+    .from("specialist_services")
+    .select(publicSpecialistOfferSelection)
+    .eq("active", true);
+
+  if (error) throw error;
+  return (data as unknown as PublicSpecialistOfferQueryRow[]).map(
+    mapPublicSpecialistOffer,
+  );
+}
+
 export const serviceMappers = {
   service: mapService,
   publicService: mapPublicService,

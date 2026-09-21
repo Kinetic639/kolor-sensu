@@ -8,4 +8,5 @@ import type { PublicNavigationItem } from "@repo/ui/public-site-shell";
 export const publicNavigation: PublicNavigationItem[] = [
   { label: "Strona główna", href: "/" },
   { label: "Specjaliści", href: "/specjalisci" },
+  { label: "Oferta", href: "/oferta" },
 ];

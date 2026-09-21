@@ -56,7 +56,10 @@ test("E: the mobile menu opens and exposes the same navigation", async ({
   await page.getByRole("button", { name: "Otwórz menu nawigacji" }).click();
   const mobileNav = page.getByRole("navigation", { name: "Nawigacja mobilna" });
   await expect(mobileNav).toBeVisible();
-  await expect(mobileNav.getByRole("link")).toHaveCount(2);
+  // Mirrors the live public-navigation config, currently 3 real routes
+  // (/, /specjalisci, /oferta) -- update this count only when that config
+  // gains or loses an entry, never to make a test pass.
+  await expect(mobileNav.getByRole("link")).toHaveCount(3);
 
   await mobileNav.getByRole("link", { name: "Specjaliści" }).click();
   await expect(page).toHaveURL(`${webUrl}/specjalisci`);
@@ -67,7 +70,7 @@ test("F: no navigation link points to a non-existent route", async ({
 }) => {
   await page.goto(`${webUrl}/`);
 
-  const knownRoutes = new Set(["/", "/specjalisci"]);
+  const knownRoutes = new Set(["/", "/specjalisci", "/oferta"]);
   const headerLinks = await page
     .locator("header nav a")
     .evaluateAll((links) => links.map((link) => new URL(link.href).pathname));

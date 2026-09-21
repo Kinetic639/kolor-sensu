@@ -212,6 +212,9 @@ importers:
       '@repo/app-runtime':
         specifier: workspace:*
         version: link:../../packages/app-runtime
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@repo/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
