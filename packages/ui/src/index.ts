@@ -132,6 +132,8 @@ export {
   SelectValue,
 } from "./select";
 export { ServiceStatusBadges, SpecialistOfferSummary } from "./service-admin";
+export { RichTextEditor, type RichTextEditorProps } from "./rich-text-editor";
+export { Prose, RichTextRenderer } from "./rich-text-renderer";
 export {
   Sheet,
   SheetClose,
