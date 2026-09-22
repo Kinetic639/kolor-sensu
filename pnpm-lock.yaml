@@ -507,6 +507,9 @@ importers:
       '@repo/design-system':
         specifier: workspace:*
         version: link:../design-system
+      '@repo/scheduling':
+        specifier: workspace:*
+        version: link:../scheduling
       '@tiptap/extension-placeholder':
         specifier: 3.31.3
         version: 3.31.3(@tiptap/extensions@3.31.3(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3))

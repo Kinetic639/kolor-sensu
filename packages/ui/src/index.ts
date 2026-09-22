@@ -135,6 +135,11 @@ export { ServiceStatusBadges, SpecialistOfferSummary } from "./service-admin";
 export { RichTextEditor, type RichTextEditorProps } from "./rich-text-editor";
 export { Prose, RichTextRenderer } from "./rich-text-renderer";
 export {
+  AvailabilityBlock,
+  type AvailabilityBlockProps,
+} from "./availability-block";
+export { ResourceHeader, type ResourceHeaderProps } from "./resource-header";
+export {
   Sheet,
   SheetClose,
   SheetContent,
