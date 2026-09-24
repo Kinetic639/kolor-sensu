@@ -7,6 +7,12 @@ export default defineMain({
     "@storybook/addon-a11y",
     "@storybook/addon-mcp",
   ],
+  // Public-site stories need the painted masks served by apps/web and a few
+  // deterministic placeholder photos (crops of the approved references).
+  staticDirs: [
+    "../public",
+    { from: "../../web/public/watercolor", to: "/watercolor" },
+  ],
   framework: {
     name: "@storybook/nextjs-vite",
     options: {},

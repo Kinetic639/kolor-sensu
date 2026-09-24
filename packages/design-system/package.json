@@ -5,9 +5,11 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./tokens.css": "./src/tokens.css"
+    "./tokens.css": "./src/tokens.css",
+    "./public-theme.css": "./src/public-theme.css"
   },
   "scripts": {
+    "generate:watercolor": "node scripts/generate-watercolor-masks.mjs",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit"
   },

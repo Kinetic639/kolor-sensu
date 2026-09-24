@@ -26,6 +26,8 @@
     "./portal-icons": "./src/portal-icons.ts",
     "./portal-layout": "./src/portal-layout.tsx",
     "./portal-shell": "./src/portal-shell.tsx",
+    "./public-site": "./src/public-site/index.ts",
+    "./public-site.css": "./src/public-site/public-site.css",
     "./notification": "./src/notification.tsx",
     "./select": "./src/select.tsx",
     "./service-admin": "./src/service-admin.tsx",

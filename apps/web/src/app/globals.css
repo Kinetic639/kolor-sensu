@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "@repo/ui/styles.css";
+/* Public-site tokens and painted layers; nothing renders differently until a
+   page uses them. docs/design/kolor-sensu-public-design-system.md */
+@import "@repo/ui/public-site.css";
 @source "../../../../packages/ui/src";
 
 @layer base {
