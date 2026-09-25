@@ -259,10 +259,10 @@ readable on any photo.
   component, only where `animationPreset="watercolor-reveal"` is used, plus
   the two matte atlases (§7). It animates only the matte (an off-layout SVG):
   no layout properties, so no layout shift (CLS 0 measured). Script time is
-  about 40 ms per reveal. Measured in headless Chromium without a GPU (a
+  about 30 ms per reveal. Measured in headless Chromium without a GPU (a
   pessimistic setting, all rasterised on the CPU): the backdrop stage runs at
   about 60 fps, the photo stage, where both masked layers repaint each frame,
-  at about 15 fps. Check on the target phones before using it widely. After
+  at about 12 fps. Check on the target phones before using it widely. After
   the reveal nothing is left: no matte, no masks, no filters, no running
   timeline (GSAP's ticker goes to sleep).
 
