@@ -19,9 +19,49 @@ const layers = ["backdrop", "photo"] as const;
 
 function strokesOf(layer: PaintLayerName) {
   return paintMatte[layer].strokes.map((stroke) => ({
-    ...stroke,
+    id: stroke.id,
     ...strokeTiming(layer, stroke.id),
   }));
+}
+
+const backdropStrokes = () =>
+  paintMatte.backdrop.strokes.map((stroke) => ({
+    ...stroke,
+    ...strokeTiming("backdrop", stroke.id),
+  }));
+
+const photoStrokes = () =>
+  paintMatte.photo.strokes.map((stroke) => ({
+    ...stroke,
+    ...strokeTiming("photo", stroke.id),
+  }));
+
+// A backdrop stroke's centreline as points.
+function points(line: readonly number[]) {
+  const out: Array<[number, number]> = [];
+  for (let i = 0; i < line.length; i += 2) out.push([line[i]!, line[i + 1]!]);
+  return out;
+}
+
+// Direction of a line (not of travel), in degrees from horizontal, -90..90.
+function lineAngle([x0, y0]: [number, number], [x1, y1]: [number, number]) {
+  const angle = (Math.atan2(y1 - y0, x1 - x0) * 180) / Math.PI;
+  return ((((angle + 90) % 180) + 180) % 180) - 90;
+}
+
+// How far the direction of travel turns along a centreline, in degrees.
+function turning(line: readonly number[]) {
+  const p = points(line);
+  let total = 0;
+  for (let i = 2; i < p.length; i++) {
+    const a = Math.atan2(
+      p[i - 1]![1] - p[i - 2]![1],
+      p[i - 1]![0] - p[i - 2]![0],
+    );
+    const b = Math.atan2(p[i]![1] - p[i - 1]![1], p[i]![0] - p[i - 1]![0]);
+    total += Math.atan2(Math.sin(b - a), Math.cos(b - a));
+  }
+  return Math.abs((total * 180) / Math.PI);
 }
 
 const end = (stroke: { at: number; duration: number }) =>
@@ -60,49 +100,103 @@ describe("paint schedule", () => {
         paintMatte[layer].strokes.map((stroke) => stroke.id).sort(),
       );
     }
-    expect(paintMatte.backdrop.strokes).toHaveLength(14);
     expect(paintMatte.photo.strokes).toHaveLength(12);
   });
 
-  it("paints the backdrop from both edges at once, toward the centre", () => {
-    const { width } = paintMatte.backdrop;
-    const strokes = strokesOf("backdrop");
-    const left = strokes.filter((stroke) => stroke.id.startsWith("left"));
-    const right = strokes.filter((stroke) => stroke.id.startsWith("right"));
-    expect(left.length + right.length).toBe(strokes.length);
+  it("paints the backdrop with strokes, dry-brush streaks and washes found in its picture", () => {
+    const strokes = backdropStrokes();
+    const brush = strokes.filter((stroke) => stroke.kind !== "wash");
+    const washes = strokes.filter((stroke) => stroke.kind === "wash");
 
-    for (const side of [left, right]) {
+    expect(brush.length).toBeGreaterThanOrEqual(16);
+    expect(brush.some((stroke) => stroke.kind === "dry")).toBe(true);
+    expect(brush.some((stroke) => stroke.kind === "stroke")).toBe(true);
+    expect(washes.length).toBeGreaterThanOrEqual(3);
+    for (const stroke of brush) {
+      expect(stroke.line.length, stroke.id).toBeGreaterThanOrEqual(8);
+      expect(stroke.soft, stroke.id).toBe(false);
+    }
+    for (const wash of washes) {
+      // A wash spreads from one point, with a softer front.
+      expect(wash.line, wash.id).toHaveLength(2);
+      expect(wash.soft, wash.id).toBe(true);
+    }
+  });
+
+  it("follows the picture's brushwork: no strips, no single angle, curves stay curved", () => {
+    const brush = backdropStrokes().filter((stroke) => stroke.kind !== "wash");
+    const angles = brush.map(({ line }) => {
+      const p = points(line);
+      return lineAngle(p[0]!, p.at(-1)!);
+    });
+
+    // Many directions, not one angle for every stroke...
+    expect(Math.max(...angles) - Math.min(...angles)).toBeGreaterThanOrEqual(
+      45,
+    );
+    // ...and not a stack of horizontal strips.
+    const flat = angles.filter((angle) => Math.abs(angle) < 10);
+    expect(flat.length).toBeLessThanOrEqual(brush.length / 4);
+    // Several strokes bend on their way, as the brushwork does.
+    const curved = brush.filter(({ line }) => turning(line) >= 25);
+    expect(curved.length).toBeGreaterThanOrEqual(5);
+  });
+
+  it("paints the backdrop from both edges at once: pink from the left, green from the right", () => {
+    const { width } = paintMatte.backdrop;
+    const strokes = backdropStrokes();
+    const pink = strokes.filter((stroke) => stroke.side === "pink");
+    const green = strokes.filter((stroke) => stroke.side === "green");
+    expect(pink.length + green.length).toBe(strokes.length);
+
+    for (const side of [pink, green]) {
       expect(Math.min(...side.map((stroke) => stroke.at))).toBeLessThanOrEqual(
         0.05,
       );
     }
-    for (const { path } of left) {
-      expect(path[0]).toBeLessThan(0.15 * width);
-      expect(path[4]).toBeGreaterThan(path[0]);
+    // Each side begins at its own edge...
+    const first = (side: typeof strokes) =>
+      side.reduce((a, b) => (b.at < a.at ? b : a));
+    expect(first(pink).line[0]).toBeLessThan(0.15 * width);
+    expect(first(green).line[0]).toBeGreaterThan(0.85 * width);
+    // ...its regions sit on its half of the picture...
+    for (const { id, line } of pink)
+      expect(line[0], id).toBeLessThan(0.55 * width);
+    for (const { id, line } of green) {
+      expect(line[0], id).toBeGreaterThan(0.45 * width);
     }
-    for (const { path } of right) {
-      expect(path[0]).toBeGreaterThan(0.85 * width);
-      expect(path[4]).toBeLessThan(path[0]);
+    // ...and its brushes travel toward the centre.
+    for (const { id, kind, line } of strokes) {
+      if (kind === "wash") continue;
+      const [[x0], [x1]] = [points(line)[0]!, points(line).at(-1)!];
+      if (Math.abs(x1 - x0) < 40) continue;
+      if (pink.some((stroke) => stroke.id === id)) {
+        expect(x1, id).toBeGreaterThan(x0);
+      } else {
+        expect(x1, id).toBeLessThan(x0);
+      }
     }
-    // The two sides run past each other: the centre is where their marks
-    // overlap, not a seam.
-    expect(Math.max(...left.map(({ path }) => path[4]))).toBeGreaterThan(
-      0.6 * width,
-    );
-    expect(Math.min(...right.map(({ path }) => path[4]))).toBeLessThan(
-      0.4 * width,
-    );
   });
 
   it("staggers strokes 20 to 90 ms apart, each starting before the last ends", () => {
-    for (const layer of layers) {
-      const strokes = strokesOf(layer).sort((a, b) => a.at - b.at);
+    const groups = [
+      ...(["pink", "green"] as const).map((side) =>
+        backdropStrokes().filter((stroke) => stroke.side === side),
+      ),
+      photoStrokes(),
+    ];
+    for (const group of groups) {
+      const strokes = [...group].sort((a, b) => a.at - b.at);
+      const gaps = new Set<number>();
       for (let i = 1; i < strokes.length; i++) {
         const gap = strokes[i]!.at - strokes[i - 1]!.at;
+        gaps.add(Math.round(gap * 1000));
         expect(gap, strokes[i]!.id).toBeGreaterThanOrEqual(0.02 - 1e-9);
         expect(gap, strokes[i]!.id).toBeLessThanOrEqual(0.09 + 1e-9);
         expect(strokes[i]!.at).toBeLessThan(end(strokes[i - 1]!));
       }
+      // Irregular, not a metronome.
+      expect(gaps.size).toBeGreaterThan(2);
     }
   });
 
@@ -127,7 +221,7 @@ describe("paint schedule", () => {
     const { width, height } = paintMatte.photo;
     const distance = (x: number, y: number) =>
       Math.hypot(x - width / 2, y - height / 2);
-    const strokes = strokesOf("photo").sort((a, b) => a.at - b.at);
+    const strokes = photoStrokes().sort((a, b) => a.at - b.at);
 
     for (const { id, path } of strokes) {
       // Every brush sets down in the middle column of the photo...

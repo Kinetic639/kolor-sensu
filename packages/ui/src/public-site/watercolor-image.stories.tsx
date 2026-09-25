@@ -201,21 +201,214 @@ function Debug({
 // .ks-wc__photo), to draw its matte in place.
 const photoInset = "2.7% 6.03% 1.35% 3.94%";
 
+// The backdrop picture a story's component uses, as a URL.
+const backdropOf = ({ watercolorSrc }: WatercolorImageProps) =>
+  typeof watercolorSrc === "string" ? watercolorSrc : defaultWatercolorSrc;
+
+// Brush lines of the backdrop matte: pink regions are painted from the left,
+// green ones from the right.
+const sideColour = { pink: "#e0457b", green: "#17a67a" } as const;
+
+/**
+ * The backdrop's paint regions as the generator found them in the picture:
+ * each brush stroke's centreline with an arrow in the direction it is
+ * painted (dashed: dry-brush streak), and the point each wash spreads from.
+ * Drawn in the backdrop layer's own space, over whatever panel holds it.
+ */
+function BrushworkLines({ labels = false }: { labels?: boolean }) {
+  const { width, height } = paintMatte.backdrop;
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      aria-hidden="true"
+    >
+      {paintMatte.backdrop.strokes.map((stroke) => {
+        const colour = sideColour[stroke.side];
+        const line = stroke.line as readonly number[];
+        const [x0, y0] = [line[0]!, line[1]!];
+        const label = labels ? (
+          <text
+            x={x0 + 8}
+            y={y0 - 8}
+            fontSize={15}
+            fontFamily="system-ui, sans-serif"
+            fill="#1d1d1d"
+            stroke="#fff"
+            strokeWidth={3}
+            paintOrder="stroke"
+          >
+            {stroke.id}
+          </text>
+        ) : null;
+        if (stroke.kind === "wash") {
+          return (
+            <g key={stroke.id}>
+              <circle
+                cx={x0}
+                cy={y0}
+                r={9}
+                fill="none"
+                stroke={colour}
+                strokeWidth={3}
+              />
+              <circle
+                cx={x0}
+                cy={y0}
+                r={22}
+                fill="none"
+                stroke={colour}
+                strokeWidth={1.5}
+                strokeDasharray="3 5"
+              />
+              {label}
+            </g>
+          );
+        }
+        const n = line.length;
+        const [x1, y1] = [line[n - 2]!, line[n - 1]!];
+        const [px, py] = [line[n - 4]!, line[n - 3]!];
+        const length = Math.hypot(x1 - px, y1 - py) || 1;
+        const [ux, uy] = [(x1 - px) / length, (y1 - py) / length];
+        const head = [
+          [x1 + ux * 14, y1 + uy * 14],
+          [x1 - uy * 8, y1 + ux * 8],
+          [x1 + uy * 8, y1 - ux * 8],
+        ]
+          .map((point) => point.join(","))
+          .join(" ");
+        const points: string[] = [];
+        for (let i = 0; i < n; i += 2) points.push(`${line[i]},${line[i + 1]}`);
+        return (
+          <g key={stroke.id}>
+            <polyline
+              points={points.join(" ")}
+              fill="none"
+              stroke={colour}
+              strokeWidth={3.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray={stroke.kind === "dry" ? "10 6" : undefined}
+            />
+            <circle cx={x0} cy={y0} r={5} fill={colour} />
+            <polygon points={head} fill={colour} />
+            {label}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+/**
+ * The backdrop picture with its paint regions laid over it (one tint per
+ * region, pink side in pinks, green side in greens) and their brush lines:
+ * the segmentation the backdrop matte is built from, derived from the
+ * picture itself. With `timeMap`, the regions show their time maps instead
+ * (darker = painted earlier within its region).
+ */
+function BrushworkMap({
+  watercolorSrc = defaultWatercolorSrc,
+  timeMap = false,
+}: {
+  watercolorSrc?: string;
+  timeMap?: boolean;
+}) {
+  const { width, height, atlas, strokes } = paintMatte.backdrop;
+  const tint = (side: "pink" | "green", index: number) => {
+    const hue =
+      side === "pink"
+        ? 330 + ((index * 23) % 50) - 25
+        : 150 + ((index * 23) % 50) - 25;
+    const light = 38 + ((index * 17) % 30);
+    return `hsl(${hue} 70% ${light}%)`;
+  };
+  return (
+    <div
+      className="relative w-full overflow-hidden"
+      style={{ aspectRatio: "16 / 10", background: timeMap ? "#000" : "#fff" }}
+    >
+      {timeMap ? null : (
+        <img
+          src={watercolorSrc}
+          alt=""
+          className="absolute inset-0 h-full w-full"
+        />
+      )}
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        className="absolute inset-0 h-full w-full"
+        aria-hidden="true"
+        style={{ opacity: timeMap ? 1 : 0.5 }}
+      >
+        {timeMap ? null : (
+          <defs>
+            {strokes.map((stroke, index) => (
+              <filter
+                key={stroke.id}
+                id={`ks-brushwork-${stroke.id}`}
+                colorInterpolationFilters="sRGB"
+              >
+                <feFlood floodColor={tint(stroke.side, index)} />
+                <feComposite in2="SourceAlpha" operator="in" />
+              </filter>
+            ))}
+          </defs>
+        )}
+        {strokes.map((stroke) => {
+          const [bx, by, bw, bh] = stroke.box;
+          const [ax, ay, aw, ah] = stroke.atlas;
+          return (
+            <g
+              key={stroke.id}
+              filter={timeMap ? undefined : `url(#ks-brushwork-${stroke.id})`}
+            >
+              <svg
+                x={bx}
+                y={by}
+                width={bw}
+                height={bh}
+                viewBox={`${ax} ${ay} ${aw} ${ah}`}
+                preserveAspectRatio="none"
+              >
+                <image
+                  href={atlas.src}
+                  width={atlas.width}
+                  height={atlas.height}
+                />
+              </svg>
+            </g>
+          );
+        })}
+      </svg>
+      <BrushworkLines labels={!timeMap} />
+    </div>
+  );
+}
+
 /**
  * The matte itself, as the layer sees it: white = painted (visible), black =
  * not painted yet (hidden). It is drawn with the very same SVG mask the
- * component uses, on a white panel.
+ * component uses, on a white panel. `paint` shows the backdrop matte only
+ * where the backdrop picture has paint (grey: no paint there, so nothing
+ * to reveal); `lines` draws the brush lines it was built from.
  */
 function MattePanel({
   url,
   layer,
   label,
+  lines = false,
+  paint,
 }: {
   url?: string;
   layer: "backdrop" | "photo";
   label?: string;
+  lines?: boolean;
+  paint?: string;
 }) {
-  const paint: CSSProperties = {
+  const matte: CSSProperties = {
     position: "absolute",
     inset: layer === "photo" ? photoInset : 0,
     background: "#fff",
@@ -226,7 +419,10 @@ function MattePanel({
       {label ? <Label>{label}</Label> : null}
       <div
         className="relative w-full overflow-hidden"
-        style={{ aspectRatio: "16 / 10", background: "#000" }}
+        style={{
+          aspectRatio: "16 / 10",
+          background: paint ? "#8a8a8a" : "#000",
+        }}
       >
         {layer === "photo" ? (
           // Outline of the photo layer's box, for orientation only.
@@ -235,7 +431,21 @@ function MattePanel({
             style={{ inset: photoInset }}
           />
         ) : null}
-        <div style={paint} />
+        {paint ? (
+          <div
+            className="absolute inset-0 bg-black"
+            style={{
+              maskImage: `url(${paint})`,
+              maskSize: "100% 100%",
+              maskRepeat: "no-repeat",
+            }}
+          >
+            <div style={matte} />
+          </div>
+        ) : (
+          <div style={matte} />
+        )}
+        {lines && layer === "backdrop" ? <BrushworkLines /> : null}
       </div>
     </div>
   );
@@ -272,20 +482,22 @@ function StrokeChart({ timeline }: { timeline?: gsap.core.Timeline }) {
 
   const scale = (seconds: number) => `${(seconds / 1.3) * 100}%`;
   const rows = [
-    ...(["backdrop", "photo"] as const).flatMap((layer) =>
-      paintMatte[layer].strokes.map((stroke) => ({
-        label: `${layer === "backdrop" ? "Tło" : "Zdjęcie"} ${stroke.id}`,
-        layer,
-        ...strokeTiming(layer, stroke.id),
-      })),
-    ),
-    { label: "Podpis (fade)", layer: "caption" as const, ...captionTiming },
+    ...paintMatte.backdrop.strokes.map((stroke) => ({
+      label: `Tło ${stroke.id}`,
+      colour: sideColour[stroke.side],
+      ...strokeTiming("backdrop", stroke.id),
+    })),
+    ...paintMatte.photo.strokes.map((stroke) => ({
+      label: `Zdjęcie ${stroke.id}`,
+      colour: "var(--color-primary)",
+      ...strokeTiming("photo", stroke.id),
+    })),
+    {
+      label: "Podpis (fade)",
+      colour: "var(--color-text-muted)",
+      ...captionTiming,
+    },
   ];
-  const colour = {
-    backdrop: "bg-accent",
-    photo: "bg-primary",
-    caption: "bg-text-muted",
-  };
 
   return (
     <div className="text-small grid gap-1">
@@ -299,8 +511,12 @@ function StrokeChart({ timeline }: { timeline?: gsap.core.Timeline }) {
             <span className="text-text-muted truncate">{row.label}</span>
             <span className="relative h-2.5">
               <span
-                className={`absolute inset-y-0 rounded-full ${colour[row.layer]}`}
-                style={{ left: scale(row.at), width: scale(row.duration) }}
+                className="absolute inset-y-0 rounded-full"
+                style={{
+                  left: scale(row.at),
+                  width: scale(row.duration),
+                  background: row.colour,
+                }}
               />
             </span>
           </div>
@@ -392,25 +608,31 @@ export const AnimatedPaintReveal: Story = {
 };
 
 function SlowMotion({ args }: { args: WatercolorImageProps }) {
-  const [timeline, setTimeline] = useState<gsap.core.Timeline>();
-  const onReveal = useMemo(
-    () =>
-      ({ timeline }: { timeline: gsap.core.Timeline }) =>
-        setTimeline(timeline),
-    [],
-  );
+  const [reveal, setReveal] = useState<{
+    timeline: gsap.core.Timeline;
+    matte: PaintMatte;
+  }>();
   return (
     <div className="grid gap-6">
-      <Debug onReveal={onReveal}>
-        <WatercolorImage {...args} />
-      </Debug>
-      <StrokeChart timeline={timeline} />
+      <div className="grid gap-6 xl:grid-cols-[3fr_2fr] xl:items-start">
+        <Debug onReveal={setReveal} keepMatte>
+          <WatercolorImage {...args} sizes="(min-width: 1280px) 720px, 100vw" />
+        </Debug>
+        <MattePanel
+          layer="backdrop"
+          url={reveal?.matte.backdrop.url}
+          lines
+          label="Matte tła i linie pociągnięć z obrazu"
+        />
+      </div>
+      <StrokeChart timeline={reveal?.timeline} />
     </div>
   );
 }
 
 /**
- * The same reveal five times slower, with every stroke on a time axis and a
+ * The same reveal five times slower, with the backdrop matte beside it
+ * (with the brush lines it follows) and every stroke on a time axis with a
  * playhead, to review the brush fronts and how the strokes overlap.
  */
 export const SlowMotionDebug: Story = {
@@ -424,9 +646,11 @@ export const SlowMotionDebug: Story = {
 function MatteView({
   args,
   freezeAt,
+  lines,
 }: {
   args: WatercolorImageProps;
   freezeAt?: number;
+  lines: boolean;
 }) {
   const { urls, onReveal } = useMatteUrls();
   return (
@@ -438,8 +662,26 @@ function MatteView({
         <MattePanel
           layer="backdrop"
           url={urls.backdrop}
+          lines={lines}
           label="Matte tła (biały = namalowane, czarny = ukryte)"
         />
+        <MattePanel
+          layer="backdrop"
+          url={urls.backdrop}
+          lines={lines}
+          paint={backdropOf(args)}
+          label="Matte tła tam, gdzie obraz ma farbę (szary = brak farby)"
+        />
+        <div>
+          <Label>
+            Regiony tła wyznaczone z obrazu (linie: kierunek pędzla)
+          </Label>
+          <BrushworkMap watercolorSrc={backdropOf(args)} />
+        </div>
+        <div>
+          <Label>Mapy czasu regionów (ciemniej = wcześniej)</Label>
+          <BrushworkMap timeMap />
+        </div>
         <MattePanel
           layer="photo"
           url={urls.photo}
@@ -453,6 +695,7 @@ function MatteView({
 function MatteDebugControls({ args }: { args: WatercolorImageProps }) {
   const [speed, setSpeed] = useState(0.25);
   const [freeze, setFreeze] = useState<number | undefined>(undefined);
+  const [lines, setLines] = useState(true);
   return (
     <div className="grid gap-6">
       <div className="text-small flex flex-wrap items-center gap-4">
@@ -478,6 +721,14 @@ function MatteDebugControls({ args }: { args: WatercolorImageProps }) {
           />
           <span>Zatrzymaj w chwili</span>
         </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={lines}
+            onChange={(event) => setLines(event.target.checked)}
+          />
+          <span>Linie pociągnięć</span>
+        </label>
         {freeze !== undefined ? (
           <label className="flex items-center gap-2">
             <input
@@ -493,10 +744,15 @@ function MatteDebugControls({ args }: { args: WatercolorImageProps }) {
         ) : null}
       </div>
       {freeze !== undefined ? (
-        <MatteView key={`freeze-${freeze}`} args={args} freezeAt={freeze} />
+        <MatteView
+          key={`freeze-${freeze}`}
+          args={args}
+          freezeAt={freeze}
+          lines={lines}
+        />
       ) : (
         <Replay key={`speed-${speed}`} speed={speed}>
-          {() => <MatteView args={args} />}
+          {() => <MatteView args={args} lines={lines} />}
         </Replay>
       )}
     </div>
@@ -505,9 +761,13 @@ function MatteDebugControls({ args }: { args: WatercolorImageProps }) {
 
 /**
  * The actual paint mattes, live, next to the component: the SVG masks the
- * backdrop and the photo are painted through. They are built from separate
- * irregular strokes that start at different moments, never a growing shape
- * or a sliding edge. Slow it down, or stop it at any moment.
+ * backdrop and the photo are painted through, never a growing shape or a
+ * sliding edge. The backdrop's matte is shown alone, then only where its
+ * picture has paint, next to the regions it is built from: derived from the
+ * picture's own brushwork (dry-brush streaks and strokes along the real
+ * direction of the paint, curved where it curves; washes spreading from
+ * their densest pigment), with the brush lines on top. Slow it down, or
+ * stop it at any moment.
  */
 export const MatteDebug: Story = {
   name: "Matte Debug",
@@ -601,8 +861,10 @@ const stripTimes = Array.from(
 );
 
 /**
- * Frame strip: the reveal stopped every 100 ms, with both mattes under each
- * frame. For reviewing the painting frame by frame, and for screenshots.
+ * Frame strip: the reveal stopped every 100 ms. Under each frame: the
+ * backdrop matte with the brush lines it follows, then the backdrop matte
+ * where its picture has paint, and the photo matte. For reviewing the
+ * painting frame by frame, and for screenshots.
  */
 export const FrameStrip: Story = {
   name: "Frame Strip (co 100 ms)",
@@ -630,8 +892,13 @@ function FrameWithMatte({
       <Debug freezeAt={time} keepMatte onReveal={onReveal}>
         <WatercolorImage {...args} sizes="300px" />
       </Debug>
+      <MattePanel layer="backdrop" url={urls.backdrop} lines />
       <div className="grid grid-cols-2 gap-2">
-        <MattePanel layer="backdrop" url={urls.backdrop} />
+        <MattePanel
+          layer="backdrop"
+          url={urls.backdrop}
+          paint={backdropOf(args)}
+        />
         <MattePanel layer="photo" url={urls.photo} />
       </div>
     </div>

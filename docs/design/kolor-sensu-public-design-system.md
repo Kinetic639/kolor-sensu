@@ -201,10 +201,11 @@ readable on any photo.
   `mask-size: 100% 100%` to the photo layer only. Raster rather than SVG so the
   edge can carry bristle-fine detail and partial alpha without SVG filters.
 - **Paint matte atlases** (entrance animation only):
-  `paint-matte-backdrop.png` and `paint-matte-photo.png`, one image per brush
-  stroke (14 and 12), grey + alpha: the alpha is the finished stroke, the grey
-  says when each pixel gets paint. About 235 KB together, fetched only where
-  the animation plays. See §11.
+  `paint-matte-backdrop.png` and `paint-matte-photo.png`, one image per paint
+  region (29 derived from the backdrop picture, 12 photo strokes), grey +
+  alpha: the alpha is the finished region, the grey says when each pixel gets
+  paint. About 330 KB together, fetched only where the animation plays. See
+  §11.
 - **Surface masks** (service tile `tile.svg`, section band `band.svg`) are
   plain SVG geometry; their colour comes from tokens.
 - Both are generated, deterministic and reproducible:
@@ -259,10 +260,10 @@ readable on any photo.
   component, only where `animationPreset="watercolor-reveal"` is used, plus
   the two matte atlases (§7). It animates only the matte (an off-layout SVG):
   no layout properties, so no layout shift (CLS 0 measured). Script time is
-  about 30 ms per reveal. Measured in headless Chromium without a GPU (a
+  about 40 ms per reveal. Measured in headless Chromium without a GPU (a
   pessimistic setting, all rasterised on the CPU): the backdrop stage runs at
   about 60 fps, the photo stage, where both masked layers repaint each frame,
-  at about 12 fps. Check on the target phones before using it widely. After
+  at about 15 fps. Check on the target phones before using it widely. After
   the reveal nothing is left: no matte, no masks, no filters, no running
   timeline (GSAP's ticker goes to sleep).
 
@@ -280,17 +281,18 @@ one.
 
 **Sequence** (one GSAP timeline, 1.2 s):
 
-| Time        | What happens                                                                                                    |
-| ----------- | --------------------------------------------------------------------------------------------------------------- |
-| 0 s         | The first backdrop strokes start from the left and the right edge at once.                                      |
-| 0.07–0.35 s | Further strokes follow, 20–50 ms apart, alternating sides, each with its own speed and ease.                    |
-| 0.32 s      | While the backdrop is still being painted, the first photo strokes set down in the centre of the photo.         |
-| 0.4–0.7 s   | The photo spreads outward in rings of strokes; the two sides of the backdrop overlap in the middle.             |
-| 0.85 s      | The caption fades in (0.3 s, no movement).                                                                      |
-| 0.95 s      | The backdrop is complete.                                                                                       |
-| 1.2 s       | The last photo strokes finish. The matte is removed and the picture is the static composition, pixel for pixel. |
+| Time       | What happens                                                                                                      |
+| ---------- | ----------------------------------------------------------------------------------------------------------------- |
+| 0 s        | The first backdrop strokes start from the left (pink) and the right (green) edge at once.                         |
+| 0.05–0.6 s | Further backdrop regions follow, outer ones first, 20–90 ms apart on each side, each with its own speed and ease. |
+| 0.32 s     | While the backdrop is still being painted, the first photo strokes set down in the centre of the photo.           |
+| 0.4–0.7 s  | The photo spreads outward in rings of strokes; the two sides of the backdrop overlap in the middle.               |
+| 0.85 s     | The caption fades in (0.3 s, no movement).                                                                        |
+| 0.95 s     | The backdrop is complete.                                                                                         |
+| 1.2 s      | The last photo strokes finish. The matte is removed and the picture is the static composition, pixel for pixel.   |
 
-The exact schedule is `paintSchedule` in `watercolor-paint-matte.ts`.
+The exact schedule is `paintSchedule` in `watercolor-paint-matte.ts` (the
+backdrop's part comes with its regions, from the generator).
 
 **How it works**
 
@@ -298,21 +300,40 @@ The exact schedule is `paintSchedule` in `watercolor-paint-matte.ts`.
   layer. The backdrop element and the photo's `<img>` are masked with it
   (`mask-image: url(#…)`) while the reveal runs; the photo layer keeps its
   static photo mask on top, so the painted edge never changes.
-- Each mask holds brush strokes (14 for the backdrop, 12 for the photo), each
-  an image from the layer's atlas. Its alpha is the finished stroke: opaque
-  body, dry-brush edge, bristle hairs, a streaky tail where the brush lifts.
-  Its grey channel is a time map: when each pixel gets paint, along the
-  brush path, with the belly of the brush ahead of its edges and clumps of
-  bristles a little ahead or behind.
+- Each mask holds paint regions, each an image from the layer's atlas: its
+  alpha is the finished region, its grey channel a time map (when each pixel
+  gets paint).
+- **Backdrop: 29 regions derived from the backdrop picture itself**
+  (`backdrop-brushwork.mjs`), not drawn by hand. A structure tensor of the
+  picture gives the direction its paint streaks run in, everywhere, and how
+  clear they are. Evenly spaced streamlines of that field, started where the
+  streaks are clearest, are the brush strokes: at whatever angle and with
+  whatever curve the brushwork has (dry-brush strokes where the streaks are
+  very clear). What they do not cover is split into washes, each spreading
+  from its densest pigment. Every pixel belongs to exactly one region;
+  borders are streaky along the brush for strokes and cloud-like for washes,
+  and fade over a few pixels. Stroke time runs along the curved centreline,
+  with the picture's own darker streaks ahead of the paper between them, so
+  a dry-brush front breaks up into the streaks that are really there; wash
+  time runs outward, darker cloud cells first. The region's colour picks
+  its side: pink regions start at the left edge, green ones at the right.
+  Outside the painted area (transparent in the picture) a pixel takes the
+  region and time of the nearest paint, so nothing lights up on its own
+  there. Needs `sharp` (a dev dependency of `@repo/design-system`) to read
+  the picture.
+- **Photo: 12 strokes from a stroke table.** Each has an opaque body,
+  dry-brush edge, bristle hairs and a streaky tail where the brush lifts;
+  its time runs along the brush path, with the belly of the brush ahead of
+  its edges and clumps of bristles a little ahead or behind.
 - Per stroke, an SVG colour-matrix filter shows the pixels whose time has
   come. GSAP moves that threshold, so the paint front is wherever the time
   map crosses it: a frayed brush front, not a moving edge or a growing shape.
   Where the paint has arrived the layer is fully opaque: nothing fades.
   When a stroke is done its filter is dropped.
-- Backdrop strokes run from both edges toward and past the centre, so the
-  middle is closed by overlapping marks, two short dry-brush touches among
-  them. Photo strokes set down near the centre of the photo and are dragged
-  outward, in three rings. A few splatter specks appear beside the brushes.
+- Backdrop regions run from both edges toward the centre, where the washes
+  close it. Photo strokes set down near the centre of the photo and are
+  dragged outward, in three rings. A few splatter specks appear beside the
+  photo's brushes (the backdrop's splatter is in its picture).
 - When the last stroke is done, the strokes cover the whole backdrop and the
   whole photo silhouette (the generator checks this and fails otherwise), so
   removing the matte changes no pixel.
@@ -320,7 +341,9 @@ The exact schedule is `paintSchedule` in `watercolor-paint-matte.ts`.
   The paint itself comes from the stroke images.
 - The strokes and atlases are generated by
   `packages/design-system/scripts/generate-paint-matte.mjs` (part of
-  `generate:watercolor`). Change the stroke table there, never the PNGs.
+  `generate:watercolor`); the backdrop's regions by `backdrop-brushwork.mjs`
+  next to it. Change the generators (or, for a new backdrop picture, just
+  run them again), never the PNGs.
 - No canvas or WebGL, no `clip-path`, no blur.
 
 **Browsers**
@@ -349,10 +372,13 @@ finished picture at once; `"simple-fade"` fades it in over 0.4 s. No brush
 painting either way.
 
 **Storybook** (Public site / WatercolorImage): Static Approved, Animated
-Paint Reveal, Slow Motion Debug (5× slower, with a stroke chart), Matte
-Debug (both mattes, white = visible; scrub or play slowly), Reduced Motion,
-Final Composition (last frame beside the static picture, with a difference
-overlay), Frame Strip (every 100 ms).
+Paint Reveal, Slow Motion Debug (5× slower, with the backdrop matte and its
+brush lines beside it and a stroke chart), Matte Debug (both mattes, white =
+visible; the backdrop matte alone and only where its picture has paint, the
+regions and brush lines found in the picture, their time maps; scrub or play
+slowly), Reduced Motion, Final Composition (last frame beside the static
+picture, with a difference overlay), Frame Strip (every 100 ms, with the
+mattes under each frame).
 
 **Not in scope yet:** the portrait version, page-level orchestration,
 scroll-linked animation and choreography between sections.
