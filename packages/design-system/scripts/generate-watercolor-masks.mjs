@@ -4,8 +4,9 @@
 // output is plain SVG geometry, so the masks render identically in every
 // browser and are cached like any other static asset.
 //
-// The photo mask used by WatercolorImage is a separate raster file, made by
-// generate-photo-mask.mjs.
+// The raster masks used by WatercolorImage are made separately: the photo
+// mask by generate-photo-mask.mjs, the entrance-animation masks by
+// generate-reveal-masks.mjs.
 //
 // Output: apps/web/public/watercolor/*.svg (Storybook serves the same folder).
 // Run:    pnpm --filter @repo/design-system generate:watercolor

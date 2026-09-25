@@ -1,6 +1,7 @@
 import Image, { type ImageProps } from "next/image";
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/utils";
+import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
 
 // Server-safe on purpose: no hooks, no browser APIs, no "use client". The
 // painted look is a static composition of two layers, so the server HTML is
@@ -12,8 +13,10 @@ import { cn } from "../lib/utils";
 //   │                         cover and cut by the dry-brush photo mask
 //   └── .ks-wc__caption       optional handwritten overlay (real text)
 //
-// The backdrop and the photo are separate elements so each can be animated
-// on its own later (paint the backdrop in, then reveal the photo on top).
+// The optional entrance animation (animationPreset="watercolor-reveal")
+// wraps the same layers in a small client component, WatercolorReveal, that
+// paints the backdrop in from both sides and then spreads the photo from its
+// centre. It ends on exactly this static composition.
 
 /** The approved painted backdrop: dusty pink left, sage green right. */
 export const defaultWatercolorSrc = "/watercolor/watercolor-background.webp";
@@ -48,6 +51,19 @@ export interface WatercolorImageProps {
   quality?: number;
   /** Optional handwritten overlay, rendered as real text in <figcaption>. */
   caption?: ReactNode;
+  /**
+   * Entrance animation, played once when the image comes into view: the
+   * backdrop is painted in from both sides, then the photo spreads from its
+   * centre, then the caption appears. "none" (default) renders the static
+   * composition only.
+   */
+  animationPreset?: "none" | "watercolor-reveal";
+  /**
+   * What the entrance animation does for visitors who prefer reduced
+   * motion: show the finished composition at once ("static", default) or
+   * fade it in briefly ("simple-fade").
+   */
+  reducedMotionMode?: ReducedMotionMode;
   className?: string;
   imageClassName?: string;
   style?: CSSProperties;
@@ -63,23 +79,23 @@ export function WatercolorImage({
   priority = false,
   quality,
   caption,
+  animationPreset = "none",
+  reducedMotionMode = "static",
   className,
   imageClassName,
   style,
 }: WatercolorImageProps) {
   const Root = caption ? "figure" : "div";
   const loading = priority ? undefined : "lazy";
-
-  return (
-    <Root
-      className={cn("ks-wc", className)}
-      style={
-        {
-          ...(aspectRatio && { "--ks-wc-ratio": aspectRatio }),
-          ...style,
-        } as CSSProperties
-      }
-    >
+  const rootProps = {
+    className: cn("ks-wc", className),
+    style: {
+      ...(aspectRatio && { "--ks-wc-ratio": aspectRatio }),
+      ...style,
+    } as CSSProperties,
+  };
+  const layers = (
+    <>
       {watercolorSrc ? (
         <div className="ks-wc__backdrop" aria-hidden="true">
           <Image
@@ -111,7 +127,19 @@ export function WatercolorImage({
           <BrushUnderline />
         </figcaption>
       ) : null}
-    </Root>
+    </>
+  );
+
+  return animationPreset === "watercolor-reveal" ? (
+    <WatercolorReveal
+      as={Root}
+      reducedMotionMode={reducedMotionMode}
+      {...rootProps}
+    >
+      {layers}
+    </WatercolorReveal>
+  ) : (
+    <Root {...rootProps}>{layers}</Root>
   );
 }
 

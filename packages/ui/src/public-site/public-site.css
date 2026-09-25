@@ -10,7 +10,8 @@
  * Assets are static files served from /watercolor/ (apps/web/public and
  * Storybook's static dir), made by `pnpm --filter @repo/design-system
  * generate:watercolor`, except watercolor-background.webp, which is the
- * approved painted backdrop itself.
+ * approved painted backdrop itself. The reveal-*.png brush masks are only
+ * used by the optional entrance animation.
  *
  * Docs: docs/design/kolor-sensu-public-design-system.md
  */
@@ -93,6 +94,115 @@
     margin-inline: auto -18%;
     fill: currentColor;
     filter: drop-shadow(0 1px 2px rgb(22 48 47 / 0.45));
+  }
+
+  /* ---------------------------------------- WatercolorImage entrance reveal */
+
+  /* animationPreset="watercolor-reveal" (watercolor-reveal.tsx). The GSAP
+     timeline only moves custom properties on the root, each from 0 (not
+     started) to 1 (finished); these rules turn them into brush masks. They
+     apply only while a script runs and motion is allowed, and only until the
+     reveal is done (data-reveal="done"), so the finished picture is exactly
+     the static composition above. Until the script takes over, the unset
+     values (0) keep the layers hidden, so nothing flashes before it paints. */
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    /* The backdrop is painted from both edges toward the centre. Per side, a
+       pigment mask and a paler wash that travels faster, so the brush edge
+       keeps changing shape. Each mask is twice the box wide with the brush
+       front in the middle. Fronts, in box widths from the painted edge:
+       pigment -0.35 to 0.95, wash -0.35 to 1.15. */
+    .ks-wc[data-animation="watercolor-reveal"]:not(
+        [data-reveal="done"],
+        [data-reveal="fading"]
+      )
+      .ks-wc__backdrop {
+      mask-image:
+        url("/watercolor/reveal-backdrop-left.png"),
+        url("/watercolor/reveal-backdrop-left-wash.png"),
+        url("/watercolor/reveal-backdrop-right.png"),
+        url("/watercolor/reveal-backdrop-right-wash.png");
+      mask-size: 200% 100%;
+      mask-repeat: no-repeat;
+      mask-composite: add;
+      mask-position:
+        calc(135% - 130% * var(--ks-reveal-left, 0)) 0,
+        calc(135% - 150% * var(--ks-reveal-left, 0)) 0,
+        calc(-35% + 130% * var(--ks-reveal-right, 0)) 0,
+        calc(-35% + 150% * var(--ks-reveal-right, 0)) 0;
+    }
+
+    /* The photo is painted from its centre outward: a patch of horizontal
+       strokes, masking the image, grows from nothing to 2.6 times the
+       photo. The photo layer keeps its usual mask on top, so the painted
+       edge is the static one throughout, and once the patch covers the
+       whole image the picture is pixel for pixel the static one. */
+    .ks-wc[data-animation="watercolor-reveal"]:not(
+        [data-reveal="done"],
+        [data-reveal="fading"]
+      )
+      .ks-wc__img {
+      mask-image: url("/watercolor/reveal-photo.png");
+      mask-size: calc(260% * var(--ks-reveal-photo-x, 0))
+        calc(260% * var(--ks-reveal-photo-y, 0));
+      mask-position: 50% 50%;
+      mask-repeat: no-repeat;
+      /* Fresh paint looks paler: the photo dries to its real colours. */
+      filter: saturate(calc(0.65 + 0.35 * var(--ks-reveal-dry, 0)))
+        brightness(calc(1.06 - 0.06 * var(--ks-reveal-dry, 0)));
+    }
+
+    /* ...and thin: it gains density quickly as the paint soaks in. */
+    .ks-wc[data-animation="watercolor-reveal"]:not(
+        [data-reveal="done"],
+        [data-reveal="fading"]
+      )
+      .ks-wc__photo {
+      opacity: clamp(0, calc(var(--ks-reveal-dry, 0) * 2.5), 1);
+    }
+
+    .ks-wc[data-animation="watercolor-reveal"]:not(
+        [data-reveal="done"],
+        [data-reveal="fading"]
+      )
+      .ks-wc__caption {
+      opacity: var(--ks-reveal-caption, 0);
+      translate: 0 calc((1 - var(--ks-reveal-caption, 0)) * 0.35em);
+    }
+  }
+
+  /* Reduced motion, reducedMotionMode="simple-fade": no painting, the whole
+     composition fades in once. ("static", the default, hides nothing.) */
+  @media (scripting: enabled) and (prefers-reduced-motion: reduce) {
+    .ks-wc[data-animation="watercolor-reveal"][data-reduced-motion="simple-fade"]:not(
+        [data-reveal="done"]
+      ) {
+      opacity: var(--ks-reveal-fade, 0);
+    }
+  }
+
+  .ks-wc[data-animation="watercolor-reveal"][data-reveal="fading"] {
+    opacity: var(--ks-reveal-fade, 0);
+  }
+
+  /* Safety net: if the script never takes over (failed to load, or much too
+     late), show the finished composition after 3 s. The script sets
+     data-reveal as soon as it runs, which cancels this. */
+  @media (scripting: enabled) {
+    .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal]) {
+      animation: ks-wc-reveal-fallback 1ms 3s forwards;
+    }
+  }
+
+  @keyframes ks-wc-reveal-fallback {
+    to {
+      --ks-reveal-left: 1;
+      --ks-reveal-right: 1;
+      --ks-reveal-photo-x: 1;
+      --ks-reveal-photo-y: 1;
+      --ks-reveal-dry: 1;
+      --ks-reveal-caption: 1;
+      --ks-reveal-fade: 1;
+    }
   }
 
   /* ------------------------------------------------------ painted surfaces */

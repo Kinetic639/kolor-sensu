@@ -35,8 +35,9 @@ handful of primitives. Pages are built from it later.
    the neutrals. Nothing else appears as a surface colour.
 5. **Restraint.** Per screen: at most one large painted photo with a
    handwritten line, one or two washes, one botanical accent.
-6. **Static first.** The painted picture is a static composition. Motion is
-   added later, once, and never loops, bounces or follows the cursor.
+6. **Static first.** The painted picture is a static composition. The
+   optional entrance animation plays once, ends on exactly that composition,
+   and never loops, bounces or follows the cursor.
 
 ## 2. Palette
 
@@ -199,6 +200,11 @@ readable on any photo.
   transparency, about 70 KB), applied with `mask-image` and
   `mask-size: 100% 100%` to the photo layer only. Raster rather than SVG so the
   edge can carry bristle-fine detail and partial alpha without SVG filters.
+- **Reveal masks** (entrance animation only): `reveal-backdrop-{left,right}`
+  and their `-wash` companions (2000 × 625 each, the brush front in the
+  middle), and `reveal-photo.png` (1500 × 1000, a patch of horizontal
+  strokes). About 220 KB together, fetched only where the animation is used.
+  See §11.
 - **Surface masks** (service tile `tile.svg`, section band `band.svg`) are
   plain SVG geometry; their colour comes from tokens.
 - Both are generated, deterministic and reproducible:
@@ -231,6 +237,9 @@ readable on any photo.
   photo or the backdrop.
 - Painted surfaces never carry body text in muted grey; see the palette rules.
 - Buttons and links have visible focus outlines (`outline-ring`, 2 px, offset).
+- The entrance animation respects `prefers-reduced-motion`: by default the
+  finished composition shows at once, or, with
+  `reducedMotionMode="simple-fade"`, it fades in over 0.6 s with no movement.
 
 ## 10. Performance
 
@@ -243,22 +252,68 @@ readable on any photo.
   full size, served resized by Next.js; photo mask about 70 KB) and CSS. No
   canvas, WebGL, JavaScript or per-image processing; the component is a
   server component.
+- The entrance animation adds GSAP (about 28 KB gzipped) and one small client
+  component, only where `animationPreset="watercolor-reveal"` is used, plus
+  the reveal masks (§7). It animates mask positions and sizes, opacity and a
+  colour filter: no layout properties, so no layout shift. Measured in
+  headless Chromium without a GPU (a pessimistic setting): the backdrop stage
+  runs at 60 fps, the photo stage at about 30 fps, because the masked photo is
+  repainted every frame. Check on the target phones before using it widely.
 
-## 11. Animation (deferred)
+## 11. Entrance animation
 
-`WatercolorImage` has no animation for now, on purpose: the static composition
-is approved first. The earlier paint-reveal sequence (`PaintReveal`,
-`AnimatedWatercolorImage`, `data-paint`, the wipe mask) has been removed.
+`<WatercolorImage animationPreset="watercolor-reveal" />` paints the
+composition in once, when it first comes into view (a quarter of it on
+screen). The default is `animationPreset="none"`: the static composition, with
+no script at all.
 
-The layers are already separate elements, so the planned sequence can animate
-them independently without restructuring:
+**Sequence** (one GSAP timeline, about 3.4 s):
 
-1. the watercolor backdrop (`.ks-wc__backdrop`) paints in,
-2. the photo (`.ks-wc__photo`) paints or reveals on top of it.
+| Time   | What happens                                                                                                                                                |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 s    | The backdrop is painted from the left and the right edge toward the centre at once (the right brush 0.12 s later and a touch slower, so they don't mirror). |
+| 0.75 s | While the strokes are still on their way to the middle, the photo spreads from its centre, a little faster sideways; it starts thin and pale, as if wet.    |
+| 2.5 s  | The caption settles in: opacity plus a 0.35 em drift.                                                                                                       |
+| 3.4 s  | Done. The reveal styles stop applying and the picture is the static composition, pixel for pixel.                                                           |
 
-When it comes back: CSS or a small client wrapper that never hides content by
-default, nothing that runs without `prefers-reduced-motion: no-preference`,
-and the base component stays a server component.
+**How it works**
+
+- The timeline (`watercolor-reveal-timeline.ts`) only moves numbers: custom
+  properties on the root (`--ks-reveal-left`, `-right`, `-photo-x`,
+  `-photo-y`, `-dry`, `-caption`), each from 0 to 1. `public-site.css` turns
+  them into mask positions and sizes.
+- Backdrop: four mask layers, per side a pigment mask (stacked brush strokes
+  with rounded ends, a wet zone, dry-brush gaps, bristle tips) and a paler,
+  streaky wash that travels faster, so the brush edge keeps changing shape
+  instead of sliding in as one rigid wipe. The masks slide via
+  `mask-position`.
+- Photo: `reveal-photo.png` masks the image element and grows from nothing to
+  2.6 times the photo via `mask-size`. The photo layer keeps its usual photo
+  mask on top, so the painted edge never changes and the last frame equals the
+  static picture. The photo's opacity and a saturation filter make it start
+  thin and pale and dry to its real colours.
+- No canvas, WebGL or SVG filters; masks are CSS `mask-image` with generated
+  PNGs. `clip-path` was not used: it cannot make soft or streaked edges.
+
+**Server rendering and no-script**
+
+- `WatercolorImage` stays a server component; only the small wrapper
+  `WatercolorReveal` (`"use client"`) is added around the same layers. The
+  server HTML is the finished composition, with no hidden inline styles.
+- The layers are hidden by CSS only inside
+  `@media (scripting: enabled) and (prefers-reduced-motion: no-preference)`,
+  so there is no flash of the finished picture before it paints. Without
+  JavaScript, nothing is hidden. If the script never takes over, a 3 s CSS
+  fallback shows the finished composition.
+- States on the root, `data-reveal`: none (server HTML), `waiting` (until in
+  view and the images and masks are loaded, at most 1.5 s), `playing`,
+  `fading` (reduced motion), `done`.
+
+**Reduced motion** (`reducedMotionMode`): `"static"` (default) shows the
+finished picture at once; `"simple-fade"` fades it in over 0.6 s.
+
+**Not in scope yet:** page-level orchestration, scroll-linked animation and
+choreography between sections.
 
 ## 12. Primitives
 
@@ -295,8 +350,9 @@ Buttons accept `asChild` to render a `next/link` `<Link>`.
 - No text baked into photos.
 - No pre-cut, pre-painted or hand-cropped photos: upload the ordinary photo
   and let `WatercolorImage` crop and paint it.
-- No looping, bouncing or cursor-following animation; nothing that hides
-  content until JavaScript runs.
+- No looping, bouncing or cursor-following animation. Nothing may stay hidden
+  without a script: pre-hide only under `(scripting: enabled)`, with a CSS
+  fallback that shows the content anyway.
 - No new mask shapes drawn by hand; extend the generators.
 - No second photo mask "variant" until there is a layout that needs it; one
   well-matched mask beats several weak ones.

@@ -1,6 +1,6 @@
 // Server rendering path (react-dom/server), independent of any browser API
 // the component could reach for.
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderToString } from "react-dom/server";
@@ -24,6 +24,18 @@ describe("WatercolorImage on the server", () => {
         /\buse(State|Effect|LayoutEffect|Ref)\b/,
       );
     }
+  });
+
+  it("keeps the entrance animation in one client module", () => {
+    const clientFiles = readdirSync(here)
+      .filter(
+        (file) => /\.tsx?$/.test(file) && !/\.(test|stories)\./.test(file),
+      )
+      .filter((file) =>
+        /^["']use client["']/m.test(readFileSync(resolve(here, file), "utf8")),
+      );
+
+    expect(clientFiles).toEqual(["watercolor-reveal.tsx"]);
   });
 
   it("renders the finished composition to HTML", () => {

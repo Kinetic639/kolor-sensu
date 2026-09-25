@@ -9,7 +9,7 @@
     "./public-theme.css": "./src/public-theme.css"
   },
   "scripts": {
-    "generate:watercolor": "node scripts/generate-watercolor-masks.mjs && node scripts/generate-photo-mask.mjs",
+    "generate:watercolor": "node scripts/generate-watercolor-masks.mjs && node scripts/generate-photo-mask.mjs && node scripts/generate-reveal-masks.mjs",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit"
   },
