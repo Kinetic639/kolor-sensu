@@ -15,8 +15,9 @@ import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
 //
 // The optional entrance animation (animationPreset="watercolor-reveal")
 // wraps the same layers in a small client component, WatercolorReveal, that
-// paints the backdrop in from both sides and then spreads the photo from its
-// centre. It ends on exactly this static composition.
+// paints them in through a matte of brush strokes: the backdrop from both
+// sides, the photo from its centre while the backdrop is still being
+// painted. It ends on exactly this static composition.
 
 /** The approved painted backdrop: dusty pink left, sage green right. */
 export const defaultWatercolorSrc = "/watercolor/watercolor-background.webp";
@@ -53,9 +54,9 @@ export interface WatercolorImageProps {
   caption?: ReactNode;
   /**
    * Entrance animation, played once when the image comes into view: the
-   * backdrop is painted in from both sides, then the photo spreads from its
-   * centre, then the caption appears. "none" (default) renders the static
-   * composition only.
+   * backdrop is painted in with brush strokes from both sides, the photo
+   * from its centre outward, then the caption appears (about 1.2 s). "none"
+   * (default) renders the static composition only.
    */
   animationPreset?: "none" | "watercolor-reveal";
   /**

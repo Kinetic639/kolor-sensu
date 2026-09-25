@@ -200,18 +200,19 @@ readable on any photo.
   transparency, about 70 KB), applied with `mask-image` and
   `mask-size: 100% 100%` to the photo layer only. Raster rather than SVG so the
   edge can carry bristle-fine detail and partial alpha without SVG filters.
-- **Reveal masks** (entrance animation only): `reveal-backdrop-{left,right}`
-  and their `-wash` companions (2000 × 625 each, the brush front in the
-  middle), and `reveal-photo.png` (1500 × 1000, a patch of horizontal
-  strokes). About 220 KB together, fetched only where the animation is used.
-  See §11.
+- **Paint matte atlases** (entrance animation only):
+  `paint-matte-backdrop.png` and `paint-matte-photo.png`, one image per brush
+  stroke (14 and 12), grey + alpha: the alpha is the finished stroke, the grey
+  says when each pixel gets paint. About 235 KB together, fetched only where
+  the animation plays. See §11.
 - **Surface masks** (service tile `tile.svg`, section band `band.svg`) are
   plain SVG geometry; their colour comes from tokens.
 - Both are generated, deterministic and reproducible:
   `pnpm --filter @repo/design-system generate:watercolor`. To tune the look,
   change the generator parameters, never the files by hand.
-- Rejected: canvas and WebGL (heavy, not SSR-able), `clip-path` polygons (no
-  soft or streaked edges), `border-radius` blobs and ellipses (read as CSS,
+- Rejected: canvas and WebGL (heavy, not SSR-able; the entrance animation
+  does not need them either), `clip-path` polygons (no soft or streaked
+  edges), `border-radius` blobs and ellipses (read as CSS,
   not paint), baking the edge into each photo (every photo would need an
   editor), runtime image processing.
 
@@ -239,7 +240,9 @@ readable on any photo.
 - Buttons and links have visible focus outlines (`outline-ring`, 2 px, offset).
 - The entrance animation respects `prefers-reduced-motion`: by default the
   finished composition shows at once, or, with
-  `reducedMotionMode="simple-fade"`, it fades in over 0.6 s with no movement.
+  `reducedMotionMode="simple-fade"`, it fades in over 0.4 s with no painting.
+  The paint matte is `aria-hidden` and never replaces the photo: the real
+  `<img>` with its alt text is in the page from the first HTML.
 
 ## 10. Performance
 
@@ -254,11 +257,14 @@ readable on any photo.
   server component.
 - The entrance animation adds GSAP (about 28 KB gzipped) and one small client
   component, only where `animationPreset="watercolor-reveal"` is used, plus
-  the reveal masks (§7). It animates mask positions and sizes, opacity and a
-  colour filter: no layout properties, so no layout shift. Measured in
-  headless Chromium without a GPU (a pessimistic setting): the backdrop stage
-  runs at 60 fps, the photo stage at about 30 fps, because the masked photo is
-  repainted every frame. Check on the target phones before using it widely.
+  the two matte atlases (§7). It animates only the matte (an off-layout SVG):
+  no layout properties, so no layout shift (CLS 0 measured). Script time is
+  about 40 ms per reveal. Measured in headless Chromium without a GPU (a
+  pessimistic setting, all rasterised on the CPU): the backdrop stage runs at
+  about 60 fps, the photo stage, where both masked layers repaint each frame,
+  at about 15 fps. Check on the target phones before using it widely. After
+  the reveal nothing is left: no matte, no masks, no filters, no running
+  timeline (GSAP's ticker goes to sleep).
 
 ## 11. Entrance animation
 
@@ -267,53 +273,89 @@ composition in once, when it first comes into view (a quarter of it on
 screen). The default is `animationPreset="none"`: the static composition, with
 no script at all.
 
-**Sequence** (one GSAP timeline, about 3.4 s):
+The picture is not faded, wiped or scaled in. Like a paint matte in After
+Effects, an animated matte of brush strokes decides which pixels of the
+finished backdrop and photo are visible, and the strokes are painted one by
+one.
 
-| Time   | What happens                                                                                                                                                |
-| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0 s    | The backdrop is painted from the left and the right edge toward the centre at once (the right brush 0.12 s later and a touch slower, so they don't mirror). |
-| 0.75 s | While the strokes are still on their way to the middle, the photo spreads from its centre, a little faster sideways; it starts thin and pale, as if wet.    |
-| 2.5 s  | The caption settles in: opacity plus a 0.35 em drift.                                                                                                       |
-| 3.4 s  | Done. The reveal styles stop applying and the picture is the static composition, pixel for pixel.                                                           |
+**Sequence** (one GSAP timeline, 1.2 s):
+
+| Time        | What happens                                                                                                    |
+| ----------- | --------------------------------------------------------------------------------------------------------------- |
+| 0 s         | The first backdrop strokes start from the left and the right edge at once.                                      |
+| 0.07–0.35 s | Further strokes follow, 20–50 ms apart, alternating sides, each with its own speed and ease.                    |
+| 0.32 s      | While the backdrop is still being painted, the first photo strokes set down in the centre of the photo.         |
+| 0.4–0.7 s   | The photo spreads outward in rings of strokes; the two sides of the backdrop overlap in the middle.             |
+| 0.85 s      | The caption fades in (0.3 s, no movement).                                                                      |
+| 0.95 s      | The backdrop is complete.                                                                                       |
+| 1.2 s       | The last photo strokes finish. The matte is removed and the picture is the static composition, pixel for pixel. |
+
+The exact schedule is `paintSchedule` in `watercolor-paint-matte.ts`.
 
 **How it works**
 
-- The timeline (`watercolor-reveal-timeline.ts`) only moves numbers: custom
-  properties on the root (`--ks-reveal-left`, `-right`, `-photo-x`,
-  `-photo-y`, `-dry`, `-caption`), each from 0 to 1. `public-site.css` turns
-  them into mask positions and sizes.
-- Backdrop: four mask layers, per side a pigment mask (stacked brush strokes
-  with rounded ends, a wet zone, dry-brush gaps, bristle tips) and a paler,
-  streaky wash that travels faster, so the brush edge keeps changing shape
-  instead of sliding in as one rigid wipe. The masks slide via
-  `mask-position`.
-- Photo: `reveal-photo.png` masks the image element and grows from nothing to
-  2.6 times the photo via `mask-size`. The photo layer keeps its usual photo
-  mask on top, so the painted edge never changes and the last frame equals the
-  static picture. The photo's opacity and a saturation filter make it start
-  thin and pale and dry to its real colours.
-- No canvas, WebGL or SVG filters; masks are CSS `mask-image` with generated
-  PNGs. `clip-path` was not used: it cannot make soft or streaked edges.
+- The matte (`watercolor-paint-matte.ts`) is an SVG with one `<mask>` per
+  layer. The backdrop element and the photo's `<img>` are masked with it
+  (`mask-image: url(#…)`) while the reveal runs; the photo layer keeps its
+  static photo mask on top, so the painted edge never changes.
+- Each mask holds brush strokes (14 for the backdrop, 12 for the photo), each
+  an image from the layer's atlas. Its alpha is the finished stroke: opaque
+  body, dry-brush edge, bristle hairs, a streaky tail where the brush lifts.
+  Its grey channel is a time map: when each pixel gets paint, along the
+  brush path, with the belly of the brush ahead of its edges and clumps of
+  bristles a little ahead or behind.
+- Per stroke, an SVG colour-matrix filter shows the pixels whose time has
+  come. GSAP moves that threshold, so the paint front is wherever the time
+  map crosses it: a frayed brush front, not a moving edge or a growing shape.
+  Where the paint has arrived the layer is fully opaque: nothing fades.
+  When a stroke is done its filter is dropped.
+- Backdrop strokes run from both edges toward and past the centre, so the
+  middle is closed by overlapping marks, two short dry-brush touches among
+  them. Photo strokes set down near the centre of the photo and are dragged
+  outward, in three rings. A few splatter specks appear beside the brushes.
+- When the last stroke is done, the strokes cover the whole backdrop and the
+  whole photo silhouette (the generator checks this and fails otherwise), so
+  removing the matte changes no pixel.
+- GSAP only schedules: one master timeline with a child timeline per stroke.
+  The paint itself comes from the stroke images.
+- The strokes and atlases are generated by
+  `packages/design-system/scripts/generate-paint-matte.mjs` (part of
+  `generate:watercolor`). Change the stroke table there, never the PNGs.
+- No canvas or WebGL, no `clip-path`, no blur.
+
+**Browsers**
+
+- Chromium and Firefox paint the reveal. WebKit (Safari) ignores SVG masks on
+  HTML elements, so there the stylesheet and the script both keep the static
+  composition (`@supports not (font: -apple-system-body)`).
 
 **Server rendering and no-script**
 
 - `WatercolorImage` stays a server component; only the small wrapper
   `WatercolorReveal` (`"use client"`) is added around the same layers. The
-  server HTML is the finished composition, with no hidden inline styles.
+  server HTML is the finished composition, with no hidden inline styles and
+  no matte. The matte is created by the script and removed again.
 - The layers are hidden by CSS only inside
   `@media (scripting: enabled) and (prefers-reduced-motion: no-preference)`,
   so there is no flash of the finished picture before it paints. Without
   JavaScript, nothing is hidden. If the script never takes over, a 3 s CSS
   fallback shows the finished composition.
 - States on the root, `data-reveal`: none (server HTML), `waiting` (until in
-  view and the images and masks are loaded, at most 1.5 s), `playing`,
+  view and the images and atlases are loaded, at most 1.5 s), `playing`,
   `fading` (reduced motion), `done`.
 
 **Reduced motion** (`reducedMotionMode`): `"static"` (default) shows the
-finished picture at once; `"simple-fade"` fades it in over 0.6 s.
+finished picture at once; `"simple-fade"` fades it in over 0.4 s. No brush
+painting either way.
 
-**Not in scope yet:** page-level orchestration, scroll-linked animation and
-choreography between sections.
+**Storybook** (Public site / WatercolorImage): Static Approved, Animated
+Paint Reveal, Slow Motion Debug (5× slower, with a stroke chart), Matte
+Debug (both mattes, white = visible; scrub or play slowly), Reduced Motion,
+Final Composition (last frame beside the static picture, with a difference
+overlay), Frame Strip (every 100 ms).
+
+**Not in scope yet:** the portrait version, page-level orchestration,
+scroll-linked animation and choreography between sections.
 
 ## 12. Primitives
 
@@ -350,6 +392,8 @@ Buttons accept `asChild` to render a `next/link` `<Link>`.
 - No text baked into photos.
 - No pre-cut, pre-painted or hand-cropped photos: upload the ordinary photo
   and let `WatercolorImage` crop and paint it.
+- No wipes, fades, blurs or growing shapes to reveal painted layers: paint
+  them in through the matte (§11).
 - No looping, bouncing or cursor-following animation. Nothing may stay hidden
   without a script: pre-hide only under `(scripting: enabled)`, with a CSS
   fallback that shows the content anyway.

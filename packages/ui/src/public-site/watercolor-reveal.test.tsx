@@ -1,9 +1,15 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { gsap } from "gsap";
+import { type ReactNode, StrictMode } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WatercolorImage } from "./watercolor-image";
-import { revealProperties } from "./watercolor-reveal-timeline";
+import type { PaintMatte } from "./watercolor-paint-matte";
+import {
+  revealProperties,
+  type WatercolorRevealDebug,
+  WatercolorRevealDebugContext,
+} from "./watercolor-reveal";
 
 const base = {
   src: "/kolor-sensu/therapy-room-upload.png",
@@ -78,6 +84,41 @@ function inlineRevealProperties(element: HTMLElement) {
   );
 }
 
+interface Reveal {
+  matte: PaintMatte;
+  timeline: gsap.core.Timeline;
+}
+
+// Records every reveal that starts, to inspect its matte and timeline.
+function recordReveals() {
+  const reveals: Reveal[] = [];
+  const debug: WatercolorRevealDebug = {
+    onReveal: (reveal) => reveals.push(reveal),
+  };
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <WatercolorRevealDebugContext.Provider value={debug}>
+      {children}
+    </WatercolorRevealDebugContext.Provider>
+  );
+  return { reveals, wrapper };
+}
+
+function mattes() {
+  return document.querySelectorAll(".ks-wc__matte");
+}
+
+// True once nothing of this reveal is left in GSAP.
+function stopped({ matte, timeline }: Reveal) {
+  return (
+    !timeline.isActive() &&
+    [...matte.backdrop.strokes, ...matte.photo.strokes].every(
+      (stroke) =>
+        gsap.getTweensOf(stroke.front).length === 0 &&
+        gsap.getTweensOf(stroke.group).length === 0,
+    )
+  );
+}
+
 // Strips the markers the reveal adds, to compare the layers themselves.
 function layersOf(element: HTMLElement) {
   const clone = element.cloneNode(true) as HTMLElement;
@@ -89,8 +130,8 @@ function layersOf(element: HTMLElement) {
 
 beforeEach(() => {
   mockMedia();
-  // Run the ~3 s timeline quickly.
-  gsap.globalTimeline.timeScale(40);
+  // Run the 1.2 s timeline quickly.
+  gsap.globalTimeline.timeScale(20);
 });
 
 afterEach(() => {
@@ -153,28 +194,57 @@ describe("WatercolorImage entrance animation", () => {
     }
   });
 
-  it("paints in once mounted, then hands over to the static composition", async () => {
-    gsap.globalTimeline.timeScale(5);
+  it("paints in through the matte, then hands over to the static composition", async () => {
+    // Real speed while the matte is inspected, then fast to the end.
+    gsap.globalTimeline.timeScale(1);
+    const { reveals, wrapper } = recordReveals();
     const { container } = render(
       <WatercolorImage
         {...base}
         aspectRatio="3 / 2"
         animationPreset="watercolor-reveal"
       />,
+      { wrapper },
     );
     const element = root(container);
 
     expect(element.dataset.reveal).toBe("waiting");
     await waitFor(() => expect(element.dataset.reveal).toBe("playing"));
-    expect(inlineRevealProperties(element)).toContain(revealProperties.left);
+    const { matte } = reveals[0]!;
+    // The real layers are masked by the matte, which lives in the root.
+    expect(element.style.getPropertyValue(revealProperties.backdrop)).toBe(
+      matte.backdrop.url,
+    );
+    expect(element.style.getPropertyValue(revealProperties.photo)).toBe(
+      matte.photo.url,
+    );
+    expect(matte.svg.parentElement).toBe(element);
 
+    gsap.globalTimeline.timeScale(20);
     await waitFor(() => expect(element.dataset.reveal).toBe("done"), {
       timeout: 3000,
     });
-    // Nothing of the animation is left behind; the ratio React set is kept.
+    // Nothing of the animation is left behind: no matte, no reveal values,
+    // no running tweens. The ratio React set is kept.
     expect(inlineRevealProperties(element)).toEqual([]);
     expect(element.style.getPropertyValue("--ks-wc-ratio")).toBe("3 / 2");
-    expect(gsap.getTweensOf(element)).toHaveLength(0);
+    expect(matte.svg.isConnected).toBe(false);
+    expect(mattes()).toHaveLength(0);
+    expect(stopped(reveals[0]!)).toBe(true);
+    expect(reveals).toHaveLength(1);
+  });
+
+  it("ends as exactly the static markup", async () => {
+    const { container } = render(
+      <WatercolorImage {...base} animationPreset="watercolor-reveal" />,
+    );
+    const element = root(container);
+    await waitFor(() => expect(element.dataset.reveal).toBe("done"), {
+      timeout: 3000,
+    });
+
+    const { container: still } = render(<WatercolorImage {...base} />);
+    expect(layersOf(element)).toBe(layersOf(root(still)));
   });
 
   it("waits until the image scrolls into view", async () => {
@@ -202,6 +272,7 @@ describe("WatercolorImage entrance animation", () => {
     expect(element.dataset.reveal).toBe("done");
     expect(inlineRevealProperties(element)).toEqual([]);
     expect(gsap.getTweensOf(element)).toHaveLength(0);
+    expect(mattes()).toHaveLength(0);
   });
 
   it("can instead fade in gently under reduced motion, with no painting", async () => {
@@ -219,6 +290,7 @@ describe("WatercolorImage entrance animation", () => {
     expect(element).toHaveAttribute("data-reduced-motion", "simple-fade");
     await waitFor(() => expect(element.dataset.reveal).toBe("fading"));
     expect(inlineRevealProperties(element)).toEqual([revealProperties.fade]);
+    expect(mattes()).toHaveLength(0);
 
     await waitFor(() => expect(element.dataset.reveal).toBe("done"));
     expect(inlineRevealProperties(element)).toEqual([]);
@@ -242,8 +314,8 @@ describe("WatercolorImage entrance animation", () => {
         get(target, key) {
           if (key === "getPropertyValue") {
             return (name: string) =>
-              name === revealProperties.photoX
-                ? "1"
+              name === revealProperties.hidden
+                ? "none"
                 : target.getPropertyValue(name);
           }
           const value = Reflect.get(target, key);
@@ -256,24 +328,82 @@ describe("WatercolorImage entrance animation", () => {
     );
 
     expect(root(container).dataset.reveal).toBe("done");
-    expect(gsap.getTweensOf(root(container))).toHaveLength(0);
+    expect(mattes()).toHaveLength(0);
   });
 
   it("stops cleanly when unmounted mid-reveal", async () => {
     gsap.globalTimeline.timeScale(1);
+    const { reveals, wrapper } = recordReveals();
     const { container, unmount } = render(
       <WatercolorImage {...base} animationPreset="watercolor-reveal" />,
+      { wrapper },
     );
     const element = root(container);
     await waitFor(() => expect(element.dataset.reveal).toBe("playing"));
 
     unmount();
-    expect(gsap.getTweensOf(element)).toHaveLength(0);
+    expect(stopped(reveals[0]!)).toBe(true);
+    expect(reveals[0]!.matte.svg.isConnected).toBe(false);
+    expect(inlineRevealProperties(element)).toEqual([]);
+
+    // Nothing runs afterwards: the reveal never completes.
+    gsap.globalTimeline.timeScale(20);
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(element.dataset.reveal).toBe("playing");
   });
 
-  it("keeps the photo the only image exposed to assistive technology", () => {
-    render(<WatercolorImage {...base} animationPreset="watercolor-reveal" />);
+  it("never runs two reveals at once: replay and strict mode start one", async () => {
+    gsap.globalTimeline.timeScale(1);
+    const { reveals, wrapper } = recordReveals();
+    const view = (replay: number) => (
+      <StrictMode>
+        <WatercolorImage
+          key={replay}
+          {...base}
+          animationPreset="watercolor-reveal"
+        />
+      </StrictMode>
+    );
+    const { container, rerender } = render(view(1), { wrapper });
+    await waitFor(() => expect(root(container).dataset.reveal).toBe("playing"));
+    expect(reveals).toHaveLength(1);
+    expect(mattes()).toHaveLength(1);
 
+    // Replay (Storybook remounts the image).
+    rerender(view(2));
+    await waitFor(() => expect(reveals).toHaveLength(2));
+    expect(stopped(reveals[0]!)).toBe(true);
+    expect(mattes()).toHaveLength(1);
+    expect(root(container).contains(reveals[1]!.matte.svg)).toBe(true);
+
+    gsap.globalTimeline.timeScale(20);
+    await waitFor(() => expect(root(container).dataset.reveal).toBe("done"), {
+      timeout: 3000,
+    });
+    expect(mattes()).toHaveLength(0);
+    expect(reveals).toHaveLength(2);
+  });
+
+  it("keeps Safari on the static composition (no SVG masks on HTML there)", () => {
+    vi.stubGlobal("CSS", {
+      supports: (property: string, value: string) =>
+        property === "font" && value === "-apple-system-body",
+    });
+    const { container } = render(
+      <WatercolorImage {...base} animationPreset="watercolor-reveal" />,
+    );
+
+    expect(root(container).dataset.reveal).toBe("done");
+    expect(mattes()).toHaveLength(0);
+  });
+
+  it("keeps the photo the only image exposed to assistive technology", async () => {
+    const { container } = render(
+      <WatercolorImage {...base} animationPreset="watercolor-reveal" />,
+    );
+    await waitFor(() => expect(root(container).dataset.reveal).toBe("playing"));
+
+    // The matte is aria-hidden; the photo keeps its alt text throughout.
     expect(screen.getAllByRole("img")).toHaveLength(1);
     expect(screen.getByRole("img")).toHaveAccessibleName(base.alt);
   });

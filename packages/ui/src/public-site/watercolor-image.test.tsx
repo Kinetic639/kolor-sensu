@@ -1,10 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { defaultWatercolorSrc, WatercolorImage } from "./watercolor-image";
-import { revealMaskUrls } from "./watercolor-reveal-timeline";
+import { paintMatteUrls } from "./watercolor-paint-matte";
+import { paintMatte } from "./watercolor-paint-matte.data";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const css = readFileSync(resolve(here, "public-site.css"), "utf8");
@@ -228,96 +229,77 @@ describe("WatercolorImage", () => {
 });
 
 describe("WatercolorImage reveal styles", () => {
+  const whilePainting =
+    "@media (scripting: enabled) and (prefers-reduced-motion: no-preference)";
+  const svgMasksWork = "@supports not (font: -apple-system-body)";
   const revealRules = () =>
     cssRules().filter(({ selector }) =>
       selector.includes('[data-animation="watercolor-reveal"]'),
     );
-  const revealRule = (layer: string) => {
-    const found = revealRules().find(
-      ({ selector, context }) =>
-        selector.endsWith(layer) &&
-        context.includes(
-          "@media (scripting: enabled) and (prefers-reduced-motion: no-preference)",
-        ),
+  const paintingRules = () =>
+    revealRules().filter(({ context }) => context.includes(whilePainting));
+  const paintingRule = (layer: string) => {
+    const found = paintingRules().find(({ selector }) =>
+      selector.endsWith(layer),
     );
     expect(found, `reveal rule for ${layer}`).toBeDefined();
-    return found!.body;
+    return found!;
   };
 
-  it("hides the layers only while the script runs and motion is allowed", () => {
+  it("hides the layers only while the script runs, motion is allowed and SVG masks work", () => {
     for (const layer of [
+      '.ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])',
       ".ks-wc__backdrop",
-      ".ks-wc__photo",
       ".ks-wc__img",
       ".ks-wc__caption",
     ]) {
-      const found = revealRules().find(({ selector }) =>
-        selector.endsWith(layer),
-      );
-      expect(found?.selector).toContain(':not([data-reveal="done"]');
-      expect(found?.context).toContain(
-        "@media (scripting: enabled) and (prefers-reduced-motion: no-preference)",
-      );
+      const { selector, context } = paintingRule(layer);
+      expect(selector).toContain(':not([data-reveal="done"])');
+      expect(context).toContain(svgMasksWork);
     }
   });
 
-  it("paints the backdrop with brush masks from both edges toward the centre", () => {
-    const body = revealRule(".ks-wc__backdrop");
-
-    for (const side of ["left", "right"]) {
-      expect(body).toContain(`url("/watercolor/reveal-backdrop-${side}.png")`);
-      expect(body).toContain(
-        `url("/watercolor/reveal-backdrop-${side}-wash.png")`,
-      );
-    }
-    expect(body).toContain("mask-composite: add");
-    expect(body).toMatch(
-      /var\(--ks-reveal-left, 0\)[\s\S]*var\(--ks-reveal-right, 0\)/,
+  it("masks the backdrop and the photo image with the paint matte, and nothing else", () => {
+    // Until the script sets the matte, an empty mask: nothing is painted.
+    expect(
+      paintingRule(
+        '.ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])',
+      ).body,
+    ).toBe("--ks-reveal-hidden: linear-gradient(transparent, transparent);");
+    expect(paintingRule(".ks-wc__backdrop").body).toBe(
+      "mask-image: var(--ks-reveal-backdrop, var(--ks-reveal-hidden));",
     );
-    expect(body).not.toMatch(/clip-path|linear-gradient/);
+    expect(paintingRule(".ks-wc__img").body).toBe(
+      "mask-image: var(--ks-reveal-photo, var(--ks-reveal-hidden));",
+    );
 
-    // Each brush mask is twice the box wide: half painted, half empty, with
-    // the brush front in the middle.
-    for (const side of ["left", "right"]) {
-      for (const suffix of ["", "-wash"]) {
-        const { width, height } = pngSize(
-          `watercolor/reveal-backdrop-${side}${suffix}.png`,
-        );
-        expect(width / height).toBeCloseTo(2 * 1.6, 2);
+    // The photo layer keeps its static photo mask, so the painted edge of
+    // the photo never changes. No wipe, fade, blur or geometric reveal of
+    // the painted layers: they are only masked by the matte.
+    for (const { selector, body } of paintingRules()) {
+      expect(selector).not.toMatch(/\.ks-wc__photo$/);
+      expect(body).not.toMatch(
+        /clip-path|filter|blur|mask-(size|position|composite)|transform|translate|scale|url\(/,
+      );
+      if (!selector.endsWith(".ks-wc__caption")) {
+        expect(body).not.toContain("opacity");
       }
     }
   });
 
-  it("spreads the photo from its centre, under the untouched photo mask", () => {
-    const body = revealRule(".ks-wc__img");
-
-    expect(body).toContain('mask-image: url("/watercolor/reveal-photo.png")');
-    expect(body).toContain("mask-position: 50% 50%");
-    expect(body).toMatch(
-      /var\(--ks-reveal-photo-x, 0\)[\s\S]*var\(--ks-reveal-photo-y, 0\)/,
-    );
-    // The photo layer keeps its static mask while the image is revealed
-    // inside it, so the painted edge never changes and the last frame is
-    // the static composition.
-    expect(revealRule(".ks-wc__photo")).not.toMatch(/mask/);
-
-    const reveal = pngSize("watercolor/reveal-photo.png");
-    const mask = pngSize("watercolor/photo-mask.png");
-    expect(reveal.width / reveal.height).toBeCloseTo(
-      mask.width / mask.height,
-      2,
+  it("shows the caption late, with a fade and no movement", () => {
+    expect(paintingRule(".ks-wc__caption").body).toBe(
+      "opacity: var(--ks-reveal-caption, 0);",
     );
   });
 
-  it("brings the caption in with a small drift, not a slide", () => {
-    const body = revealRule(".ks-wc__caption");
-
-    expect(body).toContain("opacity: var(--ks-reveal-caption, 0)");
-    const drift = body.match(
-      /translate: 0 calc\(\(1 - var\(--ks-reveal-caption, 0\)\) \* ([\d.]+)em\)/,
-    );
-    expect(drift).not.toBeNull();
-    expect(Number(drift![1])).toBeLessThanOrEqual(0.5);
+  it("keeps the matte out of the layout without switching it off", () => {
+    const matte = rule(".ks-wc__matte");
+    expect(matte).toContain("position: absolute");
+    expect(matte).toContain("width: 0");
+    expect(matte).toContain("height: 0");
+    // display: none would disable the masks it holds.
+    expect(matte).not.toContain("display");
   });
 
   it("falls back to the finished composition if the script never takes over", () => {
@@ -335,11 +317,7 @@ describe("WatercolorImage reveal styles", () => {
       context.includes(`@keyframes ${name![1]}`),
     );
     for (const property of [
-      "--ks-reveal-left: 1",
-      "--ks-reveal-right: 1",
-      "--ks-reveal-photo-x: 1",
-      "--ks-reveal-photo-y: 1",
-      "--ks-reveal-dry: 1",
+      "--ks-reveal-hidden: none",
       "--ks-reveal-caption: 1",
       "--ks-reveal-fade: 1",
     ]) {
@@ -358,18 +336,22 @@ describe("WatercolorImage reveal styles", () => {
     expect(fade?.body).toBe("opacity: var(--ks-reveal-fade, 0);");
   });
 
-  it("preloads exactly the mask files the styles use", () => {
-    const used = [
-      ...new Set(
-        revealRules().flatMap(({ body }) =>
-          [...body.matchAll(/url\("([^"]+)"\)/g)].map((match) => match[1]),
-        ),
-      ),
-    ].filter((url) => url !== "/watercolor/photo-mask.png");
-
-    expect([...revealMaskUrls].sort()).toEqual(used.sort());
-    for (const url of revealMaskUrls) {
-      expect(existsSync(resolve(publicDir, `.${url}`)), url).toBe(true);
+  it("ships the stroke atlases the matte is painted from, and no old reveal masks", () => {
+    expect(paintMatteUrls).toEqual(
+      Object.values(paintMatte).map((layer) => layer.atlas.src),
+    );
+    for (const layer of Object.values(paintMatte)) {
+      const file = `.${layer.atlas.src}`;
+      expect(existsSync(resolve(publicDir, file)), file).toBe(true);
+      expect(pngSize(file)).toEqual({
+        width: layer.atlas.width,
+        height: layer.atlas.height,
+      });
     }
+    expect(
+      readdirSync(resolve(publicDir, "watercolor")).filter((file) =>
+        file.startsWith("reveal-"),
+      ),
+    ).toEqual([]);
   });
 });

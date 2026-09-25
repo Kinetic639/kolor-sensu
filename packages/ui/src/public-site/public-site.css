@@ -10,8 +10,8 @@
  * Assets are static files served from /watercolor/ (apps/web/public and
  * Storybook's static dir), made by `pnpm --filter @repo/design-system
  * generate:watercolor`, except watercolor-background.webp, which is the
- * approved painted backdrop itself. The reveal-*.png brush masks are only
- * used by the optional entrance animation.
+ * approved painted backdrop itself. The paint-matte-*.png stroke atlases are
+ * only used by the optional entrance animation.
  *
  * Docs: docs/design/kolor-sensu-public-design-system.md
  */
@@ -98,76 +98,53 @@
 
   /* ---------------------------------------- WatercolorImage entrance reveal */
 
-  /* animationPreset="watercolor-reveal" (watercolor-reveal.tsx). The GSAP
-     timeline only moves custom properties on the root, each from 0 (not
-     started) to 1 (finished); these rules turn them into brush masks. They
-     apply only while a script runs and motion is allowed, and only until the
-     reveal is done (data-reveal="done"), so the finished picture is exactly
-     the static composition above. Until the script takes over, the unset
-     values (0) keep the layers hidden, so nothing flashes before it paints. */
+  /* animationPreset="watercolor-reveal" (watercolor-reveal.tsx). The layers
+     are painted in through a paint matte: an SVG <mask> of brush strokes the
+     script builds and animates (watercolor-paint-matte.ts). These rules only
+     point the backdrop and the photo image at it while it runs; the photo
+     layer keeps its usual mask on top, so its painted edge never changes.
+     Until the script takes over, the layers stay unpainted (an empty mask),
+     so nothing flashes before the brush starts. Once the reveal is done
+     (data-reveal="done") none of this applies and the picture is exactly
+     the static composition above.
+
+     Only while a script runs and motion is allowed; and not in WebKit, which
+     ignores SVG masks on HTML elements, so Safari keeps the static picture
+     (the script makes the same test). */
   @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
-    /* The backdrop is painted from both edges toward the centre. Per side, a
-       pigment mask and a paler wash that travels faster, so the brush edge
-       keeps changing shape. Each mask is twice the box wide with the brush
-       front in the middle. Fronts, in box widths from the painted edge:
-       pigment -0.35 to 0.95, wash -0.35 to 1.15. */
-    .ks-wc[data-animation="watercolor-reveal"]:not(
-        [data-reveal="done"],
-        [data-reveal="fading"]
-      )
-      .ks-wc__backdrop {
-      mask-image:
-        url("/watercolor/reveal-backdrop-left.png"),
-        url("/watercolor/reveal-backdrop-left-wash.png"),
-        url("/watercolor/reveal-backdrop-right.png"),
-        url("/watercolor/reveal-backdrop-right-wash.png");
-      mask-size: 200% 100%;
-      mask-repeat: no-repeat;
-      mask-composite: add;
-      mask-position:
-        calc(135% - 130% * var(--ks-reveal-left, 0)) 0,
-        calc(135% - 150% * var(--ks-reveal-left, 0)) 0,
-        calc(-35% + 130% * var(--ks-reveal-right, 0)) 0,
-        calc(-35% + 150% * var(--ks-reveal-right, 0)) 0;
-    }
+    @supports not (font: -apple-system-body) {
+      .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"]) {
+        --ks-reveal-hidden: linear-gradient(transparent, transparent);
+      }
 
-    /* The photo is painted from its centre outward: a patch of horizontal
-       strokes, masking the image, grows from nothing to 2.6 times the
-       photo. The photo layer keeps its usual mask on top, so the painted
-       edge is the static one throughout, and once the patch covers the
-       whole image the picture is pixel for pixel the static one. */
-    .ks-wc[data-animation="watercolor-reveal"]:not(
-        [data-reveal="done"],
-        [data-reveal="fading"]
-      )
-      .ks-wc__img {
-      mask-image: url("/watercolor/reveal-photo.png");
-      mask-size: calc(260% * var(--ks-reveal-photo-x, 0))
-        calc(260% * var(--ks-reveal-photo-y, 0));
-      mask-position: 50% 50%;
-      mask-repeat: no-repeat;
-      /* Fresh paint looks paler: the photo dries to its real colours. */
-      filter: saturate(calc(0.65 + 0.35 * var(--ks-reveal-dry, 0)))
-        brightness(calc(1.06 - 0.06 * var(--ks-reveal-dry, 0)));
-    }
+      .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])
+        .ks-wc__backdrop {
+        mask-image: var(--ks-reveal-backdrop, var(--ks-reveal-hidden));
+      }
 
-    /* ...and thin: it gains density quickly as the paint soaks in. */
-    .ks-wc[data-animation="watercolor-reveal"]:not(
-        [data-reveal="done"],
-        [data-reveal="fading"]
-      )
-      .ks-wc__photo {
-      opacity: clamp(0, calc(var(--ks-reveal-dry, 0) * 2.5), 1);
-    }
+      .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])
+        .ks-wc__img {
+        mask-image: var(--ks-reveal-photo, var(--ks-reveal-hidden));
+      }
 
-    .ks-wc[data-animation="watercolor-reveal"]:not(
-        [data-reveal="done"],
-        [data-reveal="fading"]
-      )
-      .ks-wc__caption {
-      opacity: var(--ks-reveal-caption, 0);
-      translate: 0 calc((1 - var(--ks-reveal-caption, 0)) * 0.35em);
+      /* The caption is not painted: the script shows it late, briefly
+         fading it in. */
+      .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])
+        .ks-wc__caption {
+        opacity: var(--ks-reveal-caption, 0);
+      }
     }
+  }
+
+  /* The <svg> that holds the matte while it runs: it draws nothing itself
+     and must not take up room. (Not display: none, which would switch the
+     masks off.) */
+  .ks-wc__matte {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
   }
 
   /* Reduced motion, reducedMotionMode="simple-fade": no painting, the whole
@@ -178,10 +155,6 @@
       ) {
       opacity: var(--ks-reveal-fade, 0);
     }
-  }
-
-  .ks-wc[data-animation="watercolor-reveal"][data-reveal="fading"] {
-    opacity: var(--ks-reveal-fade, 0);
   }
 
   /* Safety net: if the script never takes over (failed to load, or much too
@@ -195,11 +168,7 @@
 
   @keyframes ks-wc-reveal-fallback {
     to {
-      --ks-reveal-left: 1;
-      --ks-reveal-right: 1;
-      --ks-reveal-photo-x: 1;
-      --ks-reveal-photo-y: 1;
-      --ks-reveal-dry: 1;
+      --ks-reveal-hidden: none;
       --ks-reveal-caption: 1;
       --ks-reveal-fade: 1;
     }
