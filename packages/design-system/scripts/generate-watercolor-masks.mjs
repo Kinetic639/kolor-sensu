@@ -1,8 +1,11 @@
 #!/usr/bin/env node
-// Generates the painted (watercolor / dry-brush) alpha masks used by the public
-// website's WatercolorImage and wash surfaces. The output is plain SVG geometry
-// without filters, so the masks render identically in every browser, are
-// rasterised once by the browser and cached like any other static asset.
+// Generates the painted (dry-brush) alpha masks for UI surfaces on the public
+// website: the service tile and the section band, plus the paper grain. The
+// output is plain SVG geometry, so the masks render identically in every
+// browser and are cached like any other static asset.
+//
+// The photo mask used by WatercolorImage is a separate raster file, made by
+// generate-photo-mask.mjs.
 //
 // Output: apps/web/public/watercolor/*.svg (Storybook serves the same folder).
 // Run:    pnpm --filter @repo/design-system generate:watercolor
@@ -172,9 +175,9 @@ function brushStroke({
   return body;
 }
 
-// A photo mask: rows of overlapping brush strokes forming an irregular,
-// roughly elliptical painted field, plus a few loose flecks of paint.
-function photoMask({
+// Rows of overlapping brush strokes forming an irregular painted field, plus a
+// few loose flecks of paint.
+function strokeField({
   w,
   h,
   seed,
@@ -244,180 +247,16 @@ function photoMask({
   return svg(w, h, body);
 }
 
-// ------------------------------------------------------------ watercolor wash
-
-function blob({ cx, cy, rx, ry, seed, wobble = 0.1 }) {
-  const n = noise1d(seed);
-  const n2 = noise1d(seed + 99);
-  const pts = [];
-  const steps = 96;
-  for (let i = 0; i < steps; i++) {
-    const t = (i / steps) * Math.PI * 2;
-    const k = 1 + n(t * 1.6, 3) * wobble + n2(t * 9, 2) * wobble * 0.25;
-    pts.push([cx + Math.cos(t) * rx * k, cy + Math.sin(t) * ry * k]);
-  }
-  return pts;
-}
-
-// Layered glazes with a darker rim, like pigment pooling at a drying edge,
-// and a few brushed streaks along one side.
-function washMask({ seed }) {
-  const r = rng(seed);
-  const W = 1000;
-  const H = 1000;
-  const outer = blob({
-    cx: 500,
-    cy: 500,
-    rx: 440,
-    ry: 400,
-    seed,
-    wobble: 0.13,
-  });
-  let body = polygon(outer, 0.68);
-  body += polygon(
-    blob({
-      cx: 470 + r() * 60,
-      cy: 480 + r() * 60,
-      rx: 350,
-      ry: 310,
-      seed: seed + 3,
-      wobble: 0.16,
-    }),
-    0.34,
-  );
-  body += polygon(
-    blob({
-      cx: 380 + r() * 240,
-      cy: 380 + r() * 240,
-      rx: 190,
-      ry: 150,
-      seed: seed + 5,
-      wobble: 0.22,
-    }),
-    0.18,
-  );
-  const rim = `M${outer.map(([x, y]) => `${f(x)} ${f(y)}`).join(" ")}Z`;
-  body += `<path d='${rim}' fill='none' stroke='white' stroke-opacity='0.3' stroke-width='7'/>`;
-  // Brushed glaze on top: loose horizontal strokes whose dry ends run past
-  // the pooled shape, like the washes in reference B.
-  let strokes = "";
-  for (let i = 0; i < 4; i++) {
-    const cy = 250 + i * 165 + (r() - 0.5) * 50;
-    const span = 330 + r() * 120;
-    const cx = 500 + (r() - 0.5) * 120;
-    strokes += brushStroke({
-      x1: cx - span,
-      x2: cx + span,
-      cy,
-      thickness: 120 + r() * 50,
-      slope: -0.05 + r() * 0.04,
-      seed: seed * 10 + i,
-      streaks: 7,
-      reach: 110,
-    });
-  }
-  body += `<g opacity='0.4'>${strokes}</g>`;
-  return svg(W, H, body);
-}
-
-// ------------------------------------------------------------ reveal wipe
-
-// 200%-wide wipe used as an extra mask layer when animating: the left half is
-// opaque, the right half transparent, with a ragged bristle edge just past the
-// middle. With mask-size 200% 100%, mask-position 0% shows the whole element
-// and 135% hides it completely (bristles included), so animating between the
-// two sweeps paint across the element from left to right.
-function wipeMask() {
-  const r = rng(404);
-  const W = 2000;
-  const H = 1000;
-  const pts = [[0, 0]];
-  const teeth = 40;
-  for (let k = 0; k <= teeth; k++) {
-    const y = (H * k) / teeth;
-    pts.push([1025 + r() * 80, y]);
-  }
-  pts.push([0, H]);
-  let body = polygon(pts);
-  for (let s = 0; s < 22; s++) {
-    const y = r() * H;
-    const w = 3 + r() * 10;
-    const x2 = 1110 + r() * 190;
-    body += polygon(
-      [
-        [960, y - w],
-        [x2, y - w * 0.2],
-        [x2 + 10, y],
-        [x2, y + w * 0.2],
-        [960, y + w],
-      ],
-      0.4 + r() * 0.5,
-    );
-  }
-  return svg(W, H, body);
-}
-
 // ------------------------------------------------------------ paper grain
 
 const paper = `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.33 0 0 0 0 0.3 0 0 0 0.55 0'/></filter><rect width='180' height='180' filter='url(#p)'/></svg>`;
 
-// ------------------------------------------------------------ variants
-
-const photoMasks = {
-  // Landscape 4:3 – 3:2: room photos, content images.
-  "soft-horizontal": photoMask({
-    w: 1000,
-    h: 750,
-    seed: 11,
-    rows: 5,
-    marginX: 70,
-    marginY: 70,
-    envelope: 0.8,
-    slope: -0.05,
-    reach: 70,
-  }),
-  // Wide 16:9 – 21:9: hero and workshop photos.
-  "wide-brush": photoMask({
-    w: 1600,
-    h: 900,
-    seed: 23,
-    rows: 5,
-    marginX: 110,
-    marginY: 80,
-    envelope: 0.75,
-    slope: -0.06,
-    reach: 120,
-  }),
-  // Portrait 4:5 – 3:4: specialists.
-  "portrait-soft": photoMask({
-    w: 800,
-    h: 1000,
-    seed: 37,
-    rows: 6,
-    marginX: 55,
-    marginY: 80,
-    envelope: 0.7,
-    slope: -0.04,
-    reach: 55,
-  }),
-  // Square-ish, small sizes: thumbnails, tiles.
-  "compact-brush": photoMask({
-    w: 1000,
-    h: 1000,
-    seed: 53,
-    rows: 5,
-    marginX: 75,
-    marginY: 85,
-    envelope: 0.85,
-    slope: -0.05,
-    reach: 60,
-  }),
-};
+// ------------------------------------------------------------ surfaces
 
 // Painted fills for UI surfaces rather than photos: a near-rectangular tile
 // (service tiles) and a long, low band (call-to-action and section backdrops).
 const surfaceMasks = {
-  tile: photoMask({
+  tile: strokeField({
     w: 600,
     h: 780,
     seed: 97,
@@ -428,7 +267,7 @@ const surfaceMasks = {
     slope: -0.02,
     reach: 18,
   }),
-  band: photoMask({
+  band: strokeField({
     w: 2400,
     h: 560,
     seed: 131,
@@ -441,32 +280,14 @@ const surfaceMasks = {
   }),
 };
 
-const washShapes = {
-  a: washMask({ seed: 61 }),
-  b: washMask({ seed: 79 }),
-};
-
 mkdirSync(outDir, { recursive: true });
 const files = {
-  ...Object.fromEntries(
-    Object.entries(photoMasks).map(([name, markup]) => [
-      `mask-${name}.svg`,
-      markup,
-    ]),
-  ),
   ...Object.fromEntries(
     Object.entries(surfaceMasks).map(([name, markup]) => [
       `${name}.svg`,
       markup,
     ]),
   ),
-  ...Object.fromEntries(
-    Object.entries(washShapes).map(([name, markup]) => [
-      `wash-${name}.svg`,
-      markup,
-    ]),
-  ),
-  "wipe.svg": wipeMask(),
   "paper.svg": paper,
 };
 for (const [name, markup] of Object.entries(files)) {

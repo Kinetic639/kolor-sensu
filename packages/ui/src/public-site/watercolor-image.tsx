@@ -1,82 +1,53 @@
 import Image, { type ImageProps } from "next/image";
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/utils";
-import {
-  BotanicalAccent,
-  type BotanicalAccentVariant,
-} from "./botanical-accent";
 
 // Server-safe on purpose: no hooks, no browser APIs, no "use client". The
-// painted look is CSS (SVG alpha masks + token colours), so the server HTML
-// already contains the finished picture with its <img> and alt text.
-// Animation is layered on from outside (PaintReveal / paint="on-load").
+// painted look is a static composition of two layers, so the server HTML is
+// already the finished picture:
+//
+//   .ks-wc                    stable aspect-ratio box (16 / 10 by default)
+//   ├── .ks-wc__backdrop      the watercolor asset, decorative, full size
+//   ├── .ks-wc__photo         the uploaded photo, cropped with object-fit:
+//   │                         cover and cut by the dry-brush photo mask
+//   └── .ks-wc__caption       optional handwritten overlay (real text)
+//
+// The backdrop and the photo are separate elements so each can be animated
+// on its own later (paint the backdrop in, then reveal the photo on top).
 
-export const watercolorShapes = [
-  "soft-horizontal",
-  "wide-brush",
-  "portrait-soft",
-  "compact-brush",
-] as const;
-export type WatercolorShape = (typeof watercolorShapes)[number];
-
-export const watercolorTones = [
-  "sage",
-  "blush",
-  "sage-blush",
-  "neutral",
-] as const;
-export type WatercolorTone = (typeof watercolorTones)[number];
-
-export type WatercolorAccentPosition =
-  "top-left" | "top-right" | "bottom-left" | "bottom-right";
-
-export type WatercolorCaptionPosition =
-  "top-right" | "bottom-right" | "bottom-left";
-
-// Sensible defaults per shape so a caller only has to pass `sizes` when the
-// image sits in an unusual column.
-const defaultSizes: Record<WatercolorShape, string> = {
-  "soft-horizontal": "(min-width: 1024px) 50vw, 100vw",
-  "wide-brush": "(min-width: 1024px) 60vw, 100vw",
-  "portrait-soft": "(min-width: 1024px) 25vw, (min-width: 640px) 40vw, 80vw",
-  "compact-brush": "(min-width: 1024px) 20vw, 45vw",
-};
+/** The approved painted backdrop: dusty pink left, sage green right. */
+export const defaultWatercolorSrc = "/watercolor/watercolor-background.webp";
 
 export interface WatercolorImageProps {
+  /**
+   * Any ordinary rectangular photo, as uploaded. The component crops and
+   * masks it; the file itself never needs editing.
+   */
   src: ImageProps["src"];
   /**
    * Required. Describe the photo; pass "" only when the image is purely
    * decorative (the surrounding text already says everything).
    */
   alt: string;
-  /** Brushed silhouette. Pick by crop: wide hero, landscape room, portrait. */
-  shape?: WatercolorShape;
-  /** Which pastel washes sit behind the photo. */
-  tone?: WatercolorTone;
-  /** Box ratio, e.g. "16 / 9" or 1.5. Defaults to the shape's native ratio. */
-  aspectRatio?: string | number;
-  /** CSS object-position for the crop, e.g. "30% 40%" to keep a face in. */
-  focalPoint?: string;
-  /** Responsive `sizes` for next/image. */
+  /** Painted backdrop behind the photo. `null` leaves it out. */
+  watercolorSrc?: ImageProps["src"] | null;
+  /**
+   * Ratio of the whole composition. The mask and the backdrop are drawn for
+   * 16 / 10 (the default); ratios between 3 / 2 and 2 / 1 still look right.
+   */
+  aspectRatio?: string;
+  /**
+   * Which part of the photo stays in frame, as CSS object-position
+   * (e.g. "52% 44%" to keep a face or the main subject in view).
+   */
+  objectPosition?: string;
+  /** Responsive `sizes` for next/image (both layers). */
   sizes?: string;
   /** Above-the-fold hero: preload with high fetch priority, never lazy. */
   priority?: boolean;
   quality?: number;
-  /** Hide the pastel washes (e.g. inside a card that already has colour). */
-  washes?: boolean;
-  /** Optional botanical line art drawn over the edge of the frame. */
-  accent?: BotanicalAccentVariant;
-  accentPosition?: WatercolorAccentPosition;
   /** Optional handwritten overlay, rendered as real text in <figcaption>. */
   caption?: ReactNode;
-  captionPosition?: WatercolorCaptionPosition;
-  /** "light" sits on the photo (with a soft veil); "ink" sits on paper. */
-  captionTone?: "light" | "ink";
-  /**
-   * "on-load" plays the paint sequence once with CSS only (for the hero).
-   * For below-the-fold images wrap in <PaintReveal> instead.
-   */
-  paint?: "none" | "on-load";
   className?: string;
   imageClassName?: string;
   style?: CSSProperties;
@@ -85,72 +56,57 @@ export interface WatercolorImageProps {
 export function WatercolorImage({
   src,
   alt,
-  shape = "soft-horizontal",
-  tone = "sage-blush",
+  watercolorSrc = defaultWatercolorSrc,
   aspectRatio,
-  focalPoint,
-  sizes,
+  objectPosition = "50% 50%",
+  sizes = "(min-width: 1024px) 60vw, 100vw",
   priority = false,
   quality,
-  washes = true,
-  accent,
-  accentPosition = "top-right",
   caption,
-  captionPosition = "bottom-right",
-  captionTone = "light",
-  paint = "none",
   className,
   imageClassName,
   style,
 }: WatercolorImageProps) {
   const Root = caption ? "figure" : "div";
-  const rootStyle = {
-    ...(aspectRatio !== undefined && { "--ks-wc-ratio": String(aspectRatio) }),
-    ...(focalPoint && { "--ks-wc-focus": focalPoint }),
-    ...style,
-  } as CSSProperties;
+  const loading = priority ? undefined : "lazy";
 
   return (
     <Root
-      className={cn("ks-wc", `ks-wc--${shape}`, `ks-wc--${tone}`, className)}
-      data-shape={shape}
-      data-tone={tone}
-      data-paint={paint === "on-load" ? "load" : undefined}
-      style={rootStyle}
+      className={cn("ks-wc", className)}
+      style={
+        {
+          ...(aspectRatio && { "--ks-wc-ratio": aspectRatio }),
+          ...style,
+        } as CSSProperties
+      }
     >
-      {washes ? (
-        <>
-          <span className="ks-wc__wash ks-wc__wash--back" aria-hidden="true" />
-          <span className="ks-wc__wash ks-wc__wash--front" aria-hidden="true" />
-        </>
+      {watercolorSrc ? (
+        <div className="ks-wc__backdrop" aria-hidden="true">
+          <Image
+            src={watercolorSrc}
+            alt=""
+            fill
+            sizes={sizes}
+            loading={priority ? "eager" : "lazy"}
+          />
+        </div>
       ) : null}
-      <div className="ks-wc__frame">
+      <div className="ks-wc__photo">
         <Image
           src={src}
           alt={alt}
           fill
-          sizes={sizes ?? defaultSizes[shape]}
+          sizes={sizes}
           quality={quality}
           preload={priority}
-          loading={priority ? undefined : "lazy"}
+          loading={loading}
           fetchPriority={priority ? "high" : undefined}
           className={cn("ks-wc__img", imageClassName)}
+          style={{ objectPosition }}
         />
       </div>
-      {accent ? (
-        <BotanicalAccent
-          variant={accent}
-          className={cn("ks-wc__accent", `ks-wc__accent--${accentPosition}`)}
-        />
-      ) : null}
       {caption ? (
-        <figcaption
-          className={cn(
-            "ks-wc__caption",
-            `ks-wc__caption--${captionPosition}`,
-            `ks-wc__caption--${captionTone}`,
-          )}
-        >
+        <figcaption className="ks-wc__caption">
           {caption}
           <BrushUnderline />
         </figcaption>
@@ -159,7 +115,7 @@ export function WatercolorImage({
   );
 }
 
-// Dry-brush swash under the handwritten caption (reference B).
+// Dry-brush swash under the handwritten caption.
 function BrushUnderline() {
   return (
     <svg

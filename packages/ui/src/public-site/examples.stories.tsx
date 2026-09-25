@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import Image from "next/image";
 import {
   ArrowRight,
   Heart,
@@ -9,7 +10,6 @@ import {
   Users,
 } from "lucide-react";
 import { ArrowLink, PrimaryButton, SecondaryButton } from "./actions";
-import { AnimatedWatercolorImage } from "./animated-watercolor-image";
 import {
   PastelIconTile,
   SoftCard,
@@ -74,15 +74,11 @@ function HomepageFragment() {
           </ul>
         </div>
         <WatercolorImage
-          src="/kolor-sensu/room-wide.jpg"
+          src="/kolor-sensu/therapy-room-upload.png"
           alt="Jasny gabinet z fotelem, stolikiem i roślinami przy dużym oknie"
-          shape="wide-brush"
-          tone="sage-blush"
           caption="Przestrzeń dla ważnych rozmów"
           priority
-          paint="on-load"
           sizes="(min-width: 1024px) 55vw, 100vw"
-          aspectRatio="10 / 7"
           className="lg:-mr-12 xl:-mr-20"
         />
       </section>
@@ -141,14 +137,15 @@ function HomepageFragment() {
           {specialists.map((person) => (
             <li key={person.name}>
               <SoftCard interactive className="grid gap-3 p-3">
-                <WatercolorImage
-                  src={person.src}
-                  alt={`${person.name}, ${person.role.toLowerCase()}`}
-                  shape="portrait-soft"
-                  aspectRatio="1 / 1"
-                  focalPoint="50% 30%"
-                  washes={false}
-                />
+                <div className="rounded-card-sm relative aspect-square overflow-hidden">
+                  <Image
+                    src={person.src}
+                    alt={`${person.name}, ${person.role.toLowerCase()}`}
+                    fill
+                    sizes="(min-width: 1024px) 14rem, 45vw"
+                    className="object-cover object-[50%_30%]"
+                  />
+                </div>
                 <div className="flex items-end justify-between gap-2 px-1 pb-1">
                   <div>
                     <p className="text-small font-semibold">
@@ -174,11 +171,10 @@ function HomepageFragment() {
 
       {/* Rooms */}
       <section className="max-w-page px-gutter py-section-sm mx-auto grid items-center gap-10 lg:grid-cols-2">
-        <AnimatedWatercolorImage
+        <WatercolorImage
           src="/kolor-sensu/room.jpg"
           alt="Gabinet z beżowym fotelem, stolikiem i roślinami"
-          shape="soft-horizontal"
-          tone="blush"
+          sizes="(min-width: 1024px) 50vw, 100vw"
         />
         <div className="grid gap-4">
           <SectionEyebrow>Nasze gabinety</SectionEyebrow>
@@ -202,12 +198,10 @@ function HomepageFragment() {
           </p>
           <ArrowLink href="#warsztaty">Zobacz nadchodzące wydarzenia</ArrowLink>
         </div>
-        <AnimatedWatercolorImage
+        <WatercolorImage
           src="/kolor-sensu/group.jpg"
           alt="Uczestnicy warsztatu rozmawiają w kręgu"
-          shape="wide-brush"
-          tone="sage-blush"
-          aspectRatio="2 / 1"
+          sizes="(min-width: 1024px) 50vw, 100vw"
         />
       </section>
 

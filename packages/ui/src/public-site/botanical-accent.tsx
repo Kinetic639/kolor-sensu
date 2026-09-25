@@ -2,8 +2,7 @@ import type { SVGProps } from "react";
 import { cn } from "../lib/utils";
 
 // Ink line art in the style of the branch in reference A's call-to-action
-// band. Each path uses pathLength=1 so a stroke-dashoffset animation can draw
-// it (see the paint-reveal rules in public-site.css).
+// band.
 const sprig = {
   viewBox: "0 0 210 202",
   paths: [
@@ -82,7 +81,7 @@ export function BotanicalAccent({
       focusable="false"
     >
       {art.paths.map((d) => (
-        <path key={d} d={d} pathLength={1} vectorEffect="non-scaling-stroke" />
+        <path key={d} d={d} vectorEffect="non-scaling-stroke" />
       ))}
     </svg>
   );

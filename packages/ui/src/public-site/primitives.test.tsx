@@ -126,6 +126,5 @@ describe("public site primitives", () => {
     expect(svg).toHaveAttribute("aria-hidden", "true");
     const paths = container.querySelectorAll("path");
     expect(paths.length).toBeGreaterThan(3);
-    paths.forEach((path) => expect(path).toHaveAttribute("pathLength", "1"));
   });
 });

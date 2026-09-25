@@ -8,18 +8,20 @@ approved references in `docs/design/references/public/`:
 - **B** `painted-hero.png`: the painted hero photograph (brushed mask, washes,
   paper grain, handwritten overlay).
 
-It is a foundation, not a page: tokens, one painted image component, a paint
-reveal hook and a handful of primitives. Pages are built from it later.
+It is a foundation, not a page: tokens, one painted image component and a
+handful of primitives. Pages are built from it later.
 
-| Piece                               | Where                                                              |
-| ----------------------------------- | ------------------------------------------------------------------ |
-| Tokens (Tailwind v4 `@theme`)       | `packages/design-system/src/public-theme.css`                      |
-| Painted layers and reveal CSS       | `packages/ui/src/public-site/public-site.css`                      |
-| Components                          | `packages/ui/src/public-site/` (`@repo/ui/public-site`)            |
-| Mask assets                         | `apps/web/public/watercolor/*.svg`                                 |
-| Mask generator                      | `packages/design-system/scripts/generate-watercolor-masks.mjs`     |
-| Stories                             | Storybook › Public site (WatercolorImage, Primitives, Examples)    |
-| Placeholder photos (Storybook only) | `apps/storybook/public/kolor-sensu/` (crops of references A and B) |
+| Piece                         | Where                                                                       |
+| ----------------------------- | --------------------------------------------------------------------------- |
+| Tokens (Tailwind v4 `@theme`) | `packages/design-system/src/public-theme.css`                               |
+| Painted layers CSS            | `packages/ui/src/public-site/public-site.css`                               |
+| Components                    | `packages/ui/src/public-site/` (`@repo/ui/public-site`)                     |
+| Watercolor backdrop (asset)   | `apps/web/public/watercolor/watercolor-background.webp`                     |
+| Photo mask                    | `apps/web/public/watercolor/photo-mask.png`                                 |
+| Surface masks, paper grain    | `apps/web/public/watercolor/{tile,band,paper}.svg`                          |
+| Mask generators               | `packages/design-system/scripts/generate-{photo-mask,watercolor-masks}.mjs` |
+| Stories                       | Storybook › Public site (WatercolorImage, Primitives, Examples)             |
+| Sample photos (Storybook)     | `apps/storybook/public/kolor-sensu/`                                        |
 
 ## 1. Principles
 
@@ -33,8 +35,8 @@ reveal hook and a handful of primitives. Pages are built from it later.
    the neutrals. Nothing else appears as a surface colour.
 5. **Restraint.** Per screen: at most one large painted photo with a
    handwritten line, one or two washes, one botanical accent.
-6. **Quiet motion.** Paint is brushed on once; nothing loops, bounces or
-   follows the cursor.
+6. **Static first.** The painted picture is a static composition. Motion is
+   added later, once, and never loops, bounces or follows the cursor.
 
 ## 2. Palette
 
@@ -102,9 +104,8 @@ The pink accent line of a heading is `EditorialHeading accent="…"`.
   `py-section-sm` (40 → 56 px).
 - Desktop sections are two columns (text 4–5 parts, visual 6–7 parts) that
   alternate sides; on mobile the text comes first, then the visual, full width.
-- Painted washes bleed past their image. On phones the overhang shrinks to
-  about 3 %, which stays inside `px-gutter`; an edge-to-edge image needs
-  `overflow-x-clip` on its section.
+- The watercolor backdrop of `WatercolorImage` stays inside the component's
+  own box, so a full-width image never causes horizontal scrolling.
 
 ## 5. Shape and surfaces
 
@@ -130,136 +131,134 @@ Surfaces, from quiet to expressive:
 
 ## 6. Watercolor image language
 
-`WatercolorImage` is the one component for every photo on the public site:
-hero, specialists, rooms and workshops. It stacks five layers:
+`WatercolorImage` turns an ordinary rectangular photo into the approved painted
+composition (reference B, `painted-hero.png`). It is a static composition of
+two layers in one box with a stable ratio (16 / 10 by default):
 
-1. **Washes** (two `<span aria-hidden>`): pastel pigment in a brushed wash
-   shape with paper grain, lower-left and upper-right of the photo, bleeding
-   past it.
-2. **Painted mask**: an SVG alpha mask with dry-brush rows, ragged stroke ends
-   and bristle trails, applied with `mask-image` to the frame.
-3. **Image**: a real `next/image` `<img>` with `alt`, `object-fit: cover` and a
-   focal point.
-4. **Botanical accent** (optional): ink line art over the edge.
-5. **Handwritten overlay** (optional): real text in `<figcaption>`, rotated,
-   with a brush underline.
+```
+WatercolorImage (.ks-wc, aspect-ratio box)
+├── backdrop   the watercolor asset, decorative, fills the box
+├── photo      the uploaded photo, cropped by the component and cut by the
+│              dry-brush photo mask
+└── caption    optional handwritten line (real text)
+```
 
 ```tsx
 import { WatercolorImage } from "@repo/ui/public-site";
 
 <WatercolorImage
-  src={room}
+  src={upload} // any rectangular photo, as uploaded
   alt="Jasny gabinet z fotelem przy oknie"
-  shape="wide-brush" // soft-horizontal | wide-brush | portrait-soft | compact-brush
-  tone="sage-blush" // sage | blush | sage-blush | neutral
-  caption="Przestrzeń dla ważnych rozmów"
+  objectPosition="52% 44%" // what stays in frame; default "50% 50%"
+  caption="Przestrzeń dla ważnych rozmów" // optional
   priority // hero only
   sizes="(min-width: 1024px) 55vw, 100vw"
 />;
 ```
 
-| Shape             | Native ratio | For                                  |
-| ----------------- | ------------ | ------------------------------------ |
-| `wide-brush`      | 16:10        | Hero, workshops (2:1, 21:9 fine too) |
-| `soft-horizontal` | 4:3          | Rooms, content images                |
-| `portrait-soft`   | 4:5          | Specialists, portraits, tall crops   |
-| `compact-brush`   | 1:1          | Small squares, thumbnails            |
+Other props: `watercolorSrc` (another backdrop, or `null` for none),
+`aspectRatio` (the composition is drawn for 16 / 10; 3 / 2 to 2 / 1 still look
+right, beyond that the mask and backdrop stretch visibly), `quality`,
+`className`, `imageClassName`, `style`.
 
-| Tone         | Back wash → front wash  | Reference            |
-| ------------ | ----------------------- | -------------------- |
-| `sage-blush` | `blush` → `sage`        | B, A hero            |
-| `sage`       | `sage` → `primary-soft` | A specialist washes  |
-| `blush`      | `blush` → `pink-soft`   | A "Gabinety" section |
-| `neutral`    | `beige` → `cream`       | Quiet sections       |
+**Backdrop.** `watercolor-background.webp` is the approved painted backdrop
+itself (reference 1 of the correction brief): dusty pink on the left, sage on
+the right, a neutral blend between and dry-brush edges. It is a real asset, not
+CSS, and it is larger than the photo: its paint shows around the photo on
+every side, most on the left (pink) and right (sage), as in the target. It is
+decorative (`alt=""` inside an `aria-hidden` wrapper).
 
-Other props: `aspectRatio` (any ratio; the mask stretches with it),
-`focalPoint` (object-position), `washes={false}` (inside cards), `accent`
-(`sprig` | `leaf`) with `accentPosition`, `captionPosition`, `captionTone`
-(`light` on the photo with a soft veil, `ink` on paper), `paint="on-load"`.
+**Source photo.** The photo is any ordinary rectangular image an admin
+uploads. It needs no preparation: no crop, no painted edge, no fixed ratio.
+The component does the presentation crop with `object-fit: cover`, and
+`objectPosition` decides which part stays in frame when the upload's ratio
+differs from the frame (for a 3 : 2 photo in the default composition nothing
+is cropped). The photo stays a normal `next/image` `<img>` with its `alt`.
+
+**Photo mask.** `photo-mask.png` is an alpha mask applied to the photo layer
+with CSS `mask-image`. Its silhouette is traced from the approved target (the
+outline of the photographed room in reference B); its edge is procedural: dry-
+brush streaks that all run one way, uneven stroke ends, gaps where the brush
+ran dry, a few flecks and some translucent stretches where the backdrop shows
+through the photo. The photo layer box has the mask's own 3 : 2 ratio, so the
+mask is never distorted, and it is smaller than the backdrop, so the
+watercolor always extends beyond the photo.
+
+**Why the photo needs no preprocessing.** The painted edge, the crop and the
+backdrop all come from the component and two static assets. Replacing the
+photo therefore changes nothing else, which is what lets editors upload
+photos without an image editor.
+
+**Caption.** Real text in `<figcaption>`, lower right, rotated, one or two
+words per line, with a brush underline. A soft text shadow keeps white text
+readable on any photo.
 
 ## 7. Mask technique
 
-- **Static SVG alpha masks** (`/watercolor/mask-*.svg`, 9–11 KB gzipped each),
-  applied with CSS `mask-image` and `mask-size: 100% 100%`, so they stretch to
-  any box and the image stays a normal, crawlable, lazy-loadable `<img>`.
-- The masks are **plain geometry without SVG filters**: they rasterise once,
-  cost nothing per frame and render the same in every browser.
-- They are **generated**, deterministic and reproducible:
+- **Photo mask:** one static alpha PNG (1500 × 1000, 8-bit palette with
+  transparency, about 70 KB), applied with `mask-image` and
+  `mask-size: 100% 100%` to the photo layer only. Raster rather than SVG so the
+  edge can carry bristle-fine detail and partial alpha without SVG filters.
+- **Surface masks** (service tile `tile.svg`, section band `band.svg`) are
+  plain SVG geometry; their colour comes from tokens.
+- Both are generated, deterministic and reproducible:
   `pnpm --filter @repo/design-system generate:watercolor`. To tune the look,
-  change the parameters in the generator, never the SVGs by hand.
-- Washes, the service tile (`tile.svg`) and the section band (`band.svg`) use
-  the same technique; colour comes from tokens, not from the files.
+  change the generator parameters, never the files by hand.
 - Rejected: canvas and WebGL (heavy, not SSR-able), `clip-path` polygons (no
-  soft or streaked edges), `border-radius` blobs (read as CSS, not paint),
-  baking the edge into each photo (every photo would need an editor).
+  soft or streaked edges), `border-radius` blobs and ellipses (read as CSS,
+  not paint), baking the edge into each photo (every photo would need an
+  editor), runtime image processing.
 
 ## 8. Responsive behaviour
 
 - The component is fluid (`width: 100%`) and reserves its box with
-  `aspect-ratio`, so nothing shifts while the photo loads.
-- Masks stretch with the box; any ratio from 21:9 to 3:5 stays painterly.
-- `focalPoint` keeps faces and key objects inside the painted area on narrow
-  crops. The painted edge covers about 5–10 % on each side, so keep subjects
-  away from the very edge.
-- The handwritten caption scales with the image (container query units), not
-  with the viewport, so it keeps its proportion on phones.
-- On mobile the text column comes first and the picture follows at full
-  width; the washes pull in so they never cause horizontal scrolling.
+  `aspect-ratio`, so nothing shifts while the images load.
+- The backdrop, the photo layer and the mask are positioned in percentages of
+  that one box, so they scale together and keep the same relation at every
+  width (checked at 1440, 768 and 390 px). The mask never stretches in the
+  default ratio.
+- The painted edge covers roughly 5–10 % of the photo on each side; keep
+  subjects away from the very edge or move them in with `objectPosition`.
+- The caption scales with the picture (container query units), not with the
+  viewport, with a 16 px floor on phones.
 
 ## 9. Accessibility
 
 - `alt` is required. Pass `alt=""` only when the photo is purely decorative.
-- Washes, masks, grain, accents and the underline are `aria-hidden`; only the
-  photo is exposed as an image.
+- The watercolor backdrop and the caption underline are `aria-hidden`; the
+  mask is CSS only. The photo is the only image exposed to assistive tech.
 - The handwritten line is real text in `<figcaption>`, never baked into the
-  photo. Light captions sit on an ink veil that keeps them above 4.5:1.
+  photo or the backdrop.
 - Painted surfaces never carry body text in muted grey; see the palette rules.
 - Buttons and links have visible focus outlines (`outline-ring`, 2 px, offset).
-- Every animation is off under `prefers-reduced-motion`; content is never
-  hidden by default (see below).
 
 ## 10. Performance
 
-- `next/image`: responsive `sizes` per shape (overridable), modern formats and
-  `srcset` from the Next.js optimiser, `priority` → preload + `fetchPriority=high`
-  for the hero, `loading="lazy"` everywhere else.
-- No layout shift: the ratio box is reserved before the image arrives.
-- The painted look is CSS and a few small cached SVGs; no large PNG overlays,
-  no per-image processing, no JavaScript for the static picture.
-- The only client code is `PaintReveal` (an IntersectionObserver that sets one
-  attribute).
+- Both layers use `next/image`: responsive `sizes` (default
+  `(min-width: 1024px) 60vw, 100vw`), modern formats and `srcset` from the
+  Next.js optimiser. `priority` preloads the photo with `fetchPriority=high`
+  and loads the backdrop eagerly; everything else is `loading="lazy"`.
+- No layout shift: the ratio box is reserved before the images arrive.
+- The painted look is two cached static assets (backdrop WebP about 400 KB at
+  full size, served resized by Next.js; photo mask about 70 KB) and CSS. No
+  canvas, WebGL, JavaScript or per-image processing; the component is a
+  server component.
 
-## 11. Animation direction
+## 11. Animation (deferred)
 
-The reveal feels like the picture being painted, in this order:
+`WatercolorImage` has no animation for now, on purpose: the static composition
+is approved first. The earlier paint-reveal sequence (`PaintReveal`,
+`AnimatedWatercolorImage`, `data-paint`, the wipe mask) has been removed.
 
-1. washes are brushed on (a bristled wipe sweeps across each wash),
-2. the botanical line art draws itself (`stroke-dashoffset`, `pathLength=1`),
-3. the photo is brushed in, still desaturated (same wipe on the frame),
-4. colour fills in (`filter` from grey to full colour),
-5. the handwritten caption writes itself last (`clip-path` wipe).
+The layers are already separate elements, so the planned sequence can animate
+them independently without restructuring:
 
-How it works:
+1. the watercolor backdrop (`.ks-wc__backdrop`) paints in,
+2. the photo (`.ks-wc__photo`) paints or reveals on top of it.
 
-- Everything is CSS in `public-site.css`, keyed on a `data-paint` attribute on
-  the image or any ancestor: `load` (plays on first render, CSS only),
-  `idle` (held at the first frame), `play` (runs).
-- **Hero:** `paint="on-load"`. No JavaScript; the server HTML is the finished
-  image and the browser animates it on first paint.
-- **Below the fold:** `AnimatedWatercolorImage` or wrap a section in
-  `PaintReveal`. After hydration it holds blocks that are still off-screen and
-  paints them as they scroll in. Blocks already on screen are left alone, so
-  visible content is never hidden.
-- **Reduced motion:** all animation rules live inside
-  `@media (prefers-reduced-motion: no-preference)` and `PaintReveal` does
-  nothing, so the finished picture shows at once.
-- Timings are CSS variables (`--ks-paint-*-delay`, `--ks-paint-*-duration`), so
-  a future Motion or WAAPI timeline can drive the same layers without changing
-  the component.
-
-Storybook › Public site › WatercolorImage › _Paint Reveal Demo_ shows the
-sequence with a replay button; _Paint Reveal Reduced Motion_ shows the result
-for visitors who opted out.
+When it comes back: CSS or a small client wrapper that never hides content by
+default, nothing that runs without `prefers-reduced-motion: no-preference`,
+and the base component stays a server component.
 
 ## 12. Primitives
 
@@ -294,6 +293,10 @@ Buttons accept `asChild` to render a `next/link` `<Link>`.
 - No paint behind or through body text, no textured buttons, no handwriting
   font in headings, buttons, navigation or long sentences.
 - No text baked into photos.
+- No pre-cut, pre-painted or hand-cropped photos: upload the ordinary photo
+  and let `WatercolorImage` crop and paint it.
 - No looping, bouncing or cursor-following animation; nothing that hides
   content until JavaScript runs.
-- No new mask shapes drawn by hand; extend the generator.
+- No new mask shapes drawn by hand; extend the generators.
+- No second photo mask "variant" until there is a layout that needs it; one
+  well-matched mask beats several weak ones.
