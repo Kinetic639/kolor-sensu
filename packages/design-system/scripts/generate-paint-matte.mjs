@@ -24,9 +24,10 @@
 // an animated paint matte.
 //
 // The backdrop's strokes are not authored here: backdrop-brushwork.mjs
-// derives them from the watercolor backdrop picture itself (its streaks,
-// sweeps and washes), so the backdrop is painted in along its own
-// brushwork. The photo's strokes are the table below.
+// derives them from the watercolor backdrop picture itself (its streaks and
+// sweeps, extended to cover the whole picture), so the backdrop is painted
+// in along its own brushwork, as brush strokes only. The photo's strokes
+// are the table below.
 //
 // Coordinates: each layer is authored in a design space 1000 units wide
 // (backdrop 1000 x 625, 16 : 10; photo 1000 x 666, the photo layer's box).
@@ -468,13 +469,13 @@ function dataModule(builds) {
     "// Paint matte strokes of WatercolorImage's entrance animation, per layer:",
     "// the design space (width x height units), the atlas of stroke textures,",
     "// and for each stroke where its texture sits in the layer and in the atlas",
-    "// (both x y w h, in design units and atlas pixels) and whether it is a wash",
-    "// (softer front).",
+    "// (both x y w h, in design units and atlas pixels) and whether it has a",
+    "// softer, wetter front.",
     "//",
     "// Backdrop strokes are derived from the backdrop picture's brushwork: their",
-    "// kind (dry-brush streak, stroke or wash), the side of the picture (pink or",
-    "// green), their centreline in painting order (x y pairs; a wash has only",
-    "// the point it spreads from) and when they are painted (s, GSAP ease).",
+    "// kind (dry-brush streak or stroke), the side of the picture (pink or",
+    "// green), their centreline in painting order (x y pairs) and when they are",
+    "// painted (s, GSAP ease).",
     "// Photo strokes have their centreline as a quadratic curve from brush-down",
     "// to lift (x0 y0 cx cy x1 y1) and half their width.",
     "",
@@ -512,7 +513,9 @@ function dataModule(builds) {
             t.line.flat().map((v) => Math.round(v)),
           ),
         );
-        lines.push(`        soft: ${t.kind === "wash"},`);
+        // Every backdrop region is now a directional brush stroke, never
+        // the wetter, softer front of a wash.
+        lines.push(`        soft: false,`);
         lines.push(
           `        timing: { at: ${t.at}, duration: ${t.duration}, ease: "${t.ease}" },`,
         );

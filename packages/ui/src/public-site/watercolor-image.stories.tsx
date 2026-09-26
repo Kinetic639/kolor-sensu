@@ -212,8 +212,8 @@ const sideColour = { pink: "#e0457b", green: "#17a67a" } as const;
 /**
  * The backdrop's paint regions as the generator found them in the picture:
  * each brush stroke's centreline with an arrow in the direction it is
- * painted (dashed: dry-brush streak), and the point each wash spreads from.
- * Drawn in the backdrop layer's own space, over whatever panel holds it.
+ * painted (dashed: dry-brush streak). Drawn in the backdrop layer's own
+ * space, over whatever panel holds it.
  */
 function BrushworkLines({ labels = false }: { labels?: boolean }) {
   const { width, height } = paintMatte.backdrop;
@@ -242,30 +242,6 @@ function BrushworkLines({ labels = false }: { labels?: boolean }) {
             {stroke.id}
           </text>
         ) : null;
-        if (stroke.kind === "wash") {
-          return (
-            <g key={stroke.id}>
-              <circle
-                cx={x0}
-                cy={y0}
-                r={9}
-                fill="none"
-                stroke={colour}
-                strokeWidth={3}
-              />
-              <circle
-                cx={x0}
-                cy={y0}
-                r={22}
-                fill="none"
-                stroke={colour}
-                strokeWidth={1.5}
-                strokeDasharray="3 5"
-              />
-              {label}
-            </g>
-          );
-        }
         const n = line.length;
         const [x1, y1] = [line[n - 2]!, line[n - 1]!];
         const [px, py] = [line[n - 4]!, line[n - 3]!];

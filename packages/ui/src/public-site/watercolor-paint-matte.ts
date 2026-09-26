@@ -10,13 +10,14 @@ import { paintMatte } from "./watercolor-paint-matte.data";
 //     strokes    one image per paint region, cut from the layer's atlas.
 //                Its alpha is the region's finished shape, its grey channel
 //                says when each pixel gets paint.
-//                Backdrop (29 regions): derived from the backdrop picture's
+//                Backdrop (21 regions): derived from the backdrop picture's
 //                own brushwork. Its dry-brush streaks and strokes follow
 //                the direction the paint really runs in there (curved
-//                where it curves, at whatever angle it has), the rest are
-//                washes spreading from their densest pigment; the
-//                picture's darker streaks and cloud cells arrive ahead of
-//                the lighter paper between them.
+//                where it curves, at whatever angle it has); what no
+//                stroke's band reaches joins whichever traced stroke is
+//                nearest, so every region is still a directional brush
+//                stroke. The picture's darker streaks arrive ahead of the
+//                lighter paper between them.
 //                Photo (12 strokes): brush strokes from a stroke table,
 //                with an opaque body, dry-brush edge, bristle hairs and a
 //                streaky tail where the brush lifts.

@@ -202,7 +202,7 @@ readable on any photo.
   edge can carry bristle-fine detail and partial alpha without SVG filters.
 - **Paint matte atlases** (entrance animation only):
   `paint-matte-backdrop.png` and `paint-matte-photo.png`, one image per paint
-  region (29 derived from the backdrop picture, 12 photo strokes), grey +
+  region (21 derived from the backdrop picture, 12 photo strokes), grey +
   alpha: the alpha is the finished region, the grey says when each pixel gets
   paint. About 330 KB together, fetched only where the animation plays. See
   §11.
@@ -303,20 +303,20 @@ backdrop's part comes with its regions, from the generator).
 - Each mask holds paint regions, each an image from the layer's atlas: its
   alpha is the finished region, its grey channel a time map (when each pixel
   gets paint).
-- **Backdrop: 29 regions derived from the backdrop picture itself**
+- **Backdrop: 21 regions derived from the backdrop picture itself**
   (`backdrop-brushwork.mjs`), not drawn by hand. A structure tensor of the
   picture gives the direction its paint streaks run in, everywhere, and how
   clear they are. Evenly spaced streamlines of that field, started where the
   streaks are clearest, are the brush strokes: at whatever angle and with
   whatever curve the brushwork has (dry-brush strokes where the streaks are
-  very clear). What they do not cover is split into washes, each spreading
-  from its densest pigment. Every pixel belongs to exactly one region;
-  borders are streaky along the brush for strokes and cloud-like for washes,
-  and fade over a few pixels. Stroke time runs along the curved centreline,
-  with the picture's own darker streaks ahead of the paper between them, so
-  a dry-brush front breaks up into the streaks that are really there; wash
-  time runs outward, darker cloud cells first. The region's colour picks
-  its side: pink regions start at the left edge, green ones at the right.
+  very clear). What no stroke's band reaches (soft, low-coherence pockets,
+  mostly toward the middle of the picture) joins whichever traced stroke is
+  nearest, so every pixel belongs to a directional brush stroke, never a
+  shape spreading from a point. Borders are streaky along the brush. Stroke
+  time runs along the curved centreline, with the picture's own darker
+  streaks ahead of the paper between them, so a dry-brush front breaks up
+  into the streaks that are really there. The region's colour picks its
+  side: pink regions start at the left edge, green ones at the right.
   Outside the painted area (transparent in the picture) a pixel takes the
   region and time of the nearest paint, so nothing lights up on its own
   there. Needs `sharp` (a dev dependency of `@repo/design-system`) to read
@@ -330,10 +330,11 @@ backdrop's part comes with its regions, from the generator).
   map crosses it: a frayed brush front, not a moving edge or a growing shape.
   Where the paint has arrived the layer is fully opaque: nothing fades.
   When a stroke is done its filter is dropped.
-- Backdrop regions run from both edges toward the centre, where the washes
-  close it. Photo strokes set down near the centre of the photo and are
-  dragged outward, in three rings. A few splatter specks appear beside the
-  photo's brushes (the backdrop's splatter is in its picture).
+- Backdrop regions run from both edges toward the centre, where the two
+  sides' strokes close it. Photo strokes set down near the centre of the
+  photo and are dragged outward, in three rings. A few splatter specks
+  appear beside the photo's brushes (the backdrop's splatter is in its
+  picture).
 - When the last stroke is done, the strokes cover the whole backdrop and the
   whole photo silhouette (the generator checks this and fails otherwise), so
   removing the matte changes no pixel.

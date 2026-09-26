@@ -103,28 +103,20 @@ describe("paint schedule", () => {
     expect(paintMatte.photo.strokes).toHaveLength(12);
   });
 
-  it("paints the backdrop with strokes, dry-brush streaks and washes found in its picture", () => {
+  it("paints the backdrop with only dry-brush streaks and strokes found in its picture", () => {
     const strokes = backdropStrokes();
-    const brush = strokes.filter((stroke) => stroke.kind !== "wash");
-    const washes = strokes.filter((stroke) => stroke.kind === "wash");
 
-    expect(brush.length).toBeGreaterThanOrEqual(16);
-    expect(brush.some((stroke) => stroke.kind === "dry")).toBe(true);
-    expect(brush.some((stroke) => stroke.kind === "stroke")).toBe(true);
-    expect(washes.length).toBeGreaterThanOrEqual(3);
-    for (const stroke of brush) {
+    expect(strokes.length).toBeGreaterThanOrEqual(16);
+    expect(strokes.some((stroke) => stroke.kind === "dry")).toBe(true);
+    expect(strokes.some((stroke) => stroke.kind === "stroke")).toBe(true);
+    for (const stroke of strokes) {
       expect(stroke.line.length, stroke.id).toBeGreaterThanOrEqual(8);
       expect(stroke.soft, stroke.id).toBe(false);
-    }
-    for (const wash of washes) {
-      // A wash spreads from one point, with a softer front.
-      expect(wash.line, wash.id).toHaveLength(2);
-      expect(wash.soft, wash.id).toBe(true);
     }
   });
 
   it("follows the picture's brushwork: no strips, no single angle, curves stay curved", () => {
-    const brush = backdropStrokes().filter((stroke) => stroke.kind !== "wash");
+    const brush = backdropStrokes();
     const angles = brush.map(({ line }) => {
       const p = points(line);
       return lineAngle(p[0]!, p.at(-1)!);
@@ -166,8 +158,7 @@ describe("paint schedule", () => {
       expect(line[0], id).toBeGreaterThan(0.45 * width);
     }
     // ...and its brushes travel toward the centre.
-    for (const { id, kind, line } of strokes) {
-      if (kind === "wash") continue;
+    for (const { id, line } of strokes) {
       const [[x0], [x1]] = [points(line)[0]!, points(line).at(-1)!];
       if (Math.abs(x1 - x0) < 40) continue;
       if (pink.some((stroke) => stroke.id === id)) {

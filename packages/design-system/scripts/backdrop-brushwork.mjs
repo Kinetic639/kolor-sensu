@@ -5,25 +5,25 @@
 //
 // 1. Brush direction. A structure tensor of the picture's darkness gives,
 //    everywhere, the direction the paint streaks run in and how strongly
-//    (coherence): high along dry-brush streaks and sweeps, low in the soft
-//    cloud-like washes.
+//    (coherence): high along dry-brush streaks and sweeps, low in the softer,
+//    more even parts of the picture.
 // 2. Brush strokes. Evenly spaced streamlines of that direction field,
 //    started where the streaks are clearest, give the centrelines of the
 //    brush strokes: curved where the brushwork curves, at whatever angle it
 //    has. Strokes with very clear streaks are dry-brush strokes.
-// 3. Washes. What no stroke covers is split into a few washes (k-means), each
-//    spreading from its pigment-weighted centre.
-// 4. Regions. Every texture pixel of the layer goes to the nearest stroke
-//    (within its band; wider where the picture is streaky) or else to its
-//    wash, with noisy borders: streaky along the local brush direction for
-//    strokes, cauliflower-like for washes. The regions tile the whole layer,
-//    so the finished matte covers it.
-// 5. Time maps. Along a stroke, paint arrives in the brush's direction; the
+// 3. Regions. Every texture pixel of the layer goes to the nearest stroke
+//    (within its band; wider where the picture is streaky), with a noisy
+//    border streaky along the local brush direction. What no stroke's band
+//    reaches (soft, low-coherence pockets, mostly toward the middle of the
+//    picture) joins whichever traced stroke is nearest, so every pixel is
+//    still part of a directional brush stroke, never a shape spreading from
+//    a point. The regions tile the whole layer, so the finished matte
+//    covers it.
+// 4. Time maps. Along a stroke, paint arrives in the brush's direction; the
 //    picture's own streaks (darker than their surroundings) arrive first and
 //    the gaps between them later, so the paint front breaks up into the
-//    streaks that are really there. A wash spreads from its centre, its
-//    darker cloud cells ahead of the lighter ones.
-// 6. Timing. Pink regions start from the left edge, green ones from the
+//    streaks that are really there.
+// 5. Timing. Pink regions start from the left edge, green ones from the
 //    right, outer ones first; each has its own duration and ease.
 
 import sharp from "sharp";
@@ -436,87 +436,8 @@ function dropIslands(labels, w, h) {
   }
 }
 
-// ------------------------------------------------------------------ washes
-
-const WASHES = 8;
 // Mean red-over-green below which a region counts as neither pink nor green.
 const NEUTRAL = 0.012;
-
-// The painted area no stroke covers, split into washes by k-means; each
-// spreads from its pigment-weighted centre.
-function findWashes(art, layer, claimed) {
-  const points = [];
-  for (let y = 3; y < layer.height; y += 6) {
-    for (let x = 3; x < layer.width; x += 6) {
-      if (art.alpha(x, y) > 0.25 && !claimed(x, y)) points.push({ x, y });
-    }
-  }
-  // Farthest-point start, then Lloyd iterations.
-  const centres = [points.reduce((a, p) => (p.x < a.x ? p : a))];
-  while (centres.length < WASHES) {
-    let far = points[0];
-    let farDistance = -1;
-    for (const p of points) {
-      const d = Math.min(
-        ...centres.map((c) => (c.x - p.x) ** 2 + (c.y - p.y) ** 2),
-      );
-      if (d > farDistance) {
-        farDistance = d;
-        far = p;
-      }
-    }
-    centres.push(far);
-  }
-  let groups = [];
-  for (let iteration = 0; iteration < 16; iteration++) {
-    groups = centres.map(() => []);
-    for (const p of points) {
-      let best = 0;
-      let bestDistance = Infinity;
-      centres.forEach((c, i) => {
-        const d = (c.x - p.x) ** 2 + (c.y - p.y) ** 2;
-        if (d < bestDistance) {
-          bestDistance = d;
-          best = i;
-        }
-      });
-      groups[best].push(p);
-    }
-    groups.forEach((g, i) => {
-      if (!g.length) return;
-      centres[i] = {
-        x: g.reduce((s, p) => s + p.x, 0) / g.length,
-        y: g.reduce((s, p) => s + p.y, 0) / g.length,
-      };
-    });
-  }
-  return groups
-    .map((group, i) => {
-      if (!group.length) return undefined;
-      const centre = centres[i];
-      // Where the wash starts: its densest pigment.
-      let wx = 0;
-      let wy = 0;
-      let wsum = 0;
-      for (const p of group) {
-        const d = art.darkness(p.x, p.y) ** 3;
-        wx += p.x * d;
-        wy += p.y * d;
-        wsum += d;
-      }
-      const origin = { x: wx / wsum, y: wy / wsum };
-      const radius =
-        1.6 *
-        Math.sqrt(
-          group.reduce(
-            (s, p) => s + (p.x - centre.x) ** 2 + (p.y - centre.y) ** 2,
-            0,
-          ) / group.length,
-        );
-      return { centre, origin, radius };
-    })
-    .filter(Boolean);
-}
 
 // ------------------------------------------------------------------ regions
 
@@ -620,39 +541,17 @@ export async function backdropRegions(file, layer, scale) {
       }
     }
   }
-  const claimed = (x, y) => {
-    const px = Math.round(x * scale) - gx0;
-    const py = Math.round(y * scale) - gy0;
-    return (
-      owner[
-        Math.min(gh - 1, Math.max(0, py)) * gw +
-          Math.min(gw - 1, Math.max(0, px))
-      ] >= 0
-    );
-  };
 
-  // Washes take the rest, with cauliflower borders.
-  const washes = findWashes(art, layer, claimed);
-  const cellNoise = noise2d(402);
-  for (let py = 0; py < gh; py++) {
-    for (let px = 0; px < gw; px++) {
-      const i = py * gw + px;
-      if (owner[i] >= 0) continue;
-      const x = toX(px);
-      const y = toY(py);
-      let best = 0;
-      let bestCost = Infinity;
-      washes.forEach((wash, j) => {
-        const cost =
-          (Math.hypot(x - wash.centre.x, y - wash.centre.y) / wash.radius) *
-          (1 + 0.22 * cellNoise(x / 38 + j * 7.1, y / 38, 3));
-        if (cost < bestCost) {
-          bestCost = cost;
-          best = j;
-        }
-      });
-      owner[i] = bands.length + best;
-    }
+  // What no stroke's band reaches (soft, low-coherence pockets, mostly
+  // toward the middle of the picture) joins whichever traced stroke is
+  // nearest (jump flooding from the already-claimed pixels), so the whole
+  // layer stays directional brush strokes: never a shape spreading from a
+  // point.
+  const strokeClaimed = new Uint8Array(gw * gh);
+  for (let i = 0; i < gw * gh; i++) if (owner[i] >= 0) strokeClaimed[i] = 1;
+  const nearestStroke = nearestPainted(strokeClaimed, gw, gh);
+  for (let i = 0; i < gw * gh; i++) {
+    if (owner[i] < 0) owner[i] = owner[nearestStroke[i]];
   }
 
   // Outside the painted picture (transparent), each pixel takes the region
@@ -667,19 +566,12 @@ export async function backdropRegions(file, layer, scale) {
   const source = nearestPainted(painted, gw, gh);
   for (let i = 0; i < gw * gh; i++) owner[i] = owner[source[i]];
   // A region is one piece: stray bits of it elsewhere (a speck of paint far
-  // from its wash) join the region around them, so nothing lights up late
+  // from its stroke) join the region around them, so nothing lights up late
   // in the middle of paint that is already there.
   dropIslands(owner, gw, gh);
 
-  // Regions: strokes, then washes, each with its side of the picture.
-  const regions = [
-    ...bands.map((band, k) => ({ index: k, kind: band.kind, band })),
-    ...washes.map((wash, j) => ({
-      index: bands.length + j,
-      kind: "wash",
-      wash,
-    })),
-  ];
+  // Regions: one per traced brush stroke, each with its side of the picture.
+  const regions = bands.map((band, k) => ({ index: k, kind: band.kind, band }));
   for (const region of regions) {
     let sum = 0;
     let count = 0;
@@ -716,7 +608,6 @@ export async function backdropRegions(file, layer, scale) {
   // Strokes run from the end nearer their own side's edge toward the
   // centre (from the top or bottom rim, for upright ones).
   for (const region of regions) {
-    if (!region.band) continue;
     const { points } = region.band;
     const a = points[0];
     const b = points.at(-1);
@@ -730,9 +621,6 @@ export async function backdropRegions(file, layer, scale) {
     if (reverse) points.reverse();
     region.band.samples = resample(points, 3);
     region.start = points[0];
-  }
-  for (const region of regions) {
-    if (region.wash) region.start = region.wash.origin;
   }
 
   const textures = regions
@@ -757,12 +645,12 @@ export async function backdropRegions(file, layer, scale) {
 
 // Texture of one region: alpha (the region, grown by two pixels so
 // neighbours overlap and the finished matte has no seams, then fading out
-// over two more, three for a wetter wash, so its edge is soft rather than
-// stepped where the neighbour is not painted yet) and its time map.
+// over two more, so its edge is soft rather than stepped where the
+// neighbour is not painted yet) and its time map.
 function renderRegion(region, grid) {
   const { art, owner, painted, source, gw, gh, toX, toY } = grid;
   const grow = 2;
-  const feather = region.wash ? 3 : 2;
+  const feather = 2;
   const reach = grow + feather;
   const minX = Math.max(0, region.bounds.minX - reach);
   const minY = Math.max(0, region.bounds.minY - reach);
@@ -792,7 +680,6 @@ function renderRegion(region, grid) {
   }
 
   const bristles = noise2d(500 + region.index);
-  const lobes = noise2d(600 + region.index);
   const raw = new Float32Array(w * h);
   // Outside the paint, a pixel takes the time of the nearest painted one,
   // a little later the further away it is: the paint runs on to the frame.
@@ -809,7 +696,7 @@ function renderRegion(region, grid) {
       if (!alpha[y * w + x] || !painted[(minY + y) * gw + minX + x]) continue;
       const dx = toX(minX + x);
       const dy = toY(minY + y);
-      pigment.push(region.band ? art.streak(dx, dy) : art.cell(dx, dy));
+      pigment.push(art.streak(dx, dy));
     }
   }
   // The region's own pigment contrast, 5th to 95th percentile, as 0..1.
@@ -825,33 +712,15 @@ function renderRegion(region, grid) {
       const i = y * w + x;
       if (!alpha[i]) continue;
       const [dx, dy, beyond] = at(x, y);
-      let t;
-      if (region.band) {
-        const { half, kind, samples } = region.band;
-        const { along, across } = locate(samples, dx, dy);
-        const travel = along < 0 ? -along * 1.4 : along;
-        const v = Math.min(1.6, Math.abs(across) / half);
-        t =
-          travel +
-          (kind === "dry" ? 70 : 50) * (1 - strength(art.streak(dx, dy))) +
-          0.45 * half * v * v +
-          (kind === "dry" ? 18 : 12) * bristles(across / 3.2, along / 55, 2);
-      } else {
-        const { origin } = region.wash;
-        const r = Math.hypot(dx - origin.x, dy - origin.y);
-        const angle = Math.atan2(dy - origin.y, dx - origin.x);
-        t =
-          r *
-            (1 +
-              0.3 *
-                lobes(
-                  Math.cos(angle) * 1.5 + 3,
-                  Math.sin(angle) * 1.5 + 3,
-                  3,
-                )) +
-          60 * (1 - strength(art.cell(dx, dy))) +
-          10 * lobes(dx / 12, dy / 12, 2);
-      }
+      const { half, kind, samples } = region.band;
+      const { along, across } = locate(samples, dx, dy);
+      const travel = along < 0 ? -along * 1.4 : along;
+      const v = Math.min(1.6, Math.abs(across) / half);
+      const t =
+        travel +
+        (kind === "dry" ? 70 : 50) * (1 - strength(art.streak(dx, dy))) +
+        0.45 * half * v * v +
+        (kind === "dry" ? 18 : 12) * bristles(across / 3.2, along / 55, 2);
       raw[i] = t + 0.8 * beyond;
       if (beyond) continue;
       first = Math.min(first, t);
@@ -869,15 +738,13 @@ function renderRegion(region, grid) {
     }
   }
 
-  const line = region.band
-    ? resample(region.band.points, 12).map((p) => [p.x, p.y])
-    : [[region.wash.origin.x, region.wash.origin.y]];
+  const line = resample(region.band.points, 12).map((p) => [p.x, p.y]);
   return {
     region,
     kind: region.kind,
     side: region.side,
     line,
-    length: region.band ? region.band.length : region.wash.radius,
+    length: region.band.length,
     x: minX + grid.gx0,
     y: minY + grid.gy0,
     w,
@@ -895,10 +762,9 @@ const MAX_GAP = 0.09;
 const LAST_START = 0.6;
 
 // Two brushes, one per side: pink regions start from the left edge and green
-// ones from the right, both at once, outer ones first and each wash a little
-// after the strokes around it. On each side, starts are 20 to 90 ms apart,
-// unevenly: wider where the next region is further in, with some jitter.
-// Strokes take as long as their length needs, washes a little longer; the
+// ones from the right, both at once, outer ones first. On each side, starts
+// are 20 to 90 ms apart, unevenly: wider where the next region is further
+// in, with some jitter. Strokes take as long as their length needs; the
 // whole backdrop is complete by 0.95 s.
 function schedule(textures, layer) {
   for (const t of textures) {
@@ -907,20 +773,14 @@ function schedule(textures, layer) {
       t.side === "pink" ? x / layer.width : 1 - x / layer.width,
     );
     const seed = `${t.region.index}`;
-    t.order =
-      outer + (t.kind === "wash" ? 0.15 : 0) + (hash(seed, 7) - 0.5) * 0.12;
-    if (t.kind === "wash") {
-      t.duration = Math.min(0.6, Math.max(0.45, 0.35 + t.length / 1200));
-      t.ease = "sine.inOut";
-    } else {
-      t.duration = Math.min(0.62, Math.max(0.4, 0.3 + t.length / 1000));
-      t.ease =
-        t.kind === "dry"
-          ? "power2.out"
-          : hash(seed, 9) < 0.5
-            ? "power1.out"
-            : "power1.inOut";
-    }
+    t.order = outer + (hash(seed, 7) - 0.5) * 0.12;
+    t.duration = Math.min(0.62, Math.max(0.4, 0.3 + t.length / 1000));
+    t.ease =
+      t.kind === "dry"
+        ? "power2.out"
+        : hash(seed, 9) < 0.5
+          ? "power1.out"
+          : "power1.inOut";
   }
   for (const side of ["pink", "green"]) {
     const own = textures
