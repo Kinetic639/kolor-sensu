@@ -21,6 +21,8 @@ describe("WatercolorImage on the server", () => {
       "specialist-artwork.tsx",
       "specialist-info-plate.tsx",
       "specialists-section.tsx",
+      "offer-tile.tsx",
+      "offer-section.tsx",
     ]) {
       const source = readFileSync(resolve(here, file), "utf8");
       expect(source, file).not.toMatch(/^["']use client["']/m);
@@ -41,6 +43,7 @@ describe("WatercolorImage on the server", () => {
       .sort();
 
     expect(clientFiles).toEqual([
+      "offer-reveal.tsx",
       "specialist-reveal.tsx",
       "watercolor-caption-motion.tsx",
       "watercolor-reveal.tsx",

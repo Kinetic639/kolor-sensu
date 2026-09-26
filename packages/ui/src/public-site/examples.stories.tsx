@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Heart, HeartHandshake, House, Leaf, User, Users } from "lucide-react";
+import { Heart, House, Leaf, Users } from "lucide-react";
 import { ArrowLink, PrimaryButton, SecondaryButton } from "./actions";
+import { sampleOfferCopy, sampleServices } from "./offer-samples";
+import { OfferSection } from "./offer-section";
 import { sampleSpecialists, sampleSpecialistsCopy } from "./specialist-samples";
 import { SpecialistsSection } from "./specialists-section";
-import { PastelIconTile, WatercolorSectionBackground } from "./surfaces";
+import { WatercolorSectionBackground } from "./surfaces";
 import { EditorialHeading, SectionEyebrow } from "./typography";
 import { WatercolorImage } from "./watercolor-image";
 
@@ -59,47 +61,11 @@ function HomepageFragment() {
       </section>
 
       {/* Offer */}
-      <section className="max-w-page px-gutter py-section-sm mx-auto grid gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:items-center">
-        <div className="grid gap-4">
-          <SectionEyebrow>Nasza oferta</SectionEyebrow>
-          <EditorialHeading>
-            Wsparcie w różnych obszarach życia
-          </EditorialHeading>
-          <p className="max-w-copy text-body text-text-muted">
-            Oferujemy terapię, konsultacje i warsztaty dopasowane do Twoich
-            potrzeb.
-          </p>
-          <ArrowLink href="#oferta">Zobacz całą ofertę</ArrowLink>
-        </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <PastelIconTile
-            icon={<User />}
-            title="Psychoterapia indywidualna"
-            description="Przestrzeń na Ciebie i Twoje potrzeby."
-            href="#indywidualna"
-          />
-          <PastelIconTile
-            tone="blush"
-            icon={<Users />}
-            title="Psychoterapia par"
-            description="Lepsza komunikacja, większa bliskość."
-            href="#pary"
-          />
-          <PastelIconTile
-            icon={<HeartHandshake />}
-            title="Wsparcie dla dzieci i młodzieży"
-            description="Zrozumienie, rozwój, bezpieczeństwo."
-            href="#dzieci"
-          />
-          <PastelIconTile
-            tone="blush"
-            icon={<Leaf />}
-            title="Konsultacje psychologiczne"
-            description="Pierwszy krok do zmiany."
-            href="#konsultacje"
-          />
-        </div>
-      </section>
+      <OfferSection
+        services={sampleServices}
+        {...sampleOfferCopy}
+        animationPreset="brush-reveal"
+      />
 
       {/* Specialists */}
       <SpecialistsSection

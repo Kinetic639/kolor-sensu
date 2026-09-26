@@ -418,6 +418,39 @@ revealed by **blooms**, never brush strokes.
   Reduced Motion, Splash Matte Debug, Slow Motion Debug, Frame Strip) and
   SpecialistsSection (Desktop, Tablet, Mobile).
 
+### Offer tiles (brush reveal)
+
+`OfferSection` / `OfferTile` ("Nasza oferta", reference A's service tiles)
+put each service on one of four supplied watercolor patches
+(`offer-{sage,pink}-{1,2}.png`), painted in with brush strokes, but not
+WatercolorImage's (from both sides to the middle): five quick strokes, one
+band after another.
+
+- **Layers** in one 5 : 8 tile: the supplied patch, its painted area
+  (measured from the file by `generate-offer-matte.mjs`) stretched onto the
+  tile, at most ~5 %, so the four different files line up; the icon in
+  paper colour, as if cut out of the paint; title (the link), description
+  in ink (never muted grey on paint); a round arrow.
+- **Brush matte** (`generate-offer-matte.mjs` → `offer-brush-matte.data.ts`,
+  `offer-matte.png`): five strokes at 22°, rising to the right like the
+  brushwork in the patches, each crossing the whole tile and starting and
+  lifting outside it, back and forth. The brush itself (body, dry-brush
+  edge, bristle hairs) is the one of WatercolorImage's photo strokes
+  (`brush-stroke.mjs`). Variant "a" (odd tiles) paints top to bottom, its
+  first stroke left to right; variant "b" (even tiles) the opposite:
+  bottom to top, first stroke right to left.
+- **Sequence** (about 0.9 s, plus 0.1 s stagger per tile in a row): strokes
+  every 0.11 s, 0.3 s each, overlapping (painted by 0.74 s); content fades
+  in and lifts 8 px (0.3–0.75 s); arrow (0.55–0.9 s). Then no matte, no
+  inline styles.
+- **Fallbacks:** reduced motion `static` or `simple-fade`; WebKit fades the
+  paint instead of painting it; a 3 s CSS safety net.
+- **Layout:** 2 x 2 on phones, a row of four from 48 rem; type scales with
+  the tile (container units).
+- **Storybook:** OfferTile (Sage, Pink, Static, Animated, Reduced Motion,
+  Brush Matte Debug, Slow Motion Debug, Frame Strip, All Paints Animated)
+  and OfferSection (Desktop, Tablet, Mobile).
+
 ## 12. Primitives
 
 Only what the references repeat:
@@ -431,7 +464,8 @@ Only what the references repeat:
 | `ArrowLink`                   | "Zobacz całą ofertę →"                     |
 | `SoftCard`                    | Readable panels (forms)                    |
 | `SpecialistWatercolorCard`    | Specialist cards (specialists-concept.png) |
-| `PastelIconTile`              | Service tiles                              |
+| `OfferTile`                   | Service tiles                              |
+| `PastelIconTile`              | Pastel patch tiles                         |
 | `BotanicalAccent`             | Ink sprig and leaf line art                |
 | `WatercolorSectionBackground` | Closing call-to-action band                |
 

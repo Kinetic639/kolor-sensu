@@ -9,7 +9,7 @@
     "./public-theme.css": "./src/public-theme.css"
   },
   "scripts": {
-    "generate:watercolor": "node scripts/generate-watercolor-masks.mjs && node scripts/generate-photo-mask.mjs && node scripts/generate-paint-matte.mjs && node scripts/generate-splash-matte.mjs",
+    "generate:watercolor": "node scripts/generate-watercolor-masks.mjs && node scripts/generate-photo-mask.mjs && node scripts/generate-paint-matte.mjs && node scripts/generate-splash-matte.mjs && node scripts/generate-offer-matte.mjs",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit"
   },
