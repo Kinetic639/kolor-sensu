@@ -125,6 +125,11 @@ function layersOf(element: HTMLElement) {
   for (const name of ["data-animation", "data-reduced-motion", "data-reveal"]) {
     clone.removeAttribute(name);
   }
+  // The caption's own idle float (CaptionMotion, watercolor-caption-motion
+  // .tsx) runs forever, independently of the reveal: strip its live inline
+  // style so this comparison doesn't depend on the instant each side was
+  // read.
+  clone.querySelector(".ks-wc__caption-inner")?.removeAttribute("style");
   return clone.outerHTML;
 }
 

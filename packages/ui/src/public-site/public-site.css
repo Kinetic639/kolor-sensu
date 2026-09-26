@@ -63,7 +63,9 @@
 
   /* Optional handwritten caption: real text on the photo, lower right, as in
      the approved target. A soft shadow keeps white text readable on any
-     photo without a visible veil. */
+     photo without a visible veil. CaptionMotion (watercolor-caption-motion
+     .tsx) animates this element's own transform for a few pixels of scroll
+     parallax; the rotation below is its resting state. */
   .ks-wc__caption {
     position: absolute;
     right: 11%;
@@ -84,6 +86,15 @@
       0 1px 2px rgb(22 48 47 / 0.5),
       0 0 16px rgb(22 48 47 / 0.55);
     transform: rotate(-12deg);
+    will-change: transform;
+  }
+
+  /* CaptionMotion's inner layer: the slow idle float, kept separate from
+     the outer element's rotation and scroll parallax so the two transforms
+     never fight over the same tween. */
+  .ks-wc__caption-inner {
+    display: block;
+    will-change: transform;
   }
 
   .ks-wc__underline {

@@ -26,16 +26,20 @@ describe("WatercolorImage on the server", () => {
     }
   });
 
-  it("keeps the entrance animation in one client module", () => {
+  it("keeps client-only code to the entrance animation and the caption's own motion", () => {
     const clientFiles = readdirSync(here)
       .filter(
         (file) => /\.tsx?$/.test(file) && !/\.(test|stories)\./.test(file),
       )
       .filter((file) =>
         /^["']use client["']/m.test(readFileSync(resolve(here, file), "utf8")),
-      );
+      )
+      .sort();
 
-    expect(clientFiles).toEqual(["watercolor-reveal.tsx"]);
+    expect(clientFiles).toEqual([
+      "watercolor-caption-motion.tsx",
+      "watercolor-reveal.tsx",
+    ]);
   });
 
   it("renders the finished composition to HTML", () => {

@@ -1,17 +1,23 @@
 import Image, { type ImageProps } from "next/image";
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/utils";
+import { CaptionMotion } from "./watercolor-caption-motion";
 import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
 
-// Server-safe on purpose: no hooks, no browser APIs, no "use client". The
-// painted look is a static composition of two layers, so the server HTML is
-// already the finished picture:
+// Server-safe on purpose: no hooks, no browser APIs, no "use client" here.
+// The painted look is a static composition of two layers, so the server
+// HTML is already the finished picture:
 //
 //   .ks-wc                    stable aspect-ratio box (16 / 10 by default)
 //   ├── .ks-wc__backdrop      the watercolor asset, decorative, full size
 //   ├── .ks-wc__photo         the uploaded photo, cropped with object-fit:
 //   │                         cover and cut by the dry-brush photo mask
-//   └── .ks-wc__caption       optional handwritten overlay (real text)
+//   └── .ks-wc__caption       optional handwritten overlay (real text),
+//                             its own tiny client island (CaptionMotion:
+//                             watercolor-caption-motion.tsx) for a discreet
+//                             idle float and a few pixels of scroll
+//                             parallax; present with or without the
+//                             entrance animation below.
 //
 // The optional entrance animation (animationPreset="watercolor-reveal")
 // wraps the same layers in a small client component, WatercolorReveal, that
@@ -123,10 +129,10 @@ export function WatercolorImage({
         />
       </div>
       {caption ? (
-        <figcaption className="ks-wc__caption">
+        <CaptionMotion>
           {caption}
           <BrushUnderline />
-        </figcaption>
+        </CaptionMotion>
       ) : null}
     </>
   );
