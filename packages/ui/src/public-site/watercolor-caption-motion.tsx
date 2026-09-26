@@ -19,14 +19,9 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { type ReactNode, type RefObject, useRef } from "react";
+import { matches } from "./reveal-support";
 
 gsap.registerPlugin(useGSAP);
-
-function matches(query: string) {
-  return typeof window.matchMedia === "function"
-    ? window.matchMedia(query).matches
-    : false;
-}
 
 export function CaptionMotion({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLElement>(null);

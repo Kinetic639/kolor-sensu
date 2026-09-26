@@ -14,7 +14,7 @@ export interface SoftCardProps extends HTMLAttributes<HTMLDivElement> {
 
 /**
  * The one "boxed" surface of the public site, for content that needs a
- * readable panel (specialist cards, forms). Soft radius, hairline edge and a
+ * readable panel (forms, text panels). Soft radius, hairline edge and a
  * diffuse ink-tinted shadow; never a hard frame around a photo.
  */
 export function SoftCard({

@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { Label, PrefersReducedMotion, Replay } from "./story-support";
 import {
   defaultWatercolorSrc,
   WatercolorImage,
@@ -73,50 +74,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-function Label({ children }: { children: string }) {
-  return (
-    <p className="text-eyebrow text-text-muted mb-3 uppercase">{children}</p>
-  );
-}
-
 // ------------------------------------------------------------ story helpers
-
-/**
- * Remounts its children on "Odtwórz ponownie", so the entrance animation
- * plays again. `speed` scales every GSAP animation on the page (1 = real).
- */
-function Replay({
-  children,
-  speed = 1,
-}: {
-  children: (run: number) => ReactNode;
-  speed?: number;
-}) {
-  const [run, setRun] = useState(0);
-  // Set before the children mount, so their timeline starts at this speed.
-  useState(() => gsap.globalTimeline.timeScale(speed));
-  useEffect(() => {
-    gsap.globalTimeline.timeScale(speed);
-    return () => {
-      gsap.globalTimeline.timeScale(1);
-    };
-  }, [speed]);
-
-  return (
-    <div className="grid gap-4">
-      <div>
-        <button
-          type="button"
-          onClick={() => setRun((value) => value + 1)}
-          className="border-border-strong text-small hover:bg-surface-muted rounded-full border px-4 py-1.5 font-semibold"
-        >
-          Odtwórz ponownie
-        </button>
-      </div>
-      <div key={run}>{children(run)}</div>
-    </div>
-  );
-}
 
 // What public-site.css does under prefers-reduced-motion: reduce, for the
 // images inside this story: no painting (so nothing pre-hidden) and, for
@@ -134,39 +92,6 @@ const reducedMotionStyles = `
     opacity: var(--ks-reveal-fade, 0);
   }
 `;
-
-/**
- * Makes the page behave as if the visitor prefers reduced motion (the
- * operating-system setting), while this story is open: the component's
- * script through matchMedia, the stylesheet through the rules above. To
- * check the real thing, use DevTools > Rendering > "Emulate CSS media
- * feature prefers-reduced-motion".
- */
-function PrefersReducedMotion({ children }: { children: ReactNode }) {
-  useState(() => {
-    const real = window.matchMedia.bind(window);
-    const stub = (query: string) =>
-      query.includes("prefers-reduced-motion: reduce")
-        ? { ...real(query), matches: true, media: query }
-        : real(query);
-    Object.assign(stub, { real });
-    window.matchMedia = stub as typeof window.matchMedia;
-  });
-  useEffect(
-    () => () => {
-      const real = (window.matchMedia as { real?: typeof window.matchMedia })
-        .real;
-      if (real) window.matchMedia = real;
-    },
-    [],
-  );
-  return (
-    <div className="ks-story-reduced">
-      <style>{reducedMotionStyles}</style>
-      {children}
-    </div>
-  );
-}
 
 // Length of the whole reveal: the last stroke or the caption, whichever
 // ends later.
@@ -761,7 +686,7 @@ export const ReducedMotion: Story = {
   name: "Reduced Motion",
   args: { caption, animationPreset: "watercolor-reveal" },
   render: (args) => (
-    <PrefersReducedMotion>
+    <PrefersReducedMotion styles={reducedMotionStyles}>
       <Replay>
         {() => (
           <div className="grid gap-10 xl:grid-cols-2 xl:gap-8">

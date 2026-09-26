@@ -17,6 +17,10 @@ describe("WatercolorImage on the server", () => {
       "typography.tsx",
       "actions.tsx",
       "surfaces.tsx",
+      "specialist-card.tsx",
+      "specialist-artwork.tsx",
+      "specialist-info-plate.tsx",
+      "specialists-section.tsx",
     ]) {
       const source = readFileSync(resolve(here, file), "utf8");
       expect(source, file).not.toMatch(/^["']use client["']/m);
@@ -26,7 +30,7 @@ describe("WatercolorImage on the server", () => {
     }
   });
 
-  it("keeps client-only code to the entrance animation and the caption's own motion", () => {
+  it("keeps client-only code to the entrance animations and the caption's motion", () => {
     const clientFiles = readdirSync(here)
       .filter(
         (file) => /\.tsx?$/.test(file) && !/\.(test|stories)\./.test(file),
@@ -37,6 +41,7 @@ describe("WatercolorImage on the server", () => {
       .sort();
 
     expect(clientFiles).toEqual([
+      "specialist-reveal.tsx",
       "watercolor-caption-motion.tsx",
       "watercolor-reveal.tsx",
     ]);

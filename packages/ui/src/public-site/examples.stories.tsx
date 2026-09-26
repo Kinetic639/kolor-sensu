@@ -1,20 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import Image from "next/image";
-import {
-  ArrowRight,
-  Heart,
-  HeartHandshake,
-  House,
-  Leaf,
-  User,
-  Users,
-} from "lucide-react";
+import { Heart, HeartHandshake, House, Leaf, User, Users } from "lucide-react";
 import { ArrowLink, PrimaryButton, SecondaryButton } from "./actions";
-import {
-  PastelIconTile,
-  SoftCard,
-  WatercolorSectionBackground,
-} from "./surfaces";
+import { sampleSpecialists, sampleSpecialistsCopy } from "./specialist-samples";
+import { SpecialistsSection } from "./specialists-section";
+import { PastelIconTile, WatercolorSectionBackground } from "./surfaces";
 import { EditorialHeading, SectionEyebrow } from "./typography";
 import { WatercolorImage } from "./watercolor-image";
 
@@ -26,20 +15,6 @@ const heroPoints = [
   { icon: Users, label: "Indywidualne podejście" },
   { icon: House, label: "Przytulne gabinety" },
   { icon: Heart, label: "Atmosfera zaufania", pink: true },
-];
-
-const specialists = [
-  {
-    name: "Anna Nowak",
-    role: "Psychoterapeutka",
-    src: "/kolor-sensu/anna.jpg",
-  },
-  { name: "Tomasz Wójcik", role: "Psycholog", src: "/kolor-sensu/tomasz.jpg" },
-  {
-    name: "Katarzyna Zielińska",
-    role: "Psychoterapeutka",
-    src: "/kolor-sensu/kasia.jpg",
-  },
 ];
 
 function HomepageFragment() {
@@ -127,47 +102,11 @@ function HomepageFragment() {
       </section>
 
       {/* Specialists */}
-      <section className="max-w-page px-gutter py-section-sm mx-auto grid gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:items-center">
-        <div className="grid gap-4">
-          <SectionEyebrow>Nasi specjaliści</SectionEyebrow>
-          <EditorialHeading>Poznaj nasz zespół</EditorialHeading>
-          <ArrowLink href="#zespol">Zobacz wszystkich specjalistów</ArrowLink>
-        </div>
-        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {specialists.map((person) => (
-            <li key={person.name}>
-              <SoftCard interactive className="grid gap-3 p-3">
-                <div className="rounded-card-sm relative aspect-square overflow-hidden">
-                  <Image
-                    src={person.src}
-                    alt={`${person.name}, ${person.role.toLowerCase()}`}
-                    fill
-                    sizes="(min-width: 1024px) 14rem, 45vw"
-                    className="object-cover object-[50%_30%]"
-                  />
-                </div>
-                <div className="flex items-end justify-between gap-2 px-1 pb-1">
-                  <div>
-                    <p className="text-small font-semibold">
-                      <a
-                        href="#specjalista"
-                        className="after:rounded-card focus-visible:after:outline-ring after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2"
-                      >
-                        {person.name}
-                      </a>
-                    </p>
-                    <p className="text-small text-text-muted">{person.role}</p>
-                  </div>
-                  <ArrowRight
-                    aria-hidden="true"
-                    className="text-pink mb-1 size-4"
-                  />
-                </div>
-              </SoftCard>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <SpecialistsSection
+        specialists={sampleSpecialists}
+        {...sampleSpecialistsCopy}
+        animationPreset="splash-reveal"
+      />
 
       {/* Rooms */}
       <section className="max-w-page px-gutter py-section-sm mx-auto grid items-center gap-10 lg:grid-cols-2">

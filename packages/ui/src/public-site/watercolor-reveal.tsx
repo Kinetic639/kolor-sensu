@@ -34,6 +34,7 @@ import {
   type PaintMatte,
   paintMatteUrls,
 } from "./watercolor-paint-matte";
+import { decoded, matches, preload, svgMasksSupported } from "./reveal-support";
 
 gsap.registerPlugin(useGSAP);
 
@@ -77,35 +78,6 @@ export interface WatercolorRevealProps {
 // Longest wait for the images before painting anyway.
 const LOAD_TIMEOUT = 1500;
 
-function matches(query: string) {
-  return typeof window.matchMedia === "function"
-    ? window.matchMedia(query).matches
-    : false;
-}
-
-// SVG masks on HTML elements (mask-image: url(#…)) work in Chromium and
-// Firefox. WebKit ignores them, so Safari keeps the static composition; the
-// stylesheet makes the same distinction with the same test.
-function paintMatteSupported() {
-  return !(
-    typeof CSS !== "undefined" &&
-    typeof CSS.supports === "function" &&
-    CSS.supports("font", "-apple-system-body")
-  );
-}
-
-function decoded(image: HTMLImageElement) {
-  return typeof image.decode === "function"
-    ? image.decode().catch(() => undefined)
-    : undefined;
-}
-
-function preload(url: string) {
-  const image = new Image();
-  image.src = url;
-  return decoded(image);
-}
-
 export function WatercolorReveal({
   as: Root,
   reducedMotionMode,
@@ -134,7 +106,7 @@ export function WatercolorReveal({
         shown ||
         !matches("(scripting: enabled)") ||
         (reduce && reducedMotionMode === "static") ||
-        (!reduce && !paintMatteSupported())
+        (!reduce && !svgMasksSupported())
       ) {
         setState("done");
         return;

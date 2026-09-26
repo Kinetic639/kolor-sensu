@@ -1,0 +1,232 @@
+"use client";
+
+// Client-side half of SpecialistWatercolorCard's entrance animation. It
+// renders the same root element the static card uses, around the same
+// server-rendered layers, and only adds behaviour once hydrated:
+//
+//   (no attribute)  server HTML. Without a script, or where motion is
+//                   reduced, the finished card shows. With a script,
+//                   public-site.css keeps the portrait, splash and plate
+//                   hidden until it runs (and shows them after 3 s anyway).
+//   waiting         mounted; waits until the card is in view and loaded.
+//   playing         portrait lifts in, the splash blooms outward from
+//                   behind the torso (specialist-splash-matte.ts), the plate
+//                   arrives last. Where SVG masks don't work (WebKit) the
+//                   splash fades instead of blooming.
+//   fading          reduced motion, "simple-fade": a short fade instead.
+//   done            no matte, no inline styles: exactly the static card.
+
+import { useGSAP } from "@gsap/react";
+import { gsap } from "gsap";
+import {
+  createContext,
+  type ReactNode,
+  type RefObject,
+  useContext,
+  useRef,
+} from "react";
+import { decoded, matches, preload, svgMasksSupported } from "./reveal-support";
+import {
+  createSplashMatte,
+  createSplashTimeline,
+  type SplashMatte,
+  type SplashMatteVariant,
+  splashMatteUrls,
+} from "./specialist-splash-matte";
+import type { ReducedMotionMode } from "./watercolor-reveal";
+
+gsap.registerPlugin(useGSAP);
+
+/**
+ * Inspection hooks for Storybook (slow motion, matte debug, frame strips).
+ * Not for product pages.
+ */
+export interface SpecialistRevealDebug {
+  /** Show the reveal frozen at this time (s) instead of playing it. */
+  freezeAt?: number;
+  /** Keep the matte in the page after the reveal, to inspect it. */
+  keepMatte?: boolean;
+  /** Receives the matte (if any) and the timeline once the reveal starts. */
+  onReveal?: (reveal: {
+    matte?: SplashMatte;
+    timeline: gsap.core.Timeline;
+  }) => void;
+}
+
+export const SpecialistRevealDebugContext =
+  createContext<SpecialistRevealDebug | null>(null);
+
+export interface SpecialistRevealProps {
+  as: "article" | "div" | "li";
+  matte: SplashMatteVariant;
+  reducedMotionMode: ReducedMotionMode;
+  /** Extra wait (s) before this card starts, to stagger a row of cards. */
+  delay: number;
+  className?: string;
+  children: ReactNode;
+}
+
+// Longest wait for the images before revealing anyway.
+const LOAD_TIMEOUT = 1500;
+
+const layers = {
+  portrait: ".ks-sp__portrait",
+  splash: ".ks-sp__splash",
+  stain: ".ks-sp__stain",
+  plate: ".ks-sp__plate",
+} as const;
+
+export function SpecialistReveal({
+  as: Root,
+  matte: variant,
+  reducedMotionMode,
+  delay,
+  className,
+  children,
+}: SpecialistRevealProps) {
+  const ref = useRef<HTMLElement>(null);
+  const debug = useContext(SpecialistRevealDebugContext);
+
+  useGSAP(
+    (_, contextSafe) => {
+      const root = ref.current;
+      if (!root) return;
+      const setState = (state: string) => {
+        root.dataset.reveal = state;
+      };
+
+      const reduce = matches("(prefers-reduced-motion: reduce)");
+      // Already shown by the no-script fallback (the script came late).
+      const shown =
+        getComputedStyle(root).getPropertyValue("--ks-sp-hidden").trim() ===
+        "1";
+      if (
+        shown ||
+        !matches("(scripting: enabled)") ||
+        (reduce && reducedMotionMode === "static")
+      ) {
+        setState("done");
+        return;
+      }
+      setState("waiting");
+
+      const find = (selector: string) =>
+        root.querySelector<HTMLElement>(selector);
+      const targets = {
+        portrait: find(layers.portrait),
+        splash: find(layers.splash),
+        stain: find(layers.stain),
+        plate: find(layers.plate),
+      };
+      let cancelled = false;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let animation: gsap.core.Animation | undefined;
+      let matte: SplashMatte | undefined;
+
+      const clear = () => {
+        for (const target of Object.values(targets)) {
+          if (!target) continue;
+          gsap.set(target, { clearProps: "opacity,transform,translate" });
+          target.style.removeProperty("mask-image");
+          target.style.removeProperty("-webkit-mask-image");
+          if (target.getAttribute("style") === "") {
+            target.removeAttribute("style");
+          }
+        }
+        root.style.removeProperty("opacity");
+        if (root.getAttribute("style") === "") root.removeAttribute("style");
+      };
+      const finish = () => {
+        animation?.kill();
+        setState("done");
+        clear();
+        if (!debug?.keepMatte) matte?.svg.remove();
+      };
+
+      const fade = contextSafe!(() => {
+        setState("fading");
+        animation = gsap.fromTo(
+          root,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.4, ease: "sine.out", onComplete: finish },
+        );
+      });
+
+      const reveal = contextSafe!(() => {
+        if (targets.splash && svgMasksSupported()) {
+          matte = createSplashMatte(root, variant);
+          targets.splash.style.setProperty("mask-image", matte.url);
+          targets.splash.style.setProperty("-webkit-mask-image", matte.url);
+        }
+        const frozen = debug?.freezeAt;
+        const timeline = createSplashTimeline({
+          ...targets,
+          matte,
+          delay: frozen === undefined ? delay : 0,
+          paused: frozen !== undefined,
+          onComplete: finish,
+        });
+        setState("playing");
+        animation = timeline;
+        debug?.onReveal?.({ matte, timeline });
+        if (frozen !== undefined) timeline.time(frozen);
+      });
+
+      const start = async () => {
+        const loaded = Promise.all([
+          ...Array.from(root.querySelectorAll("img"), decoded),
+          ...(reduce ? [] : splashMatteUrls.map(preload)),
+        ]);
+        const timeout = new Promise((resolve) => {
+          timer = setTimeout(resolve, LOAD_TIMEOUT);
+        });
+        await Promise.race([loaded, timeout]);
+        clearTimeout(timer);
+        if (cancelled) return;
+        if (reduce) fade();
+        else reveal();
+      };
+
+      // Once, when a good part of the card is on screen. (A frozen debug
+      // frame is drawn at once.)
+      let observer: IntersectionObserver | undefined;
+      if (
+        typeof IntersectionObserver === "function" &&
+        debug?.freezeAt === undefined
+      ) {
+        observer = new IntersectionObserver(
+          (entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+              observer?.disconnect();
+              void start();
+            }
+          },
+          { threshold: 0.3 },
+        );
+        observer.observe(root);
+      } else {
+        void start();
+      }
+
+      return () => {
+        cancelled = true;
+        clearTimeout(timer);
+        observer?.disconnect();
+        clear();
+        matte?.svg.remove();
+      };
+    },
+    { scope: ref },
+  );
+
+  return (
+    <Root
+      ref={ref as RefObject<HTMLDivElement & HTMLLIElement>}
+      className={className}
+      data-animation="splash-reveal"
+      data-reduced-motion={reducedMotionMode}
+    >
+      {children}
+    </Root>
+  );
+}

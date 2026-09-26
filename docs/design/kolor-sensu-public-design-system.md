@@ -384,6 +384,40 @@ mattes under each frame).
 **Not in scope yet:** the portrait version, page-level orchestration,
 scroll-linked animation and choreography between sections.
 
+### Specialist cards (splash reveal)
+
+`SpecialistsSection` / `SpecialistWatercolorCard` ("Nasi specjaliści",
+reference `specialists-concept.png`) share the language and the mechanism of
+WatercolorImage but not its matte: the splash behind a specialist is
+revealed by **blooms**, never brush strokes.
+
+- **Layers** in one 3 : 4 box (the ratio of every supplied splash): the
+  supplied splash asset, whole and unframed; the cut-out portrait at full box
+  width, its lower edge dissolving into the watercolor in patches between
+  67 % and 80 % of the box (`portrait-dissolve.png`), with the splash's own
+  pigment multiplied over the clothes there (`portrait-stain.png`); then the
+  info plate, the only rectangular element, overlapping from 80 %.
+- **Splash matte** (`generate-splash-matte.mjs` →
+  `specialist-splash-matte.data.ts`, `splash-matte.png`): 27 bloom regions.
+  Seeds sit on jittered elliptical rings around the torso; every pixel
+  belongs to whichever bloom reaches it first, through a warped field with
+  lobes and a cauliflower edge, so blooms meet along irregular borders. Per
+  bloom, the same SVG threshold as the brush matte, with a softer, wet front
+  (slope 26) and a pale wash settling to full strength. Variant "b" is "a"
+  mirrored; a row alternates them.
+- **Sequence** (about 1.05 s, plus 0.12 s stagger per card in a row):
+  portrait fades in and lifts 14 px (0–0.5 s); splash starts behind the torso
+  at 0.2 s and is complete at 1.0 s; pigment on the portrait 0.5–0.9 s; plate
+  fades in and lifts 10 px (0.66–1.04 s). Then no matte, no inline styles.
+- **Fallbacks:** reduced motion as WatercolorImage (`static` or
+  `simple-fade`); WebKit (no SVG masks on HTML) fades the splash instead of
+  blooming it; a 3 s CSS safety net if the script never runs.
+- **Layout:** stacked cards at most 20 rem wide on phones; three in a row
+  from 48 rem. Plate type scales with the card (container units).
+- **Storybook:** SpecialistWatercolorCard (Pink, Green, Static, Animated,
+  Reduced Motion, Splash Matte Debug, Slow Motion Debug, Frame Strip) and
+  SpecialistsSection (Desktop, Tablet, Mobile).
+
 ## 12. Primitives
 
 Only what the references repeat:
@@ -395,7 +429,8 @@ Only what the references repeat:
 | `PrimaryButton`               | Solid green pill "Umów wizytę →"           |
 | `SecondaryButton`             | Outline pill "Poznaj nas"                  |
 | `ArrowLink`                   | "Zobacz całą ofertę →"                     |
-| `SoftCard`                    | Specialist cards                           |
+| `SoftCard`                    | Readable panels (forms)                    |
+| `SpecialistWatercolorCard`    | Specialist cards (specialists-concept.png) |
 | `PastelIconTile`              | Service tiles                              |
 | `BotanicalAccent`             | Ink sprig and leaf line art                |
 | `WatercolorSectionBackground` | Closing call-to-action band                |

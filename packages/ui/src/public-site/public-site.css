@@ -185,6 +185,165 @@
     }
   }
 
+  /* ------------------------------------------------ SpecialistWatercolorCard */
+
+  /* Artwork on top, plate overlapping its lower edge. The root is the
+     positioned ancestor of the name link's overlay, so the whole card is the
+     click target. Container units size the plate's type with the card. */
+  .ks-sp {
+    position: relative;
+    display: grid;
+    container-type: inline-size;
+  }
+
+  /* One 3 : 4 box: the ratio of every splash asset and the design space of
+     the splash matte and the portrait masks. */
+  .ks-sp__art {
+    position: relative;
+    isolation: isolate;
+    aspect-ratio: 3 / 4;
+  }
+
+  .ks-sp__splash {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /* Portrait layer: the whole box, so its masks share the splash's
+     coordinates. The portrait's lower edge dissolves into the watercolor
+     between 67 % and 80 % of the box, where the plate begins. */
+  .ks-sp__portrait {
+    position: absolute;
+    inset: 0;
+    isolation: isolate;
+    mask-image: url("/watercolor/portrait-dissolve.png");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+
+  /* Head and shoulders: the 4 : 5 cut-out at full box width, head a little
+     below the top of the splash. */
+  .ks-sp__portrait-frame {
+    position: absolute;
+    top: 9%;
+    left: 0;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+  }
+
+  .ks-sp__portrait-img {
+    object-fit: contain;
+    object-position: 50% 0;
+  }
+
+  /* The splash's pigment soaking into the lower portrait: the same asset in
+     the same place, multiplied over the portrait in patches. */
+  .ks-sp__stain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    mask-image: url("/watercolor/portrait-stain.png");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    /* On the masked element itself: its mask makes it a group, so a blend
+       mode on the image inside would only blend within that group. */
+    mix-blend-mode: multiply;
+  }
+
+  .ks-sp__stain img {
+    opacity: 0.55;
+  }
+
+  /* The info plate overlaps the artwork from 80 % of its height (margins in
+     % are of the card's width: 3 : 4 box, 0.2 of its height). A grid item,
+     so z-index works without positioning it (positioning would make it the
+     link overlay's containing block). */
+  .ks-sp__plate {
+    z-index: 1;
+    margin-top: -26.67%;
+    margin-inline: 3%;
+    padding: clamp(0.75rem, 5.5cqi, 1.125rem) clamp(0.875rem, 6cqi, 1.25rem);
+  }
+
+  /* Sized with the card so a long name ("Katarzyna Zielińska") keeps to
+     one line at the row's card width, as in the concept. */
+  .ks-sp__name {
+    font-size: clamp(1rem, 6.4cqi, 1.375rem);
+    line-height: 1.2;
+  }
+
+  .ks-sp__arrow {
+    width: clamp(2.25rem, 13cqi, 2.75rem);
+    aspect-ratio: 1;
+  }
+
+  /* Stacked, compact cards on phones; a row of three from tablet up, the
+     plates on one baseline because every card has the same box. */
+  .ks-sp-list {
+    display: grid;
+    gap: 2.5rem;
+    width: 100%;
+    max-width: 20rem;
+    margin: 0 auto;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (width >= 48rem) {
+    .ks-sp-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(1rem, 2vw, 1.75rem);
+      max-width: none;
+    }
+  }
+
+  /* The <svg> that holds the splash matte while it runs: draws nothing,
+     takes no room, stays rendered (display: none would switch it off). */
+  .ks-sp__matte {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /* animationPreset="splash-reveal" (specialist-reveal.tsx). Until the
+     script takes over, the portrait, splash, stain and plate stay hidden so
+     nothing flashes; the script then animates them with inline styles, which
+     win over these rules. Once done (data-reveal="done") none of this
+     applies and the card is exactly the static one. */
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    .ks-sp[data-animation="splash-reveal"]:not([data-reveal="done"])
+      :is(.ks-sp__portrait, .ks-sp__splash, .ks-sp__stain, .ks-sp__plate) {
+      opacity: var(--ks-sp-hidden, 0);
+    }
+  }
+
+  /* Reduced motion, reducedMotionMode="simple-fade": the whole card fades in
+     once. ("static", the default, hides nothing.) */
+  @media (scripting: enabled) and (prefers-reduced-motion: reduce) {
+    .ks-sp[data-animation="splash-reveal"][data-reduced-motion="simple-fade"]:not(
+        [data-reveal="done"]
+      ) {
+      opacity: var(--ks-sp-hidden, 0);
+    }
+  }
+
+  /* Safety net: if the script never takes over, show the finished card after
+     3 s. The script sets data-reveal as soon as it runs, which cancels it. */
+  @media (scripting: enabled) {
+    .ks-sp[data-animation="splash-reveal"]:not([data-reveal]) {
+      animation: ks-sp-reveal-fallback 1ms 3s forwards;
+    }
+  }
+
+  @keyframes ks-sp-reveal-fallback {
+    to {
+      --ks-sp-hidden: 1;
+    }
+  }
+
   /* ------------------------------------------------------ painted surfaces */
 
   /* Service tile and section band: a flat pastel fill cut by a brushed mask,
