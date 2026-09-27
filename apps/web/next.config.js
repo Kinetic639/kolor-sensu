@@ -30,6 +30,9 @@ const nextConfig = {
   transpilePackages: ["@repo/app-runtime", "@repo/ui"],
   typedRoutes: true,
   images: {
+    // AVIF first (about 20% smaller than WebP; slower only on the first,
+    // uncached request), WebP for browsers without AVIF.
+    formats: ["image/avif", "image/webp"],
     remotePatterns: storagePatterns,
   },
 };

@@ -68,7 +68,7 @@ export const hero = {
     { icon: <Heart />, label: "Atmosfera zaufania", tone: "pink" },
   ],
   image: {
-    src: "/images/gabinet-fotel.png",
+    src: "/images/gabinet-fotel.webp",
     alt: "Jasny gabinet z fotelem, stolikiem i roślinami przy dużym oknie",
     caption: "Przestrzeń dla ważnych rozmów",
   },
