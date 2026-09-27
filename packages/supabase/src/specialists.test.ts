@@ -8,6 +8,9 @@ import {
 import { describe, expect, it, vi } from "vitest";
 import {
   buildSpecialistMediaPath,
+  pickPortalAvatarPath,
+  getSpecialistSlugRedirect,
+  setSpecialistPublicSlugAdmin,
   specialistMappers,
   uploadSpecialistProfileImage,
   validateSpecialistImage,
@@ -288,5 +291,105 @@ describe("specialist draft mapping", () => {
       specialistMappers.draft({ ...draftRow, long_bio: { type: "nope" } })
         .longBio,
     ).toEqual(emptyRichTextDocument);
+  });
+});
+
+describe("specialist public slug", () => {
+  it("sends a normalised slug to the admin function", async () => {
+    const rpc = vi
+      .fn()
+      .mockResolvedValue({ data: "anna-kowalska", error: null });
+    const slug = await setSpecialistPublicSlugAdmin(
+      { rpc } as never,
+      "specialist-id",
+      "  Anna-Kowalska ",
+    );
+
+    expect(rpc).toHaveBeenCalledWith("set_specialist_public_slug", {
+      p_specialist_id: "specialist-id",
+      p_public_slug: "anna-kowalska",
+    });
+    expect(slug).toBe("anna-kowalska");
+  });
+
+  it("rejects an unsafe slug before calling the database", async () => {
+    const rpc = vi.fn();
+    await expect(
+      setSpecialistPublicSlugAdmin({ rpc } as never, "id", "anna kowalska!"),
+    ).rejects.toThrow();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("finds the current slug behind a retired one", async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({
+      data: { specialist: { public_slug: "anna-kowalska" } },
+      error: null,
+    });
+    const eq = vi.fn(() => ({ maybeSingle }));
+    const select = vi.fn(() => ({ eq }));
+    const from = vi.fn(() => ({ select }));
+
+    const slug = await getSpecialistSlugRedirect(
+      { from } as never,
+      "specialist-1bc3b80af9b5",
+    );
+
+    expect(from).toHaveBeenCalledWith("specialist_slug_redirects");
+    expect(eq).toHaveBeenCalledWith("old_slug", "specialist-1bc3b80af9b5");
+    expect(slug).toBe("anna-kowalska");
+  });
+
+  it("returns null for an unknown or malformed slug", async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+    const from = vi.fn(() => ({
+      select: () => ({ eq: () => ({ maybeSingle }) }),
+    }));
+
+    expect(await getSpecialistSlugRedirect({ from } as never, "nie-ma")).toBe(
+      null,
+    );
+    expect(await getSpecialistSlugRedirect({ from } as never, "Zły Slug")).toBe(
+      null,
+    );
+    expect(from).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("pickPortalAvatarPath", () => {
+  it("prefers the account's own avatar", () => {
+    expect(
+      pickPortalAvatarPath({
+        accountAvatarUrl: "https://example.com/me.jpg",
+        draftPhotoPath: "s/profile-draft.webp",
+        publishedPhotoPath: "s/profile-live.webp",
+      }),
+    ).toEqual({ url: "https://example.com/me.jpg" });
+  });
+
+  it("uses the photo the specialist last saved, even before approval", () => {
+    expect(
+      pickPortalAvatarPath({
+        accountAvatarUrl: null,
+        draftPhotoPath: "s/profile-draft.webp",
+        publishedPhotoPath: "s/profile-live.webp",
+      }),
+    ).toEqual({ storagePath: "s/profile-draft.webp" });
+  });
+
+  it("falls back to the published photo, then to nothing", () => {
+    expect(
+      pickPortalAvatarPath({
+        accountAvatarUrl: null,
+        draftPhotoPath: null,
+        publishedPhotoPath: "s/profile-live.webp",
+      }),
+    ).toEqual({ storagePath: "s/profile-live.webp" });
+    expect(
+      pickPortalAvatarPath({
+        accountAvatarUrl: null,
+        draftPhotoPath: null,
+        publishedPhotoPath: null,
+      }),
+    ).toBeNull();
   });
 });

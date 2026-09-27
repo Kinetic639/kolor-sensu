@@ -4,15 +4,18 @@ import {
   adminMobileNavigation,
   adminNavigation,
 } from "@/lib/portal-navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getPortalAvatarUrl } from "@repo/supabase";
 import { PortalShell } from "@repo/ui/portal-shell";
 import { cookies } from "next/headers";
 
 export default async function ProtectedLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [authorization, cookieStore] = await Promise.all([
+  const [authorization, cookieStore, client] = await Promise.all([
     requirePortalRole(),
     cookies(),
+    createClient(),
   ]);
   const displayName = [
     authorization.profile.first_name,
@@ -20,6 +23,14 @@ export default async function ProtectedLayout({
   ]
     .filter(Boolean)
     .join(" ");
+  // An admin who is also a specialist gets their "Mój profil" photo when the
+  // account has no avatar of its own.
+  const avatarUrl = authorization.roles.includes("specialist")
+    ? await getPortalAvatarUrl(client, {
+        userId: authorization.user.id,
+        accountAvatarUrl: authorization.profile.avatar_url,
+      })
+    : authorization.profile.avatar_url;
 
   return (
     <PortalShell
@@ -45,7 +56,7 @@ export default async function ProtectedLayout({
         name: displayName || authorization.user.email || "Administrator",
         email: authorization.user.email,
         role: "Administrator centrum",
-        imageUrl: authorization.profile.avatar_url ?? undefined,
+        imageUrl: avatarUrl ?? undefined,
       }}
     >
       {children}

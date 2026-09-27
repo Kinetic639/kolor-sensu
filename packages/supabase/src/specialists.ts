@@ -538,6 +538,93 @@ export async function uploadSpecialistProfileImage(
   return path;
 }
 
+/** Gives a specialist a new public address (admins only); the old one redirects. */
+export async function setSpecialistPublicSlugAdmin(
+  client: SupabaseClient<Database>,
+  specialistId: string,
+  slug: string,
+): Promise<string> {
+  const publicSlug = specialistSlugSchema.parse(slug.trim().toLowerCase());
+  const { data, error } = await client.rpc("set_specialist_public_slug", {
+    p_specialist_id: specialistId,
+    p_public_slug: publicSlug,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+/** The current slug of a published specialist who used to have `slug`. */
+export async function getSpecialistSlugRedirect(
+  client: SupabaseClient<Database>,
+  slug: string,
+): Promise<string | null> {
+  const parsed = specialistSlugSchema.safeParse(slug);
+  if (!parsed.success) return null;
+
+  const { data, error } = await client
+    .from("specialist_slug_redirects")
+    .select("specialist:specialists!inner (public_slug)")
+    .eq("old_slug", parsed.data)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (
+    (data as { specialist: { public_slug: string } } | null)?.specialist
+      .public_slug ?? null
+  );
+}
+
+/**
+ * Which picture the portal header shows: the account avatar if set, otherwise
+ * the specialist photo last saved in "Mój profil" (a draft counts, it is the
+ * specialist's own portal), otherwise the published one.
+ */
+export function pickPortalAvatarPath({
+  accountAvatarUrl,
+  draftPhotoPath,
+  publishedPhotoPath,
+}: {
+  accountAvatarUrl: string | null;
+  draftPhotoPath: string | null;
+  publishedPhotoPath: string | null;
+}): { url: string } | { storagePath: string } | null {
+  if (accountAvatarUrl) return { url: accountAvatarUrl };
+  const storagePath = draftPhotoPath ?? publishedPhotoPath;
+  return storagePath ? { storagePath } : null;
+}
+
+/** The header picture URL for a signed-in user; never throws. */
+export async function getPortalAvatarUrl(
+  client: SupabaseClient<Database>,
+  {
+    userId,
+    accountAvatarUrl,
+  }: { userId: string; accountAvatarUrl: string | null },
+): Promise<string | null> {
+  if (accountAvatarUrl) return accountAvatarUrl;
+  try {
+    const specialist = await getMySpecialist(client, userId);
+    if (!specialist) return null;
+    const [draft, published] = await Promise.all([
+      getMyDraft(client, specialist.id),
+      getMyPublishedProfile(client, specialist.id),
+    ]);
+    const choice = pickPortalAvatarPath({
+      accountAvatarUrl,
+      draftPhotoPath: draft?.profilePhotoUrl ?? null,
+      publishedPhotoPath: published?.profilePhotoUrl ?? null,
+    });
+    if (!choice) return null;
+    return "url" in choice
+      ? choice.url
+      : await createSpecialistMediaSignedUrl(client, choice.storagePath);
+  } catch (error) {
+    console.error("[specialists] portal avatar failed:", error);
+    return null;
+  }
+}
+
 export async function listPendingSpecialistDrafts(
   client: SupabaseClient<Database>,
 ): Promise<SpecialistProfileDraft[]> {

@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   centerProfileFormSchema,
   locationFormSchema,
-  slugify,
   toCenterProfileFormValues,
   toCenterProfileUpdate,
   toLocationFormValues,
@@ -23,15 +22,6 @@ const profile: CenterPublicProfile = {
   createdAt: "2026-09-01T00:00:00Z",
   updatedAt: "2026-09-01T00:00:00Z",
 };
-
-describe("slugify", () => {
-  it("makes URL-safe slugs from Polish names", () => {
-    expect(slugify("Gabinet Mokotów – ul. Żółkiewskiego")).toBe(
-      "gabinet-mokotow-ul-zolkiewskiego",
-    );
-    expect(slugify("  Łódź  Centrum ")).toBe("lodz-centrum");
-  });
-});
 
 describe("centre profile form", () => {
   it("fills empty inputs for missing values", () => {

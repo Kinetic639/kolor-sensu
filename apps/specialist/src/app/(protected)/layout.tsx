@@ -4,15 +4,18 @@ import {
   specialistMobileNavigation,
   specialistNavigation,
 } from "@/lib/portal-navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getPortalAvatarUrl } from "@repo/supabase";
 import { PortalShell } from "@repo/ui/portal-shell";
 import { cookies } from "next/headers";
 
 export default async function ProtectedLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [authorization, cookieStore] = await Promise.all([
+  const [authorization, cookieStore, client] = await Promise.all([
     requirePortalRole(),
     cookies(),
+    createClient(),
   ]);
   const displayName = [
     authorization.profile.first_name,
@@ -20,6 +23,11 @@ export default async function ProtectedLayout({
   ]
     .filter(Boolean)
     .join(" ");
+  // Without an account avatar, the photo from "Mój profil" is shown.
+  const avatarUrl = await getPortalAvatarUrl(client, {
+    userId: authorization.user.id,
+    accountAvatarUrl: authorization.profile.avatar_url,
+  });
 
   return (
     <PortalShell
@@ -44,7 +52,7 @@ export default async function ProtectedLayout({
         name: displayName || authorization.user.email || "Specjalista",
         email: authorization.user.email,
         role: "Specjalista",
-        imageUrl: authorization.profile.avatar_url ?? undefined,
+        imageUrl: avatarUrl ?? undefined,
       }}
     >
       {children}

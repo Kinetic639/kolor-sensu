@@ -4,6 +4,7 @@ import {
   getPublicServiceBySlug,
   getPublishedHomeContent,
   getPublishedSpecialistBySlug,
+  getSpecialistSlugRedirect,
   listPublicLocations,
   listPublishedRoomProfiles,
   listPublicServices,
@@ -88,6 +89,15 @@ export const getServiceOffers = cache((slug: string) =>
     `offers for ${slug}`,
     (client) => listPublicSpecialistOffersForService(client, slug),
     [],
+  ),
+);
+
+/** The current slug of a specialist whose address changed, or null. */
+export const getSpecialistRedirect = cache((slug: string) =>
+  load(
+    `slug redirect ${slug}`,
+    (client) => getSpecialistSlugRedirect(client, slug),
+    null,
   ),
 );
 

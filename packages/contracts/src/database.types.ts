@@ -607,6 +607,32 @@ export type Database = {
           },
         ];
       };
+      specialist_slug_redirects: {
+        Row: {
+          created_at: string;
+          old_slug: string;
+          specialist_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          old_slug: string;
+          specialist_id: string;
+        };
+        Update: {
+          created_at?: string;
+          old_slug?: string;
+          specialist_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "specialist_slug_redirects_specialist_id_fkey";
+            columns: ["specialist_id"];
+            isOneToOne: false;
+            referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       specialist_services: {
         Row: {
           accepting_new_clients: boolean;
@@ -789,6 +815,10 @@ export type Database = {
           p_specializations?: string[];
           p_therapy_approaches?: string[];
         };
+        Returns: string;
+      };
+      set_specialist_public_slug: {
+        Args: { p_public_slug: string; p_specialist_id: string };
         Returns: string;
       };
       submit_my_specialist_profile_draft: {

@@ -48,9 +48,11 @@ also a specialist); the review metadata still records who decided.
 
 `specialists.public_slug` is stored, unique, lower-case, and URL-safe. Trusted role
 assignment provisions a collision-safe placeholder using the full user UUID. Existing
-slugs remain stable. Human-readable SEO slugs can later be assigned through a trusted
-admin operation; collisions fail at the database constraint and are never silently
-rewritten. Slugs are not derived during public reads.
+slugs remain stable unless an admin changes them with
+`set_specialist_public_slug` (the admin portal's "Zmień adres", which suggests one
+from the name). Collisions fail and are never silently rewritten. The previous slug
+is kept in `specialist_slug_redirects` and the site permanently redirects it to the
+current one, so shared links and search results keep working. Slugs are not derived during public reads.
 
 ## Storage
 

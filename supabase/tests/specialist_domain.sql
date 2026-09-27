@@ -334,4 +334,64 @@ BEGIN
 END;
 $$;
 
+-- Only admins rename a specialist's public address.
+RESET ROLE;
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"20000000-0000-4000-8000-000000000001","role":"authenticated"}',
+  true
+);
+SET LOCAL ROLE authenticated;
+
+DO $$
+BEGIN
+  PERFORM public.set_specialist_public_slug(
+    (SELECT first_specialist_id FROM domain_test_ids),
+    'self-chosen-slug'
+  );
+  RAISE EXCEPTION 'Q: specialist unexpectedly renamed their public address';
+EXCEPTION
+  WHEN insufficient_privilege THEN NULL;
+END;
+$$;
+
+-- The admin renames it; the previous address redirects to the new one.
+RESET ROLE;
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"20000000-0000-4000-8000-000000000003","role":"authenticated"}',
+  true
+);
+SET LOCAL ROLE authenticated;
+
+DO $$
+DECLARE
+  previous_slug text;
+BEGIN
+  SELECT public_slug INTO previous_slug FROM public.specialists
+  WHERE id = (SELECT first_specialist_id FROM domain_test_ids);
+
+  PERFORM public.set_specialist_public_slug(
+    (SELECT first_specialist_id FROM domain_test_ids),
+    ' Approved-Specialist-Renamed '
+  );
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialists
+    WHERE id = (SELECT first_specialist_id FROM domain_test_ids)
+      AND public_slug = 'approved-specialist-renamed'
+  ) THEN
+    RAISE EXCEPTION 'R: admin could not rename the public address';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialist_slug_redirects
+    WHERE old_slug = previous_slug
+      AND specialist_id = (SELECT first_specialist_id FROM domain_test_ids)
+  ) THEN
+    RAISE EXCEPTION 'S: the previous address does not redirect';
+  END IF;
+END;
+$$;
+
 ROLLBACK;

@@ -31,12 +31,12 @@ import { saveLocationAction, updateCenterProfileAction } from "./actions";
 import {
   centerProfileFormSchema,
   locationFormSchema,
-  slugify,
   toCenterProfileFormValues,
   toLocationFormValues,
   type CenterProfileFormValues,
   type LocationFormValues,
 } from "./forms";
+import { slugify } from "@/lib/slugify";
 
 function TextField({
   id,

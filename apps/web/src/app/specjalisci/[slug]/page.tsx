@@ -7,9 +7,9 @@ import {
 } from "@repo/ui/public-site";
 import { isRichTextEmpty } from "@repo/contracts";
 import { RichTextRenderer } from "@repo/ui/rich-text-renderer";
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { PageIntro } from "@/components/page-intro";
 import { bookingCta, siteUrl } from "@/content/site";
 import {
@@ -18,7 +18,11 @@ import {
   specialistRole,
   specialistSplash,
 } from "@/lib/presentation";
-import { getSpecialist, getSpecialists } from "@/lib/public-data";
+import {
+  getSpecialist,
+  getSpecialistRedirect,
+  getSpecialists,
+} from "@/lib/public-data";
 
 // Published profiles are prerendered; a profile published later is
 // rendered on its first visit and cached from then on.
@@ -69,7 +73,13 @@ export default async function SpecialistPage({
     getSpecialist(slug),
     getSpecialists(),
   ]);
-  if (!specialist) notFound();
+  if (!specialist) {
+    // An address the admin has since changed: send visitors (and search
+    // engines) to the current one.
+    const currentSlug = await getSpecialistRedirect(slug);
+    if (currentSlug) permanentRedirect(specialistHref(currentSlug) as Route);
+    notFound();
+  }
 
   const index = Math.max(
     0,

@@ -6,17 +6,6 @@ import type {
 } from "@repo/contracts";
 import { z } from "zod";
 
-/** "Gabinet Mokotów" → "gabinet-mokotow" (Polish letters folded to ASCII). */
-export function slugify(value: string): string {
-  return value
-    .toLocaleLowerCase("pl")
-    .replace(/ł/g, "l")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 const optionalText = (max: number) => z.string().trim().max(max);
 const optionalEmail = z
   .string()
