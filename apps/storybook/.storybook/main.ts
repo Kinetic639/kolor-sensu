@@ -7,12 +7,13 @@ export default defineMain({
     "@storybook/addon-a11y",
     "@storybook/addon-mcp",
   ],
-  // Public-site stories need the watercolor assets served by apps/web, the
-  // sample photos in ../public and the approved references (for side-by-side
-  // comparison stories).
+  // Public-site stories need the watercolor and brand assets served by
+  // apps/web, the sample photos in ../public and the approved references
+  // (for side-by-side comparison stories).
   staticDirs: [
     "../public",
     { from: "../../web/public/watercolor", to: "/watercolor" },
+    { from: "../../web/public/brand", to: "/brand" },
     { from: "../../../docs/design/references/public", to: "/references" },
   ],
   framework: {
