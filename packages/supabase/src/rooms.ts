@@ -15,6 +15,22 @@ type RoomWithLocationRow = RoomRow & {
   locations: { name: string; slug: string };
 };
 
+type RoomSummaryRow = RoomWithLocationRow & {
+  // One-to-one: the room's public profile, if it has one.
+  room_public_profiles: { published: boolean } | null;
+  room_opening_hours: { id: string }[];
+  // Only today's and later ones (filtered in the query).
+  room_availability_exceptions: { id: string }[];
+};
+
+// Today's date where the centre is, as the exceptions' `date` column
+// stores it (YYYY-MM-DD).
+function centreToday(now = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Warsaw",
+  }).format(now);
+}
+
 function mapRoom(row: RoomRow): Room {
   return {
     id: row.id,
@@ -31,11 +47,14 @@ function mapRoom(row: RoomRow): Room {
   };
 }
 
-function mapAdminRoomSummary(row: RoomWithLocationRow): AdminRoomSummary {
+function mapAdminRoomSummary(row: RoomSummaryRow): AdminRoomSummary {
   return {
     ...mapRoom(row),
     locationName: row.locations.name,
     locationSlug: row.locations.slug,
+    publicProfilePublished: row.room_public_profiles?.published ?? false,
+    hasOpeningHours: row.room_opening_hours.length > 0,
+    upcomingExceptionCount: row.room_availability_exceptions.length,
   };
 }
 
@@ -44,11 +63,20 @@ export async function listRoomsAdmin(
 ): Promise<AdminRoomSummary[]> {
   const { data, error } = await client
     .from("rooms")
-    .select("*, locations!inner(name, slug)")
+    .select(
+      `
+        *,
+        locations!inner (name, slug),
+        room_public_profiles (published),
+        room_opening_hours (id),
+        room_availability_exceptions (id)
+      `,
+    )
+    .gte("room_availability_exceptions.date", centreToday())
     .order("sort_order");
 
   if (error) throw error;
-  return (data as RoomWithLocationRow[]).map(mapAdminRoomSummary);
+  return (data as unknown as RoomSummaryRow[]).map(mapAdminRoomSummary);
 }
 
 export async function getRoomByIdAdmin(
