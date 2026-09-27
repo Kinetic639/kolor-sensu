@@ -30,7 +30,6 @@ export default async function PricesPage() {
   return (
     <>
       <PageIntro
-        trail={[{ label: "Cennik" }]}
         eyebrow="Cennik"
         heading="Cennik"
         accent="Jasno i bez niespodzianek."

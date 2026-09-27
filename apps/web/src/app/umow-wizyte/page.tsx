@@ -18,7 +18,6 @@ export default function BookingPage() {
   return (
     <>
       <PageIntro
-        trail={[{ label: "Umów wizytę" }]}
         eyebrow="Pierwsza wizyta"
         heading={bookingPage.heading}
         accent={bookingPage.accent}

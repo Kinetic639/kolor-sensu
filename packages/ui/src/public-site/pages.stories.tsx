@@ -5,7 +5,6 @@ import { FaqSection } from "./faq-section";
 import { sampleRooms } from "./feature-samples";
 import { FeatureSection } from "./feature-section";
 import { HomepageSections } from "./homepage-sample";
-import { SiteBreadcrumbs } from "./site-breadcrumbs";
 import { SiteLayout, type SiteLayoutProps } from "./site-layout";
 import {
   sampleAbout,
@@ -84,21 +83,13 @@ export const HomepageMobileMenu: Story = {
   },
 };
 
-/** A subpage: breadcrumbs, its own H1, a section and the offer's FAQ. */
+/** A subpage: its own H1, a section and the offer's FAQ. */
 export const Subpage: Story = {
   name: "Subpage · Desktop",
   globals: { viewport: { value: "desktop", isRotated: false } },
   render: () => (
     <SiteLayout {...site} currentPath="/oferta/psychoterapia-par">
       <div className="max-w-page px-gutter mx-auto grid gap-5 pt-8 pb-4 lg:pt-12">
-        <SiteBreadcrumbs
-          siteUrl={site.siteUrl}
-          items={[
-            { label: "Strona główna", href: "/" },
-            { label: "Oferta", href: "/oferta" },
-            { label: "Psychoterapia par" },
-          ]}
-        />
         <SectionEyebrow className="text-pink-strong">Oferta</SectionEyebrow>
         <EditorialHeading
           as="h1"

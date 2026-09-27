@@ -15,7 +15,6 @@ export default function WorkshopsPage() {
   return (
     <>
       <PageIntro
-        trail={[{ label: "Warsztaty" }]}
         eyebrow={workshops.eyebrow}
         heading={workshopsPage.heading}
         accent={workshopsPage.accent}

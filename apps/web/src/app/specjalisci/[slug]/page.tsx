@@ -92,14 +92,7 @@ export default async function SpecialistPage({
 
   return (
     <>
-      <PageIntro
-        trail={[
-          { label: "Specjaliści", href: "/specjalisci" },
-          { label: specialist.displayName },
-        ]}
-        eyebrow={role}
-        heading={specialist.displayName}
-      />
+      <PageIntro eyebrow={role} heading={specialist.displayName} />
       <section className="max-w-page px-gutter pb-section-sm mx-auto grid items-start gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <div className="mx-auto w-full max-w-96">
           <SpecialistArtwork

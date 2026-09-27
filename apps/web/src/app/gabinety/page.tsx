@@ -1,4 +1,4 @@
-import { FeatureSection, SoftCard } from "@repo/ui/public-site";
+import { SoftCard } from "@repo/ui/public-site";
 import { Check } from "lucide-react";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -23,18 +23,10 @@ export default async function RoomsPage() {
   return (
     <>
       <PageIntro
-        trail={[{ label: "Gabinety" }]}
         eyebrow={rooms.eyebrow}
         heading={roomsPage.heading}
         accent={roomsPage.accent}
         lead={roomsPage.lead}
-      />
-      <FeatureSection
-        {...rooms}
-        eyebrow="Na miejscu"
-        imagePosition="right"
-        animationPreset="watercolor-reveal"
-        className="pt-0"
       />
       {roomProfiles.length > 0 ? (
         <section
