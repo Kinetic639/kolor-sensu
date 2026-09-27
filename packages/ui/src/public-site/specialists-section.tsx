@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "../lib/utils";
 import { ArrowLink } from "./actions";
-import { BotanicalAccent } from "./botanical-accent";
 import {
   type Specialist,
   SpecialistWatercolorCard,
@@ -45,11 +44,11 @@ export function SpecialistsSection({
     <section
       id={id}
       className={cn(
-        "max-w-page px-gutter py-section-sm relative isolate mx-auto grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,8fr)] lg:items-center lg:gap-8",
+        "max-w-page px-gutter py-section-sm mx-auto grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,8fr)] lg:items-center lg:gap-8",
         className,
       )}
     >
-      <div className="grid content-start gap-4 lg:pb-24">
+      <div className="grid content-start gap-4">
         <SectionEyebrow>{eyebrow}</SectionEyebrow>
         <EditorialHeading>{heading}</EditorialHeading>
         {description ? (
@@ -75,10 +74,6 @@ export function SpecialistsSection({
           </li>
         ))}
       </ul>
-      <BotanicalAccent
-        variant="leaf"
-        className="text-primary/30 pointer-events-none absolute bottom-4 left-[calc(var(--spacing-gutter)-1.5rem)] -z-10 hidden w-24 lg:block"
-      />
     </section>
   );
 }
