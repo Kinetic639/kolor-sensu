@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { AppHeader, type AppHeaderProps } from "./app-header";
-import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 import {
   AppSidebar,
   MobileBottomNav,
@@ -38,35 +37,11 @@ export function PortalShell({
   logoutAction,
 }: PortalShellProps) {
   const pathname = usePathname();
-  const initials = user.name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2);
-
   return (
     <SidebarProvider defaultOpen={defaultSidebarOpen}>
       <AppSidebar
         brandSubtitle={brandSubtitle}
         currentPath={pathname}
-        footer={
-          <div className="flex min-h-11 items-center gap-3 overflow-hidden rounded-[var(--radius-control)] px-1 group-data-[collapsible=icon]/sidebar:justify-center">
-            <Avatar className="size-9">
-              {user.imageUrl ? (
-                <AvatarImage alt="" src={user.imageUrl} />
-              ) : null}
-              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-            </Avatar>
-            <span className="min-w-0 group-data-[collapsible=icon]/sidebar:hidden">
-              <span className="block truncate text-xs font-semibold text-[var(--text)]">
-                {user.name}
-              </span>
-              <span className="block truncate text-[0.6875rem] text-[var(--text-muted)]">
-                {user.role}
-              </span>
-            </span>
-          </div>
-        }
         sections={navigation}
       />
       <SidebarInset>

@@ -37,7 +37,6 @@ export interface PortalSwitchLink {
 export interface AppHeaderProps {
   user: AppHeaderUser;
   searchPlaceholder?: string;
-  systemStatus?: string;
   notificationCount?: number;
   navigationTrigger?: ReactNode;
   profileHref?: string;
@@ -50,7 +49,6 @@ export interface AppHeaderProps {
 export function AppHeader({
   user,
   searchPlaceholder = "Szukaj klientów, wizyt, notatek...",
-  systemStatus = "Wszystkie systemy działają",
   notificationCount = 0,
   navigationTrigger,
   profileHref,
@@ -126,10 +124,6 @@ export function AppHeader({
       </label>
 
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2.5">
-        <span className="hidden items-center gap-2 rounded-[var(--radius-control)] bg-[var(--success-soft)] px-3 py-2 text-[0.6875rem] font-semibold text-[var(--success)] xl:flex">
-          <span className="size-2 rounded-full bg-[var(--success)]" />
-          {systemStatus}
-        </span>
         <Button
           className="relative"
           size="icon"

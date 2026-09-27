@@ -1,5 +1,5 @@
 import {
-  BedDouble,
+  Armchair,
   CalendarDays,
   Clock3,
   ContactRound,
@@ -34,7 +34,7 @@ const portalIcons = {
   clock: Clock3,
   cms: FileText,
   dashboard: LayoutDashboard,
-  rooms: BedDouble,
+  rooms: Armchair,
   services: Tags,
   settings: Settings,
   specialist: UserRound,
