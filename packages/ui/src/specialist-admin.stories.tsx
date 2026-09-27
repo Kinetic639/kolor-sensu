@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
 import { expect } from "storybook/test";
 import {
   ProfileReviewDiff,
@@ -53,20 +54,30 @@ export const ReviewDiff: Story = {
   ),
 };
 
-export const OfferRow: Story = {
-  render: () => (
+// The row is controlled (its switches show the props); the screen using it
+// holds the state, as this wrapper does.
+function OfferRowWithState() {
+  const [active, setActive] = useState(true);
+  const [accepting, setAccepting] = useState(true);
+  return (
     <ul className="max-w-4xl rounded-[var(--radius-surface)] border border-[var(--border)] bg-[var(--surface)] px-5">
       <SpecialistOfferRow
-        acceptingNewClients
-        active
+        acceptingNewClients={accepting}
+        active={active}
         durationLabel="50 min"
+        onAcceptingNewClientsChange={setAccepting}
+        onActiveChange={setActive}
         priceLabel="220,00 zł"
         serviceName="Psychoterapia indywidualna"
         supportsInPerson
         supportsOnline
       />
     </ul>
-  ),
+  );
+}
+
+export const OfferRow: Story = {
+  render: () => <OfferRowWithState />,
   play: async ({ canvas, userEvent }) => {
     const acceptingToggle = canvas.getByRole("switch", {
       name: "Przyjmowanie nowych klientów dla Psychoterapia indywidualna",

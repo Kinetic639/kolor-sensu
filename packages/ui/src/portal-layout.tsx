@@ -120,7 +120,7 @@ export function AppSidebar({
                             tooltip={`${item.label} — wkrótce`}
                           >
                             <Icon aria-hidden="true" />
-                            <span className="group-data-[collapsible=icon]/sidebar:hidden">
+                            <span className="group-data-[collapsible=icon]/sidebar:sr-only">
                               {item.label}
                             </span>
                           </SidebarMenuButton>
@@ -135,7 +135,7 @@ export function AppSidebar({
                               aria-current={isActive ? "page" : undefined}
                             >
                               <Icon aria-hidden="true" />
-                              <span className="group-data-[collapsible=icon]/sidebar:hidden">
+                              <span className="group-data-[collapsible=icon]/sidebar:sr-only">
                                 {item.label}
                               </span>
                               {item.badge !== undefined ? (

@@ -18,8 +18,14 @@ export const Default: Story = {
       <PopoverTrigger asChild>
         <Button variant="secondary">Filtry</Button>
       </PopoverTrigger>
-      <PopoverContent>
-        <p className="font-heading text-lg font-semibold">Filtry widoku</p>
+      {/* The popover is a dialog: name it by its title. */}
+      <PopoverContent aria-labelledby="popover-filters-title">
+        <p
+          id="popover-filters-title"
+          className="font-heading text-lg font-semibold"
+        >
+          Filtry widoku
+        </p>
         <p className="mt-1 text-sm text-[var(--text-muted)]">
           Ustawienia pozostają blisko elementu, którego dotyczą.
         </p>
