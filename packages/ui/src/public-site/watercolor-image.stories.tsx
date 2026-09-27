@@ -38,7 +38,9 @@ const alt =
   "Jasny gabinet terapeutyczny z fotelem, stolikiem, regałem z książkami i roślinami przy dużym oknie";
 
 const paper: Decorator = (Story) => (
-  <div className="bg-bg px-gutter font-body text-ink min-h-screen py-12">
+  // The backdrop overflows the component: clip it at the page, as the
+  // site's <main> does.
+  <div className="bg-bg px-gutter font-body text-ink min-h-screen overflow-x-clip py-12">
     <div className="mx-auto max-w-[75rem]">
       <Story />
     </div>
@@ -116,8 +118,9 @@ function Debug({
   );
 }
 
-// Where the photo layer sits in the composition (public-site.css,
-// .ks-wc__photo), to draw its matte in place.
+// Where the photo layer sits relative to the backdrop (public-site.css,
+// .ks-wc__photo and .ks-wc__backdrop), to draw its matte in place on the
+// backdrop-sized debug panels.
 const photoInset = "-1.7% 1.53% -3.85% -0.56%";
 
 // The backdrop picture a story's component uses, as a URL.

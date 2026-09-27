@@ -8,8 +8,12 @@ import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
 // The painted look is a static composition of two layers, so the server
 // HTML is already the finished picture:
 //
-//   .ks-wc                    stable aspect-ratio box (16 / 10 by default)
-//   ├── .ks-wc__backdrop      the watercolor asset, decorative, full size
+//   .ks-wc                    stable aspect-ratio box (3 / 2 by default): the
+//   │                         solid part of the painted photo
+//   ├── .ks-wc__backdrop      the watercolor asset, decorative, overflowing
+//   │                         the box on every side (so does the photo's
+//   │                         brushed fringe); keep an overflow-x: clip
+//   │                         ancestor, as the page's <main> is
 //   ├── .ks-wc__photo         the uploaded photo, cropped with object-fit:
 //   │                         cover and cut by the dry-brush photo mask
 //   └── .ks-wc__caption       optional handwritten overlay (real text),
@@ -43,8 +47,9 @@ export interface WatercolorImageProps {
   /** Painted backdrop behind the photo. `null` leaves it out. */
   watercolorSrc?: ImageProps["src"] | null;
   /**
-   * Ratio of the whole composition. The mask and the backdrop are drawn for
-   * 16 / 10 (the default); ratios between 3 / 2 and 2 / 1 still look right.
+   * Ratio of the component's box (the photo; the watercolor overflows it).
+   * The mask and the backdrop are drawn for 3 / 2 (the default); ratios up
+   * to about 2 / 1 still look right.
    */
   aspectRatio?: string;
   /**
@@ -84,7 +89,8 @@ export function WatercolorImage({
   watercolorSrc = defaultWatercolorSrc,
   aspectRatio,
   objectPosition = "50% 50%",
-  sizes = "(min-width: 1024px) 60vw, 100vw",
+  // The layers are about 1.17x the box (the watercolor overflows it).
+  sizes = "(min-width: 1024px) 70vw, 117vw",
   priority = false,
   quality,
   caption,

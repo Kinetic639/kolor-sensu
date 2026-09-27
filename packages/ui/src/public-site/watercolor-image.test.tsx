@@ -124,7 +124,7 @@ describe("WatercolorImage", () => {
     );
   });
 
-  it("keeps the mask undistorted and its paint inside the backdrop's box", () => {
+  it("fills its box with the photo, undistorted, and lets the paint overflow", () => {
     // Mask canvas size from the PNG header.
     const png = readFileSync(resolve(publicDir, "watercolor/photo-mask.png"));
     const maskRatio = png.readUInt32BE(16) / png.readUInt32BE(20);
@@ -132,32 +132,40 @@ describe("WatercolorImage", () => {
     expect(png[25]).toBe(3);
     expect(png.includes(Buffer.from("tRNS"))).toBe(true);
 
-    // Photo layer box in the default 16 / 10 composition.
-    const inset = rule(".ks-wc__photo").match(
-      /inset: (-?[\d.]+)% (-?[\d.]+)% (-?[\d.]+)% (-?[\d.]+)%/,
-    );
-    expect(inset).not.toBeNull();
-    const [top, right, bottom, left] = (inset ?? [])
-      .slice(1)
-      .map((value) => Number(value));
-    const width = (100 - left! - right!) * 16;
-    const height = (100 - top! - bottom!) * 10;
-    expect(width / height).toBeCloseTo(maskRatio, 1);
+    const insets = (selector: string) => {
+      const inset = rule(selector).match(
+        /inset: (-?[\d.]+)% (-?[\d.]+)% (-?[\d.]+)% (-?[\d.]+)%/,
+      );
+      expect(inset, selector).not.toBeNull();
+      const [top, right, bottom, left] = (inset ?? [])
+        .slice(1)
+        .map((value) => Number(value));
+      // Width and height as percentages of the box.
+      return {
+        top: top!,
+        right: right!,
+        bottom: bottom!,
+        left: left!,
+        width: 100 - left! - right!,
+        height: 100 - top! - bottom!,
+      };
+    };
+    // Layer ratios in the default 3 / 2 box.
+    const ratio = ({ width, height }: { width: number; height: number }) =>
+      (width * 3) / (height * 2);
+    const photo = insets(".ks-wc__photo");
+    const backdrop = insets(".ks-wc__backdrop");
+    expect(ratio(photo)).toBeCloseTo(maskRatio, 2);
+    expect(ratio(backdrop)).toBeCloseTo(16 / 10, 2);
 
-    // The backdrop spans the whole box. The photo's box may overhang it a
-    // little, but never by more than the mask's transparent margin
-    // (generate-photo-mask.mjs: 53 of 1500 px at the sides, 17 of 1000 at
-    // the top, 50 at the bottom), so its paint stays inside the box and the
-    // watercolor still shows around it.
-    expect(rule(".ks-wc__backdrop")).toContain("inset: 0");
-    const photoWidth = 100 - left! - right!;
-    const photoHeight = 100 - top! - bottom!;
-    expect(left! + (53 / 1500) * photoWidth).toBeGreaterThan(0);
-    expect(right! + (53 / 1500) * photoWidth).toBeGreaterThan(0);
-    expect(top! + (17 / 1000) * photoHeight).toBeGreaterThanOrEqual(0);
-    expect(bottom! + (50 / 1000) * photoHeight).toBeGreaterThan(0);
-    // Larger than the approved target's footprint (90 % of the width).
-    expect(photoWidth).toBeGreaterThan(95);
+    // The box is the solid part of the photo: the mask canvas overhangs it
+    // on every side, by its brushed fringe and margin only.
+    for (const side of ["top", "right", "bottom", "left"] as const) {
+      expect(photo[side], side).toBeLessThan(0);
+      expect(photo[side], side).toBeGreaterThan(-12);
+      // The watercolor overflows the box on every side too.
+      expect(backdrop[side], side).toBeLessThan(0);
+    }
   });
 
   it("crops any upload itself with object-fit and a configurable position", () => {
@@ -195,9 +203,7 @@ describe("WatercolorImage", () => {
     expect(backdropImage(container)).toHaveAttribute("sizes", "50vw");
     expect(root.style.getPropertyValue("--ks-wc-ratio")).toBe("3 / 2");
     // The ratio box reserves space before the images load: no layout shift.
-    expect(rule(".ks-wc")).toContain(
-      "aspect-ratio: var(--ks-wc-ratio, 16 / 10)",
-    );
+    expect(rule(".ks-wc")).toContain("aspect-ratio: var(--ks-wc-ratio, 3 / 2)");
   });
 
   it("renders the handwritten overlay as a real figure caption", () => {

@@ -21,38 +21,43 @@
 @layer components {
   /* ------------------------------------------------------ WatercolorImage */
 
-  /* One stable box. Both layers are positioned in percentages of it, so the
-     backdrop, the mask and the photo scale together and keep their relation
-     at every width. */
+  /* One stable box: the photo itself. The box is the solid part of the
+     painted photo (3 : 2), so the picture really fills the space the layout
+     gives it; its brushed fringe and the watercolor backdrop overflow the
+     box onto whatever is around it, and take no room in the layout (put the
+     component inside an overflow-x: clip ancestor, as the page's <main>
+     is, so the overflow never scrolls the page sideways). Every layer is
+     positioned in percentages of this box, so they all scale together and
+     keep their relation at every width. */
   .ks-wc {
     position: relative;
     isolation: isolate;
     /* The caption scales with the picture, not the viewport. */
     container-type: inline-size;
-    aspect-ratio: var(--ks-wc-ratio, 16 / 10);
+    aspect-ratio: var(--ks-wc-ratio, 3 / 2);
     width: 100%;
     margin: 0;
   }
 
-  /* Layer 1: the watercolor asset, decorative. It fills the whole box; its
-     painted area reaches past the photo on every side, most on the left
-     (pink) and right (sage). */
+  /* Layer 1: the watercolor asset, decorative, 16 : 10. It overflows the box
+     by about 9 % on either side and 5 % above and below; its painted area
+     reaches past the photo on every side, most on the left (pink) and right
+     (sage). */
   .ks-wc__backdrop {
     position: absolute;
-    inset: 0;
+    inset: -4.52% -8.77% -5.64% -8.64%;
     z-index: -1;
     pointer-events: none;
   }
 
-  /* Layer 2: the photo, cut by the dry-brush mask. The box is the mask
-     canvas (3 : 2, like a typical upload), with the painted silhouette
-     inside it: the approved target's footprint scaled up 1.1x about its
-     centre, so the photo reads larger and covers more of the backdrop. It
-     overhangs the box a little at the top, bottom and left, where the
-     mask's own transparent margin keeps the paint inside it. */
+  /* Layer 2: the photo, cut by the dry-brush mask. Its box is the mask
+     canvas (3 : 2, like a typical upload): the solid part of the painted
+     silhouette in it is the component's box, and the canvas overhangs it
+     by the brushed fringe and the mask's transparent margin. (Relative to
+     the backdrop, this is the approved target's footprint scaled up 1.1x.) */
   .ks-wc__photo {
     position: absolute;
-    inset: -1.7% 1.53% -3.85% -0.56%;
+    inset: -6.4% -6.98% -9.88% -9.3%;
     mask-image: url("/watercolor/photo-mask.png");
     mask-size: 100% 100%;
     mask-repeat: no-repeat;
@@ -71,16 +76,16 @@
      parallax; the rotation below is its resting state. */
   .ks-wc__caption {
     position: absolute;
-    right: 11%;
-    bottom: 21%;
+    right: 4.15%;
+    bottom: 17.49%;
     z-index: 1;
     /* One or two words per line, as in the target, at any size. */
     width: 4.8em;
-    max-width: 40%;
+    max-width: 47%;
     margin: 0;
     color: var(--color-on-primary);
     font-family: var(--font-hand);
-    font-size: clamp(1rem, 4.7cqi, 3.75rem);
+    font-size: clamp(1rem, 5.52cqi, 4.4rem);
     line-height: 1.1;
     font-weight: 600;
     text-align: center;

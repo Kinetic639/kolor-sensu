@@ -124,9 +124,24 @@ const pullLeft = ([x, y]) => [
   y,
 ];
 
+// The lower left corner, on the other hand, left too much pink next to the
+// photo: it is pushed out toward the bottom left, most in the corner itself
+// and not at all above 60 % of the height or right of 45 % of the width.
+const CORNER_PUSH = [0.06, 0.045];
+const pushLowerLeft = ([x, y]) => {
+  const weight =
+    Math.max(0, Math.min(1, (y - 0.6) / 0.4)) *
+    Math.max(0, Math.min(1, (0.45 - x) / 0.45));
+  return [
+    Math.max(0, x - CORNER_PUSH[0] * weight),
+    Math.min(1, y + CORNER_PUSH[1] * weight),
+  ];
+};
+
 // Closed Catmull-Rom spline through the outline, in canvas pixels.
 function smoothOutline(points, steps = 10) {
   const px = points
+    .map(pushLowerLeft)
     .map(pullLeft)
     .map(([x, y]) => [
       PAD_X + x * (W - 2 * PAD_X),

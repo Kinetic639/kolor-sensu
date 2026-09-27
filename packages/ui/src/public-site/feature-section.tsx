@@ -80,7 +80,8 @@ export function FeatureSection({
         objectPosition={image.objectPosition}
         animationPreset={animationPreset}
         reducedMotionMode={reducedMotionMode}
-        sizes="(min-width: 1024px) 50vw, 100vw"
+        // The layers are about 1.17x the box (the watercolor overflows it).
+        sizes="(min-width: 1024px) 59vw, 117vw"
         className={cn(imagePosition === "left" && "lg:order-first")}
       />
     </section>

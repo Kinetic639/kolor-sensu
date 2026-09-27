@@ -108,7 +108,8 @@ export function HeroSection({
         animationPreset={animationPreset}
         reducedMotionMode={reducedMotionMode}
         priority
-        sizes="(min-width: 1024px) 55vw, 100vw"
+        // The layers are about 1.17x the box (the watercolor overflows it).
+        sizes="(min-width: 1024px) 65vw, 117vw"
         className="lg:-mr-12 xl:-mr-20"
       />
     </section>

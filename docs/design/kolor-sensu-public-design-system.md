@@ -143,11 +143,18 @@ Surfaces, from quiet to expressive:
 
 `WatercolorImage` turns an ordinary rectangular photo into the approved painted
 composition (reference B, `painted-hero.png`). It is a static composition of
-two layers in one box with a stable ratio (16 / 10 by default):
+two layers around one box with a stable ratio (3 / 2 by default). The box is
+the photo itself (the solid part of its painted silhouette), so the picture
+fills the space the layout gives it; the watercolor backdrop and the photo's
+brushed fringe overflow it onto the neighbouring elements, breaking the
+page's grid a little on purpose. They take no room in the layout; keep the
+component inside an `overflow-x: clip` ancestor (the page's `<main>` is), so
+the overflow never scrolls the page sideways:
 
 ```
 WatercolorImage (.ks-wc, aspect-ratio box)
-├── backdrop   the watercolor asset, decorative, fills the box
+├── backdrop   the watercolor asset, decorative (16 : 10), overflowing the
+│              box by about 9 % either side and 5 % above and below
 ├── photo      the uploaded photo, cropped by the component and cut by the
 │              dry-brush photo mask
 └── caption    optional handwritten line (real text)
@@ -167,8 +174,8 @@ import { WatercolorImage } from "@repo/ui/public-site";
 ```
 
 Other props: `watercolorSrc` (another backdrop, or `null` for none),
-`aspectRatio` (the composition is drawn for 16 / 10; 3 / 2 to 2 / 1 still look
-right, beyond that the mask and backdrop stretch visibly), `quality`,
+`aspectRatio` (the box, drawn for 3 / 2; up to about 2 / 1 still looks right,
+beyond that the mask and backdrop stretch visibly), `quality`,
 `className`, `imageClassName`, `style`.
 
 **Backdrop.** `watercolor-background.webp` is the approved painted backdrop
@@ -234,11 +241,12 @@ readable on any photo.
   that one box, so they scale together and keep the same relation at every
   width (checked at 1440, 768 and 390 px). The mask never stretches in the
   default ratio.
-- The photo layer is the approved target's footprint scaled up 1.1× (it
-  covers more of the backdrop), overhanging the box a little where the
-  mask's transparent margin keeps its paint inside; the silhouette's left
-  bulge is pulled in (`generate-photo-mask.mjs`), so the pink shows down the
-  whole left edge.
+- Relative to the backdrop, the photo layer is the approved target's
+  footprint scaled up 1.1× (it covers more of the backdrop). In the mask
+  (`generate-photo-mask.mjs`) the silhouette's left bulge is pulled in, so
+  the pink shows down the whole left edge, and its lower left corner is
+  pushed out, where too much pink showed.
+- Pass `sizes` for the layers, about 1.17× the box (they overflow it).
 - The painted edge covers roughly 5–10 % of the photo on each side; keep
   subjects away from the very edge or move them in with `objectPosition`.
 - The caption scales with the picture (container query units), not with the
