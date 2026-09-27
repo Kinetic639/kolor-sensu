@@ -13,6 +13,11 @@ The screens that feed the public site (centre settings, rooms, profile review)
 are planned and tracked in
 [portals-content-plan.md](../product/portals-content-plan.md).
 
+The calendar and availability screens (both portals) are planned in
+[scheduling-ui-plan.md](../product/scheduling-ui-plan.md), using the AI Studio
+prototype as a visual reference only
+([review](./references/ai-studio-portal-review.md)).
+
 ## SPECIALIST
 
 Status: `NOT STARTED`
@@ -22,6 +27,8 @@ requirements.
 
 "Mój profil" and "Moje usługi i stawki", which feed the public site, are planned
 and tracked in [portals-content-plan.md](../product/portals-content-plan.md).
+The availability calendar is planned in
+[scheduling-ui-plan.md](../product/scheduling-ui-plan.md).
 
 ## BOOKING
 

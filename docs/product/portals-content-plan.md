@@ -60,8 +60,13 @@ stronę, która już istnieje.** Powody:
 4. **Prawdziwe treści pozwolą zweryfikować design strony** na realnych danych:
    długość bio, zdjęcia portretowe, liczba usług.
 
+Prototyp z Google AI Studio służy wyłącznie jako referencja wizualna
+(layout portali, kalendarze); jego kodu nie przenosimy
+([przegląd](../design/references/ai-studio-portal-review.md)).
+
 **Poza zakresem:** kalendarz, dostępność, klienci, rezerwacje. To Faza 4
-roadmapy, osobny duży plan. Blog i schorzenia (Faza 2) wracają po tym etapie,
+roadmapy, osobny duży plan:
+[scheduling-ui-plan.md](./scheduling-ui-plan.md). Blog i schorzenia (Faza 2) wracają po tym etapie,
 razem z własnymi ekranami w adminie.
 
 ## Plan (kolejność = wartość dla strony)
