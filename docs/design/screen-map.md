@@ -9,12 +9,19 @@ Status: `NOT STARTED`
 Administration screens will be defined from approved references and product
 requirements.
 
+The screens that feed the public site (centre settings, rooms, profile review)
+are planned and tracked in
+[portals-content-plan.md](../product/portals-content-plan.md).
+
 ## SPECIALIST
 
 Status: `NOT STARTED`
 
 Specialist-facing screens will be defined from approved references and product
 requirements.
+
+"Mój profil" and "Moje usługi i stawki", which feed the public site, are planned
+and tracked in [portals-content-plan.md](../product/portals-content-plan.md).
 
 ## BOOKING
 

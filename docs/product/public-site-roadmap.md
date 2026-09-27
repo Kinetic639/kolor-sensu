@@ -15,16 +15,21 @@ w tym pliku i wpisuje hash commitu (albo numer PR). Liczniki w podsumowaniu
 faz aktualizuje się w tym samym commicie. ID zadań są stałe; zadania dopisuje
 się na końcu fazy, nie przenumerowuje.
 
+Przed Fazą 2 jest etap **P — portale** ([portals-content-plan.md](./portals-content-plan.md)):
+ekrany admina i specjalisty, w których wprowadza się dane pokazywane na
+stronie. Jego zadania (P1–P6) i postęp są w tamtym pliku; tutaj tylko licznik.
+
 ### Podsumowanie faz
 
-| Faza | Zakres                                                 | Status        | Zrobione / wszystkie |
-| ---- | ------------------------------------------------------ | ------------- | -------------------- |
-| 0    | Baza: to, co już istnieje                              | `DONE`        | 16 / 16              |
-| 1    | Szybkie wygrane bez nowych domen                       | `NOT STARTED` | 0 / 15               |
-| 2    | Treści SEO: schorzenia, usługi, blog                   | `NOT STARTED` | 0 / 12               |
-| 3    | Warsztaty i filtry specjalistów                        | `NOT STARTED` | 0 / 3                |
-| 4    | Własny system rezerwacji                               | `NOT STARTED` | 0 / 5                |
-| X    | Przekrojowe (a11y, wydajność, analityka, prawo, admin) | `NOT STARTED` | 0 / 5                |
+| Faza | Zakres                                                         | Status        | Zrobione / wszystkie |
+| ---- | -------------------------------------------------------------- | ------------- | -------------------- |
+| 0    | Baza: to, co już istnieje                                      | `DONE`        | 16 / 16              |
+| 1    | Szybkie wygrane bez nowych domen                               | `NOT STARTED` | 0 / 15               |
+| P    | Portale: treści dla strony ([plan](./portals-content-plan.md)) | `NOT STARTED` | 0 / 6                |
+| 2    | Treści SEO: schorzenia, usługi, blog                           | `NOT STARTED` | 0 / 12               |
+| 3    | Warsztaty i filtry specjalistów                                | `NOT STARTED` | 0 / 3                |
+| 4    | Własny system rezerwacji                                       | `NOT STARTED` | 0 / 5                |
+| X    | Przekrojowe (a11y, wydajność, analityka, prawo, admin)         | `NOT STARTED` | 0 / 5                |
 
 ### Faza 0 — baza (już zrobione)
 
