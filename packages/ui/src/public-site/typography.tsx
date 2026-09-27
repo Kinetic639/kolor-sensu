@@ -38,17 +38,25 @@ export interface EditorialHeadingProps extends HTMLAttributes<HTMLHeadingElement
   /** Visual size, independent of the heading level. */
   size?: keyof typeof headingSizes;
   /**
-   * Second line in dusty pink, as in the hero: "Więcej zrozumienia." /
-   * "Więcej sensu." Only for display and h2 sizes (pink needs ≥ 24px).
+   * A second, coloured line: "Więcej zrozumienia." / "Więcej sensu." Only for
+   * display and h2 sizes (dusty pink needs ≥ 24px).
    */
   accent?: ReactNode;
+  /** Colour of the accent line: dusty pink (default) or brand green. */
+  accentTone?: keyof typeof accentTones;
 }
+
+const accentTones = {
+  pink: "text-pink",
+  primary: "text-primary",
+} as const;
 
 /** Serif editorial heading used for every section title on the public site. */
 export function EditorialHeading({
   as: Tag = "h2",
   size,
   accent,
+  accentTone = "pink",
   className,
   children,
   ...props
@@ -63,7 +71,9 @@ export function EditorialHeading({
       {...props}
     >
       {children}
-      {accent ? <span className="text-pink block">{accent}</span> : null}
+      {accent ? (
+        <span className={cn("block", accentTones[accentTone])}>{accent}</span>
+      ) : null}
     </Tag>
   );
 }

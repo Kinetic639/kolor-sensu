@@ -269,7 +269,8 @@
   /* Sized with the card so a long name ("Katarzyna Zielińska") keeps to
      one line at the row's card width, as in the concept. */
   .ks-sp__name {
-    font-size: clamp(1rem, 6.4cqi, 1.375rem);
+    font-size: clamp(1rem, 6.2cqi, 1.375rem);
+    font-weight: 600;
     line-height: 1.2;
   }
 

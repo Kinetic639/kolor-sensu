@@ -37,7 +37,8 @@
   --color-primary-soft: #e3eadf; /* sage tint behind content (tiles, bands) */
   --color-on-primary: #fdfdfb;
 
-  /* Dusty pink (accent line of the hero heading, hearts, blush washes) */
+  /* Dusty pink (accent lines of headings, the hero eyebrow, hearts, blush
+     washes) */
   --color-pink: #b86e6b; /* display text ≥ 24px and icons only (3.6:1) */
   --color-pink-strong: #9c5754; /* pink text below 24px (5:1) */
   --color-pink-soft: #f6e6e1; /* blush tint behind content */
@@ -56,8 +57,7 @@
 /* Fonts go through @theme inline so a next/font variable set on <body> (or any
    ancestor) resolves where the utility is used, not on :root. */
 @theme inline {
-  --font-display:
-    var(--font-fraunces, "Fraunces"), "Iowan Old Style", Georgia, serif;
+  --font-display: var(--font-lora, "Lora"), Georgia, "Iowan Old Style", serif;
   --font-body:
     var(--font-figtree, "Figtree"), "Segoe UI", system-ui, sans-serif;
   --font-hand:
@@ -66,20 +66,21 @@
 
 @theme {
   /* Typography roles (font-size + line-height + tracking + weight). Pair
-     display/h2/h3 with font-display, the rest with font-body. */
-  --text-display: clamp(2.5rem, 1.7rem + 3.2vw, 3.75rem);
-  --text-display--line-height: 1.06;
+     display/h2/h3 with font-display, the rest with font-body. Lora is set in
+     600: full, even strokes, no hairlines. */
+  --text-display: clamp(2.375rem, 1.6rem + 2.9vw, 3.375rem);
+  --text-display--line-height: 1.08;
   --text-display--letter-spacing: -0.015em;
-  --text-display--font-weight: 400;
+  --text-display--font-weight: 600;
 
   --text-h2: clamp(2rem, 1.5rem + 1.9vw, 2.875rem);
-  --text-h2--line-height: 1.12;
+  --text-h2--line-height: 1.14;
   --text-h2--letter-spacing: -0.01em;
-  --text-h2--font-weight: 400;
+  --text-h2--font-weight: 600;
 
   --text-h3: clamp(1.375rem, 1.2rem + 0.6vw, 1.625rem);
   --text-h3--line-height: 1.25;
-  --text-h3--font-weight: 400;
+  --text-h3--font-weight: 600;
 
   --text-title: 1.0625rem; /* sans card titles: "Psychoterapia par" */
   --text-title--line-height: 1.35;

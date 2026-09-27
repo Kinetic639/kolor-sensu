@@ -45,25 +45,25 @@ Sampled from the references, then adjusted only where WCAG contrast required.
 Utilities follow the token name: `--color-primary` → `bg-primary`,
 `text-primary`, `border-primary`.
 
-| Token                  | Hex       | Source                 | Use                                           |
-| ---------------------- | --------- | ---------------------- | --------------------------------------------- |
-| `color-bg`             | `#f8f7f3` | A page, B paper        | Page background                               |
-| `color-surface`        | `#fdfdfb` | A specialist cards     | Cards, inputs, round icon buttons             |
-| `color-cream`          | `#f3efe7` | A warm areas           | Alternate surface, neutral wash               |
-| `color-beige`          | `#e6ddd0` | B linen, wood          | Neutral wash pigment                          |
-| `color-ink`            | `#16302f` | A headings             | Headings and body text (13.1:1 on `bg`)       |
-| `color-text-muted`     | `#566461` | A body copy            | Secondary copy (≥ 5:1 on `bg` and soft tints) |
-| `color-primary`        | `#305c4a` | A "Umów wizytę" button | Primary button, icons, focus ring             |
-| `color-primary-strong` | `#244a3b` | darker step            | Hover / pressed                               |
-| `color-primary-soft`   | `#e3eadf` | A sage tiles           | Sage tint behind content                      |
-| `color-sage`           | `#c5d0bf` | B right wash           | Wash pigment only                             |
-| `color-pink`           | `#b86e6b` | A "Więcej sensu."      | Display text ≥ 24 px, icons (3.6:1)           |
-| `color-pink-strong`    | `#9c5754` | darker step            | Pink text below 24 px (5:1)                   |
-| `color-pink-soft`      | `#f6e6e1` | A pink tiles           | Blush tint behind content                     |
-| `color-blush`          | `#ebcdc6` | B left wash            | Wash pigment only                             |
-| `color-border`         | `#e4e1da` | A dividers             | Hairlines, card edges                         |
-| `color-border-strong`  | `#7a8a87` | A "Poznaj nas" outline | Outline button (3.4:1, meets non-text 3:1)    |
-| `color-on-primary`     | `#fdfdfb` |                        | Text on primary (7.5:1)                       |
+| Token                  | Hex       | Source                 | Use                                            |
+| ---------------------- | --------- | ---------------------- | ---------------------------------------------- |
+| `color-bg`             | `#f8f7f3` | A page, B paper        | Page background                                |
+| `color-surface`        | `#fdfdfb` | A specialist cards     | Cards, inputs, round icon buttons              |
+| `color-cream`          | `#f3efe7` | A warm areas           | Alternate surface, neutral wash                |
+| `color-beige`          | `#e6ddd0` | B linen, wood          | Neutral wash pigment                           |
+| `color-ink`            | `#16302f` | A headings             | Headings and body text (13.1:1 on `bg`)        |
+| `color-text-muted`     | `#566461` | A body copy            | Secondary copy (≥ 5:1 on `bg` and soft tints)  |
+| `color-primary`        | `#305c4a` | A "Umów wizytę" button | Primary button, icons, focus ring, hero accent |
+| `color-primary-strong` | `#244a3b` | darker step            | Hover / pressed                                |
+| `color-primary-soft`   | `#e3eadf` | A sage tiles           | Sage tint behind content                       |
+| `color-sage`           | `#c5d0bf` | B right wash           | Wash pigment only                              |
+| `color-pink`           | `#b86e6b` | A "Więcej sensu."      | Display text ≥ 24 px, icons (3.6:1)            |
+| `color-pink-strong`    | `#9c5754` | darker step            | Pink text below 24 px (5:1), hero eyebrow      |
+| `color-pink-soft`      | `#f6e6e1` | A pink tiles           | Blush tint behind content                      |
+| `color-blush`          | `#ebcdc6` | B left wash            | Wash pigment only                              |
+| `color-border`         | `#e4e1da` | A dividers             | Hairlines, card edges                          |
+| `color-border-strong`  | `#7a8a87` | A "Poznaj nas" outline | Outline button (3.4:1, meets non-text 3:1)     |
+| `color-on-primary`     | `#fdfdfb` |                        | Text on primary (7.5:1)                        |
 
 Rules:
 
@@ -78,9 +78,9 @@ Rules:
 
 | Role (utility) | Size                                   | Family / weight    | Reference                         |
 | -------------- | -------------------------------------- | ------------------ | --------------------------------- |
-| `text-display` | 40 → 60 px, lh 1.06, −0.015em          | `font-display` 400 | A H1 "Więcej zrozumienia."        |
-| `text-h2`      | 32 → 46 px, lh 1.12                    | `font-display` 400 | A section titles                  |
-| `text-h3`      | 22 → 26 px, lh 1.25                    | `font-display` 400 | Sub-headings, call-to-action      |
+| `text-display` | 38 → 54 px, lh 1.08, −0.015em          | `font-display` 600 | A H1 "Więcej zrozumienia."        |
+| `text-h2`      | 32 → 46 px, lh 1.14                    | `font-display` 600 | A section titles                  |
+| `text-h3`      | 22 → 26 px, lh 1.25                    | `font-display` 600 | Sub-headings, call-to-action      |
 | `text-title`   | 17 px, lh 1.35, 600                    | `font-body`        | A tile and card titles            |
 | `text-lead`    | 17 → 19 px, lh 1.6                     | `font-body`        | A hero paragraph                  |
 | `text-body`    | 16 px, lh 1.65                         | `font-body`        | Paragraphs                        |
@@ -88,14 +88,19 @@ Rules:
 | `text-eyebrow` | 12 px, 0.28em tracking, 600, uppercase | `font-body`        | A "NASZA OFERTA"                  |
 | `text-hand`    | 26 → 42 px                             | `font-hand`        | B "Przestrzeń dla ważnych rozmów" |
 
-Families: **Fraunces** (headings; soft editorial serif), **Figtree** (text and
+Families: **Lora** (headings; a warm serif set in 600, full even strokes
+without hairlines; chosen on 2026-09-26 over Fraunces and Cormorant
+Garamond, which read too thin), **Figtree** (text and
 UI; warm, legible, full Polish support) and **Dancing Script** (handwritten
-overlay only). The font tokens read the variables `--font-fraunces`,
+overlay only). The font tokens read the variables `--font-lora`,
 `--font-figtree` and `--font-dancing-script`, so `next/font` can provide them
 when the site is built; Storybook loads the same families from Google Fonts.
 
 Headings use `text-balance`; copy is capped at `max-w-copy` (~65 characters).
-The pink accent line of a heading is `EditorialHeading accent="…"`.
+The coloured accent line of a heading is `EditorialHeading accent="…"`,
+dusty pink by default or brand green with `accentTone="primary"`. The
+homepage hero uses green for "Więcej sensu." and puts the pink on its
+eyebrow instead (`pink-strong`, the step readable at eyebrow size).
 
 ## 4. Spacing and layout
 
@@ -458,7 +463,8 @@ Only what the references repeat:
 | Component                     | Reference A                                |
 | ----------------------------- | ------------------------------------------ |
 | `SectionEyebrow`              | "CENTRUM PSYCHOTERAPII I ROZWOJU"          |
-| `EditorialHeading`            | Serif H1/H2 with optional pink accent line |
+| `EditorialHeading`            | Serif H1/H2 with optional accent line      |
+| `HeroSection`, `HeroPoints`   | Homepage first screen, reassurance row     |
 | `PrimaryButton`               | Solid green pill "Umów wizytę →"           |
 | `SecondaryButton`             | Outline pill "Poznaj nas"                  |
 | `ArrowLink`                   | "Zobacz całą ofertę →"                     |

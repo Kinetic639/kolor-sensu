@@ -17,6 +17,14 @@ export type {
   SoftCardProps,
   WatercolorSectionBackgroundProps,
 } from "./surfaces";
+export { HeroPoints } from "./hero-points";
+export type { HeroPoint, HeroPointsProps } from "./hero-points";
+export { HeroSection } from "./hero-section";
+export type { HeroAction, HeroSectionProps } from "./hero-section";
+export { OfferSection } from "./offer-section";
+export type { OfferSectionProps } from "./offer-section";
+export { OfferTile } from "./offer-tile";
+export type { OfferPaint, OfferService, OfferTileProps } from "./offer-tile";
 export { EditorialHeading, SectionEyebrow } from "./typography";
 export type { EditorialHeadingProps, SectionEyebrowProps } from "./typography";
 export { SpecialistArtwork, specialistSplashes } from "./specialist-artwork";

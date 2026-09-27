@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Heart, House, Leaf, Users } from "lucide-react";
 import { ArrowLink, PrimaryButton, SecondaryButton } from "./actions";
+import { sampleHero } from "./hero-samples";
+import { HeroSection } from "./hero-section";
 import { sampleOfferCopy, sampleServices } from "./offer-samples";
 import { OfferSection } from "./offer-section";
 import { sampleSpecialists, sampleSpecialistsCopy } from "./specialist-samples";
@@ -12,53 +13,11 @@ import { WatercolorImage } from "./watercolor-image";
 // Isolated composition used to check the foundation against reference A.
 // It is not a page: no routing, data or copy decisions live here.
 
-const heroPoints = [
-  { icon: Leaf, label: "Doświadczeni specjaliści" },
-  { icon: Users, label: "Indywidualne podejście" },
-  { icon: House, label: "Przytulne gabinety" },
-  { icon: Heart, label: "Atmosfera zaufania", pink: true },
-];
-
 function HomepageFragment() {
   return (
     <div className="bg-bg font-body text-ink overflow-x-clip">
       {/* Hero */}
-      <section className="max-w-page px-gutter pb-section-sm mx-auto grid items-center gap-12 pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:pt-20">
-        <div className="grid gap-6">
-          <SectionEyebrow>Centrum psychoterapii i rozwoju</SectionEyebrow>
-          <EditorialHeading as="h1" accent="Więcej sensu.">
-            Więcej zrozumienia.
-          </EditorialHeading>
-          <p className="max-w-copy text-lead text-text-muted">
-            Psychoterapia, rozwój i wsparcie w bezpiecznej przestrzeni. Dla osób
-            dorosłych, par, dzieci i młodzieży.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <PrimaryButton arrow>Umów wizytę</PrimaryButton>
-            <SecondaryButton>Poznaj nas</SecondaryButton>
-          </div>
-          <ul className="mt-4 grid grid-cols-2 gap-6 sm:grid-cols-4">
-            {heroPoints.map(({ icon: Icon, label, pink }) => (
-              <li key={label} className="text-small grid gap-2">
-                <Icon
-                  aria-hidden="true"
-                  className={pink ? "text-pink size-7" : "text-primary size-7"}
-                  strokeWidth={1.25}
-                />
-                {label}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <WatercolorImage
-          src="/kolor-sensu/therapy-room-upload.png"
-          alt="Jasny gabinet z fotelem, stolikiem i roślinami przy dużym oknie"
-          caption="Przestrzeń dla ważnych rozmów"
-          priority
-          sizes="(min-width: 1024px) 55vw, 100vw"
-          className="lg:-mr-12 xl:-mr-20"
-        />
-      </section>
+      <HeroSection {...sampleHero} animationPreset="watercolor-reveal" />
 
       {/* Offer */}
       <OfferSection
