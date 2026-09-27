@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "@repo/ui/styles.css";
+/* Public-site tokens and painted layers.
+   docs/design/kolor-sensu-public-design-system.md */
+@import "@repo/ui/public-site.css";
 @source "../../../../packages/ui/src";
 
 @layer base {
@@ -12,10 +15,21 @@
     min-height: 100%;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
   body {
     margin: 0;
-    background: var(--ks-color-canvas);
-    color: var(--ks-color-text);
-    font-family: var(--ks-font-sans);
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
   }
 }

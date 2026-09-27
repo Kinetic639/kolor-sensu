@@ -5,15 +5,19 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./tokens.css": "./src/tokens.css"
+    "./tokens.css": "./src/tokens.css",
+    "./public-theme.css": "./src/public-theme.css"
   },
   "scripts": {
+    "generate:watercolor": "node scripts/generate-watercolor-masks.mjs && node scripts/generate-photo-mask.mjs && node scripts/generate-paint-matte.mjs && node scripts/generate-watercolor-splash.mjs && node scripts/generate-splash-matte.mjs && node scripts/generate-offer-matte.mjs",
+    "generate:brand": "node scripts/generate-brand-icons.mjs",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
     "eslint": "10.10.0",
+    "sharp": "0.35.4",
     "typescript": "7.0.2"
   }
 }

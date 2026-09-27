@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 1000" width="750" height="1000">
+  <!-- Placeholder portrait for a specialist without a photo: a quiet
+       head-and-shoulders silhouette in the site's ink, transparent around
+       it, in the 3 : 4 box of the cut-out portraits. -->
+  <g fill="#16302f" fill-opacity="0.16">
+    <ellipse cx="375" cy="385" rx="128" ry="150" />
+    <path d="M375 560c-150 0-262 78-300 196-14 44-20 110-20 244h640c0-134-6-200-20-244-38-118-150-196-300-196z" />
+  </g>
+</svg>

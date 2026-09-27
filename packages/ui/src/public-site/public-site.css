@@ -1,0 +1,688 @@
+/*
+ * Kolor Sensu public website: painted layers.
+ *
+ * Styles that Tailwind utilities cannot express cleanly: the WatercolorImage
+ * composition (watercolor backdrop + photo cut by a dry-brush alpha mask) and
+ * the brushed masks of painted surfaces. Everything else in the public-site
+ * components is plain utilities built on the tokens in
+ * @repo/design-system/public-theme.css.
+ *
+ * Assets are static files served from /watercolor/ (apps/web/public and
+ * Storybook's static dir), made by `pnpm --filter @repo/design-system
+ * generate:watercolor`, except watercolor-background.webp, which is the
+ * approved painted backdrop itself. The paint-matte-*.png stroke atlases are
+ * only used by the optional entrance animation.
+ *
+ * Docs: docs/design/kolor-sensu-public-design-system.md
+ */
+
+@import "@repo/design-system/public-theme.css";
+
+@layer components {
+  /* ------------------------------------------------------ WatercolorImage */
+
+  /* One stable box: the photo itself. The box is the solid part of the
+     painted photo (3 : 2), so the picture really fills the space the layout
+     gives it; its brushed fringe and the watercolor backdrop overflow the
+     box onto whatever is around it, and take no room in the layout (put the
+     component inside an overflow-x: clip ancestor, as the page's <main>
+     is, so the overflow never scrolls the page sideways). Every layer is
+     positioned in percentages of this box, so they all scale together and
+     keep their relation at every width. */
+  .ks-wc {
+    position: relative;
+    isolation: isolate;
+    /* The caption scales with the picture, not the viewport. */
+    container-type: inline-size;
+    aspect-ratio: var(--ks-wc-ratio, 3 / 2);
+    width: 100%;
+    margin: 0;
+  }
+
+  /* Layer 1: the watercolor asset, decorative, 16 : 10. It overflows the box
+     by about 9 % on either side and 5 % above and below; its painted area
+     reaches past the photo on every side, most on the left (pink) and right
+     (sage). */
+  .ks-wc__backdrop {
+    position: absolute;
+    inset: -4.52% -8.77% -5.64% -8.64%;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* Layer 2: the photo, cut by the dry-brush mask. Its box is the mask
+     canvas (3 : 2, like a typical upload): the solid part of the painted
+     silhouette in it is the component's box, and the canvas overhangs it
+     by the brushed fringe and the mask's transparent margin. (Relative to
+     the backdrop, this is the approved target's footprint scaled up 1.1x.) */
+  .ks-wc__photo {
+    position: absolute;
+    inset: -6.4% -6.98% -9.88% -9.3%;
+    mask-image: url("/watercolor/photo-mask.png");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+
+  /* The component does the crop: any rectangular upload covers the frame,
+     and object-position (set per image) picks what stays in view. */
+  .ks-wc__img {
+    object-fit: cover;
+  }
+
+  /* Optional handwritten caption: real text on the photo, lower right, as in
+     the approved target. A soft shadow keeps white text readable on any
+     photo without a visible veil. CaptionMotion (watercolor-caption-motion
+     .tsx) animates this element's own transform for a few pixels of scroll
+     parallax; the rotation below is its resting state. */
+  .ks-wc__caption {
+    position: absolute;
+    right: 4.15%;
+    bottom: 17.49%;
+    z-index: 1;
+    /* One or two words per line, as in the target, at any size. */
+    width: 4.8em;
+    max-width: 47%;
+    margin: 0;
+    color: var(--color-on-primary);
+    font-family: var(--font-hand);
+    font-size: clamp(1rem, 5.52cqi, 4.4rem);
+    line-height: 1.1;
+    font-weight: 600;
+    text-align: center;
+    text-wrap: balance;
+    text-shadow:
+      0 1px 2px rgb(22 48 47 / 0.5),
+      0 0 16px rgb(22 48 47 / 0.55);
+    transform: rotate(-12deg);
+    will-change: transform;
+  }
+
+  /* CaptionMotion's inner layer: the slow idle float, kept separate from
+     the outer element's rotation and scroll parallax so the two transforms
+     never fight over the same tween. */
+  .ks-wc__caption-inner {
+    display: block;
+    will-change: transform;
+  }
+
+  .ks-wc__underline {
+    display: block;
+    width: 80%;
+    height: auto;
+    margin-top: 0.15em;
+    margin-inline: auto -18%;
+    fill: currentColor;
+    filter: drop-shadow(0 1px 2px rgb(22 48 47 / 0.45));
+  }
+
+  /* ---------------------------------------- WatercolorImage entrance reveal */
+
+  /* animationPreset="watercolor-reveal" (watercolor-reveal.tsx). The layers
+     are painted in through a paint matte: an SVG <mask> of brush strokes the
+     script builds and animates (watercolor-paint-matte.ts). These rules only
+     point the backdrop and the photo image at it while it runs; the photo
+     layer keeps its usual mask on top, so its painted edge never changes.
+     Until the script takes over, the layers stay unpainted (an empty mask),
+     so nothing flashes before the brush starts. Once the reveal is done
+     (data-reveal="done") none of this applies and the picture is exactly
+     the static composition above.
+
+     Only while a script runs and motion is allowed; and not in WebKit, which
+     ignores SVG masks on HTML elements, so Safari keeps the static picture
+     (the script makes the same test). */
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    @supports not (font: -apple-system-body) {
+      .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"]) {
+        --ks-reveal-hidden: linear-gradient(transparent, transparent);
+      }
+
+      .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])
+        .ks-wc__backdrop {
+        mask-image: var(--ks-reveal-backdrop, var(--ks-reveal-hidden));
+      }
+
+      .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])
+        .ks-wc__img {
+        mask-image: var(--ks-reveal-photo, var(--ks-reveal-hidden));
+      }
+
+      /* The caption is not painted: the script shows it late, briefly
+         fading it in. */
+      .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])
+        .ks-wc__caption {
+        opacity: var(--ks-reveal-caption, 0);
+      }
+    }
+  }
+
+  /* The <svg> that holds the matte while it runs: it draws nothing itself
+     and must not take up room. (Not display: none, which would switch the
+     masks off.) */
+  .ks-wc__matte {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /* Reduced motion, reducedMotionMode="simple-fade": no painting, the whole
+     composition fades in once. ("static", the default, hides nothing.) */
+  @media (scripting: enabled) and (prefers-reduced-motion: reduce) {
+    .ks-wc[data-animation="watercolor-reveal"][data-reduced-motion="simple-fade"]:not(
+        [data-reveal="done"]
+      ) {
+      opacity: var(--ks-reveal-fade, 0);
+    }
+  }
+
+  /* Safety net: if the script never takes over (failed to load, or much too
+     late), show the finished composition after 3 s. The script sets
+     data-reveal as soon as it runs, which cancels this. */
+  @media (scripting: enabled) {
+    .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal]) {
+      animation: ks-wc-reveal-fallback 1ms 3s forwards;
+    }
+  }
+
+  @keyframes ks-wc-reveal-fallback {
+    to {
+      --ks-reveal-hidden: none;
+      --ks-reveal-caption: 1;
+      --ks-reveal-fade: 1;
+    }
+  }
+
+  /* ------------------------------------------------ SpecialistWatercolorCard */
+
+  /* Artwork on top, plate overlapping its lower edge. The root is the
+     positioned ancestor of the name link's overlay, so the whole card is the
+     click target. Container units size the plate's type with the card. */
+  .ks-sp {
+    position: relative;
+    display: grid;
+    container-type: inline-size;
+  }
+
+  /* One 3 : 4 box: the ratio of every splash asset and the design space of
+     the splash matte and the portrait masks. */
+  .ks-sp__art {
+    position: relative;
+    isolation: isolate;
+    aspect-ratio: 3 / 4;
+  }
+
+  .ks-sp__splash {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /* Portrait layer: the whole box, so its masks share the splash's
+     coordinates. The portrait's lower edge dissolves into the watercolor
+     between 67 % and 80 % of the box, where the plate begins. */
+  .ks-sp__portrait {
+    position: absolute;
+    inset: 0;
+    isolation: isolate;
+    mask-image: url("/watercolor/portrait-dissolve.png");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+
+  /* Head and shoulders: the 4 : 5 cut-out at full box width, head a little
+     below the top of the splash. */
+  .ks-sp__portrait-frame {
+    position: absolute;
+    top: 9%;
+    left: 0;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+  }
+
+  .ks-sp__portrait-img {
+    object-fit: contain;
+    object-position: 50% 0;
+  }
+
+  /* The splash's pigment soaking into the lower portrait: the same asset in
+     the same place, multiplied over the portrait in patches. */
+  .ks-sp__stain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    mask-image: url("/watercolor/portrait-stain.png");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    /* On the masked element itself: its mask makes it a group, so a blend
+       mode on the image inside would only blend within that group. */
+    mix-blend-mode: multiply;
+  }
+
+  .ks-sp__stain img {
+    opacity: 0.55;
+  }
+
+  /* The info plate overlaps the artwork from 80 % of its height (margins in
+     % are of the card's width: 3 : 4 box, 0.2 of its height). A grid item,
+     so z-index works without positioning it (positioning would make it the
+     link overlay's containing block). */
+  .ks-sp__plate {
+    z-index: 1;
+    margin-top: -26.67%;
+    margin-inline: 3%;
+    padding: clamp(0.75rem, 5.5cqi, 1.125rem) clamp(0.875rem, 6cqi, 1.25rem);
+  }
+
+  /* Sized with the card so a long name ("Katarzyna Zielińska") keeps to
+     one line at the row's card width, as in the concept. */
+  .ks-sp__name {
+    font-size: clamp(1rem, 6.2cqi, 1.375rem);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .ks-sp__arrow {
+    width: clamp(2.25rem, 13cqi, 2.75rem);
+    aspect-ratio: 1;
+  }
+
+  /* Stacked, compact cards on phones; a row of three from tablet up, the
+     plates on one baseline because every card has the same box. */
+  .ks-sp-list {
+    display: grid;
+    gap: 2.5rem;
+    width: 100%;
+    max-width: 20rem;
+    margin: 0 auto;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (width >= 48rem) {
+    .ks-sp-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(1rem, 2vw, 1.75rem);
+      max-width: none;
+    }
+  }
+
+  /* The <svg> that holds the splash matte while it runs: draws nothing,
+     takes no room, stays rendered (display: none would switch it off). */
+  .ks-sp__matte {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /* animationPreset="splash-reveal" (specialist-reveal.tsx). Until the
+     script takes over, the portrait, splash, stain and plate stay hidden so
+     nothing flashes; the script then animates them with inline styles, which
+     win over these rules. Once done (data-reveal="done") none of this
+     applies and the card is exactly the static one. */
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    .ks-sp[data-animation="splash-reveal"]:not([data-reveal="done"])
+      :is(.ks-sp__portrait, .ks-sp__splash, .ks-sp__stain, .ks-sp__plate) {
+      opacity: var(--ks-sp-hidden, 0);
+    }
+  }
+
+  /* Reduced motion, reducedMotionMode="simple-fade": the whole card fades in
+     once. ("static", the default, hides nothing.) */
+  @media (scripting: enabled) and (prefers-reduced-motion: reduce) {
+    .ks-sp[data-animation="splash-reveal"][data-reduced-motion="simple-fade"]:not(
+        [data-reveal="done"]
+      ) {
+      opacity: var(--ks-sp-hidden, 0);
+    }
+  }
+
+  /* Safety net: if the script never takes over, show the finished card after
+     3 s. The script sets data-reveal as soon as it runs, which cancels it. */
+  @media (scripting: enabled) {
+    .ks-sp[data-animation="splash-reveal"]:not([data-reveal]) {
+      animation: ks-sp-reveal-fallback 1ms 3s forwards;
+    }
+  }
+
+  @keyframes ks-sp-reveal-fallback {
+    to {
+      --ks-sp-hidden: 1;
+    }
+  }
+
+  /* ------------------------------------------------------------ OfferTile */
+
+  /* A 5 : 8 tile of watercolor with the service on it. The root is the
+     positioned ancestor of the title link's overlay, so the whole tile is
+     the click target. Content and arrow are grid items, so z-index lifts
+     them above the paint without positioning them. Container units (of the
+     tile's content width) size the type with the tile. */
+  .ks-of {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    justify-items: center;
+    aspect-ratio: 5 / 8;
+    padding: 17% 11% 11%;
+    text-align: center;
+    container-type: inline-size;
+  }
+
+  /* The supplied patch, whole. Its painted area is stretched onto the tile
+     (OfferTile sets the frame from the generator's measurements), so all
+     four patches fill the same box: the design space of the brush matte. */
+  .ks-of__paint {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .ks-of__paint-frame {
+    position: absolute;
+  }
+
+  .ks-of__content,
+  .ks-of__arrow {
+    z-index: 1;
+  }
+
+  .ks-of__content {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: clamp(0.375rem, 5cqi, 0.625rem);
+  }
+
+  /* Paper colour: the icon reads as cut out of the paint. */
+  .ks-of__icon {
+    color: var(--color-bg);
+  }
+
+  .ks-of__icon svg {
+    stroke-width: 1.6;
+    width: clamp(1.75rem, 23cqi, 2.375rem);
+    height: auto;
+    margin-bottom: clamp(0.25rem, 4cqi, 0.5rem);
+  }
+
+  .ks-of__title {
+    font-size: clamp(0.9375rem, 11.5cqi, 1.0625rem);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* Ink, not muted grey: this is text on paint (≥ 7:1 on every patch). */
+  .ks-of__description {
+    font-size: clamp(0.8125rem, 10cqi, 0.875rem);
+    line-height: 1.45;
+  }
+
+  /* Decoration: clicks go through it to the title link's overlay. */
+  .ks-of__arrow {
+    pointer-events: none;
+    width: clamp(2.25rem, 28cqi, 2.75rem);
+    aspect-ratio: 1;
+    margin-top: 0.75rem;
+  }
+
+  /* 2 x 2 on phones, a row of four from tablet up. */
+  .ks-of-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(0.75rem, 2.5vw, 1.25rem);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (width >= 48rem) {
+    .ks-of-list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  /* The <svg> that holds the brush matte while it runs: draws nothing,
+     takes no room, stays rendered (display: none would switch it off). */
+  .ks-of__matte {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /* animationPreset="brush-reveal" (offer-reveal.tsx). Until the script
+     takes over, the paint, content and arrow stay hidden so nothing
+     flashes; the script then animates them with inline styles, which win
+     over these rules. Once done (data-reveal="done") none of this applies
+     and the tile is exactly the static one. */
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    .ks-of[data-animation="brush-reveal"]:not([data-reveal="done"])
+      :is(.ks-of__paint, .ks-of__content, .ks-of__arrow) {
+      opacity: var(--ks-of-hidden, 0);
+    }
+  }
+
+  /* Reduced motion, reducedMotionMode="simple-fade": the whole tile fades in
+     once. ("static", the default, hides nothing.) */
+  @media (scripting: enabled) and (prefers-reduced-motion: reduce) {
+    .ks-of[data-animation="brush-reveal"][data-reduced-motion="simple-fade"]:not(
+        [data-reveal="done"]
+      ) {
+      opacity: var(--ks-of-hidden, 0);
+    }
+  }
+
+  /* Safety net: if the script never takes over, show the finished tile
+     after 3 s. The script sets data-reveal as soon as it runs. */
+  @media (scripting: enabled) {
+    .ks-of[data-animation="brush-reveal"]:not([data-reveal]) {
+      animation: ks-of-reveal-fallback 1ms 3s forwards;
+    }
+  }
+
+  @keyframes ks-of-reveal-fallback {
+    to {
+      --ks-of-hidden: 1;
+    }
+  }
+
+  /* ------------------------------------------------------------ SiteIntro */
+
+  /* First-visit brand intro (site-intro.tsx). Hidden unless its inline
+     script marked it data-intro="play" before the first paint, so without
+     JavaScript, on later visits and under reduced motion there is nothing.
+     All transforms and opacity (plus one tiny clip-path), about 1.5 s:
+
+       0.05–0.75 s  a watercolor patch spreads behind the logo
+       0.15–0.65 s  the owl mark rises in
+       0.30–0.75 s  the name
+       0.55–0.95 s  the pink swash is drawn under it
+       0.65–1.05 s  the tagline
+       1.05–1.50 s  the paper fades away; the page's reveals start at 1.1 s
+                    (INTRO_HANDOFF in reveal-support.ts) */
+  .ks-intro {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    place-items: center;
+    overflow: hidden;
+    background: var(--color-bg);
+    pointer-events: none;
+  }
+
+  .ks-intro[data-intro="play"] {
+    display: grid;
+    animation: ks-intro-out 0.45s 1.05s ease-in-out forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce), print {
+    .ks-intro[data-intro="play"] {
+      display: none;
+    }
+  }
+
+  .ks-intro__stage {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    isolation: isolate;
+  }
+
+  .ks-intro__wash {
+    position: absolute;
+    z-index: -1;
+    top: 50%;
+    left: 50%;
+    width: 24rem;
+    height: 18rem;
+    margin: -9rem 0 0 -12rem;
+    background:
+      radial-gradient(
+        ellipse 55% 60% at 36% 44%,
+        var(--color-pink-soft) 0 45%,
+        transparent 75%
+      ),
+      radial-gradient(
+        ellipse 50% 55% at 66% 60%,
+        color-mix(in oklab, var(--color-sage) 75%, transparent) 0 40%,
+        transparent 75%
+      );
+    mask-image: url("/watercolor/band.svg");
+    mask-size: 100% 100%;
+  }
+
+  .ks-intro__wash::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("/watercolor/paper.svg");
+    background-size: 180px 180px;
+    mix-blend-mode: multiply;
+    opacity: 0.25;
+  }
+
+  .ks-intro__mark {
+    display: block;
+    width: auto;
+    height: 6rem;
+  }
+
+  .ks-intro__name {
+    margin-top: 0.625rem;
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+
+  .ks-intro__swash {
+    display: block;
+    width: 9.5rem;
+    height: auto;
+    margin: 0.125rem 0 0 2.5rem;
+    fill: var(--color-pink);
+  }
+
+  .ks-intro__tagline {
+    margin-top: 0.5rem;
+    color: var(--color-pink-strong);
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* The sequence, only while it plays. */
+  .ks-intro[data-intro="play"] .ks-intro__wash {
+    animation: ks-intro-wash 0.7s 0.05s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  .ks-intro[data-intro="play"] .ks-intro__mark {
+    animation: ks-intro-rise 0.5s 0.15s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  .ks-intro[data-intro="play"] .ks-intro__name {
+    animation: ks-intro-rise 0.45s 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  .ks-intro[data-intro="play"] .ks-intro__swash {
+    animation: ks-intro-draw 0.4s 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  .ks-intro[data-intro="play"] .ks-intro__tagline {
+    animation: ks-intro-rise 0.4s 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  @keyframes ks-intro-wash {
+    from {
+      opacity: 0;
+      transform: scale(0.7) rotate(-4deg);
+    }
+  }
+
+  @keyframes ks-intro-rise {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+  }
+
+  @keyframes ks-intro-draw {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  @keyframes ks-intro-out {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  /* ------------------------------------------------------ painted surfaces */
+
+  /* Service tile and section band: a flat pastel fill cut by a brushed mask,
+     with paper grain, so surfaces read as paint instead of boxes. */
+  .ks-paint {
+    position: absolute;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--ks-paint-color, var(--color-primary-soft));
+    background-image: var(--ks-paint-image, none);
+    mask-image: var(--ks-paint-mask);
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+
+  .ks-paint::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("/watercolor/paper.svg");
+    background-size: 180px 180px;
+    mix-blend-mode: multiply;
+    opacity: 0.18;
+  }
+
+  .ks-paint--tile {
+    --ks-paint-mask: url("/watercolor/tile.svg");
+  }
+
+  .ks-paint--band {
+    --ks-paint-mask: url("/watercolor/band.svg");
+  }
+}

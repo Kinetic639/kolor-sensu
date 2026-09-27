@@ -32,17 +32,26 @@ const sheetVariants = cva(
 export interface SheetContentProps
   extends
     ComponentProps<typeof DialogPrimitive.Content>,
-    VariantProps<typeof sheetVariants> {}
+    VariantProps<typeof sheetVariants> {
+  /** Classes for the dimmed overlay behind the sheet. */
+  overlayClassName?: string;
+}
 
 export function SheetContent({
   side,
   className,
+  overlayClassName,
   children,
   ...props
 }: SheetContentProps) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[color-mix(in_srgb,var(--text)_42%,transparent)] backdrop-blur-[2px]" />
+      <DialogPrimitive.Overlay
+        className={cn(
+          "fixed inset-0 z-50 bg-[color-mix(in_srgb,var(--text)_42%,transparent)] backdrop-blur-[2px]",
+          overlayClassName,
+        )}
+      />
       <DialogPrimitive.Content
         className={cn(sheetVariants({ side }), className)}
         {...props}

@@ -7,6 +7,11 @@
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"]
   },
-  "include": [".storybook/**/*.ts", ".storybook/**/*.tsx", "src/**/*.d.ts"],
+  "include": [
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
+    "src/**/*.d.ts",
+    "vitest.config.ts"
+  ],
   "exclude": ["node_modules", "dist", "storybook-static"]
 }
