@@ -478,6 +478,45 @@ Only what the references repeat:
 
 Buttons accept `asChild` to render a `next/link` `<Link>`.
 
+### Site layout (reference A's header and footer)
+
+`SiteLayout` frames every public page, in landmark order: `SkipLink`
+("Przejdź do treści", first focusable element) → `SiteHeader` → `<main
+id="tresc">` → `SiteFooter`. Everything is server HTML; only three small
+islands hydrate: the desktop dropdown, the phone menu and the cookie notice.
+
+- **Brand:** the Kolor Sensu owl (`apps/web/public/brand`, used as
+  delivered). `generate:brand` makes `favicon.ico` (16/32/48), `icon.png`
+  (512) and `apple-icon.png` (180, on paper) for Next.js's icon conventions,
+  and the 2x header mark. `SiteLogo`: the mark plus "Kolor Sensu" in
+  Figtree 600; the name is the link text, the mark is decorative.
+- **Header:** sticky on paper with a hairline, no blur or shadow. Logo,
+  navigation (shadcn `NavigationMenu`, from 64 rem; "Oferta" opens its
+  services with a line each), "Umów wizytę" (from 40 rem), menu button
+  (below 64 rem). The current page is `aria-current="page"`, in green.
+- **Phone menu:** shadcn `Sheet` from the right, on paper (no blur behind
+  it): pages in the display serif, services indented, the booking action
+  full width, phone and e-mail.
+- **Footer:** logo with tagline and a sentence about the centre, social
+  profiles (line icons in lucide's style), "Nawigacja", "Oferta", contact
+  as an `<address>` (tap to call, tap to write, hours), then a hairline
+  (shadcn `Separator`), the copyright and legal links.
+- **Subpages:** `SiteBreadcrumbs` (shadcn `Breadcrumb`) above the page's
+  eyebrow and H1.
+- **FAQ:** `FaqSection` (shadcn `Accordion`); closed answers stay in the
+  HTML, only hidden.
+- **Cookie notice:** `CookieConsent`, a small card in the lower corner,
+  client-only (never in the first paint, no layout shift); the choice is
+  kept in localStorage and passed to the app before any analytics load.
+- **SEO:** one H1 per page; landmarks and labelled navigations;
+  structured data as JSON-LD (`JsonLd`, `<` escaped): `MedicalBusiness`
+  for the centre (from `SiteLayout` when `siteUrl` is set),
+  `BreadcrumbList`, `FAQPage`.
+- **Storybook:** Public site/Layout (header in every width, the dropdown
+  and the phone menu open, footer, logo, breadcrumbs, FAQ, cookie notice)
+  and Public site/Pages (the home page at every width, first visit, phone
+  menu open, a subpage).
+
 ## 13. What NOT to do
 
 - No generic SaaS gradients (purple-blue, mesh, "aurora").

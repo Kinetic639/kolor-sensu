@@ -17,6 +17,10 @@ export type {
   SoftCardProps,
   WatercolorSectionBackgroundProps,
 } from "./surfaces";
+export { CookieConsent } from "./cookie-consent";
+export type { CookieChoice, CookieConsentProps } from "./cookie-consent";
+export { FaqSection } from "./faq-section";
+export type { FaqItem, FaqSectionProps } from "./faq-section";
 export { FeatureSection } from "./feature-section";
 export type { FeatureSectionProps } from "./feature-section";
 export { HeroPoints } from "./hero-points";
@@ -27,6 +31,25 @@ export { OfferSection } from "./offer-section";
 export type { OfferSectionProps } from "./offer-section";
 export { OfferTile } from "./offer-tile";
 export type { OfferPaint, OfferService, OfferTileProps } from "./offer-tile";
+export { JsonLd } from "./json-ld";
+export { SiteBreadcrumbs } from "./site-breadcrumbs";
+export type { SiteBreadcrumbsProps } from "./site-breadcrumbs";
+export { SiteFooter } from "./site-footer";
+export type { SiteFooterProps } from "./site-footer";
+export { SiteHeader } from "./site-header";
+export type { SiteHeaderProps } from "./site-header";
+export { SiteLayout } from "./site-layout";
+export type { SiteLayoutProps } from "./site-layout";
+export { SiteLogo } from "./site-logo";
+export type { SiteLogoProps } from "./site-logo";
+export type {
+  SiteContact,
+  SiteLink,
+  SiteNavItem,
+  SiteSocial,
+  SocialNetwork,
+} from "./site-types";
+export { SkipLink } from "./skip-link";
 export { EditorialHeading, SectionEyebrow } from "./typography";
 export type { EditorialHeadingProps, SectionEyebrowProps } from "./typography";
 export { SpecialistArtwork, specialistSplashes } from "./specialist-artwork";

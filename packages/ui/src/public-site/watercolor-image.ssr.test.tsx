@@ -26,6 +26,15 @@ describe("WatercolorImage on the server", () => {
       "hero-section.tsx",
       "hero-points.tsx",
       "feature-section.tsx",
+      "site-layout.tsx",
+      "site-header.tsx",
+      "site-footer.tsx",
+      "site-logo.tsx",
+      "site-breadcrumbs.tsx",
+      "faq-section.tsx",
+      "skip-link.tsx",
+      "social-icons.tsx",
+      "json-ld.tsx",
     ]) {
       const source = readFileSync(resolve(here, file), "utf8");
       expect(source, file).not.toMatch(/^["']use client["']/m);
@@ -35,7 +44,7 @@ describe("WatercolorImage on the server", () => {
     }
   });
 
-  it("keeps client-only code to the entrance animations and the caption's motion", () => {
+  it("keeps client-only code to small islands: reveals, caption motion, navigation, cookie notice", () => {
     const clientFiles = readdirSync(here)
       .filter(
         (file) => /\.tsx?$/.test(file) && !/\.(test|stories)\./.test(file),
@@ -46,7 +55,10 @@ describe("WatercolorImage on the server", () => {
       .sort();
 
     expect(clientFiles).toEqual([
+      "cookie-consent.tsx",
       "offer-reveal.tsx",
+      "site-mobile-nav.tsx",
+      "site-navigation.tsx",
       "specialist-reveal.tsx",
       "watercolor-caption-motion.tsx",
       "watercolor-reveal.tsx",
