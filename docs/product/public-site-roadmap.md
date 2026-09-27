@@ -24,8 +24,8 @@ stronie. Jego zadania (P1–P6) i postęp są w tamtym pliku; tutaj tylko liczni
 | Faza | Zakres                                                         | Status        | Zrobione / wszystkie |
 | ---- | -------------------------------------------------------------- | ------------- | -------------------- |
 | 0    | Baza: to, co już istnieje                                      | `DONE`        | 16 / 16              |
-| 1    | Szybkie wygrane bez nowych domen                               | `NOT STARTED` | 0 / 15               |
-| P    | Portale: treści dla strony ([plan](./portals-content-plan.md)) | `NOT STARTED` | 0 / 6                |
+| 1    | Szybkie wygrane bez nowych domen                               | `IN PROGRESS` | 2 / 15               |
+| P    | Portale: treści dla strony ([plan](./portals-content-plan.md)) | `DONE`        | 6 / 6                |
 | 2    | Treści SEO: schorzenia, usługi, blog                           | `NOT STARTED` | 0 / 12               |
 | 3    | Warsztaty i filtry specjalistów                                | `NOT STARTED` | 0 / 3                |
 | 4    | Własny system rezerwacji                                       | `NOT STARTED` | 0 / 5                |
@@ -33,44 +33,44 @@ stronie. Jego zadania (P1–P6) i postęp są w tamtym pliku; tutaj tylko liczni
 
 ### Faza 0 — baza (już zrobione)
 
-| ID    | Zadanie                                                                 | Obszar        | Status | Commit / PR               | Uwagi                                  |
-| ----- | ----------------------------------------------------------------------- | ------------- | ------ | ------------------------- | -------------------------------------- |
-| F0-01 | Strona główna: hero, oferta, specjaliści, gabinety, warsztaty, FAQ, CTA | strona        | `DONE` | e7ab233                   | Treść statyczna; regresja CMS → F1-01  |
-| F0-02 | `/o-nas`                                                                | strona        | `DONE` | e7ab233                   |                                        |
-| F0-03 | `/specjalisci` + profil `/specjalisci/[slug]`                           | strona        | `DONE` | e7ab233                   | Dane z domeny specjalistów             |
-| F0-04 | `/oferta` + `/oferta/[slug]`                                            | strona        | `DONE` | e7ab233                   | Dane z domeny usług                    |
-| F0-05 | `/cennik`                                                               | strona        | `DONE` | e7ab233                   | Z `specialist_services`                |
-| F0-06 | `/gabinety`                                                             | strona        | `DONE` | e7ab233                   | Treść statyczna → F1-12                |
-| F0-07 | `/warsztaty`                                                            | strona        | `DONE` | e7ab233                   | Bez wydarzeń → Faza 3                  |
-| F0-08 | `/kontakt`, `/umow-wizyte` (telefon/e-mail)                             | strona        | `DONE` | e7ab233                   | Formularz → F1-09, rezerwacje → Faza 4 |
-| F0-09 | Strony prawne (szkielety), 404, strona błędu                            | strona        | `DONE` | e7ab233                   | Treść prawna → X-04                    |
-| F0-10 | `sitemap.xml`, `robots.txt`, metadane, kanoniczne URL                   | SEO           | `DONE` | e7ab233                   |                                        |
-| F0-11 | JSON-LD: MedicalBusiness, Person, Service, BreadcrumbList, FAQPage      | SEO           | `DONE` | e7ab233                   |                                        |
-| F0-12 | Layout: header, menu mobilne, stopka, okruszki, baner cookies           | komponent     | `DONE` | c5539ee, e69e270          |                                        |
-| F0-13 | Intro przy pierwszej wizycie                                            | komponent     | `DONE` | aa18cba                   |                                        |
-| F0-14 | Animacje (WatercolorImage, oferta, specjaliści) bez CLS                 | wydajność     | `DONE` | e8b586a, f3aed5b, b5c5804 |                                        |
-| F0-15 | Kontrast kolorów zgodny z WCAG AA                                       | a11y          | `DONE` | 2b076e5                   |                                        |
-| F0-16 | Testy Storybook: interakcje, a11y, Visual Tests, coverage               | a11y / jakość | `DONE` | 4b9f434, 021e2e1, 2ab40dd | 139/139 stories                        |
+| ID    | Zadanie                                                                 | Obszar        | Status | Commit / PR               | Uwagi                                          |
+| ----- | ----------------------------------------------------------------------- | ------------- | ------ | ------------------------- | ---------------------------------------------- |
+| F0-01 | Strona główna: hero, oferta, specjaliści, gabinety, warsztaty, FAQ, CTA | strona        | `DONE` | e7ab233                   | Treść statyczna; regresja CMS → F1-01          |
+| F0-02 | `/o-nas`                                                                | strona        | `DONE` | e7ab233                   |                                                |
+| F0-03 | `/specjalisci` + profil `/specjalisci/[slug]`                           | strona        | `DONE` | e7ab233                   | Dane z domeny specjalistów                     |
+| F0-04 | `/oferta` + `/oferta/[slug]`                                            | strona        | `DONE` | e7ab233                   | Dane z domeny usług                            |
+| F0-05 | `/cennik`                                                               | strona        | `DONE` | e7ab233                   | Z `specialist_services`                        |
+| F0-06 | `/gabinety`                                                             | strona        | `DONE` | e7ab233                   | Treść statyczna → F1-12                        |
+| F0-07 | `/warsztaty`                                                            | strona        | `DONE` | e7ab233                   | Bez wydarzeń → Faza 3                          |
+| F0-08 | `/kontakt`, `/umow-wizyte` (telefon/e-mail)                             | strona        | `DONE` | e7ab233                   | Formularz → F1-09, rezerwacje → Faza 4         |
+| F0-09 | Strony prawne (szkielety), 404, strona błędu                            | strona        | `DONE` | e7ab233                   | Treść prawna → X-04                            |
+| F0-10 | `sitemap.xml`, `robots.txt`, metadane, kanoniczne URL                   | SEO           | `DONE` | e7ab233                   |                                                |
+| F0-11 | JSON-LD: MedicalBusiness, Person, Service, BreadcrumbList, FAQPage      | SEO           | `DONE` | e7ab233                   | BreadcrumbList usunięty z okruszkami (d335743) |
+| F0-12 | Layout: header, menu mobilne, stopka, okruszki, baner cookies           | komponent     | `DONE` | c5539ee, e69e270          | Okruszki usunięte z podstron (d335743)         |
+| F0-13 | Intro przy pierwszej wizycie                                            | komponent     | `DONE` | aa18cba                   |                                                |
+| F0-14 | Animacje (WatercolorImage, oferta, specjaliści) bez CLS                 | wydajność     | `DONE` | e8b586a, f3aed5b, b5c5804 |                                                |
+| F0-15 | Kontrast kolorów zgodny z WCAG AA                                       | a11y          | `DONE` | 2b076e5                   |                                                |
+| F0-16 | Testy Storybook: interakcje, a11y, Visual Tests, coverage               | a11y / jakość | `DONE` | 4b9f434, 021e2e1, 2ab40dd | 139/139 stories                                |
 
 ### Faza 1 — szybkie wygrane (bez nowych domen)
 
-| ID    | Zadanie                                                                               | Obszar             | Status        | Commit / PR | Uwagi                                  |
-| ----- | ------------------------------------------------------------------------------------- | ------------------ | ------------- | ----------- | -------------------------------------- |
-| F1-01 | Przywrócić treść z CMS na stronie głównej (`site_content`, klucz `home`)              | strona / CMS       | `DONE`        | 0c96d05     | P6; w CMS jest treść testowa           |
-| F1-02 | `/pierwsza-wizyta`                                                                    | strona             | `NOT STARTED` |             |                                        |
-| F1-03 | `/pomoc-w-kryzysie` + `CrisisNotice`                                                  | strona / komponent | `NOT STARTED` |             | Link w stopce, przy formularzach       |
-| F1-04 | `/deklaracja-dostepnosci`                                                             | strona             | `NOT STARTED` |             |                                        |
-| F1-05 | `/dla-firm` + formularz zapytania B2B                                                 | strona             | `NOT STARTED` |             |                                        |
-| F1-06 | `/praca` + formularz aplikacji                                                        | strona             | `NOT STARTED` |             | `JobPosting` przy aktywnych ofertach   |
-| F1-07 | `/vouchery` + formularz zamówienia                                                    | strona             | `NOT STARTED` |             | Płatność online → F4-05                |
-| F1-08 | `InquiryForm` + `ConsentField` (Server Action, Zod, honeypot/Turnstile)               | komponent          | `NOT STARTED` |             | Decyzja: e-mail czy tabela `inquiries` |
-| F1-09 | `/kontakt`: formularz, `LocationMap`, dojazd                                          | strona / komponent | `NOT STARTED` |             | Iframe mapy dopiero po kliknięciu      |
-| F1-10 | Strona główna: `ProblemGrid`, `StepsSection`, „Stacjonarnie i online”, `TrustSignals` | komponent          | `NOT STARTED` |             | `ProblemGrid` na razie statyczny       |
-| F1-11 | Profil specjalisty: usługi i ceny, z kim pracuje, CTA z wybranym specjalistą          | strona / dane      | `NOT STARTED` |             | Nowa funkcja „oferty specjalisty”      |
-| F1-12 | `/gabinety` z domeny sal (`room_public_profiles`) + dostępność budynku                | strona / dane      | `DONE`        | 0c96d05     | P6, bez zdjęć sal                      |
-| F1-13 | Cennik: zasady (odwoływanie, płatności, faktury, online) + FAQ                        | strona             | `NOT STARTED` |             | Treść do potwierdzenia przez centrum   |
-| F1-14 | Optymalizacja obrazu hero (PNG 2,6 MB → AVIF/WebP)                                    | wydajność          | `NOT STARTED` |             |                                        |
-| F1-15 | Nawigacja i stopka: nowe strony, link do pomocy w kryzysie                            | komponent          | `NOT STARTED` |             | `site-frame.ts`                        |
+| ID    | Zadanie                                                                               | Obszar             | Status        | Commit / PR | Uwagi                                           |
+| ----- | ------------------------------------------------------------------------------------- | ------------------ | ------------- | ----------- | ----------------------------------------------- |
+| F1-01 | Przywrócić treść z CMS na stronie głównej (`site_content`, klucz `home`)              | strona / CMS       | `DONE`        | 0c96d05     | P6; w CMS jest treść testowa                    |
+| F1-02 | `/pierwsza-wizyta`                                                                    | strona             | `NOT STARTED` |             |                                                 |
+| F1-03 | `/pomoc-w-kryzysie` + `CrisisNotice`                                                  | strona / komponent | `NOT STARTED` |             | Link w stopce, przy formularzach                |
+| F1-04 | `/deklaracja-dostepnosci`                                                             | strona             | `NOT STARTED` |             |                                                 |
+| F1-05 | `/dla-firm` + formularz zapytania B2B                                                 | strona             | `NOT STARTED` |             |                                                 |
+| F1-06 | `/praca` + formularz aplikacji                                                        | strona             | `NOT STARTED` |             | `JobPosting` przy aktywnych ofertach            |
+| F1-07 | `/vouchery` + formularz zamówienia                                                    | strona             | `NOT STARTED` |             | Płatność online → F4-05                         |
+| F1-08 | `InquiryForm` + `ConsentField` (Server Action, Zod, honeypot/Turnstile)               | komponent          | `NOT STARTED` |             | Decyzja: e-mail czy tabela `inquiries`          |
+| F1-09 | `/kontakt`: formularz, `LocationMap`, dojazd                                          | strona / komponent | `NOT STARTED` |             | Iframe mapy dopiero po kliknięciu               |
+| F1-10 | Strona główna: `ProblemGrid`, `StepsSection`, „Stacjonarnie i online”, `TrustSignals` | komponent          | `NOT STARTED` |             | `ProblemGrid` na razie statyczny                |
+| F1-11 | Profil specjalisty: usługi i ceny, z kim pracuje, CTA z wybranym specjalistą          | strona / dane      | `NOT STARTED` |             | Nowa funkcja „oferty specjalisty”               |
+| F1-12 | `/gabinety` z domeny sal (`room_public_profiles`) + dostępność budynku                | strona / dane      | `DONE`        | 0c96d05     | P6; zdjęcia, lokalizacje, CMS: 3bc8cf6, fc4b495 |
+| F1-13 | Cennik: zasady (odwoływanie, płatności, faktury, online) + FAQ                        | strona             | `NOT STARTED` |             | Treść do potwierdzenia przez centrum            |
+| F1-14 | Optymalizacja obrazu hero (PNG 2,6 MB → AVIF/WebP)                                    | wydajność          | `NOT STARTED` |             |                                                 |
+| F1-15 | Nawigacja i stopka: nowe strony, link do pomocy w kryzysie                            | komponent          | `NOT STARTED` |             | `site-frame.ts`                                 |
 
 ### Faza 2 — treści SEO
 
@@ -91,11 +91,11 @@ stronie. Jego zadania (P1–P6) i postęp są w tamtym pliku; tutaj tylko liczni
 
 ### Faza 3 — warsztaty i filtry
 
-| ID    | Zadanie                                                                                                 | Obszar             | Status        | Commit / PR | Uwagi          |
-| ----- | ------------------------------------------------------------------------------------------------------- | ------------------ | ------------- | ----------- | -------------- |
-| F3-01 | Domena `workshops` / `events` + zapisy                                                                  | domena             | `NOT STARTED` |             |                |
-| F3-02 | `/warsztaty` (nadchodzące + archiwum) + `/warsztaty/[slug]`, `EventCard`, `EventDetails`, `EventSignup` | strona / komponent | `NOT STARTED` |             | Schema `Event` |
-| F3-03 | `SpecialistFilters` na `/specjalisci` (parametry URL)                                                   | komponent          | `NOT STARTED` |             |                |
+| ID    | Zadanie                                                                                                 | Obszar             | Status        | Commit / PR | Uwagi                                                                                  |
+| ----- | ------------------------------------------------------------------------------------------------------- | ------------------ | ------------- | ----------- | -------------------------------------------------------------------------------------- |
+| F3-01 | Domena `workshops` / `events` + zapisy                                                                  | domena             | `NOT STARTED` |             | Tabela `workshops` już jest (migracje z `feature/rooms-resource-domain`); brak zapisów |
+| F3-02 | `/warsztaty` (nadchodzące + archiwum) + `/warsztaty/[slug]`, `EventCard`, `EventDetails`, `EventSignup` | strona / komponent | `NOT STARTED` |             | Schema `Event`                                                                         |
+| F3-03 | `SpecialistFilters` na `/specjalisci` (parametry URL)                                                   | komponent          | `NOT STARTED` |             |                                                                                        |
 
 ### Faza 4 — własny system rezerwacji
 

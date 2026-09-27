@@ -116,54 +116,54 @@ export type Database = {
           active: boolean;
           address_line1: string | null;
           address_line2: string | null;
+          amenities: string[];
           city: string | null;
           country_code: string;
           created_at: string;
           id: string;
           name: string;
           postal_code: string | null;
+          public_description: string | null;
           publicly_visible: boolean;
           slug: string;
           sort_order: number;
           updated_at: string;
-          amenities: string[];
-          public_description: string | null;
         };
         Insert: {
           accessibility_notes?: string | null;
           active?: boolean;
           address_line1?: string | null;
           address_line2?: string | null;
+          amenities?: string[];
           city?: string | null;
           country_code?: string;
           created_at?: string;
           id?: string;
           name: string;
           postal_code?: string | null;
+          public_description?: string | null;
           publicly_visible?: boolean;
           slug: string;
           sort_order?: number;
           updated_at?: string;
-          amenities?: string[];
-          public_description?: string | null;
         };
         Update: {
           accessibility_notes?: string | null;
           active?: boolean;
           address_line1?: string | null;
           address_line2?: string | null;
+          amenities?: string[];
           city?: string | null;
           country_code?: string;
           created_at?: string;
           id?: string;
           name?: string;
           postal_code?: string | null;
+          public_description?: string | null;
           publicly_visible?: boolean;
           slug?: string;
           sort_order?: number;
           updated_at?: string;
-          amenities?: string[];
-          public_description?: string | null;
         };
         Relationships: [];
       };
@@ -654,32 +654,6 @@ export type Database = {
           },
         ];
       };
-      specialist_slug_redirects: {
-        Row: {
-          created_at: string;
-          old_slug: string;
-          specialist_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          old_slug: string;
-          specialist_id: string;
-        };
-        Update: {
-          created_at?: string;
-          old_slug?: string;
-          specialist_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "specialist_slug_redirects_specialist_id_fkey";
-            columns: ["specialist_id"];
-            isOneToOne: false;
-            referencedRelation: "specialists";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       specialist_services: {
         Row: {
           accepting_new_clients: boolean;
@@ -733,6 +707,32 @@ export type Database = {
           },
           {
             foreignKeyName: "specialist_services_specialist_id_fkey";
+            columns: ["specialist_id"];
+            isOneToOne: false;
+            referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      specialist_slug_redirects: {
+        Row: {
+          created_at: string;
+          old_slug: string;
+          specialist_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          old_slug: string;
+          specialist_id: string;
+        };
+        Update: {
+          created_at?: string;
+          old_slug?: string;
+          specialist_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "specialist_slug_redirects_specialist_id_fkey";
             columns: ["specialist_id"];
             isOneToOne: false;
             referencedRelation: "specialists";
@@ -810,6 +810,101 @@ export type Database = {
           },
         ];
       };
+      workshops: {
+        Row: {
+          capacity: number;
+          cover_image_path: string | null;
+          created_at: string;
+          currency_code: string;
+          ends_at: string;
+          id: string;
+          location_id: string | null;
+          long_description: string | null;
+          modality: Database["public"]["Enums"]["workshop_modality"];
+          price_minor: number;
+          registration_enabled: boolean;
+          room_id: string | null;
+          short_description: string | null;
+          slug: string;
+          specialist_id: string;
+          starts_at: string;
+          status: Database["public"]["Enums"]["workshop_status"];
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          capacity: number;
+          cover_image_path?: string | null;
+          created_at?: string;
+          currency_code?: string;
+          ends_at: string;
+          id?: string;
+          location_id?: string | null;
+          long_description?: string | null;
+          modality?: Database["public"]["Enums"]["workshop_modality"];
+          price_minor: number;
+          registration_enabled?: boolean;
+          room_id?: string | null;
+          short_description?: string | null;
+          slug: string;
+          specialist_id: string;
+          starts_at: string;
+          status?: Database["public"]["Enums"]["workshop_status"];
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          capacity?: number;
+          cover_image_path?: string | null;
+          created_at?: string;
+          currency_code?: string;
+          ends_at?: string;
+          id?: string;
+          location_id?: string | null;
+          long_description?: string | null;
+          modality?: Database["public"]["Enums"]["workshop_modality"];
+          price_minor?: number;
+          registration_enabled?: boolean;
+          room_id?: string | null;
+          short_description?: string | null;
+          slug?: string;
+          specialist_id?: string;
+          starts_at?: string;
+          status?: Database["public"]["Enums"]["workshop_status"];
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "workshops_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workshops_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workshops_room_location_fkey";
+            columns: ["room_id", "location_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id", "location_id"];
+          },
+          {
+            foreignKeyName: "workshops_specialist_id_fkey";
+            columns: ["specialist_id"];
+            isOneToOne: false;
+            referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -827,7 +922,16 @@ export type Database = {
         Args: { required_role: Database["public"]["Enums"]["app_role"] };
         Returns: boolean;
       };
-      publish_site_content: { Args: { p_key: string }; Returns: undefined };
+      list_public_room_locations: {
+        Args: never;
+        Returns: {
+          location_id: string;
+          location_name: string;
+          location_slug: string;
+          room_id: string;
+          room_slug: string;
+        }[];
+      };
       list_published_room_placements: {
         Args: never;
         Returns: {
@@ -836,8 +940,14 @@ export type Database = {
           sort_order: number;
         }[];
       };
+      publish_site_content: { Args: { p_key: string }; Returns: undefined };
       reject_specialist_profile_draft: {
         Args: { p_draft_id: string; p_review_comment: string };
+        Returns: undefined;
+      };
+      remove_room_image: { Args: { p_image_id: string }; Returns: string };
+      reorder_room_images: {
+        Args: { p_image_ids: string[]; p_room_id: string };
         Returns: undefined;
       };
       replace_room_opening_hours: {
@@ -859,18 +969,6 @@ export type Database = {
           isSetofReturn: true;
         };
       };
-      remove_room_image: {
-        Args: { p_image_id: string };
-        Returns: string;
-      };
-      reorder_room_images: {
-        Args: { p_image_ids: string[]; p_room_id: string };
-        Returns: undefined;
-      };
-      set_room_main_image: {
-        Args: { p_image_id: string };
-        Returns: undefined;
-      };
       save_my_specialist_profile_draft: {
         Args: {
           p_certificates?: string[];
@@ -888,6 +986,7 @@ export type Database = {
         };
         Returns: string;
       };
+      set_room_main_image: { Args: { p_image_id: string }; Returns: undefined };
       set_specialist_public_slug: {
         Args: { p_public_slug: string; p_specialist_id: string };
         Returns: string;
@@ -910,6 +1009,8 @@ export type Database = {
         | "assessment"
         | "workshop_related"
         | "other";
+      workshop_modality: "in_person" | "online";
+      workshop_status: "draft" | "published" | "cancelled" | "completed";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -1057,6 +1158,8 @@ export const Constants = {
         "workshop_related",
         "other",
       ],
+      workshop_modality: ["in_person", "online"],
+      workshop_status: ["draft", "published", "cancelled", "completed"],
     },
   },
 } as const;
