@@ -232,6 +232,44 @@ export type Database = {
           },
         ];
       };
+      room_images: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_main: boolean;
+          position: number;
+          room_id: string;
+          storage_path: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_main?: boolean;
+          position: number;
+          room_id: string;
+          storage_path: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_main?: boolean;
+          position?: number;
+          room_id?: string;
+          storage_path?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "room_images_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       room_opening_hours: {
         Row: {
           created_at: string;
@@ -768,6 +806,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      add_room_image: {
+        Args: { p_room_id: string; p_storage_path: string };
+        Returns: string;
+      };
       approve_specialist_profile_draft: {
         Args: { p_draft_id: string; p_review_comment?: string };
         Returns: undefined;
@@ -799,6 +841,18 @@ export type Database = {
           isOneToOne: false;
           isSetofReturn: true;
         };
+      };
+      remove_room_image: {
+        Args: { p_image_id: string };
+        Returns: string;
+      };
+      reorder_room_images: {
+        Args: { p_image_ids: string[]; p_room_id: string };
+        Returns: undefined;
+      };
+      set_room_main_image: {
+        Args: { p_image_id: string };
+        Returns: undefined;
       };
       save_my_specialist_profile_draft: {
         Args: {

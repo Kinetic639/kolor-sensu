@@ -169,3 +169,17 @@ export interface RoomTimeInterval {
   startsAt: string;
   endsAt: string;
 }
+
+/** A photo of a room's public profile (at most 5, one of them the main). */
+export interface RoomImage {
+  id: string;
+  roomId: string;
+  storagePath: string;
+  /** 0-based order in the gallery. */
+  position: number;
+  isMain: boolean;
+  /** Public URL (the room-media bucket is public). */
+  url: string;
+}
+
+export const ROOM_IMAGE_LIMIT = 5;

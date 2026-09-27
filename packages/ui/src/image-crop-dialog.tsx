@@ -32,12 +32,15 @@ const FRAME_WIDTH = 288;
 const frames = {
   square: { width: FRAME_WIDTH, height: FRAME_WIDTH },
   portrait: { width: FRAME_WIDTH, height: (FRAME_WIDTH * 4) / 3 },
+  landscape: { width: FRAME_WIDTH, height: (FRAME_WIDTH * 2) / 3 },
 } as const;
 /** Largest saved image; smaller crops are never upscaled. */
 const outputs = {
   square: { width: 800, height: 800 },
   portrait: { width: 900, height: 1200 },
+  landscape: { width: 1600, height: 1067 },
 } as const;
+type Aspect = keyof typeof frames;
 const KEY_STEP = 10;
 const KEY_STEP_LARGE = 40;
 const ZOOM_STEP = 0.1;
@@ -47,8 +50,8 @@ export interface ImageCropDialogProps {
   onOpenChange: (open: boolean) => void;
   /** The photo to crop: an object URL of a chosen file or a signed URL. */
   imageUrl: string | null;
-  /** Square for avatars (shown as a circle), 3:4 for portraits. */
-  aspect?: "square" | "portrait";
+  /** Square for avatars (shown as a circle), 3:4 portraits, 3:2 room photos. */
+  aspect?: Aspect;
   title: string;
   description?: string;
   pending?: boolean;
@@ -59,7 +62,7 @@ export interface ImageCropDialogProps {
 function exportCrop(
   photo: HTMLImageElement,
   image: Size,
-  aspect: "square" | "portrait",
+  aspect: Aspect,
   zoom: number,
   offset: Point,
 ): Promise<Blob> {

@@ -87,6 +87,15 @@ export const Portrait: Story = {
   },
 };
 
+/** A 3:2 room photo for the room gallery. */
+export const Landscape: Story = {
+  args: {
+    aspect: "landscape",
+    imageUrl: "/kolor-sensu/room.jpg",
+    title: "Dopasuj zdjęcie gabinetu",
+  },
+};
+
 /** A photo that cannot be loaded: saving stays disabled. */
 export const BrokenImage: Story = {
   args: { imageUrl: "/kolor-sensu/missing.jpg" },

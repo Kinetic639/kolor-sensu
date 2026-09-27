@@ -7,6 +7,7 @@ import {
   getSpecialistSlugRedirect,
   listPublicLocations,
   listPublishedRoomProfiles,
+  listRoomImages,
   listPublicServices,
   listPublicSpecialistOffersForService,
   listPublishedSpecialists,
@@ -66,9 +67,26 @@ export const getHomeContent = cache(() =>
   load("home content", getPublishedHomeContent, null),
 );
 
-/** Published room profiles, edited in the admin's /gabinety. */
+/** Published room profiles with their photos, edited in the admin's /gabinety. */
 export const getRooms = cache(() =>
-  load("rooms", listPublishedRoomProfiles, []),
+  load(
+    "rooms",
+    async (client) => {
+      const profiles = await listPublishedRoomProfiles(client);
+      return Promise.all(
+        profiles.map(async (profile) => {
+          const images = await listRoomImages(client, profile.roomId);
+          return {
+            ...profile,
+            images,
+            mainImage:
+              images.find((image) => image.isMain) ?? images[0] ?? null,
+          };
+        }),
+      );
+    },
+    [],
+  ),
 );
 
 export const getServices = cache(() =>

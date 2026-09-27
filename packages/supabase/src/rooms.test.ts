@@ -5,8 +5,14 @@ import {
 } from "@repo/contracts";
 import { describe, expect, it, vi } from "vitest";
 import {
+  buildRoomImagePath,
   listPublishedRoomProfiles,
+  listRoomImages,
+  removeRoomImage,
+  reorderRoomImages,
   roomMappers,
+  setRoomMainImage,
+  uploadRoomImage,
   upsertRoomPublicProfile,
 } from "./rooms";
 
@@ -192,5 +198,135 @@ describe("room public profiles", () => {
     expect(profiles.map((profile) => profile.displayName)).toEqual([
       "Gabinet Zielony",
     ]);
+  });
+});
+
+describe("room images", () => {
+  const roomId = "30000000-0000-4000-8000-000000000001";
+  const imageRow = {
+    id: "image-1",
+    room_id: roomId,
+    storage_path: `${roomId}/abc.webp`,
+    position: 0,
+    is_main: true,
+    created_at: "2026-09-27T00:00:00Z",
+    updated_at: "2026-09-27T00:00:00Z",
+  };
+
+  function storageClient() {
+    const upload = vi.fn().mockResolvedValue({ data: {}, error: null });
+    const remove = vi.fn().mockResolvedValue({ data: [], error: null });
+    const getPublicUrl = vi.fn((path: string) => ({
+      data: { publicUrl: `https://cdn/room-media/${path}` },
+    }));
+    const bucket = vi.fn(() => ({ upload, remove, getPublicUrl }));
+    return { upload, remove, getPublicUrl, bucket };
+  }
+
+  it("keeps each room's photos in its own folder", () => {
+    expect(buildRoomImagePath(roomId, "image/webp", "abc")).toBe(
+      `${roomId}/abc.webp`,
+    );
+  });
+
+  it("uploads a photo and registers it on the room", async () => {
+    const storage = storageClient();
+    const rpc = vi.fn().mockResolvedValue({ data: "image-1", error: null });
+    const client = { storage: { from: storage.bucket }, rpc } as never;
+    const file = new File(["x"], "room.webp", { type: "image/webp" });
+
+    const id = await uploadRoomImage(client, roomId, file);
+
+    expect(storage.bucket).toHaveBeenCalledWith("room-media");
+    const [path] = storage.upload.mock.calls[0]!;
+    expect(path).toMatch(new RegExp(`^${roomId}/[0-9a-f-]+\.webp$`));
+    expect(rpc).toHaveBeenCalledWith("add_room_image", {
+      p_room_id: roomId,
+      p_storage_path: path,
+    });
+    expect(id).toBe("image-1");
+  });
+
+  it("removes the uploaded file when the room already has 5 photos", async () => {
+    const storage = storageClient();
+    const limit = {
+      code: "23514",
+      message: "A room can have at most 5 photos",
+    };
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: limit });
+    const client = { storage: { from: storage.bucket }, rpc } as never;
+    const file = new File(["x"], "room.webp", { type: "image/webp" });
+
+    await expect(uploadRoomImage(client, roomId, file)).rejects.toBe(limit);
+    const [path] = storage.upload.mock.calls[0]!;
+    expect(storage.remove).toHaveBeenCalledWith([path]);
+  });
+
+  it("refuses files that are not photos before uploading", async () => {
+    const storage = storageClient();
+    const client = { storage: { from: storage.bucket }, rpc: vi.fn() } as never;
+    await expect(
+      uploadRoomImage(
+        client,
+        roomId,
+        new File(["x"], "a.gif", { type: "image/gif" }),
+      ),
+    ).rejects.toThrow(/JPG, PNG lub WebP/);
+    expect(storage.upload).not.toHaveBeenCalled();
+  });
+
+  it("lists a room's photos in order with their public URLs", async () => {
+    const storage = storageClient();
+    const chain = queryResult(imageRow);
+    const client = {
+      from: vi.fn(() => chain),
+      storage: { from: storage.bucket },
+    } as never;
+
+    const images = await listRoomImages(client, roomId);
+
+    expect(chain.eq).toHaveBeenCalledWith("room_id", roomId);
+    expect(chain.order).toHaveBeenCalledWith("position");
+    expect(images).toEqual([
+      {
+        id: "image-1",
+        roomId,
+        storagePath: `${roomId}/abc.webp`,
+        position: 0,
+        isMain: true,
+        url: `https://cdn/room-media/${roomId}/abc.webp`,
+      },
+    ]);
+  });
+
+  it("deletes the file of a removed photo", async () => {
+    const storage = storageClient();
+    const rpc = vi
+      .fn()
+      .mockResolvedValue({ data: `${roomId}/abc.webp`, error: null });
+    const client = { storage: { from: storage.bucket }, rpc } as never;
+
+    await removeRoomImage(client, "image-1");
+
+    expect(rpc).toHaveBeenCalledWith("remove_room_image", {
+      p_image_id: "image-1",
+    });
+    expect(storage.remove).toHaveBeenCalledWith([`${roomId}/abc.webp`]);
+  });
+
+  it("saves a new order and the main photo", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
+    const client = { rpc } as never;
+
+    await reorderRoomImages(client, roomId, ["b", "a"]);
+    await setRoomMainImage(client, "b");
+
+    expect(rpc).toHaveBeenNthCalledWith(1, "reorder_room_images", {
+      p_room_id: roomId,
+      p_image_ids: ["b", "a"],
+    });
+    expect(rpc).toHaveBeenNthCalledWith(2, "set_room_main_image", {
+      p_image_id: "b",
+    });
   });
 });

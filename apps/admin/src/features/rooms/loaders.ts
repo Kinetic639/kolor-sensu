@@ -1,20 +1,38 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { getRoomPublicProfileAdmin, listRoomsAdmin } from "@repo/supabase";
+import {
+  getRoomByIdAdmin,
+  getRoomPublicProfileAdmin,
+  listLocations,
+  listRoomImages,
+  listRoomsAdmin,
+} from "@repo/supabase";
 
 export async function loadAdminRooms() {
   const client = await createClient();
-  const rooms = await listRoomsAdmin(client);
-  const profiles = await Promise.all(
-    rooms.map((room) => getRoomPublicProfileAdmin(client, room.id)),
-  );
-  return rooms.map((room, index) => ({
-    ...room,
-    publicProfile: profiles[index] ?? null,
-  }));
+  return listRoomsAdmin(client);
 }
 
-export type AdminRoomWithProfile = Awaited<
-  ReturnType<typeof loadAdminRooms>
->[number];
+export async function loadAdminRoomDetail(roomId: string) {
+  const client = await createClient();
+  const [room, locations, publicProfile, images] = await Promise.all([
+    getRoomByIdAdmin(client, roomId),
+    listLocations(client),
+    getRoomPublicProfileAdmin(client, roomId),
+    listRoomImages(client, roomId),
+  ]);
+  if (!room) return null;
+  return {
+    room,
+    locationName:
+      locations.find((location) => location.id === room.locationId)?.name ??
+      "Nieznana lokalizacja",
+    publicProfile,
+    images,
+  };
+}
+
+export type AdminRoomDetailModel = NonNullable<
+  Awaited<ReturnType<typeof loadAdminRoomDetail>>
+>;

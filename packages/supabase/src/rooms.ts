@@ -5,12 +5,14 @@ import {
   type AdminRoomSummary,
   type Room,
   type RoomCreate,
+  type RoomImage,
   type RoomPublicProfile,
   type RoomUpdate,
 } from "@repo/contracts";
 import type { Database } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { z } from "zod";
+import { validateSpecialistImage } from "./specialists";
 
 type RoomRow = Database["public"]["Tables"]["rooms"]["Row"];
 
@@ -242,6 +244,128 @@ export async function listPublishedRoomProfiles(
 
   if (error) throw error;
   return data.map(mapRoomPublicProfile);
+}
+
+const roomMediaBucket = "room-media";
+const roomImageExtensions = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+} as const;
+
+type RoomImageRow = Database["public"]["Tables"]["room_images"]["Row"];
+
+function mapRoomImage(row: RoomImageRow, url: string): RoomImage {
+  return {
+    id: row.id,
+    roomId: row.room_id,
+    storagePath: row.storage_path,
+    position: row.position,
+    isMain: row.is_main,
+    url,
+  };
+}
+
+/** Each room's photos live in a folder named after the room. */
+export function buildRoomImagePath(
+  roomId: string,
+  mimeType: keyof typeof roomImageExtensions,
+  uniqueId: string,
+): string {
+  return `${roomId}/${uniqueId}.${roomImageExtensions[mimeType]}`;
+}
+
+/** A room's photos in gallery order (readers see only published rooms). */
+export async function listRoomImages(
+  client: SupabaseClient<Database>,
+  roomId: string,
+): Promise<RoomImage[]> {
+  const { data, error } = await client
+    .from("room_images")
+    .select("*")
+    .eq("room_id", roomId)
+    .order("position");
+
+  if (error) throw error;
+  const bucket = client.storage.from(roomMediaBucket);
+  return data.map((row) =>
+    mapRoomImage(row, bucket.getPublicUrl(row.storage_path).data.publicUrl),
+  );
+}
+
+/**
+ * Uploads a photo and adds it at the end of the room's gallery (admins only).
+ * If the room already has the maximum of photos, the file is removed again.
+ */
+export async function uploadRoomImage(
+  client: SupabaseClient<Database>,
+  roomId: string,
+  file: File,
+): Promise<string> {
+  const problem = validateSpecialistImage(file);
+  if (problem) throw new Error(problem);
+
+  const bucket = client.storage.from(roomMediaBucket);
+  const path = buildRoomImagePath(
+    roomId,
+    file.type as keyof typeof roomImageExtensions,
+    crypto.randomUUID(),
+  );
+  const { error: uploadError } = await bucket.upload(path, file, {
+    contentType: file.type,
+    upsert: false,
+  });
+  if (uploadError) throw uploadError;
+
+  const { data, error } = await client.rpc("add_room_image", {
+    p_room_id: roomId,
+    p_storage_path: path,
+  });
+  if (error) {
+    await bucket.remove([path]);
+    throw error;
+  }
+  return data;
+}
+
+export async function removeRoomImage(
+  client: SupabaseClient<Database>,
+  imageId: string,
+): Promise<void> {
+  const { data: path, error } = await client.rpc("remove_room_image", {
+    p_image_id: imageId,
+  });
+  if (error) throw error;
+
+  // The photo is already gone from the room; a leftover file only wastes space.
+  const { error: removeError } = await client.storage
+    .from(roomMediaBucket)
+    .remove([path]);
+  if (removeError)
+    console.error("[rooms] photo file not removed:", removeError);
+}
+
+/** Saves the gallery order: every photo of the room, first to last. */
+export async function reorderRoomImages(
+  client: SupabaseClient<Database>,
+  roomId: string,
+  imageIds: string[],
+): Promise<void> {
+  const { error } = await client.rpc("reorder_room_images", {
+    p_room_id: roomId,
+    p_image_ids: imageIds,
+  });
+  if (error) throw error;
+}
+
+export async function setRoomMainImage(
+  client: SupabaseClient<Database>,
+  imageId: string,
+): Promise<void> {
+  const { error } = await client.rpc("set_room_main_image", {
+    p_image_id: imageId,
+  });
+  if (error) throw error;
 }
 
 export const roomMappers = {

@@ -14,6 +14,14 @@ const storagePatterns = supabaseUrl
         hostname: new URL(supabaseUrl).hostname,
         pathname: "/storage/v1/object/sign/**",
       },
+      // Room photos: the public room-media bucket.
+      {
+        protocol: /** @type {"https" | "http"} */ (
+          new URL(supabaseUrl).protocol.replace(":", "")
+        ),
+        hostname: new URL(supabaseUrl).hostname,
+        pathname: "/storage/v1/object/public/room-media/**",
+      },
     ]
   : [];
 

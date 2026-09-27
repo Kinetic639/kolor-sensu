@@ -80,6 +80,7 @@ export type {
   RichTextMark,
 } from "@repo/contracts/rich-text";
 export {
+  ROOM_IMAGE_LIMIT,
   roomAvailabilityExceptionCreateSchema,
   roomAvailabilityExceptionUpdateSchema,
   roomCapacitySchema,
@@ -101,6 +102,7 @@ export type {
   RoomAvailabilityExceptionType,
   RoomAvailabilityExceptionUpdate,
   RoomCreate,
+  RoomImage,
   RoomOpeningHoursInterval,
   RoomOpeningHoursIntervalInput,
   RoomOpeningHoursReplace,

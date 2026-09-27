@@ -168,6 +168,11 @@ export {
   type SidebarProps,
   type SidebarProviderProps,
 } from "./sidebar";
+export {
+  SortableImageGallery,
+  type GalleryImage,
+  type SortableImageGalleryProps,
+} from "./sortable-image-gallery";
 export { Switch } from "./switch";
 export {
   ProfileReviewDiff,

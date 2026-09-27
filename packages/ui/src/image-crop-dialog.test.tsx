@@ -88,6 +88,16 @@ describe("ImageCropDialog", () => {
     });
   });
 
+  it("uses a 3:2 frame for room photos", () => {
+    renderDialog({ aspect: "landscape" });
+    loadPhoto(1600, 1200);
+
+    expect(screen.getByRole("group", { name: "Kadr zdjęcia" })).toHaveStyle({
+      width: "288px",
+      height: "192px",
+    });
+  });
+
   it("closes without saving on cancel", async () => {
     const user = userEvent.setup();
     const { onConfirm, onOpenChange } = renderDialog();

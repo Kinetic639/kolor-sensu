@@ -1,5 +1,6 @@
 import { FeatureSection, SoftCard } from "@repo/ui/public-site";
 import { Check } from "lucide-react";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
 import { PageIntro } from "@/components/page-intro";
@@ -46,7 +47,18 @@ export default async function RoomsPage() {
           <ul className="grid gap-6 md:grid-cols-2">
             {roomProfiles.map((room) => (
               <li key={room.roomId}>
-                <SoftCard className="grid h-full content-start gap-3 p-6 lg:p-8">
+                <SoftCard className="grid h-full content-start gap-3 overflow-hidden p-6 lg:p-8">
+                  {room.mainImage ? (
+                    <div className="relative -mx-6 -mt-6 mb-2 aspect-[3/2] lg:-mx-8 lg:-mt-8">
+                      <Image
+                        alt={room.displayName}
+                        className="object-cover"
+                        fill
+                        sizes="(min-width: 768px) 50vw, 100vw"
+                        src={room.mainImage.url}
+                      />
+                    </div>
+                  ) : null}
                   <h3 className="font-display text-h3 text-ink">
                     {room.displayName}
                   </h3>
