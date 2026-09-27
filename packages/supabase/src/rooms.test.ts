@@ -54,25 +54,49 @@ describe("room domain mapping", () => {
     });
   });
 
+  const summaryRow = {
+    id: "room-id",
+    location_id: "location-id",
+    name: "Sala 1",
+    slug: "sala-1",
+    description: null,
+    active: true,
+    publicly_visible: false,
+    capacity: 4,
+    sort_order: 0,
+    created_at: "2026-09-20T00:00:00Z",
+    updated_at: "2026-09-20T00:00:00Z",
+    locations: { name: "Centrum Główne", slug: "centrum-glowne" },
+    room_public_profiles: { published: true },
+    room_opening_hours: [{ id: "hours-1" }, { id: "hours-2" }],
+    room_availability_exceptions: [{ id: "exception-1" }],
+  };
+
   it("maps an admin room summary with the joined location context", () => {
-    expect(
-      roomMappers.adminRoomSummary({
-        id: "room-id",
-        location_id: "location-id",
-        name: "Sala 1",
-        slug: "sala-1",
-        description: null,
-        active: true,
-        publicly_visible: false,
-        capacity: 4,
-        sort_order: 0,
-        created_at: "2026-09-20T00:00:00Z",
-        updated_at: "2026-09-20T00:00:00Z",
-        locations: { name: "Centrum Główne", slug: "centrum-glowne" },
-      }),
-    ).toMatchObject({
+    expect(roomMappers.adminRoomSummary(summaryRow)).toMatchObject({
       locationName: "Centrum Główne",
       locationSlug: "centrum-glowne",
+    });
+  });
+
+  it("summarises the room's public profile, opening hours and upcoming exceptions", () => {
+    expect(roomMappers.adminRoomSummary(summaryRow)).toMatchObject({
+      publicProfilePublished: true,
+      hasOpeningHours: true,
+      upcomingExceptionCount: 1,
+    });
+    // A new room: no profile, no hours, no exceptions.
+    expect(
+      roomMappers.adminRoomSummary({
+        ...summaryRow,
+        room_public_profiles: null,
+        room_opening_hours: [],
+        room_availability_exceptions: [],
+      }),
+    ).toMatchObject({
+      publicProfilePublished: false,
+      hasOpeningHours: false,
+      upcomingExceptionCount: 0,
     });
   });
 });
