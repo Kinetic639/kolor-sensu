@@ -54,7 +54,6 @@ const preview: Preview = {
     ),
   ],
   parameters: {
-    actions: { argTypesRegex: "^on[A-Z].*" },
     a11y: {
       test: "error",
     },
