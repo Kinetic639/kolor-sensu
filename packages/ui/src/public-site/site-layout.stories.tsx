@@ -55,6 +55,19 @@ export const HeaderDesktop: Story = {
 export const HeaderOfferOpen: Story = {
   name: "Header · Oferta open",
   globals: { viewport: { value: "desktop", isRotated: false } },
+  parameters: {
+    a11y: {
+      // Radix NavigationMenu puts a focus proxy next to an open dropdown: a
+      // visually hidden, aria-hidden span that takes Tab focus only to hand
+      // it on to the menu. axe's aria-hidden-focus flags it (a known false
+      // positive); only that span is left out, the rest of the page is
+      // checked as usual.
+      context: {
+        include: ["body"],
+        exclude: ['.ks-site-nav span[aria-hidden="true"][tabindex="0"]'],
+      },
+    },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: "Oferta" }));

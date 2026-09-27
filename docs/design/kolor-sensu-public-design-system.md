@@ -45,35 +45,35 @@ Sampled from the references, then adjusted only where WCAG contrast required.
 Utilities follow the token name: `--color-primary` → `bg-primary`,
 `text-primary`, `border-primary`.
 
-| Token                  | Hex       | Source                 | Use                                                                                                                                                              |
-| ---------------------- | --------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `color-bg`             | `#f8f7f3` | A page, B paper        | Page background                                                                                                                                                  |
-| `color-surface`        | `#fdfdfb` | A specialist cards     | Cards, inputs, round icon buttons                                                                                                                                |
-| `color-cream`          | `#f3efe7` | A warm areas           | Alternate surface, neutral wash                                                                                                                                  |
-| `color-beige`          | `#e6ddd0` | B linen, wood          | Neutral wash pigment                                                                                                                                             |
-| `color-ink`            | `#16302f` | A headings             | Headings and body text (13.1:1 on `bg`)                                                                                                                          |
-| `color-text-muted`     | `#566461` | A body copy            | Secondary copy (≥ 5:1 on `bg` and soft tints)                                                                                                                    |
-| `color-primary`        | `#66996c` | #87af8c, a step darker | Button fill (white label 3.25:1, below AA 4.5:1 for small text: a deliberate choice); hero accent and icons on `bg` / `surface` (3.1:1: large text and graphics) |
-| `color-primary-strong` | `#527a57` | darker step            | Hover / pressed; small green text (4.6:1 on `bg`), icons on `cream` / `primary-soft`, focus ring                                                                 |
-| `color-primary-soft`   | `#e3ede4` | #87af8c, tint          | Fresh sage tint behind content                                                                                                                                   |
-| `color-sage`           | `#c5d0bf` | B right wash           | Wash pigment only                                                                                                                                                |
-| `color-pink`           | `#b86e6b` | A "Więcej sensu."      | Display text ≥ 24 px, icons (3.6:1)                                                                                                                              |
-| `color-pink-strong`    | `#9c5754` | darker step            | Pink text below 24 px (5:1), hero eyebrow                                                                                                                        |
-| `color-pink-soft`      | `#f6e6e1` | A pink tiles           | Blush tint behind content                                                                                                                                        |
-| `color-blush`          | `#ebcdc6` | B left wash            | Wash pigment only                                                                                                                                                |
-| `color-border`         | `#e4e1da` | A dividers             | Hairlines, card edges                                                                                                                                            |
-| `color-border-strong`  | `#7a8a87` | A "Poznaj nas" outline | Outline button (3.4:1, meets non-text 3:1)                                                                                                                       |
-| `color-on-primary`     | `#fdfdfb` |                        | White labels on `primary` and `primary-strong`                                                                                                                   |
+| Token                  | Hex       | Source                  | Use                                                                                                                |
+| ---------------------- | --------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `color-bg`             | `#f8f7f3` | A page, B paper         | Page background                                                                                                    |
+| `color-surface`        | `#fdfdfb` | A specialist cards      | Cards, inputs, round icon buttons                                                                                  |
+| `color-cream`          | `#f3efe7` | A warm areas            | Alternate surface, neutral wash                                                                                    |
+| `color-beige`          | `#e6ddd0` | B linen, wood           | Neutral wash pigment                                                                                               |
+| `color-ink`            | `#16302f` | A headings              | Headings and body text (13.1:1 on `bg`)                                                                            |
+| `color-text-muted`     | `#566461` | A body copy             | Secondary copy (≥ 5:1 on `bg` and soft tints)                                                                      |
+| `color-primary`        | `#527b57` | #87af8c, darkened to AA | Button fill (white label 4.76:1); green text and icons on `bg` (4.53:1), e.g. "Sensu" in the logo, the hero accent |
+| `color-primary-strong` | `#45684a` | darker step             | Hover / pressed, focus ring, icons on `cream` / `primary-soft` (5.9:1 on `bg`)                                     |
+| `color-primary-soft`   | `#e3ede4` | #87af8c, tint           | Fresh sage tint behind content                                                                                     |
+| `color-sage`           | `#c5d0bf` | B right wash            | Wash pigment only                                                                                                  |
+| `color-pink`           | `#b86e6b` | A "Więcej sensu."       | Display text ≥ 24 px, icons (3.6:1)                                                                                |
+| `color-pink-strong`    | `#9c5754` | darker step             | Pink text below 24 px (5:1), hero eyebrow                                                                          |
+| `color-pink-soft`      | `#f6e6e1` | A pink tiles            | Blush tint behind content                                                                                          |
+| `color-blush`          | `#ebcdc6` | B left wash             | Wash pigment only                                                                                                  |
+| `color-border`         | `#e4e1da` | A dividers              | Hairlines, card edges                                                                                              |
+| `color-border-strong`  | `#7a8a87` | A "Poznaj nas" outline  | Outline button (3.4:1, meets non-text 3:1)                                                                         |
+| `color-on-primary`     | `#fdfdfb` |                         | White labels on `primary` and `primary-strong`                                                                     |
 
 Rules:
 
 - Body text is `ink` or `text-muted` on `bg`, `surface`, `cream` or a `*-soft`
   tint. On pigment (`sage`, `blush`, painted bands) use `ink` only.
 - `pink` is never body text. Use `pink-strong` for small pink text.
-- The brand green is #87af8c a step darker (same hue and saturation), not a
-  dark bottle green. Its white button labels are below AA 4.5:1 by choice;
-  as text it is for large type only (hero accent, 22 px+ headings); small
-  green text and icons on tints use `primary-strong`.
+- The brand green is #87af8c (same hue and saturation) darkened only as far
+  as WCAG AA needs: white labels on it and green text on the paper both
+  pass 4.5:1 (checked by the Storybook accessibility tests). `primary-strong`
+  is the hover step and the colour for icons on tints.
 - Colour never carries meaning alone; status always has a word or an icon.
 - Success, warning and error colours are not part of this layer yet; the
   public site has no status UI. Add them when forms arrive.
