@@ -31,10 +31,14 @@
   --color-ink: #16302f; /* headings and body, 13.1:1 on bg */
   --color-text-muted: #566461; /* secondary copy, ≥ 5:1 on bg and soft tints */
 
-  /* Brand green (buttons, icons, links) */
-  --color-primary: #305c4a; /* primary button fill, 7.1:1 on bg */
-  --color-primary-strong: #244a3b; /* hover / pressed */
-  --color-primary-soft: #e3eadf; /* sage tint behind content (tiles, bands) */
+  /* Brand green: a slightly darker #87af8c (same hue and saturation), soft
+     and fresh rather than a dark bottle green. */
+  --color-primary: #66996c; /* button fill (white label 3.25:1); hero accent
+                               and icons on bg/surface (3.1:1, large text and
+                               graphics) */
+  --color-primary-strong: #527a57; /* hover / pressed; small green text,
+                                      icons on tints, focus ring (4.6:1 on bg) */
+  --color-primary-soft: #e3ede4; /* fresh sage tint behind content (tiles, bands) */
   --color-on-primary: #fdfdfb;
 
   /* Dusty pink (accent lines of headings, the hero eyebrow, hearts, blush
@@ -51,7 +55,7 @@
   /* Lines */
   --color-border: #e4e1da; /* hairlines, dividers, card edges */
   --color-border-strong: #7a8a87; /* outline button, 3.4:1 on bg */
-  --color-ring: #305c4a;
+  --color-ring: #527a57;
 }
 
 /* Fonts go through @theme inline so a next/font variable set on <body> (or any
@@ -123,7 +127,7 @@
     0 1px 2px rgb(22 48 47 / 0.04), 0 12px 32px -14px rgb(22 48 47 / 0.14);
   --shadow-card-hover:
     0 2px 4px rgb(22 48 47 / 0.05), 0 22px 44px -18px rgb(22 48 47 / 0.2);
-  --shadow-button: 0 10px 22px -12px rgb(48 92 74 / 0.6);
+  --shadow-button: 0 10px 22px -12px rgb(82 122 87 / 0.5);
 
   /* Motion */
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);

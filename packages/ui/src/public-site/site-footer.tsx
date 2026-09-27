@@ -35,7 +35,7 @@ function ColumnTitle({ children }: { children: string }) {
 }
 
 const linkStyle =
-  "text-small text-ink hover:text-primary focus-visible:outline-ring rounded-sm underline-offset-4 transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-offset-2";
+  "text-small text-ink hover:text-primary-strong focus-visible:outline-ring rounded-sm underline-offset-4 transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-offset-2";
 
 export function SiteFooter({
   navigation,

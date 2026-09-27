@@ -26,7 +26,7 @@ export function isCurrent(href: string, currentPath?: string) {
 }
 
 const itemStyle =
-  "text-small text-ink inline-flex h-10 items-center rounded-full px-3.5 font-medium transition-colors hover:bg-cream focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2 data-[active=true]:text-primary";
+  "text-small text-ink inline-flex h-10 items-center rounded-full px-3.5 font-medium transition-colors hover:bg-cream focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2 data-[active=true]:text-primary-strong";
 
 export interface SiteNavigationProps {
   items: readonly SiteNavItem[];

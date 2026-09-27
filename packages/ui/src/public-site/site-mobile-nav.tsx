@@ -116,7 +116,7 @@ export function SiteMobileNav({
               <li>
                 <a
                   href={`tel:${contact.phone}`}
-                  className="hover:text-primary inline-flex items-center gap-2.5"
+                  className="hover:text-primary-strong inline-flex items-center gap-2.5"
                 >
                   <Phone
                     className="text-primary size-4"
@@ -129,7 +129,7 @@ export function SiteMobileNav({
               <li>
                 <a
                   href={`mailto:${contact.email}`}
-                  className="hover:text-primary inline-flex items-center gap-2.5"
+                  className="hover:text-primary-strong inline-flex items-center gap-2.5"
                 >
                   <Mail
                     className="text-primary size-4"

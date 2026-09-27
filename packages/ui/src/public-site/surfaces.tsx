@@ -43,7 +43,7 @@ export function SoftCard({
 const tileTones = {
   sage: {
     paint: "[--ks-paint-color:var(--color-primary-soft)]",
-    icon: "text-primary",
+    icon: "text-primary-strong",
   },
   blush: {
     paint: "[--ks-paint-color:var(--color-pink-soft)]",
@@ -51,7 +51,7 @@ const tileTones = {
   },
   cream: {
     paint: "[--ks-paint-color:var(--color-cream)]",
-    icon: "text-primary",
+    icon: "text-primary-strong",
   },
 } as const;
 

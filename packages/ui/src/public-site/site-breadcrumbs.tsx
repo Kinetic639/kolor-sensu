@@ -46,7 +46,7 @@ export function SiteBreadcrumbs({
                     <BreadcrumbLink asChild>
                       <Link
                         href={item.href}
-                        className="hover:text-primary focus-visible:outline-ring rounded-sm underline-offset-4 hover:underline focus-visible:outline-2"
+                        className="hover:text-primary-strong focus-visible:outline-ring rounded-sm underline-offset-4 hover:underline focus-visible:outline-2"
                       >
                         {item.label}
                       </Link>

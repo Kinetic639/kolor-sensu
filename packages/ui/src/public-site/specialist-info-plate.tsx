@@ -5,7 +5,7 @@ import type { SpecialistAccent } from "./specialist-artwork";
 
 const arrowTones = {
   pink: "bg-pink-soft text-pink-strong",
-  sage: "bg-primary-soft text-primary",
+  sage: "bg-primary-soft text-primary-strong",
 } as const;
 
 export interface SpecialistInfoPlateProps {
