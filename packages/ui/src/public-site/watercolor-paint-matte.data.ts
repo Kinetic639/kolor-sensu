@@ -2,18 +2,16 @@
 // Do not edit: change the strokes there and run
 // `pnpm --filter @repo/design-system generate:watercolor`.
 //
-// Paint matte strokes of WatercolorImage's entrance animation, per layer:
-// the design space (width x height units), the atlas of stroke textures,
-// and for each stroke where its texture sits in the layer and in the atlas
-// (both x y w h, in design units and atlas pixels) and whether it has a
-// softer, wetter front.
+// Paint matte strokes of WatercolorImage's backdrop: the design space
+// (width x height units), the atlas of stroke textures, and for each
+// stroke where its texture sits in the layer and in the atlas (both
+// x y w h, in design units and atlas pixels) and whether it has a softer,
+// wetter front.
 //
-// Backdrop strokes are derived from the backdrop picture's brushwork: their
+// The strokes are derived from the backdrop picture's brushwork: their
 // kind (dry-brush streak or stroke), the side of the picture (pink or
 // green), their centreline in painting order (x y pairs) and when they are
 // painted (s, GSAP ease).
-// Photo strokes have their centreline as a quadratic curve from brush-down
-// to lift (x0 y0 cx cy x1 y1) and half their width.
 
 export const paintMatte = {
   backdrop: {
@@ -312,113 +310,6 @@ export const paintMatte = {
         timing: { at: 0.525, duration: 0.425, ease: "power2.out" },
         box: [372.9, 464.3, 368.6, 167.1],
         atlas: [2, 3058, 258, 117],
-      },
-    ],
-  },
-  photo: {
-    width: 1000,
-    height: 666,
-    atlas: {
-      src: "/watercolor/paint-matte-photo.png",
-      width: 496,
-      height: 2126,
-    },
-    strokes: [
-      {
-        id: "center-1",
-        path: [430, 275, 779.6, 250, 1130, 245],
-        half: 90,
-        soft: false,
-        box: [307.1, 122.9, 698.6, 274.3],
-        atlas: [2, 2, 489, 192],
-      },
-      {
-        id: "center-2",
-        path: [575, 376, 222.1, 381, -130, 406],
-        half: 90,
-        soft: false,
-        box: [-5.7, 254.3, 702.9, 274.3],
-        atlas: [2, 196, 492, 192],
-      },
-      {
-        id: "center-3",
-        path: [560, 266, 214.7, 273, -130, 296],
-        half: 90,
-        soft: false,
-        box: [-5.7, 144.3, 688.6, 274.3],
-        atlas: [2, 390, 482, 192],
-      },
-      {
-        id: "center-4",
-        path: [445, 386, 787.1, 363, 1130, 356],
-        half: 90,
-        soft: false,
-        box: [322.9, 234.3, 682.9, 274.3],
-        atlas: [2, 584, 478, 192],
-      },
-      {
-        id: "upper-center",
-        path: [545, 156, 207.9, 179, -130, 186],
-        half: 90,
-        soft: false,
-        box: [-5.7, 34.3, 672.9, 274.3],
-        atlas: [2, 778, 471, 192],
-      },
-      {
-        id: "lower-center",
-        path: [455, 496, 792.9, 489, 1130, 466],
-        half: 90,
-        soft: false,
-        box: [332.9, 344.3, 672.9, 274.3],
-        atlas: [2, 972, 471, 192],
-      },
-      {
-        id: "right-1",
-        path: [470, 166, 800.3, 157, 1130, 136],
-        half: 90,
-        soft: false,
-        box: [347.1, 14.3, 658.6, 274.3],
-        atlas: [2, 1166, 461, 192],
-      },
-      {
-        id: "left-1",
-        path: [540, 486, 205.3, 507, -130, 516],
-        half: 90,
-        soft: false,
-        box: [-5.7, 364.3, 668.6, 274.3],
-        atlas: [2, 1360, 468, 192],
-      },
-      {
-        id: "left-2",
-        path: [520, 46, 195.3, 67, -130, 76],
-        half: 90,
-        soft: false,
-        box: [-5.7, -5.7, 648.6, 204.3],
-        atlas: [2, 1554, 454, 143],
-      },
-      {
-        id: "right-2",
-        path: [450, 56, 790.3, 47, 1130, 26],
-        half: 90,
-        soft: false,
-        box: [327.1, -5.7, 678.6, 184.3],
-        atlas: [2, 1699, 475, 129],
-      },
-      {
-        id: "left-3",
-        path: [530, 596, 199.6, 603, -130, 626],
-        half: 90,
-        soft: false,
-        box: [-5.7, 474.3, 658.6, 198.6],
-        atlas: [2, 1830, 461, 139],
-      },
-      {
-        id: "right-3",
-        path: [440, 606, 784.7, 583, 1130, 576],
-        half: 90,
-        soft: false,
-        box: [317.1, 454.3, 688.6, 218.6],
-        atlas: [2, 1971, 482, 153],
       },
     ],
   },

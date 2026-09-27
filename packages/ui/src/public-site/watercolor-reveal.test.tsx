@@ -122,10 +122,10 @@ function mattes() {
 function stopped({ matte, timeline }: Reveal) {
   return (
     !timeline.isActive() &&
-    [...matte.backdrop.strokes, ...matte.photo.strokes].every(
-      (stroke) =>
-        gsap.getTweensOf(stroke.front).length === 0 &&
-        gsap.getTweensOf(stroke.group).length === 0,
+    [...matte.backdrop.strokes, matte.photo].every(
+      ({ front, group }) =>
+        gsap.getTweensOf(front).length === 0 &&
+        gsap.getTweensOf(group).length === 0,
     )
   );
 }

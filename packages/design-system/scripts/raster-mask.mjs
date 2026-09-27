@@ -1,6 +1,6 @@
 // Shared helpers for the raster alpha masks of WatercolorImage: a seeded
 // random generator, 2D value noise, easing helpers and a minimal PNG writer.
-// Used by generate-photo-mask.mjs and generate-paint-matte.mjs.
+// Used by the watercolor generators next to it.
 
 import { Buffer } from "node:buffer";
 import { crc32, deflateSync } from "node:zlib";

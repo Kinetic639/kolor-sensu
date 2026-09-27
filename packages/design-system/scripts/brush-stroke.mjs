@@ -1,8 +1,7 @@
 // One painted brush stroke as a raster: its alpha (the finished shape: an
 // opaque body, dry-brush edges, bristle hairs and a ragged tail where the
 // brush lifts) and its grey time map (when each pixel gets paint, along the
-// brush path, the belly of the brush ahead of its edges). Shared by
-// generate-paint-matte.mjs (WatercolorImage's photo strokes) and
+// brush path, the belly of the brush ahead of its edges). Used by
 // generate-offer-matte.mjs (the offer tiles' strokes).
 //
 // A stroke runs from `from` (brush down) to `to` (brush lifted) along a

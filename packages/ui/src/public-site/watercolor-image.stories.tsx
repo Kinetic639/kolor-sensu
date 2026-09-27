@@ -17,8 +17,11 @@ import { paintMatte } from "./watercolor-paint-matte.data";
 import {
   captionTiming,
   type PaintMatte,
+  paintRevealLength,
+  photoSplashTiming,
   strokeTiming,
 } from "./watercolor-paint-matte";
+import { watercolorSplash } from "./watercolor-splash-matte.data";
 import {
   type WatercolorRevealDebug,
   WatercolorRevealDebugContext,
@@ -93,17 +96,8 @@ const reducedMotionStyles = `
   }
 `;
 
-// Length of the whole reveal: the last stroke or the caption, whichever
-// ends later.
-const revealLength = Math.max(
-  captionTiming.at + captionTiming.duration,
-  ...(["backdrop", "photo"] as const).flatMap((layer) =>
-    paintMatte[layer].strokes.map((stroke) => {
-      const timing = strokeTiming(layer, stroke.id);
-      return timing.at + timing.duration;
-    }),
-  ),
-);
+// Length of the whole reveal: the last stroke, the photo or the caption.
+const revealLength = paintRevealLength;
 
 /** Inspection hooks for one component (see WatercolorRevealDebug). */
 function Debug({
@@ -124,7 +118,7 @@ function Debug({
 
 // Where the photo layer sits in the composition (public-site.css,
 // .ks-wc__photo), to draw its matte in place.
-const photoInset = "2.7% 6.03% 1.35% 3.94%";
+const photoInset = "-1.7% 1.53% -3.85% -0.56%";
 
 // The backdrop picture a story's component uses, as a URL.
 const backdropOf = ({ watercolorSrc }: WatercolorImageProps) =>
@@ -365,8 +359,9 @@ function useMatteUrls() {
 }
 
 /**
- * Every stroke on the time axis, with a playhead: which strokes run at the
- * same moment, and how the photo overlaps the backdrop.
+ * Every backdrop stroke and every photo bloom on the time axis, with a
+ * playhead: which run at the same moment, and how the photo overlaps the
+ * backdrop.
  */
 function StrokeChart({ timeline }: { timeline?: gsap.core.Timeline }) {
   const [time, setTime] = useState(0);
@@ -386,12 +381,13 @@ function StrokeChart({ timeline }: { timeline?: gsap.core.Timeline }) {
     ...paintMatte.backdrop.strokes.map((stroke) => ({
       label: `Tło ${stroke.id}`,
       colour: sideColour[stroke.side],
-      ...strokeTiming("backdrop", stroke.id),
+      ...strokeTiming(stroke.id),
     })),
-    ...paintMatte.photo.strokes.map((stroke) => ({
-      label: `Zdjęcie ${stroke.id}`,
+    ...watercolorSplash.photo.blooms.map((bloom) => ({
+      label: `Zdjęcie, plama ${bloom.id}`,
       colour: "var(--color-primary)",
-      ...strokeTiming("photo", stroke.id),
+      at: photoSplashTiming.at + bloom.start,
+      duration: bloom.duration,
     })),
     {
       label: "Podpis (fade)",
@@ -495,12 +491,12 @@ export const StaticApproved: Story = {
 };
 
 /**
- * `animationPreset="watercolor-reveal"`: the picture is painted in through
- * a paint matte of independent brush strokes. The backdrop starts from the
- * left and the right edge at once and meets in the middle; the photo is
- * painted from its centre outward, starting while the backdrop is still
- * being painted. About 1.2 s; it plays once, when the image comes into
- * view.
+ * `animationPreset="watercolor-reveal"`: the backdrop is painted in through
+ * a matte of independent brush strokes, starting from the left and the
+ * right edge at once and meeting in the middle; the photo spreads in from
+ * its middle outward, in many blooms like watercolor on wet paper, starting
+ * while the backdrop is still being painted. About 1.15 s; it plays once,
+ * when the image comes into view.
  */
 export const AnimatedPaintReveal: Story = {
   name: "Animated Paint Reveal",
@@ -533,8 +529,9 @@ function SlowMotion({ args }: { args: WatercolorImageProps }) {
 
 /**
  * The same reveal five times slower, with the backdrop matte beside it
- * (with the brush lines it follows) and every stroke on a time axis with a
- * playhead, to review the brush fronts and how the strokes overlap.
+ * (with the brush lines it follows) and every stroke and bloom on a time
+ * axis with a playhead, to review the brush fronts, the blooms and how they
+ * overlap.
  */
 export const SlowMotionDebug: Story = {
   name: "Slow Motion Debug",
@@ -661,9 +658,9 @@ function MatteDebugControls({ args }: { args: WatercolorImageProps }) {
 }
 
 /**
- * The actual paint mattes, live, next to the component: the SVG masks the
- * backdrop and the photo are painted through, never a growing shape or a
- * sliding edge. The backdrop's matte is shown alone, then only where its
+ * The actual mattes, live, next to the component: the SVG masks the
+ * backdrop is painted through and the photo spreads in through, never a
+ * growing shape or a sliding edge. The backdrop's matte is shown alone, then only where its
  * picture has paint, next to the regions it is built from: derived from the
  * picture's own brushwork (dry-brush streaks and strokes along the real
  * direction of the paint, curved where it curves; washes spreading from

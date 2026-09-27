@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Generates the paint matte of WatercolorImage's entrance animation
 // (animationPreset="watercolor-reveal"): the brush strokes that paint the
-// backdrop and the photo in. The finished composition never uses them.
+// backdrop in. (The photo is not painted: it spreads in, in blooms;
+// generate-watercolor-splash.mjs.) The finished composition never uses them.
 //
 // How the matte works (packages/ui/src/public-site/watercolor-paint-matte.ts):
 // every brush stroke is one image in the layer's atlas with two channels,
@@ -19,39 +20,34 @@
 // So the paint front is not a line or a shape that moves: it is wherever the
 // time map crosses the threshold, and it frays into bristle streaks the way
 // a real brush front does. Many such strokes, started at different moments,
-// overlap into the matte; the matte masks the real backdrop and photo
-// layers. This is a paint-on "gradient wipe" per stroke, the web version of
-// an animated paint matte.
+// overlap into the matte; the matte masks the real backdrop layer. This is
+// a paint-on "gradient wipe" per stroke, the web version of an animated
+// paint matte.
 //
-// The backdrop's strokes are not authored here: backdrop-brushwork.mjs
-// derives them from the watercolor backdrop picture itself (its streaks and
-// sweeps, extended to cover the whole picture), so the backdrop is painted
-// in along its own brushwork, as brush strokes only. The photo's strokes
-// are the table below.
+// The strokes are not authored here: backdrop-brushwork.mjs derives them
+// from the watercolor backdrop picture itself (its streaks and sweeps,
+// extended to cover the whole picture), so the backdrop is painted in along
+// its own brushwork, as brush strokes only.
 //
-// Coordinates: each layer is authored in a design space 1000 units wide
-// (backdrop 1000 x 625, 16 : 10; photo 1000 x 666, the photo layer's box).
-// Photo strokes are described in brush-stroke.mjs, which renders them.
+// Coordinates: the backdrop is authored in a design space of 1000 x 625
+// units (16 : 10).
 //
 // When every stroke is complete, the strokes cover the whole layer (checked
 // below), so the component can drop the matte and the picture is the static
 // composition, pixel for pixel.
 //
-// Output: apps/web/public/watercolor/paint-matte-{backdrop,photo}.png (atlas
-//         of stroke textures, 8-bit grey + alpha PNG) and
+// Output: apps/web/public/watercolor/paint-matte-backdrop.png (atlas of
+//         stroke textures, 8-bit grey + alpha PNG) and
 //         packages/ui/src/public-site/watercolor-paint-matte.data.ts (stroke
 //         geometry and atlas rectangles).
 // Run:    pnpm --filter @repo/design-system generate:watercolor
 // The output is deterministic: the same seeds always produce the same files.
 
-import { Buffer } from "node:buffer";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { argv, stdout } from "node:process";
 import { fileURLToPath } from "node:url";
-import { inflateSync } from "node:zlib";
 import { backdropRegions } from "./backdrop-brushwork.mjs";
-import { renderStroke } from "./brush-stroke.mjs";
 import { encodeAlphaPng, encodeGreyAlphaPng } from "./raster-mask.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -73,29 +69,6 @@ const layers = {
     width: 1000,
     height: 625,
     source: resolve(publicDir, "watercolor-background.webp"),
-  },
-  // The photo is painted from its centre outward, in six bands. In every
-  // band one stroke sets down near the centre and runs out to the left edge,
-  // and another to the right edge; the two start a little apart, so they
-  // overlap in the middle. Strokes run past the edges of the layer, so the
-  // photo's own painted edge (photo-mask.png) is what ends them.
-  photo: {
-    width: 1000,
-    height: 666,
-    strokes: [
-      { id: "center-1", from: [430, 275], to: [1130, 245], bend: -10, half: 90, dry: 0.5, touchdown: true, seed: 31 },
-      { id: "center-2", from: [575, 376], to: [-130, 406], bend: 10, half: 90, dry: 0.5, touchdown: true, seed: 32 },
-      { id: "center-3", from: [560, 266], to: [-130, 296], bend: 8, half: 90, dry: 0.5, touchdown: true, seed: 33 },
-      { id: "center-4", from: [445, 386], to: [1130, 356], bend: -8, half: 90, dry: 0.5, touchdown: true, seed: 34 },
-      { id: "upper-center", from: [545, 156], to: [-130, 186], bend: -8, half: 90, dry: 0.5, touchdown: true, seed: 35 },
-      { id: "lower-center", from: [455, 496], to: [1130, 466], bend: 8, half: 90, dry: 0.5, touchdown: true, seed: 36 },
-      { id: "right-1", from: [470, 166], to: [1130, 136], bend: 6, half: 90, dry: 0.5, touchdown: true, seed: 37 },
-      { id: "left-1", from: [540, 486], to: [-130, 516], bend: -6, half: 90, dry: 0.5, touchdown: true, seed: 38 },
-      { id: "left-2", from: [520, 46], to: [-130, 76], bend: -6, half: 90, dry: 0.5, touchdown: true, seed: 39 },
-      { id: "right-2", from: [450, 56], to: [1130, 26], bend: 6, half: 90, dry: 0.5, touchdown: true, seed: 40 },
-      { id: "left-3", from: [530, 596], to: [-130, 626], bend: 8, half: 90, dry: 0.5, touchdown: true, seed: 41 },
-      { id: "right-3", from: [440, 606], to: [1130, 576], bend: -8, half: 90, dry: 0.5, touchdown: true, seed: 42 },
-    ],
   },
 };
 
@@ -146,57 +119,15 @@ function coverage({ layer, textures }) {
   return { w, h, covered: empty.map((e) => 1 - e) };
 }
 
-// Reads photo-mask.png (written by generate-photo-mask.mjs: palette PNG,
-// filters None / Sub / Up) back into alpha values.
-function readPhotoMask() {
-  const file = readFileSync(resolve(publicDir, "photo-mask.png"));
-  const width = file.readUInt32BE(16);
-  const height = file.readUInt32BE(20);
-  const idat = [];
-  for (let offset = 8; offset < file.length;) {
-    const length = file.readUInt32BE(offset);
-    const type = file.toString("ascii", offset + 4, offset + 8);
-    if (type === "IDAT")
-      idat.push(file.subarray(offset + 8, offset + 8 + length));
-    offset += 12 + length;
-  }
-  const raw = inflateSync(Buffer.concat(idat));
-  const alpha = new Uint8Array(width * height);
-  for (let y = 0; y < height; y++) {
-    const filter = raw[y * (width + 1)];
-    for (let x = 0; x < width; x++) {
-      const value = raw[y * (width + 1) + 1 + x];
-      const left = x > 0 ? alpha[y * width + x - 1] : 0;
-      const up = y > 0 ? alpha[(y - 1) * width + x] : 0;
-      alpha[y * width + x] =
-        (value + (filter === 1 ? left : filter === 2 ? up : 0)) & 255;
-    }
-  }
-  return { width, height, alpha };
-}
-
-// The finished matte must cover everything the layer can show, or dropping
-// it at the end would change the picture. The backdrop is checked over the
-// whole layer (any backdrop image may be passed); the photo over the painted
-// silhouette of photo-mask.png, the only part of the photo ever visible.
+// The finished matte must cover the whole layer (any backdrop image may be
+// passed), or dropping it at the end would change the picture.
 function check(built) {
   const { w, h, covered } = coverage(built);
-  let within = () => true;
-  if (built.name === "photo") {
-    const mask = readPhotoMask();
-    within = (x, y) =>
-      mask.alpha[
-        Math.min(mask.height - 1, Math.floor((y / h) * mask.height)) *
-          mask.width +
-          Math.min(mask.width - 1, Math.floor((x / w) * mask.width))
-      ] > 0;
-  }
   let checked = 0;
   let open = 0;
   let worst = 1;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      if (!within(x, y)) continue;
       checked++;
       const c = covered[y * w + x];
       worst = Math.min(worst, c);
@@ -235,18 +166,16 @@ function dataModule(builds) {
     "// Do not edit: change the strokes there and run",
     "// `pnpm --filter @repo/design-system generate:watercolor`.",
     "//",
-    "// Paint matte strokes of WatercolorImage's entrance animation, per layer:",
-    "// the design space (width x height units), the atlas of stroke textures,",
-    "// and for each stroke where its texture sits in the layer and in the atlas",
-    "// (both x y w h, in design units and atlas pixels) and whether it has a",
-    "// softer, wetter front.",
+    "// Paint matte strokes of WatercolorImage's backdrop: the design space",
+    "// (width x height units), the atlas of stroke textures, and for each",
+    "// stroke where its texture sits in the layer and in the atlas (both",
+    "// x y w h, in design units and atlas pixels) and whether it has a softer,",
+    "// wetter front.",
     "//",
-    "// Backdrop strokes are derived from the backdrop picture's brushwork: their",
+    "// The strokes are derived from the backdrop picture's brushwork: their",
     "// kind (dry-brush streak or stroke), the side of the picture (pink or",
     "// green), their centreline in painting order (x y pairs) and when they are",
     "// painted (s, GSAP ease).",
-    "// Photo strokes have their centreline as a quadratic curve from brush-down",
-    "// to lift (x0 y0 cx cy x1 y1) and half their width.",
     "",
     "export const paintMatte = {",
   ];
@@ -267,28 +196,21 @@ function dataModule(builds) {
         round,
       );
       lines.push("      {");
-      if (t.stroke) {
-        lines.push(`        id: "${t.stroke.id}",`);
-        lines.push(`        path: [${t.control.map(round).join(", ")}],`);
-        lines.push(`        half: ${t.stroke.half},`);
-        lines.push(`        soft: ${Boolean(t.stroke.soft)},`);
-      } else {
-        lines.push(`        id: "${t.id}",`);
-        lines.push(`        kind: "${t.kind}",`);
-        lines.push(`        side: "${t.side}",`);
-        lines.push(
-          ...numberList(
-            "        line: ",
-            t.line.flat().map((v) => Math.round(v)),
-          ),
-        );
-        // Every backdrop region is now a directional brush stroke, never
-        // the wetter, softer front of a wash.
-        lines.push(`        soft: false,`);
-        lines.push(
-          `        timing: { at: ${t.at}, duration: ${t.duration}, ease: "${t.ease}" },`,
-        );
-      }
+      lines.push(`        id: "${t.id}",`);
+      lines.push(`        kind: "${t.kind}",`);
+      lines.push(`        side: "${t.side}",`);
+      lines.push(
+        ...numberList(
+          "        line: ",
+          t.line.flat().map((v) => Math.round(v)),
+        ),
+      );
+      // Every backdrop region is a directional brush stroke, never the
+      // wetter, softer front of a wash.
+      lines.push(`        soft: false,`);
+      lines.push(
+        `        timing: { at: ${t.at}, duration: ${t.duration}, ease: "${t.ease}" },`,
+      );
       lines.push(`        box: [${box.join(", ")}],`);
       lines.push(`        atlas: [${[PAD, t.atlasY, t.w, t.h].join(", ")}],`);
       lines.push("      },");
@@ -316,14 +238,6 @@ const builds = [
     "backdrop",
     layers.backdrop,
     await backdropRegions(layers.backdrop.source, layers.backdrop, SCALE),
-  ),
-  buildLayer(
-    "photo",
-    layers.photo,
-    layers.photo.strokes.map((stroke) => ({
-      stroke,
-      ...renderStroke(stroke, layers.photo, SCALE),
-    })),
   ),
 ];
 writeFileSync(dataFile, dataModule(builds));

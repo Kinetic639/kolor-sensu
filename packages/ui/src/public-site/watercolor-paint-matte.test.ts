@@ -1,6 +1,7 @@
-// The paint matte and its schedule. These tests check the structure the
-// reveal relies on (strokes, their order and timing, what GSAP touches, the
-// first and last frame); whether it looks painted is judged in Storybook
+// The matte and its schedule: the backdrop's brush strokes and the photo's
+// blooms. These tests check the structure the reveal relies on (strokes,
+// their order and timing, what GSAP touches, the first and last frame);
+// whether it looks painted is judged in Storybook
 // (Slow Motion Debug, Matte Debug, Frame Strip), not here.
 import { gsap } from "gsap";
 import { afterEach, describe, expect, it } from "vitest";
@@ -8,32 +9,18 @@ import {
   captionTiming,
   createPaintMatte,
   createPaintTimeline,
-  type PaintLayerName,
-  type PaintMatte,
+  paintRevealLength,
   paintSchedule,
+  photoSplashTiming,
   strokeTiming,
 } from "./watercolor-paint-matte";
 import { paintMatte } from "./watercolor-paint-matte.data";
-
-const layers = ["backdrop", "photo"] as const;
-
-function strokesOf(layer: PaintLayerName) {
-  return paintMatte[layer].strokes.map((stroke) => ({
-    id: stroke.id,
-    ...strokeTiming(layer, stroke.id),
-  }));
-}
+import { watercolorSplash } from "./watercolor-splash-matte.data";
 
 const backdropStrokes = () =>
   paintMatte.backdrop.strokes.map((stroke) => ({
     ...stroke,
-    ...strokeTiming("backdrop", stroke.id),
-  }));
-
-const photoStrokes = () =>
-  paintMatte.photo.strokes.map((stroke) => ({
-    ...stroke,
-    ...strokeTiming("photo", stroke.id),
+    ...strokeTiming(stroke.id),
   }));
 
 // A backdrop stroke's centreline as points.
@@ -84,23 +71,18 @@ function build() {
   return { host, caption, matte: createPaintMatte(host) };
 }
 
-function allStrokes(matte: PaintMatte) {
-  return [...matte.backdrop.strokes, ...matte.photo.strokes];
-}
-
 afterEach(() => {
   for (const host of hosts) host.remove();
   hosts = [];
 });
 
 describe("paint schedule", () => {
-  it("times every stroke of both mattes, and nothing else", () => {
-    for (const layer of layers) {
-      expect(Object.keys(paintSchedule[layer]).sort()).toEqual(
-        paintMatte[layer].strokes.map((stroke) => stroke.id).sort(),
-      );
-    }
-    expect(paintMatte.photo.strokes).toHaveLength(12);
+  it("times every backdrop stroke, and nothing else", () => {
+    expect(Object.keys(paintSchedule).sort()).toEqual(
+      paintMatte.backdrop.strokes.map((stroke) => stroke.id).sort(),
+    );
+    // The photo is not painted with strokes.
+    expect(paintMatte).not.toHaveProperty("photo");
   });
 
   it("paints the backdrop with only dry-brush streaks and strokes found in its picture", () => {
@@ -170,12 +152,9 @@ describe("paint schedule", () => {
   });
 
   it("staggers strokes 20 to 90 ms apart, each starting before the last ends", () => {
-    const groups = [
-      ...(["pink", "green"] as const).map((side) =>
-        backdropStrokes().filter((stroke) => stroke.side === side),
-      ),
-      photoStrokes(),
-    ];
+    const groups = (["pink", "green"] as const).map((side) =>
+      backdropStrokes().filter((stroke) => stroke.side === side),
+    );
     for (const group of groups) {
       const strokes = [...group].sort((a, b) => a.at - b.at);
       const gaps = new Set<number>();
@@ -191,95 +170,100 @@ describe("paint schedule", () => {
     }
   });
 
-  it("starts the photo from its centre while the backdrop is still painting", () => {
-    const backdrop = strokesOf("backdrop");
-    const photo = strokesOf("photo");
-    const photoStart = Math.min(...photo.map((stroke) => stroke.at));
-    const backdropEnd = Math.max(...backdrop.map(end));
+  it("starts the photo while the backdrop is still painting", () => {
+    const backdropEnd = Math.max(...backdropStrokes().map(end));
+    const photo = photoSplashTiming;
 
-    expect(photoStart).toBeGreaterThanOrEqual(0.3);
-    expect(photoStart).toBeLessThanOrEqual(0.4);
-    expect(photoStart).toBeLessThan(backdropEnd);
+    expect(photo.at).toBeGreaterThanOrEqual(0.3);
+    expect(photo.at).toBeLessThanOrEqual(0.4);
+    expect(photo.at).toBeLessThan(backdropEnd);
     expect(backdropEnd).toBeGreaterThanOrEqual(0.75);
     expect(backdropEnd).toBeLessThanOrEqual(0.95 + 1e-9);
 
-    const photoEnd = Math.max(...photo.map(end));
-    expect(photoEnd).toBeGreaterThanOrEqual(0.9);
-    expect(photoEnd).toBeLessThanOrEqual(1.2 + 1e-9);
+    expect(end(photo)).toBeGreaterThanOrEqual(0.9);
+    expect(end(photo)).toBeLessThanOrEqual(1.2 + 1e-9);
   });
 
-  it("sets the photo brushes down near the centre and moves outward", () => {
-    const { width, height } = paintMatte.photo;
-    const distance = (x: number, y: number) =>
-      Math.hypot(x - width / 2, y - height / 2);
-    const strokes = photoStrokes().sort((a, b) => a.at - b.at);
-
-    for (const { id, path } of strokes) {
-      // Every brush sets down in the middle column of the photo...
-      expect(path[0], id).toBeGreaterThan(0.4 * width);
-      expect(path[0], id).toBeLessThan(0.6 * width);
-      // ...and is dragged away from the centre.
-      expect(distance(path[4], path[5]), id).toBeGreaterThan(
-        distance(path[0], path[1]),
+  it("spreads the photo in many uneven blooms, from its middle outward", () => {
+    const { width, height, blooms } = watercolorSplash.photo;
+    expect(blooms.length).toBeGreaterThanOrEqual(15);
+    const distance = ([x, y]: readonly number[]) =>
+      Math.hypot((x! - width / 2) / width, (y! - height / 2) / height);
+    const sorted = [...blooms].sort((a, b) => a.start - b.start);
+    // The first blooms sit in the middle...
+    for (const bloom of sorted.slice(0, 3)) {
+      expect(distance(bloom.seed), bloom.id).toBeLessThan(0.1);
+    }
+    // ...the last ones far out, and every one is done within the map.
+    expect(
+      Math.min(...sorted.slice(-5).map((bloom) => distance(bloom.seed))),
+    ).toBeGreaterThan(0.2);
+    for (const bloom of blooms) {
+      expect(bloom.start + bloom.duration, bloom.id).toBeLessThanOrEqual(
+        watercolorSplash.photo.time.duration + 1e-9,
       );
     }
-    // First the centre, then further and further out.
-    const rings = [0, 4, 8].map((first) =>
-      strokes
-        .slice(first, first + 4)
-        .map(({ path }) => distance(path[0], path[1])),
+    // Irregular timing, not a metronome.
+    expect(new Set(blooms.map((bloom) => bloom.start)).size).toBeGreaterThan(
+      blooms.length / 3,
     );
-    for (let i = 1; i < rings.length; i++) {
-      expect(Math.min(...rings[i]!)).toBeGreaterThan(
-        Math.max(...rings[i - 1]!),
-      );
-    }
   });
 
   it("brings the caption in last, after the photo reads", () => {
-    const photoStart = Math.min(...strokesOf("photo").map((s) => s.at));
-    expect(captionTiming.at).toBeGreaterThan(photoStart + 0.4);
+    expect(captionTiming.at).toBeGreaterThan(photoSplashTiming.at + 0.4);
   });
 });
 
 describe("paint matte", () => {
-  it("builds one hidden SVG with a mask per layer and a filtered image per stroke", () => {
+  it("builds one hidden SVG: a filtered image per backdrop stroke", () => {
     const { host, matte } = build();
 
     expect(matte.svg.parentElement).toBe(host);
     expect(matte.svg).toHaveAttribute("aria-hidden", "true");
     expect(matte.svg).toHaveClass("ks-wc__matte");
 
-    for (const layer of layers) {
-      const { mask, url, strokes, splatters } = matte[layer];
-      expect(url).toBe(`url(#${mask.id})`);
-      // Coverage only: the stroke images keep their time map in colour.
-      expect(mask).toHaveAttribute("mask-type", "alpha");
-      expect(strokes.map((stroke) => stroke.id)).toEqual(
-        paintMatte[layer].strokes.map((stroke) => stroke.id),
+    const { mask, url, strokes } = matte.backdrop;
+    expect(url).toBe(`url(#${mask.id})`);
+    // Coverage only: the stroke images keep their time map in colour.
+    expect(mask).toHaveAttribute("mask-type", "alpha");
+    expect(strokes.map((stroke) => stroke.id)).toEqual(
+      paintMatte.backdrop.strokes.map((stroke) => stroke.id),
+    );
+    for (const stroke of strokes) {
+      expect(mask.contains(stroke.group)).toBe(true);
+      expect(stroke.group).toHaveAttribute("visibility", "hidden");
+      const filterId = stroke.group
+        .getAttribute("filter")!
+        .match(/^url\(#(.+)\)$/)![1]!;
+      const filter = matte.svg.querySelector(`[id="${filterId}"]`)!;
+      expect(filter.contains(stroke.front)).toBe(true);
+      expect(filter.querySelector("feComposite")).toHaveAttribute(
+        "operator",
+        "in",
       );
-      for (const stroke of strokes) {
-        expect(mask.contains(stroke.group)).toBe(true);
-        expect(stroke.group).toHaveAttribute("visibility", "hidden");
-        const filterId = stroke.group
-          .getAttribute("filter")!
-          .match(/^url\(#(.+)\)$/)![1]!;
-        const filter = matte.svg.querySelector(`[id="${filterId}"]`)!;
-        expect(filter.contains(stroke.front)).toBe(true);
-        expect(filter.querySelector("feComposite")).toHaveAttribute(
-          "operator",
-          "in",
-        );
-        expect(stroke.group.querySelector("image")).toHaveAttribute(
-          "href",
-          paintMatte[layer].atlas.src,
-        );
-      }
-      for (const { dot } of splatters) {
-        expect(mask.contains(dot)).toBe(true);
-        expect(dot).toHaveAttribute("r", "0");
-      }
+      expect(stroke.group.querySelector("image")).toHaveAttribute(
+        "href",
+        paintMatte.backdrop.atlas.src,
+      );
     }
+  });
+
+  it("gives the photo one filtered time map, whatever the number of blooms", () => {
+    const { matte } = build();
+    const { mask, url, group, front } = matte.photo;
+    expect(url).toBe(`url(#${mask.id})`);
+    expect(mask).toHaveAttribute("mask-type", "alpha");
+    expect(mask.querySelectorAll("image")).toHaveLength(1);
+    expect(group.querySelector("image")).toHaveAttribute(
+      "href",
+      watercolorSplash.photo.time.src,
+    );
+    const filterId = group.getAttribute("filter")!.match(/^url\(#(.+)\)$/)![1]!;
+    const filter = matte.svg.querySelector(`[id="${filterId}"]`)!;
+    expect(filter.children).toHaveLength(1);
+    expect(filter.contains(front)).toBe(true);
+    // Nothing shown yet.
+    expect(frontOffset(front)).toBeLessThanOrEqual(0);
   });
 
   it("gives each matte its own ids, so two images never share a mask", () => {
@@ -299,11 +283,8 @@ describe("paint timeline", () => {
   it("lasts about 1.2 s", () => {
     const { matte, caption } = build();
     const timeline = createPaintTimeline(matte, { caption, paused: true });
-    const strokesEnd = Math.max(
-      ...layers.flatMap((layer) => strokesOf(layer).map(end)),
-    );
 
-    expect(timeline.duration()).toBeCloseTo(strokesEnd, 5);
+    expect(timeline.duration()).toBeCloseTo(paintRevealLength, 5);
     expect(timeline.duration()).toBeGreaterThanOrEqual(1);
     expect(timeline.duration()).toBeLessThanOrEqual(1.3);
     timeline.kill();
@@ -313,26 +294,40 @@ describe("paint timeline", () => {
     const { matte, caption } = build();
     const timeline = createPaintTimeline(matte, { caption, paused: true });
 
-    for (const stroke of allStrokes(matte)) {
+    for (const { front } of [...matte.backdrop.strokes, matte.photo]) {
       // alpha = offset − sharpness × grey ≤ 0 for every grey ≥ 0.
-      expect(frontOffset(stroke.front)).toBeLessThanOrEqual(0);
+      expect(frontOffset(front)).toBeLessThanOrEqual(0);
     }
     expect(caption.style.opacity).toBe("0");
     timeline.kill();
   });
 
-  it("only moves the paint fronts: colour stays white, nothing fades", () => {
+  it("only moves the fronts: colour stays white, nothing fades", () => {
     const { matte, caption } = build();
     const timeline = createPaintTimeline(matte, { caption, paused: true });
-    const stroke = matte.photo.strokes[0]!;
-    const matrix = () =>
-      stroke.front.getAttribute("values")!.trim().split(/\s+/).slice(0, -1);
-    const before = matrix();
+    const stroke = matte.backdrop.strokes[0]!;
+    const matrix = (front: SVGFEColorMatrixElement) =>
+      front.getAttribute("values")!.trim().split(/\s+/).slice(0, -1);
+    const before = [matrix(stroke.front), matrix(matte.photo.front)];
 
-    timeline.time(strokeTiming("photo", stroke.id).at + 0.2);
-    expect(matrix()).toEqual(before);
+    timeline.time(strokeTiming(stroke.id).at + 0.2);
+    expect(matrix(stroke.front)).toEqual(before[0]);
     expect(frontOffset(stroke.front)).toBeGreaterThan(0);
     expect(frontOffset(stroke.front)).toBeLessThan(stroke.sharpness);
+
+    timeline.time(photoSplashTiming.at + 0.3);
+    expect(matrix(matte.photo.front)).toEqual(before[1]);
+    expect(frontOffset(matte.photo.front)).toBeGreaterThan(0);
+    timeline.kill();
+  });
+
+  it("runs the photo's threshold linearly (the blooms' timing is in the map)", () => {
+    const { matte } = build();
+    const timeline = createPaintTimeline(matte, { paused: true });
+    const [tween] = gsap.getTweensOf(matte.photo.front);
+    expect(tween!.vars.ease).toBe("none");
+    expect(tween!.duration()).toBeCloseTo(photoSplashTiming.duration, 5);
+    expect(tween!.startTime()).toBeCloseTo(photoSplashTiming.at, 5);
     timeline.kill();
   });
 
@@ -357,12 +352,12 @@ describe("paint timeline", () => {
     timeline.kill();
   });
 
-  it("ends with every stroke fully painted and every filter gone", () => {
+  it("ends with everything fully painted and every filter gone", () => {
     const { matte, caption } = build();
     const timeline = createPaintTimeline(matte, { caption, paused: true });
 
     timeline.progress(1);
-    for (const stroke of allStrokes(matte)) {
+    for (const stroke of matte.backdrop.strokes) {
       expect(stroke.group).toHaveAttribute("visibility", "visible");
       expect(stroke.group).toHaveAttribute("filter", "none");
       // The last matrix it held shows every pixel, whatever its time.
@@ -370,11 +365,11 @@ describe("paint timeline", () => {
         frontOffset(stroke.front) - stroke.sharpness,
       ).toBeGreaterThanOrEqual(1 - 1e-6);
     }
-    for (const layer of layers) {
-      for (const { dot, radius } of matte[layer].splatters) {
-        expect(Number(dot.getAttribute("r"))).toBeCloseTo(radius);
-      }
-    }
+    const { sharpness } = watercolorSplash.photo.time;
+    expect(matte.photo.group).toHaveAttribute("filter", "none");
+    expect(frontOffset(matte.photo.front) - sharpness).toBeGreaterThanOrEqual(
+      1 - 1e-6,
+    );
     expect(caption.style.opacity).toBe("1");
     timeline.kill();
   });
@@ -384,9 +379,9 @@ describe("paint timeline", () => {
     const timeline = createPaintTimeline(matte, { caption });
 
     timeline.kill();
-    for (const stroke of allStrokes(matte)) {
-      expect(gsap.getTweensOf(stroke.front)).toHaveLength(0);
-      expect(gsap.getTweensOf(stroke.group)).toHaveLength(0);
+    for (const { front, group } of [...matte.backdrop.strokes, matte.photo]) {
+      expect(gsap.getTweensOf(front)).toHaveLength(0);
+      expect(gsap.getTweensOf(group)).toHaveLength(0);
     }
     expect(gsap.getTweensOf(caption)).toHaveLength(0);
   });

@@ -12,8 +12,9 @@ import { WatercolorImage, type WatercolorImageProps } from "./watercolor-image";
 //
 //   intro        eyebrow in dusty pink, the H1 with its second line in brand
 //                green, lead copy, two actions, a row of reassurances
-//   picture      WatercolorImage, painted in with brush strokes when it first
-//                comes into view (animationPreset="watercolor-reveal"), with
+//   picture      WatercolorImage, its backdrop painted in with brush strokes
+//                and its photo spreading in blooms when it first comes into
+//                view (animationPreset="watercolor-reveal"), with
 //                its handwritten caption
 //
 // Text first on phones, side by side from 64 rem, the picture reaching into

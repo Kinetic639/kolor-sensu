@@ -8,8 +8,7 @@
 //    painter filling a patch. Variant "a" (odd tiles of a row) paints top
 //    to bottom, its first stroke left to right; variant "b" (even tiles)
 //    the opposite way: bottom to top, its first stroke right to left. The
-//    strokes are real brush shapes (brush-stroke.mjs,
-//    the same brush as WatercolorImage's photo strokes: opaque body,
+//    strokes are real brush shapes (brush-stroke.mjs: opaque body,
 //    dry-brush edges, bristle hairs, ragged lift outside the tile), each an
 //    image in the atlas with its time map; the runtime (packages/ui/src/
 //    public-site/offer-brush-matte.ts) reveals them with an SVG threshold,

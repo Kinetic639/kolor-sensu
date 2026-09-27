@@ -112,12 +112,26 @@ const outline = [
 
 // ---------------------------------------------------------------- geometry
 
+// The photo is shown larger than in the target (public-site.css,
+// .ks-wc__photo), and there the silhouette's left bulge would reach past the
+// backdrop's pink paint to the edge of the component. It is pulled in a
+// little, most at the far left and not at all beyond 15 % of the width, so
+// the pink stays visible down the whole left edge.
+const LEFT_PULL = 0.035;
+const LEFT_REACH = 0.15;
+const pullLeft = ([x, y]) => [
+  x < LEFT_REACH ? x + LEFT_PULL * (1 - x / LEFT_REACH) ** 2 : x,
+  y,
+];
+
 // Closed Catmull-Rom spline through the outline, in canvas pixels.
 function smoothOutline(points, steps = 10) {
-  const px = points.map(([x, y]) => [
-    PAD_X + x * (W - 2 * PAD_X),
-    PAD_TOP + y * (H - PAD_TOP - PAD_BOTTOM),
-  ]);
+  const px = points
+    .map(pullLeft)
+    .map(([x, y]) => [
+      PAD_X + x * (W - 2 * PAD_X),
+      PAD_TOP + y * (H - PAD_TOP - PAD_BOTTOM),
+    ]);
   const n = px.length;
   const out = [];
   for (let i = 0; i < n; i++) {

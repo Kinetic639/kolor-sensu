@@ -45,11 +45,14 @@
   }
 
   /* Layer 2: the photo, cut by the dry-brush mask. The box is the mask
-     canvas: the photo's footprint in the approved target (3 : 2, like a
-     typical upload), with the painted silhouette inside it. */
+     canvas (3 : 2, like a typical upload), with the painted silhouette
+     inside it: the approved target's footprint scaled up 1.1x about its
+     centre, so the photo reads larger and covers more of the backdrop. It
+     overhangs the box a little at the top, bottom and left, where the
+     mask's own transparent margin keeps the paint inside it. */
   .ks-wc__photo {
     position: absolute;
-    inset: 2.7% 6.03% 1.35% 3.94%;
+    inset: -1.7% 1.53% -3.85% -0.56%;
     mask-image: url("/watercolor/photo-mask.png");
     mask-size: 100% 100%;
     mask-repeat: no-repeat;

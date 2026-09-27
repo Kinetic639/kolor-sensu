@@ -5,8 +5,9 @@
 // browser and are cached like any other static asset.
 //
 // The raster masks used by WatercolorImage are made separately: the photo
-// mask by generate-photo-mask.mjs, the paint matte of the entrance animation
-// by generate-paint-matte.mjs.
+// mask by generate-photo-mask.mjs, the matte of the entrance animation by
+// generate-paint-matte.mjs (backdrop) and generate-watercolor-splash.mjs
+// (photo).
 //
 // Output: apps/web/public/watercolor/*.svg (Storybook serves the same folder).
 // Run:    pnpm --filter @repo/design-system generate:watercolor

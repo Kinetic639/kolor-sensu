@@ -209,12 +209,12 @@ readable on any photo.
   transparency, about 70 KB), applied with `mask-image` and
   `mask-size: 100% 100%` to the photo layer only. Raster rather than SVG so the
   edge can carry bristle-fine detail and partial alpha without SVG filters.
-- **Paint matte atlases** (entrance animation only):
-  `paint-matte-backdrop.png` and `paint-matte-photo.png`, one image per paint
-  region (21 derived from the backdrop picture, 12 photo strokes), grey +
-  alpha: the alpha is the finished region, the grey says when each pixel gets
-  paint. About 330 KB together, fetched only where the animation plays. See
-  §11.
+- **Entrance animation mattes** (only where the animation plays):
+  `paint-matte-backdrop.png`, one image per backdrop paint region (21,
+  derived from the backdrop picture), grey + alpha: the alpha is the
+  finished region, the grey says when each pixel gets paint; and
+  `watercolor-splash-photo.png`, the photo's blooms baked into one time map
+  (400 × 266). About 280 KB together. See §11.
 - **Surface masks** (service tile `tile.svg`, section band `band.svg`) are
   plain SVG geometry; their colour comes from tokens.
 - Both are generated, deterministic and reproducible:
@@ -234,6 +234,11 @@ readable on any photo.
   that one box, so they scale together and keep the same relation at every
   width (checked at 1440, 768 and 390 px). The mask never stretches in the
   default ratio.
+- The photo layer is the approved target's footprint scaled up 1.1× (it
+  covers more of the backdrop), overhanging the box a little where the
+  mask's transparent margin keeps its paint inside; the silhouette's left
+  bulge is pulled in (`generate-photo-mask.mjs`), so the pink shows down the
+  whole left edge.
 - The painted edge covers roughly 5–10 % of the photo on each side; keep
   subjects away from the very edge or move them in with `objectPosition`.
 - The caption scales with the picture (container query units), not with the
@@ -284,24 +289,26 @@ screen). The default is `animationPreset="none"`: the static composition, with
 no script at all.
 
 The picture is not faded, wiped or scaled in. Like a paint matte in After
-Effects, an animated matte of brush strokes decides which pixels of the
-finished backdrop and photo are visible, and the strokes are painted one by
-one.
+Effects, an animated matte decides which pixels of the finished backdrop and
+photo are visible: the backdrop is painted in with brush strokes, one by one;
+the photo spreads in like watercolor on wet paper, in blooms (the same kind
+of effect as the specialist cards' splash, with its own generator).
 
-**Sequence** (one GSAP timeline, 1.2 s):
+**Sequence** (one GSAP timeline, about 1.15 s):
 
-| Time       | What happens                                                                                                      |
-| ---------- | ----------------------------------------------------------------------------------------------------------------- |
-| 0 s        | The first backdrop strokes start from the left (pink) and the right (green) edge at once.                         |
-| 0.05–0.6 s | Further backdrop regions follow, outer ones first, 20–90 ms apart on each side, each with its own speed and ease. |
-| 0.32 s     | While the backdrop is still being painted, the first photo strokes set down in the centre of the photo.           |
-| 0.4–0.7 s  | The photo spreads outward in rings of strokes; the two sides of the backdrop overlap in the middle.               |
-| 0.85 s     | The caption fades in (0.3 s, no movement).                                                                        |
-| 0.95 s     | The backdrop is complete.                                                                                         |
-| 1.2 s      | The last photo strokes finish. The matte is removed and the picture is the static composition, pixel for pixel.   |
+| Time       | What happens                                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------------- |
+| 0 s        | The first backdrop strokes start from the left (pink) and the right (green) edge at once.                           |
+| 0.05–0.6 s | Further backdrop regions follow, outer ones first, 20–90 ms apart on each side, each with its own speed and ease.   |
+| 0.32 s     | While the backdrop is still being painted, the first blooms of the photo open in its middle.                        |
+| 0.4–0.9 s  | The photo spreads outward in many uneven blooms; the two sides of the backdrop overlap in the middle.               |
+| 0.85 s     | The caption fades in (0.3 s, no movement).                                                                          |
+| 0.95 s     | The backdrop is complete.                                                                                           |
+| 1.15 s     | The last blooms of the photo and the caption finish. The matte is removed: the static composition, pixel for pixel. |
 
-The exact schedule is `paintSchedule` in `watercolor-paint-matte.ts` (the
-backdrop's part comes with its regions, from the generator).
+The exact schedule is `paintSchedule` and `photoSplashTiming` in
+`watercolor-paint-matte.ts` (the backdrop's part comes with its regions, the
+photo's blooms with its time map, from the generators).
 
 **How it works**
 
@@ -309,9 +316,10 @@ backdrop's part comes with its regions, from the generator).
   layer. The backdrop element and the photo's `<img>` are masked with it
   (`mask-image: url(#…)`) while the reveal runs; the photo layer keeps its
   static photo mask on top, so the painted edge never changes.
-- Each mask holds paint regions, each an image from the layer's atlas: its
-  alpha is the finished region, its grey channel a time map (when each pixel
-  gets paint).
+- The backdrop's mask holds paint regions, each an image from its atlas:
+  its alpha is the finished region, its grey channel a time map (when each
+  pixel gets paint). The photo's mask holds a single time map of the whole
+  photo layer.
 - **Backdrop: 21 regions derived from the backdrop picture itself**
   (`backdrop-brushwork.mjs`), not drawn by hand. A structure tensor of the
   picture gives the direction its paint streaks run in, everywhere, and how
@@ -330,29 +338,32 @@ backdrop's part comes with its regions, from the generator).
   region and time of the nearest paint, so nothing lights up on its own
   there. Needs `sharp` (a dev dependency of `@repo/design-system`) to read
   the picture.
-- **Photo: 12 strokes from a stroke table.** Each has an opaque body,
-  dry-brush edge, bristle hairs and a streaky tail where the brush lifts;
-  its time runs along the brush path, with the belly of the brush ahead of
-  its edges and clumps of bristles a little ahead or behind.
-- Per stroke, an SVG colour-matrix filter shows the pixels whose time has
-  come. GSAP moves that threshold, so the paint front is wherever the time
+- **Photo: blooms, baked into one time map**
+  (`generate-watercolor-splash.mjs`). About 22 blooms, each from its own
+  seed on jittered elliptical rings around the middle of the photo, the
+  middle ones first and the outer ones later, one in five lagging behind.
+  Every pixel belongs to whichever bloom reaches it first, through a warped
+  field with lobes and a cauliflower edge, so blooms meet along irregular
+  borders. Each bloom spreads with its own sine.out ease; the generator
+  folds starts and eases into the map, so the runtime needs one filter and
+  one linear tween for the whole photo, with a soft, wet front.
+- Per backdrop stroke (and once for the photo), an SVG colour-matrix
+  filter shows the pixels whose time has come. GSAP moves that threshold, so the paint front is wherever the time
   map crosses it: a frayed brush front, not a moving edge or a growing shape.
   Where the paint has arrived the layer is fully opaque: nothing fades.
   When a stroke is done its filter is dropped.
 - Backdrop regions run from both edges toward the centre, where the two
-  sides' strokes close it. Photo strokes set down near the centre of the
-  photo and are dragged outward, in three rings. A few splatter specks
-  appear beside the photo's brushes (the backdrop's splatter is in its
-  picture).
-- When the last stroke is done, the strokes cover the whole backdrop and the
-  whole photo silhouette (the generator checks this and fails otherwise), so
-  removing the matte changes no pixel.
-- GSAP only schedules: one master timeline with a child timeline per stroke.
-  The paint itself comes from the stroke images.
-- The strokes and atlases are generated by
-  `packages/design-system/scripts/generate-paint-matte.mjs` (part of
-  `generate:watercolor`); the backdrop's regions by `backdrop-brushwork.mjs`
-  next to it. Change the generators (or, for a new backdrop picture, just
+  sides' strokes close it (its splatter is in its picture).
+- When everything is done, the strokes cover the whole backdrop (the
+  generator checks this and fails otherwise) and the photo's map is opaque
+  over the whole layer, so removing the matte changes no pixel.
+- GSAP only schedules: one master timeline with a child timeline per
+  backdrop stroke and one tween for the photo. The paint itself comes from
+  the images.
+- The backdrop's strokes and atlas are generated by
+  `packages/design-system/scripts/generate-paint-matte.mjs`, its regions by
+  `backdrop-brushwork.mjs` next to it; the photo's time map by
+  `generate-watercolor-splash.mjs` (all part of `generate:watercolor`). Change the generators (or, for a new backdrop picture, just
   run them again), never the PNGs.
 - No canvas or WebGL, no `clip-path`, no blur.
 

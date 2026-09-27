@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { defaultWatercolorSrc, WatercolorImage } from "./watercolor-image";
 import { paintMatteUrls } from "./watercolor-paint-matte";
 import { paintMatte } from "./watercolor-paint-matte.data";
+import { watercolorSplash } from "./watercolor-splash-matte.data";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const css = readFileSync(resolve(here, "public-site.css"), "utf8");
@@ -123,7 +124,7 @@ describe("WatercolorImage", () => {
     );
   });
 
-  it("keeps the mask undistorted and smaller than the backdrop", () => {
+  it("keeps the mask undistorted and its paint inside the backdrop's box", () => {
     // Mask canvas size from the PNG header.
     const png = readFileSync(resolve(publicDir, "watercolor/photo-mask.png"));
     const maskRatio = png.readUInt32BE(16) / png.readUInt32BE(20);
@@ -143,11 +144,20 @@ describe("WatercolorImage", () => {
     const height = (100 - top! - bottom!) * 10;
     expect(width / height).toBeCloseTo(maskRatio, 1);
 
-    // The backdrop spans the whole box; the photo is inset from it, so the
-    // watercolor shows around the photo (most on the left and right).
+    // The backdrop spans the whole box. The photo's box may overhang it a
+    // little, but never by more than the mask's transparent margin
+    // (generate-photo-mask.mjs: 53 of 1500 px at the sides, 17 of 1000 at
+    // the top, 50 at the bottom), so its paint stays inside the box and the
+    // watercolor still shows around it.
     expect(rule(".ks-wc__backdrop")).toContain("inset: 0");
-    expect(left).toBeGreaterThan(0);
-    expect(right).toBeGreaterThan(0);
+    const photoWidth = 100 - left! - right!;
+    const photoHeight = 100 - top! - bottom!;
+    expect(left! + (53 / 1500) * photoWidth).toBeGreaterThan(0);
+    expect(right! + (53 / 1500) * photoWidth).toBeGreaterThan(0);
+    expect(top! + (17 / 1000) * photoHeight).toBeGreaterThanOrEqual(0);
+    expect(bottom! + (50 / 1000) * photoHeight).toBeGreaterThan(0);
+    // Larger than the approved target's footprint (90 % of the width).
+    expect(photoWidth).toBeGreaterThan(95);
   });
 
   it("crops any upload itself with object-fit and a configurable position", () => {
@@ -338,10 +348,19 @@ describe("WatercolorImage reveal styles", () => {
     expect(fade?.body).toBe("opacity: var(--ks-reveal-fade, 0);");
   });
 
-  it("ships the stroke atlases the matte is painted from, and no old reveal masks", () => {
-    expect(paintMatteUrls).toEqual(
-      Object.values(paintMatte).map((layer) => layer.atlas.src),
-    );
+  it("ships the backdrop's stroke atlas and the photo's time map, and no old reveal masks", () => {
+    expect(paintMatteUrls).toEqual([
+      ...Object.values(paintMatte).map((layer) => layer.atlas.src),
+      watercolorSplash.photo.time.src,
+    ]);
+    expect(pngSize(`.${watercolorSplash.photo.time.src}`)).toEqual({
+      width: watercolorSplash.photo.time.width,
+      height: watercolorSplash.photo.time.height,
+    });
+    // The photo's old stroke atlas is gone.
+    expect(
+      existsSync(resolve(publicDir, "watercolor/paint-matte-photo.png")),
+    ).toBe(false);
     for (const layer of Object.values(paintMatte)) {
       const file = `.${layer.atlas.src}`;
       expect(existsSync(resolve(publicDir, file)), file).toBe(true);
