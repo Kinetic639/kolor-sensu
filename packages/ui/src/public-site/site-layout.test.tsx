@@ -67,19 +67,28 @@ describe("SiteLayout", () => {
   it("puts the logo, linking home, in the header", () => {
     render(page());
     const header = screen.getByRole("banner");
-    const home = within(header).getByRole("link", { name: "Kolor Sensu" });
+    // The name and the tagline are the link text; the mark is decorative.
+    const home = within(header).getByRole("link", {
+      name: "Kolor Sensu, Centrum psychoterapii i rozwoju",
+    });
     expect(home).toHaveAttribute("href", "/");
-    // The name is the link text; the mark is decorative.
     expect(home.querySelector("img")).toHaveAttribute("alt", "");
     expect(home.querySelector("img")!.getAttribute("src")).toContain(
       "logo-mark.png",
     );
-    // "Sensu" in the brand green, in the header only.
+    // "Sensu" in the brand green, in the footer's logo too.
     expect(within(home).getByText("Sensu")).toHaveClass("text-primary");
     const footer = screen.getByRole("contentinfo");
-    expect(
-      within(footer).getByText("Sensu", { selector: "span" }),
-    ).not.toHaveClass("text-primary");
+    expect(within(footer).getByText("Sensu", { selector: "span" })).toHaveClass(
+      "text-primary",
+    );
+    expect(footer).toHaveTextContent("Centrum psychoterapii i rozwoju");
+  });
+
+  it("keeps the header low: 56 px on phones, 64 px from 64 rem", () => {
+    render(page());
+    const bar = screen.getByRole("banner").firstElementChild!;
+    expect(bar).toHaveClass("h-14", "lg:h-16");
   });
 
   it("links every page from the main navigation and marks the current one", () => {
@@ -113,6 +122,11 @@ describe("SiteLayout", () => {
     render(page({ currentPath: "/o-nas" }));
     await user.click(screen.getByRole("button", { name: "Otwórz menu" }));
     const menu = await screen.findByRole("dialog");
+    // The same logo as the header: green "Sensu" and the tagline.
+    expect(within(menu).getByText("Sensu")).toHaveClass("text-primary");
+    expect(
+      within(menu).getByText("Centrum psychoterapii i rozwoju"),
+    ).toBeInTheDocument();
     for (const label of ["O nas", "Oferta", "Psychoterapia par", "Kontakt"]) {
       expect(
         within(menu).getByRole("link", { name: label }),

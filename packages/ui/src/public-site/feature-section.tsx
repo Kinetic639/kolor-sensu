@@ -55,7 +55,9 @@ export function FeatureSection({
       id={id}
       data-image-position={imagePosition}
       className={cn(
-        "max-w-page px-gutter py-section-sm mx-auto grid items-center gap-10 lg:grid-cols-2",
+        // Wide column gap: the watercolor overflows the image's box by about
+        // 9 % of its width, and must not run into the text beside it.
+        "max-w-page px-gutter py-section-sm mx-auto grid items-center gap-10 lg:grid-cols-2 lg:gap-x-20",
         className,
       )}
     >

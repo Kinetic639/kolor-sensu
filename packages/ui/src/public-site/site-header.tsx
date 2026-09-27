@@ -1,7 +1,7 @@
 import { PageLink as Link } from "./page-link";
 import { cn } from "../lib/utils";
 import { PrimaryButton } from "./actions";
-import { SiteLogo } from "./site-logo";
+import { brandTagline, SiteLogo } from "./site-logo";
 import { SiteMobileNav } from "./site-mobile-nav";
 import { SiteNavigation } from "./site-navigation";
 import type { SiteContact, SiteLink, SiteNavItem } from "./site-types";
@@ -38,8 +38,8 @@ export function SiteHeader({
         className,
       )}
     >
-      <div className="max-w-page px-gutter mx-auto flex h-16 items-center gap-4 lg:h-20">
-        <SiteLogo accent />
+      <div className="max-w-page px-gutter mx-auto flex h-14 items-center gap-4 lg:h-16">
+        <SiteLogo tagline={brandTagline} />
         <SiteNavigation
           items={navigation}
           currentPath={currentPath}

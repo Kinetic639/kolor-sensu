@@ -4,6 +4,9 @@ import { cn } from "../lib/utils";
 
 /** The mark for headers (apps/web/public/brand, generate:brand). */
 export const logoMarkSrc = "/brand/logo-mark.png";
+/** The line under the name: header, mobile menu and footer. */
+export const brandTagline = "Centrum psychoterapii i rozwoju";
+
 // Its pixel size (2x of the largest rendered height).
 const MARK = { width: 106, height: 96 };
 
@@ -12,8 +15,6 @@ export interface SiteLogoProps {
   /** Second line under the name, e.g. in the footer. */
   tagline?: string;
   size?: "md" | "lg";
-  /** "Sensu" in the brand green, as the headings' accent lines (header). */
-  accent?: boolean;
   className?: string;
 }
 
@@ -30,13 +31,14 @@ export function SiteLogo({
   href = "/",
   tagline,
   size = "md",
-  accent = false,
   className,
 }: SiteLogoProps) {
   const { mark, name } = sizes[size];
   return (
     <Link
       href={href}
+      // The name and the tagline are two blocks; say them as one phrase.
+      aria-label={tagline ? `Kolor Sensu, ${tagline}` : undefined}
       className={cn(
         "focus-visible:outline-ring inline-flex shrink-0 items-center gap-2.5 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4",
         className,
@@ -58,7 +60,8 @@ export function SiteLogo({
           )}
         >
           Kolor{" "}
-          <span className={accent ? "text-primary" : undefined}>Sensu</span>
+          {/* "Sensu" in the brand green, as the headings' accent lines. */}
+          <span className="text-primary">Sensu</span>
         </span>
         {tagline ? (
           <span className="text-text-muted text-[0.75rem]">{tagline}</span>

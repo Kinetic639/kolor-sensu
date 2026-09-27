@@ -13,7 +13,7 @@ import {
   SheetTrigger,
 } from "../sheet";
 import { PrimaryButton } from "./actions";
-import { SiteLogo } from "./site-logo";
+import { brandTagline, SiteLogo } from "./site-logo";
 import { isCurrent } from "./site-navigation";
 import type { SiteContact, SiteLink, SiteNavItem } from "./site-types";
 
@@ -58,7 +58,7 @@ export function SiteMobileNav({
         className="bg-bg text-ink border-border/70 flex w-full flex-col gap-8 p-0 shadow-none sm:max-w-sm [&>button:last-child]:top-6 [&>button:last-child]:right-5 [&>button:last-child]:rounded-full [&>button:last-child]:p-2.5"
       >
         <div className="px-6 pt-5">
-          <SiteLogo />
+          <SiteLogo tagline={brandTagline} />
         </div>
         <SheetTitle className="sr-only">Menu</SheetTitle>
         <SheetDescription className="sr-only">
