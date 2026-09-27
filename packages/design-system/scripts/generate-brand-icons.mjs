@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-// Generates the public site's icons from the Kolor Sensu logo
-// (apps/web/public/brand/kolor-sensu-logo.png, used as delivered):
+// Generates the apps' icons from the Kolor Sensu logo
+// (apps/web/public/brand/kolor-sensu-logo.png, used as delivered). The
+// first three go to every app (web, admin, specialist), so the public site
+// and both portals share one favicon:
 //
-//   apps/web/src/app/favicon.ico     16, 32 and 48 px (browser tabs)
-//   apps/web/src/app/icon.png        512 px, transparent (modern browsers,
+//   apps/*/src/app/favicon.ico       16, 32 and 48 px (browser tabs)
+//   apps/*/src/app/icon.png          512 px, transparent (modern browsers,
 //                                    search results)
-//   apps/web/src/app/apple-icon.png  180 px on paper colour (iOS home
+//   apps/*/src/app/apple-icon.png    180 px on paper colour (iOS home
 //                                    screen ignores transparency)
 //   apps/web/public/brand/logo-mark.png
 //                                    the mark for the site header, 2x of its
@@ -80,12 +82,15 @@ const favicon = ico(
     })),
   ),
 );
-writeFileSync(resolve(web, "src/app/favicon.ico"), favicon);
-writeFileSync(resolve(web, "src/app/icon.png"), await square(512));
-writeFileSync(
-  resolve(web, "src/app/apple-icon.png"),
-  await square(180, { fill: 0.8, background: PAPER }),
-);
+// The same three icons for every app: the public site and both portals.
+const icon = await square(512);
+const appleIcon = await square(180, { fill: 0.8, background: PAPER });
+for (const app of ["web", "admin", "specialist"]) {
+  const appDir = resolve(here, "../../../apps", app, "src/app");
+  writeFileSync(resolve(appDir, "favicon.ico"), favicon);
+  writeFileSync(resolve(appDir, "icon.png"), icon);
+  writeFileSync(resolve(appDir, "apple-icon.png"), appleIcon);
+}
 
 // Header mark: at most 48 CSS px tall, so 96 px, width by its own ratio.
 const mark = await sharp(source)
