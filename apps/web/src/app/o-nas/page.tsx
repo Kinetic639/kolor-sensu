@@ -34,7 +34,6 @@ export default async function AboutPage() {
   return (
     <>
       <PageIntro
-        trail={[{ label: "O nas" }]}
         eyebrow={hero.eyebrow}
         heading={about.heading}
         accent={about.accent}

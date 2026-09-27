@@ -15,9 +15,29 @@ export const homePageContentSchema = z.strictObject({
 
 export type HomePageContent = z.infer<typeof homePageContentSchema>;
 
-export interface HomeContentAdmin {
-  draft: HomePageContent;
-  published: HomePageContent | null;
+export type HomeContentAdmin = SiteContentAdmin<HomePageContent>;
+
+/**
+ * /gabinety: the page's structure (title, rooms per location) is code-owned;
+ * the CMS only switches its optional sections on and off.
+ */
+export const roomsPageContentSchema = z.strictObject({
+  /** "Co u nas znajdziesz" under the title. */
+  showAmenitiesSection: z.boolean(),
+  /** Each location's address, description and amenities above its rooms. */
+  showLocationDetails: z.boolean(),
+});
+
+export type RoomsPageContent = z.infer<typeof roomsPageContentSchema>;
+
+export const defaultRoomsPageContent: RoomsPageContent = {
+  showAmenitiesSection: true,
+  showLocationDetails: true,
+};
+
+export interface SiteContentAdmin<Content> {
+  draft: Content;
+  published: Content | null;
   publishedAt: string | null;
   updatedAt: string;
 }

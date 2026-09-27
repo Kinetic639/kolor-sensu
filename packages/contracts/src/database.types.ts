@@ -112,6 +112,7 @@ export type Database = {
       };
       locations: {
         Row: {
+          accessibility_notes: string | null;
           active: boolean;
           address_line1: string | null;
           address_line2: string | null;
@@ -125,8 +126,11 @@ export type Database = {
           slug: string;
           sort_order: number;
           updated_at: string;
+          amenities: string[];
+          public_description: string | null;
         };
         Insert: {
+          accessibility_notes?: string | null;
           active?: boolean;
           address_line1?: string | null;
           address_line2?: string | null;
@@ -140,8 +144,11 @@ export type Database = {
           slug: string;
           sort_order?: number;
           updated_at?: string;
+          amenities?: string[];
+          public_description?: string | null;
         };
         Update: {
+          accessibility_notes?: string | null;
           active?: boolean;
           address_line1?: string | null;
           address_line2?: string | null;
@@ -155,6 +162,8 @@ export type Database = {
           slug?: string;
           sort_order?: number;
           updated_at?: string;
+          amenities?: string[];
+          public_description?: string | null;
         };
         Relationships: [];
       };
@@ -232,6 +241,44 @@ export type Database = {
           },
         ];
       };
+      room_images: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_main: boolean;
+          position: number;
+          room_id: string;
+          storage_path: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_main?: boolean;
+          position: number;
+          room_id: string;
+          storage_path: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_main?: boolean;
+          position?: number;
+          room_id?: string;
+          storage_path?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "room_images_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       room_opening_hours: {
         Row: {
           created_at: string;
@@ -280,7 +327,7 @@ export type Database = {
           created_at: string;
           display_name: string;
           image_path: string | null;
-          long_description: string | null;
+          long_description: Json;
           published: boolean;
           room_id: string;
           short_description: string | null;
@@ -292,7 +339,7 @@ export type Database = {
           created_at?: string;
           display_name: string;
           image_path?: string | null;
-          long_description?: string | null;
+          long_description?: Json;
           published?: boolean;
           room_id: string;
           short_description?: string | null;
@@ -304,7 +351,7 @@ export type Database = {
           created_at?: string;
           display_name?: string;
           image_path?: string | null;
-          long_description?: string | null;
+          long_description?: Json;
           published?: boolean;
           room_id?: string;
           short_description?: string | null;
@@ -453,9 +500,10 @@ export type Database = {
           education: string[];
           id: string;
           languages: string[];
-          long_bio: string;
+          long_bio: Json;
           modalities: string[];
           portrait_photo_url: string | null;
+          professional_title: string | null;
           profile_photo_url: string | null;
           review_comment: string | null;
           reviewed_at: string | null;
@@ -476,9 +524,10 @@ export type Database = {
           education?: string[];
           id?: string;
           languages?: string[];
-          long_bio?: string;
+          long_bio?: Json;
           modalities?: string[];
           portrait_photo_url?: string | null;
+          professional_title?: string | null;
           profile_photo_url?: string | null;
           review_comment?: string | null;
           reviewed_at?: string | null;
@@ -499,9 +548,10 @@ export type Database = {
           education?: string[];
           id?: string;
           languages?: string[];
-          long_bio?: string;
+          long_bio?: Json;
           modalities?: string[];
           portrait_photo_url?: string | null;
+          professional_title?: string | null;
           profile_photo_url?: string | null;
           review_comment?: string | null;
           reviewed_at?: string | null;
@@ -546,7 +596,7 @@ export type Database = {
           display_name: string;
           education: string[];
           languages: string[];
-          long_bio: string;
+          long_bio: Json;
           modalities: string[];
           portrait_photo_url: string | null;
           profile_photo_url: string | null;
@@ -564,7 +614,7 @@ export type Database = {
           display_name?: string;
           education?: string[];
           languages?: string[];
-          long_bio?: string;
+          long_bio?: Json;
           modalities?: string[];
           portrait_photo_url?: string | null;
           profile_photo_url?: string | null;
@@ -582,7 +632,7 @@ export type Database = {
           display_name?: string;
           education?: string[];
           languages?: string[];
-          long_bio?: string;
+          long_bio?: Json;
           modalities?: string[];
           portrait_photo_url?: string | null;
           profile_photo_url?: string | null;
@@ -599,6 +649,32 @@ export type Database = {
             foreignKeyName: "specialist_public_profiles_specialist_id_fkey";
             columns: ["specialist_id"];
             isOneToOne: true;
+            referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      specialist_slug_redirects: {
+        Row: {
+          created_at: string;
+          old_slug: string;
+          specialist_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          old_slug: string;
+          specialist_id: string;
+        };
+        Update: {
+          created_at?: string;
+          old_slug?: string;
+          specialist_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "specialist_slug_redirects_specialist_id_fkey";
+            columns: ["specialist_id"];
+            isOneToOne: false;
             referencedRelation: "specialists";
             referencedColumns: ["id"];
           },
@@ -739,6 +815,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      add_room_image: {
+        Args: { p_room_id: string; p_storage_path: string };
+        Returns: string;
+      };
       approve_specialist_profile_draft: {
         Args: { p_draft_id: string; p_review_comment?: string };
         Returns: undefined;
@@ -748,6 +828,14 @@ export type Database = {
         Returns: boolean;
       };
       publish_site_content: { Args: { p_key: string }; Returns: undefined };
+      list_published_room_placements: {
+        Args: never;
+        Returns: {
+          location_id: string;
+          room_id: string;
+          sort_order: number;
+        }[];
+      };
       reject_specialist_profile_draft: {
         Args: { p_draft_id: string; p_review_comment: string };
         Returns: undefined;
@@ -771,20 +859,37 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      remove_room_image: {
+        Args: { p_image_id: string };
+        Returns: string;
+      };
+      reorder_room_images: {
+        Args: { p_image_ids: string[]; p_room_id: string };
+        Returns: undefined;
+      };
+      set_room_main_image: {
+        Args: { p_image_id: string };
+        Returns: undefined;
+      };
       save_my_specialist_profile_draft: {
         Args: {
           p_certificates?: string[];
           p_display_name: string;
           p_education?: string[];
           p_languages?: string[];
-          p_long_bio?: string;
+          p_long_bio?: Json;
           p_modalities?: string[];
           p_portrait_photo_url?: string;
+          p_professional_title?: string;
           p_profile_photo_url?: string;
           p_short_bio?: string;
           p_specializations?: string[];
           p_therapy_approaches?: string[];
         };
+        Returns: string;
+      };
+      set_specialist_public_slug: {
+        Args: { p_public_slug: string; p_specialist_id: string };
         Returns: string;
       };
       submit_my_specialist_profile_draft: {

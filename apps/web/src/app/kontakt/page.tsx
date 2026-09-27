@@ -15,7 +15,6 @@ export default function ContactPage() {
   return (
     <>
       <PageIntro
-        trail={[{ label: "Kontakt" }]}
         eyebrow="Kontakt"
         heading="Kontakt"
         accent="Jesteśmy tu dla Ciebie."

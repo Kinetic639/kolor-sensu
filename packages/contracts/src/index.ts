@@ -26,6 +26,7 @@ export {
   profilePublicationStatusSchema,
   specialistImageMetadataSchema,
   specialistProfileDraftInputSchema,
+  specialistProfileSubmissionSchema,
   specialistProfileReviewInputSchema,
   specialistPublicProfileInputSchema,
   specialistSlugSchema,
@@ -60,9 +61,35 @@ export type {
   SpecialistService,
   SpecialistServiceUpsert,
 } from "@repo/contracts/services";
-export { homePageContentSchema } from "@repo/contracts/cms";
-export type { HomeContentAdmin, HomePageContent } from "@repo/contracts/cms";
 export {
+  defaultRoomsPageContent,
+  homePageContentSchema,
+  roomsPageContentSchema,
+} from "@repo/contracts/cms";
+export type {
+  HomeContentAdmin,
+  HomePageContent,
+  RoomsPageContent,
+  SiteContentAdmin,
+} from "@repo/contracts/cms";
+export {
+  emptyRichTextDocument,
+  isRichTextEmpty,
+  isSafeRichTextHref,
+  parseRichText,
+  plainTextFromRichText,
+  richTextDocumentSchema,
+  richTextDocumentWithMaxCharacters,
+  serializeRichText,
+} from "@repo/contracts/rich-text";
+export type {
+  RichTextBlockNode,
+  RichTextDocument,
+  RichTextInlineNode,
+  RichTextMark,
+} from "@repo/contracts/rich-text";
+export {
+  ROOM_IMAGE_LIMIT,
   roomAvailabilityExceptionCreateSchema,
   roomAvailabilityExceptionUpdateSchema,
   roomCapacitySchema,
@@ -84,6 +111,8 @@ export type {
   RoomAvailabilityExceptionType,
   RoomAvailabilityExceptionUpdate,
   RoomCreate,
+  RoomImage,
+  RoomPlacement,
   RoomOpeningHoursInterval,
   RoomOpeningHoursIntervalInput,
   RoomOpeningHoursReplace,

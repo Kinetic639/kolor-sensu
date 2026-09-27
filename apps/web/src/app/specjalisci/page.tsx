@@ -23,7 +23,6 @@ export default async function SpecialistsPage() {
   return (
     <>
       <PageIntro
-        trail={[{ label: "Specjaliści" }]}
         eyebrow={specialistsCopy.eyebrow}
         heading="Specjaliści"
         accent="Ludzie, którzy słuchają."

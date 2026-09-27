@@ -1,6 +1,6 @@
 export {
   AlertTriangle,
-  BedDouble,
+  Armchair,
   CalendarDays,
   CircleAlert,
   Clock3,

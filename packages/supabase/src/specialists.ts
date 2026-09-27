@@ -1,4 +1,6 @@
 import {
+  emptyRichTextDocument,
+  richTextDocumentSchema,
   specialistProfileDraftInputSchema,
   specialistProfileReviewInputSchema,
   specialistSlugSchema,
@@ -7,8 +9,9 @@ import {
   type SpecialistProfileDraftInput,
   type SpecialistPublicProfile,
 } from "@repo/contracts";
-import type { Database } from "@repo/contracts/database";
+import type { Database, Json } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { readRichText } from "./rich-text";
 
 type SpecialistRow = Database["public"]["Tables"]["specialists"]["Row"];
 type PublicProfileRow =
@@ -16,6 +19,8 @@ type PublicProfileRow =
 type DraftRow =
   Database["public"]["Tables"]["specialist_profile_drafts"]["Row"];
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+
+const specialistMediaBucket = "specialist-profile-media";
 
 type AdminSpecialistSummaryRow = SpecialistRow & {
   profile: Pick<
@@ -86,7 +91,7 @@ function mapPublicProfile(row: PublicProfileQueryRow): SpecialistPublicProfile {
     joinedAt: row.specialists.joined_at,
     displayName: row.display_name,
     shortBio: row.short_bio,
-    longBio: row.long_bio,
+    longBio: readRichText(row.long_bio),
     profilePhotoUrl: row.profile_photo_url,
     portraitPhotoUrl: row.portrait_photo_url,
     languages: row.languages,
@@ -107,8 +112,9 @@ function mapDraft(row: DraftRow): SpecialistProfileDraft {
     id: row.id,
     specialistId: row.specialist_id,
     displayName: row.display_name,
+    professionalTitle: row.professional_title,
     shortBio: row.short_bio,
-    longBio: row.long_bio,
+    longBio: readRichText(row.long_bio),
     profilePhotoUrl: row.profile_photo_url,
     portraitPhotoUrl: row.portrait_photo_url,
     languages: row.languages,
@@ -290,7 +296,8 @@ export async function saveMySpecialistProfileDraft(
   const { data, error } = await client.rpc("save_my_specialist_profile_draft", {
     p_display_name: draft.displayName,
     p_short_bio: draft.shortBio,
-    p_long_bio: draft.longBio,
+    p_long_bio: draft.longBio as unknown as Json,
+    p_professional_title: draft.professionalTitle,
     p_languages: draft.languages,
     p_therapy_approaches: draft.therapyApproaches,
     p_specializations: draft.specializations,
@@ -415,7 +422,7 @@ export async function getSpecialistPublicProfileAdmin(
     joinedAt: specialist.joinedAt,
     displayName: data.display_name,
     shortBio: data.short_bio,
-    longBio: data.long_bio,
+    longBio: readRichText(data.long_bio),
     profilePhotoUrl: data.profile_photo_url,
     portraitPhotoUrl: data.portrait_photo_url,
     languages: data.languages,
@@ -453,11 +460,163 @@ export async function createSpecialistMediaSignedUrl(
 ): Promise<string | null> {
   if (!path) return null;
   const { data, error } = await client.storage
-    .from("specialist-profile-media")
+    .from(specialistMediaBucket)
     .createSignedUrl(path, 60 * 30);
 
   if (error) throw error;
   return data.signedUrl;
+}
+
+const specialistImageExtensions = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+} as const;
+type SpecialistImageType = keyof typeof specialistImageExtensions;
+
+/** The bucket's own limit (see the specialist domain migration). */
+export const SPECIALIST_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const SPECIALIST_IMAGE_TYPES = Object.keys(
+  specialistImageExtensions,
+) as SpecialistImageType[];
+
+/** A readable reason the file cannot be used, or `null` when it is fine. */
+export function validateSpecialistImage(file: {
+  type: string;
+  size: number;
+}): string | null {
+  if (!(file.type in specialistImageExtensions)) {
+    return "Wybierz plik JPG, PNG lub WebP.";
+  }
+  if (file.size > SPECIALIST_IMAGE_MAX_BYTES) {
+    return "Plik jest za duży. Maksymalny rozmiar to 5 MB.";
+  }
+  return null;
+}
+
+/**
+ * A new object path for every upload, so replacing a photo in a draft never
+ * overwrites the file the published profile still points to.
+ */
+export function buildSpecialistMediaPath(
+  specialistId: string,
+  kind: "profile" | "portrait",
+  mimeType: SpecialistImageType,
+  uniqueId: string,
+): string {
+  return `${specialistId}/${kind}-${uniqueId}.${specialistImageExtensions[mimeType]}`;
+}
+
+export async function uploadSpecialistProfileImage(
+  client: SupabaseClient<Database>,
+  {
+    specialistId,
+    kind,
+    file,
+  }: { specialistId: string; kind: "profile" | "portrait"; file: File },
+): Promise<string> {
+  const problem = validateSpecialistImage(file);
+  if (problem) throw new Error(problem);
+
+  const path = buildSpecialistMediaPath(
+    specialistId,
+    kind,
+    file.type as SpecialistImageType,
+    crypto.randomUUID(),
+  );
+  const { error } = await client.storage
+    .from(specialistMediaBucket)
+    .upload(path, file, { contentType: file.type, upsert: false });
+
+  if (error) throw error;
+  return path;
+}
+
+/** Gives a specialist a new public address (admins only); the old one redirects. */
+export async function setSpecialistPublicSlugAdmin(
+  client: SupabaseClient<Database>,
+  specialistId: string,
+  slug: string,
+): Promise<string> {
+  const publicSlug = specialistSlugSchema.parse(slug.trim().toLowerCase());
+  const { data, error } = await client.rpc("set_specialist_public_slug", {
+    p_specialist_id: specialistId,
+    p_public_slug: publicSlug,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+/** The current slug of a published specialist who used to have `slug`. */
+export async function getSpecialistSlugRedirect(
+  client: SupabaseClient<Database>,
+  slug: string,
+): Promise<string | null> {
+  const parsed = specialistSlugSchema.safeParse(slug);
+  if (!parsed.success) return null;
+
+  const { data, error } = await client
+    .from("specialist_slug_redirects")
+    .select("specialist:specialists!inner (public_slug)")
+    .eq("old_slug", parsed.data)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (
+    (data as { specialist: { public_slug: string } } | null)?.specialist
+      .public_slug ?? null
+  );
+}
+
+/**
+ * Which picture the portal header shows: the account avatar if set, otherwise
+ * the specialist photo last saved in "Mój profil" (a draft counts, it is the
+ * specialist's own portal), otherwise the published one.
+ */
+export function pickPortalAvatarPath({
+  accountAvatarUrl,
+  draftPhotoPath,
+  publishedPhotoPath,
+}: {
+  accountAvatarUrl: string | null;
+  draftPhotoPath: string | null;
+  publishedPhotoPath: string | null;
+}): { url: string } | { storagePath: string } | null {
+  if (accountAvatarUrl) return { url: accountAvatarUrl };
+  const storagePath = draftPhotoPath ?? publishedPhotoPath;
+  return storagePath ? { storagePath } : null;
+}
+
+/** The header picture URL for a signed-in user; never throws. */
+export async function getPortalAvatarUrl(
+  client: SupabaseClient<Database>,
+  {
+    userId,
+    accountAvatarUrl,
+  }: { userId: string; accountAvatarUrl: string | null },
+): Promise<string | null> {
+  if (accountAvatarUrl) return accountAvatarUrl;
+  try {
+    const specialist = await getMySpecialist(client, userId);
+    if (!specialist) return null;
+    const [draft, published] = await Promise.all([
+      getMyDraft(client, specialist.id),
+      getMyPublishedProfile(client, specialist.id),
+    ]);
+    const choice = pickPortalAvatarPath({
+      accountAvatarUrl,
+      draftPhotoPath: draft?.profilePhotoUrl ?? null,
+      publishedPhotoPath: published?.profilePhotoUrl ?? null,
+    });
+    if (!choice) return null;
+    return "url" in choice
+      ? choice.url
+      : await createSpecialistMediaSignedUrl(client, choice.storagePath);
+  } catch (error) {
+    console.error("[specialists] portal avatar failed:", error);
+    return null;
+  }
 }
 
 export async function listPendingSpecialistDrafts(

@@ -27,6 +27,10 @@ approved public presentation assets.
 
 ## Publication workflow
 
+Drafts also carry `professional_title`: the specialist proposes it with the rest
+of the profile, and approval copies it to `specialists.professional_title`. The
+full bio (`long_bio`) is rich text (see [rich-text-platform.md](./rich-text-platform.md)).
+
 `profile_publication_status` supports `draft`, `pending_review`, `published`, and
 `rejected`. The canonical public row is constrained to `draft` or `published`.
 Specialists write drafts only through `save_my_specialist_profile_draft` and submit
@@ -36,16 +40,19 @@ Resolved drafts remain as review history. A new edit creates a new draft after a
 published or rejected submission, while a pending draft is immutable. Approval
 atomically copies the complete draft into the canonical public profile and records
 the reviewer, result, comment, and timestamps. Rejection records the same audit
-metadata without changing the published profile. Even an admin who is also a
-specialist cannot review their own draft.
+metadata without changing the published profile. An admin who is also a
+specialist can review their own draft (the centre starts with one admin who is
+also a specialist); the review metadata still records who decided.
 
 ## Slugs
 
 `specialists.public_slug` is stored, unique, lower-case, and URL-safe. Trusted role
 assignment provisions a collision-safe placeholder using the full user UUID. Existing
-slugs remain stable. Human-readable SEO slugs can later be assigned through a trusted
-admin operation; collisions fail at the database constraint and are never silently
-rewritten. Slugs are not derived during public reads.
+slugs remain stable unless an admin changes them with
+`set_specialist_public_slug` (the admin portal's "Zmień adres", which suggests one
+from the name). Collisions fail and are never silently rewritten. The previous slug
+is kept in `specialist_slug_redirects` and the site permanently redirects it to the
+current one, so shared links and search results keep working. Slugs are not derived during public reads.
 
 ## Storage
 

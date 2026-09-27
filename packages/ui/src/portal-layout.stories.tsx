@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect, waitFor } from "storybook/test";
 import { CalendarDays, Clock3 } from "lucide-react";
 import { MetricCard, PageHeader } from "./portal-content";
 import type {
@@ -77,6 +78,28 @@ function PortalShellExample({
   );
 }
 
+// The sidebar header is exactly as tall as the main header, so their bottom
+// borders form one line.
+async function expectHeadersAligned({
+  canvasElement,
+}: {
+  canvasElement: HTMLElement;
+}) {
+  const heights = () => {
+    const header = canvasElement.querySelector<HTMLElement>("header");
+    const sidebarHeader = canvasElement.querySelector<HTMLElement>(
+      "[data-portal-sidebar-header]",
+    );
+    return [header, sidebarHeader].map((element) =>
+      element ? Math.round(element.getBoundingClientRect().height) : null,
+    );
+  };
+  await waitFor(() => {
+    const [header, sidebarHeader] = heights();
+    expect(sidebarHeader).toBe(header);
+  });
+}
+
 const meta = {
   title: "Portal/AppShell",
   component: PortalShell,
@@ -103,19 +126,23 @@ export const DesktopExpanded: Story = {
   },
   globals: { viewport: { value: "desktop", isRotated: false } },
   render: () => <PortalShellExample />,
+  play: expectHeadersAligned,
 };
 
 export const DesktopCollapsed: Story = {
   ...DesktopExpanded,
   render: () => <PortalShellExample defaultSidebarOpen={false} />,
+  play: expectHeadersAligned,
 };
 
 export const Tablet: Story = {
   ...DesktopExpanded,
+  play: undefined,
   globals: { viewport: { value: "tablet", isRotated: false } },
 };
 
 export const Mobile: Story = {
   ...DesktopExpanded,
+  play: undefined,
   globals: { viewport: { value: "mobile", isRotated: false } },
 };

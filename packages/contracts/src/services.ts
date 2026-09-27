@@ -1,3 +1,4 @@
+import { partialUpdateSchema } from "@repo/contracts/partial-update";
 import { z } from "zod";
 import { currencyCodeSchema } from "@repo/contracts/center";
 
@@ -33,7 +34,7 @@ export const serviceCreateSchema = z.object({
   sortOrder: z.number().int().min(0).max(10_000).default(0),
 });
 
-export const serviceUpdateSchema = serviceCreateSchema.partial();
+export const serviceUpdateSchema = partialUpdateSchema(serviceCreateSchema);
 
 export const specialistServiceUpsertSchema = z
   .object({

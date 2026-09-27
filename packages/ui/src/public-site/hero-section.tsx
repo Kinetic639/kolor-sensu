@@ -65,7 +65,7 @@ export function HeroSection({
     <section
       id={id}
       className={cn(
-        "max-w-page px-gutter pb-section-sm mx-auto grid items-center gap-12 pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:pt-20",
+        "max-w-page px-gutter py-section-sm mx-auto grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]",
         className,
       )}
     >

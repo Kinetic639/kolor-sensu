@@ -79,7 +79,6 @@ export default async function ServicePage({
   return (
     <>
       <PageIntro
-        trail={[{ label: "Oferta", href: "/oferta" }, { label: title }]}
         eyebrow="Oferta"
         heading={title}
         lead={service.shortDescription ?? undefined}

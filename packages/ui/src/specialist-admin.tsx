@@ -1,7 +1,8 @@
 "use client";
 
-import { Check, MapPin, Monitor, UserCheck } from "lucide-react";
+import { Check, MapPin, Monitor, Pencil, UserCheck } from "lucide-react";
 import { Badge } from "./badge";
+import { Button } from "./button";
 import { Card } from "./card";
 import { cn } from "./lib/utils";
 import { StatusBadge } from "./portal-content";
@@ -46,6 +47,45 @@ export interface ProfileReviewDiffField {
   proposedValue: string;
   changed: boolean;
   multiline?: boolean;
+  /** Photo fields: the image replaces the text value when present. */
+  currentImageUrl?: string | null;
+  proposedImageUrl?: string | null;
+}
+
+function DiffValue({
+  field,
+  side,
+}: {
+  field: ProfileReviewDiffField;
+  side: "current" | "proposed";
+}) {
+  const imageUrl =
+    side === "current" ? field.currentImageUrl : field.proposedImageUrl;
+  const text = side === "current" ? field.currentValue : field.proposedValue;
+
+  if (imageUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- short-lived signed URLs
+      <img
+        alt={`${field.label} – ${side === "current" ? "obecnie" : "propozycja"}`}
+        className="mt-2 h-40 w-auto rounded-[var(--radius-control)] object-cover"
+        src={imageUrl}
+      />
+    );
+  }
+  return (
+    <p
+      className={cn(
+        "mt-2 text-sm",
+        side === "current"
+          ? "text-[var(--text-muted)]"
+          : "font-medium text-[var(--text)]",
+        field.multiline && "whitespace-pre-wrap",
+      )}
+    >
+      {text}
+    </p>
+  );
 }
 
 export function ProfileReviewDiff({
@@ -85,27 +125,13 @@ export function ProfileReviewDiff({
               <p className="text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
                 Obecnie
               </p>
-              <p
-                className={cn(
-                  "mt-2 text-sm text-[var(--text-muted)]",
-                  field.multiline && "whitespace-pre-wrap",
-                )}
-              >
-                {field.currentValue}
-              </p>
+              <DiffValue field={field} side="current" />
             </div>
             <div className="bg-[var(--primary-soft)] p-4">
               <p className="text-xs font-bold tracking-wide text-[var(--primary)] uppercase">
                 Propozycja
               </p>
-              <p
-                className={cn(
-                  "mt-2 text-sm font-medium text-[var(--text)]",
-                  field.multiline && "whitespace-pre-wrap",
-                )}
-              >
-                {field.proposedValue}
-              </p>
+              <DiffValue field={field} side="proposed" />
             </div>
           </div>
         </Card>
@@ -116,6 +142,7 @@ export function ProfileReviewDiff({
 
 export interface SpecialistOfferRowProps {
   serviceName: string;
+  description?: string | null;
   priceLabel: string;
   durationLabel: string;
   supportsInPerson: boolean;
@@ -125,10 +152,13 @@ export interface SpecialistOfferRowProps {
   pending?: boolean;
   onActiveChange?: (active: boolean) => void;
   onAcceptingNewClientsChange?: (accepting: boolean) => void;
+  /** Adds an "Edytuj" button (the specialist edits price, time and form). */
+  onEdit?: () => void;
 }
 
 export function SpecialistOfferRow({
   serviceName,
+  description,
   priceLabel,
   durationLabel,
   supportsInPerson,
@@ -138,9 +168,10 @@ export function SpecialistOfferRow({
   pending = false,
   onActiveChange,
   onAcceptingNewClientsChange,
+  onEdit,
 }: SpecialistOfferRowProps) {
   return (
-    <li className="grid gap-4 border-b border-[var(--border)] py-4 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center">
+    <li className="grid gap-4 border-b border-[var(--border)] py-4 last:border-b-0 lg:grid-flow-col lg:grid-cols-[minmax(0,1fr)] lg:items-center">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-semibold text-[var(--text)]">{serviceName}</p>
@@ -148,6 +179,11 @@ export function SpecialistOfferRow({
             {active ? "Aktywna" : "Nieaktywna"}
           </Badge>
         </div>
+        {description ? (
+          <p className="mt-0.5 text-sm text-[var(--text-muted)]">
+            {description}
+          </p>
+        ) : null}
         <p className="mt-1 text-sm text-[var(--text-muted)]">
           {priceLabel} · {durationLabel}
         </p>
@@ -175,15 +211,29 @@ export function SpecialistOfferRow({
           onCheckedChange={onAcceptingNewClientsChange}
         />
       </label>
-      <label className="flex min-h-11 items-center justify-between gap-3 text-sm lg:justify-start">
-        <span className="text-[var(--text-muted)]">Oferta aktywna</span>
-        <Switch
-          checked={active}
+      {onActiveChange ? (
+        <label className="flex min-h-11 items-center justify-between gap-3 text-sm lg:justify-start">
+          <span className="text-[var(--text-muted)]">Oferta aktywna</span>
+          <Switch
+            checked={active}
+            disabled={pending}
+            aria-label={`Aktywność oferty ${serviceName}`}
+            onCheckedChange={onActiveChange}
+          />
+        </label>
+      ) : null}
+      {onEdit ? (
+        <Button
+          aria-label={`Edytuj: ${serviceName}`}
           disabled={pending}
-          aria-label={`Aktywność oferty ${serviceName}`}
-          onCheckedChange={onActiveChange}
-        />
-      </label>
+          onClick={onEdit}
+          size="sm"
+          variant="secondary"
+        >
+          <Pencil className="size-4" aria-hidden="true" />
+          Edytuj
+        </Button>
+      ) : null}
     </li>
   );
 }

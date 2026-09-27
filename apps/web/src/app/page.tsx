@@ -15,22 +15,27 @@ import {
   specialistsCopy,
   workshops,
 } from "@/content/site";
+import { withHomeContent } from "@/lib/home-content";
 import { toOfferTile, toSpecialistCard } from "@/lib/presentation";
-import { getServices, getSpecialists } from "@/lib/public-data";
+import { getHomeContent, getServices, getSpecialists } from "@/lib/public-data";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
 export default async function Home() {
-  const [services, specialists] = await Promise.all([
+  const [homeContent, services, specialists] = await Promise.all([
+    getHomeContent(),
     getServices(),
     getSpecialists(),
   ]);
 
   return (
     <>
-      <HeroSection {...hero} animationPreset="watercolor-reveal" />
+      <HeroSection
+        {...withHomeContent(hero, homeContent)}
+        animationPreset="watercolor-reveal"
+      />
       {services.length > 0 ? (
         <OfferSection
           {...offerCopy}

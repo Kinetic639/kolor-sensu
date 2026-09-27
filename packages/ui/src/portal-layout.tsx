@@ -1,5 +1,5 @@
 import {
-  BedDouble,
+  Armchair,
   CalendarDays,
   Clock3,
   ContactRound,
@@ -34,7 +34,7 @@ const portalIcons = {
   clock: Clock3,
   cms: FileText,
   dashboard: LayoutDashboard,
-  rooms: BedDouble,
+  rooms: Armchair,
   services: Tags,
   settings: Settings,
   specialist: UserRound,
@@ -81,8 +81,12 @@ export function AppSidebar({
 }: AppSidebarProps) {
   return (
     <Sidebar className={className} collapsible="icon">
-      <SidebarHeader className="border-b border-[var(--border)] px-3 py-4">
-        <div className="flex min-h-10 items-center gap-3 overflow-hidden px-1 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:px-0">
+      {/* As tall as the main header (AppHeader), so their borders line up. */}
+      <SidebarHeader
+        className="h-[var(--ks-header-height)] shrink-0 justify-center border-b border-[var(--border)] px-3 py-0"
+        data-portal-sidebar-header
+      >
+        <div className="flex items-center gap-3 overflow-hidden px-1 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:px-0">
           <span className="font-heading flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-sm font-semibold text-white">
             KS
           </span>

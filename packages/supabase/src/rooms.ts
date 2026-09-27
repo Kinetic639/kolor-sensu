@@ -1,13 +1,20 @@
 import {
   roomCreateSchema,
+  roomPublicProfileSchema,
   roomUpdateSchema,
   type AdminRoomSummary,
   type Room,
   type RoomCreate,
+  type RoomImage,
+  type RoomPlacement,
+  type RoomPublicProfile,
   type RoomUpdate,
 } from "@repo/contracts";
-import type { Database } from "@repo/contracts/database";
+import type { Database, Json } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { z } from "zod";
+import { readRichText } from "./rich-text";
+import { validateSpecialistImage } from "./specialists";
 
 type RoomRow = Database["public"]["Tables"]["rooms"]["Row"];
 
@@ -163,7 +170,221 @@ export async function listActiveRoomsForSpecialist(
   return data.map(mapRoom);
 }
 
+type RoomPublicProfileRow =
+  Database["public"]["Tables"]["room_public_profiles"]["Row"];
+
+function mapRoomPublicProfile(row: RoomPublicProfileRow): RoomPublicProfile {
+  return {
+    roomId: row.room_id,
+    displayName: row.display_name,
+    shortDescription: row.short_description,
+    longDescription: readRichText(row.long_description),
+    imagePath: row.image_path,
+    accessibilityNotes: row.accessibility_notes,
+    amenities: row.amenities,
+    published: row.published,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function getRoomPublicProfileAdmin(
+  client: SupabaseClient<Database>,
+  roomId: string,
+): Promise<RoomPublicProfile | null> {
+  const { data, error } = await client
+    .from("room_public_profiles")
+    .select("*")
+    .eq("room_id", roomId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapRoomPublicProfile(data) : null;
+}
+
+/** Creates or replaces the room's website profile (admins only, by RLS). */
+export async function upsertRoomPublicProfile(
+  client: SupabaseClient<Database>,
+  roomId: string,
+  input: z.input<typeof roomPublicProfileSchema>,
+): Promise<RoomPublicProfile> {
+  const profile = roomPublicProfileSchema.parse(input);
+  const { data, error } = await client
+    .from("room_public_profiles")
+    .upsert(
+      {
+        room_id: roomId,
+        display_name: profile.displayName,
+        short_description: profile.shortDescription,
+        long_description: profile.longDescription as unknown as Json,
+        image_path: profile.imagePath,
+        accessibility_notes: profile.accessibilityNotes,
+        amenities: profile.amenities,
+        published: profile.published,
+      },
+      { onConflict: "room_id" },
+    )
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return mapRoomPublicProfile(data);
+}
+
+/**
+ * Published profiles of active, publicly visible rooms (RLS adds the room
+ * conditions for anonymous readers, who cannot read `rooms` itself).
+ */
+export async function listPublishedRoomProfiles(
+  client: SupabaseClient<Database>,
+): Promise<RoomPublicProfile[]> {
+  const { data, error } = await client
+    .from("room_public_profiles")
+    .select("*")
+    .eq("published", true)
+    .order("display_name");
+
+  if (error) throw error;
+  return data.map(mapRoomPublicProfile);
+}
+
+/** Which published room belongs to which location, in display order. */
+export async function listPublishedRoomPlacements(
+  client: SupabaseClient<Database>,
+): Promise<RoomPlacement[]> {
+  const { data, error } = await client.rpc("list_published_room_placements");
+  if (error) throw error;
+  return data.map((row) => ({
+    roomId: row.room_id,
+    locationId: row.location_id,
+    sortOrder: row.sort_order,
+  }));
+}
+
+const roomMediaBucket = "room-media";
+const roomImageExtensions = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+} as const;
+
+type RoomImageRow = Database["public"]["Tables"]["room_images"]["Row"];
+
+function mapRoomImage(row: RoomImageRow, url: string): RoomImage {
+  return {
+    id: row.id,
+    roomId: row.room_id,
+    storagePath: row.storage_path,
+    position: row.position,
+    isMain: row.is_main,
+    url,
+  };
+}
+
+/** Each room's photos live in a folder named after the room. */
+export function buildRoomImagePath(
+  roomId: string,
+  mimeType: keyof typeof roomImageExtensions,
+  uniqueId: string,
+): string {
+  return `${roomId}/${uniqueId}.${roomImageExtensions[mimeType]}`;
+}
+
+/** A room's photos in gallery order (readers see only published rooms). */
+export async function listRoomImages(
+  client: SupabaseClient<Database>,
+  roomId: string,
+): Promise<RoomImage[]> {
+  const { data, error } = await client
+    .from("room_images")
+    .select("*")
+    .eq("room_id", roomId)
+    .order("position");
+
+  if (error) throw error;
+  const bucket = client.storage.from(roomMediaBucket);
+  return data.map((row) =>
+    mapRoomImage(row, bucket.getPublicUrl(row.storage_path).data.publicUrl),
+  );
+}
+
+/**
+ * Uploads a photo and adds it at the end of the room's gallery (admins only).
+ * If the room already has the maximum of photos, the file is removed again.
+ */
+export async function uploadRoomImage(
+  client: SupabaseClient<Database>,
+  roomId: string,
+  file: File,
+): Promise<string> {
+  const problem = validateSpecialistImage(file);
+  if (problem) throw new Error(problem);
+
+  const bucket = client.storage.from(roomMediaBucket);
+  const path = buildRoomImagePath(
+    roomId,
+    file.type as keyof typeof roomImageExtensions,
+    crypto.randomUUID(),
+  );
+  const { error: uploadError } = await bucket.upload(path, file, {
+    contentType: file.type,
+    upsert: false,
+  });
+  if (uploadError) throw uploadError;
+
+  const { data, error } = await client.rpc("add_room_image", {
+    p_room_id: roomId,
+    p_storage_path: path,
+  });
+  if (error) {
+    await bucket.remove([path]);
+    throw error;
+  }
+  return data;
+}
+
+export async function removeRoomImage(
+  client: SupabaseClient<Database>,
+  imageId: string,
+): Promise<void> {
+  const { data: path, error } = await client.rpc("remove_room_image", {
+    p_image_id: imageId,
+  });
+  if (error) throw error;
+
+  // The photo is already gone from the room; a leftover file only wastes space.
+  const { error: removeError } = await client.storage
+    .from(roomMediaBucket)
+    .remove([path]);
+  if (removeError)
+    console.error("[rooms] photo file not removed:", removeError);
+}
+
+/** Saves the gallery order: every photo of the room, first to last. */
+export async function reorderRoomImages(
+  client: SupabaseClient<Database>,
+  roomId: string,
+  imageIds: string[],
+): Promise<void> {
+  const { error } = await client.rpc("reorder_room_images", {
+    p_room_id: roomId,
+    p_image_ids: imageIds,
+  });
+  if (error) throw error;
+}
+
+export async function setRoomMainImage(
+  client: SupabaseClient<Database>,
+  imageId: string,
+): Promise<void> {
+  const { error } = await client.rpc("set_room_main_image", {
+    p_image_id: imageId,
+  });
+  if (error) throw error;
+}
+
 export const roomMappers = {
   room: mapRoom,
   adminRoomSummary: mapAdminRoomSummary,
+  publicProfile: mapRoomPublicProfile,
 };

@@ -21,7 +21,6 @@ export default async function OfferPage() {
   return (
     <>
       <PageIntro
-        trail={[{ label: "Oferta" }]}
         eyebrow={offerCopy.eyebrow}
         heading="Oferta"
         accent={offerCopy.heading}

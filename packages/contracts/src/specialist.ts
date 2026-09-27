@@ -1,3 +1,7 @@
+import {
+  richTextDocumentWithMaxCharacters,
+  type RichTextDocument,
+} from "@repo/contracts/rich-text";
 import { z } from "zod";
 
 export const profilePublicationStatusSchema = z.enum([
@@ -24,8 +28,10 @@ const optionalMediaPathSchema = z
 
 const profileFields = {
   displayName: z.string().trim().max(160),
+  professionalTitle: z.string().trim().max(160),
   shortBio: z.string().trim().max(500),
-  longBio: z.string().trim().max(10_000),
+  // Rich text (docs/architecture/rich-text-platform.md), 10 000 characters.
+  longBio: richTextDocumentWithMaxCharacters(10_000),
   profilePhotoUrl: optionalMediaPathSchema,
   portraitPhotoUrl: optionalMediaPathSchema,
   languages: z.array(z.string().trim().min(1).max(100)).max(20),
@@ -38,6 +44,32 @@ const profileFields = {
 
 export const specialistPublicProfileInputSchema = z.object(profileFields);
 export const specialistProfileDraftInputSchema = z.object(profileFields);
+
+/**
+ * A draft may be saved half-filled; sending it for review needs everything the
+ * public profile page shows.
+ */
+export const specialistProfileSubmissionSchema = z.object({
+  ...profileFields,
+  displayName: profileFields.displayName.min(1, "Podaj imię i nazwisko."),
+  professionalTitle: profileFields.professionalTitle.min(
+    1,
+    "Podaj tytuł zawodowy.",
+  ),
+  shortBio: profileFields.shortBio.min(1, "Dodaj krótki opis."),
+  specializations: profileFields.specializations.min(
+    1,
+    "Dodaj co najmniej jedną specjalizację.",
+  ),
+  therapyApproaches: profileFields.therapyApproaches.min(
+    1,
+    "Dodaj co najmniej jeden nurt pracy.",
+  ),
+  modalities: profileFields.modalities.min(
+    1,
+    "Wybierz co najmniej jedną formę spotkań.",
+  ),
+});
 
 export const specialistProfileReviewInputSchema = z.discriminatedUnion(
   "action",
@@ -109,7 +141,7 @@ export interface SpecialistPublicProfile {
   joinedAt: string | null;
   displayName: string;
   shortBio: string;
-  longBio: string;
+  longBio: RichTextDocument;
   profilePhotoUrl: string | null;
   portraitPhotoUrl: string | null;
   languages: string[];
@@ -128,8 +160,9 @@ export interface SpecialistProfileDraft {
   id: string;
   specialistId: string;
   displayName: string;
+  professionalTitle: string | null;
   shortBio: string;
-  longBio: string;
+  longBio: RichTextDocument;
   profilePhotoUrl: string | null;
   portraitPhotoUrl: string | null;
   languages: string[];

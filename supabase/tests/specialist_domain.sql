@@ -140,12 +140,16 @@ BEGIN
   ) INTO own_draft_id;
   PERFORM public.submit_my_specialist_profile_draft(own_draft_id);
 
-  BEGIN
-    PERFORM public.approve_specialist_profile_draft(own_draft_id, 'self review');
-    RAISE EXCEPTION 'F: specialist/admin unexpectedly approved their own draft';
-  EXCEPTION
-    WHEN insufficient_privilege THEN NULL;
-  END;
+  -- A single admin who is also a specialist publishes their own profile.
+  PERFORM public.approve_specialist_profile_draft(own_draft_id, 'self review');
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialist_profile_drafts
+    WHERE id = own_draft_id
+      AND status = 'published'
+      AND reviewed_by = auth.uid()
+  ) THEN
+    RAISE EXCEPTION 'F: specialist/admin could not approve their own draft';
+  END IF;
 END;
 $$;
 
@@ -209,7 +213,8 @@ DECLARE
   approval_draft_id uuid;
   rejection_draft_id uuid;
 BEGIN
-  IF (SELECT count(*) FROM public.specialist_profile_drafts WHERE status = 'pending_review') <> 3 THEN
+  -- The dual-role admin's own draft (F) is already approved.
+  IF (SELECT count(*) FROM public.specialist_profile_drafts WHERE status = 'pending_review') <> 2 THEN
     RAISE EXCEPTION 'G: admin could not read all pending drafts';
   END IF;
 
@@ -279,6 +284,16 @@ BEGIN
   EXCEPTION
     WHEN insufficient_privilege THEN NULL;
   END;
+
+  -- Reading media must not fail for anonymous visitors (it used to, with
+  -- "permission denied"), and media of unpublished profiles stays hidden.
+  IF EXISTS (
+    SELECT 1 FROM storage.objects
+    WHERE bucket_id = 'specialist-profile-media'
+      AND name LIKE (SELECT second_specialist_id::text FROM domain_test_ids) || '/%'
+  ) THEN
+    RAISE EXCEPTION 'N: anonymous user read media of an unpublished profile';
+  END IF;
 END;
 $$;
 
@@ -316,6 +331,66 @@ BEGIN
   EXCEPTION
     WHEN unique_violation THEN NULL;
   END;
+END;
+$$;
+
+-- Only admins rename a specialist's public address.
+RESET ROLE;
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"20000000-0000-4000-8000-000000000001","role":"authenticated"}',
+  true
+);
+SET LOCAL ROLE authenticated;
+
+DO $$
+BEGIN
+  PERFORM public.set_specialist_public_slug(
+    (SELECT first_specialist_id FROM domain_test_ids),
+    'self-chosen-slug'
+  );
+  RAISE EXCEPTION 'Q: specialist unexpectedly renamed their public address';
+EXCEPTION
+  WHEN insufficient_privilege THEN NULL;
+END;
+$$;
+
+-- The admin renames it; the previous address redirects to the new one.
+RESET ROLE;
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"20000000-0000-4000-8000-000000000003","role":"authenticated"}',
+  true
+);
+SET LOCAL ROLE authenticated;
+
+DO $$
+DECLARE
+  previous_slug text;
+BEGIN
+  SELECT public_slug INTO previous_slug FROM public.specialists
+  WHERE id = (SELECT first_specialist_id FROM domain_test_ids);
+
+  PERFORM public.set_specialist_public_slug(
+    (SELECT first_specialist_id FROM domain_test_ids),
+    ' Approved-Specialist-Renamed '
+  );
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialists
+    WHERE id = (SELECT first_specialist_id FROM domain_test_ids)
+      AND public_slug = 'approved-specialist-renamed'
+  ) THEN
+    RAISE EXCEPTION 'R: admin could not rename the public address';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialist_slug_redirects
+    WHERE old_slug = previous_slug
+      AND specialist_id = (SELECT first_specialist_id FROM domain_test_ids)
+  ) THEN
+    RAISE EXCEPTION 'S: the previous address does not redirect';
+  END IF;
 END;
 $$;
 

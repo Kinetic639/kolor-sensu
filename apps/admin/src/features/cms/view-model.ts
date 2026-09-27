@@ -1,5 +1,9 @@
-import type { HomeContentAdmin } from "@repo/contracts";
-import type { HomeContentViewModel } from "./types";
+import type {
+  HomeContentAdmin,
+  RoomsPageContent,
+  SiteContentAdmin,
+} from "@repo/contracts";
+import type { HomeContentViewModel, RoomsPageViewModel } from "./types";
 
 const dateFormatter = new Intl.DateTimeFormat("pl-PL", {
   dateStyle: "medium",
@@ -25,6 +29,22 @@ export function mapHomeContentViewModel(
     buttonLabel: content.draft.buttonLabel,
     isPublished: content.published !== null,
     hasUnpublishedChanges,
+    publishedAtLabel: formatDate(content.publishedAt),
+    updatedAtLabel: formatDate(content.updatedAt) ?? "",
+  };
+}
+
+export function mapRoomsPageViewModel(
+  content: SiteContentAdmin<RoomsPageContent>,
+): RoomsPageViewModel {
+  const { draft, published } = content;
+  return {
+    ...draft,
+    isPublished: published !== null,
+    hasUnpublishedChanges:
+      !published ||
+      published.showAmenitiesSection !== draft.showAmenitiesSection ||
+      published.showLocationDetails !== draft.showLocationDetails,
     publishedAtLabel: formatDate(content.publishedAt),
     updatedAtLabel: formatDate(content.updatedAt) ?? "",
   };

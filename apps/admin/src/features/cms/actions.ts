@@ -2,10 +2,16 @@
 
 import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type { HomePageContent } from "@repo/contracts";
-import { publishHomeContent, updateHomeDraft } from "@repo/supabase";
+import type { HomePageContent, RoomsPageContent } from "@repo/contracts";
+import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
+import {
+  publishHomeContent,
+  publishRoomsPageContent,
+  updateHomeDraft,
+  updateRoomsPageDraft,
+} from "@repo/supabase";
 import { revalidatePath } from "next/cache";
-import { loadHomeContent } from "./loaders";
+import { loadHomeContent, loadRoomsPageContent } from "./loaders";
 
 async function revalidatePublicHome() {
   const webUrl = process.env.NEXT_PUBLIC_WEB_URL ?? "http://localhost:3000";
@@ -49,4 +55,24 @@ export async function publishHomeContentAction() {
   await revalidatePublicHome();
   revalidatePath("/cms");
   return loadHomeContent();
+}
+
+export async function getRoomsPageContentAction() {
+  await requirePortalRole();
+  return loadRoomsPageContent();
+}
+
+export async function updateRoomsPageDraftAction(input: RoomsPageContent) {
+  await requirePortalRole();
+  await updateRoomsPageDraft(await createClient(), input);
+  revalidatePath("/cms");
+  return loadRoomsPageContent();
+}
+
+export async function publishRoomsPageContentAction() {
+  await requirePortalRole();
+  await publishRoomsPageContent(await createClient());
+  await revalidateWeb([{ path: "/gabinety" }]);
+  revalidatePath("/cms");
+  return loadRoomsPageContent();
 }

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import {
   AlertCircle,
-  BedDouble,
+  Armchair,
   BookOpen,
   Building2,
   CalendarCheck,
@@ -187,7 +187,7 @@ const adminDashboardProps: AdminDashboardProps = {
       title: "Gabinet Zielony",
       description: "4 wizyty",
       value: "09:00–17:30",
-      icon: BedDouble,
+      icon: Armchair,
       tone: "success",
     },
     {
@@ -195,7 +195,7 @@ const adminDashboardProps: AdminDashboardProps = {
       title: "Gabinet Błękitny",
       description: "3 wizyty",
       value: "10:00–18:00",
-      icon: BedDouble,
+      icon: Armchair,
       tone: "info",
     },
     {
@@ -203,7 +203,7 @@ const adminDashboardProps: AdminDashboardProps = {
       title: "Gabinet Piaskowy",
       description: "2 wizyty",
       value: "12:00–19:00",
-      icon: BedDouble,
+      icon: Armchair,
       tone: "warning",
     },
   ],

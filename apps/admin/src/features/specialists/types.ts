@@ -1,4 +1,7 @@
-import type { ProfilePublicationStatus } from "@repo/contracts";
+import type {
+  ProfilePublicationStatus,
+  RichTextDocument,
+} from "@repo/contracts";
 
 export interface SpecialistListItemViewModel {
   id: string;
@@ -24,10 +27,15 @@ export interface SpecialistsListViewModel {
 
 export interface SpecialistProfileSnapshotViewModel {
   displayName: string;
+  professionalTitle: string | null;
   shortBio: string;
-  longBio: string;
+  longBio: RichTextDocument;
+  /** Short-lived signed URLs, for showing the photos. */
   profilePhotoUrl: string | null;
   portraitPhotoUrl: string | null;
+  /** Storage paths, for telling whether a photo changed. */
+  profilePhotoPath: string | null;
+  portraitPhotoPath: string | null;
   languages: string[];
   therapyApproaches: string[];
   specializations: string[];
@@ -83,4 +91,6 @@ export interface ProfileDiffFieldViewModel {
   proposedValue: string;
   changed: boolean;
   multiline?: boolean;
+  currentImageUrl?: string | null;
+  proposedImageUrl?: string | null;
 }

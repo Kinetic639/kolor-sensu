@@ -5,9 +5,11 @@ import {
   SoftCard,
   SpecialistArtwork,
 } from "@repo/ui/public-site";
-import type { Metadata } from "next";
+import { isRichTextEmpty } from "@repo/contracts";
+import { RichTextRenderer } from "@repo/ui/rich-text-renderer";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { PageIntro } from "@/components/page-intro";
 import { bookingCta, siteUrl } from "@/content/site";
 import {
@@ -16,7 +18,11 @@ import {
   specialistRole,
   specialistSplash,
 } from "@/lib/presentation";
-import { getSpecialist, getSpecialists } from "@/lib/public-data";
+import {
+  getSpecialist,
+  getSpecialistRedirect,
+  getSpecialists,
+} from "@/lib/public-data";
 
 // Published profiles are prerendered; a profile published later is
 // rendered on its first visit and cached from then on.
@@ -67,28 +73,26 @@ export default async function SpecialistPage({
     getSpecialist(slug),
     getSpecialists(),
   ]);
-  if (!specialist) notFound();
+  if (!specialist) {
+    // An address the admin has since changed: send visitors (and search
+    // engines) to the current one.
+    const currentSlug = await getSpecialistRedirect(slug);
+    if (currentSlug) permanentRedirect(specialistHref(currentSlug) as Route);
+    notFound();
+  }
 
   const index = Math.max(
     0,
     all.findIndex((one) => one.publicSlug === specialist.publicSlug),
   );
   const role = specialistRole(specialist);
-  const bio = (specialist.longBio ?? specialist.shortBio ?? "")
-    .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
+  // The full bio is rich text written in the specialist portal; without one
+  // the short bio stands in.
+  const hasLongBio = !isRichTextEmpty(specialist.longBio);
 
   return (
     <>
-      <PageIntro
-        trail={[
-          { label: "Specjaliści", href: "/specjalisci" },
-          { label: specialist.displayName },
-        ]}
-        eyebrow={role}
-        heading={specialist.displayName}
-      />
+      <PageIntro eyebrow={role} heading={specialist.displayName} />
       <section className="max-w-page px-gutter pb-section-sm mx-auto grid items-start gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <div className="mx-auto w-full max-w-96">
           <SpecialistArtwork
@@ -104,12 +108,15 @@ export default async function SpecialistPage({
           />
         </div>
         <div className="grid content-start gap-8">
-          {bio.length > 0 ? (
-            <div className="text-body text-ink max-w-copy grid gap-4">
-              {bio.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
-            </div>
+          {hasLongBio ? (
+            <RichTextRenderer
+              className="text-body text-ink max-w-copy [&_a]:text-primary-strong [&_blockquote]:border-primary [&_h2]:font-display [&_h2]:text-h3 [&_h3]:font-display [&_h3]:text-title [&>:first-child]:mt-0"
+              document={specialist.longBio}
+            />
+          ) : specialist.shortBio ? (
+            <p className="text-body text-ink max-w-copy">
+              {specialist.shortBio}
+            </p>
           ) : null}
           <Facts title="Specjalizacje" items={specialist.specializations} />
           <Facts title="Podejście" items={specialist.therapyApproaches} />

@@ -1,4 +1,5 @@
 import type { AdminSpecialistSummary, PortalProfile } from "@repo/supabase";
+import { emptyRichTextDocument, plainTextFromRichText } from "@repo/contracts";
 import type {
   Service,
   Specialist,
@@ -117,10 +118,13 @@ export function mapSpecialistDetailViewModel({
     publicProfile: publicProfile
       ? {
           displayName: publicProfile.displayName,
+          professionalTitle: publicProfile.professionalTitle,
           shortBio: publicProfile.shortBio,
           longBio: publicProfile.longBio,
           profilePhotoUrl: media.publicProfilePhotoUrl,
           portraitPhotoUrl: media.publicPortraitPhotoUrl,
+          profilePhotoPath: publicProfile.profilePhotoUrl,
+          portraitPhotoPath: publicProfile.portraitPhotoUrl,
           languages: publicProfile.languages,
           therapyApproaches: publicProfile.therapyApproaches,
           specializations: publicProfile.specializations,
@@ -135,10 +139,13 @@ export function mapSpecialistDetailViewModel({
       ? {
           id: draft.id,
           displayName: draft.displayName,
+          professionalTitle: draft.professionalTitle,
           shortBio: draft.shortBio,
           longBio: draft.longBio,
           profilePhotoUrl: media.draftProfilePhotoUrl,
           portraitPhotoUrl: media.draftPortraitPhotoUrl,
+          profilePhotoPath: draft.profilePhotoUrl,
+          portraitPhotoPath: draft.portraitPhotoUrl,
           languages: draft.languages,
           therapyApproaches: draft.therapyApproaches,
           specializations: draft.specializations,
@@ -187,8 +194,13 @@ export function createProfileDiff(
       current?.displayName,
       detail.draft.displayName,
     ],
+    [
+      "professionalTitle",
+      "Tytuł zawodowy",
+      current?.professionalTitle,
+      detail.draft.professionalTitle,
+    ],
     ["shortBio", "Krótki opis", current?.shortBio, detail.draft.shortBio, true],
-    ["longBio", "Pełny opis", current?.longBio, detail.draft.longBio, true],
     ["languages", "Języki", current?.languages, detail.draft.languages],
     [
       "therapyApproaches",
@@ -212,16 +224,76 @@ export function createProfileDiff(
     ],
   ] as const;
 
-  return fields.map(([id, label, currentValue, proposedValue, multiline]) => {
-    const currentLabel = stringifyProfileValue(currentValue ?? null);
-    const proposedLabel = stringifyProfileValue(proposedValue);
+  const textFields = fields.map(
+    ([id, label, currentValue, proposedValue, multiline]) => {
+      const currentLabel = stringifyProfileValue(currentValue ?? null);
+      const proposedLabel = stringifyProfileValue(proposedValue);
+      return {
+        id,
+        label,
+        currentValue: currentLabel,
+        proposedValue: proposedLabel,
+        changed: currentLabel !== proposedLabel,
+        multiline,
+      };
+    },
+  );
+
+  const draft = detail.draft;
+  // The bio is rich text: compared as a document (formatting counts), shown
+  // as its text.
+  const currentBio = current?.longBio ?? emptyRichTextDocument;
+  const currentBioText = plainTextFromRichText(currentBio);
+  const proposedBioText = plainTextFromRichText(draft.longBio);
+  const bioChanged =
+    JSON.stringify(currentBio) !== JSON.stringify(draft.longBio);
+  const bioField = {
+    id: "longBio",
+    label: "Pełny opis",
+    currentValue: currentBioText || "Brak",
+    proposedValue:
+      (proposedBioText || "Brak") +
+      (bioChanged && currentBioText === proposedBioText
+        ? " (zmienione formatowanie)"
+        : ""),
+    changed: bioChanged,
+    multiline: true,
+  };
+
+  const photoFields = (
+    [
+      [
+        "profilePhoto",
+        "Zdjęcie profilowe",
+        "profilePhotoPath",
+        "profilePhotoUrl",
+      ],
+      [
+        "portraitPhoto",
+        "Zdjęcie portretowe",
+        "portraitPhotoPath",
+        "portraitPhotoUrl",
+      ],
+    ] as const
+  ).map(([id, label, pathKey, urlKey]) => {
+    const currentPath = current?.[pathKey] ?? null;
+    const proposedPath = draft[pathKey];
     return {
       id,
       label,
-      currentValue: currentLabel,
-      proposedValue: proposedLabel,
-      changed: currentLabel !== proposedLabel,
-      multiline,
+      currentValue: currentPath ? "Obecne zdjęcie" : "Brak zdjęcia",
+      proposedValue: proposedPath
+        ? currentPath === proposedPath
+          ? "Obecne zdjęcie"
+          : "Nowe zdjęcie"
+        : currentPath
+          ? "Zdjęcie usunięte"
+          : "Brak zdjęcia",
+      changed: currentPath !== proposedPath,
+      currentImageUrl: current?.[urlKey] ?? null,
+      proposedImageUrl: draft[urlKey],
     };
   });
+
+  return [...photoFields, ...textFields, bioField];
 }

@@ -10,7 +10,7 @@ import {
 import { AdminDashboard } from "@repo/ui/portal-dashboards";
 import {
   AlertTriangle,
-  BedDouble,
+  Armchair,
   CalendarDays,
   Tags,
   Users,
@@ -89,7 +89,7 @@ export default async function Home() {
           id: "locations",
           label: "Lokalizacje",
           value: locations.length,
-          icon: BedDouble,
+          icon: Armchair,
           tone: "peach",
           detail: "Obłożenie po wdrożeniu grafików gabinetów",
         },

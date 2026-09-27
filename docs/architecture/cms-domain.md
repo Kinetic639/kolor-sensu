@@ -43,15 +43,18 @@ separation" below.
 
 ```
 site_content
-  key                text PRIMARY KEY CHECK (key = 'home')
+  key                text PRIMARY KEY CHECK (key IN ('home', 'rooms'))
   draft_payload       jsonb NOT NULL
   published_payload   jsonb            -- null until first publish
   published_at        timestamptz
   created_at / updated_at
 ```
 
-`key = 'home'` is a hard database-level guarantee, not a UI convention:
-`admin` has **no `INSERT` grant at all** on this table (the singleton row
+The set of keys is a hard database-level guarantee, not a UI convention
+(`home` for the home hero, `rooms` for /gabinety's section switches,
+added in `20260927201414_site_content_rooms_page.sql`; each key's payload
+shape is checked by `private.site_content_payload_is_valid`):
+`admin` has **no `INSERT` grant at all** on this table (each row
 is seeded once by migration, same pattern as `center_settings`/
 `center_public_profile`), so not even Admin can create a second/arbitrary
 CMS entry — proven by DB test G, which fails at the grant layer before any
@@ -177,6 +180,9 @@ user-created entries with their own lifecycle, not predefined content
 inside a fixed page. That calls for a real, separate dynamic-content model
 (closer to what the removed generic CMS attempted) — deliberately not
 built in this phase, and not a natural extension of `site_content`.
+The articles, conditions and workshops domains are planned (and their
+progress tracked) in
+[public-site-roadmap.md](../product/public-site-roadmap.md).
 
 **Media**: `image_path`-style fields, if a future fixed page needs one,
 remain unbuilt until a real Storage-backed media pipeline exists — same

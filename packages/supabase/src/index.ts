@@ -48,6 +48,15 @@ export {
   specialistMappers,
   submitProfileForReview,
   createSpecialistMediaSignedUrl,
+  getPortalAvatarUrl,
+  getSpecialistSlugRedirect,
+  pickPortalAvatarPath,
+  setSpecialistPublicSlugAdmin,
+  buildSpecialistMediaPath,
+  SPECIALIST_IMAGE_MAX_BYTES,
+  SPECIALIST_IMAGE_TYPES,
+  uploadSpecialistProfileImage,
+  validateSpecialistImage,
 } from "./specialists";
 export type { AdminSpecialistSummary } from "./specialists";
 export {
@@ -74,15 +83,29 @@ export type { AdminServiceOfferSummary, AdminServiceSummary } from "./services";
 export {
   getHomeContentAdmin,
   getPublishedHomeContent,
+  getPublishedRoomsPageContent,
+  getRoomsPageContentAdmin,
   publishHomeContent,
+  publishRoomsPageContent,
   updateHomeDraft,
+  updateRoomsPageDraft,
 } from "./cms";
 export {
   createRoom,
   disableRoom,
   getRoomByIdAdmin,
+  getRoomPublicProfileAdmin,
   listActiveRoomsForSpecialist,
+  listPublishedRoomPlacements,
+  listPublishedRoomProfiles,
   listRoomsAdmin,
+  buildRoomImagePath,
+  listRoomImages,
+  removeRoomImage,
+  reorderRoomImages,
+  setRoomMainImage,
+  uploadRoomImage,
   roomMappers,
   updateRoom,
+  upsertRoomPublicProfile,
 } from "./rooms";
