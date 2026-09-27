@@ -2,8 +2,10 @@ import {
   createSpecialistMediaSignedUrl,
   getPublicCenterProfile,
   getPublicServiceBySlug,
+  getPublishedHomeContent,
   getPublishedSpecialistBySlug,
   listPublicLocations,
+  listPublishedRoomProfiles,
   listPublicServices,
   listPublicSpecialistOffersForService,
   listPublishedSpecialists,
@@ -56,6 +58,16 @@ export const getCenter = cache(() =>
 
 export const getLocations = cache(() =>
   load("locations", listPublicLocations, []),
+);
+
+/** The home hero's CMS fields, published from the admin's /cms. */
+export const getHomeContent = cache(() =>
+  load("home content", getPublishedHomeContent, null),
+);
+
+/** Published room profiles, edited in the admin's /gabinety. */
+export const getRooms = cache(() =>
+  load("rooms", listPublishedRoomProfiles, []),
 );
 
 export const getServices = cache(() =>

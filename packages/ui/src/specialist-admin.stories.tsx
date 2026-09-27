@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-import { expect } from "storybook/test";
+import { expect, fn } from "storybook/test";
 import {
   ProfileReviewDiff,
   SpecialistOfferRow,
@@ -48,6 +48,15 @@ export const ReviewDiff: Story = {
             proposedValue: "Polski, Angielski",
             changed: true,
           },
+          {
+            id: "profilePhoto",
+            label: "Zdjęcie profilowe",
+            currentValue: "Brak zdjęcia",
+            proposedValue: "Nowe zdjęcie",
+            changed: true,
+            currentImageUrl: null,
+            proposedImageUrl: "/kolor-sensu/anna.jpg",
+          },
         ]}
       />
     </div>
@@ -85,5 +94,48 @@ export const OfferRow: Story = {
 
     await userEvent.click(acceptingToggle);
     await expect(acceptingToggle).not.toBeChecked();
+  },
+};
+
+// The specialist's own list: no activity switch (it lives in the edit
+// dialog), a description from the catalogue and an edit action.
+const onEdit = fn();
+
+export const SpecialistOwnOffers: Story = {
+  render: () => (
+    <ul className="max-w-4xl rounded-[var(--radius-surface)] border border-[var(--border)] bg-[var(--surface)] px-5">
+      <SpecialistOfferRow
+        acceptingNewClients
+        active
+        description="Pierwsza rozmowa i diagnoza potrzeb"
+        durationLabel="50 min"
+        onAcceptingNewClientsChange={() => {}}
+        onEdit={onEdit}
+        priceLabel="150,00 zł"
+        serviceName="Konsultacja psychologiczna"
+        supportsInPerson
+        supportsOnline={false}
+      />
+      <SpecialistOfferRow
+        acceptingNewClients={false}
+        active={false}
+        description="Praca rozwojowa w formie warsztatu"
+        durationLabel="90 min"
+        onAcceptingNewClientsChange={() => {}}
+        onEdit={() => {}}
+        priceLabel="180,00 zł"
+        serviceName="Warsztat indywidualny"
+        supportsInPerson
+        supportsOnline
+      />
+    </ul>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole("button", {
+        name: "Edytuj: Konsultacja psychologiczna",
+      }),
+    );
+    await expect(onEdit).toHaveBeenCalled();
   },
 };

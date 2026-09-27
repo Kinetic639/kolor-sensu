@@ -3,8 +3,12 @@ import {
   roomCreateSchema,
   roomSlugSchema,
 } from "@repo/contracts";
-import { describe, expect, it } from "vitest";
-import { roomMappers } from "./rooms";
+import { describe, expect, it, vi } from "vitest";
+import {
+  listPublishedRoomProfiles,
+  roomMappers,
+  upsertRoomPublicProfile,
+} from "./rooms";
 
 describe("room domain schemas", () => {
   it("accepts stable URL-safe room slugs and rejects unsafe values", () => {
@@ -98,5 +102,95 @@ describe("room domain mapping", () => {
       hasOpeningHours: false,
       upcomingExceptionCount: 0,
     });
+  });
+});
+
+const profileRow = {
+  room_id: "room-1",
+  display_name: "Gabinet Zielony",
+  short_description: "Jasny gabinet",
+  long_description: null,
+  image_path: null,
+  accessibility_notes: "Winda w budynku",
+  amenities: ["Fotele", "Klimatyzacja"],
+  published: true,
+  created_at: "2026-09-01T00:00:00Z",
+  updated_at: "2026-09-02T00:00:00Z",
+};
+
+function queryResult(data: unknown) {
+  const chain: Record<string, unknown> = {};
+  for (const method of ["select", "eq", "order", "upsert"]) {
+    chain[method] = vi.fn(() => chain);
+  }
+  chain.maybeSingle = vi.fn().mockResolvedValue({ data, error: null });
+  chain.single = vi.fn().mockResolvedValue({ data, error: null });
+  chain.then = (resolve: (value: unknown) => void) =>
+    resolve({ data: [data], error: null });
+  return chain;
+}
+
+describe("room public profiles", () => {
+  it("maps database naming into the contract", () => {
+    expect(roomMappers.publicProfile(profileRow)).toEqual({
+      roomId: "room-1",
+      displayName: "Gabinet Zielony",
+      shortDescription: "Jasny gabinet",
+      longDescription: null,
+      imagePath: null,
+      accessibilityNotes: "Winda w budynku",
+      amenities: ["Fotele", "Klimatyzacja"],
+      published: true,
+      createdAt: "2026-09-01T00:00:00Z",
+      updatedAt: "2026-09-02T00:00:00Z",
+    });
+  });
+
+  it("saves a validated profile keyed by the room", async () => {
+    const chain = queryResult(profileRow);
+    const client = { from: vi.fn(() => chain) } as never;
+
+    const saved = await upsertRoomPublicProfile(client, "room-1", {
+      displayName: " Gabinet Zielony ",
+      amenities: ["Fotele"],
+      published: true,
+    });
+
+    expect(chain.upsert).toHaveBeenCalledWith(
+      {
+        room_id: "room-1",
+        display_name: "Gabinet Zielony",
+        short_description: null,
+        long_description: null,
+        image_path: null,
+        accessibility_notes: null,
+        amenities: ["Fotele"],
+        published: true,
+      },
+      { onConflict: "room_id" },
+    );
+    expect(saved.displayName).toBe("Gabinet Zielony");
+  });
+
+  it("rejects a profile without a name before writing", async () => {
+    const from = vi.fn();
+    await expect(
+      upsertRoomPublicProfile({ from } as never, "room-1", {
+        displayName: "",
+      }),
+    ).rejects.toThrow();
+    expect(from).not.toHaveBeenCalled();
+  });
+
+  it("lists only published profiles for the site", async () => {
+    const chain = queryResult(profileRow);
+    const client = { from: vi.fn(() => chain) } as never;
+
+    const profiles = await listPublishedRoomProfiles(client);
+
+    expect(chain.eq).toHaveBeenCalledWith("published", true);
+    expect(profiles.map((profile) => profile.displayName)).toEqual([
+      "Gabinet Zielony",
+    ]);
   });
 });

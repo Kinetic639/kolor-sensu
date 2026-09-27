@@ -5,7 +5,8 @@
   "private": true,
   "exports": {
     "./query-provider": "./src/query-provider.tsx",
-    "./create-disclosure-store": "./src/create-disclosure-store.ts"
+    "./create-disclosure-store": "./src/create-disclosure-store.ts",
+    "./revalidate-web": "./src/revalidate-web.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

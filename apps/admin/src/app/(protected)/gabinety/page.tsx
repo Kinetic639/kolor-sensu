@@ -1,6 +1,6 @@
 import { loadAdminRooms } from "@/features/rooms/loaders";
-import { Card } from "@repo/ui/card";
-import { EmptyState, PageHeader, StatusBadge } from "@repo/ui/portal-content";
+import { RoomsList } from "@/features/rooms/rooms-list";
+import { EmptyState, PageHeader } from "@repo/ui/portal-content";
 
 export default async function RoomsPage() {
   const rooms = await loadAdminRooms();
@@ -8,7 +8,7 @@ export default async function RoomsPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        description="Fizyczne gabinety przypisane do lokalizacji centrum."
+        description="Fizyczne gabinety przypisane do lokalizacji centrum i ich profile na stronie."
         title="Gabinety"
       />
       {rooms.length === 0 ? (
@@ -17,31 +17,7 @@ export default async function RoomsPage() {
           title="Brak zdefiniowanych gabinetów"
         />
       ) : (
-        <div className="space-y-3">
-          {rooms.map((room) => (
-            <Card
-              className="flex flex-wrap items-center justify-between gap-3"
-              key={room.id}
-            >
-              <div>
-                <p className="font-heading font-semibold text-[var(--text)]">
-                  {room.name}
-                </p>
-                <p className="text-sm text-[var(--text-muted)]">
-                  {room.locationName} &middot; pojemność {room.capacity}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <StatusBadge tone={room.active ? "success" : "neutral"}>
-                  {room.active ? "Aktywny" : "Nieaktywny"}
-                </StatusBadge>
-                <StatusBadge tone={room.publiclyVisible ? "info" : "neutral"}>
-                  {room.publiclyVisible ? "Publiczny" : "Wewnętrzny"}
-                </StatusBadge>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <RoomsList rooms={rooms} />
       )}
     </div>
   );

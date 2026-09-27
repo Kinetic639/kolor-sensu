@@ -1,4 +1,6 @@
 import {
+  emptyRichTextDocument,
+  richTextDocumentSchema,
   specialistProfileDraftInputSchema,
   specialistProfileReviewInputSchema,
   specialistSlugSchema,
@@ -7,7 +9,7 @@ import {
   type SpecialistProfileDraftInput,
   type SpecialistPublicProfile,
 } from "@repo/contracts";
-import type { Database } from "@repo/contracts/database";
+import type { Database, Json } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type SpecialistRow = Database["public"]["Tables"]["specialists"]["Row"];
@@ -16,6 +18,15 @@ type PublicProfileRow =
 type DraftRow =
   Database["public"]["Tables"]["specialist_profile_drafts"]["Row"];
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+
+// Stored bios are validated again on read; an unreadable one shows as empty
+// instead of breaking the page.
+function readRichText(value: unknown) {
+  const parsed = richTextDocumentSchema.safeParse(value);
+  return parsed.success ? parsed.data : emptyRichTextDocument;
+}
+
+const specialistMediaBucket = "specialist-profile-media";
 
 type AdminSpecialistSummaryRow = SpecialistRow & {
   profile: Pick<
@@ -86,7 +97,7 @@ function mapPublicProfile(row: PublicProfileQueryRow): SpecialistPublicProfile {
     joinedAt: row.specialists.joined_at,
     displayName: row.display_name,
     shortBio: row.short_bio,
-    longBio: row.long_bio,
+    longBio: readRichText(row.long_bio),
     profilePhotoUrl: row.profile_photo_url,
     portraitPhotoUrl: row.portrait_photo_url,
     languages: row.languages,
@@ -107,8 +118,9 @@ function mapDraft(row: DraftRow): SpecialistProfileDraft {
     id: row.id,
     specialistId: row.specialist_id,
     displayName: row.display_name,
+    professionalTitle: row.professional_title,
     shortBio: row.short_bio,
-    longBio: row.long_bio,
+    longBio: readRichText(row.long_bio),
     profilePhotoUrl: row.profile_photo_url,
     portraitPhotoUrl: row.portrait_photo_url,
     languages: row.languages,
@@ -290,7 +302,8 @@ export async function saveMySpecialistProfileDraft(
   const { data, error } = await client.rpc("save_my_specialist_profile_draft", {
     p_display_name: draft.displayName,
     p_short_bio: draft.shortBio,
-    p_long_bio: draft.longBio,
+    p_long_bio: draft.longBio as unknown as Json,
+    p_professional_title: draft.professionalTitle,
     p_languages: draft.languages,
     p_therapy_approaches: draft.therapyApproaches,
     p_specializations: draft.specializations,
@@ -415,7 +428,7 @@ export async function getSpecialistPublicProfileAdmin(
     joinedAt: specialist.joinedAt,
     displayName: data.display_name,
     shortBio: data.short_bio,
-    longBio: data.long_bio,
+    longBio: readRichText(data.long_bio),
     profilePhotoUrl: data.profile_photo_url,
     portraitPhotoUrl: data.portrait_photo_url,
     languages: data.languages,
@@ -453,11 +466,76 @@ export async function createSpecialistMediaSignedUrl(
 ): Promise<string | null> {
   if (!path) return null;
   const { data, error } = await client.storage
-    .from("specialist-profile-media")
+    .from(specialistMediaBucket)
     .createSignedUrl(path, 60 * 30);
 
   if (error) throw error;
   return data.signedUrl;
+}
+
+const specialistImageExtensions = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+} as const;
+type SpecialistImageType = keyof typeof specialistImageExtensions;
+
+/** The bucket's own limit (see the specialist domain migration). */
+export const SPECIALIST_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const SPECIALIST_IMAGE_TYPES = Object.keys(
+  specialistImageExtensions,
+) as SpecialistImageType[];
+
+/** A readable reason the file cannot be used, or `null` when it is fine. */
+export function validateSpecialistImage(file: {
+  type: string;
+  size: number;
+}): string | null {
+  if (!(file.type in specialistImageExtensions)) {
+    return "Wybierz plik JPG, PNG lub WebP.";
+  }
+  if (file.size > SPECIALIST_IMAGE_MAX_BYTES) {
+    return "Plik jest za duży. Maksymalny rozmiar to 5 MB.";
+  }
+  return null;
+}
+
+/**
+ * A new object path for every upload, so replacing a photo in a draft never
+ * overwrites the file the published profile still points to.
+ */
+export function buildSpecialistMediaPath(
+  specialistId: string,
+  kind: "profile" | "portrait",
+  mimeType: SpecialistImageType,
+  uniqueId: string,
+): string {
+  return `${specialistId}/${kind}-${uniqueId}.${specialistImageExtensions[mimeType]}`;
+}
+
+export async function uploadSpecialistProfileImage(
+  client: SupabaseClient<Database>,
+  {
+    specialistId,
+    kind,
+    file,
+  }: { specialistId: string; kind: "profile" | "portrait"; file: File },
+): Promise<string> {
+  const problem = validateSpecialistImage(file);
+  if (problem) throw new Error(problem);
+
+  const path = buildSpecialistMediaPath(
+    specialistId,
+    kind,
+    file.type as SpecialistImageType,
+    crypto.randomUUID(),
+  );
+  const { error } = await client.storage
+    .from(specialistMediaBucket)
+    .upload(path, file, { contentType: file.type, upsert: false });
+
+  if (error) throw error;
+  return path;
 }
 
 export async function listPendingSpecialistDrafts(

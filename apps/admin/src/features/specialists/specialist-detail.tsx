@@ -43,6 +43,8 @@ import {
   SpecialistStatusSummary,
 } from "@repo/ui/specialist-admin";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/tabs";
+import { isRichTextEmpty } from "@repo/contracts";
+import { RichTextRenderer } from "@repo/ui/rich-text-renderer";
 import { Textarea } from "@repo/ui/textarea";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink } from "lucide-react";
@@ -120,11 +122,17 @@ function ProfileSnapshot({
           <p className="pt-2 text-sm font-semibold text-[var(--text)]">
             Pełny opis
           </p>
-          <p className="text-sm whitespace-pre-wrap text-[var(--text-muted)]">
-            {profile.longBio || "Brak opisu"}
-          </p>
+          {isRichTextEmpty(profile.longBio) ? (
+            <p className="text-sm text-[var(--text-muted)]">Brak opisu</p>
+          ) : (
+            <RichTextRenderer className="text-sm" document={profile.longBio} />
+          )}
           <DefinitionList
             items={[
+              {
+                label: "Tytuł zawodowy",
+                value: profile.professionalTitle ?? "Brak",
+              },
               { label: "Języki", value: list(profile.languages) },
               { label: "Specjalizacje", value: list(profile.specializations) },
               { label: "Podejścia", value: list(profile.therapyApproaches) },
@@ -181,13 +189,17 @@ function DraftReview({ detail }: { detail: SpecialistDetailViewModel }) {
   const queryClient = useQueryClient();
   const draft = detail.draft;
   const mutation = useMutation({
-    mutationFn: (input: { action: "approve" | "reject"; comment?: string }) => {
+    mutationFn: async (input: {
+      action: "approve" | "reject";
+      comment?: string;
+    }) => {
       if (!draft) throw new Error("Brak szkicu do weryfikacji.");
-      return reviewSpecialistDraftAction({
+      const result = await reviewSpecialistDraftAction({
         specialistId: detail.id,
         draftId: draft.id,
         ...input,
       });
+      if (!result.ok) throw new Error(result.message);
     },
     onSuccess: async (_, input) => {
       await Promise.all([
@@ -205,7 +217,7 @@ function DraftReview({ detail }: { detail: SpecialistDetailViewModel }) {
           : "Szkic został odrzucony",
       );
     },
-    onError: () => toast.error("Nie udało się zakończyć weryfikacji"),
+    onError: (error) => toast.error(error.message),
   });
 
   if (!draft || draft.status !== "pending_review") return null;

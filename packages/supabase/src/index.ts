@@ -48,6 +48,11 @@ export {
   specialistMappers,
   submitProfileForReview,
   createSpecialistMediaSignedUrl,
+  buildSpecialistMediaPath,
+  SPECIALIST_IMAGE_MAX_BYTES,
+  SPECIALIST_IMAGE_TYPES,
+  uploadSpecialistProfileImage,
+  validateSpecialistImage,
 } from "./specialists";
 export type { AdminSpecialistSummary } from "./specialists";
 export {
@@ -81,8 +86,11 @@ export {
   createRoom,
   disableRoom,
   getRoomByIdAdmin,
+  getRoomPublicProfileAdmin,
   listActiveRoomsForSpecialist,
+  listPublishedRoomProfiles,
   listRoomsAdmin,
   roomMappers,
   updateRoom,
+  upsertRoomPublicProfile,
 } from "./rooms";

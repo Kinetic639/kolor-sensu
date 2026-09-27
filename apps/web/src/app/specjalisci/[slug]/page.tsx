@@ -5,6 +5,8 @@ import {
   SoftCard,
   SpecialistArtwork,
 } from "@repo/ui/public-site";
+import { isRichTextEmpty } from "@repo/contracts";
+import { RichTextRenderer } from "@repo/ui/rich-text-renderer";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -74,10 +76,9 @@ export default async function SpecialistPage({
     all.findIndex((one) => one.publicSlug === specialist.publicSlug),
   );
   const role = specialistRole(specialist);
-  const bio = (specialist.longBio ?? specialist.shortBio ?? "")
-    .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
+  // The full bio is rich text written in the specialist portal; without one
+  // the short bio stands in.
+  const hasLongBio = !isRichTextEmpty(specialist.longBio);
 
   return (
     <>
@@ -104,12 +105,15 @@ export default async function SpecialistPage({
           />
         </div>
         <div className="grid content-start gap-8">
-          {bio.length > 0 ? (
-            <div className="text-body text-ink max-w-copy grid gap-4">
-              {bio.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
-            </div>
+          {hasLongBio ? (
+            <RichTextRenderer
+              className="text-body text-ink max-w-copy [&_a]:text-primary-strong [&_blockquote]:border-primary [&_h2]:font-display [&_h2]:text-h3 [&_h3]:font-display [&_h3]:text-title [&>:first-child]:mt-0"
+              document={specialist.longBio}
+            />
+          ) : specialist.shortBio ? (
+            <p className="text-body text-ink max-w-copy">
+              {specialist.shortBio}
+            </p>
           ) : null}
           <Facts title="Specjalizacje" items={specialist.specializations} />
           <Facts title="Podejście" items={specialist.therapyApproaches} />

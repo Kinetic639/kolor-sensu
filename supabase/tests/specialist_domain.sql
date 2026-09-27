@@ -140,12 +140,16 @@ BEGIN
   ) INTO own_draft_id;
   PERFORM public.submit_my_specialist_profile_draft(own_draft_id);
 
-  BEGIN
-    PERFORM public.approve_specialist_profile_draft(own_draft_id, 'self review');
-    RAISE EXCEPTION 'F: specialist/admin unexpectedly approved their own draft';
-  EXCEPTION
-    WHEN insufficient_privilege THEN NULL;
-  END;
+  -- A single admin who is also a specialist publishes their own profile.
+  PERFORM public.approve_specialist_profile_draft(own_draft_id, 'self review');
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialist_profile_drafts
+    WHERE id = own_draft_id
+      AND status = 'published'
+      AND reviewed_by = auth.uid()
+  ) THEN
+    RAISE EXCEPTION 'F: specialist/admin could not approve their own draft';
+  END IF;
 END;
 $$;
 
@@ -209,7 +213,8 @@ DECLARE
   approval_draft_id uuid;
   rejection_draft_id uuid;
 BEGIN
-  IF (SELECT count(*) FROM public.specialist_profile_drafts WHERE status = 'pending_review') <> 3 THEN
+  -- The dual-role admin's own draft (F) is already approved.
+  IF (SELECT count(*) FROM public.specialist_profile_drafts WHERE status = 'pending_review') <> 2 THEN
     RAISE EXCEPTION 'G: admin could not read all pending drafts';
   END IF;
 
@@ -279,6 +284,16 @@ BEGIN
   EXCEPTION
     WHEN insufficient_privilege THEN NULL;
   END;
+
+  -- Reading media must not fail for anonymous visitors (it used to, with
+  -- "permission denied"), and media of unpublished profiles stays hidden.
+  IF EXISTS (
+    SELECT 1 FROM storage.objects
+    WHERE bucket_id = 'specialist-profile-media'
+      AND name LIKE (SELECT second_specialist_id::text FROM domain_test_ids) || '/%'
+  ) THEN
+    RAISE EXCEPTION 'N: anonymous user read media of an unpublished profile';
+  END IF;
 END;
 $$;
 

@@ -10,14 +10,14 @@ Statusy: `NOT STARTED`, `IN PROGRESS`, `DONE`, `SKIPPED` (z uzasadnieniem).
 Każdy commit realizujący zadanie aktualizuje jego status i wpisuje hash commitu
 (albo numer PR).
 
-| ID  | Zadanie                                                                                    | Aplikacja  | Status        | Commit / PR | Uwagi                       |
-| --- | ------------------------------------------------------------------------------------------ | ---------- | ------------- | ----------- | --------------------------- |
-| P1  | „Mój profil”: zdjęcia, dane, tagi, podgląd, wysyłka do akceptacji                          | specialist | `NOT STARTED` |             |                             |
-| P2  | „Moje usługi i stawki”: tabela, dodawanie z katalogu, edycja, statystyki                   | specialist | `NOT STARTED` |             |                             |
-| P3  | Akceptacja profili: diff ze zdjęciami i wszystkimi polami                                  | admin      | `NOT STARTED` |             | Ekran istnieje, do dopięcia |
-| P4  | „Ustawienia centrum”: profil publiczny i lokalizacje                                       | admin      | `NOT STARTED` |             | Dziś zaślepka               |
-| P5  | „Gabinety”: edycja profilu publicznego sali                                                | admin      | `NOT STARTED` |             | Dziś tylko lista            |
-| P6  | Strona: CMS na stronie głównej (F1-01), `/gabinety` z bazy (F1-12), odświeżanie na żądanie | web        | `NOT STARTED` |             |                             |
+| ID  | Zadanie                                                                                    | Aplikacja  | Status        | Commit / PR | Uwagi                                                    |
+| --- | ------------------------------------------------------------------------------------------ | ---------- | ------------- | ----------- | -------------------------------------------------------- |
+| P1  | „Mój profil”: zdjęcia, dane, tagi, podgląd, wysyłka do akceptacji                          | specialist | `IN PROGRESS` |             | Gotowe, czeka na commit; tytuł zawodowy tylko do odczytu |
+| P2  | „Moje usługi i stawki”: tabela, dodawanie z katalogu, edycja, statystyki                   | specialist | `IN PROGRESS` |             | Gotowe, czeka na commit; bez „Najczęściej rezerwowanej”  |
+| P3  | Akceptacja profili: diff ze zdjęciami i wszystkimi polami                                  | admin      | `IN PROGRESS` |             | Gotowe (zdjęcia w diffie), czeka na commit               |
+| P4  | „Ustawienia centrum”: profil publiczny i lokalizacje                                       | admin      | `IN PROGRESS` |             | Gotowe, czeka na commit                                  |
+| P5  | „Gabinety”: edycja profilu publicznego sali                                                | admin      | `IN PROGRESS` |             | Gotowe bez zdjęcia sali (brak bucketu), czeka na commit  |
+| P6  | Strona: CMS na stronie głównej (F1-01), `/gabinety` z bazy (F1-12), odświeżanie na żądanie | web        | `IN PROGRESS` |             | Gotowe, czeka na commit                                  |
 
 ## Dlaczego teraz portale (i które ekrany)
 

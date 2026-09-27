@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
 import { PageIntro } from "@/components/page-intro";
 import { rooms, roomsPage } from "@/content/site";
-import { getLocations } from "@/lib/public-data";
+import { getLocations, getRooms } from "@/lib/public-data";
 
 export const metadata: Metadata = {
   title: "Gabinety",
@@ -14,7 +14,10 @@ export const metadata: Metadata = {
 };
 
 export default async function RoomsPage() {
-  const locations = await getLocations();
+  const [locations, roomProfiles] = await Promise.all([
+    getLocations(),
+    getRooms(),
+  ]);
 
   return (
     <>
@@ -32,6 +35,58 @@ export default async function RoomsPage() {
         animationPreset="watercolor-reveal"
         className="pt-0"
       />
+      {roomProfiles.length > 0 ? (
+        <section
+          aria-labelledby="rooms-list-heading"
+          className="max-w-page px-gutter pb-section-sm mx-auto grid gap-6"
+        >
+          <h2 id="rooms-list-heading" className="font-display text-h2 text-ink">
+            Nasze gabinety
+          </h2>
+          <ul className="grid gap-6 md:grid-cols-2">
+            {roomProfiles.map((room) => (
+              <li key={room.roomId}>
+                <SoftCard className="grid h-full content-start gap-3 p-6 lg:p-8">
+                  <h3 className="font-display text-h3 text-ink">
+                    {room.displayName}
+                  </h3>
+                  {room.shortDescription ? (
+                    <p className="text-body text-text-muted">
+                      {room.shortDescription}
+                    </p>
+                  ) : null}
+                  {room.longDescription ? (
+                    <p className="text-body whitespace-pre-line">
+                      {room.longDescription}
+                    </p>
+                  ) : null}
+                  {room.amenities.length > 0 ? (
+                    <ul className="text-body grid gap-2">
+                      {room.amenities.map((amenity) => (
+                        <li key={amenity} className="flex gap-3">
+                          <Check
+                            className="text-primary mt-1 size-4 shrink-0"
+                            aria-hidden="true"
+                          />
+                          {amenity}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {room.accessibilityNotes ? (
+                    <p className="text-body text-text-muted">
+                      <span className="text-ink font-semibold">
+                        Dostępność:{" "}
+                      </span>
+                      {room.accessibilityNotes}
+                    </p>
+                  ) : null}
+                </SoftCard>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <section className="max-w-page px-gutter pb-section-sm mx-auto">
         <SoftCard className="grid gap-4 p-6 lg:p-8">
           <h2 className="font-display text-h3 text-ink">Co u nas znajdziesz</h2>

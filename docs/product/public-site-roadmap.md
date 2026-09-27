@@ -54,23 +54,23 @@ stronie. Jego zadania (P1–P6) i postęp są w tamtym pliku; tutaj tylko liczni
 
 ### Faza 1 — szybkie wygrane (bez nowych domen)
 
-| ID    | Zadanie                                                                               | Obszar             | Status        | Commit / PR | Uwagi                                          |
-| ----- | ------------------------------------------------------------------------------------- | ------------------ | ------------- | ----------- | ---------------------------------------------- |
-| F1-01 | Przywrócić treść z CMS na stronie głównej (`site_content`, klucz `home`)              | strona / CMS       | `NOT STARTED` |             | Regresja: admin publikuje, strona nie pokazuje |
-| F1-02 | `/pierwsza-wizyta`                                                                    | strona             | `NOT STARTED` |             |                                                |
-| F1-03 | `/pomoc-w-kryzysie` + `CrisisNotice`                                                  | strona / komponent | `NOT STARTED` |             | Link w stopce, przy formularzach               |
-| F1-04 | `/deklaracja-dostepnosci`                                                             | strona             | `NOT STARTED` |             |                                                |
-| F1-05 | `/dla-firm` + formularz zapytania B2B                                                 | strona             | `NOT STARTED` |             |                                                |
-| F1-06 | `/praca` + formularz aplikacji                                                        | strona             | `NOT STARTED` |             | `JobPosting` przy aktywnych ofertach           |
-| F1-07 | `/vouchery` + formularz zamówienia                                                    | strona             | `NOT STARTED` |             | Płatność online → F4-05                        |
-| F1-08 | `InquiryForm` + `ConsentField` (Server Action, Zod, honeypot/Turnstile)               | komponent          | `NOT STARTED` |             | Decyzja: e-mail czy tabela `inquiries`         |
-| F1-09 | `/kontakt`: formularz, `LocationMap`, dojazd                                          | strona / komponent | `NOT STARTED` |             | Iframe mapy dopiero po kliknięciu              |
-| F1-10 | Strona główna: `ProblemGrid`, `StepsSection`, „Stacjonarnie i online”, `TrustSignals` | komponent          | `NOT STARTED` |             | `ProblemGrid` na razie statyczny               |
-| F1-11 | Profil specjalisty: usługi i ceny, z kim pracuje, CTA z wybranym specjalistą          | strona / dane      | `NOT STARTED` |             | Nowa funkcja „oferty specjalisty”              |
-| F1-12 | `/gabinety` z domeny sal (`room_public_profiles`) + dostępność budynku                | strona / dane      | `NOT STARTED` |             |                                                |
-| F1-13 | Cennik: zasady (odwoływanie, płatności, faktury, online) + FAQ                        | strona             | `NOT STARTED` |             | Treść do potwierdzenia przez centrum           |
-| F1-14 | Optymalizacja obrazu hero (PNG 2,6 MB → AVIF/WebP)                                    | wydajność          | `NOT STARTED` |             |                                                |
-| F1-15 | Nawigacja i stopka: nowe strony, link do pomocy w kryzysie                            | komponent          | `NOT STARTED` |             | `site-frame.ts`                                |
+| ID    | Zadanie                                                                               | Obszar             | Status        | Commit / PR | Uwagi                                                  |
+| ----- | ------------------------------------------------------------------------------------- | ------------------ | ------------- | ----------- | ------------------------------------------------------ |
+| F1-01 | Przywrócić treść z CMS na stronie głównej (`site_content`, klucz `home`)              | strona / CMS       | `IN PROGRESS` |             | Gotowe (P6), czeka na commit; w CMS jest treść testowa |
+| F1-02 | `/pierwsza-wizyta`                                                                    | strona             | `NOT STARTED` |             |                                                        |
+| F1-03 | `/pomoc-w-kryzysie` + `CrisisNotice`                                                  | strona / komponent | `NOT STARTED` |             | Link w stopce, przy formularzach                       |
+| F1-04 | `/deklaracja-dostepnosci`                                                             | strona             | `NOT STARTED` |             |                                                        |
+| F1-05 | `/dla-firm` + formularz zapytania B2B                                                 | strona             | `NOT STARTED` |             |                                                        |
+| F1-06 | `/praca` + formularz aplikacji                                                        | strona             | `NOT STARTED` |             | `JobPosting` przy aktywnych ofertach                   |
+| F1-07 | `/vouchery` + formularz zamówienia                                                    | strona             | `NOT STARTED` |             | Płatność online → F4-05                                |
+| F1-08 | `InquiryForm` + `ConsentField` (Server Action, Zod, honeypot/Turnstile)               | komponent          | `NOT STARTED` |             | Decyzja: e-mail czy tabela `inquiries`                 |
+| F1-09 | `/kontakt`: formularz, `LocationMap`, dojazd                                          | strona / komponent | `NOT STARTED` |             | Iframe mapy dopiero po kliknięciu                      |
+| F1-10 | Strona główna: `ProblemGrid`, `StepsSection`, „Stacjonarnie i online”, `TrustSignals` | komponent          | `NOT STARTED` |             | `ProblemGrid` na razie statyczny                       |
+| F1-11 | Profil specjalisty: usługi i ceny, z kim pracuje, CTA z wybranym specjalistą          | strona / dane      | `NOT STARTED` |             | Nowa funkcja „oferty specjalisty”                      |
+| F1-12 | `/gabinety` z domeny sal (`room_public_profiles`) + dostępność budynku                | strona / dane      | `IN PROGRESS` |             | Gotowe (P6) bez zdjęć sal, czeka na commit             |
+| F1-13 | Cennik: zasady (odwoływanie, płatności, faktury, online) + FAQ                        | strona             | `NOT STARTED` |             | Treść do potwierdzenia przez centrum                   |
+| F1-14 | Optymalizacja obrazu hero (PNG 2,6 MB → AVIF/WebP)                                    | wydajność          | `NOT STARTED` |             |                                                        |
+| F1-15 | Nawigacja i stopka: nowe strony, link do pomocy w kryzysie                            | komponent          | `NOT STARTED` |             | `site-frame.ts`                                        |
 
 ### Faza 2 — treści SEO
 

@@ -453,9 +453,10 @@ export type Database = {
           education: string[];
           id: string;
           languages: string[];
-          long_bio: string;
+          long_bio: Json;
           modalities: string[];
           portrait_photo_url: string | null;
+          professional_title: string | null;
           profile_photo_url: string | null;
           review_comment: string | null;
           reviewed_at: string | null;
@@ -476,9 +477,10 @@ export type Database = {
           education?: string[];
           id?: string;
           languages?: string[];
-          long_bio?: string;
+          long_bio?: Json;
           modalities?: string[];
           portrait_photo_url?: string | null;
+          professional_title?: string | null;
           profile_photo_url?: string | null;
           review_comment?: string | null;
           reviewed_at?: string | null;
@@ -499,9 +501,10 @@ export type Database = {
           education?: string[];
           id?: string;
           languages?: string[];
-          long_bio?: string;
+          long_bio?: Json;
           modalities?: string[];
           portrait_photo_url?: string | null;
+          professional_title?: string | null;
           profile_photo_url?: string | null;
           review_comment?: string | null;
           reviewed_at?: string | null;
@@ -546,7 +549,7 @@ export type Database = {
           display_name: string;
           education: string[];
           languages: string[];
-          long_bio: string;
+          long_bio: Json;
           modalities: string[];
           portrait_photo_url: string | null;
           profile_photo_url: string | null;
@@ -564,7 +567,7 @@ export type Database = {
           display_name?: string;
           education?: string[];
           languages?: string[];
-          long_bio?: string;
+          long_bio?: Json;
           modalities?: string[];
           portrait_photo_url?: string | null;
           profile_photo_url?: string | null;
@@ -582,7 +585,7 @@ export type Database = {
           display_name?: string;
           education?: string[];
           languages?: string[];
-          long_bio?: string;
+          long_bio?: Json;
           modalities?: string[];
           portrait_photo_url?: string | null;
           profile_photo_url?: string | null;
@@ -777,9 +780,10 @@ export type Database = {
           p_display_name: string;
           p_education?: string[];
           p_languages?: string[];
-          p_long_bio?: string;
+          p_long_bio?: Json;
           p_modalities?: string[];
           p_portrait_photo_url?: string;
+          p_professional_title?: string;
           p_profile_photo_url?: string;
           p_short_bio?: string;
           p_specializations?: string[];

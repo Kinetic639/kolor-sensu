@@ -53,6 +53,10 @@ export {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "./dropdown-menu";
+export {
+  ImageCropDialog,
+  type ImageCropDialogProps,
+} from "./image-crop-dialog";
 export { Input, type InputProps } from "./input";
 export { Label, type LabelProps } from "./label";
 export { cn } from "./lib/utils";
@@ -132,6 +136,8 @@ export {
   SelectValue,
 } from "./select";
 export { ServiceStatusBadges, SpecialistOfferSummary } from "./service-admin";
+export { RichTextEditor, type RichTextEditorProps } from "./rich-text-editor";
+export { Prose, RichTextRenderer } from "./rich-text-renderer";
 export {
   Sheet,
   SheetClose,
@@ -171,6 +177,17 @@ export {
   type SpecialistOfferRowProps,
   type SpecialistStatusSummaryProps,
 } from "./specialist-admin";
+export {
+  ProfilePhotoField,
+  ProfileStatusBanner,
+  SpecialistProfilePreview,
+  TagListField,
+  type ProfilePhotoFieldProps,
+  type ProfileStatus,
+  type ProfileStatusBannerProps,
+  type SpecialistProfilePreviewProps,
+  type TagListFieldProps,
+} from "./specialist-profile";
 export { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
 export {
   TestContentBlock,

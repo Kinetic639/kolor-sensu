@@ -1,10 +1,21 @@
-import { PortalRoutePlaceholder } from "@repo/ui/portal-content";
+import { loadProfileEditor } from "@/features/profile/loaders";
+import { ProfileEditor } from "@/features/profile/profile-editor";
+import { EmptyState, PageHeader } from "@repo/ui/portal-content";
 
-export default function ProfilePage() {
-  return (
-    <PortalRoutePlaceholder
-      title="Profil"
-      description="Dane zawodowe i treści profilu publicznego."
-    />
-  );
+export default async function ProfilePage() {
+  const model = await loadProfileEditor();
+
+  if (!model) {
+    return (
+      <div className="space-y-5">
+        <PageHeader title="Mój profil" />
+        <EmptyState
+          title="Brak profilu specjalisty"
+          description="Twoje konto nie jest jeszcze powiązane z profilem specjalisty. Skontaktuj się z administratorem centrum."
+        />
+      </div>
+    );
+  }
+
+  return <ProfileEditor model={model} />;
 }
