@@ -25,6 +25,7 @@ describe("WatercolorImage on the server", () => {
       "offer-section.tsx",
       "hero-section.tsx",
       "hero-points.tsx",
+      "feature-section.tsx",
     ]) {
       const source = readFileSync(resolve(here, file), "utf8");
       expect(source, file).not.toMatch(/^["']use client["']/m);

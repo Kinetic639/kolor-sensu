@@ -17,6 +17,8 @@ export type {
   SoftCardProps,
   WatercolorSectionBackgroundProps,
 } from "./surfaces";
+export { FeatureSection } from "./feature-section";
+export type { FeatureSectionProps } from "./feature-section";
 export { HeroPoints } from "./hero-points";
 export type { HeroPoint, HeroPointsProps } from "./hero-points";
 export { HeroSection } from "./hero-section";

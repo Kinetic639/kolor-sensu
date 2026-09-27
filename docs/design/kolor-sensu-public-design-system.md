@@ -465,6 +465,7 @@ Only what the references repeat:
 | `SectionEyebrow`              | "CENTRUM PSYCHOTERAPII I ROZWOJU"          |
 | `EditorialHeading`            | Serif H1/H2 with optional accent line      |
 | `HeroSection`, `HeroPoints`   | Homepage first screen, reassurance row     |
+| `FeatureSection`              | "Nasze gabinety", "Warsztaty i rozwój"     |
 | `PrimaryButton`               | Solid green pill "Umów wizytę →"           |
 | `SecondaryButton`             | Outline pill "Poznaj nas"                  |
 | `ArrowLink`                   | "Zobacz całą ofertę →"                     |
