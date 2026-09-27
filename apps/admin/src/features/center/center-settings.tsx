@@ -16,6 +16,7 @@ import {
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
 import { EmptyState, PageHeader, SectionHeader } from "@repo/ui/portal-content";
+import { TagListField } from "@repo/ui/specialist-profile";
 import { Switch } from "@repo/ui/switch";
 import { Textarea } from "@repo/ui/textarea";
 import { MapPin, Pencil, Plus } from "lucide-react";
@@ -325,6 +326,37 @@ function LocationForm({
           registration={register("city")}
         />
       </div>
+      <TextField
+        error={errors.publicDescription?.message}
+        hint="Widoczny na stronie Gabinety nad listą gabinetów w tej lokalizacji."
+        id="location-description"
+        label="Opis lokalizacji"
+        multiline
+        registration={register("publicDescription")}
+      />
+      <Controller
+        control={control}
+        name="amenities"
+        render={({ field }) => (
+          <TagListField
+            description="Np. winda, parking, wejście od strony placu, poczekalnia."
+            id="location-amenities"
+            label="Udogodnienia"
+            maxItems={30}
+            maxLength={100}
+            onChange={field.onChange}
+            values={field.value}
+          />
+        )}
+      />
+      <TextField
+        error={errors.accessibilityNotes?.message}
+        hint="Np. próg przy wejściu, szerokość drzwi, toaleta dostosowana do potrzeb osób z niepełnosprawnościami."
+        id="location-accessibility"
+        label="Dostępność"
+        multiline
+        registration={register("accessibilityNotes")}
+      />
       <div className="grid gap-3 sm:grid-cols-2">
         {(
           [
@@ -447,7 +479,7 @@ function LocationsCard({ locations }: { locations: Location[] }) {
         }}
         open={editing !== null}
       >
-        <DialogContent>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {current ? `Edytuj: ${current.name}` : "Dodaj lokalizację"}

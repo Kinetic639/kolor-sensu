@@ -11,6 +11,7 @@ import {
 } from "@repo/contracts";
 import type { Database, Json } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { readRichText } from "./rich-text";
 
 type SpecialistRow = Database["public"]["Tables"]["specialists"]["Row"];
 type PublicProfileRow =
@@ -18,13 +19,6 @@ type PublicProfileRow =
 type DraftRow =
   Database["public"]["Tables"]["specialist_profile_drafts"]["Row"];
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
-
-// Stored bios are validated again on read; an unreadable one shows as empty
-// instead of breaking the page.
-function readRichText(value: unknown) {
-  const parsed = richTextDocumentSchema.safeParse(value);
-  return parsed.success ? parsed.data : emptyRichTextDocument;
-}
 
 const specialistMediaBucket = "specialist-profile-media";
 

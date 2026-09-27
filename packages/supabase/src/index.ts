@@ -83,8 +83,12 @@ export type { AdminServiceOfferSummary, AdminServiceSummary } from "./services";
 export {
   getHomeContentAdmin,
   getPublishedHomeContent,
+  getPublishedRoomsPageContent,
+  getRoomsPageContentAdmin,
   publishHomeContent,
+  publishRoomsPageContent,
   updateHomeDraft,
+  updateRoomsPageDraft,
 } from "./cms";
 export {
   createRoom,
@@ -92,6 +96,7 @@ export {
   getRoomByIdAdmin,
   getRoomPublicProfileAdmin,
   listActiveRoomsForSpecialist,
+  listPublishedRoomPlacements,
   listPublishedRoomProfiles,
   listRoomsAdmin,
   buildRoomImagePath,

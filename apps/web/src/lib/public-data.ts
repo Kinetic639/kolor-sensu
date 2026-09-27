@@ -3,17 +3,21 @@ import {
   getPublicCenterProfile,
   getPublicServiceBySlug,
   getPublishedHomeContent,
+  getPublishedRoomsPageContent,
   getPublishedSpecialistBySlug,
   getSpecialistSlugRedirect,
   listPublicLocations,
+  listPublishedRoomPlacements,
   listPublishedRoomProfiles,
   listRoomImages,
   listPublicServices,
   listPublicSpecialistOffersForService,
   listPublishedSpecialists,
 } from "@repo/supabase";
+import { defaultRoomsPageContent } from "@repo/contracts";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
+import { groupRoomsByLocation } from "./rooms-by-location";
 
 // Everything the public pages read from Supabase, in one place. Each
 // loader is deduplicated within a render (React cache) and never throws:
@@ -67,23 +71,36 @@ export const getHomeContent = cache(() =>
   load("home content", getPublishedHomeContent, null),
 );
 
-/** Published room profiles with their photos, edited in the admin's /gabinety. */
-export const getRooms = cache(() =>
+/** Which optional sections /gabinety shows, set in the admin's CMS. */
+export const getRoomsPageContent = cache(() =>
+  load(
+    "rooms page content",
+    getPublishedRoomsPageContent,
+    defaultRoomsPageContent,
+  ),
+);
+
+/**
+ * The /gabinety page: each location with its published rooms and photos,
+ * edited in the admin's /gabinety and centre settings.
+ */
+export const getRoomsByLocation = cache(() =>
   load(
     "rooms",
     async (client) => {
-      const profiles = await listPublishedRoomProfiles(client);
-      return Promise.all(
-        profiles.map(async (profile) => {
-          const images = await listRoomImages(client, profile.roomId);
-          return {
-            ...profile,
-            images,
-            mainImage:
-              images.find((image) => image.isMain) ?? images[0] ?? null,
-          };
-        }),
-      );
+      const [locations, placements, profiles] = await Promise.all([
+        listPublicLocations(client),
+        listPublishedRoomPlacements(client),
+        listPublishedRoomProfiles(client),
+      ]);
+      const images = (
+        await Promise.all(
+          placements.map((placement) =>
+            listRoomImages(client, placement.roomId),
+          ),
+        )
+      ).flat();
+      return groupRoomsByLocation({ locations, placements, profiles, images });
     },
     [],
   ),

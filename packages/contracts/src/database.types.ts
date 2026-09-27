@@ -112,6 +112,7 @@ export type Database = {
       };
       locations: {
         Row: {
+          accessibility_notes: string | null;
           active: boolean;
           address_line1: string | null;
           address_line2: string | null;
@@ -125,8 +126,11 @@ export type Database = {
           slug: string;
           sort_order: number;
           updated_at: string;
+          amenities: string[];
+          public_description: string | null;
         };
         Insert: {
+          accessibility_notes?: string | null;
           active?: boolean;
           address_line1?: string | null;
           address_line2?: string | null;
@@ -140,8 +144,11 @@ export type Database = {
           slug: string;
           sort_order?: number;
           updated_at?: string;
+          amenities?: string[];
+          public_description?: string | null;
         };
         Update: {
+          accessibility_notes?: string | null;
           active?: boolean;
           address_line1?: string | null;
           address_line2?: string | null;
@@ -155,6 +162,8 @@ export type Database = {
           slug?: string;
           sort_order?: number;
           updated_at?: string;
+          amenities?: string[];
+          public_description?: string | null;
         };
         Relationships: [];
       };
@@ -318,7 +327,7 @@ export type Database = {
           created_at: string;
           display_name: string;
           image_path: string | null;
-          long_description: string | null;
+          long_description: Json;
           published: boolean;
           room_id: string;
           short_description: string | null;
@@ -330,7 +339,7 @@ export type Database = {
           created_at?: string;
           display_name: string;
           image_path?: string | null;
-          long_description?: string | null;
+          long_description?: Json;
           published?: boolean;
           room_id: string;
           short_description?: string | null;
@@ -342,7 +351,7 @@ export type Database = {
           created_at?: string;
           display_name?: string;
           image_path?: string | null;
-          long_description?: string | null;
+          long_description?: Json;
           published?: boolean;
           room_id?: string;
           short_description?: string | null;
@@ -819,6 +828,14 @@ export type Database = {
         Returns: boolean;
       };
       publish_site_content: { Args: { p_key: string }; Returns: undefined };
+      list_published_room_placements: {
+        Args: never;
+        Returns: {
+          location_id: string;
+          room_id: string;
+          sort_order: number;
+        }[];
+      };
       reject_specialist_profile_draft: {
         Args: { p_draft_id: string; p_review_comment: string };
         Returns: undefined;

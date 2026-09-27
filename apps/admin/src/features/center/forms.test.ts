@@ -84,6 +84,9 @@ describe("location form", () => {
     active: true,
     publiclyVisible: true,
     sortOrder: 0,
+    publicDescription: null,
+    amenities: ["Winda", "Parking"],
+    accessibilityNotes: "Wejście bez progów.",
     createdAt: "",
     updatedAt: "",
   };
@@ -91,12 +94,17 @@ describe("location form", () => {
   it("round-trips an existing location", () => {
     const values = toLocationFormValues(location);
     expect(values.addressLine2).toBe("");
+    expect(values.publicDescription).toBe("");
+    expect(values.amenities).toEqual(["Winda", "Parking"]);
     expect(toLocationInput(values)).toMatchObject({
       name: "Mokotów",
       slug: "mokotow",
       addressLine2: null,
       city: "Warszawa",
       publiclyVisible: true,
+      publicDescription: null,
+      amenities: ["Winda", "Parking"],
+      accessibilityNotes: "Wejście bez progów.",
     });
   });
 

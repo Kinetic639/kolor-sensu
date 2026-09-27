@@ -1,3 +1,4 @@
+import { partialUpdateSchema } from "@repo/contracts/partial-update";
 import { z } from "zod";
 
 const ianaTimezones = new Set(Intl.supportedValuesOf("timeZone"));
@@ -65,9 +66,13 @@ export const locationCreateSchema = z.object({
   active: z.boolean().default(true),
   publiclyVisible: z.boolean().default(true),
   sortOrder: z.number().int().min(0).max(10_000).default(0),
+  // Shown on the site above the location's rooms.
+  publicDescription: z.string().trim().max(1000).nullable().default(null),
+  amenities: z.array(z.string().trim().min(1).max(100)).max(30).default([]),
+  accessibilityNotes: z.string().trim().max(1000).nullable().default(null),
 });
 
-export const locationUpdateSchema = locationCreateSchema.partial();
+export const locationUpdateSchema = partialUpdateSchema(locationCreateSchema);
 
 export type CenterSettingsUpdate = z.infer<typeof centerSettingsUpdateSchema>;
 export type CenterPublicProfileUpdate = z.infer<
@@ -129,6 +134,9 @@ export interface Location {
   active: boolean;
   publiclyVisible: boolean;
   sortOrder: number;
+  publicDescription: string | null;
+  amenities: string[];
+  accessibilityNotes: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -143,4 +151,7 @@ export interface PublicLocation {
   city: string | null;
   countryCode: string;
   sortOrder: number;
+  publicDescription: string | null;
+  amenities: string[];
+  accessibilityNotes: string | null;
 }

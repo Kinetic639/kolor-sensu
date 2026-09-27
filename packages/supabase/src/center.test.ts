@@ -5,6 +5,9 @@ import {
   localeSchema,
   locationCreateSchema,
   locationSlugSchema,
+  locationUpdateSchema,
+  roomUpdateSchema,
+  serviceUpdateSchema,
   timezoneSchema,
 } from "@repo/contracts";
 import { describe, expect, it } from "vitest";
@@ -59,6 +62,28 @@ describe("center domain schemas", () => {
     expect(result.active).toBe(true);
     expect(result.publiclyVisible).toBe(true);
     expect(result.sortOrder).toBe(0);
+    expect(result.publicDescription).toBeNull();
+    expect(result.amenities).toEqual([]);
+    expect(result.accessibilityNotes).toBeNull();
+  });
+
+  it("limits a location's amenities to short, non-empty labels", () => {
+    const base = { name: "Kolor Sensu", slug: "kolor-sensu-main" };
+    expect(
+      locationCreateSchema.safeParse({
+        ...base,
+        amenities: ["Winda", "Parking"],
+      }).success,
+    ).toBe(true);
+    expect(
+      locationCreateSchema.safeParse({ ...base, amenities: [""] }).success,
+    ).toBe(false);
+    expect(
+      locationCreateSchema.safeParse({
+        ...base,
+        amenities: Array.from({ length: 31 }, (_, i) => `u${i}`),
+      }).success,
+    ).toBe(false);
   });
 });
 
@@ -100,11 +125,38 @@ describe("center domain mapping", () => {
         city: null,
         country_code: "PL",
         sort_order: 0,
+        public_description: "Kamienica w centrum.",
+        amenities: ["Winda"],
+        accessibility_notes: "Wejście bez progów.",
       }),
     ).toMatchObject({
       id: "location-id",
       slug: "kolor-sensu-main",
       countryCode: "PL",
+      publicDescription: "Kamienica w centrum.",
+      amenities: ["Winda"],
+      accessibilityNotes: "Wejście bez progów.",
     });
+  });
+});
+
+describe("partial update schemas", () => {
+  it("leave out what the caller did not send (no defaults)", () => {
+    expect(locationUpdateSchema.parse({ active: false })).toEqual({
+      active: false,
+    });
+    expect(roomUpdateSchema.parse({ name: "Gabinet" })).toEqual({
+      name: "Gabinet",
+    });
+    expect(serviceUpdateSchema.parse({ active: false })).toEqual({
+      active: false,
+    });
+  });
+
+  it("still validate the fields that are sent", () => {
+    expect(locationUpdateSchema.safeParse({ slug: "Zły Slug" }).success).toBe(
+      false,
+    );
+    expect(roomUpdateSchema.safeParse({ capacity: 0 }).success).toBe(false);
   });
 });

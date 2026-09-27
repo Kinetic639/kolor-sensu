@@ -8,6 +8,7 @@
     "./center": "./src/center.ts",
     "./cms": "./src/cms.ts",
     "./database": "./src/database.types.ts",
+    "./partial-update": "./src/partial-update.ts",
     "./rich-text": "./src/rich-text.ts",
     "./rooms": "./src/rooms.ts",
     "./services": "./src/services.ts",

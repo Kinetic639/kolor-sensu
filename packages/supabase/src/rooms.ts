@@ -6,12 +6,14 @@ import {
   type Room,
   type RoomCreate,
   type RoomImage,
+  type RoomPlacement,
   type RoomPublicProfile,
   type RoomUpdate,
 } from "@repo/contracts";
-import type { Database } from "@repo/contracts/database";
+import type { Database, Json } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { z } from "zod";
+import { readRichText } from "./rich-text";
 import { validateSpecialistImage } from "./specialists";
 
 type RoomRow = Database["public"]["Tables"]["rooms"]["Row"];
@@ -176,7 +178,7 @@ function mapRoomPublicProfile(row: RoomPublicProfileRow): RoomPublicProfile {
     roomId: row.room_id,
     displayName: row.display_name,
     shortDescription: row.short_description,
-    longDescription: row.long_description,
+    longDescription: readRichText(row.long_description),
     imagePath: row.image_path,
     accessibilityNotes: row.accessibility_notes,
     amenities: row.amenities,
@@ -214,7 +216,7 @@ export async function upsertRoomPublicProfile(
         room_id: roomId,
         display_name: profile.displayName,
         short_description: profile.shortDescription,
-        long_description: profile.longDescription,
+        long_description: profile.longDescription as unknown as Json,
         image_path: profile.imagePath,
         accessibility_notes: profile.accessibilityNotes,
         amenities: profile.amenities,
@@ -244,6 +246,19 @@ export async function listPublishedRoomProfiles(
 
   if (error) throw error;
   return data.map(mapRoomPublicProfile);
+}
+
+/** Which published room belongs to which location, in display order. */
+export async function listPublishedRoomPlacements(
+  client: SupabaseClient<Database>,
+): Promise<RoomPlacement[]> {
+  const { data, error } = await client.rpc("list_published_room_placements");
+  if (error) throw error;
+  return data.map((row) => ({
+    roomId: row.room_id,
+    locationId: row.location_id,
+    sortOrder: row.sort_order,
+  }));
 }
 
 const roomMediaBucket = "room-media";

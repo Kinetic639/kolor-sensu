@@ -61,8 +61,17 @@ export type {
   SpecialistService,
   SpecialistServiceUpsert,
 } from "@repo/contracts/services";
-export { homePageContentSchema } from "@repo/contracts/cms";
-export type { HomeContentAdmin, HomePageContent } from "@repo/contracts/cms";
+export {
+  defaultRoomsPageContent,
+  homePageContentSchema,
+  roomsPageContentSchema,
+} from "@repo/contracts/cms";
+export type {
+  HomeContentAdmin,
+  HomePageContent,
+  RoomsPageContent,
+  SiteContentAdmin,
+} from "@repo/contracts/cms";
 export {
   emptyRichTextDocument,
   isRichTextEmpty,
@@ -103,6 +112,7 @@ export type {
   RoomAvailabilityExceptionUpdate,
   RoomCreate,
   RoomImage,
+  RoomPlacement,
   RoomOpeningHoursInterval,
   RoomOpeningHoursIntervalInput,
   RoomOpeningHoursReplace,

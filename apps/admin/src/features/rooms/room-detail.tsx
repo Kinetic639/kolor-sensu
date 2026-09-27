@@ -15,14 +15,14 @@ import {
   StatusBadge,
 } from "@repo/ui/portal-content";
 import { SortableImageGallery } from "@repo/ui/sortable-image-gallery";
-import { TagListField } from "@repo/ui/specialist-profile";
+import { RichTextEditor } from "@repo/ui/rich-text-editor";
 import { Switch } from "@repo/ui/switch";
 import { Textarea } from "@repo/ui/textarea";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 import {
   removeRoomImageAction,
@@ -41,12 +41,19 @@ import {
   type RoomProfileFormValues,
 } from "./forms";
 import type { AdminRoomDetailModel } from "./loaders";
+import { LocationSelect } from "./location-select";
 
 // The original may be large; only the cropped photo (well under 5 MB) is kept.
 const SOURCE_IMAGE_MAX_BYTES = 20 * 1024 * 1024;
 const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 type ActionResult = { ok: true } | { ok: false; message: string };
+
+// On the site only when the room is public and its profile published; the
+// page's one switch sets both.
+function isOnSite(model: AdminRoomDetailModel) {
+  return model.room.publiclyVisible && Boolean(model.publicProfile?.published);
+}
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   return message ? (
@@ -213,11 +220,15 @@ function RoomProfileCard({ model }: { model: AdminRoomDetailModel }) {
     reset,
     formState: { errors, isDirty },
   } = useForm<RoomProfileFormValues>({
-    resolver: zodResolver(roomProfileFormSchema),
-    defaultValues: toRoomProfileFormValues(
-      model.publicProfile,
-      model.room.name,
-    ),
+    // The rich text schema reads `unknown` input (it validates stored JSON);
+    // the form always holds a document, so the resolver is typed as such.
+    resolver: zodResolver(
+      roomProfileFormSchema,
+    ) as unknown as Resolver<RoomProfileFormValues>,
+    defaultValues: {
+      ...toRoomProfileFormValues(model.publicProfile, model.room.name),
+      published: isOnSite(model),
+    },
   });
 
   return (
@@ -259,38 +270,26 @@ function RoomProfileCard({ model }: { model: AdminRoomDetailModel }) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="room-long">Opis</Label>
-          <Textarea id="room-long" rows={6} {...register("longDescription")} />
-        </div>
-        <Controller
-          control={control}
-          name="amenities"
-          render={({ field }) => (
-            <TagListField
-              description="Np. fotele, klimatyzacja, wyciszenie."
-              id="room-amenities"
-              label="Udogodnienia"
-              maxItems={50}
-              maxLength={100}
-              onChange={field.onChange}
-              values={field.value}
-            />
-          )}
-        />
-        <div className="space-y-1.5">
-          <Label htmlFor="room-accessibility">Dostępność</Label>
-          <Textarea
-            aria-describedby="room-accessibility-hint"
-            id="room-accessibility"
-            rows={2}
-            {...register("accessibilityNotes")}
+          <p className="text-sm font-semibold text-[var(--text)]">Pełny opis</p>
+          <Controller
+            control={control}
+            name="longDescription"
+            render={({ field }) => (
+              <RichTextEditor
+                ariaLabel="Pełny opis gabinetu"
+                onChange={field.onChange}
+                placeholder="Opisz gabinet: atmosferę, wyposażenie, do czego służy…"
+                value={field.value}
+              />
+            )}
           />
-          <p
-            className="text-xs text-[var(--text-muted)]"
-            id="room-accessibility-hint"
-          >
-            Np. winda, próg, toaleta dostosowana do potrzeb osób z
-            niepełnosprawnościami.
+          <FieldError
+            id="room-long-error"
+            message={errors.longDescription?.message}
+          />
+          <p className="text-xs text-[var(--text-muted)]">
+            Udogodnienia i dostępność budynku opisujesz w lokalizacji
+            (Ustawienia centrum).
           </p>
         </div>
         <Controller
@@ -299,18 +298,11 @@ function RoomProfileCard({ model }: { model: AdminRoomDetailModel }) {
           render={({ field }) => (
             <SwitchField
               checked={field.value}
-              label="Opublikowany na stronie"
+              label="Widoczny na stronie"
               onCheckedChange={field.onChange}
             />
           )}
         />
-        {model.room.publiclyVisible ? null : (
-          <p className="rounded-[var(--radius-control)] bg-[var(--warning-soft)] p-3 text-sm text-[var(--text)]">
-            Gabinet jest oznaczony jako wewnętrzny, więc nie pojawi się na
-            stronie nawet po opublikowaniu profilu. Zmienisz to w danych
-            gabinetu.
-          </p>
-        )}
         <div className="flex justify-end">
           <Button disabled={!isDirty} loading={isPending} type="submit">
             Zapisz profil
@@ -338,7 +330,7 @@ function RoomDetailsCard({ model }: { model: AdminRoomDetailModel }) {
     <Card>
       <SectionHeader
         title="Dane gabinetu"
-        description="Używane w centrum; nazwa i widoczność decydują też o stronie."
+        description="Nazwa, lokalizacja i pojemność. Widoczność na stronie ustawiasz w profilu publicznym."
       />
       <form
         className="mt-5 space-y-4"
@@ -360,6 +352,27 @@ function RoomDetailsCard({ model }: { model: AdminRoomDetailModel }) {
             {...register("name")}
           />
           <FieldError id="room-name-error" message={errors.name?.message} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="room-location">Lokalizacja</Label>
+          <Controller
+            control={control}
+            name="locationId"
+            render={({ field }) => (
+              <LocationSelect
+                describedBy="room-location-error"
+                id="room-location"
+                invalid={Boolean(errors.locationId)}
+                locations={model.locations}
+                onChange={field.onChange}
+                value={field.value}
+              />
+            )}
+          />
+          <FieldError
+            id="room-location-error"
+            message={errors.locationId?.message}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="room-capacity">Pojemność (osoby)</Label>
@@ -387,25 +400,17 @@ function RoomDetailsCard({ model }: { model: AdminRoomDetailModel }) {
             Widoczna tylko w portalach, nie na stronie.
           </p>
         </div>
-        {(
-          [
-            ["active", "Gabinet aktywny"],
-            ["publiclyVisible", "Widoczny na stronie"],
-          ] as const
-        ).map(([name, label]) => (
-          <Controller
-            control={control}
-            key={name}
-            name={name}
-            render={({ field }) => (
-              <SwitchField
-                checked={field.value}
-                label={label}
-                onCheckedChange={field.onChange}
-              />
-            )}
-          />
-        ))}
+        <Controller
+          control={control}
+          name="active"
+          render={({ field }) => (
+            <SwitchField
+              checked={field.value}
+              label="Gabinet aktywny"
+              onCheckedChange={field.onChange}
+            />
+          )}
+        />
         <div className="flex justify-end">
           <Button disabled={!isDirty} loading={isPending} type="submit">
             Zapisz dane
@@ -418,6 +423,7 @@ function RoomDetailsCard({ model }: { model: AdminRoomDetailModel }) {
 
 export function RoomDetail({ model }: { model: AdminRoomDetailModel }) {
   const { room, publicProfile } = model;
+  const onSite = isOnSite(model);
 
   return (
     <div className="space-y-6">
@@ -436,15 +442,8 @@ export function RoomDetail({ model }: { model: AdminRoomDetailModel }) {
         <StatusBadge tone={room.active ? "success" : "neutral"}>
           {room.active ? "Aktywny" : "Nieaktywny"}
         </StatusBadge>
-        <StatusBadge tone={room.publiclyVisible ? "info" : "neutral"}>
-          {room.publiclyVisible ? "Widoczny na stronie" : "Wewnętrzny"}
-        </StatusBadge>
-        <StatusBadge tone={publicProfile?.published ? "success" : "neutral"}>
-          {publicProfile?.published
-            ? "Profil opublikowany"
-            : publicProfile
-              ? "Profil nieopublikowany"
-              : "Brak profilu"}
+        <StatusBadge tone={onSite ? "success" : "neutral"}>
+          {onSite ? "Widoczny na stronie" : "Ukryty na stronie"}
         </StatusBadge>
       </div>
 

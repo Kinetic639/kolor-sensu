@@ -1,4 +1,5 @@
 import {
+  emptyRichTextDocument,
   roomCapacitySchema,
   roomCreateSchema,
   roomSlugSchema,
@@ -6,6 +7,7 @@ import {
 import { describe, expect, it, vi } from "vitest";
 import {
   buildRoomImagePath,
+  listPublishedRoomPlacements,
   listPublishedRoomProfiles,
   listRoomImages,
   removeRoomImage,
@@ -115,7 +117,12 @@ const profileRow = {
   room_id: "room-1",
   display_name: "Gabinet Zielony",
   short_description: "Jasny gabinet",
-  long_description: null,
+  long_description: {
+    type: "doc",
+    content: [
+      { type: "paragraph", content: [{ type: "text", text: "Opis gabinetu" }] },
+    ],
+  },
   image_path: null,
   accessibility_notes: "Winda w budynku",
   amenities: ["Fotele", "Klimatyzacja"],
@@ -142,7 +149,7 @@ describe("room public profiles", () => {
       roomId: "room-1",
       displayName: "Gabinet Zielony",
       shortDescription: "Jasny gabinet",
-      longDescription: null,
+      longDescription: profileRow.long_description,
       imagePath: null,
       accessibilityNotes: "Winda w budynku",
       amenities: ["Fotele", "Klimatyzacja"],
@@ -167,7 +174,7 @@ describe("room public profiles", () => {
         room_id: "room-1",
         display_name: "Gabinet Zielony",
         short_description: null,
-        long_description: null,
+        long_description: emptyRichTextDocument,
         image_path: null,
         accessibility_notes: null,
         amenities: ["Fotele"],
@@ -328,5 +335,30 @@ describe("room images", () => {
     expect(rpc).toHaveBeenNthCalledWith(2, "set_room_main_image", {
       p_image_id: "b",
     });
+  });
+});
+
+describe("room placements", () => {
+  it("lists which published room belongs to which location, in order", async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: [
+        { room_id: "room-2", location_id: "loc-1", sort_order: 0 },
+        { room_id: "room-1", location_id: "loc-1", sort_order: 1 },
+      ],
+      error: null,
+    });
+
+    expect(await listPublishedRoomPlacements({ rpc } as never)).toEqual([
+      { roomId: "room-2", locationId: "loc-1", sortOrder: 0 },
+      { roomId: "room-1", locationId: "loc-1", sortOrder: 1 },
+    ]);
+    expect(rpc).toHaveBeenCalledWith("list_published_room_placements");
+  });
+
+  it("falls back to an empty document for an unreadable description", () => {
+    expect(
+      roomMappers.publicProfile({ ...profileRow, long_description: "tekst" })
+        .longDescription,
+    ).toEqual(emptyRichTextDocument);
   });
 });

@@ -4,6 +4,7 @@ import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import {
+  createRoom,
   getRoomPublicProfileAdmin,
   removeRoomImage,
   reorderRoomImages,
@@ -13,21 +14,32 @@ import {
 } from "@repo/supabase";
 import { revalidatePath } from "next/cache";
 import {
+  newRoomFormSchema,
   roomDetailsFormSchema,
   roomProfileFormSchema,
   toRoomProfileInput,
+  toRoomCreate,
   toRoomUpdate,
+  type NewRoomFormValues,
   type RoomDetailsFormValues,
   type RoomProfileFormValues,
 } from "./forms";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
 
-function failure(error: unknown, fallback: string): ActionResult {
+function failure(
+  error: unknown,
+  fallback: string,
+): { ok: false; message: string } {
   console.error("[rooms]", error);
   const code =
     typeof error === "object" && error && "code" in error ? error.code : null;
   if (code === "42501") return { ok: false, message: "Brak uprawnień." };
+  if (code === "23505")
+    return {
+      ok: false,
+      message: "W tej lokalizacji jest już gabinet o takiej nazwie.",
+    };
   if (code === "23514")
     return { ok: false, message: "Gabinet może mieć najwyżej 5 zdjęć." };
   return { ok: false, message: fallback };
@@ -71,6 +83,11 @@ export async function saveRoomProfileAction(
       roomId,
       toRoomProfileInput(parsed.data, current),
     );
+    // One switch decides whether the room is on the site: it publishes the
+    // profile and makes the room public together.
+    await updateRoom(client, roomId, {
+      publiclyVisible: parsed.data.published,
+    });
     await refresh(roomId);
     return { ok: true };
   } catch (error) {
@@ -123,5 +140,23 @@ export async function removeRoomImageAction(
     return { ok: true };
   } catch (error) {
     return failure(error, "Nie udało się usunąć zdjęcia.");
+  }
+}
+
+export async function createRoomAction(
+  values: NewRoomFormValues,
+): Promise<{ ok: true; roomId: string } | { ok: false; message: string }> {
+  await requirePortalRole();
+  const parsed = newRoomFormSchema.safeParse(values);
+  if (!parsed.success) return { ok: false, message: "Sprawdź dane gabinetu." };
+  try {
+    const room = await createRoom(
+      await createClient(),
+      toRoomCreate(parsed.data),
+    );
+    revalidatePath("/gabinety");
+    return { ok: true, roomId: room.id };
+  } catch (error) {
+    return failure(error, "Nie udało się dodać gabinetu.");
   }
 }

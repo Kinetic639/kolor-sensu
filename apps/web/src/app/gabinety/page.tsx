@@ -1,11 +1,17 @@
-import { SoftCard } from "@repo/ui/public-site";
-import { Check } from "lucide-react";
-import Image from "next/image";
+import { isRichTextEmpty, type PublicLocation } from "@repo/contracts";
+import { RoomGallery, SoftCard } from "@repo/ui/public-site";
+import { RichTextRenderer } from "@repo/ui/rich-text-renderer";
+import { Accessibility, Check, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
 import { PageIntro } from "@/components/page-intro";
 import { rooms, roomsPage } from "@/content/site";
-import { getLocations, getRooms } from "@/lib/public-data";
+import {
+  getLocations,
+  getRoomsByLocation,
+  getRoomsPageContent,
+} from "@/lib/public-data";
+import type { RoomsPageRoom } from "@/lib/rooms-by-location";
 
 export const metadata: Metadata = {
   title: "Gabinety",
@@ -14,10 +20,103 @@ export const metadata: Metadata = {
   alternates: { canonical: "/gabinety" },
 };
 
+function formatAddress(location: PublicLocation) {
+  return [
+    [location.addressLine1, location.addressLine2].filter(Boolean).join(", "),
+    [location.postalCode, location.city].filter(Boolean).join(" "),
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
+function LocationDetails({ location }: { location: PublicLocation }) {
+  const address = formatAddress(location);
+  return (
+    <div className="grid gap-4">
+      {address ? (
+        <p className="text-body text-text-muted flex items-start gap-2">
+          <MapPin
+            className="text-primary mt-1 size-4 shrink-0"
+            aria-hidden="true"
+          />
+          {address}
+        </p>
+      ) : null}
+      {location.publicDescription ? (
+        <p className="text-body text-ink max-w-copy whitespace-pre-line">
+          {location.publicDescription}
+        </p>
+      ) : null}
+      {location.amenities.length > 0 ? (
+        <ul
+          aria-label={`Udogodnienia: ${location.name}`}
+          className="text-body flex flex-wrap gap-x-6 gap-y-2"
+        >
+          {location.amenities.map((amenity) => (
+            <li key={amenity} className="flex items-center gap-2">
+              <Check
+                className="text-primary size-4 shrink-0"
+                aria-hidden="true"
+              />
+              {amenity}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {location.accessibilityNotes ? (
+        <p className="text-body text-text-muted flex items-start gap-2">
+          <Accessibility
+            className="text-primary mt-1 size-4 shrink-0"
+            aria-hidden="true"
+          />
+          <span>
+            <span className="text-ink font-semibold">Dostępność: </span>
+            {location.accessibilityNotes}
+          </span>
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function RoomCard({
+  room,
+  headingLevel,
+}: {
+  room: RoomsPageRoom;
+  /** h3 under a location's heading, h2 when locations are hidden. */
+  headingLevel: "h2" | "h3";
+}) {
+  const Heading = headingLevel;
+  return (
+    <article className="grid items-start gap-6 lg:grid-cols-2 lg:gap-10">
+      <RoomGallery
+        label={`Zdjęcia: ${room.displayName}`}
+        photos={room.photos}
+      />
+      <div className="grid content-start gap-3">
+        <Heading className="font-display text-h3 text-ink">
+          {room.displayName}
+        </Heading>
+        {room.shortDescription ? (
+          <p className="text-lead text-text-muted">{room.shortDescription}</p>
+        ) : null}
+        {isRichTextEmpty(room.longDescription) ? null : (
+          <RichTextRenderer
+            className="text-body text-ink max-w-copy [&_a]:text-primary-strong [&_blockquote]:border-primary [&_h2]:font-display [&_h2]:text-title [&_h3]:font-display [&_h3]:text-title [&>:first-child]:mt-0"
+            document={room.longDescription}
+          />
+        )}
+      </div>
+    </article>
+  );
+}
+
 export default async function RoomsPage() {
-  const [locations, roomProfiles] = await Promise.all([
+  const [groups, locations, content] = await Promise.all([
+    getRoomsByLocation(),
     getLocations(),
-    getRooms(),
+    getRoomsPageContent(),
   ]);
 
   return (
@@ -28,97 +127,66 @@ export default async function RoomsPage() {
         accent={roomsPage.accent}
         lead={roomsPage.lead}
       />
-      {roomProfiles.length > 0 ? (
-        <section
-          aria-labelledby="rooms-list-heading"
-          className="max-w-page px-gutter pb-section-sm mx-auto grid gap-6"
-        >
-          <h2 id="rooms-list-heading" className="font-display text-h2 text-ink">
-            Nasze gabinety
-          </h2>
-          <ul className="grid gap-6 md:grid-cols-2">
-            {roomProfiles.map((room) => (
-              <li key={room.roomId}>
-                <SoftCard className="grid h-full content-start gap-3 overflow-hidden p-6 lg:p-8">
-                  {room.mainImage ? (
-                    <div className="relative -mx-6 -mt-6 mb-2 aspect-[3/2] lg:-mx-8 lg:-mt-8">
-                      <Image
-                        alt={room.displayName}
-                        className="object-cover"
-                        fill
-                        sizes="(min-width: 768px) 50vw, 100vw"
-                        src={room.mainImage.url}
-                      />
-                    </div>
-                  ) : null}
-                  <h3 className="font-display text-h3 text-ink">
-                    {room.displayName}
-                  </h3>
-                  {room.shortDescription ? (
-                    <p className="text-body text-text-muted">
-                      {room.shortDescription}
-                    </p>
-                  ) : null}
-                  {room.longDescription ? (
-                    <p className="text-body whitespace-pre-line">
-                      {room.longDescription}
-                    </p>
-                  ) : null}
-                  {room.amenities.length > 0 ? (
-                    <ul className="text-body grid gap-2">
-                      {room.amenities.map((amenity) => (
-                        <li key={amenity} className="flex gap-3">
-                          <Check
-                            className="text-primary mt-1 size-4 shrink-0"
-                            aria-hidden="true"
-                          />
-                          {amenity}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  {room.accessibilityNotes ? (
-                    <p className="text-body text-text-muted">
-                      <span className="text-ink font-semibold">
-                        Dostępność:{" "}
-                      </span>
-                      {room.accessibilityNotes}
-                    </p>
-                  ) : null}
-                </SoftCard>
-              </li>
-            ))}
-          </ul>
+      {content.showAmenitiesSection ? (
+        <section className="max-w-page px-gutter pb-section-sm mx-auto">
+          <SoftCard className="grid gap-4 p-6 lg:p-8">
+            <h2 className="font-display text-h3 text-ink">
+              Co u nas znajdziesz
+            </h2>
+            <ul className="text-body grid gap-2.5 sm:grid-cols-2">
+              {roomsPage.points.map((point) => (
+                <li key={point} className="flex gap-3">
+                  <Check
+                    className="text-primary mt-1 size-4 shrink-0"
+                    aria-hidden="true"
+                  />
+                  {point}
+                </li>
+              ))}
+            </ul>
+          </SoftCard>
         </section>
       ) : null}
-      <section className="max-w-page px-gutter pb-section-sm mx-auto">
-        <SoftCard className="grid gap-4 p-6 lg:p-8">
-          <h2 className="font-display text-h3 text-ink">Co u nas znajdziesz</h2>
-          <ul className="text-body grid gap-2.5 sm:grid-cols-2">
-            {roomsPage.points.map((point) => (
-              <li key={point} className="flex gap-3">
-                <Check
-                  className="text-primary mt-1 size-4 shrink-0"
-                  aria-hidden="true"
-                />
-                {point}
-              </li>
+
+      {groups.map(({ location, rooms: locationRooms }) => (
+        <section
+          aria-labelledby={
+            content.showLocationDetails ? `location-${location.id}` : undefined
+          }
+          className="max-w-page px-gutter pb-section-sm mx-auto grid gap-10"
+          key={location.id}
+        >
+          {content.showLocationDetails ? (
+            <SoftCard className="grid gap-4 p-6 lg:p-8">
+              <h2
+                className="font-display text-h2 text-ink"
+                id={`location-${location.id}`}
+              >
+                {location.name}
+              </h2>
+              <LocationDetails location={location} />
+            </SoftCard>
+          ) : null}
+          <div className="grid gap-14">
+            {locationRooms.map((room) => (
+              <RoomCard
+                headingLevel={content.showLocationDetails ? "h3" : "h2"}
+                key={room.roomId}
+                room={room}
+              />
             ))}
-          </ul>
-        </SoftCard>
-      </section>
-      {locations.length > 0 ? (
+          </div>
+        </section>
+      ))}
+
+      {content.showLocationDetails &&
+      groups.length === 0 &&
+      locations.length > 0 ? (
         <section className="max-w-page px-gutter pb-section-sm mx-auto grid gap-6 md:grid-cols-2">
           {locations.map((location) => (
-            <SoftCard key={location.id} className="grid gap-2 p-6">
+            <SoftCard key={location.id} className="grid gap-4 p-6">
               <h2 className="font-display text-h3 text-ink">{location.name}</h2>
-              <p className="text-body text-text-muted">
-                {[location.addressLine1, location.addressLine2]
-                  .filter(Boolean)
-                  .join(", ")}
-                <br />
-                {[location.postalCode, location.city].filter(Boolean).join(" ")}
-              </p>
+              <LocationDetails location={location} />
             </SoftCard>
           ))}
         </section>

@@ -9,9 +9,23 @@ import {
   listRoomsAdmin,
 } from "@repo/supabase";
 
+// Rooms can be placed in any location the centre has, active or not.
+function toLocationOptions(
+  locations: Awaited<ReturnType<typeof listLocations>>,
+) {
+  return locations.map((location) => ({
+    id: location.id,
+    name: location.active ? location.name : `${location.name} (nieaktywna)`,
+  }));
+}
+
 export async function loadAdminRooms() {
   const client = await createClient();
-  return listRoomsAdmin(client);
+  const [rooms, locations] = await Promise.all([
+    listRoomsAdmin(client),
+    listLocations(client),
+  ]);
+  return { rooms, locations: toLocationOptions(locations) };
 }
 
 export async function loadAdminRoomDetail(roomId: string) {
@@ -30,8 +44,11 @@ export async function loadAdminRoomDetail(roomId: string) {
       "Nieznana lokalizacja",
     publicProfile,
     images,
+    locations: toLocationOptions(locations),
   };
 }
+
+export type LocationOption = { id: string; name: string };
 
 export type AdminRoomDetailModel = NonNullable<
   Awaited<ReturnType<typeof loadAdminRoomDetail>>

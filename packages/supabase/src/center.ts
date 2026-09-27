@@ -44,6 +44,9 @@ type PublicLocationQueryRow = Pick<
   | "city"
   | "country_code"
   | "sort_order"
+  | "public_description"
+  | "amenities"
+  | "accessibility_notes"
 >;
 
 function mapCenterSettings(row: CenterSettingsRow): CenterSettings {
@@ -110,6 +113,9 @@ function mapLocation(row: LocationRow): Location {
     active: row.active,
     publiclyVisible: row.publicly_visible,
     sortOrder: row.sort_order,
+    publicDescription: row.public_description,
+    amenities: row.amenities,
+    accessibilityNotes: row.accessibility_notes,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -126,6 +132,9 @@ function mapPublicLocation(row: PublicLocationQueryRow): PublicLocation {
     city: row.city,
     countryCode: row.country_code,
     sortOrder: row.sort_order,
+    publicDescription: row.public_description,
+    amenities: row.amenities,
+    accessibilityNotes: row.accessibility_notes,
   };
 }
 
@@ -279,6 +288,9 @@ export async function createLocation(
       active: location.active,
       publicly_visible: location.publiclyVisible,
       sort_order: location.sortOrder,
+      public_description: location.publicDescription,
+      amenities: location.amenities,
+      accessibility_notes: location.accessibilityNotes,
     })
     .select("*")
     .single();
@@ -306,6 +318,9 @@ export async function updateLocation(
       active: patch.active,
       publicly_visible: patch.publiclyVisible,
       sort_order: patch.sortOrder,
+      public_description: patch.publicDescription,
+      amenities: patch.amenities,
+      accessibility_notes: patch.accessibilityNotes,
     })
     .eq("id", id)
     .select("*")
@@ -331,7 +346,10 @@ const publicLocationSelection = `
   postal_code,
   city,
   country_code,
-  sort_order
+  sort_order,
+  public_description,
+  amenities,
+  accessibility_notes
 `;
 
 export async function listPublicLocations(

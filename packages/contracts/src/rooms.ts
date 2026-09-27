@@ -1,3 +1,8 @@
+import { partialUpdateSchema } from "@repo/contracts/partial-update";
+import {
+  emptyRichTextDocument,
+  richTextDocumentWithMaxCharacters,
+} from "@repo/contracts/rich-text";
 import { z } from "zod";
 
 export const roomSlugSchema = z
@@ -19,12 +24,15 @@ export const roomCreateSchema = z.object({
   sortOrder: z.number().int().min(0).max(10_000).default(0),
 });
 
-export const roomUpdateSchema = roomCreateSchema.partial();
+export const roomUpdateSchema = partialUpdateSchema(roomCreateSchema);
 
 export const roomPublicProfileSchema = z.object({
   displayName: z.string().trim().min(1).max(200),
   shortDescription: z.string().trim().max(500).nullable().default(null),
-  longDescription: z.string().trim().max(10_000).nullable().default(null),
+  // Rich text (docs/architecture/rich-text-platform.md), 10 000 characters.
+  longDescription: richTextDocumentWithMaxCharacters(10_000).default(
+    emptyRichTextDocument,
+  ),
   imagePath: z.string().trim().max(2048).nullable().default(null),
   accessibilityNotes: z.string().trim().max(2000).nullable().default(null),
   amenities: z.array(z.string().trim().min(1).max(100)).max(50).default([]),
@@ -73,8 +81,7 @@ export const roomAvailabilityExceptionCreateSchema = z
     roomTimedExceptionSchema,
   ])
   .refine(
-    (value) =>
-      value.type === "closed_all_day" || value.startsAt < value.endsAt,
+    (value) => value.type === "closed_all_day" || value.startsAt < value.endsAt,
     { message: "Start time must be before end time.", path: ["endsAt"] },
   );
 
@@ -130,8 +137,7 @@ export interface RoomPublicProfile extends RoomPublicProfileInput {
   updatedAt: string;
 }
 
-export interface RoomOpeningHoursInterval
-  extends RoomOpeningHoursIntervalInput {
+export interface RoomOpeningHoursInterval extends RoomOpeningHoursIntervalInput {
   id: string;
   roomId: string;
   createdAt: string;
@@ -139,9 +145,7 @@ export interface RoomOpeningHoursInterval
 }
 
 export type RoomAvailabilityExceptionType =
-  | "closed_all_day"
-  | "blocked_interval"
-  | "extra_available_interval";
+  "closed_all_day" | "blocked_interval" | "extra_available_interval";
 
 export interface RoomAvailabilityException {
   id: string;
@@ -159,10 +163,7 @@ export interface EffectiveRoomAvailabilityInput {
   roomActive: boolean;
   weekday: number;
   openingHours: RoomOpeningHoursIntervalInput[];
-  exceptions: Pick<
-    RoomAvailabilityException,
-    "type" | "startsAt" | "endsAt"
-  >[];
+  exceptions: Pick<RoomAvailabilityException, "type" | "startsAt" | "endsAt">[];
 }
 
 export interface RoomTimeInterval {
@@ -183,3 +184,10 @@ export interface RoomImage {
 }
 
 export const ROOM_IMAGE_LIMIT = 5;
+
+/** Where a published room is shown on the site: its location and order. */
+export interface RoomPlacement {
+  roomId: string;
+  locationId: string;
+  sortOrder: number;
+}

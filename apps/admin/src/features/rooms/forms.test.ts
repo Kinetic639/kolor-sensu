@@ -1,4 +1,8 @@
-import type { RoomPublicProfile } from "@repo/contracts";
+import {
+  emptyRichTextDocument,
+  type RichTextDocument,
+  type RoomPublicProfile,
+} from "@repo/contracts";
 import { describe, expect, it } from "vitest";
 import {
   roomDetailsFormSchema,
@@ -6,6 +10,8 @@ import {
   toRoomDetailsFormValues,
   toRoomProfileFormValues,
   toRoomProfileInput,
+  newRoomFormSchema,
+  toRoomCreate,
   toRoomUpdate,
 } from "./forms";
 
@@ -13,9 +19,14 @@ const profile: RoomPublicProfile = {
   roomId: "room-1",
   displayName: "Gabinet Zielony",
   shortDescription: "Jasny gabinet",
-  longDescription: null,
+  longDescription: {
+    type: "doc",
+    content: [
+      { type: "paragraph", content: [{ type: "text", text: "Pełny opis" }] },
+    ],
+  } as RichTextDocument,
   imagePath: "rooms/green.jpg",
-  accessibilityNotes: null,
+  accessibilityNotes: "Próg przy wejściu",
   amenities: ["Fotele"],
   published: true,
   createdAt: "",
@@ -27,20 +38,18 @@ describe("room profile form", () => {
     expect(toRoomProfileFormValues(null, "Sala 1")).toEqual({
       displayName: "Sala 1",
       shortDescription: "",
-      longDescription: "",
-      accessibilityNotes: "",
-      amenities: [],
+      longDescription: emptyRichTextDocument,
       published: false,
     });
   });
 
-  it("stores empty texts as null and keeps the existing image", () => {
+  it("keeps fields the form no longer edits (image, amenities, access)", () => {
     const values = toRoomProfileFormValues(profile, "Sala 1");
     expect(toRoomProfileInput(values, profile)).toEqual({
       displayName: "Gabinet Zielony",
       shortDescription: "Jasny gabinet",
-      longDescription: null,
-      accessibilityNotes: null,
+      longDescription: profile.longDescription,
+      accessibilityNotes: "Próg przy wejściu",
       imagePath: "rooms/green.jpg",
       amenities: ["Fotele"],
       published: true,
@@ -76,17 +85,18 @@ describe("room details form", () => {
     const values = toRoomDetailsFormValues(room);
     expect(values).toEqual({
       name: "Gabinet Zielony",
+      locationId: "location-1",
       description: "",
       capacity: "2",
       active: true,
-      publiclyVisible: false,
     });
+    // Visibility on the site is set with the public profile, not here.
     expect(toRoomUpdate(values)).toEqual({
       name: "Gabinet Zielony",
+      locationId: "location-1",
       description: null,
       capacity: 2,
       active: true,
-      publiclyVisible: false,
     });
   });
 
@@ -94,6 +104,7 @@ describe("room details form", () => {
     const result = roomDetailsFormSchema.safeParse({
       ...toRoomDetailsFormValues(room),
       name: " ",
+      locationId: "",
       capacity: "0",
     });
     expect(
@@ -102,7 +113,41 @@ describe("room details form", () => {
       ),
     ).toEqual({
       name: "Podaj nazwę gabinetu.",
+      locationId: "Wybierz lokalizację.",
       capacity: "Pojemność to liczba od 1 do 100.",
     });
+  });
+});
+
+describe("new room form", () => {
+  it("creates an inactive-on-the-site room with a slug from its name", () => {
+    expect(
+      toRoomCreate({
+        name: " Gabinet Żółty ",
+        locationId: "30000000-0000-4000-8000-000000000001",
+        capacity: "3",
+      }),
+    ).toEqual({
+      name: "Gabinet Żółty",
+      slug: "gabinet-zolty",
+      locationId: "30000000-0000-4000-8000-000000000001",
+      capacity: 3,
+      description: null,
+      active: true,
+      publiclyVisible: false,
+      sortOrder: 0,
+    });
+  });
+
+  it("needs a name that makes an address, and a location", () => {
+    const result = newRoomFormSchema.safeParse({
+      name: "!",
+      locationId: "",
+      capacity: "1",
+    });
+    expect(result.error?.issues.map((issue) => issue.path[0])).toEqual([
+      "name",
+      "locationId",
+    ]);
   });
 });

@@ -26,15 +26,16 @@ export function RoomsList({ rooms }: { rooms: AdminRoomSummary[] }) {
               <StatusBadge tone={room.active ? "success" : "neutral"}>
                 {room.active ? "Aktywny" : "Nieaktywny"}
               </StatusBadge>
-              <StatusBadge tone={room.publiclyVisible ? "info" : "neutral"}>
-                {room.publiclyVisible ? "Publiczny" : "Wewnętrzny"}
-              </StatusBadge>
               <StatusBadge
-                tone={room.publicProfilePublished ? "success" : "neutral"}
+                tone={
+                  room.publiclyVisible && room.publicProfilePublished
+                    ? "success"
+                    : "neutral"
+                }
               >
-                {room.publicProfilePublished
-                  ? "Profil opublikowany"
-                  : "Profil nieopublikowany"}
+                {room.publiclyVisible && room.publicProfilePublished
+                  ? "Widoczny na stronie"
+                  : "Ukryty na stronie"}
               </StatusBadge>
               <ChevronRight
                 className="size-5 text-[var(--text-muted)]"
