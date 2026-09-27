@@ -13,12 +13,15 @@
 //
 //    Each bloom is one image in the atlas: alpha = its finished region
 //    (grown and feathered a little so neighbours overlap without seams),
-//    grey = when each of its pixels gets paint (0 first). The runtime
-//    (packages/ui/src/public-site/specialist-splash-matte.ts) shows the
-//    pixels whose time has come with an SVG threshold filter, one GSAP tween
-//    per bloom. Together the blooms cover the whole box (checked below), so
-//    once they are done the matte can be dropped and the splash asset's own
-//    alpha is the final shape.
+//    grey = when each of its pixels gets paint (0 first). The blooms are
+//    then baked into one time map of the whole box (splash-time.png: grey =
+//    when each pixel gets paint, each bloom's start and ease included). The
+//    runtime (packages/ui/src/public-site/specialist-splash-matte.ts) shows
+//    the pixels whose time has come with one SVG threshold filter and one
+//    GSAP tween; the atlas stays for inspection in Storybook. Together the
+//    blooms cover the whole box (checked below), so once they are done the
+//    matte can be dropped and the splash asset's own alpha is the final
+//    shape.
 //
 // 2. Two static masks in the same 3 : 4 box, for the portrait's lower edge:
 //    portrait-dissolve.png  opaque above ~67 % of the box, then the portrait
@@ -30,8 +33,8 @@
 // Coordinates: the artwork box is 750 x 1000 design units (3 : 4, the ratio
 // of every supplied splash asset).
 //
-// Output: apps/web/public/watercolor/{splash-matte,portrait-dissolve,
-//         portrait-stain}.png and
+// Output: apps/web/public/watercolor/{splash-matte,splash-time,
+//         portrait-dissolve,portrait-stain}.png and
 //         packages/ui/src/public-site/specialist-splash-matte.data.ts
 // Run:    pnpm --filter @repo/design-system generate:watercolor
 // Deterministic: the same seeds always produce the same files.
@@ -289,6 +292,43 @@ for (const t of textures) {
 }
 const open = empty.filter((e) => e > 0.5 / 255).length;
 
+// ---------------------------------------------------------------- time map
+
+// What the runtime actually draws: all blooms baked into one image of the
+// box, grey = when each pixel gets paint (0 at the splash's start, 255 at
+// SPLASH_END). A bloom's front runs through its own time map with a
+// sine.out ease, so its pixel of grey g is reached ease⁻¹(g) of the way
+// through the bloom; where blooms overlap, the first one to arrive counts.
+// One threshold filter and one linear tween then play every bloom at once,
+// instead of a filter and a tween per bloom (27 filters per card, too much
+// for the GPU while a row of cards reveals).
+const BLOOM_FRONT = 1 / 26;
+const reached = (g) =>
+  (2 / Math.PI) * Math.asin(clamp01((g + BLOOM_FRONT) / (1 + 2 * BLOOM_FRONT)));
+const arrival = new Float32Array(GW * GH).fill(Infinity);
+for (const t of textures) {
+  for (let y = 0; y < t.h; y++) {
+    for (let x = 0; x < t.w; x++) {
+      const i = y * t.w + x;
+      if (t.alpha[i] < 128) continue;
+      const g = (t.y + y) * GW + t.x + x;
+      const time = t.bloom.start + t.duration * reached(t.grey[i] / 252);
+      if (time < arrival[g]) arrival[g] = time;
+    }
+  }
+}
+const timeGrey = Uint8Array.from(arrival, (time) =>
+  Math.round(255 * clamp01(time / SPLASH_END)),
+);
+writeFileSync(
+  resolve(publicDir, "splash-time.png"),
+  encodeGreyAlphaPng(timeGrey, new Uint8Array(GW * GH).fill(255), GW, GH),
+);
+// The same softness as each bloom's front had, in the baked map's units.
+const meanDuration =
+  textures.reduce((sum, t) => sum + t.duration, 0) / textures.length;
+const TIME_SHARPNESS = Math.round(SPLASH_END / meanDuration / BLOOM_FRONT);
+
 // ----------------------------------------------------------- portrait masks
 
 // Box ratios of the card layout (public-site.css, .ks-sp__*): the portrait's
@@ -347,13 +387,21 @@ const lines = [
   "//",
   "// The splash matte of SpecialistWatercolorCard: the blooms that reveal the",
   "// watercolor splash behind a specialist. Design space: the 3 : 4 artwork",
-  "// box (width x height units). Per bloom: its seed (x y), when it starts",
-  "// after the splash starts and how long it spreads (s), where its texture",
-  "// sits in the box and in the atlas (x y w h, design units / atlas px).",
+  "// box (width x height units). `time`: all blooms baked into one time map",
+  "// of the box (what the runtime draws), how long it runs (s) and the",
+  "// sharpness of its front. Per bloom (for inspection): its seed (x y), when",
+  "// it starts after the splash starts and how long it spreads (s), where its",
+  "// texture sits in the box and in the atlas (x y w h, design units / atlas",
+  "// px).",
   "",
   "export const splashMatte = {",
   `  width: ${WIDTH},`,
   `  height: ${HEIGHT},`,
+  "  time: {",
+  '    src: "/watercolor/splash-time.png",',
+  `    duration: ${SPLASH_END},`,
+  `    sharpness: ${TIME_SHARPNESS},`,
+  "  },",
   "  atlas: {",
   '    src: "/watercolor/splash-matte.png",',
   `    width: ${atlasWidth},`,
@@ -380,6 +428,7 @@ writeFileSync(dataFile, lines.join("\n"));
 stdout.write(
   `splash-matte.png  ${atlasWidth} x ${atlasHeight}, ${textures.length} blooms; ` +
     `finished matte leaves ${open} of ${GW * GH} px open\n` +
+    `splash-time.png  ${GW} x ${GH}, sharpness ${TIME_SHARPNESS}\n` +
     `portrait-dissolve.png, portrait-stain.png  ${MASK_W} x ${MASK_H}\n`,
 );
 

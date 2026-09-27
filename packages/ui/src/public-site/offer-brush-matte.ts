@@ -45,7 +45,9 @@ export interface OfferMatte {
 /** When each part of the tile appears (s from the start of the reveal). */
 export const offerRevealTiming = {
   strokes: { at: 0, gap: 0.11, duration: 0.3, ease: "power2.out" },
-  content: { at: 0.3, duration: 0.45, lift: 8 },
+  // Opacity only: the content holds the tile link's overlay, and moving it
+  // would move the overlay's box with it (a layout shift, CLS).
+  content: { at: 0.3, duration: 0.45 },
   arrow: { at: 0.55, duration: 0.35, lift: 6 },
 } as const;
 
@@ -233,13 +235,8 @@ export function createOfferTimeline({
   if (content) {
     timeline.fromTo(
       content,
-      { opacity: 0, y: timing.content.lift },
-      {
-        opacity: 1,
-        y: 0,
-        duration: timing.content.duration,
-        ease: "power2.out",
-      },
+      { opacity: 0 },
+      { opacity: 1, duration: timing.content.duration, ease: "power2.out" },
       timing.content.at,
     );
   }

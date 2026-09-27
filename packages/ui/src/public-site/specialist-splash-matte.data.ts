@@ -4,13 +4,21 @@
 //
 // The splash matte of SpecialistWatercolorCard: the blooms that reveal the
 // watercolor splash behind a specialist. Design space: the 3 : 4 artwork
-// box (width x height units). Per bloom: its seed (x y), when it starts
-// after the splash starts and how long it spreads (s), where its texture
-// sits in the box and in the atlas (x y w h, design units / atlas px).
+// box (width x height units). `time`: all blooms baked into one time map
+// of the box (what the runtime draws), how long it runs (s) and the
+// sharpness of its front. Per bloom (for inspection): its seed (x y), when
+// it starts after the splash starts and how long it spreads (s), where its
+// texture sits in the box and in the atlas (x y w h, design units / atlas
+// px).
 
 export const splashMatte = {
   width: 750,
   height: 1000,
+  time: {
+    src: "/watercolor/splash-time.png",
+    duration: 0.8,
+    sharpness: 43,
+  },
   atlas: {
     src: "/watercolor/splash-matte.png",
     width: 183,

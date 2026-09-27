@@ -253,6 +253,8 @@ describe("SpecialistWatercolorCard entrance animation", () => {
   });
 
   it("does not replay after the no-script fallback has already shown the card", () => {
+    // The fallback fires 3 s after the page loads; the script came later.
+    vi.spyOn(performance, "now").mockReturnValue(5000);
     const style = document.createElement("style");
     style.textContent = ".ks-sp { --ks-sp-hidden: 1; }";
     document.head.append(style);
@@ -261,6 +263,16 @@ describe("SpecialistWatercolorCard entrance animation", () => {
     );
     expect(card(container).dataset.reveal).toBe("done");
     style.remove();
+  });
+
+  it("does not read computed styles before the fallback could have fired", () => {
+    vi.spyOn(performance, "now").mockReturnValue(500);
+    const computed = vi.spyOn(window, "getComputedStyle");
+    const { container } = render(
+      <SpecialistWatercolorCard {...anna} animationPreset="splash-reveal" />,
+    );
+    expect(card(container).dataset.reveal).toBe("waiting");
+    expect(computed).not.toHaveBeenCalled();
   });
 
   it("stops cleanly when unmounted mid-reveal", async () => {
@@ -278,9 +290,7 @@ describe("SpecialistWatercolorCard entrance animation", () => {
     expect(timeline.isActive()).toBe(false);
     expect(matte!.svg.isConnected).toBe(false);
     expect(inlineStyles(element)).toEqual([]);
-    for (const bloom of matte!.blooms) {
-      expect(gsap.getTweensOf(bloom.front)).toHaveLength(0);
-    }
+    expect(gsap.getTweensOf(matte!.front)).toHaveLength(0);
   });
 
   it("never runs two reveals at once in strict mode", async () => {

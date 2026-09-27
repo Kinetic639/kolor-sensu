@@ -372,6 +372,12 @@ backdrop's part comes with its regions, from the generator).
 - States on the root, `data-reveal`: none (server HTML), `waiting` (until in
   view and the images and atlases are loaded, at most 1.5 s), `playing`,
   `fading` (reduced motion), `done`.
+- **Warm-up** (all three reveals, `reveal-support.ts`): about half a screen
+  before an image comes into view, its images and atlases are loaded and
+  decoded and the matte and a paused timeline are built; once enough of it is
+  visible, it only has to start. The fallback check (did the 3 s CSS safety
+  net already show it?) reads computed styles only after those 3 s, never
+  while the page is hydrating.
 
 **Reduced motion** (`reducedMotionMode`): `"static"` (default) shows the
 finished picture at once; `"simple-fade"` fades it in over 0.4 s. No brush
@@ -403,17 +409,21 @@ revealed by **blooms**, never brush strokes.
   pigment multiplied over the clothes there (`portrait-stain.png`); then the
   info plate, the only rectangular element, overlapping from 80 %.
 - **Splash matte** (`generate-splash-matte.mjs` →
-  `specialist-splash-matte.data.ts`, `splash-matte.png`): 27 bloom regions.
+  `specialist-splash-matte.data.ts`, `splash-time.png`): 27 bloom regions.
   Seeds sit on jittered elliptical rings around the torso; every pixel
   belongs to whichever bloom reaches it first, through a warped field with
-  lobes and a cauliflower edge, so blooms meet along irregular borders. Per
-  bloom, the same SVG threshold as the brush matte, with a softer, wet front
-  (slope 26) and a pale wash settling to full strength. Variant "b" is "a"
-  mirrored; a row alternates them.
+  lobes and a cauliflower edge, so blooms meet along irregular borders. The
+  generator bakes all blooms, each with its start and ease, into one time
+  map of the box; the runtime runs the same SVG threshold as the brush matte
+  over it, with a softer, wet front, in one linear tween: one filter per
+  card, however many blooms (27 filters per card were too much for the GPU
+  in a row of cards). The per-bloom atlas (`splash-matte.png`) is only for
+  Splash Matte Debug. Variant "b" is "a" mirrored; a row alternates them.
 - **Sequence** (about 1.05 s, plus 0.12 s stagger per card in a row):
   portrait fades in and lifts 14 px (0–0.5 s); splash starts behind the torso
   at 0.2 s and is complete at 1.0 s; pigment on the portrait 0.5–0.9 s; plate
-  fades in and lifts 10 px (0.66–1.04 s). Then no matte, no inline styles.
+  fades in, without moving (it holds the link overlay; 0.66–1.04 s). Then
+  no matte, no inline styles.
 - **Fallbacks:** reduced motion as WatercolorImage (`static` or
   `simple-fade`); WebKit (no SVG masks on HTML) fades the splash instead of
   blooming it; a 3 s CSS safety net if the script never runs.
@@ -446,7 +456,8 @@ band after another.
   bottom to top, first stroke right to left.
 - **Sequence** (about 0.9 s, plus 0.1 s stagger per tile in a row): strokes
   every 0.11 s, 0.3 s each, overlapping (painted by 0.74 s); content fades
-  in and lifts 8 px (0.3–0.75 s); arrow (0.55–0.9 s). Then no matte, no
+  in without moving (it holds the link overlay; 0.3–0.75 s); arrow lifts in
+  (0.55–0.9 s). Then no matte, no
   inline styles.
 - **Fallbacks:** reduced motion `static` or `simple-fade`; WebKit fades the
   paint instead of painting it; a 3 s CSS safety net.

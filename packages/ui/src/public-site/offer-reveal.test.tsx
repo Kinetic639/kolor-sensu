@@ -259,6 +259,8 @@ describe("OfferTile entrance animation", () => {
   });
 
   it("does not replay after the no-script fallback has already shown the tile", () => {
+    // The fallback fires 3 s after the page loads; the script came later.
+    vi.spyOn(performance, "now").mockReturnValue(5000);
     const style = document.createElement("style");
     style.textContent = ".ks-of { --ks-of-hidden: 1; }";
     document.head.append(style);
@@ -267,6 +269,16 @@ describe("OfferTile entrance animation", () => {
     );
     expect(tile(container).dataset.reveal).toBe("done");
     style.remove();
+  });
+
+  it("does not read computed styles before the fallback could have fired", () => {
+    vi.spyOn(performance, "now").mockReturnValue(500);
+    const computed = vi.spyOn(window, "getComputedStyle");
+    const { container } = render(
+      <OfferTile {...individual} animationPreset="brush-reveal" />,
+    );
+    expect(tile(container).dataset.reveal).toBe("waiting");
+    expect(computed).not.toHaveBeenCalled();
   });
 
   it("stops cleanly when unmounted mid-reveal", async () => {

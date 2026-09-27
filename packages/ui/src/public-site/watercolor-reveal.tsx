@@ -34,7 +34,14 @@ import {
   type PaintMatte,
   paintMatteUrls,
 } from "./watercolor-paint-matte";
-import { decoded, matches, preload, svgMasksSupported } from "./reveal-support";
+import {
+  decoded,
+  matches,
+  preload,
+  shownByFallback,
+  svgMasksSupported,
+  watchReveal,
+} from "./reveal-support";
 
 gsap.registerPlugin(useGSAP);
 
@@ -98,10 +105,7 @@ export function WatercolorReveal({
 
       const reduce = matches("(prefers-reduced-motion: reduce)");
       // Already shown by the no-script fallback (the script came late).
-      const shown =
-        getComputedStyle(root)
-          .getPropertyValue(revealProperties.hidden)
-          .trim() === "none";
+      const shown = shownByFallback(root, revealProperties.hidden, "none");
       if (
         shown ||
         !matches("(scripting: enabled)") ||
@@ -155,62 +159,69 @@ export function WatercolorReveal({
         );
       });
 
-      const paint = contextSafe!(() => {
+      // Built ahead, paused at its start: the masks are only applied once
+      // it plays, so until then the layers stay unpainted.
+      let timeline: gsap.core.Timeline | undefined;
+      const build = contextSafe!(() => {
         matte = createPaintMatte(root);
-        root.style.setProperty(revealProperties.backdrop, matte.backdrop.url);
-        root.style.setProperty(revealProperties.photo, matte.photo.url);
-        setState("playing");
-        const frozen = debug?.freezeAt;
-        const timeline = createPaintTimeline(matte, {
+        timeline = createPaintTimeline(matte, {
           caption,
-          paused: frozen !== undefined,
+          paused: true,
           onComplete: finish,
         });
         animation = timeline;
-        debug?.onReveal?.({ matte, timeline });
-        if (frozen !== undefined) timeline.time(frozen);
       });
 
+      const paint = contextSafe!(() => {
+        if (!matte || !timeline) build();
+        root.style.setProperty(revealProperties.backdrop, matte!.backdrop.url);
+        root.style.setProperty(revealProperties.photo, matte!.photo.url);
+        setState("playing");
+        debug?.onReveal?.({ matte: matte!, timeline: timeline! });
+        const frozen = debug?.freezeAt;
+        if (frozen !== undefined) timeline!.time(frozen);
+        else timeline!.play();
+      });
+
+      // Load and decode the images and the stroke atlases, then build the
+      // reveal, before it is needed.
+      let prepared: Promise<void> | undefined;
+      const prepare = () =>
+        (prepared ??= (async () => {
+          const loaded = Promise.all([
+            ...Array.from(root.querySelectorAll("img"), decoded),
+            ...(reduce ? [] : paintMatteUrls.map(preload)),
+          ]);
+          const timeout = new Promise((resolve) => {
+            timer = setTimeout(resolve, LOAD_TIMEOUT);
+          });
+          await Promise.race([loaded, timeout]);
+          clearTimeout(timer);
+          if (!cancelled && !reduce) build();
+        })());
+
       const start = async () => {
-        const loaded = Promise.all([
-          ...Array.from(root.querySelectorAll("img"), decoded),
-          ...(reduce ? [] : paintMatteUrls.map(preload)),
-        ]);
-        const timeout = new Promise((resolve) => {
-          timer = setTimeout(resolve, LOAD_TIMEOUT);
-        });
-        await Promise.race([loaded, timeout]);
-        clearTimeout(timer);
+        await prepare();
         if (cancelled) return;
         if (reduce) fade();
         else paint();
       };
 
-      // Play once, when a good part of the image is on screen. (A frozen
-      // debug frame is drawn at once.)
-      let observer: IntersectionObserver | undefined;
-      if (
-        typeof IntersectionObserver === "function" &&
+      // Prepare when the image comes near, play once a good part of it is
+      // on screen. (A frozen debug frame is drawn at once.)
+      const stop =
         debug?.freezeAt === undefined
-      ) {
-        observer = new IntersectionObserver(
-          (entries) => {
-            if (entries.some((entry) => entry.isIntersecting)) {
-              observer?.disconnect();
-              void start();
-            }
-          },
-          { threshold: 0.25 },
-        );
-        observer.observe(root);
-      } else {
-        void start();
-      }
+          ? watchReveal(root, {
+              threshold: 0.25,
+              near: () => void prepare(),
+              visible: () => void start(),
+            })
+          : (void start(), () => {});
 
       return () => {
         cancelled = true;
         clearTimeout(timer);
-        observer?.disconnect();
+        stop();
         // Unmounted or re-run mid-reveal: no matte or styles left behind.
         clear();
         matte?.svg.remove();

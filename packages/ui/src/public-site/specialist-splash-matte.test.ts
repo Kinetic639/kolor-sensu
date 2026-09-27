@@ -97,25 +97,23 @@ describe("splash matte data", () => {
 });
 
 describe("splash matte", () => {
-  it("builds one hidden mask with a filtered bloom image per region", () => {
+  it("builds one mask with a single filtered time map, whatever the number of blooms", () => {
     const { host, matte } = build();
     expect(matte.svg.parentElement).toBe(host);
     expect(matte.svg).toHaveAttribute("aria-hidden", "true");
     expect(matte.url).toBe(`url(#${matte.mask.id})`);
     expect(matte.mask).toHaveAttribute("mask-type", "alpha");
-    expect(matte.blooms.map((bloom) => bloom.id)).toEqual(
-      splashMatte.blooms.map((bloom) => bloom.id),
-    );
-    for (const bloom of matte.blooms) {
-      expect(matte.mask.contains(bloom.group)).toBe(true);
-      expect(bloom.group).toHaveAttribute("visibility", "hidden");
-      expect(bloom.group.querySelector("image")).toHaveAttribute(
-        "href",
-        splashMatte.atlas.src,
-      );
-      // Nothing painted yet.
-      expect(frontOffset(bloom.front)).toBeLessThanOrEqual(0);
-    }
+    // One filter and one image: the GPU cost does not grow with the blooms.
+    expect(matte.svg.querySelectorAll("filter")).toHaveLength(1);
+    expect(matte.svg.querySelectorAll("feColorMatrix")).toHaveLength(1);
+    const images = matte.svg.querySelectorAll("image");
+    expect(images).toHaveLength(1);
+    expect(images[0]).toHaveAttribute("href", splashMatte.time.src);
+    expect(images[0]).toHaveAttribute("width", String(splashMatte.width));
+    expect(images[0]).toHaveAttribute("height", String(splashMatte.height));
+    expect(matte.mask.contains(matte.group)).toBe(true);
+    // Nothing painted yet.
+    expect(frontOffset(matte.front)).toBeLessThanOrEqual(0);
   });
 
   it("mirrors the layout for variant b, and never shares ids", () => {
@@ -178,18 +176,28 @@ describe("card reveal timeline", () => {
     timeline.kill();
   });
 
-  it("ends with every bloom fully painted, visible and unfiltered", () => {
+  it("runs the threshold linearly through the time map (the blooms' timing is baked in)", () => {
+    const { layers, matte } = build();
+    const timeline = createSplashTimeline({ ...layers, matte, paused: true });
+    const tweens = gsap.getTweensOf(matte.front);
+    expect(tweens).toHaveLength(1);
+    expect(tweens[0]!.duration()).toBeCloseTo(splashMatte.time.duration, 5);
+    expect(tweens[0]!.vars.ease).toBe("none");
+    expect(tweens[0]!.startTime()).toBeCloseTo(
+      specialistRevealTiming.splash.at,
+      5,
+    );
+    timeline.kill();
+  });
+
+  it("ends with the splash fully painted and unfiltered", () => {
     const { layers, matte } = build();
     const timeline = createSplashTimeline({ ...layers, matte, paused: true });
     timeline.progress(1);
-    for (const bloom of matte.blooms) {
-      expect(bloom.group).toHaveAttribute("visibility", "visible");
-      expect(bloom.group).toHaveAttribute("filter", "none");
-      expect(bloom.group.style.opacity).toBe("1");
-      expect(frontOffset(bloom.front) - BLOOM_SHARPNESS).toBeGreaterThanOrEqual(
-        1 - 1e-6,
-      );
-    }
+    expect(matte.group).toHaveAttribute("filter", "none");
+    expect(frontOffset(matte.front) - BLOOM_SHARPNESS).toBeGreaterThanOrEqual(
+      1 - 1e-6,
+    );
     for (const layer of Object.values(layers)) {
       expect(layer.style.opacity).toBe("1");
     }

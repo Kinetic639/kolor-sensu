@@ -35,16 +35,32 @@ function mockMedia({ reduce = false, scripting = true } = {}) {
   }));
 }
 
-// A hand-driven IntersectionObserver: `scrollIntoView()` reports the watched
-// element as visible.
+// A hand-driven IntersectionObserver: `comeNear()` reports the watched
+// element to the observers looking ahead (with a root margin),
+// `scrollIntoView()` to all of them.
 function mockIntersectionObserver() {
   const observers: Array<{
     callback: IntersectionObserverCallback;
     targets: Element[];
+    options?: IntersectionObserverInit;
   }> = [];
+  const report = (only: (typeof observers)[number][]) => {
+    for (const observer of only) {
+      observer.callback(
+        observer.targets.map(
+          (target) =>
+            ({ target, isIntersecting: true }) as IntersectionObserverEntry,
+        ),
+        observer as unknown as IntersectionObserver,
+      );
+    }
+  };
   class Observer {
     targets: Element[] = [];
-    constructor(public callback: IntersectionObserverCallback) {
+    constructor(
+      public callback: IntersectionObserverCallback,
+      public options?: IntersectionObserverInit,
+    ) {
       observers.push(this);
     }
     observe(target: Element) {
@@ -60,16 +76,11 @@ function mockIntersectionObserver() {
   }
   vi.stubGlobal("IntersectionObserver", Observer);
   return {
+    comeNear() {
+      report(observers.filter((observer) => observer.options?.rootMargin));
+    },
     scrollIntoView() {
-      for (const observer of observers) {
-        observer.callback(
-          observer.targets.map(
-            (target) =>
-              ({ target, isIntersecting: true }) as IntersectionObserverEntry,
-          ),
-          observer as unknown as IntersectionObserver,
-        );
-      }
+      report(observers);
     },
   };
 }
@@ -310,7 +321,41 @@ describe("WatercolorImage entrance animation", () => {
     expect(root(container).dataset.reveal).toBe("done");
   });
 
+  it("does not read computed styles before the fallback could have fired", () => {
+    vi.spyOn(performance, "now").mockReturnValue(500);
+    const computed = vi.spyOn(window, "getComputedStyle");
+    const { container } = render(
+      <WatercolorImage {...base} animationPreset="watercolor-reveal" />,
+    );
+    expect(root(container).dataset.reveal).toBe("waiting");
+    // (The caption's float reads the caption's own styles.)
+    expect(computed).not.toHaveBeenCalledWith(root(container));
+  });
+
+  it("builds the reveal when the image comes near, and plays it once in view", async () => {
+    const io = mockIntersectionObserver();
+    const { reveals, wrapper } = recordReveals();
+    const { container } = render(
+      <WatercolorImage {...base} animationPreset="watercolor-reveal" />,
+      { wrapper },
+    );
+    const element = root(container);
+    io.comeNear();
+    await waitFor(() => expect(mattes()).toHaveLength(1));
+    // Ready, but nothing painted or started yet.
+    expect(element.dataset.reveal).toBe("waiting");
+    expect(inlineRevealProperties(element)).toEqual([]);
+    expect(reveals).toHaveLength(0);
+
+    io.scrollIntoView();
+    await waitFor(() => expect(element.dataset.reveal).toBe("playing"));
+    expect(mattes()).toHaveLength(1);
+    expect(reveals[0]!.timeline.paused()).toBe(false);
+  });
+
   it("does not replay after the no-script fallback has already shown the image", () => {
+    // The fallback fires 3 s after the page loads; the script came later.
+    vi.spyOn(performance, "now").mockReturnValue(5000);
     const computed = window.getComputedStyle;
     vi.spyOn(window, "getComputedStyle").mockImplementation((element) => {
       const style = computed(element);
