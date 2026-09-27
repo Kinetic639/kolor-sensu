@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { JsonLd } from "./json-ld";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
+import { SiteIntro } from "./site-intro";
 import { logoMarkSrc } from "./site-logo";
 import type {
   SiteContact,
@@ -13,7 +14,7 @@ import { SkipLink } from "./skip-link";
 
 // Server-safe. The frame of every public page, in landmark order:
 //
-//   skip link → <header> (banner, with <nav>) → <main id="tresc"> → <footer>
+//   (first-visit intro) → skip link → <header> (banner, with <nav>) → <main id="tresc"> → <footer>
 //
 // plus the centre as schema.org structured data when the site's origin is
 // known. Pages render their sections as children; each page has one <h1>.
@@ -29,6 +30,8 @@ export interface SiteLayoutProps {
   /** Absolute origin, e.g. https://kolorsensu.pl, for structured data. */
   siteUrl?: string;
   year?: number;
+  /** The first-visit brand intro (site-intro.tsx). */
+  intro?: boolean;
   children: ReactNode;
 }
 
@@ -42,10 +45,12 @@ export function SiteLayout({
   currentPath,
   siteUrl,
   year,
+  intro = true,
   children,
 }: SiteLayoutProps) {
   return (
     <div className="bg-bg font-body text-ink flex min-h-screen flex-col">
+      {intro ? <SiteIntro /> : null}
       <SkipLink />
       <SiteHeader
         navigation={navigation}

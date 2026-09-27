@@ -1,10 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { userEvent, within } from "storybook/test";
+import { useState } from "react";
+import { expect, userEvent, within } from "storybook/test";
+import { Button } from "../button";
 import { CookieConsent } from "./cookie-consent";
 import { FaqSection } from "./faq-section";
 import { SiteBreadcrumbs } from "./site-breadcrumbs";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
+import { SiteIntro } from "./site-intro";
 import { SiteLogo } from "./site-logo";
 import {
   sampleAbout,
@@ -140,6 +143,52 @@ export const Faq: Story = {
       cta={{ href: "/kontakt", label: "Masz inne pytanie? Napisz do nas" }}
     />
   ),
+};
+
+function IntroReplay() {
+  const [run, setRun] = useState(0);
+  return (
+    <>
+      <SiteIntro key={run} replay />
+      <SiteHeader
+        navigation={sampleNavigation}
+        cta={sampleCta}
+        contact={sampleContact}
+        currentPath="/"
+      />
+      <div className="max-w-page px-gutter mx-auto py-16">
+        <Button variant="outline" onClick={() => setRun((n) => n + 1)}>
+          Odtwórz intro
+        </Button>
+      </div>
+    </>
+  );
+}
+
+/**
+ * The first-visit intro (about 1.5 s), over the page it uncovers. On the
+ * site it plays once per visitor, never under reduced motion, and the
+ * page's reveals start as it fades.
+ */
+export const Intro: Story = {
+  name: "Intro · First visit",
+  render: () => <IntroReplay />,
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole("button", { name: "Odtwórz intro" }),
+    );
+    await expect(
+      canvasElement.querySelector('.ks-intro[data-intro="play"]'),
+    ).not.toBeNull();
+  },
+};
+
+export const IntroMobile: Story = {
+  name: "Intro · Mobile",
+  render: () => <IntroReplay />,
+  globals: { viewport: { value: "mobile", isRotated: false } },
 };
 
 /** The cookie notice, as on a first visit. */

@@ -49,12 +49,27 @@ export function shownByFallback(
   );
 }
 
+// When the page's reveals may start while SiteIntro plays: as its paper
+// begins to fade (ms after it started; public-site.css, .ks-intro).
+const INTRO_HANDOFF = 1100;
+
+/** How long (ms) the first-visit intro still covers the page; 0 if none. */
+export function introRemaining() {
+  const intro = document.querySelector<HTMLElement>(
+    '.ks-intro[data-intro="play"]',
+  );
+  if (!intro) return 0;
+  const at = Number(intro.dataset.introAt ?? 0);
+  return Math.max(0, at + INTRO_HANDOFF - performance.now());
+}
+
 /**
  * Two moments of a reveal: `near` when the element is still about half a
  * screen away (load, decode and build the animation then, so nothing is left
  * to do when it starts), `visible` when `threshold` of it is on screen (play
- * it). Each fires once; without IntersectionObserver both fire at once.
- * Returns a function that stops watching.
+ * it; while the first-visit intro still covers the page, as it fades). Each
+ * fires once; without IntersectionObserver both fire at once. Returns a
+ * function that stops watching.
  */
 export function watchReveal(
   root: Element,
@@ -64,10 +79,16 @@ export function watchReveal(
     visible,
   }: { threshold: number; near: () => void; visible: () => void },
 ) {
-  if (typeof IntersectionObserver !== "function") {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const show = () => {
     near();
-    visible();
-    return () => {};
+    const wait = introRemaining();
+    if (wait > 0) timer = setTimeout(visible, wait);
+    else visible();
+  };
+  if (typeof IntersectionObserver !== "function") {
+    show();
+    return () => clearTimeout(timer);
   }
   const once = (callback: () => void, options: IntersectionObserverInit) => {
     const observer = new IntersectionObserver((entries) => {
@@ -80,15 +101,10 @@ export function watchReveal(
     return observer;
   };
   const early = once(near, { rootMargin: "50% 0px 50% 0px" });
-  const late = once(
-    () => {
-      near();
-      visible();
-    },
-    { threshold },
-  );
+  const late = once(show, { threshold });
   return () => {
     early.disconnect();
     late.disconnect();
+    clearTimeout(timer);
   };
 }

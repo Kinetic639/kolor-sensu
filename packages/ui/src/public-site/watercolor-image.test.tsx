@@ -223,7 +223,9 @@ describe("WatercolorImage", () => {
     for (const { selector, body, context } of cssRules()) {
       if (!/--ks-reveal|animation\b/.test(body)) continue;
       if (context.some((at) => at.startsWith("@keyframes"))) continue;
-      expect(selector).toMatch(/\[data-(animation|reduced-motion|reveal)[=\]]/);
+      expect(selector).toMatch(
+        /\[data-(animation|reduced-motion|reveal|intro)[=\]]/,
+      );
     }
   });
 });

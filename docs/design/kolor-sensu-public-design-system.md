@@ -519,12 +519,25 @@ islands hydrate: the desktop dropdown, the phone menu and the cookie notice.
 - **Cookie notice:** `CookieConsent`, a small card in the lower corner,
   client-only (never in the first paint, no layout shift); the choice is
   kept in localStorage and passed to the app before any analytics load.
+- **First-visit intro:** `SiteIntro` (first in `SiteLayout`, `intro`
+  prop): paper, a pink and sage watercolor patch spreading, the owl mark,
+  the name, a pink brush swash drawn under it, the tagline, then the paper
+  fades away (about 1.5 s). Pure CSS from the first paint, no JavaScript
+  bundle needed; an inline script before the first paint lets it play only
+  on the first visit (localStorage `ks-intro`), never under reduced motion
+  or where storage is blocked. It takes no clicks or focus and is hidden
+  from assistive technology; the page underneath is already rendered, so
+  it is not a preloader and does not delay LCP. The page's reveals start as
+  it fades (1.1 s; `introRemaining` in `reveal-support.ts`). Returning
+  visitors download nothing for it (lazy image, CSS images of a hidden
+  element).
 - **SEO:** one H1 per page; landmarks and labelled navigations;
   structured data as JSON-LD (`JsonLd`, `<` escaped): `MedicalBusiness`
   for the centre (from `SiteLayout` when `siteUrl` is set),
   `BreadcrumbList`, `FAQPage`.
 - **Storybook:** Public site/Layout (header in every width, the dropdown
-  and the phone menu open, footer, logo, breadcrumbs, FAQ, cookie notice)
+  and the phone menu open, footer, logo, breadcrumbs, FAQ, cookie notice,
+  intro with a replay button)
   and Public site/Pages (the home page at every width, first visit, phone
   menu open, a subpage).
 

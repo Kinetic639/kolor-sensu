@@ -484,6 +484,167 @@
     }
   }
 
+  /* ------------------------------------------------------------ SiteIntro */
+
+  /* First-visit brand intro (site-intro.tsx). Hidden unless its inline
+     script marked it data-intro="play" before the first paint, so without
+     JavaScript, on later visits and under reduced motion there is nothing.
+     All transforms and opacity (plus one tiny clip-path), about 1.5 s:
+
+       0.05–0.75 s  a watercolor patch spreads behind the logo
+       0.15–0.65 s  the owl mark rises in
+       0.30–0.75 s  the name
+       0.55–0.95 s  the pink swash is drawn under it
+       0.65–1.05 s  the tagline
+       1.05–1.50 s  the paper fades away; the page's reveals start at 1.1 s
+                    (INTRO_HANDOFF in reveal-support.ts) */
+  .ks-intro {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    place-items: center;
+    overflow: hidden;
+    background: var(--color-bg);
+    pointer-events: none;
+  }
+
+  .ks-intro[data-intro="play"] {
+    display: grid;
+    animation: ks-intro-out 0.45s 1.05s ease-in-out forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce), print {
+    .ks-intro[data-intro="play"] {
+      display: none;
+    }
+  }
+
+  .ks-intro__stage {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    isolation: isolate;
+  }
+
+  .ks-intro__wash {
+    position: absolute;
+    z-index: -1;
+    top: 50%;
+    left: 50%;
+    width: 24rem;
+    height: 18rem;
+    margin: -9rem 0 0 -12rem;
+    background:
+      radial-gradient(
+        ellipse 55% 60% at 36% 44%,
+        var(--color-pink-soft) 0 45%,
+        transparent 75%
+      ),
+      radial-gradient(
+        ellipse 50% 55% at 66% 60%,
+        color-mix(in oklab, var(--color-sage) 75%, transparent) 0 40%,
+        transparent 75%
+      );
+    mask-image: url("/watercolor/band.svg");
+    mask-size: 100% 100%;
+  }
+
+  .ks-intro__wash::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("/watercolor/paper.svg");
+    background-size: 180px 180px;
+    mix-blend-mode: multiply;
+    opacity: 0.25;
+  }
+
+  .ks-intro__mark {
+    display: block;
+    width: auto;
+    height: 6rem;
+  }
+
+  .ks-intro__name {
+    margin-top: 0.625rem;
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+
+  .ks-intro__swash {
+    display: block;
+    width: 9.5rem;
+    height: auto;
+    margin: 0.125rem 0 0 2.5rem;
+    fill: var(--color-pink);
+  }
+
+  .ks-intro__tagline {
+    margin-top: 0.5rem;
+    color: var(--color-pink-strong);
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* The sequence, only while it plays. */
+  .ks-intro[data-intro="play"] .ks-intro__wash {
+    animation: ks-intro-wash 0.7s 0.05s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  .ks-intro[data-intro="play"] .ks-intro__mark {
+    animation: ks-intro-rise 0.5s 0.15s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  .ks-intro[data-intro="play"] .ks-intro__name {
+    animation: ks-intro-rise 0.45s 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  .ks-intro[data-intro="play"] .ks-intro__swash {
+    animation: ks-intro-draw 0.4s 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  .ks-intro[data-intro="play"] .ks-intro__tagline {
+    animation: ks-intro-rise 0.4s 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  @keyframes ks-intro-wash {
+    from {
+      opacity: 0;
+      transform: scale(0.7) rotate(-4deg);
+    }
+  }
+
+  @keyframes ks-intro-rise {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+  }
+
+  @keyframes ks-intro-draw {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  @keyframes ks-intro-out {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
   /* ------------------------------------------------------ painted surfaces */
 
   /* Service tile and section band: a flat pastel fill cut by a brushed mask,
