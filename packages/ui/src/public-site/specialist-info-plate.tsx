@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { PageLink as Link } from "./page-link";
 import { cn } from "../lib/utils";
 import type { SpecialistAccent } from "./specialist-artwork";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { Cookie } from "lucide-react";
-import Link from "next/link";
+import { PageLink as Link } from "./page-link";
 import { useEffect, useState } from "react";
 import { cn } from "../lib/utils";
 import { PrimaryButton, SecondaryButton } from "./actions";

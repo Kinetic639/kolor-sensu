@@ -14,10 +14,13 @@ export interface SiteNavItem extends SiteLink {
 
 export interface SiteContact {
   address: { street: string; postalCode: string; city: string };
-  /** As dialled, e.g. "+48123456789"; `phoneLabel` is how it is shown. */
-  phone: string;
-  phoneLabel: string;
-  email: string;
+  /**
+   * As dialled, e.g. "+48123456789"; `phoneLabel` is how it is shown. Left
+   * out, the phone is simply not shown (likewise the email).
+   */
+  phone?: string;
+  phoneLabel?: string;
+  email?: string;
   /** Opening hours as shown, e.g. "Pn–Pt 8:00–20:00". */
   hours?: string;
 }

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { PageLink as Link } from "./page-link";
 import { cn } from "../lib/utils";
 
 /** The mark for headers (apps/web/public/brand, generate:brand). */
@@ -12,6 +12,8 @@ export interface SiteLogoProps {
   /** Second line under the name, e.g. in the footer. */
   tagline?: string;
   size?: "md" | "lg";
+  /** "Sensu" in the brand green, as the headings' accent lines (header). */
+  accent?: boolean;
   className?: string;
 }
 
@@ -28,6 +30,7 @@ export function SiteLogo({
   href = "/",
   tagline,
   size = "md",
+  accent = false,
   className,
 }: SiteLogoProps) {
   const { mark, name } = sizes[size];
@@ -54,7 +57,8 @@ export function SiteLogo({
             name,
           )}
         >
-          Kolor Sensu
+          Kolor{" "}
+          <span className={accent ? "text-primary" : undefined}>Sensu</span>
         </span>
         {tagline ? (
           <span className="text-text-muted text-[0.75rem]">{tagline}</span>

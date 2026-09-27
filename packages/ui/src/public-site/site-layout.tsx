@@ -22,7 +22,7 @@ import { SkipLink } from "./skip-link";
 export interface SiteLayoutProps {
   navigation: readonly SiteNavItem[];
   cta?: SiteLink;
-  contact: SiteContact;
+  contact?: SiteContact;
   socials?: readonly SiteSocial[];
   legal?: readonly SiteLink[];
   about?: string;
@@ -82,15 +82,17 @@ export function SiteLayout({
             description: about,
             url: siteUrl,
             logo: new URL(logoMarkSrc, siteUrl).toString(),
-            telephone: contact.phone,
-            email: contact.email,
-            address: {
-              "@type": "PostalAddress",
-              streetAddress: contact.address.street,
-              postalCode: contact.address.postalCode,
-              addressLocality: contact.address.city,
-              addressCountry: "PL",
-            },
+            ...(contact && {
+              telephone: contact.phone,
+              email: contact.email,
+              address: {
+                "@type": "PostalAddress",
+                streetAddress: contact.address.street,
+                postalCode: contact.address.postalCode,
+                addressLocality: contact.address.city,
+                addressCountry: "PL",
+              },
+            }),
             sameAs: socials.map((social) => social.href),
           }}
         />

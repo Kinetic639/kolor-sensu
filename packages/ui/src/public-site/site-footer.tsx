@@ -1,5 +1,5 @@
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
-import Link from "next/link";
+import { PageLink as Link } from "./page-link";
 import { cn } from "../lib/utils";
 import { Separator } from "../separator";
 import { SiteLogo } from "./site-logo";
@@ -18,7 +18,8 @@ import { SocialIcon, socialNames } from "./social-icons";
 
 export interface SiteFooterProps {
   navigation: readonly SiteNavItem[];
-  contact: SiteContact;
+  /** Left out, the footer has no contact column. */
+  contact?: SiteContact;
   socials?: readonly SiteSocial[];
   legal?: readonly SiteLink[];
   /** A sentence about the centre under the logo. */
@@ -103,55 +104,61 @@ export function SiteFooter({
           </nav>
         ) : null}
 
-        <div>
-          <ColumnTitle>Kontakt</ColumnTitle>
-          <address className="text-small grid gap-3 not-italic">
-            <p className="flex gap-3">
-              <MapPin
-                className="text-primary mt-0.5 size-4 shrink-0"
-                strokeWidth={1.75}
-                aria-hidden="true"
-              />
-              <span>
-                {contact.address.street}
-                <br />
-                {`${contact.address.postalCode} ${contact.address.city}`}
-              </span>
-            </p>
-            <a
-              href={`tel:${contact.phone}`}
-              className={cn(linkStyle, "flex gap-3")}
-            >
-              <Phone
-                className="text-primary mt-0.5 size-4 shrink-0"
-                strokeWidth={1.75}
-                aria-hidden="true"
-              />
-              {contact.phoneLabel}
-            </a>
-            <a
-              href={`mailto:${contact.email}`}
-              className={cn(linkStyle, "flex gap-3")}
-            >
-              <Mail
-                className="text-primary mt-0.5 size-4 shrink-0"
-                strokeWidth={1.75}
-                aria-hidden="true"
-              />
-              {contact.email}
-            </a>
-            {contact.hours ? (
-              <p className="text-text-muted flex gap-3">
-                <Clock
+        {contact ? (
+          <div>
+            <ColumnTitle>Kontakt</ColumnTitle>
+            <address className="text-small grid gap-3 not-italic">
+              <p className="flex gap-3">
+                <MapPin
                   className="text-primary mt-0.5 size-4 shrink-0"
                   strokeWidth={1.75}
                   aria-hidden="true"
                 />
-                {contact.hours}
+                <span>
+                  {contact.address.street}
+                  <br />
+                  {`${contact.address.postalCode} ${contact.address.city}`}
+                </span>
               </p>
-            ) : null}
-          </address>
-        </div>
+              {contact.phone ? (
+                <a
+                  href={`tel:${contact.phone}`}
+                  className={cn(linkStyle, "flex gap-3")}
+                >
+                  <Phone
+                    className="text-primary mt-0.5 size-4 shrink-0"
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                  />
+                  {contact.phoneLabel ?? contact.phone}
+                </a>
+              ) : null}
+              {contact.email ? (
+                <a
+                  href={`mailto:${contact.email}`}
+                  className={cn(linkStyle, "flex gap-3")}
+                >
+                  <Mail
+                    className="text-primary mt-0.5 size-4 shrink-0"
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                  />
+                  {contact.email}
+                </a>
+              ) : null}
+              {contact.hours ? (
+                <p className="text-text-muted flex gap-3">
+                  <Clock
+                    className="text-primary mt-0.5 size-4 shrink-0"
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                  />
+                  {contact.hours}
+                </p>
+              ) : null}
+            </address>
+          </div>
+        ) : null}
       </div>
 
       <div className="max-w-page px-gutter mx-auto">

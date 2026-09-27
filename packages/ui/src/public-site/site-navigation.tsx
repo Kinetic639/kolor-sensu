@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { PageLink as Link } from "./page-link";
+import { usePathname } from "next/navigation";
 import { cn } from "../lib/utils";
 import {
   NavigationMenu,
@@ -26,19 +27,23 @@ export function isCurrent(href: string, currentPath?: string) {
 }
 
 const itemStyle =
-  "text-small text-ink inline-flex h-10 items-center rounded-full px-3.5 font-medium transition-colors hover:bg-cream focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2 data-[active=true]:text-primary-strong";
+  "text-small text-ink inline-flex h-10 items-center rounded-full px-3.5 font-medium transition-colors hover:bg-cream focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2 data-[active=true]:text-primary-strong aria-[current=page]:text-primary-strong";
 
 export interface SiteNavigationProps {
   items: readonly SiteNavItem[];
+  /** The page's path; by default the router's current path. */
   currentPath?: string;
   className?: string;
 }
 
 export function SiteNavigation({
   items,
-  currentPath,
+  currentPath: givenPath,
   className,
 }: SiteNavigationProps) {
+  // Outside a Next.js router (tests) usePathname() is null.
+  const pathname = usePathname();
+  const currentPath = givenPath ?? pathname ?? undefined;
   return (
     <NavigationMenu
       viewport={false}

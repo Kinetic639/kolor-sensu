@@ -1,7 +1,7 @@
 import { Slot, Slottable } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { PageLink as Link, type PageLinkProps } from "./page-link";
 import type { ButtonHTMLAttributes, ComponentProps } from "react";
 import { cn } from "../lib/utils";
 
@@ -80,7 +80,7 @@ export function SecondaryButton(props: PublicButtonProps) {
   return <PublicButton variant="secondary" {...props} />;
 }
 
-export type ArrowLinkProps = ComponentProps<typeof Link>;
+export type ArrowLinkProps = PageLinkProps;
 
 /** Inline "read more" link: "Zobacz całą ofertę →". */
 export function ArrowLink({ className, children, ...props }: ArrowLinkProps) {

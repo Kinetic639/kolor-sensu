@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { PageLink as Link } from "./page-link";
 import { cn } from "../lib/utils";
 import { PrimaryButton } from "./actions";
 import { SiteLogo } from "./site-logo";
@@ -39,7 +39,7 @@ export function SiteHeader({
       )}
     >
       <div className="max-w-page px-gutter mx-auto flex h-16 items-center gap-4 lg:h-20">
-        <SiteLogo />
+        <SiteLogo accent />
         <SiteNavigation
           items={navigation}
           currentPath={currentPath}

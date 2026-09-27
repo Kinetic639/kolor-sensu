@@ -1,6 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { PageLink as Link } from "./page-link";
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/utils";
 import { offerMatte } from "./offer-brush-matte.data";

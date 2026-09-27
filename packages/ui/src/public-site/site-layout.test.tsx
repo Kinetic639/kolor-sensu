@@ -74,6 +74,12 @@ describe("SiteLayout", () => {
     expect(home.querySelector("img")!.getAttribute("src")).toContain(
       "logo-mark.png",
     );
+    // "Sensu" in the brand green, in the header only.
+    expect(within(home).getByText("Sensu")).toHaveClass("text-primary");
+    const footer = screen.getByRole("contentinfo");
+    expect(
+      within(footer).getByText("Sensu", { selector: "span" }),
+    ).not.toHaveClass("text-primary");
   });
 
   it("links every page from the main navigation and marks the current one", () => {
@@ -86,10 +92,11 @@ describe("SiteLayout", () => {
         within(nav).getByRole("link", { name: item.label }),
       ).toHaveAttribute("href", item.href);
     }
-    expect(within(nav).getByRole("link", { name: "Gabinety" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    const current = within(nav).getByRole("link", { name: "Gabinety" });
+    expect(current).toHaveAttribute("aria-current", "page");
+    // ...and shows it: Radix marks the link with aria-current, not with
+    // data-active="true".
+    expect(current).toHaveClass("aria-[current=page]:text-primary-strong");
     // "Oferta" opens its services.
     expect(
       within(nav).getByRole("button", { name: "Oferta" }),

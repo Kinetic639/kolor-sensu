@@ -1,57 +1,73 @@
-import { createPublicClient } from "@/lib/supabase/public";
-import { getPublishedHomeContent } from "@repo/supabase";
-import { Container } from "@repo/ui/container";
-import { TestContentBlock } from "@repo/ui/test-content-block";
+import {
+  FaqSection,
+  FeatureSection,
+  HeroSection,
+  OfferSection,
+  SpecialistsSection,
+} from "@repo/ui/public-site";
 import type { Metadata } from "next";
-import { cache } from "react";
+import { ClosingCta } from "@/components/closing-cta";
+import {
+  faq,
+  hero,
+  offerCopy,
+  rooms,
+  specialistsCopy,
+  workshops,
+} from "@/content/site";
+import { toOfferTile, toSpecialistCard } from "@/lib/presentation";
+import { getServices, getSpecialists } from "@/lib/public-data";
 
-const loadHomeContent = cache(() =>
-  getPublishedHomeContent(createPublicClient()),
-);
-
-export async function generateMetadata(): Promise<Metadata> {
-  const content = await loadHomeContent();
-
-  if (!content) {
-    return {
-      title: "Kolor Sensu | Centrum Psychoterapii",
-      description: "Kolor Sensu, Centrum Psychoterapii.",
-    };
-  }
-
-  return {
-    title: content.heading,
-    description: content.body.slice(0, 160),
-  };
-}
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default async function Home() {
-  const content = await loadHomeContent();
-
-  if (!content) {
-    return (
-      <main className="flex min-h-screen items-center py-16">
-        <Container>
-          <p className="text-sm text-[var(--ks-color-text-muted)]">
-            KOLOR SENSU · Centrum Psychoterapii
-          </p>
-          <h1 className="mt-2 text-2xl font-semibold">
-            Strona w przygotowaniu
-          </h1>
-        </Container>
-      </main>
-    );
-  }
+  const [services, specialists] = await Promise.all([
+    getServices(),
+    getSpecialists(),
+  ]);
 
   return (
-    <main className="py-10">
-      <Container>
-        <TestContentBlock
-          body={content.body}
-          buttonLabel={content.buttonLabel}
-          heading={content.heading}
+    <>
+      <HeroSection {...hero} animationPreset="watercolor-reveal" />
+      {services.length > 0 ? (
+        <OfferSection
+          {...offerCopy}
+          services={services.slice(0, 4).map(toOfferTile)}
+          cta={{ href: "/oferta", label: "Zobacz całą ofertę" }}
+          animationPreset="brush-reveal"
         />
-      </Container>
-    </main>
+      ) : null}
+      {specialists.length > 0 ? (
+        <SpecialistsSection
+          {...specialistsCopy}
+          specialists={specialists.slice(0, 3).map(toSpecialistCard)}
+          cta={{
+            href: "/specjalisci",
+            label: "Zobacz wszystkich specjalistów",
+          }}
+          animationPreset="splash-reveal"
+        />
+      ) : null}
+      <FeatureSection
+        {...rooms}
+        cta={{ href: "/gabinety", label: "Zobacz nasze gabinety" }}
+        imagePosition="left"
+        animationPreset="watercolor-reveal"
+      />
+      <FeatureSection
+        {...workshops}
+        cta={{ href: "/warsztaty", label: "Zobacz nadchodzące wydarzenia" }}
+        imagePosition="right"
+        animationPreset="watercolor-reveal"
+      />
+      <FaqSection
+        items={faq}
+        description="Najczęstsze pytania osób, które zastanawiają się nad pierwszą wizytą."
+        cta={{ href: "/kontakt", label: "Masz inne pytanie? Napisz do nas" }}
+      />
+      <ClosingCta />
+    </>
   );
 }

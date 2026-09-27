@@ -1,7 +1,8 @@
 "use client";
 
 import { Mail, Menu, Phone } from "lucide-react";
-import Link from "next/link";
+import { PageLink as Link } from "./page-link";
+import { usePathname } from "next/navigation";
 import { cn } from "../lib/utils";
 import {
   Sheet,
@@ -25,6 +26,7 @@ export interface SiteMobileNavProps {
   items: readonly SiteNavItem[];
   cta?: SiteLink;
   contact?: SiteContact;
+  /** The page's path; by default the router's current path. */
   currentPath?: string;
   className?: string;
 }
@@ -33,9 +35,12 @@ export function SiteMobileNav({
   items,
   cta,
   contact,
-  currentPath,
+  currentPath: givenPath,
   className,
 }: SiteMobileNavProps) {
+  // Outside a Next.js router (tests) usePathname() is null.
+  const pathname = usePathname();
+  const currentPath = givenPath ?? pathname ?? undefined;
   return (
     <Sheet>
       <SheetTrigger
@@ -111,34 +116,38 @@ export function SiteMobileNav({
               </PrimaryButton>
             </SheetClose>
           ) : null}
-          {contact ? (
+          {contact?.phone || contact?.email ? (
             <ul className="text-small grid gap-2">
-              <li>
-                <a
-                  href={`tel:${contact.phone}`}
-                  className="hover:text-primary-strong inline-flex items-center gap-2.5"
-                >
-                  <Phone
-                    className="text-primary size-4"
-                    strokeWidth={1.75}
-                    aria-hidden="true"
-                  />
-                  {contact.phoneLabel}
-                </a>
-              </li>
-              <li>
-                <a
-                  href={`mailto:${contact.email}`}
-                  className="hover:text-primary-strong inline-flex items-center gap-2.5"
-                >
-                  <Mail
-                    className="text-primary size-4"
-                    strokeWidth={1.75}
-                    aria-hidden="true"
-                  />
-                  {contact.email}
-                </a>
-              </li>
+              {contact.phone ? (
+                <li>
+                  <a
+                    href={`tel:${contact.phone}`}
+                    className="hover:text-primary-strong inline-flex items-center gap-2.5"
+                  >
+                    <Phone
+                      className="text-primary size-4"
+                      strokeWidth={1.75}
+                      aria-hidden="true"
+                    />
+                    {contact.phoneLabel ?? contact.phone}
+                  </a>
+                </li>
+              ) : null}
+              {contact.email ? (
+                <li>
+                  <a
+                    href={`mailto:${contact.email}`}
+                    className="hover:text-primary-strong inline-flex items-center gap-2.5"
+                  >
+                    <Mail
+                      className="text-primary size-4"
+                      strokeWidth={1.75}
+                      aria-hidden="true"
+                    />
+                    {contact.email}
+                  </a>
+                </li>
+              ) : null}
             </ul>
           ) : null}
         </div>

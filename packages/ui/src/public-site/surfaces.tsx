@@ -1,6 +1,6 @@
 import { Slot } from "@radix-ui/react-slot";
 import { ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { PageLink as Link } from "./page-link";
 import type { HTMLAttributes, ReactNode } from "react";
 import { cn } from "../lib/utils";
 import { BotanicalAccent } from "./botanical-accent";

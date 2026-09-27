@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { PageLink as Link } from "./page-link";
 import { PrimaryButton, SecondaryButton } from "./actions";
 import { FaqSection } from "./faq-section";
 import { sampleRooms, sampleWorkshops } from "./feature-samples";
