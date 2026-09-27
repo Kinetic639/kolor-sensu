@@ -19,12 +19,29 @@ Przed Fazą 2 jest etap **P — portale** ([portals-content-plan.md](./portals-c
 ekrany admina i specjalisty, w których wprowadza się dane pokazywane na
 stronie. Jego zadania (P1–P6) i postęp są w tamtym pliku; tutaj tylko licznik.
 
+### Priorytet: rdzeń — konsultacje
+
+Najpierw ma w pełni działać podstawowy system: **usługi konsultacji →
+dostępność specjalistów → umawianie wizyt**. Admin tworzy usługi,
+specjalista wybiera te, które oferuje (gotowe, P2), określa grafik
+dostępności, a klient umawia wizytę. Kolejność prac:
+
+1. Faza 1 bez nowych rodzajów płatnych usług: F1-11, F1-03, F1-02, F1-13,
+   F1-10, F1-08 + F1-09, F1-04, F1-15.
+2. Dostępność specjalistów: etap K ([scheduling-ui-plan.md](./scheduling-ui-plan.md)),
+   od schematu bazy (KD) i domeny czasu (K1).
+3. Rezerwacje: Faza 4 (F4-01–F4-04).
+
+**Odłożone do czasu, aż rdzeń działa:** oferta dla firm (F1-05), praca
+(F1-06), vouchery (F1-07, F4-05), warsztaty (F3-01, F3-02). Nie pracujemy
+nad nimi wcześniej.
+
 ### Podsumowanie faz
 
 | Faza | Zakres                                                         | Status        | Zrobione / wszystkie |
 | ---- | -------------------------------------------------------------- | ------------- | -------------------- |
 | 0    | Baza: to, co już istnieje                                      | `DONE`        | 16 / 16              |
-| 1    | Szybkie wygrane bez nowych domen                               | `IN PROGRESS` | 2 / 15               |
+| 1    | Szybkie wygrane bez nowych domen                               | `IN PROGRESS` | 3 / 15               |
 | P    | Portale: treści dla strony ([plan](./portals-content-plan.md)) | `DONE`        | 6 / 6                |
 | 2    | Treści SEO: schorzenia, usługi, blog                           | `NOT STARTED` | 0 / 12               |
 | 3    | Warsztaty i filtry specjalistów                                | `NOT STARTED` | 0 / 3                |
@@ -60,16 +77,16 @@ stronie. Jego zadania (P1–P6) i postęp są w tamtym pliku; tutaj tylko liczni
 | F1-02 | `/pierwsza-wizyta`                                                                    | strona             | `NOT STARTED` |             |                                                 |
 | F1-03 | `/pomoc-w-kryzysie` + `CrisisNotice`                                                  | strona / komponent | `NOT STARTED` |             | Link w stopce, przy formularzach                |
 | F1-04 | `/deklaracja-dostepnosci`                                                             | strona             | `NOT STARTED` |             |                                                 |
-| F1-05 | `/dla-firm` + formularz zapytania B2B                                                 | strona             | `NOT STARTED` |             |                                                 |
-| F1-06 | `/praca` + formularz aplikacji                                                        | strona             | `NOT STARTED` |             | `JobPosting` przy aktywnych ofertach            |
-| F1-07 | `/vouchery` + formularz zamówienia                                                    | strona             | `NOT STARTED` |             | Płatność online → F4-05                         |
+| F1-05 | `/dla-firm` + formularz zapytania B2B                                                 | strona             | `NOT STARTED` |             | Odłożone: po rdzeniu konsultacji                |
+| F1-06 | `/praca` + formularz aplikacji                                                        | strona             | `NOT STARTED` |             | Odłożone: po rdzeniu konsultacji                |
+| F1-07 | `/vouchery` + formularz zamówienia                                                    | strona             | `NOT STARTED` |             | Odłożone: po rdzeniu konsultacji                |
 | F1-08 | `InquiryForm` + `ConsentField` (Server Action, Zod, honeypot/Turnstile)               | komponent          | `NOT STARTED` |             | Decyzja: e-mail czy tabela `inquiries`          |
 | F1-09 | `/kontakt`: formularz, `LocationMap`, dojazd                                          | strona / komponent | `NOT STARTED` |             | Iframe mapy dopiero po kliknięciu               |
 | F1-10 | Strona główna: `ProblemGrid`, `StepsSection`, „Stacjonarnie i online”, `TrustSignals` | komponent          | `NOT STARTED` |             | `ProblemGrid` na razie statyczny                |
 | F1-11 | Profil specjalisty: usługi i ceny, z kim pracuje, CTA z wybranym specjalistą          | strona / dane      | `NOT STARTED` |             | Nowa funkcja „oferty specjalisty”               |
 | F1-12 | `/gabinety` z domeny sal (`room_public_profiles`) + dostępność budynku                | strona / dane      | `DONE`        | 0c96d05     | P6; zdjęcia, lokalizacje, CMS: 3bc8cf6, fc4b495 |
 | F1-13 | Cennik: zasady (odwoływanie, płatności, faktury, online) + FAQ                        | strona             | `NOT STARTED` |             | Treść do potwierdzenia przez centrum            |
-| F1-14 | Optymalizacja obrazu hero (PNG 2,6 MB → AVIF/WebP)                                    | wydajność          | `NOT STARTED` |             |                                                 |
+| F1-14 | Optymalizacja obrazu hero (PNG 2,6 MB → AVIF/WebP)                                    | wydajność          | `DONE`        | 97d23ea     | Dostarczany 39–103 KB (był 85–207 KB)           |
 | F1-15 | Nawigacja i stopka: nowe strony, link do pomocy w kryzysie                            | komponent          | `NOT STARTED` |             | `site-frame.ts`                                 |
 
 ### Faza 2 — treści SEO
@@ -91,11 +108,11 @@ stronie. Jego zadania (P1–P6) i postęp są w tamtym pliku; tutaj tylko liczni
 
 ### Faza 3 — warsztaty i filtry
 
-| ID    | Zadanie                                                                                                 | Obszar             | Status        | Commit / PR | Uwagi                                                                                  |
-| ----- | ------------------------------------------------------------------------------------------------------- | ------------------ | ------------- | ----------- | -------------------------------------------------------------------------------------- |
-| F3-01 | Domena `workshops` / `events` + zapisy                                                                  | domena             | `NOT STARTED` |             | Tabela `workshops` już jest (migracje z `feature/rooms-resource-domain`); brak zapisów |
-| F3-02 | `/warsztaty` (nadchodzące + archiwum) + `/warsztaty/[slug]`, `EventCard`, `EventDetails`, `EventSignup` | strona / komponent | `NOT STARTED` |             | Schema `Event`                                                                         |
-| F3-03 | `SpecialistFilters` na `/specjalisci` (parametry URL)                                                   | komponent          | `NOT STARTED` |             |                                                                                        |
+| ID    | Zadanie                                                                                                 | Obszar             | Status        | Commit / PR | Uwagi                                                          |
+| ----- | ------------------------------------------------------------------------------------------------------- | ------------------ | ------------- | ----------- | -------------------------------------------------------------- |
+| F3-01 | Domena `workshops` / `events` + zapisy                                                                  | domena             | `NOT STARTED` |             | Odłożone: po rdzeniu. Tabela `workshops` już jest, bez zapisów |
+| F3-02 | `/warsztaty` (nadchodzące + archiwum) + `/warsztaty/[slug]`, `EventCard`, `EventDetails`, `EventSignup` | strona / komponent | `NOT STARTED` |             | Odłożone: po rdzeniu; schema `Event`                           |
+| F3-03 | `SpecialistFilters` na `/specjalisci` (parametry URL)                                                   | komponent          | `NOT STARTED` |             |                                                                |
 
 ### Faza 4 — własny system rezerwacji
 
@@ -105,7 +122,7 @@ stronie. Jego zadania (P1–P6) i postęp są w tamtym pliku; tutaj tylko liczni
 | F4-02 | Domena `appointments`                                                    | domena             | `NOT STARTED` |             |                                   |
 | F4-03 | Kreator na `/umow-wizyte` (usługa → specjalista → forma → termin → dane) | strona / komponent | `NOT STARTED` |             | Zastępuje obecny formularz        |
 | F4-04 | Potwierdzenia, przypomnienia, zmiana/odwołanie wizyty                    | funkcja            | `NOT STARTED` |             |                                   |
-| F4-05 | Płatności online za vouchery                                             | funkcja            | `NOT STARTED` |             |                                   |
+| F4-05 | Płatności online za vouchery                                             | funkcja            | `NOT STARTED` |             | Odłożone: po rdzeniu konsultacji  |
 
 ### Przekrojowe
 
