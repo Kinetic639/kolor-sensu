@@ -177,6 +177,9 @@ user-created entries with their own lifecycle, not predefined content
 inside a fixed page. That calls for a real, separate dynamic-content model
 (closer to what the removed generic CMS attempted) — deliberately not
 built in this phase, and not a natural extension of `site_content`.
+The articles, conditions and workshops domains are planned (and their
+progress tracked) in
+[public-site-roadmap.md](../product/public-site-roadmap.md).
 
 **Media**: `image_path`-style fields, if a future fixed page needs one,
 remain unbuilt until a real Storage-backed media pipeline exists — same
