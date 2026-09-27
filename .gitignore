@@ -38,6 +38,11 @@ storybook-static
 # Debug
 .storybook-dev.log
 build-storybook.log
+# Chromatic (Visual Tests addon): its log and diagnostics must stay out of
+# git, or its own uncommitted-changes check trips over them.
+chromatic.log
+chromatic-diagnostics*.json
+chromatic-build-*.xml
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
