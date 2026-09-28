@@ -24,16 +24,19 @@ stronie. Jego zadania (P1–P6) i postęp są w tamtym pliku; tutaj tylko liczni
 Najpierw ma w pełni działać podstawowy system: **usługi konsultacji →
 dostępność specjalistów → umawianie wizyt**. Admin tworzy usługi,
 specjalista wybiera te, które oferuje (gotowe, P2), określa grafik
-dostępności, a klient umawia wizytę. Kolejność prac:
+dostępności, a klient umawia wizytę. Kolejność prac (od 2026-09-28):
 
-1. Faza 1 bez nowych rodzajów płatnych usług: F1-11, F1-03, F1-02, F1-13,
-   F1-10, F1-08 + F1-09, F1-04, F1-15.
-2. Dostępność specjalistów: etap K ([scheduling-ui-plan.md](./scheduling-ui-plan.md)),
-   od schematu bazy (KD) i domeny czasu (K1).
-3. Rezerwacje: Faza 4 (F4-01–F4-04).
+1. **Teraz: rezerwacje online, Faza 4**, według
+   [booking-plan.md](./booking-plan.md) (etap R). Obejmuje minimalny grafik
+   dostępności specjalistów (R2) i płatność online (Stripe). Fazy 2 i 3
+   pomijamy.
+2. Pozostała Faza 1 (tabela niżej); F1-13 (zasady odwołania i płatności)
+   jest potrzebna najpóźniej przed R6.
+3. Pełne kalendarze portali: etap K ([scheduling-ui-plan.md](./scheduling-ui-plan.md)),
+   na schemacie dostępności z etapu R.
 
 **Stan Fazy 1:** 4 z 15 zrobione (F1-01, F1-11, F1-12, F1-14), 8 w kolejce
-(pkt 1), 3 odłożone. Pozostałe zadania w kolejności:
+(pkt 2), 3 odłożone. Pozostałe zadania w kolejności:
 
 | Kolejność | ID            | Co daje rdzeniowi                                           | Zależy od                                      |
 | --------- | ------------- | ----------------------------------------------------------- | ---------------------------------------------- |
@@ -58,7 +61,7 @@ nad nimi wcześniej.
 | P    | Portale: treści dla strony ([plan](./portals-content-plan.md)) | `DONE`        | 6 / 6                |
 | 2    | Treści SEO: schorzenia, usługi, blog                           | `NOT STARTED` | 0 / 12               |
 | 3    | Warsztaty i filtry specjalistów                                | `NOT STARTED` | 0 / 3                |
-| 4    | Własny system rezerwacji                                       | `NOT STARTED` | 0 / 5                |
+| 4    | Własny system rezerwacji ([plan](./booking-plan.md))           | `IN PROGRESS` | 0 / 5                |
 | X    | Przekrojowe (a11y, wydajność, analityka, prawo, admin)         | `NOT STARTED` | 0 / 5                |
 
 ### Faza 0 — baza (już zrobione)
@@ -96,7 +99,7 @@ nad nimi wcześniej.
 | F1-08 | `InquiryForm` + `ConsentField` (Server Action, Zod, honeypot/Turnstile)               | komponent          | `NOT STARTED` |             | Decyzja: e-mail czy tabela `inquiries`          |
 | F1-09 | `/kontakt`: formularz, `LocationMap`, dojazd                                          | strona / komponent | `NOT STARTED` |             | Iframe mapy dopiero po kliknięciu               |
 | F1-10 | Strona główna: `ProblemGrid`, `StepsSection`, „Stacjonarnie i online”, `TrustSignals` | komponent          | `NOT STARTED` |             | `ProblemGrid` na razie statyczny                |
-| F1-11 | Profil specjalisty: usługi i ceny, z kim pracuje, CTA z wybranym specjalistą          | strona / dane      | `DONE`        |             | `client_groups`; `/umow-wizyte?specjalista=`    |
+| F1-11 | Profil specjalisty: usługi i ceny, z kim pracuje, CTA z wybranym specjalistą          | strona / dane      | `DONE`        | 9d74645     | `client_groups`; `/umow-wizyte?specjalista=`    |
 | F1-12 | `/gabinety` z domeny sal (`room_public_profiles`) + dostępność budynku                | strona / dane      | `DONE`        | 0c96d05     | P6; zdjęcia, lokalizacje, CMS: 3bc8cf6, fc4b495 |
 | F1-13 | Cennik: zasady (odwoływanie, płatności, faktury, online) + FAQ                        | strona             | `NOT STARTED` |             | Treść do potwierdzenia przez centrum            |
 | F1-14 | Optymalizacja obrazu hero (PNG 2,6 MB → AVIF/WebP)                                    | wydajność          | `DONE`        | 97d23ea     | Dostarczany 39–103 KB (był 85–207 KB)           |
@@ -129,13 +132,13 @@ nad nimi wcześniej.
 
 ### Faza 4 — własny system rezerwacji
 
-| ID    | Zadanie                                                                  | Obszar             | Status        | Commit / PR | Uwagi                              |
-| ----- | ------------------------------------------------------------------------ | ------------------ | ------------- | ----------- | ---------------------------------- |
-| F4-01 | Szczegółowy plan rezerwacji (osobny dokument)                            | plan               | `NOT STARTED` |             | `packages/scheduling`, domena sal  |
-| F4-02 | Domena `appointments`                                                    | domena             | `NOT STARTED` |             |                                    |
-| F4-03 | Kreator na `/umow-wizyte` (usługa → specjalista → forma → termin → dane) | strona / komponent | `NOT STARTED` |             | Zaczyna od `?specjalista=` (F1-11) |
-| F4-04 | Potwierdzenia, przypomnienia, zmiana/odwołanie wizyty                    | funkcja            | `NOT STARTED` |             |                                    |
-| F4-05 | Płatności online za vouchery                                             | funkcja            | `NOT STARTED` |             | Odłożone: po rdzeniu konsultacji   |
+| ID    | Zadanie                                                                  | Obszar             | Status        | Commit / PR | Uwagi                                |
+| ----- | ------------------------------------------------------------------------ | ------------------ | ------------- | ----------- | ------------------------------------ |
+| F4-01 | Szczegółowy plan rezerwacji (osobny dokument)                            | plan               | `IN PROGRESS` |             | [booking-plan.md](./booking-plan.md) |
+| F4-02 | Domena `appointments`                                                    | domena             | `NOT STARTED` |             |                                      |
+| F4-03 | Kreator na `/umow-wizyte` (usługa → specjalista → forma → termin → dane) | strona / komponent | `NOT STARTED` |             | Zaczyna od `?specjalista=` (F1-11)   |
+| F4-04 | Potwierdzenia, przypomnienia, zmiana/odwołanie wizyty                    | funkcja            | `NOT STARTED` |             |                                      |
+| F4-05 | Płatności online za vouchery                                             | funkcja            | `NOT STARTED` |             | Odłożone: po rdzeniu konsultacji     |
 
 ### Przekrojowe
 

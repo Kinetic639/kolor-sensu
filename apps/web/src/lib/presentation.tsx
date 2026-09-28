@@ -20,11 +20,6 @@ export const portraitPlaceholder = "/images/specjalista.svg";
 const splashes: SpecialistSplash[] = ["pink-1", "sage-1", "pink-2", "sage-2"];
 const paints: OfferPaint[] = ["sage-1", "pink-1", "sage-2", "pink-2"];
 
-/** The booking page, telling it which specialist the visitor chose. */
-export function bookingHref(slug: string) {
-  return `/umow-wizyte?${new URLSearchParams({ specjalista: slug })}`;
-}
-
 export function specialistHref(slug: string) {
   return `/specjalisci/${slug}`;
 }

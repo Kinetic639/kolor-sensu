@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ContactDetails } from "@/components/contact-details";
 import { PageIntro } from "@/components/page-intro";
 import { bookingPage } from "@/content/site";
+import { loadBookingParams } from "@/features/booking/search-params";
 import { specialistHref, specialistRole } from "@/lib/presentation";
 import { getSpecialist } from "@/lib/public-data";
 
@@ -20,9 +21,8 @@ export const metadata: Metadata = {
 export default async function BookingPage({
   searchParams,
 }: PageProps<"/umow-wizyte">) {
-  const { specjalista } = await searchParams;
-  const specialist =
-    typeof specjalista === "string" ? await getSpecialist(specjalista) : null;
+  const { specjalista } = await loadBookingParams(searchParams);
+  const specialist = specjalista ? await getSpecialist(specjalista) : null;
 
   return (
     <>

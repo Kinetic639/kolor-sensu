@@ -12,13 +12,13 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { PageIntro } from "@/components/page-intro";
 import { bookingCta, siteUrl } from "@/content/site";
+import { bookingHref } from "@/features/booking/search-params";
 import { serviceHref } from "@/lib/site-frame";
 import {
   formatDuration,
   formatPrice,
   offerModes,
   portraitPlaceholder,
-  bookingHref,
   specialistHref,
   specialistRole,
   specialistSplash,
@@ -189,7 +189,7 @@ export default async function SpecialistPage({
           ) : null}
           <div className="flex flex-wrap items-center gap-3">
             <PrimaryButton asChild arrow>
-              <Link href={bookingHref(specialist.publicSlug) as Route}>
+              <Link href={bookingHref({ specjalista: specialist.publicSlug })}>
                 {bookingCta.label}
               </Link>
             </PrimaryButton>
