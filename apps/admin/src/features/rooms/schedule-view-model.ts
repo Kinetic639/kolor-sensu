@@ -60,6 +60,11 @@ export interface RoomScheduleDay {
   reservedLabel: string | null;
   windows: RoomScheduleWindow[];
   closed: (MinuteRange & { label: string })[];
+  /**
+   * Not worth a column: the room is never open on this weekday and nobody
+   * is in it. (A date closed by an exception stays, with its reason.)
+   */
+  hidden: boolean;
 }
 
 export interface RoomScheduleSpecialist {
@@ -78,6 +83,8 @@ export interface RoomScheduleViewModel {
   nextWeek: string;
   range: MinuteRange;
   days: RoomScheduleDay[];
+  /** "sobota, niedziela": the hidden days, or null when all are shown. */
+  hiddenDays: string | null;
   summary: {
     hasHours: boolean;
     openLabel: string | null;
@@ -262,6 +269,11 @@ export function mapRoomScheduleViewModel({
       openLabel: open ? (open.length ? rangeLabel(open) : "Zamknięte") : null,
       reservedLabel: dayReserved ? formatHours(dayReserved) : null,
       windows: dayWindows,
+      hidden:
+        hasHours &&
+        !hours.some((one) => one.weekday === index + 1) &&
+        !open?.length &&
+        !dayWindows.length,
       closed: open
         ? closedIntervals(open, range).map((one) => ({
             ...one,
@@ -286,8 +298,15 @@ export function mapRoomScheduleViewModel({
       accent: one.accent,
     }));
 
+  const hiddenDays = days
+    .flatMap((day, index) =>
+      day.hidden ? [WEEKDAY_NAMES[index]!.toLowerCase()] : [],
+    )
+    .join(", ");
+
   return {
     title: formatDateRange(week, weekEnd),
+    hiddenDays: hiddenDays || null,
     week,
     previousWeek: addDays(week, -7),
     nextWeek: addDays(week, 7),

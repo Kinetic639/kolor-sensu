@@ -225,59 +225,66 @@ export function RoomScheduleView({
           Tydzień gabinetu: {roomName} ({model.title})
         </h2>
         <WeekNav model={model} roomId={roomId} today={today} />
+        {model.hiddenDays ? (
+          <p className="w-full text-xs text-[var(--text-muted)]">
+            Bez dni, w które gabinet jest zamknięty: {model.hiddenDays}.
+          </p>
+        ) : null}
       </Card>
 
       <Card className="grid overflow-hidden p-0 xl:grid-cols-[minmax(0,1fr)_19rem]">
         <CalendarWeekGrid
           className="min-w-0"
-          columns={model.days.map((day) => ({
-            key: day.date,
-            label: day.label,
-            sublabel: day.sublabel,
-            isToday: day.isToday,
-            ariaLabel: day.fullLabel,
-            summary: (
-              <span className="text-[0.625rem] font-medium text-[var(--text-muted)]">
-                {day.openLabel ?? day.reservedLabel ?? " "}
-              </span>
-            ),
-            content: (
-              <>
-                {day.closed.map((one) => (
-                  <CalendarBlock
-                    end={one.end}
-                    key={`closed-${one.start}`}
-                    label={`${one.label}, ${minutesToTime(one.start)}–${minutesToTime(one.end)}`}
-                    range={range}
-                    start={one.start}
-                    variant="closed"
-                  >
-                    {one.end - one.start >= 60 ? one.label : null}
-                  </CalendarBlock>
-                ))}
-                {day.windows.map((one) => (
-                  <CalendarBlock
-                    accent={one.accent}
-                    end={one.end}
-                    key={one.id}
-                    label={`${one.specialistName}, ${one.timeLabel}. ${one.recurrenceLabel}${one.outsideHours ? `. ${OUTSIDE}` : ""}`}
-                    range={range}
-                    start={one.start}
-                    tint={one.tint}
-                  >
-                    <RoomScheduleBlockBody
-                      avatarUrl={one.avatarUrl}
-                      initials={one.initials}
-                      mode={one.mode}
-                      name={one.specialistName}
-                      timeLabel={one.timeLabel}
-                      warning={one.outsideHours ? OUTSIDE : undefined}
-                    />
-                  </CalendarBlock>
-                ))}
-              </>
-            ),
-          }))}
+          columns={model.days
+            .filter((day) => !day.hidden)
+            .map((day) => ({
+              key: day.date,
+              label: day.label,
+              sublabel: day.sublabel,
+              isToday: day.isToday,
+              ariaLabel: day.fullLabel,
+              summary: (
+                <span className="text-[0.625rem] font-medium text-[var(--text-muted)]">
+                  {day.openLabel ?? day.reservedLabel ?? " "}
+                </span>
+              ),
+              content: (
+                <>
+                  {day.closed.map((one) => (
+                    <CalendarBlock
+                      end={one.end}
+                      key={`closed-${one.start}`}
+                      label={`${one.label}, ${minutesToTime(one.start)}–${minutesToTime(one.end)}`}
+                      range={range}
+                      start={one.start}
+                      variant="closed"
+                    >
+                      {one.end - one.start >= 60 ? one.label : null}
+                    </CalendarBlock>
+                  ))}
+                  {day.windows.map((one) => (
+                    <CalendarBlock
+                      accent={one.accent}
+                      end={one.end}
+                      key={one.id}
+                      label={`${one.specialistName}, ${one.timeLabel}. ${one.recurrenceLabel}${one.outsideHours ? `. ${OUTSIDE}` : ""}`}
+                      range={range}
+                      start={one.start}
+                      tint={one.tint}
+                    >
+                      <RoomScheduleBlockBody
+                        avatarUrl={one.avatarUrl}
+                        initials={one.initials}
+                        mode={one.mode}
+                        name={one.specialistName}
+                        timeLabel={one.timeLabel}
+                        warning={one.outsideHours ? OUTSIDE : undefined}
+                      />
+                    </CalendarBlock>
+                  ))}
+                </>
+              ),
+            }))}
           range={range}
         />
         <Summary model={model} roomId={roomId} />

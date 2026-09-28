@@ -130,6 +130,33 @@ describe("mapRoomScheduleViewModel", () => {
     expect(days[5]!.openLabel).toBe("Zamknięte");
   });
 
+  it("hides the days the room is always closed, unless someone is in", () => {
+    const { days, hiddenDays } = model();
+    expect(days.map((day) => day.hidden)).toEqual([
+      false,
+      false,
+      // Closed that date only (an exception): shown, with the reason.
+      false,
+      false,
+      false,
+      true,
+      true,
+    ]);
+    expect(hiddenDays).toBe("sobota, niedziela");
+
+    // A window on a closed weekday keeps the day, to show it.
+    const saturday = rule({
+      id: "anna-sat",
+      recurrence: "once",
+      weekdays: [6],
+      validFrom: "2030-01-12",
+      validUntil: "2030-01-12",
+    });
+    const withSaturday = model({ rules: [anna, jan, saturday] });
+    expect(withSaturday.days[5]!.hidden).toBe(false);
+    expect(withSaturday.hiddenDays).toBe("niedziela");
+  });
+
   it("sums up the week against the opening hours", () => {
     expect(model().summary).toEqual({
       hasHours: true,
@@ -147,6 +174,7 @@ describe("mapRoomScheduleViewModel", () => {
     expect(days[0]!.closed).toEqual([]);
     expect(days[0]!.openLabel).toBeNull();
     expect(days[1]!.windows[0]!.outsideHours).toBe(false);
+    expect(days.some((day) => day.hidden)).toBe(false);
     expect(summary).toMatchObject({
       hasHours: false,
       openLabel: null,
