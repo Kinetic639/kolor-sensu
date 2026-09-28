@@ -3,6 +3,7 @@ import {
   CalendarOff,
   Clock,
   Layers,
+  Lock,
   RotateCw,
   Video,
 } from "lucide-react";
@@ -56,6 +57,28 @@ export function PlaceChip({
       <PlaceIcon mode={mode} />
       {placeText(placeLabel, mode)}
     </span>
+  );
+}
+
+/** A colleague's hours in the chosen room: taken, by whom, when. */
+export function RoomTakenBody({
+  name,
+  timeLabel,
+}: {
+  name: string;
+  timeLabel: string;
+}) {
+  return (
+    <div className="grid content-start gap-0.5 text-[0.6875rem] leading-tight">
+      <p className="flex items-center gap-1 font-bold text-[var(--text-muted)] uppercase">
+        <Lock aria-hidden="true" className="size-3 shrink-0" />
+        Zajęte
+      </p>
+      <p className="line-clamp-2 font-semibold break-words text-[var(--text)]">
+        {name}
+      </p>
+      <p className="text-[var(--text-muted)] tabular-nums">{timeLabel}</p>
+    </div>
   );
 }
 

@@ -6,10 +6,12 @@ import {
   timeOffInputSchema,
   type AvailabilityRuleInput,
   type AvailabilityRuleValues,
+  type RoomOccupancy,
   type TimeOffInput,
 } from "@repo/contracts";
 import {
   describeRecurrence,
+  formatDayMonth,
   formatHours,
   isoWeekday,
   timeToMinutes,
@@ -47,7 +49,7 @@ import {
   type UseFormSetValue,
   type UseFormWatch,
 } from "react-hook-form";
-import { quickCreateDefaults } from "./form-values";
+import { quickCreateDefaults, roomConflicts } from "./form-values";
 import type { RoomViewModel } from "./types";
 
 /** Quarter hours from 6:00 to 22:00. */
@@ -162,12 +164,47 @@ function TimeSelect<Values extends Record<string, unknown>>({
   );
 }
 
-function roomOptions(rooms: RoomViewModel[]) {
-  return rooms.map((room) => ({
-    value: room.id,
-    label: room.name,
-    accent: room.accent,
-  }));
+/** The rooms to choose from; one someone else has then is not available. */
+function roomOptions(
+  rooms: RoomViewModel[],
+  conflicts: Map<string, RoomOccupancy> = new Map(),
+) {
+  return rooms.map((room) => {
+    const taken = conflicts.get(room.id);
+    return {
+      value: room.id,
+      label: room.name,
+      accent: room.accent,
+      disabled: Boolean(taken),
+      description: taken
+        ? `Zajęty: ${taken.specialistName}, ${formatDayMonth(taken.date)} ${taken.startsAt}–${taken.endsAt}`
+        : undefined,
+    };
+  });
+}
+
+/** Rooms taken at the form's hours, as far as the shown week tells. */
+function useRoomConflicts(
+  watch: UseFormWatch<AvailabilityRuleInput>,
+  occupancy: RoomOccupancy[],
+) {
+  const [recurrence, weekdays, intervalWeeks, validFrom, startsAt, endsAt] =
+    watch([
+      "recurrence",
+      "weekdays",
+      "intervalWeeks",
+      "validFrom",
+      "startsAt",
+      "endsAt",
+    ]);
+  return roomConflicts(occupancy, {
+    recurrence,
+    weekdays,
+    intervalWeeks,
+    validFrom,
+    startsAt,
+    endsAt,
+  });
 }
 
 type RuleForm = {
@@ -404,6 +441,7 @@ function useRuleForm(defaultValues: AvailabilityRuleInput) {
 export function RuleForm({
   defaultValues,
   rooms,
+  occupancy = [],
   pending,
   editing,
   notice,
@@ -413,6 +451,8 @@ export function RuleForm({
 }: {
   defaultValues: AvailabilityRuleInput;
   rooms: RoomViewModel[];
+  /** Other specialists' hours in the shown week. */
+  occupancy?: RoomOccupancy[];
   pending: boolean;
   editing: boolean;
   /** Shown above the fields, e.g. "this occurrence is part of a rule". */
@@ -436,6 +476,7 @@ export function RuleForm({
     "endsAt",
   ]);
   const minutes = Math.max(0, timeToMinutes(endsAt) - timeToMinutes(startsAt));
+  const conflicts = useRoomConflicts(watch, occupancy);
 
   return (
     <form
@@ -526,7 +567,7 @@ export function RuleForm({
                 legend="4. Przypisany gabinet"
                 name="rule-room"
                 onChange={field.onChange}
-                options={roomOptions(rooms)}
+                options={roomOptions(rooms, conflicts)}
                 value={field.value}
               />
             )}
@@ -596,6 +637,7 @@ export function QuickCreateForm({
   selection,
   dayLabel,
   rooms,
+  occupancy = [],
   pending,
   onCancel,
   onMoreOptions,
@@ -604,6 +646,8 @@ export function QuickCreateForm({
   selection: QuickCreateValues;
   dayLabel: string;
   rooms: RoomViewModel[];
+  /** Other specialists' hours in the shown week. */
+  occupancy?: RoomOccupancy[];
   pending: boolean;
   onCancel: () => void;
   onMoreOptions: (values: AvailabilityRuleInput) => void;
@@ -616,8 +660,9 @@ export function QuickCreateForm({
     setValue,
     getValues,
     formState: { errors },
-  } = useRuleForm(quickCreateDefaults(selection, rooms));
+  } = useRuleForm(quickCreateDefaults(selection, rooms, occupancy));
   const mode = watch("mode");
+  const conflicts = useRoomConflicts(watch, occupancy);
   const minutes =
     timeToMinutes(selection.endsAt) - timeToMinutes(selection.startsAt);
 
@@ -662,7 +707,7 @@ export function QuickCreateForm({
               legend="Przypisany gabinet"
               name="quick-room"
               onChange={field.onChange}
-              options={roomOptions(rooms)}
+              options={roomOptions(rooms, conflicts)}
               value={field.value}
             />
           )}

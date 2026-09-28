@@ -17,34 +17,24 @@ import {
   editAvailabilityOccurrence,
   deleteTimeOff,
   saveAvailabilityRule,
-  type AvailabilityErrorReason,
   type OccurrenceTarget,
 } from "@repo/supabase";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { findMyAvailabilityRule } from "./loaders";
+import { availabilityErrorMessage, isStaleRefusal } from "./messages";
 import { nextDayCopy, weekTemplate, withWorkdays } from "./rule-copies";
 
-type ActionResult = { ok: true } | { ok: false; message: string };
-
-const MESSAGES: Record<AvailabilityErrorReason, string> = {
-  overlap: "Te godziny nakładają się na inne Twoje godziny dostępności.",
-  room_taken:
-    "Ten gabinet jest w tym czasie zajęty przez innego specjalistę. Wybierz inny gabinet albo inne godziny.",
-  room_unavailable: "Ten gabinet nie jest już dostępny. Wybierz inny.",
-  time_off_overlap: "Ta nieobecność nakłada się na inną, już zapisaną.",
-  not_found: "Nie znaleziono tych godzin. Odśwież stronę.",
-  forbidden: "Brak uprawnień do zmiany tego grafiku.",
-};
+/** `stale`: the refusal comes from old data; the page should reload. */
+type ActionResult =
+  { ok: true } | { ok: false; message: string; stale?: boolean };
 
 function failure(error: unknown): ActionResult {
-  if (error instanceof AvailabilityError) {
-    return { ok: false, message: MESSAGES[error.reason] };
-  }
-  if (error instanceof Error && error.name === "ZodError") {
-    return { ok: false, message: "Sprawdź poprawność danych." };
-  }
-  return { ok: false, message: "Nie udało się zapisać. Spróbuj ponownie." };
+  return {
+    ok: false,
+    message: availabilityErrorMessage(error),
+    stale: isStaleRefusal(error),
+  };
 }
 
 async function run(change: () => Promise<unknown>): Promise<ActionResult> {

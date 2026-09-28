@@ -33,6 +33,46 @@ describe("CalendarWeekGrid", () => {
 });
 
 describe("CalendarBlock", () => {
+  it("shows someone else's hours behind one's own, not in the way", () => {
+    render(
+      <CalendarBlock
+        accent="var(--resource-1)"
+        end={12 * 60}
+        label="Gabinet 1 zajęty: Anna Nowak, 10:00 – 12:00"
+        range={range}
+        start={10 * 60}
+        variant="taken"
+      >
+        Anna Nowak
+      </CalendarBlock>,
+    );
+    const block = screen.getByRole("note", {
+      name: "Gabinet 1 zajęty: Anna Nowak, 10:00 – 12:00",
+    });
+    expect(block.className).toContain("z-0");
+    expect(block.className).toContain("pointer-events-none");
+  });
+
+  it("shades closed hours behind the other blocks", () => {
+    render(
+      <CalendarBlock
+        end={20 * 60}
+        label="Gabinet zamknięty, 18:00–20:00"
+        range={range}
+        start={18 * 60}
+        variant="closed"
+      >
+        Gabinet zamknięty
+      </CalendarBlock>,
+    );
+    const block = screen.getByRole("note", {
+      name: "Gabinet zamknięty, 18:00–20:00",
+    });
+    expect(block.className).toContain("z-0");
+    expect(block.className).not.toContain("z-10");
+    expect(block.style.top).toBe("83.33333333333334%");
+  });
+
   it("is placed by its minutes within the visible range", () => {
     render(
       <CalendarBlock

@@ -2,11 +2,15 @@ import "server-only";
 
 import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_TIME_ZONE, mondayOf } from "@repo/scheduling";
+import { addDays, DEFAULT_TIME_ZONE, mondayOf } from "@repo/scheduling";
 import {
+  getMyPublishedProfile,
   getMySpecialist,
   listActiveRoomsForSpecialist,
   listAvailabilityRules,
+  listRoomExceptions,
+  listRoomOccupancy,
+  listRoomOpeningHours,
   listTimeOff,
 } from "@repo/supabase";
 import { formatInTimeZone } from "date-fns-tz";
@@ -22,18 +26,43 @@ export async function loadAvailability(params: AvailabilityParams) {
   const specialist = await getMySpecialist(client, authorization.user.id);
   if (!specialist) return null;
 
-  const [rules, timeOff, rooms] = await Promise.all([
+  const now = new Date();
+  const today = formatInTimeZone(now, DEFAULT_TIME_ZONE, "yyyy-MM-dd");
+  const week = mondayOf(params.tydzien ?? today);
+  const [rules, timeOff, rooms, occupancy] = await Promise.all([
     listAvailabilityRules(client, specialist.id),
     listTimeOff(client, specialist.id),
     listActiveRoomsForSpecialist(client),
+    listRoomOccupancy(client, week, addDays(week, 6)),
   ]);
-  const now = new Date();
-  const today = formatInTimeZone(now, DEFAULT_TIME_ZONE, "yyyy-MM-dd");
 
+  // The room over the calendar: the one in the URL, else the first; none
+  // when asked ("brak") or when the centre has no rooms.
+  const roomId =
+    params.gabinet === "brak"
+      ? null
+      : ((rooms.find((room) => room.id === params.gabinet) ?? rooms[0])?.id ??
+        null);
+  const [hours, exceptions] = roomId
+    ? await Promise.all([
+        listRoomOpeningHours(client, roomId),
+        listRoomExceptions(client, roomId, week),
+      ])
+    : [[], []];
+
+  // The account's name, else the public profile's (accounts made by
+  // invitation may have no name yet).
+  const accountName = [
+    authorization.profile.first_name,
+    authorization.profile.last_name,
+  ]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(" ");
   const specialistName =
-    [authorization.profile.first_name, authorization.profile.last_name]
-      .filter(Boolean)
-      .join(" ") || "Specjalista";
+    accountName ||
+    (await getMyPublishedProfile(client, specialist.id))?.displayName ||
+    "Specjalista";
 
   return {
     today,
@@ -44,9 +73,12 @@ export async function loadAvailability(params: AvailabilityParams) {
       timeOff,
       rooms: rooms.map((room) => ({ id: room.id, name: room.name })),
       now,
-      week: mondayOf(params.tydzien ?? today),
+      week,
       filters: { day: params.dzien, mode: params.forma },
       timeZone: DEFAULT_TIME_ZONE,
+      specialistId: specialist.id,
+      occupancy,
+      room: roomId ? { id: roomId, hours, exceptions } : null,
     }),
   };
 }

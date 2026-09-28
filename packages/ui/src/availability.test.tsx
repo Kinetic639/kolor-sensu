@@ -4,6 +4,7 @@ import {
   AvailabilityBlockBody,
   AvailabilityRuleCard,
   OccupancyBar,
+  RoomTakenBody,
   StatDots,
   TimeOffItem,
 } from "./availability";
@@ -21,6 +22,15 @@ describe("AvailabilityBlockBody", () => {
     expect(screen.getByText("09:00 – 13:00")).toBeInTheDocument();
     expect(screen.getByText("Gabinet 1 + online")).toBeInTheDocument();
     expect(screen.getByText("Pierwszorazowi do 11:00")).toBeInTheDocument();
+  });
+});
+
+describe("RoomTakenBody", () => {
+  it("says the room is taken, by whom and when", () => {
+    render(<RoomTakenBody name="Anna Nowak" timeLabel="10:00 – 12:00" />);
+    expect(screen.getByText("Zajęte")).toBeInTheDocument();
+    expect(screen.getByText("Anna Nowak")).toBeInTheDocument();
+    expect(screen.getByText("10:00 – 12:00")).toBeInTheDocument();
   });
 });
 

@@ -335,3 +335,96 @@ describe("formatting", () => {
     ).toBe("7 stycznia 2030, 12:00–14:30");
   });
 });
+
+describe("room occupancy in the calendar", () => {
+  const occupancy = [
+    // Anna has room 1 on Monday 10:00–12:00.
+    {
+      roomId: "room-1",
+      date: "2030-01-07",
+      startsAt: "10:00",
+      endsAt: "12:00",
+      specialistId: "anna",
+      specialistName: "Anna Nowak",
+    },
+    // Someone in room 2: another room, not shown.
+    {
+      roomId: "room-2",
+      date: "2030-01-07",
+      startsAt: "10:00",
+      endsAt: "12:00",
+      specialistId: "jan",
+      specialistName: "Jan Kowalski",
+    },
+    // My own hours in room 1 are my windows, not someone else's.
+    {
+      roomId: "room-1",
+      date: "2030-01-08",
+      startsAt: "09:00",
+      endsAt: "13:00",
+      specialistId: "specialist",
+      specialistName: "Ja",
+    },
+  ];
+
+  it("shows who else has the chosen room, and when it is closed", () => {
+    const model = mapAvailabilityViewModel({
+      ...base,
+      rules: [],
+      specialistId: "specialist",
+      occupancy,
+      room: {
+        id: "room-1",
+        hours: [1, 2, 3, 4, 5].map((weekday) => ({
+          weekday,
+          startsAt: "08:00",
+          endsAt: "18:00",
+        })),
+        exceptions: [],
+      },
+    });
+    const { calendar } = model;
+
+    expect(calendar.roomFocus).toEqual({
+      id: "room-1",
+      name: "Gabinet 1",
+      accent: "var(--resource-1)",
+      hoursLabel: "Pn–Pt 08:00–18:00",
+      busyLabel: "1 blok innych specjalistów",
+    });
+    expect(calendar.days[0]!.room.busy).toEqual([
+      {
+        id: "room-1-2030-01-07-600-anna",
+        start: 600,
+        end: 720,
+        timeLabel: "10:00 – 12:00",
+        specialistName: "Anna Nowak",
+        label: "Gabinet 1 zajęty: Anna Nowak, 10:00 – 12:00",
+      },
+    ]);
+    expect(calendar.days[1]!.room.busy).toEqual([]);
+    expect(calendar.days[0]!.room.closed).toEqual([
+      { start: 1080, end: 1200, label: "Gabinet 1 zamknięty" },
+    ]);
+    expect(calendar.days[5]!.room.closed).toEqual([
+      { start: 480, end: 1200, label: "Gabinet 1 zamknięty" },
+    ]);
+    // Others' hours, any room, for choosing a free room in the forms.
+    expect(calendar.othersOccupancy.map((one) => one.specialistId)).toEqual([
+      "anna",
+      "jan",
+    ]);
+  });
+
+  it("shows nothing of rooms when none is chosen", () => {
+    const model = mapAvailabilityViewModel({
+      ...base,
+      rules: [],
+      specialistId: "specialist",
+      occupancy,
+      room: null,
+    });
+    expect(model.calendar.roomFocus).toBeNull();
+    expect(model.calendar.days[0]!.room).toEqual({ busy: [], closed: [] });
+  });
+});

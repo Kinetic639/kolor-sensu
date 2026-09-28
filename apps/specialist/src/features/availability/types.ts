@@ -1,5 +1,6 @@
 import type {
   AvailabilityMode,
+  RoomOccupancy,
   SpecialistAvailabilityRule,
 } from "@repo/contracts";
 import type { MinuteRange } from "@repo/scheduling";
@@ -41,6 +42,29 @@ export interface CalendarDayViewModel {
   hoursLabel: string | null;
   windows: CalendarWindowViewModel[];
   timeOff: { id: string; start: number; end: number; label: string }[];
+  /** The chosen room: who else has it, and when it is closed. */
+  room: {
+    busy: {
+      id: string;
+      start: number;
+      end: number;
+      timeLabel: string;
+      specialistName: string;
+      label: string;
+    }[];
+    closed: { start: number; end: number; label: string }[];
+  };
+}
+
+/** The room shown over the calendar. */
+export interface RoomFocusViewModel {
+  id: string;
+  name: string;
+  accent: string;
+  /** "Pn–Pt 08:00–18:00", or null without opening hours. */
+  hoursLabel: string | null;
+  /** "2 bloki innych specjalistów", or null when nobody else has it. */
+  busyLabel: string | null;
 }
 
 export interface RuleItemViewModel {
@@ -71,6 +95,9 @@ export interface AvailabilityViewModel {
     range: MinuteRange;
     days: CalendarDayViewModel[];
     stats: { available: string; booked: string; free: string };
+    roomFocus: RoomFocusViewModel | null;
+    /** Other specialists' hours this week in every room. */
+    othersOccupancy: RoomOccupancy[];
   };
   rules: {
     items: RuleItemViewModel[];

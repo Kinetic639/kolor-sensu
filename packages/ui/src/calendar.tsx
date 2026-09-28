@@ -162,7 +162,7 @@ export function CalendarWeekGrid({
 }
 
 export type CalendarBlockVariant =
-  "availability" | "appointment" | "blocked" | "preview";
+  "availability" | "appointment" | "blocked" | "closed" | "taken" | "preview";
 
 export interface CalendarBlockProps {
   range: MinuteRange;
@@ -187,6 +187,13 @@ const VARIANT_CLASSES: Record<CalendarBlockVariant, string> = {
     "inset-x-2 rounded-[var(--radius-control)] border border-l-4 border-[var(--border-strong)] border-l-[var(--block-accent)] bg-[var(--surface)] shadow-sm",
   blocked:
     "inset-x-1 rounded-[var(--radius-control)] border border-dashed border-[var(--border-strong)] bg-[repeating-linear-gradient(135deg,var(--surface-muted)_0_6px,transparent_6px_12px)]",
+  // Hours a room is closed: a background band under the other blocks.
+  closed:
+    "pointer-events-none inset-x-0 z-0 bg-[repeating-linear-gradient(135deg,var(--surface-muted)_0_6px,transparent_6px_12px)] p-1.5 text-[0.625rem] font-medium text-[var(--text-subtle)]",
+  // Someone else's hours (e.g. a colleague in the room): behind one's own
+  // blocks, and not in the way of dragging.
+  taken:
+    "pointer-events-none inset-x-1 z-0 rounded-[var(--radius-control)] border border-dashed border-[color-mix(in_srgb,var(--block-accent)_55%,transparent)] bg-[repeating-linear-gradient(135deg,color-mix(in_srgb,var(--block-accent)_12%,transparent)_0_6px,transparent_6px_12px)] p-1.5",
   preview:
     "pointer-events-none inset-x-1 z-30 rounded-[var(--radius-control)] border-2 border-dashed border-[var(--primary)] bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] shadow-lg",
 };

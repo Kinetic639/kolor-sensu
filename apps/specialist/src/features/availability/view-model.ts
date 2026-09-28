@@ -1,16 +1,28 @@
 import type {
   AvailabilityMode,
+  RoomOccupancy,
   SpecialistAvailabilityRule,
   SpecialistTimeOff,
 } from "@repo/contracts";
 import {
   addDays,
+  closedIntervals,
   describeRecurrence,
   expandAvailability,
+  formatDate,
+  formatDateRange,
+  formatDayMonth,
   formatHours,
+  formatWeekday,
+  openIntervalsOn,
+  summarizeOpeningHours,
   timeToMinutes,
   visibleRange,
+  WEEKDAY_NAMES,
+  WEEKDAY_SHORT,
   zonedInstant,
+  type OpeningHoursInterval,
+  type RoomDateException,
 } from "@repo/scheduling";
 import { formatInTimeZone } from "date-fns-tz";
 import type {
@@ -20,51 +32,11 @@ import type {
   RuleItemViewModel,
 } from "./types";
 
-export const WEEKDAYS = [
-  "Poniedziałek",
-  "Wtorek",
-  "Środa",
-  "Czwartek",
-  "Piątek",
-  "Sobota",
-  "Niedziela",
-];
-const WEEKDAYS_SHORT = ["Pon", "Wt", "Śr", "Czw", "Pt", "Sob", "Niedz"];
+export { formatDate, formatDateRange };
+
+const WEEKDAYS = WEEKDAY_NAMES;
+const WEEKDAYS_SHORT = WEEKDAY_SHORT;
 const RESOURCE_COLOURS = 6;
-
-// Local calendar dates are formatted at UTC noon: no time zone can move them.
-const atNoon = (date: string) => new Date(`${date}T12:00:00Z`);
-const dayMonth = new Intl.DateTimeFormat("pl-PL", {
-  day: "numeric",
-  month: "long",
-  timeZone: "UTC",
-});
-const fullDate = new Intl.DateTimeFormat("pl-PL", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-  timeZone: "UTC",
-});
-const weekdayLong = new Intl.DateTimeFormat("pl-PL", {
-  weekday: "long",
-  timeZone: "UTC",
-});
-
-export function formatDate(date: string) {
-  return fullDate.format(atNoon(date));
-}
-
-/** `7–13 stycznia 2030`, `30 stycznia – 2 lutego 2030`, … */
-export function formatDateRange(from: string, to: string) {
-  if (from === to) return formatDate(from);
-  if (from.slice(0, 7) === to.slice(0, 7)) {
-    return `${Number(from.slice(8))}–${formatDate(to)}`;
-  }
-  if (from.slice(0, 4) === to.slice(0, 4)) {
-    return `${dayMonth.format(atNoon(from))} – ${formatDate(to)}`;
-  }
-  return `${formatDate(from)} – ${formatDate(to)}`;
-}
 
 function local(instant: Date | string, timeZone: string) {
   return {
@@ -93,6 +65,16 @@ function daysTitle(weekdays: number[]) {
   if (weekdays.length === 7) return "Codziennie";
   if (weekdays.join() === "1,2,3,4,5") return "Poniedziałek – piątek";
   return weekdays.map((day) => WEEKDAYS_SHORT[day - 1]!).join(", ");
+}
+
+/** "1 blok innych specjalistów", "3 bloki …", "5 bloków …". */
+function othersBlocksLabel(count: number) {
+  if (count === 1) return "1 blok innych specjalistów";
+  const few =
+    count % 10 >= 2 &&
+    count % 10 <= 4 &&
+    (count % 100 < 12 || count % 100 > 14);
+  return `${count} ${few ? "bloki" : "bloków"} innych specjalistów`;
 }
 
 /** "1 termin pominięty", "2 terminy pominięte", "5 terminów pominiętych". */
@@ -143,6 +125,9 @@ export function mapAvailabilityViewModel({
   week,
   filters,
   timeZone,
+  specialistId,
+  occupancy = [],
+  room = null,
 }: {
   rules: SpecialistAvailabilityRule[];
   timeOff: SpecialistTimeOff[];
@@ -152,6 +137,16 @@ export function mapAvailabilityViewModel({
   week: string;
   filters: { day: number | null; mode: "stacjonarnie" | "online" | null };
   timeZone: string;
+  /** Who is signed in: their own hours in a room are not "taken". */
+  specialistId?: string;
+  /** Everyone's hours in every room this week. */
+  occupancy?: RoomOccupancy[];
+  /** The room shown over the calendar, with its opening hours. */
+  room?: {
+    id: string;
+    hours: OpeningHoursInterval[];
+    exceptions: RoomDateException[];
+  } | null;
 }): AvailabilityViewModel {
   const today = local(now, timeZone).date;
   const roomNames = new Map(rooms.map((room) => [room.id, room.name]));
@@ -179,12 +174,36 @@ export function mapAvailabilityViewModel({
   });
   const minutesOf = (instant: Date) =>
     timeToMinutes(local(instant, timeZone).time);
-  const range = visibleRange(
-    windows.map((window) => ({
+  // Other specialists' hours: in the chosen room they are shown, and in
+  // any room they tell the forms which rooms are free.
+  const othersOccupancy = occupancy.filter(
+    (one) => one.specialistId !== specialistId,
+  );
+  const roomName = room ? (roomNames.get(room.id) ?? "Gabinet") : null;
+  const roomBusy = room
+    ? othersOccupancy.filter((one) => one.roomId === room.id)
+    : [];
+  const roomOpen = new Map(
+    room && room.hours.length
+      ? Array.from({ length: 7 }, (_, index) => {
+          const date = addDays(week, index);
+          return [date, openIntervalsOn(date, room.hours, room.exceptions)];
+        })
+      : [],
+  );
+  const busySpan = (one: RoomOccupancy) => ({
+    start: timeToMinutes(one.startsAt),
+    end: timeToMinutes(one.endsAt) || 24 * 60,
+  });
+
+  const range = visibleRange([
+    ...windows.map((window) => ({
       start: minutesOf(window.start),
       end: minutesOf(window.end) || 24 * 60,
     })),
-  );
+    ...roomBusy.map(busySpan),
+    ...[...roomOpen.values()].flat(),
+  ]);
 
   let weekMinutes = 0;
   const days: CalendarDayViewModel[] = Array.from({ length: 7 }, (_, index) => {
@@ -223,11 +242,31 @@ export function mapAvailabilityViewModel({
     return {
       date,
       label: WEEKDAYS_SHORT[index]!,
-      sublabel: dayMonth.format(atNoon(date)),
+      sublabel: formatDayMonth(date),
       fullLabel: `${WEEKDAYS[index]}, ${formatDate(date)}`,
       isToday: date === today,
       hoursLabel: minutes ? formatHours(minutes) : null,
       windows: dayWindows,
+      room: {
+        busy: roomBusy
+          .filter((one) => one.date === date)
+          .map((one) => {
+            const timeLabel = timeRange(one.startsAt, one.endsAt);
+            return {
+              id: `${one.roomId}-${date}-${timeToMinutes(one.startsAt)}-${one.specialistId}`,
+              ...busySpan(one),
+              timeLabel,
+              specialistName: one.specialistName,
+              label: `${roomName} zajęty: ${one.specialistName}, ${timeLabel}`,
+            };
+          }),
+        closed: roomOpen.has(date)
+          ? closedIntervals(roomOpen.get(date)!, range).map((one) => ({
+              ...one,
+              label: `${roomName} zamknięty`,
+            }))
+          : [],
+      },
       timeOff: offIntervals
         .filter((off) => off.start < dayEnd && off.end > dayStart)
         .map((off) => ({
@@ -279,7 +318,7 @@ export function mapAvailabilityViewModel({
         id: rule.id,
         title: once ? formatDate(rule.validFrom) : daysTitle(rule.weekdays),
         subtitle: once
-          ? weekdayLong.format(atNoon(rule.validFrom))
+          ? formatWeekday(rule.validFrom)
           : [
               rule.intervalWeeks > 1 || rule.validFrom > today
                 ? `od ${formatDate(rule.validFrom)}`
@@ -319,6 +358,19 @@ export function mapAvailabilityViewModel({
       range,
       days,
       stats: { available: weekly, booked: formatHours(0), free: weekly },
+      roomFocus: room
+        ? {
+            id: room.id,
+            name: roomName!,
+            accent: colours({ mode: "in_person", roomId: room.id }, roomIndex)
+              .accent,
+            hoursLabel: summarizeOpeningHours(room.hours),
+            busyLabel: roomBusy.length
+              ? othersBlocksLabel(roomBusy.length)
+              : null,
+          }
+        : null,
+      othersOccupancy,
     },
     rules: {
       items,

@@ -1112,6 +1112,17 @@ export type Database = {
           sort_order: number;
         }[];
       };
+      list_room_occupancy: {
+        Args: { p_from: string; p_to: string };
+        Returns: {
+          day: string;
+          ends_at: string;
+          room_id: string;
+          specialist_id: string;
+          specialist_name: string;
+          starts_at: string;
+        }[];
+      };
       publish_site_content: { Args: { p_key: string }; Returns: undefined };
       reject_specialist_profile_draft: {
         Args: { p_draft_id: string; p_review_comment: string };

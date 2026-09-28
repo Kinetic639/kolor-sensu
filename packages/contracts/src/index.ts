@@ -17,6 +17,8 @@ export type {
   AvailabilityRuleValues,
   OccurrenceScope,
   RecurrenceEnd,
+  RoomAvailabilityRule,
+  RoomOccupancy,
   SpecialistAvailabilityRule,
   SpecialistTimeOff,
   TimeOffInput,

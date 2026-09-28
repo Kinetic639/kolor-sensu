@@ -5,6 +5,8 @@ import {
   type AvailabilityRuleInput,
   type AvailabilityRuleValues,
   type OccurrenceScope,
+  type RoomAvailabilityRule,
+  type RoomOccupancy,
   type SpecialistAvailabilityRule,
   type SpecialistTimeOff,
 } from "@repo/contracts";
@@ -24,14 +26,26 @@ type TimeOffRow = Database["public"]["Tables"]["specialist_time_off"]["Row"];
 export type AvailabilityErrorReason =
   | "overlap"
   | "room_taken"
+  | "room_closed"
   | "room_unavailable"
   | "time_off_overlap"
   | "not_found"
   | "forbidden";
 
+/** Who already has a room, when a window is refused for it. */
+export interface RoomConflict {
+  specialistName: string;
+  date: string;
+  startsAt: string;
+  endsAt: string;
+}
+
 /** A refusal from the database, with a reason the portals can explain. */
 export class AvailabilityError extends Error {
-  constructor(readonly reason: AvailabilityErrorReason) {
+  constructor(
+    readonly reason: AvailabilityErrorReason,
+    readonly conflict: RoomConflict | null = null,
+  ) {
     super(`Availability change refused: ${reason}`);
     this.name = "AvailabilityError";
   }
@@ -40,15 +54,39 @@ export class AvailabilityError extends Error {
 interface PostgrestLikeError {
   code?: string;
   hint?: string | null;
+  details?: string | null;
   message: string;
+}
+
+/** The DETAIL of a `room_taken` refusal (JSON), if it is readable. */
+function readRoomConflict(details: string | null | undefined) {
+  if (!details) return null;
+  try {
+    const value = JSON.parse(details) as Record<string, unknown>;
+    const { specialist, date, startsAt, endsAt } = value;
+    return typeof specialist === "string" &&
+      typeof date === "string" &&
+      typeof startsAt === "string" &&
+      typeof endsAt === "string"
+      ? { specialistName: specialist, date, startsAt, endsAt }
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 function toAvailabilityError(error: PostgrestLikeError, timeOff = false) {
   switch (error.code) {
     case "23P01":
       if (timeOff) return new AvailabilityError("time_off_overlap");
+      if (error.hint === "room_taken") {
+        return new AvailabilityError(
+          "room_taken",
+          readRoomConflict(error.details),
+        );
+      }
       return new AvailabilityError(
-        error.hint === "room_taken" ? "room_taken" : "overlap",
+        error.hint === "room_closed" ? "room_closed" : "overlap",
       );
     case "22023":
       return new AvailabilityError("room_unavailable");
@@ -117,6 +155,81 @@ export async function listAvailabilityRules(
   return data.map(mapRule);
 }
 
+type RoomRuleRow = RuleRow & {
+  specialist: {
+    profile: {
+      first_name: string;
+      last_name: string;
+      avatar_url: string | null;
+    };
+    public_profile: { display_name: string } | null;
+  };
+};
+
+/** Every window in a room, whoever it belongs to (admins, by RLS). */
+export async function listRoomAvailabilityRules(
+  client: SupabaseClient<Database>,
+  roomId: string,
+): Promise<RoomAvailabilityRule[]> {
+  const { data, error } = await client
+    .from("specialist_availability_rules")
+    .select(
+      `
+        *,
+        exceptions:specialist_availability_exceptions (date),
+        specialist:specialists!inner (
+          profile:profiles!specialists_user_id_fkey (first_name, last_name, avatar_url),
+          public_profile:specialist_public_profiles (display_name)
+        )
+      `,
+    )
+    .eq("room_id", roomId)
+    .order("valid_from")
+    .order("starts_at");
+
+  if (error) throw error;
+  return (data as unknown as RoomRuleRow[]).map((row) => {
+    const { profile, public_profile } = row.specialist;
+    return {
+      ...mapRule(row),
+      // The account's name, else the public profile's (accounts made by
+      // invitation may have no name yet).
+      specialistName:
+        [profile.first_name, profile.last_name]
+          .map((part) => part.trim())
+          .filter(Boolean)
+          .join(" ") ||
+        public_profile?.display_name.trim() ||
+        "Specjalista",
+      specialistAvatarUrl: profile.avatar_url,
+    };
+  });
+}
+
+/**
+ * Who has which active room when, between two local dates (at most 62
+ * days apart): for specialists choosing a room, and for admins.
+ */
+export async function listRoomOccupancy(
+  client: SupabaseClient<Database>,
+  from: string,
+  to: string,
+): Promise<RoomOccupancy[]> {
+  const { data, error } = await client.rpc("list_room_occupancy", {
+    p_from: localDateSchema.parse(from),
+    p_to: localDateSchema.parse(to),
+  });
+  if (error) throw error;
+  return data.map((row) => ({
+    roomId: row.room_id,
+    date: row.day,
+    startsAt: row.starts_at.slice(0, 5),
+    endsAt: row.ends_at.slice(0, 5),
+    specialistId: row.specialist_id,
+    specialistName: row.specialist_name,
+  }));
+}
+
 export async function listTimeOff(
   client: SupabaseClient<Database>,
   specialistId: string,
@@ -125,6 +238,23 @@ export async function listTimeOff(
     .from("specialist_time_off")
     .select("*")
     .eq("specialist_id", specialistId);
+
+  if (error) throw error;
+  return data
+    .map(mapTimeOff)
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+}
+
+/** Time off of several specialists, e.g. everyone working in a room. */
+export async function listTimeOffForSpecialists(
+  client: SupabaseClient<Database>,
+  specialistIds: string[],
+): Promise<SpecialistTimeOff[]> {
+  if (!specialistIds.length) return [];
+  const { data, error } = await client
+    .from("specialist_time_off")
+    .select("*")
+    .in("specialist_id", specialistIds);
 
   if (error) throw error;
   return data

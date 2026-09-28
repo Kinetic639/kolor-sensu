@@ -92,7 +92,12 @@ export {
   updateRoomsPageDraft,
 } from "./cms";
 export {
+  addRoomException,
   createRoom,
+  deleteRoomException,
+  listRoomExceptions,
+  listRoomOpeningHours,
+  replaceRoomOpeningHours,
   disableRoom,
   getRoomByIdAdmin,
   getRoomPublicProfileAdmin,
@@ -118,8 +123,15 @@ export {
   editAvailabilityOccurrence,
   deleteTimeOff,
   listAvailabilityRules,
+  listRoomAvailabilityRules,
+  listRoomOccupancy,
   listTimeOff,
+  listTimeOffForSpecialists,
   parseTstzRange,
   saveAvailabilityRule,
 } from "./availability";
-export type { AvailabilityErrorReason, OccurrenceTarget } from "./availability";
+export type {
+  AvailabilityErrorReason,
+  OccurrenceTarget,
+  RoomConflict,
+} from "./availability";

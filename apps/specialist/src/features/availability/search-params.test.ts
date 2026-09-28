@@ -11,25 +11,33 @@ describe("availability search params", () => {
       tydzien: null,
       dzien: null,
       forma: null,
+      gabinet: null,
     });
   });
 
   it("reads the view, week and filters, ignoring malformed values", () => {
     expect(
-      load("widok=reguly&tydzien=2030-01-07&dzien=3&forma=online"),
+      load(
+        "widok=reguly&tydzien=2030-01-07&dzien=3&forma=online&gabinet=7f6ecfde-56dc-4045-91e1-a0b3cb71abd2",
+      ),
     ).toEqual({
       widok: "reguly",
       tydzien: "2030-01-07",
       dzien: 3,
       forma: "online",
+      gabinet: "7f6ecfde-56dc-4045-91e1-a0b3cb71abd2",
     });
+    expect(load("gabinet=brak").gabinet).toBe("brak");
     expect(
-      load("widok=lista&tydzien=2030-02-30&dzien=8&forma=telefon"),
+      load(
+        "widok=lista&tydzien=2030-02-30&dzien=8&forma=telefon&gabinet=zielony",
+      ),
     ).toEqual({
       widok: "kalendarz",
       tydzien: null,
       dzien: null,
       forma: null,
+      gabinet: null,
     });
   });
 

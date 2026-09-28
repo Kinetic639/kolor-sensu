@@ -3,8 +3,10 @@
 import type {
   AvailabilityRuleInput,
   AvailabilityRuleValues,
+  RoomOccupancy,
   SpecialistAvailabilityRule,
 } from "@repo/contracts";
+import { useRefreshOnReturn } from "@repo/app-runtime/refresh-on-return";
 import { describeRecurrence } from "@repo/scheduling";
 import {
   AlertDialog,
@@ -66,7 +68,7 @@ import { formatDate } from "./view-model";
 // after a drag, time off, and the questions calendar apps ask about
 // repeating events ("only this occurrence, this and following, or all?").
 
-type Result = { ok: true } | { ok: false; message: string };
+type Result = { ok: true } | { ok: false; message: string; stale?: boolean };
 
 interface EditorApi {
   /**
@@ -135,16 +137,21 @@ const isOccurrenceOfRule = (
 
 export function AvailabilityEditorProvider({
   rooms,
+  occupancy = [],
   today,
   specialistName,
   children,
 }: {
   rooms: RoomViewModel[];
+  /** Other specialists' hours in the shown week, to mark taken rooms. */
+  occupancy?: RoomOccupancy[];
   today: string;
   specialistName: string;
   children: ReactNode;
 }) {
   const router = useRouter();
+  // Back on the tab after a while: others may have taken rooms since.
+  useRefreshOnReturn(router.refresh);
   const [pending, startTransition] = useTransition();
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [quick, setQuick] = useState<
@@ -167,6 +174,9 @@ export function AvailabilityEditorProvider({
       const result = await action();
       if (!result.ok) {
         toast.error(result.message);
+        // Someone else changed the schedule: show it (e.g. who has the
+        // room now), keeping the form open.
+        if (result.stale) router.refresh();
         return;
       }
       closeAll();
@@ -321,6 +331,7 @@ export function AvailabilityEditorProvider({
                   : undefined
               }
               onSubmit={submitSheet}
+              occupancy={occupancy}
               pending={pending}
               rooms={rooms}
             />
@@ -353,6 +364,7 @@ export function AvailabilityEditorProvider({
                   "Dodano dostępność",
                 )
               }
+              occupancy={occupancy}
               pending={pending}
               rooms={rooms}
               selection={quick}

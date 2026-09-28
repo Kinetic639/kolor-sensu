@@ -4,6 +4,32 @@ import { ChoiceCardGroup } from "./choice-card";
 import { LinkTabs } from "./link-tabs";
 
 describe("LinkTabs", () => {
+  it("underlines the current page tab", () => {
+    render(
+      <LinkTabs
+        ariaLabel="Sekcje gabinetu"
+        items={[
+          {
+            key: "grafik",
+            label: "Grafik",
+            href: "?zakladka=grafik",
+            active: true,
+            badge: "Tydzień",
+          },
+          {
+            key: "godziny",
+            label: "Godziny otwarcia",
+            href: "?zakladka=godziny",
+          },
+        ]}
+        variant="underline"
+      />,
+    );
+    const current = screen.getByRole("link", { name: /Grafik/ });
+    expect(current).toHaveAttribute("aria-current", "page");
+    expect(current.className).toContain("border-b-2");
+  });
+
   it("links every view and marks the current one", () => {
     render(
       <LinkTabs

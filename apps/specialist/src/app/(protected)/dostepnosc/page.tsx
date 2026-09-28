@@ -15,6 +15,7 @@ import {
 } from "@/features/availability/search-params";
 import type { AvailabilityViewModel } from "@/features/availability/types";
 import type { SpecialistAvailabilityRule } from "@repo/contracts";
+import { WEEKDAY_SHORT } from "@repo/scheduling";
 import {
   AvailabilityRuleCard,
   StatDots,
@@ -30,6 +31,7 @@ import {
   CalendarCheck,
   ChevronLeft,
   ChevronRight,
+  DoorOpen,
   Filter,
   MousePointer2,
   RotateCw,
@@ -38,8 +40,6 @@ import {
 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-
-const WEEKDAYS_SHORT = ["Pon", "Wt", "Śr", "Czw", "Pt", "Sob", "Niedz"];
 
 function Pill({
   icon,
@@ -53,6 +53,73 @@ function Pill({
       {icon}
       {children}
     </span>
+  );
+}
+
+/**
+ * Which room's occupancy is shown over the calendar: who else has it and
+ * when it is closed, so a free room is easy to find.
+ */
+function RoomFocusBar({
+  model,
+  params,
+}: {
+  model: AvailabilityViewModel;
+  params: AvailabilityParams;
+}) {
+  const focus = model.calendar.roomFocus;
+  const roomHref = (gabinet: string) =>
+    availabilityHref({ ...params, gabinet }) as Route;
+  return (
+    <Card className="grid gap-2.5 p-3.5">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-muted)]">
+          <DoorOpen aria-hidden="true" className="size-3.5" />
+          Zajętość gabinetu:
+        </span>
+        <LinkTabs
+          ariaLabel="Pokaż zajętość gabinetu"
+          items={[
+            ...model.rooms.map((room) => ({
+              key: room.id,
+              label: room.name,
+              href: roomHref(room.id),
+              active: focus?.id === room.id,
+              icon: (
+                <span
+                  aria-hidden="true"
+                  className="size-2 rounded-full"
+                  style={{ backgroundColor: room.accent }}
+                />
+              ),
+            })),
+            {
+              key: "brak",
+              label: "Ukryj",
+              href: roomHref("brak"),
+              active: !focus,
+            },
+          ]}
+          linkAs={Link}
+          variant="chips"
+        />
+      </div>
+      {focus ? (
+        <p className="text-xs text-[var(--text-muted)]">
+          <strong className="font-semibold text-[var(--text)]">
+            {focus.name}
+          </strong>
+          {" · "}
+          {focus.hoursLabel
+            ? `Otwarty: ${focus.hoursLabel}`
+            : "Bez ustalonych godzin otwarcia"}
+          {" · "}
+          {focus.busyLabel
+            ? `W tym tygodniu: ${focus.busyLabel}. Skontaktuj się z osobą, która ma gabinet, jeśli chcesz zamienić godziny.`
+            : "W tym tygodniu nikt inny go nie zajmuje."}
+        </p>
+      ) : null}
+    </Card>
   );
 }
 
@@ -151,6 +218,10 @@ function CalendarView({
         </div>
       </Card>
 
+      {model.rooms.length ? (
+        <RoomFocusBar model={model} params={params} />
+      ) : null}
+
       <Card className="overflow-hidden p-0">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-2.5 text-xs text-[var(--text-muted)]">
           <p className="flex items-center gap-2">
@@ -182,11 +253,30 @@ function CalendarView({
               />
               Online
             </li>
+            {calendar.roomFocus ? (
+              <>
+                <li className="flex items-center gap-1">
+                  <span
+                    aria-hidden="true"
+                    className="size-3 rounded-sm border border-dashed border-[var(--border-strong)] bg-[repeating-linear-gradient(135deg,var(--surface-muted)_0_3px,transparent_3px_6px)]"
+                  />
+                  Zajęte przez innych
+                </li>
+                <li className="flex items-center gap-1">
+                  <span
+                    aria-hidden="true"
+                    className="size-3 rounded-sm bg-[repeating-linear-gradient(135deg,var(--surface-muted)_0_3px,transparent_3px_6px)]"
+                  />
+                  Gabinet zamknięty
+                </li>
+              </>
+            ) : null}
           </ul>
         </div>
         <AvailabilityCalendar
           days={calendar.days}
           range={calendar.range}
+          roomAccent={calendar.roomFocus?.accent}
           rules={rules}
         />
       </Card>
@@ -266,7 +356,7 @@ function RulesView({
                 active: params.dzien === null,
                 badge: rules.total,
               },
-              ...WEEKDAYS_SHORT.map((label, index) => ({
+              ...WEEKDAY_SHORT.map((label, index) => ({
                 key: String(index + 1),
                 label,
                 href: filterHref({ dzien: index + 1 }),
@@ -406,6 +496,7 @@ export default async function AvailabilityPage({
 
   return (
     <AvailabilityEditorProvider
+      occupancy={model.calendar.othersOccupancy}
       rooms={model.rooms}
       specialistName={data.specialistName}
       today={data.today}

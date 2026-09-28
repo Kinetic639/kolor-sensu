@@ -347,6 +347,124 @@ END;
 $$;
 RESET ROLE;
 
+-- U: a room's opening hours limit the availability set in it.
+SELECT set_config('request.jwt.claims', '{"sub":"70000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+
+DO $$
+DECLARE
+  ids availability_test_ids%ROWTYPE;
+  hint text;
+BEGIN
+  SELECT * INTO ids FROM availability_test_ids;
+  -- Room 1: Monday to Friday, 08:00–18:00.
+  PERFORM public.replace_room_opening_hours(
+    ids.room_1_id,
+    (SELECT jsonb_agg(jsonb_build_object('weekday', day, 'starts_at', '08:00', 'ends_at', '18:00'))
+     FROM generate_series(1, 5) AS day)
+  );
+
+  BEGIN
+    PERFORM public.save_availability_rule(
+      p_specialist_id => ids.anna_id,
+      p_recurrence => 'weekly', p_weekdays => ARRAY[2, 6]::smallint[],
+      p_starts_at => '17:00', p_ends_at => '18:00',
+      p_valid_from => '2030-01-07', p_mode => 'in_person', p_room_id => ids.room_1_id
+    );
+    RAISE EXCEPTION 'U: a Saturday in a room closed on Saturdays was accepted';
+  EXCEPTION WHEN exclusion_violation THEN
+    GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
+    IF hint <> 'room_closed' THEN RAISE EXCEPTION 'U: expected room_closed, got %', hint; END IF;
+  END;
+  BEGIN
+    PERFORM public.save_availability_rule(
+      p_specialist_id => ids.anna_id,
+      p_recurrence => 'once', p_weekdays => ARRAY[2]::smallint[],
+      p_starts_at => '07:00', p_ends_at => '09:00',
+      p_valid_from => '2030-01-08', p_mode => 'hybrid', p_room_id => ids.room_1_id
+    );
+    RAISE EXCEPTION 'U: hours before opening were accepted';
+  EXCEPTION WHEN exclusion_violation THEN NULL;
+  END;
+
+  -- Within the hours, a room without hours, or online: fine.
+  PERFORM public.save_availability_rule(
+    p_specialist_id => ids.anna_id,
+    p_recurrence => 'weekly', p_weekdays => ARRAY[2]::smallint[],
+    p_starts_at => '17:00', p_ends_at => '18:00',
+    p_valid_from => '2030-01-07', p_mode => 'in_person', p_room_id => ids.room_1_id
+  );
+  PERFORM public.save_availability_rule(
+    p_specialist_id => ids.anna_id,
+    p_recurrence => 'weekly', p_weekdays => ARRAY[6]::smallint[],
+    p_starts_at => '11:00', p_ends_at => '12:00',
+    p_valid_from => '2030-01-07', p_mode => 'in_person', p_room_id => ids.room_2_id
+  );
+  PERFORM public.save_availability_rule(
+    p_specialist_id => ids.anna_id,
+    p_recurrence => 'weekly', p_weekdays => ARRAY[7]::smallint[],
+    p_starts_at => '07:00', p_ends_at => '08:00',
+    p_valid_from => '2030-01-07', p_mode => 'online'
+  );
+END;
+$$;
+RESET ROLE;
+
+-- V: specialists see who has which room when; a taken room says who.
+SELECT set_config('request.jwt.claims', '{"sub":"70000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+
+DO $$
+DECLARE
+  ids availability_test_ids%ROWTYPE;
+  detail text;
+BEGIN
+  SELECT * INTO ids FROM availability_test_ids;
+
+  -- Anna's fortnightly room 2 (G) on Tuesday 2030-01-08, with her name.
+  IF NOT EXISTS (
+    SELECT 1 FROM public.list_room_occupancy('2030-01-07', '2030-01-13') AS busy
+    WHERE busy.room_id = ids.room_2_id AND busy.day = '2030-01-08'
+      AND busy.starts_at = '13:00' AND busy.ends_at = '16:00'
+      AND busy.specialist_id = ids.anna_id AND busy.specialist_name = 'Anna Test'
+  ) THEN
+    RAISE EXCEPTION 'V: room occupancy is missing Anna''s room 2';
+  END IF;
+  -- Not in the off weeks of a fortnightly rule.
+  IF EXISTS (
+    SELECT 1 FROM public.list_room_occupancy('2030-01-14', '2030-01-20') AS busy
+    WHERE busy.specialist_id = ids.anna_id AND busy.room_id = ids.room_2_id
+      AND busy.starts_at = '13:00'
+  ) THEN
+    RAISE EXCEPTION 'V: an off week of a fortnightly rule is shown as taken';
+  END IF;
+  BEGIN
+    PERFORM public.list_room_occupancy('2030-01-01', '2030-06-01');
+    RAISE EXCEPTION 'V: a range over 62 days was accepted';
+  EXCEPTION WHEN invalid_parameter_value THEN NULL;
+  END;
+
+  -- The refusal names who has the room and when (Jan's own fortnightly
+  -- room 2 starts a week later, so it is not in the way).
+  BEGIN
+    PERFORM public.save_availability_rule(
+      p_recurrence => 'once', p_weekdays => ARRAY[2]::smallint[],
+      p_starts_at => '14:00', p_ends_at => '15:00',
+      p_valid_from => '2030-01-08', p_mode => 'in_person', p_room_id => ids.room_2_id
+    );
+    RAISE EXCEPTION 'V: a taken room was accepted';
+  EXCEPTION WHEN exclusion_violation THEN
+    GET STACKED DIAGNOSTICS detail = PG_EXCEPTION_DETAIL;
+    IF detail::jsonb IS DISTINCT FROM jsonb_build_object(
+      'specialist', 'Anna Test', 'date', '2030-01-08', 'startsAt', '13:00', 'endsAt', '16:00'
+    ) THEN
+      RAISE EXCEPTION 'V: unexpected detail %', detail;
+    END IF;
+  END;
+END;
+$$;
+RESET ROLE;
+
 -- T: anonymous visitors read nothing.
 SELECT set_config('request.jwt.claims', '', true);
 SET LOCAL ROLE anon;
@@ -360,6 +478,11 @@ BEGIN
   BEGIN
     PERFORM 1 FROM public.specialist_availability_exceptions LIMIT 1;
     RAISE EXCEPTION 'T: anon read exceptions';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.list_room_occupancy('2030-01-07', '2030-01-13');
+    RAISE EXCEPTION 'T: anon read room occupancy';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
 END;

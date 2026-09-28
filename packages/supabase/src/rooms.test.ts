@@ -6,7 +6,12 @@ import {
 } from "@repo/contracts";
 import { describe, expect, it, vi } from "vitest";
 import {
+  addRoomException,
   buildRoomImagePath,
+  deleteRoomException,
+  listRoomExceptions,
+  listRoomOpeningHours,
+  replaceRoomOpeningHours,
   listPublishedRoomPlacements,
   listPublishedRoomProfiles,
   listRoomImages,
@@ -360,5 +365,127 @@ describe("room placements", () => {
       roomMappers.publicProfile({ ...profileRow, long_description: "tekst" })
         .longDescription,
     ).toEqual(emptyRichTextDocument);
+  });
+});
+
+const ROOM_ID = "20000000-0000-4000-8000-000000000001";
+
+function listQuery(result: unknown) {
+  const query: Record<string, ReturnType<typeof vi.fn>> = {};
+  for (const name of ["select", "eq", "gte", "order"]) {
+    query[name] = vi.fn(() => query);
+  }
+  query.then = vi.fn((resolve: (value: unknown) => unknown) =>
+    Promise.resolve(result).then(resolve),
+  );
+  return query;
+}
+
+describe("room opening hours", () => {
+  it("lists a room's hours in week order, as HH:MM", async () => {
+    const query = listQuery({
+      data: [
+        {
+          id: "h1",
+          room_id: ROOM_ID,
+          weekday: 1,
+          starts_at: "08:00:00",
+          ends_at: "18:00:00",
+          created_at: "",
+          updated_at: "",
+        },
+      ],
+      error: null,
+    });
+    const from = vi.fn(() => query);
+
+    expect(await listRoomOpeningHours({ from } as never, ROOM_ID)).toEqual([
+      expect.objectContaining({
+        weekday: 1,
+        startsAt: "08:00",
+        endsAt: "18:00",
+      }),
+    ]);
+    expect(query.eq).toHaveBeenCalledWith("room_id", ROOM_ID);
+    expect(query.order).toHaveBeenCalledWith("weekday");
+  });
+
+  it("replaces the week at once through the database function", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: [], error: null });
+    await replaceRoomOpeningHours({ rpc } as never, ROOM_ID, [
+      { weekday: 2, startsAt: "08:00", endsAt: "12:00" },
+    ]);
+    expect(rpc).toHaveBeenCalledWith("replace_room_opening_hours", {
+      p_room_id: ROOM_ID,
+      p_intervals: [{ weekday: 2, starts_at: "08:00", ends_at: "12:00" }],
+    });
+  });
+
+  it("rejects invalid hours before calling the database", async () => {
+    const rpc = vi.fn();
+    await expect(
+      replaceRoomOpeningHours({ rpc } as never, ROOM_ID, [
+        { weekday: 2, startsAt: "12:00", endsAt: "08:00" },
+      ]),
+    ).rejects.toThrow();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+});
+
+describe("room exceptions", () => {
+  it("lists exceptions from a date on", async () => {
+    const query = listQuery({
+      data: [
+        {
+          id: "e1",
+          room_id: ROOM_ID,
+          date: "2030-01-07",
+          type: "blocked_interval",
+          starts_at: "12:00:00",
+          ends_at: "13:00:00",
+          reason: "Serwis",
+          created_at: "",
+          updated_at: "",
+        },
+      ],
+      error: null,
+    });
+    const from = vi.fn(() => query);
+
+    expect(
+      await listRoomExceptions({ from } as never, ROOM_ID, "2030-01-01"),
+    ).toEqual([
+      expect.objectContaining({
+        type: "blocked_interval",
+        startsAt: "12:00",
+        endsAt: "13:00",
+        reason: "Serwis",
+      }),
+    ]);
+    expect(query.gte).toHaveBeenCalledWith("date", "2030-01-01");
+  });
+
+  it("adds a validated exception and removes one", async () => {
+    const insert = vi.fn().mockResolvedValue({ error: null });
+    const eq = vi.fn().mockResolvedValue({ error: null });
+    const from = vi.fn(() => ({ insert, delete: () => ({ eq }) }));
+
+    await addRoomException({ from } as never, {
+      roomId: ROOM_ID,
+      date: "2030-01-07",
+      type: "closed_all_day",
+      reason: " Remont ",
+    });
+    expect(insert).toHaveBeenCalledWith({
+      room_id: ROOM_ID,
+      date: "2030-01-07",
+      type: "closed_all_day",
+      starts_at: null,
+      ends_at: null,
+      reason: "Remont",
+    });
+
+    await deleteRoomException({ from } as never, "e1");
+    expect(eq).toHaveBeenCalledWith("id", "e1");
   });
 });

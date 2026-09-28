@@ -6,6 +6,8 @@ import {
   deleteAvailabilityOccurrence,
   deleteAvailabilityRule,
   editAvailabilityOccurrence,
+  listRoomAvailabilityRules,
+  listRoomOccupancy,
   parseTstzRange,
   saveAvailabilityRule,
 } from "./availability";
@@ -140,6 +142,7 @@ describe("saveAvailabilityRule", () => {
   it.each([
     [{ code: "23P01", hint: "overlap" }, "overlap"],
     [{ code: "23P01", hint: "room_taken" }, "room_taken"],
+    [{ code: "23P01", hint: "room_closed" }, "room_closed"],
     [{ code: "22023", hint: null }, "room_unavailable"],
     [{ code: "P0002", hint: null }, "not_found"],
     [{ code: "42501", hint: null }, "forbidden"],
@@ -239,5 +242,156 @@ describe("addTimeOff", () => {
     await expect(addTimeOff({ rpc } as never, interval)).rejects.toMatchObject({
       reason: "time_off_overlap",
     });
+  });
+});
+
+describe("listRoomAvailabilityRules", () => {
+  it("reads the room's windows with each specialist's name", async () => {
+    const order = vi.fn();
+    const query = {
+      select: vi.fn(() => query),
+      eq: vi.fn(() => query),
+      order,
+    };
+    order.mockReturnValueOnce(query).mockResolvedValueOnce({
+      data: [
+        {
+          id: "rule",
+          specialist_id: "specialist",
+          recurrence: "weekly",
+          weekdays: [1],
+          interval_weeks: 1,
+          occurrence_count: null,
+          starts_at: "09:00:00",
+          ends_at: "12:00:00",
+          valid_from: "2030-01-07",
+          valid_until: null,
+          mode: "in_person",
+          room_id: ROOM,
+          note: null,
+          created_at: "",
+          updated_at: "",
+          exceptions: [],
+          specialist: {
+            profile: {
+              first_name: "Anna",
+              last_name: "Nowak",
+              avatar_url: null,
+            },
+            public_profile: { display_name: "Anna Nowak-Kowal" },
+          },
+        },
+        {
+          id: "rule-2",
+          specialist_id: "other",
+          recurrence: "once",
+          weekdays: [2],
+          interval_weeks: 1,
+          occurrence_count: null,
+          starts_at: "13:00:00",
+          ends_at: "14:00:00",
+          valid_from: "2030-01-08",
+          valid_until: "2030-01-08",
+          mode: "online",
+          room_id: ROOM,
+          note: null,
+          created_at: "",
+          updated_at: "",
+          exceptions: [],
+          specialist: {
+            profile: { first_name: "", last_name: "", avatar_url: null },
+            public_profile: { display_name: "Jan Kowalski" },
+          },
+        },
+      ],
+      error: null,
+    });
+    const from = vi.fn(() => query);
+
+    const rules = await listRoomAvailabilityRules({ from } as never, ROOM);
+
+    expect(from).toHaveBeenCalledWith("specialist_availability_rules");
+    expect(query.eq).toHaveBeenCalledWith("room_id", ROOM);
+    expect(rules).toEqual([
+      expect.objectContaining({
+        id: "rule",
+        startsAt: "09:00",
+        specialistName: "Anna Nowak",
+        specialistAvatarUrl: null,
+      }),
+      // Without a name on the account, the public profile's name.
+      expect.objectContaining({ id: "rule-2", specialistName: "Jan Kowalski" }),
+    ]);
+  });
+});
+
+describe("listRoomOccupancy", () => {
+  it("reads who has which room when, as HH:MM", async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: [
+        {
+          room_id: ROOM,
+          day: "2030-01-08",
+          starts_at: "13:00:00",
+          ends_at: "16:00:00",
+          specialist_id: "anna",
+          specialist_name: "Anna Nowak",
+        },
+      ],
+      error: null,
+    });
+
+    expect(
+      await listRoomOccupancy({ rpc } as never, "2030-01-07", "2030-01-13"),
+    ).toEqual([
+      {
+        roomId: ROOM,
+        date: "2030-01-08",
+        startsAt: "13:00",
+        endsAt: "16:00",
+        specialistId: "anna",
+        specialistName: "Anna Nowak",
+      },
+    ]);
+    expect(rpc).toHaveBeenCalledWith("list_room_occupancy", {
+      p_from: "2030-01-07",
+      p_to: "2030-01-13",
+    });
+  });
+});
+
+describe("a taken room", () => {
+  it("says who has it and when", async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: null,
+      error: {
+        code: "23P01",
+        hint: "room_taken",
+        message: "x",
+        details:
+          '{"date": "2030-01-08", "endsAt": "16:00", "startsAt": "13:00", "specialist": "Anna Nowak"}',
+      },
+    });
+    await expect(
+      saveAvailabilityRule({ rpc } as never, input),
+    ).rejects.toMatchObject({
+      reason: "room_taken",
+      conflict: {
+        specialistName: "Anna Nowak",
+        date: "2030-01-08",
+        startsAt: "13:00",
+        endsAt: "16:00",
+      },
+    });
+  });
+
+  it("copes without details", async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: null,
+      error: { code: "23P01", hint: "room_taken", message: "x", details: "" },
+    });
+    await expect(
+      saveAvailabilityRule({ rpc } as never, input),
+    ).rejects.toMatchObject({ reason: "room_taken", conflict: null });
   });
 });

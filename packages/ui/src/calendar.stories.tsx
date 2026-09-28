@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { expect, fireEvent, fn } from "storybook/test";
-import { AvailabilityBlockBody } from "./availability";
+import { AvailabilityBlockBody, RoomTakenBody } from "./availability";
 import {
   CalendarBlock,
   CalendarWeekGrid,
@@ -180,5 +180,76 @@ export const DragToCreate: Story = {
     await expect(canvas.getByRole("status")).toHaveTextContent(
       "Zaznaczono 2030-01-08: 9:00–11:00",
     );
+  },
+};
+
+/**
+ * A room over one's own week: a colleague's hours in it (taken) and the
+ * hours it is closed, behind one's own blocks.
+ */
+export const RoomOccupancy: Story = {
+  render: () => (
+    <div className="rounded-[var(--radius-surface)] border border-[var(--border)] bg-[var(--surface)]">
+      <CalendarWeekGrid
+        columns={columns({
+          0: (
+            <>
+              <CalendarBlock
+                accent="var(--resource-1)"
+                end={12 * 60}
+                label="Gabinet 1 zajęty: Anna Nowak, 10:00 – 12:00"
+                range={range}
+                start={10 * 60}
+                variant="taken"
+              >
+                <RoomTakenBody name="Anna Nowak" timeLabel="10:00 – 12:00" />
+              </CalendarBlock>
+              <CalendarBlock
+                accent="var(--resource-1)"
+                end={16 * 60}
+                label="Dostępność 13:00–16:00, Gabinet 1"
+                range={range}
+                start={13 * 60}
+                tint="var(--resource-1-soft)"
+              >
+                <AvailabilityBlockBody
+                  mode="in_person"
+                  placeLabel="Gabinet 1"
+                  timeLabel="13:00 – 16:00"
+                />
+              </CalendarBlock>
+              <CalendarBlock
+                end={20 * 60}
+                label="Gabinet 1 zamknięty, 18:00–20:00"
+                range={range}
+                start={18 * 60}
+                variant="closed"
+              >
+                Gabinet 1 zamknięty
+              </CalendarBlock>
+            </>
+          ),
+          5: (
+            <CalendarBlock
+              end={20 * 60}
+              label="Gabinet 1 zamknięty, 08:00–20:00"
+              range={range}
+              start={8 * 60}
+              variant="closed"
+            >
+              Gabinet 1 zamknięty
+            </CalendarBlock>
+          ),
+        })}
+        range={range}
+      />
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole("note", {
+        name: "Gabinet 1 zajęty: Anna Nowak, 10:00 – 12:00",
+      }),
+    ).toBeInTheDocument();
   },
 };

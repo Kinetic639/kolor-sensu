@@ -2,7 +2,7 @@
 
 import type { SpecialistAvailabilityRule } from "@repo/contracts";
 import { minutesToTime, type MinuteRange } from "@repo/scheduling";
-import { AvailabilityBlockBody } from "@repo/ui/availability";
+import { AvailabilityBlockBody, RoomTakenBody } from "@repo/ui/availability";
 import {
   CalendarBlock,
   CalendarWeekGrid,
@@ -19,10 +19,13 @@ export function AvailabilityCalendar({
   days,
   range,
   rules,
+  roomAccent,
 }: {
   days: CalendarDayViewModel[];
   range: MinuteRange;
   rules: SpecialistAvailabilityRule[];
+  /** Colour of the room shown over the calendar. */
+  roomAccent?: string;
 }) {
   const editor = useAvailabilityEditor();
   const ruleById = useMemo(
@@ -88,6 +91,34 @@ export function AvailabilityCalendar({
         ),
         content: (
           <>
+            {day.room.closed.map((one) => (
+              <CalendarBlock
+                end={one.end}
+                key={`closed-${one.start}`}
+                label={`${one.label}, ${minutesToTime(one.start)}–${minutesToTime(one.end)}`}
+                range={range}
+                start={one.start}
+                variant="closed"
+              >
+                {one.end - one.start >= 60 ? one.label : null}
+              </CalendarBlock>
+            ))}
+            {day.room.busy.map((one) => (
+              <CalendarBlock
+                accent={roomAccent}
+                end={one.end}
+                key={one.id}
+                label={one.label}
+                range={range}
+                start={one.start}
+                variant="taken"
+              >
+                <RoomTakenBody
+                  name={one.specialistName}
+                  timeLabel={one.timeLabel}
+                />
+              </CalendarBlock>
+            ))}
             {day.timeOff.map((off) => (
               <CalendarBlock
                 end={off.end}

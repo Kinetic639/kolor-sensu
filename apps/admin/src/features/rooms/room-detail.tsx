@@ -9,17 +9,11 @@ import { Card } from "@repo/ui/card";
 import { ImageCropDialog } from "@repo/ui/image-crop-dialog";
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
-import {
-  PageHeader,
-  SectionHeader,
-  StatusBadge,
-} from "@repo/ui/portal-content";
+import { SectionHeader } from "@repo/ui/portal-content";
 import { SortableImageGallery } from "@repo/ui/sortable-image-gallery";
 import { RichTextEditor } from "@repo/ui/rich-text-editor";
 import { Switch } from "@repo/ui/switch";
 import { Textarea } from "@repo/ui/textarea";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
@@ -40,7 +34,7 @@ import {
   type RoomDetailsFormValues,
   type RoomProfileFormValues,
 } from "./forms";
-import type { AdminRoomDetailModel } from "./loaders";
+import type { AdminRoomDetailModel, AdminRoomModel } from "./loaders";
 import { LocationSelect } from "./location-select";
 
 // The original may be large; only the cropped photo (well under 5 MB) is kept.
@@ -48,12 +42,6 @@ const SOURCE_IMAGE_MAX_BYTES = 20 * 1024 * 1024;
 const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 type ActionResult = { ok: true } | { ok: false; message: string };
-
-// On the site only when the room is public and its profile published; the
-// page's one switch sets both.
-function isOnSite(model: AdminRoomDetailModel) {
-  return model.room.publiclyVisible && Boolean(model.publicProfile?.published);
-}
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   return message ? (
@@ -227,7 +215,8 @@ function RoomProfileCard({ model }: { model: AdminRoomDetailModel }) {
     ) as unknown as Resolver<RoomProfileFormValues>,
     defaultValues: {
       ...toRoomProfileFormValues(model.publicProfile, model.room.name),
-      published: isOnSite(model),
+      // The page's one switch sets both the profile and the room public.
+      published: model.onSite,
     },
   });
 
@@ -313,7 +302,7 @@ function RoomProfileCard({ model }: { model: AdminRoomDetailModel }) {
   );
 }
 
-function RoomDetailsCard({ model }: { model: AdminRoomDetailModel }) {
+function RoomDetailsCard({ model }: { model: AdminRoomModel }) {
   const { isPending, run } = useSave();
   const {
     control,
@@ -421,38 +410,21 @@ function RoomDetailsCard({ model }: { model: AdminRoomDetailModel }) {
   );
 }
 
-export function RoomDetail({ model }: { model: AdminRoomDetailModel }) {
-  const { room, publicProfile } = model;
-  const onSite = isOnSite(model);
-
+/** Gabinety → Profil publiczny: photos and the website profile. */
+export function RoomProfileTab({ model }: { model: AdminRoomDetailModel }) {
   return (
     <div className="space-y-6">
-      <Button asChild size="sm" variant="ghost">
-        <Link href="/gabinety">
-          <ArrowLeft className="size-4" aria-hidden="true" />
-          Wróć do listy
-        </Link>
-      </Button>
-      <PageHeader
-        description={`${model.locationName} · pojemność ${room.capacity}`}
-        eyebrow="Gabinet"
-        title={room.name}
-      />
-      <div className="flex flex-wrap gap-2">
-        <StatusBadge tone={room.active ? "success" : "neutral"}>
-          {room.active ? "Aktywny" : "Nieaktywny"}
-        </StatusBadge>
-        <StatusBadge tone={onSite ? "success" : "neutral"}>
-          {onSite ? "Widoczny na stronie" : "Ukryty na stronie"}
-        </StatusBadge>
-      </div>
-
       <RoomPhotos model={model} />
+      <RoomProfileCard model={model} />
+    </div>
+  );
+}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem] xl:items-start">
-        <RoomProfileCard model={model} />
-        <RoomDetailsCard model={model} />
-      </div>
+/** Gabinety → Ustawienia: name, location, capacity and status. */
+export function RoomSettingsTab({ model }: { model: AdminRoomModel }) {
+  return (
+    <div className="max-w-2xl">
+      <RoomDetailsCard model={model} />
     </div>
   );
 }

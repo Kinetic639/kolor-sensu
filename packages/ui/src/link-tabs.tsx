@@ -17,8 +17,11 @@ export interface LinkTabItem {
 export interface LinkTabsProps {
   items: LinkTabItem[];
   ariaLabel: string;
-  /** `segmented`: view switcher; `chips`: a row of filters. */
-  variant?: "segmented" | "chips";
+  /**
+   * `segmented`: view switcher; `chips`: a row of filters; `underline`:
+   * sections of a page.
+   */
+  variant?: "segmented" | "chips" | "underline";
   /** The link component, e.g. next/link (defaults to `a`). */
   linkAs?: ElementType;
   className?: string;
@@ -32,6 +35,7 @@ export function LinkTabs({
   className,
 }: LinkTabsProps) {
   const segmented = variant === "segmented";
+  const underline = variant === "underline";
   return (
     <nav aria-label={ariaLabel} className={className}>
       <ul
@@ -39,7 +43,9 @@ export function LinkTabs({
           "flex flex-wrap items-center",
           segmented
             ? "gap-1 rounded-[var(--radius-surface)] bg-[var(--surface-muted)] p-1"
-            : "gap-1.5",
+            : underline
+              ? "gap-x-5 gap-y-1"
+              : "gap-1.5",
         )}
       >
         {items.map((item) => (
@@ -48,19 +54,26 @@ export function LinkTabs({
               aria-current={item.active ? "page" : undefined}
               className={cn(
                 "inline-flex min-h-9 items-center gap-2 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
-                segmented
+                underline
                   ? cn(
-                      "rounded-[var(--radius-control)] px-3.5 py-2",
+                      "-mb-px border-b-2 px-0.5 py-2 text-sm",
                       item.active
-                        ? "bg-[var(--surface)] text-[var(--text)] shadow-sm ring-1 ring-[var(--border)]"
-                        : "text-[var(--text-muted)] hover:bg-[color-mix(in_srgb,var(--surface)_60%,transparent)] hover:text-[var(--text)]",
+                        ? "border-[var(--primary)] text-[var(--text)]"
+                        : "border-transparent text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text)]",
                     )
-                  : cn(
-                      "rounded-[var(--radius-control)] border px-2.5 py-1.5",
-                      item.active
-                        ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm"
-                        : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text)]",
-                    ),
+                  : segmented
+                    ? cn(
+                        "rounded-[var(--radius-control)] px-3.5 py-2",
+                        item.active
+                          ? "bg-[var(--surface)] text-[var(--text)] shadow-sm ring-1 ring-[var(--border)]"
+                          : "text-[var(--text-muted)] hover:bg-[color-mix(in_srgb,var(--surface)_60%,transparent)] hover:text-[var(--text)]",
+                      )
+                    : cn(
+                        "rounded-[var(--radius-control)] border px-2.5 py-1.5",
+                        item.active
+                          ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm"
+                          : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text)]",
+                      ),
               )}
               href={item.href}
             >
@@ -71,7 +84,7 @@ export function LinkTabs({
                   className={cn(
                     "rounded-full px-2 py-0.5 text-[0.625rem] font-semibold",
                     item.active
-                      ? segmented
+                      ? segmented || underline
                         ? "bg-[var(--primary-soft)] text-[var(--primary)]"
                         : "bg-[color-mix(in_srgb,white_20%,transparent)] text-inherit"
                       : "bg-[var(--surface-muted)] text-[var(--text-muted)]",

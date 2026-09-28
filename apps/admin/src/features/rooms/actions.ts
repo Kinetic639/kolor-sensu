@@ -4,15 +4,23 @@ import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import {
+  addRoomException,
   createRoom,
+  deleteRoomException,
   getRoomPublicProfileAdmin,
   removeRoomImage,
   reorderRoomImages,
+  replaceRoomOpeningHours,
   setRoomMainImage,
   updateRoom,
   upsertRoomPublicProfile,
 } from "@repo/supabase";
 import { revalidatePath } from "next/cache";
+import {
+  exceptionFormSchema,
+  toRoomExceptionInput,
+  type ExceptionFormValues,
+} from "./exception-form";
 import {
   newRoomFormSchema,
   roomDetailsFormSchema,
@@ -24,6 +32,11 @@ import {
   type RoomDetailsFormValues,
   type RoomProfileFormValues,
 } from "./forms";
+import {
+  openingHoursFormSchema,
+  toOpeningHoursIntervals,
+  type OpeningHoursFormValues,
+} from "./opening-hours-form";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
 
@@ -40,6 +53,8 @@ function failure(
       ok: false,
       message: "W tej lokalizacji jest już gabinet o takiej nazwie.",
     };
+  if (code === "23P01")
+    return { ok: false, message: "Te godziny nakładają się na już zapisane." };
   if (code === "23514")
     return { ok: false, message: "Gabinet może mieć najwyżej 5 zdjęć." };
   return { ok: false, message: fallback };
@@ -158,5 +173,62 @@ export async function createRoomAction(
     return { ok: true, roomId: room.id };
   } catch (error) {
     return failure(error, "Nie udało się dodać gabinetu.");
+  }
+}
+
+/**
+ * Saves the room's week at once. Specialists' windows saved before stay;
+ * the schedule marks those now outside the hours.
+ */
+export async function saveOpeningHoursAction(
+  roomId: string,
+  values: OpeningHoursFormValues,
+): Promise<ActionResult> {
+  await requirePortalRole();
+  const parsed = openingHoursFormSchema.safeParse(values);
+  if (!parsed.success) return { ok: false, message: "Sprawdź godziny." };
+  try {
+    await replaceRoomOpeningHours(
+      await createClient(),
+      roomId,
+      toOpeningHoursIntervals(parsed.data),
+    );
+    await refresh(roomId);
+    return { ok: true };
+  } catch (error) {
+    return failure(error, "Nie udało się zapisać godzin otwarcia.");
+  }
+}
+
+export async function addRoomExceptionAction(
+  roomId: string,
+  values: ExceptionFormValues,
+): Promise<ActionResult> {
+  await requirePortalRole();
+  const parsed = exceptionFormSchema.safeParse(values);
+  if (!parsed.success) return { ok: false, message: "Sprawdź dane wyjątku." };
+  try {
+    await addRoomException(
+      await createClient(),
+      toRoomExceptionInput(roomId, parsed.data),
+    );
+    await refresh(roomId);
+    return { ok: true };
+  } catch (error) {
+    return failure(error, "Nie udało się dodać wyjątku.");
+  }
+}
+
+export async function deleteRoomExceptionAction(
+  roomId: string,
+  exceptionId: string,
+): Promise<ActionResult> {
+  await requirePortalRole();
+  try {
+    await deleteRoomException(await createClient(), exceptionId);
+    await refresh(roomId);
+    return { ok: true };
+  } catch (error) {
+    return failure(error, "Nie udało się usunąć wyjątku.");
   }
 }

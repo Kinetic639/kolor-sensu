@@ -1,10 +1,15 @@
 import {
+  roomAvailabilityExceptionCreateSchema,
   roomCreateSchema,
+  roomOpeningHoursIntervalSchema,
   roomPublicProfileSchema,
   roomUpdateSchema,
   type AdminRoomSummary,
   type Room,
+  type RoomAvailabilityException,
   type RoomCreate,
+  type RoomOpeningHoursInterval,
+  type RoomOpeningHoursIntervalInput,
   type RoomImage,
   type RoomPlacement,
   type RoomPublicProfile,
@@ -380,6 +385,131 @@ export async function setRoomMainImage(
   const { error } = await client.rpc("set_room_main_image", {
     p_image_id: imageId,
   });
+  if (error) throw error;
+}
+
+type OpeningHoursRow = Pick<
+  Database["public"]["Tables"]["room_opening_hours"]["Row"],
+  | "id"
+  | "room_id"
+  | "weekday"
+  | "starts_at"
+  | "ends_at"
+  | "created_at"
+  | "updated_at"
+>;
+type RoomExceptionRow =
+  Database["public"]["Tables"]["room_availability_exceptions"]["Row"];
+
+const shortTime = (time: string) => time.slice(0, 5);
+
+function mapOpeningHours(row: OpeningHoursRow): RoomOpeningHoursInterval {
+  return {
+    id: row.id,
+    roomId: row.room_id,
+    weekday: row.weekday,
+    startsAt: shortTime(row.starts_at),
+    endsAt: shortTime(row.ends_at),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function mapRoomException(row: RoomExceptionRow): RoomAvailabilityException {
+  return {
+    id: row.id,
+    roomId: row.room_id,
+    date: row.date,
+    type: row.type,
+    startsAt: row.starts_at ? shortTime(row.starts_at) : null,
+    endsAt: row.ends_at ? shortTime(row.ends_at) : null,
+    reason: row.reason,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/** The room's weekly opening hours, Monday first. */
+export async function listRoomOpeningHours(
+  client: SupabaseClient<Database>,
+  roomId: string,
+): Promise<RoomOpeningHoursInterval[]> {
+  const { data, error } = await client
+    .from("room_opening_hours")
+    .select("id, room_id, weekday, starts_at, ends_at, created_at, updated_at")
+    .eq("room_id", roomId)
+    .order("weekday")
+    .order("starts_at");
+
+  if (error) throw error;
+  return data.map(mapOpeningHours);
+}
+
+/**
+ * Replaces the room's whole week at once (admins only). An empty list
+ * removes the hours: the room is then not limited to any.
+ */
+export async function replaceRoomOpeningHours(
+  client: SupabaseClient<Database>,
+  roomId: string,
+  intervals: RoomOpeningHoursIntervalInput[],
+): Promise<void> {
+  const parsed = intervals.map((one) =>
+    roomOpeningHoursIntervalSchema.parse(one),
+  );
+  const { error } = await client.rpc("replace_room_opening_hours", {
+    p_room_id: roomId,
+    p_intervals: parsed.map((one) => ({
+      weekday: one.weekday,
+      starts_at: one.startsAt,
+      ends_at: one.endsAt,
+    })),
+  });
+  if (error) throw error;
+}
+
+/** The room's exceptions (closed days, blocked or extra hours) from a date. */
+export async function listRoomExceptions(
+  client: SupabaseClient<Database>,
+  roomId: string,
+  fromDate: string,
+): Promise<RoomAvailabilityException[]> {
+  const { data, error } = await client
+    .from("room_availability_exceptions")
+    .select("*")
+    .eq("room_id", roomId)
+    .gte("date", fromDate)
+    .order("date")
+    .order("starts_at");
+
+  if (error) throw error;
+  return data.map(mapRoomException);
+}
+
+export async function addRoomException(
+  client: SupabaseClient<Database>,
+  input: z.input<typeof roomAvailabilityExceptionCreateSchema>,
+): Promise<void> {
+  const exception = roomAvailabilityExceptionCreateSchema.parse(input);
+  const { error } = await client.from("room_availability_exceptions").insert({
+    room_id: exception.roomId,
+    date: exception.date,
+    type: exception.type,
+    starts_at: exception.startsAt,
+    ends_at: exception.endsAt,
+    reason: exception.reason || null,
+  });
+  if (error) throw error;
+}
+
+export async function deleteRoomException(
+  client: SupabaseClient<Database>,
+  id: string,
+): Promise<void> {
+  const { error } = await client
+    .from("room_availability_exceptions")
+    .delete()
+    .eq("id", id);
   if (error) throw error;
 }
 

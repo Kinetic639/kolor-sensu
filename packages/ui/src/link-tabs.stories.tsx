@@ -69,6 +69,47 @@ export const FilterChips: Story = {
   ),
 };
 
+export const SectionTabs: Story = {
+  render: () => (
+    <div className="border-b border-[var(--border)]">
+      <LinkTabs
+        ariaLabel="Sekcje gabinetu"
+        items={[
+          {
+            key: "grafik",
+            label: "Grafik",
+            href: "?zakladka=grafik",
+            active: true,
+            badge: "Tydzień",
+          },
+          {
+            key: "godziny",
+            label: "Godziny otwarcia",
+            href: "?zakladka=godziny",
+          },
+          {
+            key: "profil",
+            label: "Profil publiczny",
+            href: "?zakladka=profil",
+          },
+          {
+            key: "ustawienia",
+            label: "Ustawienia",
+            href: "?zakladka=ustawienia",
+          },
+        ]}
+        variant="underline"
+      />
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("link", { name: /Grafik/ })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  },
+};
+
 function ModeChoice() {
   const [value, setValue] = useState<"in_person" | "online" | "hybrid">(
     "in_person",

@@ -206,6 +206,23 @@ export interface SpecialistAvailabilityRule {
   note: string | null;
 }
 
+/** A window in a room, with whose it is (for the room's schedule). */
+export interface RoomAvailabilityRule extends SpecialistAvailabilityRule {
+  specialistName: string;
+  specialistAvatarUrl: string | null;
+}
+
+/** Who has a room when, on one date (for colleagues and admins). */
+export interface RoomOccupancy {
+  roomId: string;
+  date: string;
+  /** `HH:MM`, local. */
+  startsAt: string;
+  endsAt: string;
+  specialistId: string;
+  specialistName: string;
+}
+
 export interface SpecialistTimeOff {
   id: string;
   specialistId: string;

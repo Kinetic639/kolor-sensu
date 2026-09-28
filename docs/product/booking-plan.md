@@ -160,6 +160,47 @@ kalendarzu; lista reguł z filtrami dni i formy, „Na cały tydzień”
 (reguła na pn–pt), „Skopiuj na kolejny dzień”, szablon Pn–Pt jako jedna
 reguła. Admin (R9 / K5): podgląd grafików wszystkich i obłożenia gabinetów.
 
+**Gabinety w portalu admina (RG1, `/gabinety/[id]?zakladka=…`):**
+
+- Zakładki jak w referencji: **Grafik** (tydzień gabinetu: dyżury
+  specjalistów w ich kolorach, godziny zamknięcia zakreskowane, dyżury poza
+  godzinami oznaczone; podsumowanie: obłożenie, zarezerwowane i wolne
+  godziny, specjaliści tygodnia, najbliższe dyżury), **Godziny otwarcia**
+  (tydzień z przedziałami, np. przerwą, kopiowanie dnia; wyjątki na daty:
+  zamknięty cały dzień, zablokowane godziny, dodatkowo otwarty),
+  **Profil publiczny** (zdjęcia i opis), **Ustawienia** (dane gabinetu).
+  Przełącznik gabinetu w nagłówku zostaje na tej samej zakładce.
+- **Godziny otwarcia ograniczają dostępność** (`20260928065956`): gdy
+  gabinet ma godziny, okno specjalisty w nim musi się mieścić w przedziale
+  otwarcia każdego swojego dnia tygodnia (`room_closed`, „Gabinet jest
+  wtedy zamknięty”). Gabinet bez godzin nie ma ograniczeń. Zmiana godzin
+  nie usuwa zapisanych okien — grafik pokazuje je jako „Poza godzinami
+  otwarcia”. Wyjątki na daty liczą się w grafiku i (RD2) w wolnych
+  terminach.
+- Dopóki nie ma wizyt (RD2), gabinet „rezerwują” okna dostępności
+  specjalistów; obłożenie = ich godziny w godzinach otwarcia.
+
+**Zajętość gabinetów u specjalisty (`20260928074604`,
+`/dostepnosc?gabinet=…`):**
+
+- Kalendarz dostępności pokazuje wybrany gabinet (domyślnie pierwszy,
+  „Ukryj” = `gabinet=brak`): godziny innych specjalistów w nim („Zajęte:
+  imię i nazwisko, godziny”) oraz godziny zamknięcia. Specjalista widzi, kto
+  ma gabinet, i może się umówić na zamianę.
+- `list_room_occupancy(od, do)` (SECURITY DEFINER, specjaliści i admin,
+  najwyżej 62 dni): tylko gabinet, data, godziny i imię — bez notatek.
+- W formularzach gabinet zajęty w wybranych godzinach (w pokazanym
+  tygodniu) jest wyłączony z opisem „Zajęty: kto, kiedy”; szybkie okno
+  proponuje pierwszy wolny gabinet albo żaden, gdy wszystkie są zajęte.
+- Gwarancją jest baza: odmowa `room_taken` podaje w DETAIL (JSON), kto i
+  kiedy ma gabinet — pierwszą kolidującą datę, także w przyszłych
+  tygodniach reguły.
+- Bez realtime (na razie zbędny, a RLS i tak ukrywa cudze reguły przed
+  `postgres_changes`): kalendarz odświeża się sam po odmowie z powodu
+  nieaktualnych danych (`room_taken`, `overlap`, `not_found`,
+  `room_unavailable`) i po powrocie do karty po co najmniej 30 s
+  (`@repo/app-runtime/refresh-on-return`; także grafik gabinetu u admina).
+
 ### Bezpieczeństwo
 
 - **RLS wymuszone, anon bez dostępu do tabel.** Strona publiczna dostaje
@@ -253,21 +294,22 @@ na stronę Stripe.
 Statusy: `NOT STARTED`, `IN PROGRESS`, `DONE`, `SKIPPED` (z uzasadnieniem).
 Każdy commit realizujący zadanie aktualizuje status i wpisuje hash commitu.
 
-| ID  | Zadanie                                                                                                  | Roadmapa | Status        | Commit / PR | Uwagi                                       |
-| --- | -------------------------------------------------------------------------------------------------------- | -------- | ------------- | ----------- | ------------------------------------------- |
-| R0  | Plan (ten dokument), nuqs w `apps/web`, kontrakty parametrów kreatora                                    | F4-01    | `DONE`        | 8df6b69     |                                             |
-| RD1 | Schemat dostępności: reguły, okna jednorazowe, nieobecności, konflikty gabinetów, RPC zapisu, testy SQL  | F4-02    | `DONE`        | f980622     |                                             |
-| RD2 | Schemat wizyt i płatności: wykluczenia, RPC wolnych terminów i holdu, `slot_is_available`, testy SQL     | F4-02    | `NOT STARTED` |             |                                             |
-| R1  | Domena slotów w `packages/scheduling` (DST, reguły, wyjątki, zajętość, bufor, lead time, horyzont) z TDD | F4-02    | `IN PROGRESS` |             | Okna i wolne terminy gotowe; zajętość z RD2 |
-| R2  | Portal specjalisty `/dostepnosc`: grafik tygodniowy, nieobecności, okna jednorazowe, podgląd tygodnia    | F4-02    | `DONE`        | f980622     | Pełny kalendarz: etap K                     |
-| R3  | UI `@repo/ui/booking`: stepper, podsumowanie, karty wyboru, siatka tygodnia, lista dnia, legenda         | F4-03    | `NOT STARTED` |             | Stories + testy a11y                        |
-| R4  | `/umow-wizyte`: kroki Usługa → Forma → Specjalista → Termin z nuqs, SSR                                  | F4-03    | `NOT STARTED` |             |                                             |
-| R5  | Hold terminu, krok „Dane” (Turnstile, limity), zgody                                                     | F4-03    | `NOT STARTED` |             | Klucze Turnstile                            |
-| R6  | Płatność Stripe: Payment Element, webhook, „Oczekujemy na potwierdzenie”, wygasanie                      | F4-03    | `NOT STARTED` |             | Klucze testowe Stripe                       |
-| R7  | Potwierdzenie i e-maile (Resend): potwierdzenie z linkiem i plikiem `.ics`                               | F4-04    | `NOT STARTED` |             | Klucz Resend, DNS domeny                    |
-| R8  | Zarządzanie z linku: szczegóły, przełożenie, anulowanie ze zwrotem                                       | F4-04    | `NOT STARTED` |             |                                             |
-| R9  | Portale: lista wizyt specjalisty i admina, anulowanie przez centrum                                      | F4-04    | `NOT STARTED` |             | Widoki kalendarza: etap K (K5)              |
-| R10 | Przypomnienia e-mail 24 h przed wizytą, włączenie `booking_enabled` na produkcji                         | F4-04    | `NOT STARTED` |             |                                             |
+| ID  | Zadanie                                                                                                                              | Roadmapa | Status        | Commit / PR | Uwagi                                       |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------- | ----------- | ------------------------------------------- |
+| R0  | Plan (ten dokument), nuqs w `apps/web`, kontrakty parametrów kreatora                                                                | F4-01    | `DONE`        | 8df6b69     |                                             |
+| RD1 | Schemat dostępności: reguły, okna jednorazowe, nieobecności, konflikty gabinetów, RPC zapisu, testy SQL                              | F4-02    | `DONE`        | f980622     |                                             |
+| RD2 | Schemat wizyt i płatności: wykluczenia, RPC wolnych terminów i holdu, `slot_is_available`, testy SQL                                 | F4-02    | `NOT STARTED` |             |                                             |
+| R1  | Domena slotów w `packages/scheduling` (DST, reguły, wyjątki, zajętość, bufor, lead time, horyzont) z TDD                             | F4-02    | `IN PROGRESS` |             | Okna i wolne terminy gotowe; zajętość z RD2 |
+| RG1 | Admin `/gabinety/[id]`: zakładki, grafik gabinetu, godziny otwarcia z wyjątkami, limit dostępności; zajętość gabinetów u specjalisty | F4-02    | `DONE`        |             | Sprawdzone na koncie admina                 |
+| R2  | Portal specjalisty `/dostepnosc`: grafik tygodniowy, nieobecności, okna jednorazowe, podgląd tygodnia                                | F4-02    | `DONE`        | f980622     | Pełny kalendarz: etap K                     |
+| R3  | UI `@repo/ui/booking`: stepper, podsumowanie, karty wyboru, siatka tygodnia, lista dnia, legenda                                     | F4-03    | `NOT STARTED` |             | Stories + testy a11y                        |
+| R4  | `/umow-wizyte`: kroki Usługa → Forma → Specjalista → Termin z nuqs, SSR                                                              | F4-03    | `NOT STARTED` |             |                                             |
+| R5  | Hold terminu, krok „Dane” (Turnstile, limity), zgody                                                                                 | F4-03    | `NOT STARTED` |             | Klucze Turnstile                            |
+| R6  | Płatność Stripe: Payment Element, webhook, „Oczekujemy na potwierdzenie”, wygasanie                                                  | F4-03    | `NOT STARTED` |             | Klucze testowe Stripe                       |
+| R7  | Potwierdzenie i e-maile (Resend): potwierdzenie z linkiem i plikiem `.ics`                                                           | F4-04    | `NOT STARTED` |             | Klucz Resend, DNS domeny                    |
+| R8  | Zarządzanie z linku: szczegóły, przełożenie, anulowanie ze zwrotem                                                                   | F4-04    | `NOT STARTED` |             |                                             |
+| R9  | Portale: lista wizyt specjalisty i admina, anulowanie przez centrum                                                                  | F4-04    | `NOT STARTED` |             | Widoki kalendarza: etap K (K5)              |
+| R10 | Przypomnienia e-mail 24 h przed wizytą, włączenie `booking_enabled` na produkcji                                                     | F4-04    | `NOT STARTED` |             |                                             |
 
 ### Potrzebne od centrum przed R5–R7
 
