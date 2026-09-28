@@ -143,6 +143,7 @@ function ProfileSnapshot({
               { label: "Specjalizacje", value: list(profile.specializations) },
               { label: "Podejścia", value: list(profile.therapyApproaches) },
               { label: "Formy pracy", value: list(profile.modalities) },
+              { label: "Z kim pracuje", value: list(profile.clientGroups) },
               { label: "Wykształcenie", value: list(profile.education) },
               { label: "Certyfikaty", value: list(profile.certificates) },
             ]}

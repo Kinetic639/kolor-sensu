@@ -53,6 +53,8 @@ type PublicSpecialistOfferQueryRow = {
     professional_title: string | null;
   };
   services: {
+    name: string;
+    slug: string;
     default_duration_minutes: number;
   };
 };
@@ -109,6 +111,8 @@ function mapPublicSpecialistOffer(
 ): PublicSpecialistOffer {
   return {
     serviceId: row.service_id,
+    serviceName: row.services.name,
+    serviceSlug: row.services.slug,
     specialistPublicSlug: row.specialists.public_slug,
     specialistProfessionalTitle: row.specialists.professional_title,
     priceMinor: row.price_minor,
@@ -444,6 +448,7 @@ const publicSpecialistOfferSelection = `
     professional_title
   ),
   services!inner (
+    name,
     slug,
     default_duration_minutes
   )
@@ -463,6 +468,23 @@ export async function listPublicSpecialistOffersForService(
   return (data as unknown as PublicSpecialistOfferQueryRow[]).map(
     mapPublicSpecialistOffer,
   );
+}
+
+/** One specialist's active, public offers, cheapest first (for their profile). */
+export async function listPublicOffersForSpecialist(
+  client: SupabaseClient<Database>,
+  publicSlug: string,
+): Promise<PublicSpecialistOffer[]> {
+  const { data, error } = await client
+    .from("specialist_services")
+    .select(publicSpecialistOfferSelection)
+    .eq("active", true)
+    .eq("specialists.public_slug", publicSlug);
+
+  if (error) throw error;
+  return (data as unknown as PublicSpecialistOfferQueryRow[])
+    .map(mapPublicSpecialistOffer)
+    .sort((a, b) => a.priceMinor - b.priceMinor);
 }
 
 export const serviceMappers = {

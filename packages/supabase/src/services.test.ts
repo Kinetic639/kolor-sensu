@@ -7,8 +7,8 @@ import {
   serviceSlugSchema,
   specialistServiceUpsertSchema,
 } from "@repo/contracts";
-import { describe, expect, it } from "vitest";
-import { serviceMappers } from "./services";
+import { describe, expect, it, vi } from "vitest";
+import { listPublicOffersForSpecialist, serviceMappers } from "./services";
 
 describe("service domain schemas", () => {
   it("accepts known categories and rejects unknown ones", () => {
@@ -151,11 +151,53 @@ describe("service domain mapping", () => {
         supports_online: true,
         accepting_new_clients: true,
         specialists: { public_slug: "anna-maria", professional_title: null },
-        services: { default_duration_minutes: 50 },
+        services: {
+          name: "Psychoterapia indywidualna",
+          slug: "psychoterapia-indywidualna",
+          default_duration_minutes: 50,
+        },
       }),
     ).toMatchObject({
       specialistPublicSlug: "anna-maria",
+      serviceName: "Psychoterapia indywidualna",
+      serviceSlug: "psychoterapia-indywidualna",
       effectiveDurationMinutes: 50,
     });
+  });
+});
+
+describe("a specialist's public offers", () => {
+  it("lists the active offers of one specialist, cheapest service first", async () => {
+    const row = (name: string, price: number) => ({
+      service_id: `${name}-id`,
+      price_minor: price,
+      currency_code: "PLN",
+      duration_minutes: null,
+      supports_in_person: true,
+      supports_online: false,
+      accepting_new_clients: true,
+      specialists: { public_slug: "anna", professional_title: null },
+      services: { name, slug: name, default_duration_minutes: 50 },
+    });
+    const eq = vi.fn();
+    const chain = {
+      select: vi.fn(() => chain),
+      eq: eq.mockImplementation(() => chain),
+      then: (resolve: (value: unknown) => void) =>
+        resolve({
+          data: [row("terapia", 22000), row("konsultacja", 15000)],
+          error: null,
+        }),
+    };
+    const client = { from: vi.fn(() => chain) } as never;
+
+    const offers = await listPublicOffersForSpecialist(client, "anna");
+
+    expect(eq).toHaveBeenCalledWith("active", true);
+    expect(eq).toHaveBeenCalledWith("specialists.public_slug", "anna");
+    expect(offers.map((offer) => offer.serviceName)).toEqual([
+      "konsultacja",
+      "terapia",
+    ]);
   });
 });

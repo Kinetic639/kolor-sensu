@@ -42,6 +42,8 @@ export interface SpecialistProfileSnapshotViewModel {
   education: string[];
   certificates: string[];
   modalities: string[];
+  /** Labels, in a fixed order. */
+  clientGroups: string[];
   publicationStatus: ProfilePublicationStatus;
   publishedAt: string | null;
 }

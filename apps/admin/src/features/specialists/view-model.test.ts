@@ -26,6 +26,7 @@ const snapshot: Content = {
   education: [],
   certificates: [],
   modalities: [],
+  clientGroups: ["Dorośli"],
 };
 
 function detail(draft: Partial<Content>): SpecialistDetailViewModel {
@@ -106,6 +107,18 @@ describe("createProfileDiff", () => {
       proposedValue: "Polski, Angielski",
     });
     expect(byId(fields, "displayName")?.changed).toBe(false);
+  });
+
+  it("shows who the specialist proposes to work with", () => {
+    const fields = createProfileDiff(
+      detail({ clientGroups: ["Dorośli", "Pary"] }),
+    );
+    expect(byId(fields, "clientGroups")).toMatchObject({
+      label: "Z kim pracuje",
+      changed: true,
+      currentValue: "Dorośli",
+      proposedValue: "Dorośli, Pary",
+    });
   });
 });
 

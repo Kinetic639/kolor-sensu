@@ -5,21 +5,27 @@ import {
   SoftCard,
   SpecialistArtwork,
 } from "@repo/ui/public-site";
-import { isRichTextEmpty } from "@repo/contracts";
+import { clientGroupLabels, isRichTextEmpty } from "@repo/contracts";
 import { RichTextRenderer } from "@repo/ui/rich-text-renderer";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { PageIntro } from "@/components/page-intro";
 import { bookingCta, siteUrl } from "@/content/site";
+import { serviceHref } from "@/lib/site-frame";
 import {
+  formatDuration,
+  formatPrice,
+  offerModes,
   portraitPlaceholder,
+  bookingHref,
   specialistHref,
   specialistRole,
   specialistSplash,
 } from "@/lib/presentation";
 import {
   getSpecialist,
+  getSpecialistOffers,
   getSpecialistRedirect,
   getSpecialists,
 } from "@/lib/public-data";
@@ -69,9 +75,10 @@ export default async function SpecialistPage({
   params,
 }: PageProps<"/specjalisci/[slug]">) {
   const { slug } = await params;
-  const [specialist, all] = await Promise.all([
+  const [specialist, all, offers] = await Promise.all([
     getSpecialist(slug),
     getSpecialists(),
+    getSpecialistOffers(slug),
   ]);
   if (!specialist) {
     // An address the admin has since changed: send visitors (and search
@@ -118,6 +125,49 @@ export default async function SpecialistPage({
               {specialist.shortBio}
             </p>
           ) : null}
+          {offers.length > 0 ? (
+            <SoftCard
+              className="grid gap-4 p-6"
+              aria-labelledby="offers-heading"
+            >
+              <h2 className="text-title text-ink font-body" id="offers-heading">
+                Usługi i ceny
+              </h2>
+              <ul className="divide-border grid divide-y">
+                {offers.map((offer) => (
+                  <li
+                    className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3 first:pt-0 last:pb-0"
+                    key={offer.serviceId}
+                  >
+                    <div className="grid gap-0.5">
+                      <Link
+                        className="text-ink hover:text-primary-strong font-semibold underline-offset-4 hover:underline"
+                        href={serviceHref(offer.serviceSlug) as Route}
+                      >
+                        {offer.serviceName}
+                      </Link>
+                      <span className="text-small text-text-muted">
+                        {[
+                          formatDuration(offer.effectiveDurationMinutes),
+                          offerModes(offer),
+                          offer.acceptingNewClients ? null : "bez nowych osób",
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    </div>
+                    <span className="text-ink font-semibold whitespace-nowrap">
+                      {formatPrice(offer)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </SoftCard>
+          ) : null}
+          <Facts
+            title="Z kim pracuję"
+            items={clientGroupLabels(specialist.clientGroups)}
+          />
           <Facts title="Specjalizacje" items={specialist.specializations} />
           <Facts title="Podejście" items={specialist.therapyApproaches} />
           <Facts title="Formy pracy" items={specialist.modalities} />
@@ -139,7 +189,9 @@ export default async function SpecialistPage({
           ) : null}
           <div className="flex flex-wrap items-center gap-3">
             <PrimaryButton asChild arrow>
-              <Link href="/umow-wizyte">{bookingCta.label}</Link>
+              <Link href={bookingHref(specialist.publicSlug) as Route}>
+                {bookingCta.label}
+              </Link>
             </PrimaryButton>
             <SecondaryButton asChild>
               <Link href="/specjalisci">Wszyscy specjaliści</Link>

@@ -17,6 +17,30 @@ export const specialistSlugSchema = z
   .max(100)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be URL safe.");
 
+/** Who a specialist works with; stored as these codes, labelled in the apps. */
+export const clientGroupSchema = z.enum([
+  "adults",
+  "teens",
+  "children",
+  "couples",
+  "families",
+]);
+
+export const CLIENT_GROUP_LABELS: Record<ClientGroup, string> = {
+  adults: "Dorośli",
+  teens: "Młodzież",
+  children: "Dzieci",
+  couples: "Pary",
+  families: "Rodziny",
+};
+
+/** Labels in the fixed order of `clientGroupSchema`, whatever order was saved. */
+export function clientGroupLabels(groups: readonly ClientGroup[]): string[] {
+  return clientGroupSchema.options
+    .filter((group) => groups.includes(group))
+    .map((group) => CLIENT_GROUP_LABELS[group]);
+}
+
 const optionalMediaPathSchema = z
   .string()
   .max(2048)
@@ -40,6 +64,11 @@ const profileFields = {
   education: z.array(z.string().trim().min(1).max(500)).max(50),
   certificates: z.array(z.string().trim().min(1).max(500)).max(50),
   modalities: z.array(z.string().trim().min(1).max(160)).max(20),
+  clientGroups: z
+    .array(clientGroupSchema)
+    .refine((groups) => new Set(groups).size === groups.length, {
+      message: "Każda grupa może być wybrana tylko raz.",
+    }),
 } as const;
 
 export const specialistPublicProfileInputSchema = z.object(profileFields);
@@ -68,6 +97,10 @@ export const specialistProfileSubmissionSchema = z.object({
   modalities: profileFields.modalities.min(
     1,
     "Wybierz co najmniej jedną formę spotkań.",
+  ),
+  clientGroups: profileFields.clientGroups.min(
+    1,
+    "Wybierz, z kim pracujesz.",
   ),
 });
 
@@ -104,6 +137,7 @@ export const specialistImageMetadataSchema = z.object({
     .max(5 * 1024 * 1024),
 });
 
+export type ClientGroup = z.infer<typeof clientGroupSchema>;
 export type ProfilePublicationStatus = z.infer<
   typeof profilePublicationStatusSchema
 >;
@@ -150,6 +184,7 @@ export interface SpecialistPublicProfile {
   education: string[];
   certificates: string[];
   modalities: string[];
+  clientGroups: ClientGroup[];
   publicationStatus: ProfilePublicationStatus;
   publishedAt: string | null;
   createdAt: string;
@@ -171,6 +206,7 @@ export interface SpecialistProfileDraft {
   education: string[];
   certificates: string[];
   modalities: string[];
+  clientGroups: ClientGroup[];
   status: ProfilePublicationStatus;
   submittedAt: string | null;
   submittedBy: string | null;

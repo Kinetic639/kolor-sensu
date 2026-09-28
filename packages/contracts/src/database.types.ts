@@ -495,6 +495,7 @@ export type Database = {
       specialist_profile_drafts: {
         Row: {
           certificates: string[];
+          client_groups: string[];
           created_at: string;
           display_name: string;
           education: string[];
@@ -519,6 +520,7 @@ export type Database = {
         };
         Insert: {
           certificates?: string[];
+          client_groups?: string[];
           created_at?: string;
           display_name?: string;
           education?: string[];
@@ -543,6 +545,7 @@ export type Database = {
         };
         Update: {
           certificates?: string[];
+          client_groups?: string[];
           created_at?: string;
           display_name?: string;
           education?: string[];
@@ -592,6 +595,7 @@ export type Database = {
       specialist_public_profiles: {
         Row: {
           certificates: string[];
+          client_groups: string[];
           created_at: string;
           display_name: string;
           education: string[];
@@ -610,6 +614,7 @@ export type Database = {
         };
         Insert: {
           certificates?: string[];
+          client_groups?: string[];
           created_at?: string;
           display_name?: string;
           education?: string[];
@@ -628,6 +633,7 @@ export type Database = {
         };
         Update: {
           certificates?: string[];
+          client_groups?: string[];
           created_at?: string;
           display_name?: string;
           education?: string[];
@@ -972,6 +978,7 @@ export type Database = {
       save_my_specialist_profile_draft: {
         Args: {
           p_certificates?: string[];
+          p_client_groups?: string[];
           p_display_name: string;
           p_education?: string[];
           p_languages?: string[];

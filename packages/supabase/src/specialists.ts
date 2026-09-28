@@ -1,9 +1,11 @@
 import {
+  clientGroupSchema,
   emptyRichTextDocument,
   richTextDocumentSchema,
   specialistProfileDraftInputSchema,
   specialistProfileReviewInputSchema,
   specialistSlugSchema,
+  type ClientGroup,
   type Specialist,
   type SpecialistProfileDraft,
   type SpecialistProfileDraftInput,
@@ -21,6 +23,14 @@ type DraftRow =
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 
 const specialistMediaBucket = "specialist-profile-media";
+
+/** The database checks the codes; anything else is dropped, not guessed. */
+function readClientGroups(values: string[]): ClientGroup[] {
+  return values.flatMap((value) => {
+    const parsed = clientGroupSchema.safeParse(value);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
 
 type AdminSpecialistSummaryRow = SpecialistRow & {
   profile: Pick<
@@ -100,6 +110,7 @@ function mapPublicProfile(row: PublicProfileQueryRow): SpecialistPublicProfile {
     education: row.education,
     certificates: row.certificates,
     modalities: row.modalities,
+    clientGroups: readClientGroups(row.client_groups),
     publicationStatus: row.publication_status,
     publishedAt: row.published_at,
     createdAt: row.created_at,
@@ -123,6 +134,7 @@ function mapDraft(row: DraftRow): SpecialistProfileDraft {
     education: row.education,
     certificates: row.certificates,
     modalities: row.modalities,
+    clientGroups: readClientGroups(row.client_groups),
     status: row.status,
     submittedAt: row.submitted_at,
     submittedBy: row.submitted_by,
@@ -175,6 +187,7 @@ const publicProfileSelection = `
   education,
   certificates,
   modalities,
+  client_groups,
   publication_status,
   published_at,
   created_at,
@@ -304,6 +317,7 @@ export async function saveMySpecialistProfileDraft(
     p_education: draft.education,
     p_certificates: draft.certificates,
     p_modalities: draft.modalities,
+    p_client_groups: draft.clientGroups,
     ...(draft.profilePhotoUrl
       ? { p_profile_photo_url: draft.profilePhotoUrl }
       : {}),
@@ -431,6 +445,7 @@ export async function getSpecialistPublicProfileAdmin(
     education: data.education,
     certificates: data.certificates,
     modalities: data.modalities,
+    clientGroups: readClientGroups(data.client_groups),
     publicationStatus: data.publication_status,
     publishedAt: data.published_at,
     createdAt: data.created_at,

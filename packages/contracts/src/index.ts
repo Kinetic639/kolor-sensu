@@ -23,6 +23,9 @@ export type {
   PublicLocation,
 } from "@repo/contracts/center";
 export {
+  CLIENT_GROUP_LABELS,
+  clientGroupLabels,
+  clientGroupSchema,
   profilePublicationStatusSchema,
   specialistImageMetadataSchema,
   specialistProfileDraftInputSchema,
@@ -32,6 +35,7 @@ export {
   specialistSlugSchema,
 } from "@repo/contracts/specialist";
 export type {
+  ClientGroup,
   ProfilePublicationStatus,
   Specialist,
   SpecialistImageMetadata,

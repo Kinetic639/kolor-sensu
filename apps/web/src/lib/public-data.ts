@@ -11,6 +11,7 @@ import {
   listPublishedRoomProfiles,
   listRoomImages,
   listPublicServices,
+  listPublicOffersForSpecialist,
   listPublicSpecialistOffersForService,
   listPublishedSpecialists,
 } from "@repo/supabase";
@@ -133,6 +134,15 @@ export const getSpecialistRedirect = cache((slug: string) =>
     `slug redirect ${slug}`,
     (client) => getSpecialistSlugRedirect(client, slug),
     null,
+  ),
+);
+
+/** What one specialist offers, cheapest first (their profile page). */
+export const getSpecialistOffers = cache((slug: string) =>
+  load(
+    `offers of ${slug}`,
+    (client) => listPublicOffersForSpecialist(client, slug),
+    [],
   ),
 );
 

@@ -105,6 +105,8 @@ export interface PublicService {
 
 export interface PublicSpecialistOffer {
   serviceId: string;
+  serviceName: string;
+  serviceSlug: string;
   specialistPublicSlug: string;
   specialistProfessionalTitle: string | null;
   priceMinor: number;

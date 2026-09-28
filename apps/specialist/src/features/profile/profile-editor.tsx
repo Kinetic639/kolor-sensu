@@ -3,6 +3,9 @@
 import { createClient } from "@/lib/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  CLIENT_GROUP_LABELS,
+  clientGroupLabels,
+  clientGroupSchema,
   specialistProfileDraftInputSchema,
   specialistProfileSubmissionSchema,
 } from "@repo/contracts";
@@ -525,6 +528,58 @@ export function ProfileEditor({ model }: { model: ProfileEditorViewModel }) {
                   </fieldset>
                 )}
               />
+
+              <Controller
+                control={control}
+                name="clientGroups"
+                render={({ field }) => (
+                  <fieldset
+                    aria-describedby={
+                      errorOf("clientGroups")
+                        ? "client-groups-error"
+                        : undefined
+                    }
+                    className="space-y-2"
+                  >
+                    <legend className="text-sm font-semibold text-[var(--text)]">
+                      Z kim pracujesz
+                      <RequiredMark />
+                    </legend>
+                    <div className="flex flex-wrap gap-x-6 gap-y-2">
+                      {clientGroupSchema.options.map((group) => {
+                        const id = `client-group-${group}`;
+                        return (
+                          <div
+                            className="flex min-h-11 items-center gap-2"
+                            key={group}
+                          >
+                            <Checkbox
+                              checked={field.value.includes(group)}
+                              id={id}
+                              onCheckedChange={(checked) =>
+                                field.onChange(
+                                  checked
+                                    ? [...field.value, group]
+                                    : field.value.filter(
+                                        (item) => item !== group,
+                                      ),
+                                )
+                              }
+                            />
+                            <Label className="font-normal" htmlFor={id}>
+                              {CLIENT_GROUP_LABELS[group]}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <FieldError
+                      id="client-groups-error"
+                      message={errorOf("clientGroups")}
+                    />
+                  </fieldset>
+                )}
+              />
             </Card>
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -573,6 +628,10 @@ export function ProfileEditor({ model }: { model: ProfileEditorViewModel }) {
             photoUrl={previews.profilePhotoUrl}
             professionalTitle={values.professionalTitle || null}
             sections={[
+              {
+                label: "Z kim pracuję",
+                items: clientGroupLabels(values.clientGroups),
+              },
               { label: "Specjalizacje", items: values.specializations },
               { label: "Nurty pracy", items: values.therapyApproaches },
               { label: "Wykształcenie", items: values.education },

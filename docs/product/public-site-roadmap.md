@@ -32,6 +32,19 @@ dostępności, a klient umawia wizytę. Kolejność prac:
    od schematu bazy (KD) i domeny czasu (K1).
 3. Rezerwacje: Faza 4 (F4-01–F4-04).
 
+**Stan Fazy 1:** 4 z 15 zrobione (F1-01, F1-11, F1-12, F1-14), 8 w kolejce
+(pkt 1), 3 odłożone. Pozostałe zadania w kolejności:
+
+| Kolejność | ID            | Co daje rdzeniowi                                           | Zależy od                                      |
+| --------- | ------------- | ----------------------------------------------------------- | ---------------------------------------------- |
+| 1         | F1-03         | Bezpieczeństwo: pomoc w kryzysie przed umówieniem wizyty    | —                                              |
+| 2         | F1-02         | Pierwsza wizyta: jak wygląda, ile trwa, jak się przygotować | Treść do potwierdzenia przez centrum           |
+| 3         | F1-13         | Zasady wizyt: odwoływanie, płatności, faktury, online       | Treść do potwierdzenia przez centrum           |
+| 4         | F1-10         | Strona główna prowadzi do usług, specjalistów i umawiania   | —                                              |
+| 5         | F1-08 + F1-09 | Formularz kontaktu, zanim powstaną rezerwacje online        | Decyzja: e-mail czy tabela `inquiries` w bazie |
+| 6         | F1-04         | Deklaracja dostępności (wymóg prawny)                       | Dane kontaktowe osoby odpowiedzialnej          |
+| 7         | F1-15         | Nawigacja i stopka z nowymi stronami                        | Po F1-02, F1-03, F1-04, F1-13                  |
+
 **Odłożone do czasu, aż rdzeń działa:** oferta dla firm (F1-05), praca
 (F1-06), vouchery (F1-07, F4-05), warsztaty (F3-01, F3-02). Nie pracujemy
 nad nimi wcześniej.
@@ -41,7 +54,7 @@ nad nimi wcześniej.
 | Faza | Zakres                                                         | Status        | Zrobione / wszystkie |
 | ---- | -------------------------------------------------------------- | ------------- | -------------------- |
 | 0    | Baza: to, co już istnieje                                      | `DONE`        | 16 / 16              |
-| 1    | Szybkie wygrane bez nowych domen                               | `IN PROGRESS` | 3 / 15               |
+| 1    | Szybkie wygrane bez nowych domen                               | `IN PROGRESS` | 4 / 15               |
 | P    | Portale: treści dla strony ([plan](./portals-content-plan.md)) | `DONE`        | 6 / 6                |
 | 2    | Treści SEO: schorzenia, usługi, blog                           | `NOT STARTED` | 0 / 12               |
 | 3    | Warsztaty i filtry specjalistów                                | `NOT STARTED` | 0 / 3                |
@@ -83,7 +96,7 @@ nad nimi wcześniej.
 | F1-08 | `InquiryForm` + `ConsentField` (Server Action, Zod, honeypot/Turnstile)               | komponent          | `NOT STARTED` |             | Decyzja: e-mail czy tabela `inquiries`          |
 | F1-09 | `/kontakt`: formularz, `LocationMap`, dojazd                                          | strona / komponent | `NOT STARTED` |             | Iframe mapy dopiero po kliknięciu               |
 | F1-10 | Strona główna: `ProblemGrid`, `StepsSection`, „Stacjonarnie i online”, `TrustSignals` | komponent          | `NOT STARTED` |             | `ProblemGrid` na razie statyczny                |
-| F1-11 | Profil specjalisty: usługi i ceny, z kim pracuje, CTA z wybranym specjalistą          | strona / dane      | `NOT STARTED` |             | Nowa funkcja „oferty specjalisty”               |
+| F1-11 | Profil specjalisty: usługi i ceny, z kim pracuje, CTA z wybranym specjalistą          | strona / dane      | `DONE`        |             | `client_groups`; `/umow-wizyte?specjalista=`    |
 | F1-12 | `/gabinety` z domeny sal (`room_public_profiles`) + dostępność budynku                | strona / dane      | `DONE`        | 0c96d05     | P6; zdjęcia, lokalizacje, CMS: 3bc8cf6, fc4b495 |
 | F1-13 | Cennik: zasady (odwoływanie, płatności, faktury, online) + FAQ                        | strona             | `NOT STARTED` |             | Treść do potwierdzenia przez centrum            |
 | F1-14 | Optymalizacja obrazu hero (PNG 2,6 MB → AVIF/WebP)                                    | wydajność          | `DONE`        | 97d23ea     | Dostarczany 39–103 KB (był 85–207 KB)           |
@@ -116,13 +129,13 @@ nad nimi wcześniej.
 
 ### Faza 4 — własny system rezerwacji
 
-| ID    | Zadanie                                                                  | Obszar             | Status        | Commit / PR | Uwagi                             |
-| ----- | ------------------------------------------------------------------------ | ------------------ | ------------- | ----------- | --------------------------------- |
-| F4-01 | Szczegółowy plan rezerwacji (osobny dokument)                            | plan               | `NOT STARTED` |             | `packages/scheduling`, domena sal |
-| F4-02 | Domena `appointments`                                                    | domena             | `NOT STARTED` |             |                                   |
-| F4-03 | Kreator na `/umow-wizyte` (usługa → specjalista → forma → termin → dane) | strona / komponent | `NOT STARTED` |             | Zastępuje obecny formularz        |
-| F4-04 | Potwierdzenia, przypomnienia, zmiana/odwołanie wizyty                    | funkcja            | `NOT STARTED` |             |                                   |
-| F4-05 | Płatności online za vouchery                                             | funkcja            | `NOT STARTED` |             | Odłożone: po rdzeniu konsultacji  |
+| ID    | Zadanie                                                                  | Obszar             | Status        | Commit / PR | Uwagi                              |
+| ----- | ------------------------------------------------------------------------ | ------------------ | ------------- | ----------- | ---------------------------------- |
+| F4-01 | Szczegółowy plan rezerwacji (osobny dokument)                            | plan               | `NOT STARTED` |             | `packages/scheduling`, domena sal  |
+| F4-02 | Domena `appointments`                                                    | domena             | `NOT STARTED` |             |                                    |
+| F4-03 | Kreator na `/umow-wizyte` (usługa → specjalista → forma → termin → dane) | strona / komponent | `NOT STARTED` |             | Zaczyna od `?specjalista=` (F1-11) |
+| F4-04 | Potwierdzenia, przypomnienia, zmiana/odwołanie wizyty                    | funkcja            | `NOT STARTED` |             |                                    |
+| F4-05 | Płatności online za vouchery                                             | funkcja            | `NOT STARTED` |             | Odłożone: po rdzeniu konsultacji   |
 
 ### Przekrojowe
 

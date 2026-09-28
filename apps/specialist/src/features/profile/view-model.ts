@@ -23,6 +23,7 @@ function pickContent(
     education: source.education,
     certificates: source.certificates,
     modalities: source.modalities,
+    clientGroups: source.clientGroups,
   };
 }
 
@@ -43,6 +44,7 @@ function emptyContent(
     education: [],
     certificates: [],
     modalities: [],
+    clientGroups: [],
   };
 }
 

@@ -1,5 +1,9 @@
 import type { AdminSpecialistSummary, PortalProfile } from "@repo/supabase";
-import { emptyRichTextDocument, plainTextFromRichText } from "@repo/contracts";
+import {
+  clientGroupLabels,
+  emptyRichTextDocument,
+  plainTextFromRichText,
+} from "@repo/contracts";
 import type {
   Service,
   Specialist,
@@ -131,6 +135,7 @@ export function mapSpecialistDetailViewModel({
           education: publicProfile.education,
           certificates: publicProfile.certificates,
           modalities: publicProfile.modalities,
+          clientGroups: clientGroupLabels(publicProfile.clientGroups),
           publicationStatus: publicProfile.publicationStatus,
           publishedAt: publicProfile.publishedAt,
         }
@@ -152,6 +157,7 @@ export function mapSpecialistDetailViewModel({
           education: draft.education,
           certificates: draft.certificates,
           modalities: draft.modalities,
+          clientGroups: clientGroupLabels(draft.clientGroups),
           status: draft.status,
           submittedAt: draft.submittedAt,
           reviewComment: draft.reviewComment,
@@ -215,6 +221,12 @@ export function createProfileDiff(
       detail.draft.specializations,
     ],
     ["modalities", "Formy pracy", current?.modalities, detail.draft.modalities],
+    [
+      "clientGroups",
+      "Z kim pracuje",
+      current?.clientGroups,
+      detail.draft.clientGroups,
+    ],
     ["education", "Wykształcenie", current?.education, detail.draft.education],
     [
       "certificates",

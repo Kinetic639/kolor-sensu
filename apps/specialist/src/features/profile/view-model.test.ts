@@ -1,5 +1,6 @@
 import {
   emptyRichTextDocument,
+  type ClientGroup,
   type RichTextDocument,
   type Specialist,
   type SpecialistProfileDraft,
@@ -32,6 +33,7 @@ const content = {
   education: [],
   certificates: [],
   modalities: ["Spotkania online"],
+  clientGroups: ["adults"] as ClientGroup[],
 };
 
 const published: SpecialistPublicProfile = {
@@ -93,6 +95,7 @@ describe("mapProfileEditorViewModel", () => {
     expect(model.editable).toBe(true);
     expect(model.values.displayName).toBe("Anna Kowalska");
     expect(model.values.specializations).toEqual([]);
+    expect(model.values.clientGroups).toEqual([]);
     expect(model.publicUrl).toBeNull();
   });
 
@@ -105,6 +108,7 @@ describe("mapProfileEditorViewModel", () => {
 
     expect(model.status).toBe("draft");
     expect(model.values.shortBio).toBe("Nowy opis");
+    expect(model.values.clientGroups).toEqual(["adults"]);
     expect(model.lastModified).toBe("2026-09-21T08:30:00Z");
     expect(model.publicUrl).toBe(
       "https://kolorsensu.pl/specjalisci/anna-kowalska",

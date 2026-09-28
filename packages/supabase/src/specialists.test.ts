@@ -143,6 +143,7 @@ describe("specialist profile submission", () => {
     education: [],
     certificates: [],
     modalities: ["Spotkania online"],
+    clientGroups: ["adults" as const],
   };
 
   it("accepts a profile with every field the public page needs", () => {
@@ -160,6 +161,17 @@ describe("specialist profile submission", () => {
     ).toBe(false);
   });
 
+  it("accepts only the known client groups, each once", () => {
+    for (const clientGroups of [["seniors"], ["adults", "adults"]]) {
+      expect(
+        specialistProfileSubmissionSchema.safeParse({
+          ...complete,
+          clientGroups,
+        }).success,
+      ).toBe(false);
+    }
+  });
+
   it("names each missing required field", () => {
     const result = specialistProfileSubmissionSchema.safeParse({
       ...complete,
@@ -169,11 +181,13 @@ describe("specialist profile submission", () => {
       specializations: [],
       therapyApproaches: [],
       modalities: [],
+      clientGroups: [],
     });
     expect(result.success).toBe(false);
     expect(
       result.error?.issues.map((issue) => issue.path.join(".")).sort(),
     ).toEqual([
+      "clientGroups",
       "displayName",
       "modalities",
       "professionalTitle",
@@ -269,6 +283,7 @@ describe("specialist draft mapping", () => {
     education: [],
     certificates: [],
     modalities: [],
+    client_groups: ["adults", "couples"],
     status: "draft" as const,
     submitted_at: null,
     submitted_by: null,
@@ -283,6 +298,7 @@ describe("specialist draft mapping", () => {
     expect(specialistMappers.draft(draftRow)).toMatchObject({
       professionalTitle: "Psychoterapeutka",
       longBio: draftRow.long_bio,
+      clientGroups: ["adults", "couples"],
     });
   });
 
