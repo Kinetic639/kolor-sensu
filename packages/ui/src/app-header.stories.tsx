@@ -11,6 +11,10 @@ const meta = {
       email: "anna@example.com",
     },
     notificationCount: 3,
+    breadcrumbs: [
+      { label: "Portal specjalisty", href: "/" },
+      { label: "Dostępność" },
+    ],
     profileHref: "/profil",
     portalSwitch: {
       label: "Przejdź do panelu administratora",

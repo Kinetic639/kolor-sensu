@@ -8,8 +8,18 @@ export const specialistNavigation: PortalNavigationSection[] = [
     label: "PRACA",
     items: [
       { label: "Dashboard", href: "/", icon: "dashboard" },
-      { label: "Mój kalendarz", href: "/kalendarz", icon: "calendar" },
-      { label: "Dostępność", href: "/dostepnosc", icon: "clock" },
+      {
+        label: "Mój kalendarz",
+        href: "/kalendarz",
+        icon: "calendar",
+        badge: "Wizyty",
+      },
+      {
+        label: "Dostępność",
+        href: "/dostepnosc",
+        icon: "clock",
+        badge: "Dyżury",
+      },
     ],
   },
   {

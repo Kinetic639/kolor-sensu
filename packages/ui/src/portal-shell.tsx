@@ -6,6 +6,7 @@ import { AppHeader, type AppHeaderProps } from "./app-header";
 import {
   AppSidebar,
   MobileBottomNav,
+  portalBreadcrumbs,
   type PortalNavigationItem,
   type PortalNavigationSection,
 } from "./portal-layout";
@@ -47,6 +48,7 @@ export function PortalShell({
       <SidebarInset>
         <div className="sticky top-0 z-30">
           <AppHeader
+            breadcrumbs={portalBreadcrumbs(navigation, pathname, brandSubtitle)}
             logoutAction={logoutAction}
             navigationTrigger={
               <SidebarTrigger className="hidden md:inline-flex" />

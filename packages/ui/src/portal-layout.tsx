@@ -12,7 +12,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { Badge } from "./badge";
 import { cn } from "./lib/utils";
 import {
   Sidebar,
@@ -62,6 +61,28 @@ export function isPortalPathActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+export interface PortalBreadcrumb {
+  label: string;
+  href?: string;
+}
+
+/**
+ * The header trail: the portal, then the navigation item the path is in
+ * (the most specific one wins).
+ */
+export function portalBreadcrumbs(
+  sections: PortalNavigationSection[],
+  pathname: string,
+  rootLabel: string,
+): PortalBreadcrumb[] {
+  const current = sections
+    .flatMap((section) => section.items)
+    .filter((item) => isPortalPathActive(pathname, item.href))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+  if (!current) return [{ label: rootLabel }];
+  return [{ label: rootLabel, href: "/" }, { label: current.label }];
+}
+
 export interface AppSidebarProps {
   sections: PortalNavigationSection[];
   currentPath?: string;
@@ -87,14 +108,14 @@ export function AppSidebar({
         data-portal-sidebar-header
       >
         <div className="flex items-center gap-3 overflow-hidden px-1 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:px-0">
-          <span className="font-heading flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-sm font-semibold text-white">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--sidebar-border)] bg-[var(--sidebar-active)] text-sm font-bold text-white">
             KS
           </span>
           <span className="min-w-0 group-data-[collapsible=icon]/sidebar:hidden">
-            <span className="font-heading block truncate text-lg leading-tight font-semibold text-[var(--text)]">
+            <span className="block truncate text-base leading-tight font-bold text-white">
               {brandName}
             </span>
-            <span className="block truncate text-[0.6875rem] text-[var(--text-muted)]">
+            <span className="block truncate text-[0.6875rem] font-semibold tracking-[0.06em] text-[var(--sidebar-accent)] uppercase">
               {brandSubtitle}
             </span>
           </span>
@@ -131,6 +152,7 @@ export function AppSidebar({
                         ) : (
                           <SidebarMenuButton
                             asChild
+                            className="data-[active=true]:ring-1 data-[active=true]:ring-[rgb(52_211_153/0.4)]"
                             isActive={isActive}
                             tooltip={item.label}
                           >
@@ -138,17 +160,17 @@ export function AppSidebar({
                               href={item.href}
                               aria-current={isActive ? "page" : undefined}
                             >
-                              <Icon aria-hidden="true" />
+                              <Icon
+                                aria-hidden="true"
+                                className="text-[var(--sidebar-icon)]"
+                              />
                               <span className="group-data-[collapsible=icon]/sidebar:sr-only">
                                 {item.label}
                               </span>
                               {item.badge !== undefined ? (
-                                <Badge
-                                  className="ml-auto group-data-[collapsible=icon]/sidebar:hidden"
-                                  variant={isActive ? "primary" : "neutral"}
-                                >
+                                <span className="ml-auto rounded border border-[var(--sidebar-border)] bg-[var(--sidebar-surface)] px-1.5 py-0.5 text-[0.625rem] leading-none font-semibold text-[var(--sidebar-accent)] group-data-[collapsible=icon]/sidebar:hidden">
                                   {item.badge}
-                                </Badge>
+                                </span>
                               ) : null}
                             </a>
                           </SidebarMenuButton>

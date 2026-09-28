@@ -6,6 +6,7 @@ import {
   AppSidebar,
   MobileBottomNav,
   isPortalPathActive,
+  portalBreadcrumbs,
 } from "./portal-layout";
 import { SidebarProvider, SidebarTrigger } from "./sidebar";
 
@@ -160,5 +161,50 @@ describe("AppHeader", () => {
     await user.click(screen.getByRole("button", { name: "Menu użytkownika" }));
     await user.click(screen.getByRole("menuitem", { name: "Wyloguj się" }));
     expect(logoutAction).toHaveBeenCalledOnce();
+  });
+});
+
+describe("portal breadcrumbs", () => {
+  it("names the portal and the current page", () => {
+    expect(
+      portalBreadcrumbs(navigation, "/specjalisci/abc", "Portal specjalisty"),
+    ).toEqual([
+      { label: "Portal specjalisty", href: "/" },
+      { label: "Specjaliści" },
+    ]);
+  });
+
+  it("shows only the portal on the start page or an unknown path", () => {
+    expect(portalBreadcrumbs(navigation, "/", "Panel")).toEqual([
+      { label: "Panel", href: "/" },
+      { label: "Dashboard" },
+    ]);
+    expect(portalBreadcrumbs(navigation, "/nie-ma", "Panel")).toEqual([
+      { label: "Panel" },
+    ]);
+  });
+
+  it("renders the trail in the header instead of a search box", () => {
+    render(
+      <AppHeader
+        breadcrumbs={[
+          { label: "Portal specjalisty", href: "/" },
+          { label: "Dostępność" },
+        ]}
+        user={{ name: "Anna Kowalska", role: "Psychoterapeutka" }}
+      />,
+    );
+
+    const trail = screen.getByRole("navigation", { name: "Okruszki" });
+    expect(
+      within(trail).getByRole("link", { name: "Portal specjalisty" }),
+    ).toHaveAttribute("href", "/");
+    expect(within(trail).getByText("Dostępność")).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    // Separators are list items of their own, never nested in another.
+    expect(trail.querySelectorAll("li li")).toHaveLength(0);
   });
 });

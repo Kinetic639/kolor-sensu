@@ -5,12 +5,19 @@ import {
   Bell,
   ChevronDown,
   LogOut,
-  Search,
   Sprout,
   UserRound,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "./breadcrumb";
 import { Button } from "./button";
 import {
   DropdownMenu,
@@ -36,7 +43,8 @@ export interface PortalSwitchLink {
 
 export interface AppHeaderProps {
   user: AppHeaderUser;
-  searchPlaceholder?: string;
+  /** Where the user is: the portal, then the page (the last one is current). */
+  breadcrumbs?: { label: string; href?: string }[];
   notificationCount?: number;
   navigationTrigger?: ReactNode;
   profileHref?: string;
@@ -48,7 +56,7 @@ export interface AppHeaderProps {
 
 export function AppHeader({
   user,
-  searchPlaceholder = "Szukaj klientów, wizyt, notatek...",
+  breadcrumbs = [],
   notificationCount = 0,
   navigationTrigger,
   profileHref,
@@ -110,18 +118,33 @@ export function AppHeader({
         </span>
       </div>
 
-      <label className="hidden h-9 max-w-md flex-1 items-center gap-2 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface-subtle)] px-3 text-[var(--text-muted)] md:flex">
-        <Search className="size-4" aria-hidden="true" />
-        <span className="sr-only">Szukaj</span>
-        <input
-          className="min-w-0 flex-1 bg-transparent text-xs text-[var(--text)] outline-none placeholder:text-[var(--text-subtle)]"
-          placeholder={searchPlaceholder}
-          type="search"
-        />
-        <kbd className="rounded bg-[var(--surface-muted)] px-1.5 py-0.5 text-[0.625rem] font-semibold">
-          ⌘ K
-        </kbd>
-      </label>
+      {breadcrumbs.length ? (
+        <Breadcrumb className="hidden min-w-0 md:block">
+          <BreadcrumbList className="flex-nowrap text-xs sm:gap-1.5">
+            {breadcrumbs.map((crumb, index) => {
+              const last = index === breadcrumbs.length - 1;
+              return (
+                <Fragment key={`${crumb.label}-${index}`}>
+                  <BreadcrumbItem className="min-w-0">
+                    {last ? (
+                      <BreadcrumbPage className="truncate font-semibold text-[var(--primary)]">
+                        {crumb.label}
+                      </BreadcrumbPage>
+                    ) : crumb.href ? (
+                      <BreadcrumbLink className="truncate" href={crumb.href}>
+                        {crumb.label}
+                      </BreadcrumbLink>
+                    ) : (
+                      <span className="truncate">{crumb.label}</span>
+                    )}
+                  </BreadcrumbItem>
+                  {last ? null : <BreadcrumbSeparator />}
+                </Fragment>
+              );
+            })}
+          </BreadcrumbList>
+        </Breadcrumb>
+      ) : null}
 
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2.5">
         <Button

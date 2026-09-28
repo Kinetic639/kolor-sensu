@@ -41,7 +41,7 @@
   --ks-container-md: 56rem;
   --ks-container-lg: 72rem;
   --ks-container-xl: 90rem;
-  --ks-sidebar-width: 13.5rem;
+  --ks-sidebar-width: 16rem;
   --ks-header-height: 4rem;
 
   --background: #fbfaf6;
@@ -96,6 +96,51 @@
   --shadow-surface: var(--ks-shadow-surface);
   --shadow-raised: var(--ks-shadow-raised);
   --shadow-overlay: var(--ks-shadow-overlay);
+
+  /* Portal sidebar: a dark green panel (docs/design/references/
+     ai-studio-portal-review.md). */
+  --sidebar-background: #11241e;
+  --sidebar-surface: #0e1f1a;
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-muted: #94a3b8;
+  --sidebar-border: #1d3b31;
+  --sidebar-hover: rgb(255 255 255 / 0.06);
+  --sidebar-active: #234e3e;
+  --sidebar-active-hover: #2b5d4a;
+  --sidebar-icon: #2dd4bf;
+  --sidebar-accent: #34d399;
+  --sidebar-ring: #34d399;
+
+  /* Calendar resources (rooms), assigned by position; online uses --info. */
+  --resource-1: #286e4d;
+  --resource-1-soft: #ebf7f0;
+  --resource-2: #cf5c2e;
+  --resource-2-soft: #fef3ed;
+  --resource-3: #725aa6;
+  --resource-3-soft: #f4f1fc;
+  --resource-4: #a86a14;
+  --resource-4-soft: #fbf5eb;
+  --resource-5: #217a86;
+  --resource-5-soft: #eaf6f7;
+  --resource-6: #b4436c;
+  --resource-6-soft: #fcedf2;
+}
+
+/* Inside the sidebar (desktop panel and mobile sheet alike) the general
+   tokens take the sidebar's values, so its parts need no dark variants. */
+[data-sidebar="sidebar"] {
+  --surface: var(--sidebar-background);
+  --surface-muted: var(--sidebar-hover);
+  --text: var(--sidebar-foreground);
+  --text-muted: var(--sidebar-muted);
+  --border: var(--sidebar-border);
+  --border-strong: var(--sidebar-border);
+  --primary: var(--sidebar-active);
+  --primary-hover: var(--sidebar-active-hover);
+  --ring: var(--sidebar-ring);
+
+  background-color: var(--sidebar-background);
+  color: var(--sidebar-foreground);
 }
 
 @theme inline {
