@@ -6,14 +6,20 @@ import {
   timeOffInputSchema,
   type AvailabilityRuleInput,
   type AvailabilityRuleValues,
-  type SpecialistAvailabilityRule,
   type TimeOffInput,
 } from "@repo/contracts";
+import {
+  describeRecurrence,
+  formatHours,
+  isoWeekday,
+  timeToMinutes,
+} from "@repo/scheduling";
 import { Button } from "@repo/ui/button";
 import { Checkbox } from "@repo/ui/checkbox";
-import { DialogFooter } from "@repo/ui/dialog";
+import { ChoiceCardGroup } from "@repo/ui/choice-card";
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
+import { WeekdayPicker } from "@repo/ui/recurrence";
 import {
   Select,
   SelectContent,
@@ -22,36 +28,58 @@ import {
   SelectValue,
 } from "@repo/ui/select";
 import { Textarea } from "@repo/ui/textarea";
+import {
+  Building2,
+  Check,
+  Clock,
+  Layers,
+  Repeat,
+  Trash2,
+  Video,
+} from "lucide-react";
 import type { ReactNode } from "react";
-import { Controller, useForm, type Control, type Path } from "react-hook-form";
-
-const WEEKDAYS = [
-  "Poniedziałek",
-  "Wtorek",
-  "Środa",
-  "Czwartek",
-  "Piątek",
-  "Sobota",
-  "Niedziela",
-];
-
-const RECURRENCES = [
-  ["weekly", "Co tydzień"],
-  ["biweekly", "Co 2 tygodnie"],
-  ["once", "Jednorazowo (jeden dzień)"],
-] as const;
-
-const MODES = [
-  ["in_person", "W gabinecie"],
-  ["online", "Online"],
-  ["hybrid", "W gabinecie i online"],
-] as const;
+import {
+  Controller,
+  useForm,
+  type Control,
+  type FieldErrors,
+  type Path,
+  type UseFormSetValue,
+  type UseFormWatch,
+} from "react-hook-form";
+import { quickCreateDefaults } from "./form-values";
+import type { RoomViewModel } from "./types";
 
 /** Quarter hours from 6:00 to 22:00. */
-const TIMES = Array.from({ length: 65 }, (_, index) => {
+export const TIMES = Array.from({ length: 65 }, (_, index) => {
   const minutes = 6 * 60 + index * 15;
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 });
+
+const MODE_OPTIONS = [
+  {
+    value: "in_person" as const,
+    label: "Stacjonarnie",
+    icon: <Building2 className="size-4" />,
+  },
+  {
+    value: "online" as const,
+    label: "Online",
+    icon: <Video className="size-4" />,
+  },
+  {
+    value: "hybrid" as const,
+    label: "Hybrydowo",
+    icon: <Layers className="size-4" />,
+  },
+];
+
+const INTERVALS = [
+  ["1", "tydzień"],
+  ["2", "2 tygodnie"],
+  ["3", "3 tygodnie"],
+  ["4", "4 tygodnie"],
+] as const;
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   return message ? (
@@ -61,52 +89,48 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   ) : null;
 }
 
-function Field({
-  id,
-  label,
-  error,
-  hint,
-  children,
-}: {
-  id: string;
-  label: string;
-  error?: string;
-  hint?: string;
-  children: ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id}>{label}</Label>
+    <section className="grid gap-2">
+      <h3 className="text-sm font-bold text-[var(--text)]">{title}</h3>
       {children}
-      {hint ? (
-        <p className="text-xs text-[var(--text-muted)]" id={`${id}-hint`}>
-          {hint}
-        </p>
-      ) : null}
-      <FieldError id={`${id}-error`} message={error} />
-    </div>
+    </section>
   );
 }
 
-function SelectField<Values extends Record<string, unknown>>({
+function SmallLabel({
+  htmlFor,
+  children,
+}: {
+  htmlFor: string;
+  children: ReactNode;
+}) {
+  return (
+    <Label
+      className="text-xs font-normal text-[var(--text-muted)]"
+      htmlFor={htmlFor}
+    >
+      {children}
+    </Label>
+  );
+}
+
+function TimeSelect<Values extends Record<string, unknown>>({
   control,
   name,
   id,
   label,
   error,
-  options,
-  placeholder,
 }: {
   control: Control<Values>;
   name: Path<Values>;
   id: string;
   label: string;
   error?: string;
-  options: readonly (readonly [string, string])[];
-  placeholder?: string;
 }) {
   return (
-    <Field error={error} id={id} label={label}>
+    <div className="grid gap-1">
+      <SmallLabel htmlFor={id}>{label}</SmallLabel>
       <Controller
         control={control}
         name={name}
@@ -118,154 +142,192 @@ function SelectField<Values extends Record<string, unknown>>({
             <SelectTrigger
               aria-describedby={error ? `${id}-error` : undefined}
               aria-invalid={error ? true : undefined}
+              className="font-semibold tabular-nums"
               id={id}
             >
-              <SelectValue placeholder={placeholder} />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {options.map(([value, text]) => (
-                <SelectItem key={value} value={value}>
-                  {text}
+              {TIMES.map((time) => (
+                <SelectItem key={time} value={time}>
+                  {time}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         )}
       />
-    </Field>
+      <FieldError id={`${id}-error`} message={error} />
+    </div>
   );
 }
 
-export function toRuleFormValues(
-  rule: SpecialistAvailabilityRule | null,
-  defaults: { weekday?: number; recurrence?: "weekly" | "once"; today: string },
-): AvailabilityRuleInput {
-  if (rule) {
-    return {
-      recurrence: rule.recurrence,
-      weekday: rule.weekday,
-      startsAt: rule.startsAt,
-      endsAt: rule.endsAt,
-      validFrom: rule.validFrom,
-      validUntil: rule.recurrence === "once" ? null : rule.validUntil,
-      mode: rule.mode,
-      roomId: rule.roomId,
-      note: rule.note,
-    };
-  }
-  return {
-    recurrence: defaults.recurrence ?? "weekly",
-    weekday: defaults.weekday ?? 1,
-    startsAt: "09:00",
-    endsAt: "13:00",
-    validFrom: defaults.today,
-    validUntil: null,
-    mode: "in_person",
-    roomId: null,
-    note: null,
-  };
+function roomOptions(rooms: RoomViewModel[]) {
+  return rooms.map((room) => ({
+    value: room.id,
+    label: room.name,
+    accent: room.accent,
+  }));
 }
 
-export function RuleForm({
-  defaultValues,
-  rooms,
-  pending,
-  submitLabel,
-  onCancel,
-  onSubmit,
-}: {
-  defaultValues: AvailabilityRuleInput;
-  rooms: { id: string; name: string }[];
-  pending: boolean;
-  submitLabel: string;
-  onCancel: () => void;
-  onSubmit: (values: AvailabilityRuleValues) => void;
-}) {
-  const {
-    control,
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm<AvailabilityRuleInput, unknown, AvailabilityRuleValues>({
-    resolver: zodResolver(availabilityRuleInputSchema),
-    defaultValues,
-  });
-  const recurrence = watch("recurrence");
-  const mode = watch("mode");
-  const once = recurrence === "once";
+type RuleForm = {
+  control: Control<AvailabilityRuleInput>;
+  watch: UseFormWatch<AvailabilityRuleInput>;
+  setValue: UseFormSetValue<AvailabilityRuleInput>;
+  errors: FieldErrors<AvailabilityRuleInput>;
+};
+
+/**
+ * One-off (the default) or a rule: weekdays, every N weeks and how it ends,
+ * with a plain summary — as calendar apps offer it.
+ */
+function RecurrenceFields({
+  control,
+  watch,
+  setValue,
+  errors,
+  idPrefix,
+}: RuleForm & { idPrefix: string }) {
+  const [
+    recurrence,
+    weekdays,
+    intervalWeeks,
+    validFrom,
+    ends,
+    validUntil,
+    occurrenceCount,
+  ] = watch([
+    "recurrence",
+    "weekdays",
+    "intervalWeeks",
+    "validFrom",
+    "ends",
+    "validUntil",
+    "occurrenceCount",
+  ]);
+  const summary =
+    recurrence === "weekly"
+      ? describeRecurrence({
+          recurrence,
+          weekdays,
+          intervalWeeks,
+          validFrom,
+          validUntil: ends === "until" ? validUntil : null,
+          occurrenceCount: ends === "count" ? occurrenceCount : null,
+        })
+      : null;
 
   return (
-    <form className="space-y-4" noValidate onSubmit={handleSubmit(onSubmit)}>
-      <SelectField
+    <div className="grid gap-4">
+      <Controller
         control={control}
-        error={errors.recurrence?.message}
-        id="rule-recurrence"
-        label="Jak często"
         name="recurrence"
-        options={RECURRENCES}
+        render={({ field }) => (
+          <ChoiceCardGroup
+            legend="Powtarzanie"
+            name={`${idPrefix}-recurrence`}
+            onChange={(value) => {
+              field.onChange(value);
+              // A new rule repeats on the chosen day's weekday.
+              if (value === "weekly" && weekdays.length <= 1) {
+                setValue("weekdays", [isoWeekday(validFrom)]);
+              }
+            }}
+            options={[
+              {
+                value: "once",
+                label: "Jednorazowo",
+                description: "Tylko w wybranym dniu",
+              },
+              {
+                value: "weekly",
+                label: "Reguła",
+                description: "Powtarzaj w wybrane dni",
+                icon: <Repeat className="size-4" />,
+              },
+            ]}
+            value={field.value}
+          />
+        )}
       />
-      {once ? (
-        <Field error={errors.validFrom?.message} id="rule-date" label="Dzień">
-          <Input id="rule-date" type="date" {...register("validFrom")} />
-        </Field>
-      ) : (
-        <>
-          <Field
-            error={errors.weekday?.message}
-            id="rule-weekday"
-            label="Dzień tygodnia"
-          >
+
+      {recurrence === "weekly" ? (
+        <div className="grid gap-4 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+          <div className="grid gap-1.5">
+            <p className="text-xs text-[var(--text-muted)]">Powtarzaj w</p>
             <Controller
               control={control}
-              name="weekday"
+              name="weekdays"
+              render={({ field }) => (
+                <WeekdayPicker
+                  label="Powtarzaj w"
+                  onChange={field.onChange}
+                  value={field.value}
+                />
+              )}
+            />
+            <FieldError
+              id={`${idPrefix}-weekdays-error`}
+              message={errors.weekdays?.message}
+            />
+          </div>
+
+          <div className="grid gap-1 sm:w-1/2">
+            <SmallLabel htmlFor={`${idPrefix}-interval`}>Co</SmallLabel>
+            <Controller
+              control={control}
+              name="intervalWeeks"
               render={({ field }) => (
                 <Select
                   onValueChange={(value) => field.onChange(Number(value))}
                   value={String(field.value)}
                 >
-                  <SelectTrigger id="rule-weekday">
+                  <SelectTrigger id={`${idPrefix}-interval`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {WEEKDAYS.map((day, index) => (
-                      <SelectItem key={day} value={String(index + 1)}>
-                        {day}
+                    {INTERVALS.map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               )}
             />
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field
-              error={errors.validFrom?.message}
-              hint={
-                recurrence === "biweekly"
-                  ? "Liczymy co drugi tydzień od tego tygodnia."
-                  : undefined
-              }
-              id="rule-valid-from"
-              label="Obowiązuje od"
-            >
-              <Input
-                id="rule-valid-from"
-                type="date"
-                {...register("validFrom")}
+          </div>
+
+          <Controller
+            control={control}
+            name="ends"
+            render={({ field }) => (
+              <ChoiceCardGroup
+                legend="Kończy się"
+                name={`${idPrefix}-ends`}
+                onChange={field.onChange}
+                options={[
+                  { value: "never", label: "Nigdy" },
+                  { value: "until", label: "W dniu" },
+                  { value: "count", label: "Po liczbie razy" },
+                ]}
+                value={field.value}
               />
-            </Field>
-            <Field
-              error={errors.validUntil?.message}
-              id="rule-valid-until"
-              label="Obowiązuje do (opcjonalnie)"
-            >
+            )}
+          />
+          {ends === "until" ? (
+            <div className="grid gap-1 sm:w-1/2">
+              <SmallLabel htmlFor={`${idPrefix}-until`}>
+                Ostatni dzień
+              </SmallLabel>
               <Controller
                 control={control}
                 name="validUntil"
                 render={({ field }) => (
                   <Input
-                    id="rule-valid-until"
+                    aria-describedby={
+                      errors.validUntil ? `${idPrefix}-until-error` : undefined
+                    }
+                    id={`${idPrefix}-until`}
                     onChange={(event) =>
                       field.onChange(event.target.value || null)
                     }
@@ -274,75 +336,370 @@ export function RuleForm({
                   />
                 )}
               />
-            </Field>
+              <FieldError
+                id={`${idPrefix}-until-error`}
+                message={errors.validUntil?.message}
+              />
+            </div>
+          ) : null}
+          {ends === "count" ? (
+            <div className="grid gap-1 sm:w-1/2">
+              <SmallLabel htmlFor={`${idPrefix}-count`}>
+                Liczba powtórzeń
+              </SmallLabel>
+              <Controller
+                control={control}
+                name="occurrenceCount"
+                render={({ field }) => (
+                  <Input
+                    aria-describedby={
+                      errors.occurrenceCount
+                        ? `${idPrefix}-count-error`
+                        : undefined
+                    }
+                    id={`${idPrefix}-count`}
+                    inputMode="numeric"
+                    max={200}
+                    min={1}
+                    onChange={(event) =>
+                      field.onChange(
+                        event.target.value ? Number(event.target.value) : null,
+                      )
+                    }
+                    type="number"
+                    value={field.value ?? ""}
+                  />
+                )}
+              />
+              <FieldError
+                id={`${idPrefix}-count-error`}
+                message={errors.occurrenceCount?.message}
+              />
+            </div>
+          ) : null}
+
+          {summary ? (
+            <p
+              className="flex items-center gap-1.5 text-xs font-semibold text-[var(--primary)]"
+              role="status"
+            >
+              <Repeat aria-hidden="true" className="size-3.5" />
+              {summary}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function useRuleForm(defaultValues: AvailabilityRuleInput) {
+  const form = useForm<AvailabilityRuleInput, unknown, AvailabilityRuleValues>({
+    resolver: zodResolver(availabilityRuleInputSchema),
+    defaultValues,
+  });
+  return form;
+}
+
+export function RuleForm({
+  defaultValues,
+  rooms,
+  pending,
+  editing,
+  notice,
+  onCancel,
+  onDelete,
+  onSubmit,
+}: {
+  defaultValues: AvailabilityRuleInput;
+  rooms: RoomViewModel[];
+  pending: boolean;
+  editing: boolean;
+  /** Shown above the fields, e.g. "this occurrence is part of a rule". */
+  notice?: ReactNode;
+  onCancel: () => void;
+  onDelete?: () => void;
+  onSubmit: (values: AvailabilityRuleValues) => void;
+}) {
+  const {
+    control,
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useRuleForm(defaultValues);
+  const [recurrence, mode, startsAt, endsAt] = watch([
+    "recurrence",
+    "mode",
+    "startsAt",
+    "endsAt",
+  ]);
+  const minutes = Math.max(0, timeToMinutes(endsAt) - timeToMinutes(startsAt));
+
+  return (
+    <form
+      className="flex min-h-0 flex-1 flex-col"
+      noValidate
+      onSubmit={handleSubmit(onSubmit)}
+    >
+      <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
+        {notice}
+        <Section title="1. Dzień i godziny">
+          <div className="grid gap-1 sm:w-1/2">
+            <SmallLabel htmlFor="rule-date">
+              {recurrence === "once" ? "Dzień" : "Zaczyna się"}
+            </SmallLabel>
+            <Input
+              aria-describedby={
+                errors.validFrom ? "rule-date-error" : undefined
+              }
+              id="rule-date"
+              type="date"
+              {...register("validFrom")}
+            />
+            <FieldError
+              id="rule-date-error"
+              message={errors.validFrom?.message}
+            />
           </div>
-        </>
-      )}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <SelectField
-          control={control}
-          error={errors.startsAt?.message}
-          id="rule-starts-at"
-          label="Od"
-          name="startsAt"
-          options={TIMES.map((time) => [time, time] as const)}
-        />
-        <SelectField
-          control={control}
-          error={errors.endsAt?.message}
-          id="rule-ends-at"
-          label="Do"
-          name="endsAt"
-          options={TIMES.map((time) => [time, time] as const)}
-        />
-      </div>
-      <SelectField
-        control={control}
-        error={errors.mode?.message}
-        id="rule-mode"
-        label="Forma"
-        name="mode"
-        options={MODES}
-      />
-      {mode === "online" ? null : (
-        <SelectField
-          control={control}
-          error={errors.roomId?.message}
-          id="rule-room"
-          label="Gabinet"
-          name="roomId"
-          options={rooms.map((room) => [room.id, room.name] as const)}
-          placeholder="Wybierz gabinet"
-        />
-      )}
-      <Field
-        error={errors.note?.message}
-        hint="Widoczna tylko dla Ciebie i centrum."
-        id="rule-note"
-        label="Notatka (opcjonalnie)"
-      >
+          <div className="grid grid-cols-2 gap-3">
+            <TimeSelect
+              control={control}
+              error={errors.startsAt?.message}
+              id="rule-starts-at"
+              label="Od"
+              name="startsAt"
+            />
+            <TimeSelect
+              control={control}
+              error={errors.endsAt?.message}
+              id="rule-ends-at"
+              label="Do"
+              name="endsAt"
+            />
+          </div>
+          <p className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+            <Clock
+              aria-hidden="true"
+              className="size-3.5 text-[var(--primary)]"
+            />
+            Łączny czas dyżuru:
+            <strong className="text-[var(--text)]">
+              {formatHours(minutes)}
+            </strong>
+          </p>
+        </Section>
+
+        <Section title="2. Powtarzanie">
+          <RecurrenceFields
+            control={control}
+            errors={errors}
+            idPrefix="rule"
+            setValue={setValue}
+            watch={watch}
+          />
+        </Section>
+
         <Controller
           control={control}
-          name="note"
+          name="mode"
           render={({ field }) => (
-            <Textarea
-              aria-describedby="rule-note-hint"
-              id="rule-note"
-              onChange={(event) => field.onChange(event.target.value)}
-              rows={2}
-              value={field.value ?? ""}
+            <ChoiceCardGroup
+              legend="3. Forma pracy"
+              name="rule-mode"
+              onChange={field.onChange}
+              options={MODE_OPTIONS}
+              value={field.value}
             />
           )}
         />
-      </Field>
-      <DialogFooter>
-        <Button onClick={onCancel} variant="secondary">
-          Anuluj
+
+        {mode === "online" ? null : (
+          <Controller
+            control={control}
+            name="roomId"
+            render={({ field }) => (
+              <ChoiceCardGroup
+                error={errors.roomId?.message}
+                layout="list"
+                legend="4. Przypisany gabinet"
+                name="rule-room"
+                onChange={field.onChange}
+                options={roomOptions(rooms)}
+                value={field.value}
+              />
+            )}
+          />
+        )}
+
+        <Section title={mode === "online" ? "4. Notatka" : "5. Notatka"}>
+          <Label className="sr-only" htmlFor="rule-note">
+            Notatka
+          </Label>
+          <Controller
+            control={control}
+            name="note"
+            render={({ field }) => (
+              <Textarea
+                aria-describedby="rule-note-hint"
+                id="rule-note"
+                onChange={(event) => field.onChange(event.target.value)}
+                placeholder="np. pacjenci pierwszorazowi tylko do 15:00"
+                rows={2}
+                value={field.value ?? ""}
+              />
+            )}
+          />
+          <p className="text-xs text-[var(--text-muted)]" id="rule-note-hint">
+            Widoczna tylko dla Ciebie i centrum.
+          </p>
+          <FieldError id="rule-note-error" message={errors.note?.message} />
+        </Section>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--surface-subtle)] px-6 py-4">
+        {editing && onDelete ? (
+          <Button
+            className="text-[var(--danger)]"
+            onClick={onDelete}
+            variant="ghost"
+          >
+            <Trash2 aria-hidden="true" className="size-4" />
+            Usuń
+          </Button>
+        ) : (
+          <span />
+        )}
+        <div className="flex items-center gap-2">
+          <Button onClick={onCancel} variant="secondary">
+            Anuluj
+          </Button>
+          <Button loading={pending} type="submit">
+            <Check aria-hidden="true" className="size-4" />
+            Zapisz dostępność
+          </Button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+export interface QuickCreateValues {
+  date: string;
+  startsAt: string;
+  endsAt: string;
+}
+
+/** The short form after dragging on the calendar: this day, unless a rule. */
+export function QuickCreateForm({
+  selection,
+  dayLabel,
+  rooms,
+  pending,
+  onCancel,
+  onMoreOptions,
+  onSubmit,
+}: {
+  selection: QuickCreateValues;
+  dayLabel: string;
+  rooms: RoomViewModel[];
+  pending: boolean;
+  onCancel: () => void;
+  onMoreOptions: (values: AvailabilityRuleInput) => void;
+  onSubmit: (values: AvailabilityRuleValues) => void;
+}) {
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    getValues,
+    formState: { errors },
+  } = useRuleForm(quickCreateDefaults(selection, rooms));
+  const mode = watch("mode");
+  const minutes =
+    timeToMinutes(selection.endsAt) - timeToMinutes(selection.startsAt);
+
+  return (
+    <form className="grid gap-4" noValidate onSubmit={handleSubmit(onSubmit)}>
+      <div className="flex items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[color-mix(in_srgb,var(--primary)_25%,transparent)] bg-[var(--primary-soft)] p-3">
+        <div>
+          <p className="text-xs text-[var(--text-muted)]">Dzień i godziny</p>
+          <p className="text-sm font-bold text-[var(--text)]">
+            {dayLabel}, {selection.startsAt} – {selection.endsAt}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-[var(--text-muted)]">Wymiar</p>
+          <p className="text-sm font-bold text-[var(--primary)]">
+            {formatHours(minutes)}
+          </p>
+        </div>
+      </div>
+
+      <Controller
+        control={control}
+        name="mode"
+        render={({ field }) => (
+          <ChoiceCardGroup
+            legend="Forma przyjęć"
+            name="quick-mode"
+            onChange={field.onChange}
+            options={MODE_OPTIONS}
+            value={field.value}
+          />
+        )}
+      />
+
+      {mode === "online" ? null : (
+        <Controller
+          control={control}
+          name="roomId"
+          render={({ field }) => (
+            <ChoiceCardGroup
+              error={errors.roomId?.message}
+              legend="Przypisany gabinet"
+              name="quick-room"
+              onChange={field.onChange}
+              options={roomOptions(rooms)}
+              value={field.value}
+            />
+          )}
+        />
+      )}
+
+      <RecurrenceFields
+        control={control}
+        errors={errors}
+        idPrefix="quick"
+        setValue={setValue}
+        watch={watch}
+      />
+      {errors.endsAt?.message ? (
+        <p className="text-sm text-[var(--danger)]" role="alert">
+          {errors.endsAt.message}
+        </p>
+      ) : null}
+
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
+        <Button
+          className="px-0 text-xs underline"
+          onClick={() => onMoreOptions(getValues())}
+          variant="ghost"
+        >
+          Więcej opcji…
         </Button>
-        <Button loading={pending} type="submit">
-          {submitLabel}
-        </Button>
-      </DialogFooter>
+        <div className="flex items-center gap-2">
+          <Button onClick={onCancel} variant="secondary">
+            Anuluj
+          </Button>
+          <Button loading={pending} type="submit">
+            <Check aria-hidden="true" className="size-4" />
+            Zapisz dostępność
+          </Button>
+        </div>
+      </div>
     </form>
   );
 }
@@ -378,14 +735,23 @@ export function TimeOffForm({
   const partial = watch("fromTime") !== null;
 
   return (
-    <form className="space-y-4" noValidate onSubmit={handleSubmit(onSubmit)}>
+    <form className="grid gap-4" noValidate onSubmit={handleSubmit(onSubmit)}>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field error={errors.fromDate?.message} id="off-from" label="Od dnia">
+        <div className="grid gap-1">
+          <Label htmlFor="off-from">Od dnia</Label>
           <Input id="off-from" type="date" {...register("fromDate")} />
-        </Field>
-        <Field error={errors.toDate?.message} id="off-to" label="Do dnia">
-          <Input id="off-to" type="date" {...register("toDate")} />
-        </Field>
+          <FieldError id="off-from-error" message={errors.fromDate?.message} />
+        </div>
+        <div className="grid gap-1">
+          <Label htmlFor="off-to">Do dnia</Label>
+          <Input
+            aria-describedby={errors.toDate ? "off-to-error" : undefined}
+            id="off-to"
+            type="date"
+            {...register("toDate")}
+          />
+          <FieldError id="off-to-error" message={errors.toDate?.message} />
+        </div>
       </div>
       <div className="flex min-h-11 items-center gap-2">
         <Checkbox
@@ -401,31 +767,25 @@ export function TimeOffForm({
         </Label>
       </div>
       {partial ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <SelectField
+        <div className="grid grid-cols-2 gap-3">
+          <TimeSelect
             control={control}
             error={errors.fromTime?.message}
             id="off-from-time"
             label="Od godziny (pierwszego dnia)"
             name="fromTime"
-            options={TIMES.map((time) => [time, time] as const)}
           />
-          <SelectField
+          <TimeSelect
             control={control}
             error={errors.toTime?.message}
             id="off-to-time"
             label="Do godziny (ostatniego dnia)"
             name="toTime"
-            options={TIMES.map((time) => [time, time] as const)}
           />
         </div>
       ) : null}
-      <Field
-        error={errors.reason?.message}
-        hint="Widoczny tylko dla Ciebie i centrum."
-        id="off-reason"
-        label="Powód (opcjonalnie)"
-      >
+      <div className="grid gap-1">
+        <Label htmlFor="off-reason">Powód (opcjonalnie)</Label>
         <Controller
           control={control}
           name="reason"
@@ -439,15 +799,18 @@ export function TimeOffForm({
             />
           )}
         />
-      </Field>
-      <DialogFooter>
+        <p className="text-xs text-[var(--text-muted)]" id="off-reason-hint">
+          Widoczny tylko dla Ciebie i centrum.
+        </p>
+      </div>
+      <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-4">
         <Button onClick={onCancel} variant="secondary">
           Anuluj
         </Button>
         <Button loading={pending} type="submit">
           Dodaj nieobecność
         </Button>
-      </DialogFooter>
+      </div>
     </form>
   );
 }

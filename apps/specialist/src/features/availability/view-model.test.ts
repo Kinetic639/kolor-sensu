@@ -18,7 +18,10 @@ function rule(
     id: "rule",
     specialistId: "specialist",
     recurrence: "weekly",
-    weekday: 1,
+    weekdays: [1],
+    intervalWeeks: 1,
+    occurrenceCount: null,
+    exceptions: [],
     startsAt: "09:00",
     endsAt: "13:00",
     validFrom: "2030-01-07",
@@ -39,16 +42,30 @@ function timeOff(
 }
 
 const base = {
-  rooms: [{ id: "room-1", name: "Gabinet 1" }],
+  rooms: [
+    { id: "room-1", name: "Gabinet 1" },
+    { id: "room-2", name: "Gabinet 2" },
+  ],
   timeOff: [],
   // Monday 2030-01-07, 08:00 local.
   now: new Date("2030-01-07T07:00:00Z"),
   week: "2030-01-07",
+  filters: { day: null, mode: null },
   timeZone: TZ,
 };
 
-describe("mapAvailabilityViewModel", () => {
-  it("groups recurring windows by weekday, all seven days listed", () => {
+describe("rooms", () => {
+  it("gives each room a colour by position; online is blue", () => {
+    const model = mapAvailabilityViewModel({ ...base, rules: [] });
+    expect(model.rooms).toEqual([
+      { id: "room-1", name: "Gabinet 1", accent: "var(--resource-1)" },
+      { id: "room-2", name: "Gabinet 2", accent: "var(--resource-2)" },
+    ]);
+  });
+});
+
+describe("calendar week", () => {
+  it("places the week's windows by minutes with the room's colours", () => {
     const model = mapAvailabilityViewModel({
       ...base,
       rules: [
@@ -61,97 +78,62 @@ describe("mapAvailabilityViewModel", () => {
           roomId: null,
         }),
         rule({
-          id: "thu",
-          recurrence: "biweekly",
-          weekday: 4,
-          validFrom: "2030-01-09",
-          mode: "hybrid",
+          id: "tue",
+          weekdays: [2],
+          roomId: "room-2",
           note: "Tylko dorośli",
         }),
       ],
     });
+    const { calendar } = model;
 
-    expect(model.weekly.map((day) => day.label)).toEqual([
-      "Poniedziałek",
-      "Wtorek",
-      "Środa",
-      "Czwartek",
-      "Piątek",
-      "Sobota",
-      "Niedziela",
-    ]);
-    expect(model.weekly[0]!.windows).toMatchObject([
+    expect(calendar.title).toBe("7–13 stycznia 2030");
+    expect(calendar.previousWeek).toBe("2029-12-31");
+    expect(calendar.nextWeek).toBe("2030-01-14");
+    expect(calendar.range).toEqual({ start: 480, end: 1200 });
+    const [monday, tuesday] = calendar.days;
+    expect(monday).toMatchObject({
+      date: "2030-01-07",
+      label: "Pon",
+      sublabel: "7 stycznia",
+      isToday: true,
+      hoursLabel: "7 godz.",
+    });
+    expect(monday!.windows).toMatchObject([
       {
-        id: "rule",
-        timeLabel: "09:00–13:00",
+        ruleId: "rule",
+        start: 540,
+        end: 780,
+        timeLabel: "09:00 – 13:00",
         placeLabel: "Gabinet 1",
-        recurrenceLabel: "Co tydzień",
+        accent: "var(--resource-1)",
+        tint: "var(--resource-1-soft)",
       },
-      { id: "online", placeLabel: "Online", mode: "online" },
+      {
+        ruleId: "online",
+        placeLabel: "Online",
+        accent: "var(--info)",
+        tint: "var(--info-soft)",
+      },
     ]);
-    expect(model.weekly[3]!.windows[0]).toMatchObject({
-      recurrenceLabel: "Co 2 tygodnie, od 9 stycznia 2030",
+    expect(tuesday!.windows[0]).toMatchObject({
+      placeLabel: "Gabinet 2",
+      accent: "var(--resource-2)",
       note: "Tylko dorośli",
     });
-  });
-
-  it("says when a window starts later or ends, and hides ended ones", () => {
-    const model = mapAvailabilityViewModel({
-      ...base,
-      rules: [
-        rule({ id: "later", validFrom: "2030-02-04" }),
-        rule({ id: "ends", weekday: 2, validUntil: "2030-06-30" }),
-        rule({ id: "ended", weekday: 3, validUntil: "2030-01-06" }),
-      ],
+    expect(calendar.days[2]!.hoursLabel).toBeNull();
+    expect(calendar.stats).toEqual({
+      available: "11 godz.",
+      booked: "0 godz.",
+      free: "11 godz.",
     });
-    expect(model.weekly[0]!.windows[0]!.recurrenceLabel).toBe(
-      "Co tydzień, od 4 lutego 2030",
-    );
-    expect(model.weekly[1]!.windows[0]!.recurrenceLabel).toBe(
-      "Co tydzień, do 30 czerwca 2030",
-    );
-    expect(model.weekly[2]!.windows).toEqual([]);
   });
 
-  it("lists upcoming one-day windows by date", () => {
+  it("shows time off as blocks and cuts it out of the windows", () => {
     const model = mapAvailabilityViewModel({
       ...base,
-      rules: [
-        rule({
-          id: "past",
-          recurrence: "once",
-          weekday: 5,
-          validFrom: "2030-01-04",
-          validUntil: "2030-01-04",
-        }),
-        rule({
-          id: "soon",
-          recurrence: "once",
-          weekday: 4,
-          validFrom: "2030-01-10",
-          validUntil: "2030-01-10",
-          mode: "online",
-          roomId: null,
-        }),
-      ],
-    });
-    expect(model.oneOff).toMatchObject([
-      {
-        id: "soon",
-        label: "czwartek, 10 stycznia 2030",
-        timeLabel: "09:00–13:00",
-        placeLabel: "Online",
-      },
-    ]);
-    expect(model.weekly.flatMap((day) => day.windows)).toEqual([]);
-  });
-
-  it("previews the chosen week with time off cut out", () => {
-    const model = mapAvailabilityViewModel({
-      ...base,
-      rules: [rule(), rule({ id: "tue", weekday: 2 })],
+      rules: [rule(), rule({ id: "tue", weekdays: [2] })],
       timeOff: [
-        // Monday 10:00–11:00 local, and all of Tuesday.
         timeOff("2030-01-07T09:00:00.000Z", "2030-01-07T10:00:00.000Z"),
         timeOff(
           "2030-01-07T23:00:00.000Z",
@@ -160,25 +142,157 @@ describe("mapAvailabilityViewModel", () => {
         ),
       ],
     });
-
-    expect(model.preview.title).toBe("Tydzień 7–13 stycznia 2030");
-    expect(model.preview.previousWeek).toBe("2029-12-31");
-    expect(model.preview.nextWeek).toBe("2030-01-14");
-    const [monday, tuesday] = model.preview.days;
-    expect(monday).toMatchObject({ label: "pon. 7.01", isToday: true });
+    const [monday, tuesday] = model.calendar.days;
     expect(monday!.windows.map((one) => one.timeLabel)).toEqual([
-      "09:00–10:00",
-      "11:00–13:00",
+      "09:00 – 10:00",
+      "11:00 – 13:00",
     ]);
-    expect(monday!.timeOff).toMatchObject([{ label: "10:00–11:00" }]);
+    expect(monday!.timeOff).toMatchObject([
+      { start: 600, end: 660, label: "Nieobecność" },
+    ]);
     expect(tuesday!.windows).toEqual([]);
     expect(tuesday!.timeOff).toMatchObject([
-      { label: "Cały dzień", reason: "Urlop" },
+      { start: 480, end: 1200, label: "Nieobecność: Urlop" },
     ]);
-    expect(model.preview.hoursLabel).toBe("3 h");
   });
 
-  it("lists time off that has not ended yet", () => {
+  it("widens the hours for early or late windows", () => {
+    const model = mapAvailabilityViewModel({
+      ...base,
+      rules: [rule({ startsAt: "07:30", endsAt: "21:15" })],
+    });
+    expect(model.calendar.range).toEqual({ start: 420, end: 1320 });
+  });
+});
+
+describe("rules list", () => {
+  const rules = [
+    rule(),
+    rule({
+      id: "online",
+      weekdays: [1],
+      startsAt: "15:00",
+      endsAt: "18:00",
+      mode: "online",
+      roomId: null,
+    }),
+    rule({
+      id: "thu",
+      weekdays: [2, 4],
+      intervalWeeks: 2,
+      validFrom: "2030-01-09",
+      mode: "hybrid",
+    }),
+    rule({
+      id: "once",
+      recurrence: "once",
+      weekdays: [5],
+      validFrom: "2030-01-11",
+      validUntil: "2030-01-11",
+    }),
+    rule({ id: "ended", weekdays: [3], validUntil: "2030-01-06" }),
+  ];
+
+  it("describes each current rule, by day and time", () => {
+    const model = mapAvailabilityViewModel({ ...base, rules });
+    expect(model.rules.items.map((item) => item.id)).toEqual([
+      "rule",
+      "online",
+      "thu",
+      "once",
+    ]);
+    expect(model.rules.items[0]).toMatchObject({
+      title: "Poniedziałek",
+      recurrenceLabel: "Co tydzień w poniedziałki",
+      timeLabel: "09:00 – 13:00",
+      durationLabel: "4 godz.",
+      placeLabel: "Gabinet 1",
+      accent: "var(--resource-1)",
+      occupancy: {
+        percent: 0,
+        bookedLabel: "0 godz. zajęte (0 wizyt)",
+        freeLabel: "4 godz. wolne",
+      },
+    });
+    expect(model.rules.items[2]).toMatchObject({
+      title: "Wt, Czw",
+      subtitle: "od 9 stycznia 2030",
+      recurrenceLabel: "Co 2 tygodnie we wtorki i czwartki",
+    });
+    expect(model.rules.items[3]).toMatchObject({
+      title: "11 stycznia 2030",
+      subtitle: "piątek",
+      recurrenceLabel: "Jednorazowo",
+      canCopyToWorkdays: false,
+    });
+    expect(model.rules.total).toBe(4);
+  });
+
+  it("filters by day and by form, with counts per day", () => {
+    const byDay = mapAvailabilityViewModel({
+      ...base,
+      rules,
+      filters: { day: 1, mode: null },
+    });
+    expect(byDay.rules.items.map((item) => item.id)).toEqual([
+      "rule",
+      "online",
+    ]);
+    expect(byDay.rules.dayCounts).toEqual({ 1: 2, 2: 1, 4: 1, 5: 1 });
+
+    const online = mapAvailabilityViewModel({
+      ...base,
+      rules,
+      filters: { day: null, mode: "online" },
+    });
+    expect(online.rules.items.map((item) => item.id)).toEqual([
+      "online",
+      "thu",
+    ]);
+    const inPerson = mapAvailabilityViewModel({
+      ...base,
+      rules,
+      filters: { day: null, mode: "stacjonarnie" },
+    });
+    expect(inPerson.rules.items.map((item) => item.id)).toEqual([
+      "rule",
+      "thu",
+      "once",
+    ]);
+  });
+
+  it("shows a Monday–Friday rule once, under each of its days", () => {
+    const workdays = rule({
+      id: "workdays",
+      weekdays: [1, 2, 3, 4, 5],
+      exceptions: ["2030-01-09", "2030-01-10"],
+    });
+    const model = mapAvailabilityViewModel({
+      ...base,
+      rules: [workdays],
+      filters: { day: 3, mode: null },
+    });
+    expect(model.rules.items).toMatchObject([
+      {
+        id: "workdays",
+        title: "Poniedziałek – piątek",
+        subtitle: "2 terminy pominięte",
+        recurrenceLabel: "Co tydzień w dni robocze (pn–pt)",
+        canCopyToWorkdays: false,
+      },
+    ]);
+    expect(model.rules.dayCounts).toEqual({ 1: 1, 2: 1, 3: 1, 4: 1, 5: 1 });
+    // The skipped Wednesday and Thursday are not in the calendar.
+    expect(model.calendar.days.map((day) => day.windows.length)).toEqual([
+      1, 1, 0, 0, 1, 0, 0,
+    ]);
+    expect(model.calendar.days[0]!.windows[0]).toMatchObject({
+      recurring: true,
+      recurrenceLabel: "Co tydzień w dni robocze (pn–pt)",
+    });
+  });
+
+  it("lists time off that has not ended", () => {
     const model = mapAvailabilityViewModel({
       ...base,
       rules: [],
@@ -219,11 +333,5 @@ describe("formatting", () => {
         TZ,
       ),
     ).toBe("7 stycznia 2030, 12:00–14:30");
-    expect(
-      formatTimeOff(
-        timeOff("2030-03-30T11:00:00.000Z", "2030-04-01T12:00:00.000Z"),
-        TZ,
-      ),
-    ).toBe("30 marca 2030, 12:00 – 1 kwietnia 2030, 14:00");
   });
 });

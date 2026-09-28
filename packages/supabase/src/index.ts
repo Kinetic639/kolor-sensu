@@ -113,11 +113,13 @@ export {
 export {
   AvailabilityError,
   addTimeOff,
+  deleteAvailabilityOccurrence,
   deleteAvailabilityRule,
+  editAvailabilityOccurrence,
   deleteTimeOff,
   listAvailabilityRules,
   listTimeOff,
   parseTstzRange,
   saveAvailabilityRule,
 } from "./availability";
-export type { AvailabilityErrorReason } from "./availability";
+export type { AvailabilityErrorReason, OccurrenceTarget } from "./availability";

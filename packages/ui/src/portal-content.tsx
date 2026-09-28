@@ -161,6 +161,49 @@ export function MetricCard({
 
 export type StatusTone = "neutral" | "success" | "warning" | "danger" | "info";
 
+const statToneClasses = {
+  mint: "border-[color-mix(in_srgb,var(--primary)_22%,transparent)] bg-[var(--primary-soft)]",
+  neutral: "border-[var(--border)] bg-[var(--surface-subtle)]",
+  blue: "border-[color-mix(in_srgb,var(--info)_22%,transparent)] bg-[var(--info-soft)]",
+} as const;
+
+export interface StatTileProps {
+  label: string;
+  value: ReactNode;
+  detail?: string;
+  tone?: keyof typeof statToneClasses;
+  className?: string;
+}
+
+/** A tinted figure: label, a large value and a line of detail. */
+export function StatTile({
+  label,
+  value,
+  detail,
+  tone = "neutral",
+  className,
+}: StatTileProps) {
+  return (
+    <div
+      aria-label={label}
+      className={cn(
+        "rounded-[var(--radius-control)] border p-3.5",
+        statToneClasses[tone],
+        className,
+      )}
+      role="group"
+    >
+      <p className="text-xs font-medium text-[var(--text-muted)]">{label}</p>
+      <p className="mt-1 text-xl font-bold text-[var(--text)]">{value}</p>
+      {detail ? (
+        <p className="mt-0.5 text-[0.6875rem] text-[var(--text-muted)]">
+          {detail}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export interface StatusBadgeProps extends Omit<BadgeProps, "variant"> {
   tone?: StatusTone;
   dot?: boolean;

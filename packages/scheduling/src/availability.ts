@@ -1,18 +1,27 @@
 import { fromZonedTime } from "date-fns-tz";
 
-// Specialist availability as stored (docs/product/booking-plan.md, RD1):
-// rules in the centre's local time, expanded here into windows of real
-// instants. The recurrence arithmetic mirrors the database's
-// private.availability_occurs_on, which checks the same rules on save.
+// Specialist availability as stored (docs/product/booking-plan.md, "Reguły
+// powtarzania"): one-offs and rules repeating on several weekdays every N
+// weeks, with skipped dates (RFC 5545 RRULE / EXDATE), in the centre's local
+// time, expanded here into windows of real instants. The recurrence
+// arithmetic mirrors the database's private.availability_pattern_on.
 
 export type AvailabilityMode = "in_person" | "online" | "hybrid";
-export type AvailabilityRecurrence = "weekly" | "biweekly" | "once";
+export type AvailabilityRecurrence = "once" | "weekly";
 
-export interface AvailabilityRule {
+export interface RecurrencePattern {
+  /** ISO weekdays, 1 Monday … 7 Sunday. */
+  weekdays: number[];
+  /** Every N weeks, counted from the week of `validFrom`. */
+  intervalWeeks: number;
+  validFrom: string;
+}
+
+export interface AvailabilityRule extends RecurrencePattern {
   id: string;
   recurrence: AvailabilityRecurrence;
-  /** ISO weekday: 1 Monday … 7 Sunday. */
-  weekday: number;
+  /** Dates removed from the series. */
+  exceptions: string[];
   /** Local wall-clock time, `HH:MM` (seconds, if any, are ignored). */
   startsAt: string;
   endsAt: string;
@@ -62,14 +71,96 @@ export function mondayOf(date: string) {
   return addDays(date, 1 - isoWeekday(date));
 }
 
-export function occursOn(rule: AvailabilityRule, date: string) {
-  if (isoWeekday(date) !== rule.weekday) return false;
-  if (date < rule.validFrom) return false;
-  if (rule.validUntil && date > rule.validUntil) return false;
-  if (rule.recurrence !== "biweekly") return true;
+/** Whether the pattern (ignoring end and exceptions) falls on a date. */
+function patternOn(pattern: RecurrencePattern, date: string) {
+  if (!pattern.weekdays.includes(isoWeekday(date))) return false;
+  if (date < pattern.validFrom) return false;
   const weeks =
-    (dayNumber(mondayOf(date)) - dayNumber(mondayOf(rule.validFrom))) / 7;
-  return weeks % 2 === 0;
+    (dayNumber(mondayOf(date)) - dayNumber(mondayOf(pattern.validFrom))) / 7;
+  return weeks % pattern.intervalWeeks === 0;
+}
+
+export function occursOn(
+  rule: Pick<
+    AvailabilityRule,
+    | "recurrence"
+    | "weekdays"
+    | "intervalWeeks"
+    | "validFrom"
+    | "validUntil"
+    | "exceptions"
+  >,
+  date: string,
+) {
+  if (rule.validUntil && date > rule.validUntil) return false;
+  if (rule.exceptions.includes(date)) return false;
+  if (rule.recurrence === "once") return date === rule.validFrom;
+  return patternOn(rule, date);
+}
+
+/** The date of the `count`th occurrence of a pattern (1 = the first). */
+export function nthOccurrenceDate(pattern: RecurrencePattern, count: number) {
+  let found = 0;
+  // At most one occurrence a month in the sparsest pattern.
+  for (let offset = 0; offset <= count * 28; offset += 1) {
+    const date = addDays(pattern.validFrom, offset);
+    if (patternOn(pattern, date) && ++found === count) return date;
+  }
+  return null;
+}
+
+const WEEKDAY_PLURAL = [
+  "poniedziałki",
+  "wtorki",
+  "środy",
+  "czwartki",
+  "piątki",
+  "soboty",
+  "niedziele",
+];
+const longDate = new Intl.DateTimeFormat("pl-PL", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+function listInPolish(items: string[]) {
+  return items.length > 1
+    ? `${items.slice(0, -1).join(", ")} i ${items.at(-1)}`
+    : (items[0] ?? "");
+}
+
+/** "Co 2 tygodnie we wtorki i czwartki, do 30 czerwca 2030", as calendars do. */
+export function describeRecurrence(rule: {
+  recurrence: AvailabilityRecurrence;
+  weekdays: number[];
+  intervalWeeks: number;
+  validFrom: string;
+  validUntil: string | null;
+  occurrenceCount: number | null;
+}) {
+  if (rule.recurrence === "once") return "Jednorazowo";
+  const days = [...rule.weekdays].sort((a, b) => a - b);
+  const every =
+    rule.intervalWeeks === 1
+      ? "Co tydzień"
+      : `Co ${rule.intervalWeeks} tygodnie`;
+  let text: string;
+  if (days.length === 7 && rule.intervalWeeks === 1) {
+    text = "Codziennie";
+  } else if (days.join() === "1,2,3,4,5") {
+    text = `${every} w dni robocze (pn–pt)`;
+  } else {
+    const names = days.map((day) => WEEKDAY_PLURAL[day - 1]!);
+    const preposition = /^w[^aeiouyąęó]/.test(names[0]!) ? "we" : "w";
+    text = `${every} ${preposition} ${listInPolish(names)}`;
+  }
+  if (rule.occurrenceCount) return `${text}, ${rule.occurrenceCount} razy`;
+  if (rule.validUntil) {
+    return `${text}, do ${longDate.format(new Date(`${rule.validUntil}T12:00:00Z`))}`;
+  }
+  return text;
 }
 
 /** A local date and `HH:MM` time in a time zone, as an instant. */

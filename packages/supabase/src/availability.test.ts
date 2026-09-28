@@ -3,7 +3,9 @@ import {
   AvailabilityError,
   addTimeOff,
   availabilityMappers,
+  deleteAvailabilityOccurrence,
   deleteAvailabilityRule,
+  editAvailabilityOccurrence,
   parseTstzRange,
   saveAvailabilityRule,
 } from "./availability";
@@ -12,11 +14,14 @@ const ROOM = "20000000-0000-4000-8000-000000000001";
 
 const input = {
   recurrence: "weekly" as const,
-  weekday: 1,
+  weekdays: [5, 1],
+  intervalWeeks: 1,
   startsAt: "09:00",
   endsAt: "13:00",
   validFrom: "2030-01-07",
+  ends: "never" as const,
   validUntil: null,
+  occurrenceCount: null,
   mode: "in_person" as const,
   roomId: ROOM,
   note: " Pierwszorazowi do 11:00 ",
@@ -28,8 +33,10 @@ describe("availability mapping", () => {
       availabilityMappers.rule({
         id: "rule",
         specialist_id: "specialist",
-        recurrence: "biweekly",
-        weekday: 4,
+        recurrence: "weekly",
+        weekdays: [2, 4],
+        interval_weeks: 2,
+        occurrence_count: 6,
         starts_at: "09:00:00",
         ends_at: "12:30:00",
         valid_from: "2030-01-07",
@@ -39,12 +46,16 @@ describe("availability mapping", () => {
         note: null,
         created_at: "",
         updated_at: "",
+        exceptions: [{ date: "2030-01-16" }, { date: "2030-01-09" }],
       }),
     ).toEqual({
       id: "rule",
       specialistId: "specialist",
-      recurrence: "biweekly",
-      weekday: 4,
+      recurrence: "weekly",
+      weekdays: [2, 4],
+      intervalWeeks: 2,
+      occurrenceCount: 6,
+      exceptions: ["2030-01-09", "2030-01-16"],
       startsAt: "09:00",
       endsAt: "12:30",
       validFrom: "2030-01-07",
@@ -78,7 +89,8 @@ describe("saveAvailabilityRule", () => {
 
     expect(rpc).toHaveBeenCalledWith("save_availability_rule", {
       p_recurrence: "weekly",
-      p_weekday: 1,
+      p_weekdays: [1, 5],
+      p_interval_weeks: 1,
       p_starts_at: "09:00",
       p_ends_at: "13:00",
       p_valid_from: "2030-01-07",
@@ -93,17 +105,24 @@ describe("saveAvailabilityRule", () => {
     const rpc = vi.fn().mockResolvedValue({ data: "rule-id", error: null });
     await saveAvailabilityRule(
       { rpc } as never,
-      { ...input, mode: "online", validUntil: "2030-06-30", note: null },
+      {
+        ...input,
+        mode: "online",
+        ends: "count",
+        occurrenceCount: 10,
+        note: null,
+      },
       { id: "rule-id", specialistId: "specialist" },
     );
 
     expect(rpc).toHaveBeenCalledWith("save_availability_rule", {
       p_recurrence: "weekly",
-      p_weekday: 1,
+      p_weekdays: [1, 5],
+      p_interval_weeks: 1,
       p_starts_at: "09:00",
       p_ends_at: "13:00",
       p_valid_from: "2030-01-07",
-      p_valid_until: "2030-06-30",
+      p_occurrence_count: 10,
       p_mode: "online",
       p_id: "rule-id",
       p_specialist_id: "specialist",
@@ -141,6 +160,58 @@ describe("deleteAvailabilityRule", () => {
     expect(rpc).toHaveBeenCalledWith("delete_availability_rule", {
       p_id: "rule-id",
     });
+  });
+});
+
+describe("occurrences", () => {
+  it("removes an occurrence with a scope", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
+    await deleteAvailabilityOccurrence({ rpc } as never, {
+      ruleId: "rule-id",
+      date: "2030-01-16",
+      scope: "following",
+    });
+    expect(rpc).toHaveBeenCalledWith("delete_availability_occurrence", {
+      p_rule_id: "rule-id",
+      p_date: "2030-01-16",
+      p_scope: "following",
+    });
+  });
+
+  it("changes an occurrence with a scope and validated values", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: "new-id", error: null });
+    const id = await editAvailabilityOccurrence(
+      { rpc } as never,
+      { ruleId: "rule-id", date: "2030-01-14", scope: "this" },
+      { ...input, recurrence: "once", validFrom: "2030-01-14", note: null },
+    );
+    expect(rpc).toHaveBeenCalledWith("edit_availability_occurrence", {
+      p_rule_id: "rule-id",
+      p_date: "2030-01-14",
+      p_scope: "this",
+      p_recurrence: "once",
+      p_weekdays: [1],
+      p_interval_weeks: 1,
+      p_starts_at: "09:00",
+      p_ends_at: "13:00",
+      p_valid_from: "2030-01-14",
+      p_valid_until: "2030-01-14",
+      p_mode: "in_person",
+      p_room_id: ROOM,
+    });
+    expect(id).toBe("new-id");
+  });
+
+  it("rejects an unknown scope before calling the database", async () => {
+    const rpc = vi.fn();
+    await expect(
+      deleteAvailabilityOccurrence({ rpc } as never, {
+        ruleId: "rule-id",
+        date: "2030-01-16",
+        scope: "some" as never,
+      }),
+    ).rejects.toThrow();
+    expect(rpc).not.toHaveBeenCalled();
   });
 });
 

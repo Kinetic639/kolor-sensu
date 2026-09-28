@@ -104,57 +104,61 @@ tstzrange`, migawka ceny i czasu trwania, status (`held`,
 ### Dostępność specjalistów (RD1, R1, R2)
 
 Specjalista określa, kiedy i gdzie przyjmuje; z tego (minus nieobecności i
-zajęte terminy) powstają wolne terminy w kreatorze. Wzorce: referencja AI
-Studio (`SpecialistAvailabilityDrawer`, widok reguł) i tabele godzin sal.
+zajęte terminy) powstają wolne terminy w kreatorze. Wygląd według referencji
+AI Studio (kalendarz z przeciąganiem, „Reguły i bloki”, szuflada edycji).
 
-**Model (RD1):**
+#### Reguły powtarzania
 
-- `specialist_availability_rules` — okno cykliczne: dzień tygodnia (1–7),
-  `starts_at`–`ends_at` (czas lokalny centrum), forma `in_person` |
-  `online` | `hybrid` (gabinet + online), `room_id` (wymagany poza
-  `online`), co ile tygodni (1 albo 2, z tygodniem startowym), okres
-  `valid_from`–`valid_until` (opcjonalnie), notatka wewnętrzna.
-- `specialist_availability_windows` — okno jednorazowe (data + godziny, forma,
-  gabinet, notatka): „tylko w tym tygodniu”, dodatkowe godziny.
-- `specialist_time_off` — nieobecność jako przedział `tstzrange` (od–do,
-  cały dzień albo godziny), powód wewnętrzny. Wygrywa z oknami.
-- Ograniczenia w bazie: `starts_at < ends_at`, siatka 15 min, okna jednego
-  specjalisty się nie nakładają, **gabinet nie jest zajęty przez innego
-  specjalistę** w tym samym czasie (sprawdzane w funkcjach zapisu dla reguł i
-  okien, bo reguły cykliczne nie dają się wyrazić jednym `EXCLUDE`), gabinet
-  musi być aktywny.
-- Uprawnienia: specjalista czyta i zmienia tylko swoje (przez RPC z
-  walidacją), admin czyta wszystko i może edytować w imieniu specjalisty,
-  anon nic. Strona publiczna dostaje tylko wolne terminy.
-- Zmiana grafiku nie odwołuje umówionych wizyt; podgląd tygodnia pokazuje
-  wizyty poza grafikiem jako konflikt do rozwiązania.
+Tak jak w dużych kalendarzach (Google Calendar, Outlook, Apple Calendar) i
+w standardzie iCalendar (RFC 5545: RRULE, EXDATE, UNTIL):
 
-**Domena (R1, `packages/scheduling`, TDD):**
+- **Tworzenie**: domyślnie dostępność **jednorazowa** (jeden dzień). Jako
+  **reguła**: dni tygodnia (kilka naraz, np. pn–pt albo wt + czw), **co N
+  tygodni** (1–4), koniec **nigdy / w dniu / po N razach** (N zapisywane jako
+  data ostatniego wystąpienia plus liczba do wyświetlenia), z podsumowaniem
+  po polsku („Co 2 tygodnie we wtorki i czwartki, do 30 czerwca 2030”).
+- **Zmiana lub usunięcie terminu z reguły** (klik w kalendarzu): pytanie o
+  zakres, domyślnie najbezpieczniejszy:
+  - **Tylko ten termin** — wyjątek (EXDATE); przy zmianie w jego miejsce
+    powstaje dostępność jednorazowa.
+  - **Ten i następne terminy** — reguła kończy się dzień wcześniej (UNTIL), a
+    przy zmianie od tej daty zaczyna się nowa reguła; od pierwszego terminu
+    zmienia się (albo znika) cała reguła.
+  - **Wszystkie terminy** — zmiana reguły (z zachowaniem jej początku).
+- **Zakładka „Reguły i bloki”** edytuje i usuwa całe reguły.
+- Wzór z Cal.com: tygodniowe godziny plus jednorazowe wyjątki na daty.
 
-- `expandAvailability(rules, windows, timeOff, zakres, strefa)` → okna jako
-  instanty z formą i gabinetem (DST: tydzień zmiany czasu w testach).
-- `freeSlots(okna, zajęte, { duration, buffer, step, leadTime, horizon, now,
-mode })` → początki wizyt na siatce `step`, gdzie wizyta + przerwa mieści
-  się w oknie i nie koliduje z wizytą (z jej przerwą).
-- `groupByDay` / `weekOf` dla kroku „Termin” i podglądu tygodnia.
-- To samo sprawdzenie „czy termin mieści się w grafiku” jest w SQL
-  (`private.slot_is_available`) i blokuje hold; wspólne przypadki testowe
-  w Vitest i w `supabase/tests/availability_domain.sql`.
+**Model (RD1, `20260928044750`, `20260928062634`):**
 
-**Portal specjalisty (R2, `/dostepnosc`):**
+- `specialist_availability_rules`: `recurrence` (`once` | `weekly`),
+  `weekdays` (zbiór 1–7), `interval_weeks` (1–4), `valid_from`–`valid_until`,
+  `occurrence_count`, `starts_at`–`ends_at` (czas lokalny centrum), forma
+  `in_person` | `online` | `hybrid` i `room_id` (wymagany poza online),
+  notatka. Jednorazowa = `valid_from = valid_until`.
+- `specialist_availability_exceptions`: pominięte terminy reguły (EXDATE).
+- `specialist_time_off`: nieobecności (`tstzrange`), wygrywają z regułami.
+- Zapis wyłącznie przez funkcje (`save_availability_rule`,
+  `edit_availability_occurrence`, `delete_availability_occurrence`,
+  `delete_availability_rule`, `add_time_off`, `delete_time_off`): kto czyim
+  grafikiem zarządza, siatka 15 min, aktywny gabinet, **brak nakładania się
+  terminów jednego specjalisty i brak dwóch specjalistów w jednym gabinecie**
+  — terminy porównywane dzień po dniu w okresie ważności obu reguł (do 3 lat
+  naprzód), z pominięciem wyjątków; blokady doradcze na specjalistę i
+  gabinet przeciw wyścigom.
+- RLS: specjalista czyta swoje, admin wszystkie, anon nic. Strona publiczna
+  dostanie tylko wolne terminy (RD2). Zmiany grafiku nie odwołują wizyt.
 
-- **Grafik tygodniowy**: dni tygodnia z oknami (godziny, gabinet albo online,
-  cykliczność); dodawanie i edycja w `Sheet` (formularz RHF + Zod: dzień,
-  od–do co 15 min, forma, gabinet z listy aktywnych, co tydzień / co 2
-  tygodnie, obowiązuje od–do, notatka); usuwanie przez `AlertDialog`;
-  „Skopiuj dzień” do innych dni.
-- **Nieobecności i dodatkowe okna**: lista nadchodzących z dodawaniem
-  (urlop od–do, zablokowane godziny, dodatkowe okno jednego dnia).
-- **Podgląd tygodnia**: renderowana na serwerze siatka tygodnia z wyliczonej
-  dostępności (ta sama funkcja co w kreatorze), z nawigacją `?tydzien=`
-  (nuqs), konfliktami gabinetów i wizytami poza grafikiem.
-- Kalendarz z przeciąganiem (K3) później, na tych samych danych.
-- Admin (R9 / K5): podgląd grafików wszystkich i obłożenia gabinetów.
+**Domena (R1, `packages/scheduling`, TDD):** `occursOn` (to samo co SQL
+`availability_pattern_on` + wyjątki), `expandAvailability` (DST),
+`nthOccurrenceDate`, `describeRecurrence`, `freeSlots`, funkcje siatki
+kalendarza (`pointerToMinutes`, `dragRange`, `visibleRange`).
+
+**Portal specjalisty (R2, `/dostepnosc?widok=kalendarz|reguly`):** kalendarz
+tygodnia z przeciąganiem (szybkie okno: jednorazowo albo reguła), klik w
+termin z pytaniem o zakres, „+” przy dniu dla klawiatury, nieobecności w
+kalendarzu; lista reguł z filtrami dni i formy, „Na cały tydzień”
+(reguła na pn–pt), „Skopiuj na kolejny dzień”, szablon Pn–Pt jako jedna
+reguła. Admin (R9 / K5): podgląd grafików wszystkich i obłożenia gabinetów.
 
 ### Bezpieczeństwo
 
@@ -251,11 +255,11 @@ Każdy commit realizujący zadanie aktualizuje status i wpisuje hash commitu.
 
 | ID  | Zadanie                                                                                                  | Roadmapa | Status        | Commit / PR | Uwagi                                       |
 | --- | -------------------------------------------------------------------------------------------------------- | -------- | ------------- | ----------- | ------------------------------------------- |
-| R0  | Plan (ten dokument), nuqs w `apps/web`, kontrakty parametrów kreatora                                    | F4-01    | `DONE`        | 84acd31     |                                             |
-| RD1 | Schemat dostępności: reguły, okna jednorazowe, nieobecności, konflikty gabinetów, RPC zapisu, testy SQL  | F4-02    | `DONE`        |             |                                             |
+| R0  | Plan (ten dokument), nuqs w `apps/web`, kontrakty parametrów kreatora                                    | F4-01    | `DONE`        | 8df6b69     |                                             |
+| RD1 | Schemat dostępności: reguły, okna jednorazowe, nieobecności, konflikty gabinetów, RPC zapisu, testy SQL  | F4-02    | `DONE`        | f980622     |                                             |
 | RD2 | Schemat wizyt i płatności: wykluczenia, RPC wolnych terminów i holdu, `slot_is_available`, testy SQL     | F4-02    | `NOT STARTED` |             |                                             |
 | R1  | Domena slotów w `packages/scheduling` (DST, reguły, wyjątki, zajętość, bufor, lead time, horyzont) z TDD | F4-02    | `IN PROGRESS` |             | Okna i wolne terminy gotowe; zajętość z RD2 |
-| R2  | Portal specjalisty `/dostepnosc`: grafik tygodniowy, nieobecności, okna jednorazowe, podgląd tygodnia    | F4-02    | `DONE`        |             | Pełny kalendarz: etap K                     |
+| R2  | Portal specjalisty `/dostepnosc`: grafik tygodniowy, nieobecności, okna jednorazowe, podgląd tygodnia    | F4-02    | `DONE`        | f980622     | Pełny kalendarz: etap K                     |
 | R3  | UI `@repo/ui/booking`: stepper, podsumowanie, karty wyboru, siatka tygodnia, lista dnia, legenda         | F4-03    | `NOT STARTED` |             | Stories + testy a11y                        |
 | R4  | `/umow-wizyte`: kroki Usługa → Forma → Specjalista → Termin z nuqs, SSR                                  | F4-03    | `NOT STARTED` |             |                                             |
 | R5  | Hold terminu, krok „Dane” (Turnstile, limity), zgody                                                     | F4-03    | `NOT STARTED` |             | Klucze Turnstile                            |

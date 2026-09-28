@@ -1,100 +1,86 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import {
-  AvailabilityWeekPreview,
+  AvailabilityBlockBody,
+  AvailabilityRuleCard,
+  OccupancyBar,
+  StatDots,
   TimeOffItem,
-  WeeklySchedule,
 } from "./availability";
 
-describe("WeeklySchedule", () => {
-  it("lists every weekday with its windows or a free day", () => {
+describe("AvailabilityBlockBody", () => {
+  it("shows the hours, the place and the note", () => {
     render(
-      <WeeklySchedule
-        days={[
-          {
-            weekday: 1,
-            label: "Poniedziałek",
-            windows: [
-              {
-                id: "a",
-                timeLabel: "09:00–13:00",
-                placeLabel: "Gabinet 1",
-                mode: "in_person",
-                recurrenceLabel: "Co tydzień",
-                note: "Pierwszorazowi do 11:00",
-              },
-              {
-                id: "b",
-                timeLabel: "14:00–16:00",
-                placeLabel: "Online",
-                mode: "online",
-                recurrenceLabel: "Co 2 tygodnie",
-              },
-            ],
-            action: <button type="button">Dodaj w poniedziałek</button>,
-          },
-          { weekday: 2, label: "Wtorek", windows: [] },
-        ]}
+      <AvailabilityBlockBody
+        mode="hybrid"
+        note="Pierwszorazowi do 11:00"
+        placeLabel="Gabinet 1"
+        timeLabel="09:00 – 13:00"
       />,
     );
-
-    const monday = screen.getByRole("region", { name: "Poniedziałek" });
-    const items = within(monday).getAllByRole("listitem");
-    expect(items).toHaveLength(2);
-    expect(within(items[0]!).getByText("09:00–13:00")).toBeInTheDocument();
-    expect(within(items[0]!).getByText("Gabinet 1")).toBeInTheDocument();
-    expect(
-      within(items[0]!).getByText("Pierwszorazowi do 11:00"),
-    ).toBeInTheDocument();
-    expect(within(items[1]!).getByText("Co 2 tygodnie")).toBeInTheDocument();
-    expect(
-      within(monday).getByRole("button", { name: "Dodaj w poniedziałek" }),
-    ).toBeInTheDocument();
-
-    const tuesday = screen.getByRole("region", { name: "Wtorek" });
-    expect(within(tuesday).getByText("Brak godzin")).toBeInTheDocument();
+    expect(screen.getByText("09:00 – 13:00")).toBeInTheDocument();
+    expect(screen.getByText("Gabinet 1 + online")).toBeInTheDocument();
+    expect(screen.getByText("Pierwszorazowi do 11:00")).toBeInTheDocument();
   });
 });
 
-describe("AvailabilityWeekPreview", () => {
-  it("shows the week's windows and time off per day", () => {
+describe("AvailabilityRuleCard", () => {
+  it("describes a rule and offers its actions", () => {
     render(
-      <AvailabilityWeekPreview
-        days={[
-          {
-            date: "2030-01-07",
-            label: "pon. 7.01",
-            isToday: true,
-            windows: [
-              {
-                id: "w",
-                timeLabel: "09:00–13:00",
-                placeLabel: "Gabinet 1",
-                mode: "hybrid",
-              },
-            ],
-            timeOff: [],
-          },
-          {
-            date: "2030-01-08",
-            label: "wt. 8.01",
-            windows: [],
-            timeOff: [{ id: "t", label: "Cały dzień", reason: "Urlop" }],
-          },
-        ]}
-        title="Tydzień 7–13 stycznia 2030"
+      <AvailabilityRuleCard
+        actions={<button type="button">Edytuj regułę</button>}
+        durationLabel="6 godz."
+        mode="in_person"
+        note="Tylko dorośli"
+        occupancy={{
+          percent: 58,
+          bookedLabel: "3,5 godz. zajęte (3 wizyty)",
+          freeLabel: "2,5 godz. wolne",
+        }}
+        placeLabel="Gabinet 2"
+        recurrenceLabel="Co tydzień"
+        subtitle="od 7 stycznia 2030"
+        timeLabel="09:00 – 15:00"
+        title="Poniedziałek"
       />,
     );
-
+    const card = screen.getByRole("article", { name: "Poniedziałek" });
+    expect(within(card).getByText("Co tydzień")).toBeInTheDocument();
+    expect(within(card).getByText("09:00 – 15:00")).toBeInTheDocument();
+    expect(within(card).getByText("(6 godz.)")).toBeInTheDocument();
+    expect(within(card).getByText("Gabinet 2")).toBeInTheDocument();
+    expect(within(card).getByText("„Tylko dorośli”")).toBeInTheDocument();
+    expect(within(card).getByRole("progressbar")).toHaveAttribute(
+      "aria-valuenow",
+      "58",
+    );
     expect(
-      screen.getByRole("heading", { name: "Tydzień 7–13 stycznia 2030" }),
+      within(card).getByRole("button", { name: "Edytuj regułę" }),
     ).toBeInTheDocument();
-    const monday = screen.getByRole("listitem", { name: /pon\. 7\.01/ });
-    expect(monday).toHaveAttribute("aria-current", "date");
-    expect(within(monday).getByText("09:00–13:00")).toBeInTheDocument();
-    expect(within(monday).getByText("Gabinet 1 + online")).toBeInTheDocument();
-    const tuesday = screen.getByRole("listitem", { name: /wt\. 8\.01/ });
-    expect(within(tuesday).getByText(/Urlop/)).toBeInTheDocument();
+  });
+});
+
+describe("OccupancyBar", () => {
+  it("is a progress bar with a clamped value", () => {
+    render(<OccupancyBar label="Rezerwacje" percent={130} />);
+    expect(
+      screen.getByRole("progressbar", { name: "Rezerwacje" }),
+    ).toHaveAttribute("aria-valuenow", "100");
+  });
+});
+
+describe("StatDots", () => {
+  it("lists labelled values", () => {
+    render(
+      <StatDots
+        items={[
+          { label: "Łączna dostępność", value: "6 godz.", tone: "primary" },
+          { label: "Zarezerwowane wizyty", value: "0 godz.", tone: "info" },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Łączna dostępność:")).toBeInTheDocument();
+    expect(screen.getByText("6 godz.")).toBeInTheDocument();
   });
 });
 

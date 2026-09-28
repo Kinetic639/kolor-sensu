@@ -1,35 +1,28 @@
 BEGIN;
 
--- Specialist availability (docs/product/booking-plan.md, RD1): weekly,
--- fortnightly and one-day windows in a room or online, time off, and the
--- rules the save functions enforce. Everything is rolled back at the end.
+-- Specialist availability (docs/product/booking-plan.md, "Reguły
+-- powtarzania"): one-off windows and recurring rules (several weekdays,
+-- every N weeks, ending never / on a date / after N occurrences), in a room
+-- or online; single occurrences removed or changed with a scope, as in
+-- calendar apps; time off. Everything is rolled back at the end.
 
 INSERT INTO auth.users (
   id, aud, role, email, raw_app_meta_data, raw_user_meta_data,
   created_at, updated_at, is_sso_user, is_anonymous
 )
 VALUES
-  (
-    '70000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated',
+  ('70000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated',
     'domain-test-availability-admin@example.invalid',
     '{"provider":"email","providers":["email"]}',
-    '{"first_name":"Availability","last_name":"Admin"}',
-    now(), now(), false, false
-  ),
-  (
-    '70000000-0000-4000-8000-000000000002', 'authenticated', 'authenticated',
+    '{"first_name":"Availability","last_name":"Admin"}', now(), now(), false, false),
+  ('70000000-0000-4000-8000-000000000002', 'authenticated', 'authenticated',
     'domain-test-availability-anna@example.invalid',
     '{"provider":"email","providers":["email"]}',
-    '{"first_name":"Anna","last_name":"Test"}',
-    now(), now(), false, false
-  ),
-  (
-    '70000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated',
+    '{"first_name":"Anna","last_name":"Test"}', now(), now(), false, false),
+  ('70000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated',
     'domain-test-availability-jan@example.invalid',
     '{"provider":"email","providers":["email"]}',
-    '{"first_name":"Jan","last_name":"Test"}',
-    now(), now(), false, false
-  );
+    '{"first_name":"Jan","last_name":"Test"}', now(), now(), false, false);
 
 INSERT INTO public.user_roles (user_id, role)
 VALUES
@@ -52,146 +45,132 @@ FROM public.locations WHERE slug = 'test-loc-availability';
 
 CREATE TEMP TABLE availability_test_ids AS
 SELECT
-  (SELECT id FROM public.specialists
-   WHERE user_id = '70000000-0000-4000-8000-000000000002') AS anna_id,
-  (SELECT id FROM public.specialists
-   WHERE user_id = '70000000-0000-4000-8000-000000000003') AS jan_id,
+  (SELECT id FROM public.specialists WHERE user_id = '70000000-0000-4000-8000-000000000002') AS anna_id,
+  (SELECT id FROM public.specialists WHERE user_id = '70000000-0000-4000-8000-000000000003') AS jan_id,
   (SELECT id FROM public.rooms WHERE slug = 'availability-room-1') AS room_1_id,
   (SELECT id FROM public.rooms WHERE slug = 'availability-room-2') AS room_2_id,
   (SELECT id FROM public.rooms WHERE slug = 'availability-room-closed') AS room_closed_id;
-
 GRANT SELECT ON availability_test_ids TO authenticated, anon;
 
--- Lets another user refer to a window they cannot read.
-CREATE TEMP TABLE availability_test_rules (anna_rule_id uuid);
+-- Lets another user refer to rows they cannot read.
+CREATE TEMP TABLE availability_test_rules (name text PRIMARY KEY, rule_id uuid);
 GRANT SELECT, INSERT ON availability_test_rules TO authenticated;
 
 -- 2030-01-07 is a Monday.
 
--- A-F: Anna manages her own availability.
-SELECT set_config(
-  'request.jwt.claims',
-  '{"sub":"70000000-0000-4000-8000-000000000002","role":"authenticated"}',
-  true
-);
+-- A–G: Anna manages her own availability.
+SELECT set_config('request.jwt.claims', '{"sub":"70000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 SET LOCAL ROLE authenticated;
 
 DO $$
 DECLARE
   ids availability_test_ids%ROWTYPE;
-  rule_id uuid;
+  v_rule uuid;
   hint text;
 BEGIN
   SELECT * INTO ids FROM availability_test_ids;
 
-  -- A: a weekly window in a room.
-  rule_id := public.save_availability_rule(
-    p_recurrence => 'weekly', p_weekday => 1::smallint,
-    p_starts_at => '09:00', p_ends_at => '13:00',
-    p_valid_from => '2030-01-07', p_mode => 'in_person',
-    p_room_id => ids.room_1_id
+  -- A: one rule, Monday to Friday, in a room.
+  v_rule := public.save_availability_rule(
+    p_recurrence => 'weekly', p_weekdays => ARRAY[5, 1, 3, 2, 4]::smallint[],
+    p_starts_at => '09:00', p_ends_at => '12:00',
+    p_valid_from => '2030-01-07', p_mode => 'in_person', p_room_id => ids.room_1_id
   );
-  IF (SELECT specialist_id FROM public.specialist_availability_rules WHERE id = rule_id)
-     IS DISTINCT FROM ids.anna_id THEN
-    RAISE EXCEPTION 'A: the window was not saved for the calling specialist';
+  IF (SELECT (specialist_id, weekdays, interval_weeks) FROM public.specialist_availability_rules WHERE id = v_rule)
+     IS DISTINCT FROM (ids.anna_id, ARRAY[1, 2, 3, 4, 5]::smallint[], 1::smallint) THEN
+    RAISE EXCEPTION 'A: the weekdays were not saved sorted, for the caller';
   END IF;
+  INSERT INTO availability_test_rules VALUES ('anna_workdays', v_rule);
 
-  -- B: her own windows must not overlap, even online.
+  -- B: her own windows must not overlap, on any shared weekday.
   BEGIN
     PERFORM public.save_availability_rule(
-      p_recurrence => 'weekly', p_weekday => 1::smallint,
-      p_starts_at => '12:00', p_ends_at => '14:00',
+      p_recurrence => 'weekly', p_weekdays => ARRAY[3, 6]::smallint[],
+      p_starts_at => '11:00', p_ends_at => '13:00',
       p_valid_from => '2030-01-07', p_mode => 'online'
     );
     RAISE EXCEPTION 'B: an overlapping window was accepted';
   EXCEPTION WHEN exclusion_violation THEN
     GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
-    IF hint <> 'overlap' THEN
-      RAISE EXCEPTION 'B: expected hint overlap, got %', hint;
-    END IF;
+    IF hint <> 'overlap' THEN RAISE EXCEPTION 'B: expected hint overlap, got %', hint; END IF;
   END;
 
-  -- B: back to back is fine.
-  PERFORM public.save_availability_rule(
-    p_recurrence => 'weekly', p_weekday => 1::smallint,
-    p_starts_at => '13:00', p_ends_at => '15:00',
-    p_valid_from => '2030-01-07', p_mode => 'online'
-  );
-
-  -- C: editing a window keeps its id and is checked without itself.
-  PERFORM public.save_availability_rule(
-    p_id => rule_id,
-    p_recurrence => 'weekly', p_weekday => 1::smallint,
-    p_starts_at => '08:00', p_ends_at => '13:00',
-    p_valid_from => '2030-01-07', p_mode => 'hybrid',
-    p_room_id => ids.room_1_id, p_note => 'Pierwszorazowi do 11:00'
-  );
-  IF (SELECT starts_at FROM public.specialist_availability_rules WHERE id = rule_id) <> '08:00' THEN
-    RAISE EXCEPTION 'C: the window was not updated';
-  END IF;
-  INSERT INTO availability_test_rules VALUES (rule_id);
-
-  -- D: a room window needs an active room; online has no room.
+  -- C: weekdays must be 1–7, at least one.
   BEGIN
     PERFORM public.save_availability_rule(
-      p_recurrence => 'weekly', p_weekday => 2::smallint,
-      p_starts_at => '09:00', p_ends_at => '10:00',
-      p_valid_from => '2030-01-07', p_mode => 'in_person',
-      p_room_id => ids.room_closed_id
+      p_recurrence => 'weekly', p_weekdays => ARRAY[]::smallint[],
+      p_starts_at => '13:00', p_ends_at => '14:00',
+      p_valid_from => '2030-01-07', p_mode => 'online'
+    );
+    RAISE EXCEPTION 'C: a rule without weekdays was accepted';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.save_availability_rule(
+      p_recurrence => 'weekly', p_weekdays => ARRAY[8]::smallint[],
+      p_starts_at => '13:00', p_ends_at => '14:00',
+      p_valid_from => '2030-01-07', p_mode => 'online'
+    );
+    RAISE EXCEPTION 'C: weekday 8 was accepted';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+
+  -- D: a room window needs an active room; times on a 15-minute grid.
+  BEGIN
+    PERFORM public.save_availability_rule(
+      p_recurrence => 'once', p_weekdays => ARRAY[1]::smallint[],
+      p_starts_at => '15:00', p_ends_at => '16:00',
+      p_valid_from => '2030-01-07', p_mode => 'in_person', p_room_id => ids.room_closed_id
     );
     RAISE EXCEPTION 'D: an inactive room was accepted';
   EXCEPTION WHEN invalid_parameter_value THEN NULL;
   END;
   BEGIN
     PERFORM public.save_availability_rule(
-      p_recurrence => 'weekly', p_weekday => 2::smallint,
-      p_starts_at => '09:00', p_ends_at => '10:00',
-      p_valid_from => '2030-01-07', p_mode => 'in_person'
-    );
-    RAISE EXCEPTION 'D: an in-person window without a room was accepted';
-  EXCEPTION WHEN check_violation THEN NULL;
-  END;
-
-  -- E: times on a 15-minute grid only.
-  BEGIN
-    PERFORM public.save_availability_rule(
-      p_recurrence => 'weekly', p_weekday => 2::smallint,
-      p_starts_at => '09:10', p_ends_at => '10:00',
+      p_recurrence => 'once', p_weekdays => ARRAY[1]::smallint[],
+      p_starts_at => '15:10', p_ends_at => '16:00',
       p_valid_from => '2030-01-07', p_mode => 'online'
     );
-    RAISE EXCEPTION 'E: an off-grid time was accepted';
+    RAISE EXCEPTION 'D: an off-grid time was accepted';
   EXCEPTION WHEN check_violation THEN NULL;
   END;
 
-  -- F: a one-day window takes its weekday from the date.
-  rule_id := public.save_availability_rule(
-    p_recurrence => 'once', p_weekday => 7::smallint,
-    p_starts_at => '10:00', p_ends_at => '12:00',
+  -- E: a one-off window takes its weekday from the date.
+  v_rule := public.save_availability_rule(
+    p_recurrence => 'once', p_weekdays => ARRAY[7]::smallint[],
+    p_starts_at => '15:00', p_ends_at => '17:00',
     p_valid_from => '2030-01-09', p_mode => 'online'
   );
-  IF (SELECT (weekday, valid_until) FROM public.specialist_availability_rules WHERE id = rule_id)
-     IS DISTINCT FROM (3::smallint, '2030-01-09'::date) THEN
-    RAISE EXCEPTION 'F: a one-day window did not normalise to its date';
+  IF (SELECT (weekdays, valid_until) FROM public.specialist_availability_rules WHERE id = v_rule)
+     IS DISTINCT FROM (ARRAY[3]::smallint[], '2030-01-09'::date) THEN
+    RAISE EXCEPTION 'E: a one-off window did not normalise to its date';
   END IF;
 
-  -- F: fortnightly, from the week of 2030-01-07 (even weeks).
-  PERFORM public.save_availability_rule(
-    p_recurrence => 'biweekly', p_weekday => 4::smallint,
-    p_starts_at => '09:00', p_ends_at => '12:00',
-    p_valid_from => '2030-01-07', p_mode => 'in_person',
-    p_room_id => ids.room_2_id
+  -- F: "after N occurrences" ends on the Nth date: Mon, Wed, Fri from
+  -- 2030-01-07, five times = 7, 9, 11, 14, 16 January.
+  v_rule := public.save_availability_rule(
+    p_recurrence => 'weekly', p_weekdays => ARRAY[1, 3, 5]::smallint[],
+    p_starts_at => '18:00', p_ends_at => '19:00',
+    p_valid_from => '2030-01-07', p_mode => 'online', p_occurrence_count => 5::smallint
   );
+  IF (SELECT (valid_until, occurrence_count) FROM public.specialist_availability_rules WHERE id = v_rule)
+     IS DISTINCT FROM ('2030-01-16'::date, 5::smallint) THEN
+    RAISE EXCEPTION 'F: five occurrences should end on 2030-01-16';
+  END IF;
+
+  -- G: every second week, Tuesday and Thursday, in room 2 (even weeks).
+  v_rule := public.save_availability_rule(
+    p_recurrence => 'weekly', p_weekdays => ARRAY[2, 4]::smallint[], p_interval_weeks => 2::smallint,
+    p_starts_at => '13:00', p_ends_at => '16:00',
+    p_valid_from => '2030-01-07', p_mode => 'in_person', p_room_id => ids.room_2_id
+  );
+  INSERT INTO availability_test_rules VALUES ('anna_fortnight', v_rule);
 END;
 $$;
-
 RESET ROLE;
 
--- G-J: Jan shares the rooms.
-SELECT set_config(
-  'request.jwt.claims',
-  '{"sub":"70000000-0000-4000-8000-000000000003","role":"authenticated"}',
-  true
-);
+-- H–L: Jan shares the rooms.
+SELECT set_config('request.jwt.claims', '{"sub":"70000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
 SET LOCAL ROLE authenticated;
 
 DO $$
@@ -201,199 +180,186 @@ DECLARE
 BEGIN
   SELECT * INTO ids FROM availability_test_ids;
 
-  -- G: he cannot read Anna's windows.
+  -- H: he cannot read Anna's windows.
   IF EXISTS (SELECT 1 FROM public.specialist_availability_rules WHERE specialist_id = ids.anna_id) THEN
-    RAISE EXCEPTION 'G: a specialist could read another specialist''s availability';
+    RAISE EXCEPTION 'H: a specialist could read another specialist''s availability';
   END IF;
 
-  -- H: Anna's room at the same time is taken, without saying by whom.
+  -- I: Anna's room on any of her weekdays is taken, without saying by whom.
   BEGIN
     PERFORM public.save_availability_rule(
-      p_recurrence => 'weekly', p_weekday => 1::smallint,
-      p_starts_at => '11:00', p_ends_at => '12:00',
-      p_valid_from => '2030-01-07', p_mode => 'in_person',
-      p_room_id => ids.room_1_id
+      p_recurrence => 'once', p_weekdays => ARRAY[3]::smallint[],
+      p_starts_at => '10:00', p_ends_at => '11:00',
+      p_valid_from => '2030-01-16', p_mode => 'in_person', p_room_id => ids.room_1_id
     );
-    RAISE EXCEPTION 'H: a taken room was accepted';
+    RAISE EXCEPTION 'I: a taken room was accepted';
   EXCEPTION WHEN exclusion_violation THEN
     GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
-    IF hint <> 'room_taken' THEN
-      RAISE EXCEPTION 'H: expected hint room_taken, got %', hint;
-    END IF;
+    IF hint <> 'room_taken' THEN RAISE EXCEPTION 'I: expected room_taken, got %', hint; END IF;
   END;
 
-  -- H: the same room right after, another room, or online are fine.
+  -- J: every second week in the other weeks shares room 2; the same weeks do not.
   PERFORM public.save_availability_rule(
-    p_recurrence => 'weekly', p_weekday => 1::smallint,
-    p_starts_at => '13:00', p_ends_at => '17:00',
-    p_valid_from => '2030-01-07', p_mode => 'in_person',
-    p_room_id => ids.room_1_id
-  );
-  PERFORM public.save_availability_rule(
-    p_recurrence => 'weekly', p_weekday => 1::smallint,
-    p_starts_at => '09:00', p_ends_at => '12:00',
-    p_valid_from => '2030-01-07', p_mode => 'in_person',
-    p_room_id => ids.room_2_id
-  );
-
-  -- I: fortnightly in alternate weeks shares a room; the same weeks do not.
-  PERFORM public.save_availability_rule(
-    p_recurrence => 'biweekly', p_weekday => 4::smallint,
-    p_starts_at => '09:00', p_ends_at => '12:00',
-    p_valid_from => '2030-01-14', p_mode => 'in_person',
-    p_room_id => ids.room_2_id
+    p_recurrence => 'weekly', p_weekdays => ARRAY[2, 4]::smallint[], p_interval_weeks => 2::smallint,
+    p_starts_at => '13:00', p_ends_at => '16:00',
+    p_valid_from => '2030-01-14', p_mode => 'in_person', p_room_id => ids.room_2_id
   );
   BEGIN
     PERFORM public.save_availability_rule(
-      p_recurrence => 'weekly', p_weekday => 4::smallint,
-      p_starts_at => '10:00', p_ends_at => '11:00',
-      p_valid_from => '2030-06-01', p_mode => 'in_person',
-      p_room_id => ids.room_2_id
+      p_recurrence => 'weekly', p_weekdays => ARRAY[4]::smallint[],
+      p_starts_at => '14:00', p_ends_at => '15:00',
+      p_valid_from => '2030-03-01', p_mode => 'in_person', p_room_id => ids.room_2_id
     );
-    RAISE EXCEPTION 'I: a weekly window over fortnightly ones was accepted';
+    RAISE EXCEPTION 'J: a weekly window over fortnightly ones was accepted';
   EXCEPTION WHEN exclusion_violation THEN NULL;
   END;
 
-  -- J: a one-day window in a room taken that day is rejected; another day is fine.
+  -- K: he cannot manage Anna's occurrences.
   BEGIN
-    PERFORM public.save_availability_rule(
-      p_recurrence => 'once', p_weekday => 1::smallint,
-      p_starts_at => '10:00', p_ends_at => '11:00',
-      p_valid_from => '2030-02-04', p_mode => 'in_person',
-      p_room_id => ids.room_1_id
+    PERFORM public.delete_availability_occurrence(
+      (SELECT rule_id FROM availability_test_rules WHERE name = 'anna_workdays'), '2030-01-08', 'this'
     );
-    RAISE EXCEPTION 'J: a one-day window in a taken room was accepted';
-  EXCEPTION WHEN exclusion_violation THEN NULL;
-  END;
-  PERFORM public.save_availability_rule(
-    p_recurrence => 'once', p_weekday => 1::smallint,
-    p_starts_at => '10:00', p_ends_at => '11:00',
-    p_valid_from => '2030-02-05', p_mode => 'in_person',
-    p_room_id => ids.room_1_id
-  );
-
-  -- J: a weekly window that ends the day before does not clash with it.
-  PERFORM public.save_availability_rule(
-    p_recurrence => 'weekly', p_weekday => 2::smallint,
-    p_starts_at => '09:00', p_ends_at => '12:00',
-    p_valid_from => '2030-01-07', p_valid_until => '2030-02-04',
-    p_mode => 'in_person', p_room_id => ids.room_1_id
-  );
-  BEGIN
-    PERFORM public.save_availability_rule(
-      p_recurrence => 'weekly', p_weekday => 2::smallint,
-      p_starts_at => '09:00', p_ends_at => '12:00',
-      p_valid_from => '2030-02-05', p_mode => 'online'
-    );
-    RAISE EXCEPTION 'J: a window starting on the one-day window''s date was accepted';
-  EXCEPTION WHEN exclusion_violation THEN NULL;
-  END;
-
-  -- K: he cannot manage Anna's availability.
-  BEGIN
-    PERFORM public.save_availability_rule(
-      p_specialist_id => ids.anna_id,
-      p_recurrence => 'weekly', p_weekday => 6::smallint,
-      p_starts_at => '09:00', p_ends_at => '10:00',
-      p_valid_from => '2030-01-07', p_mode => 'online'
-    );
-    RAISE EXCEPTION 'K: a specialist saved another specialist''s window';
-  EXCEPTION WHEN insufficient_privilege THEN NULL;
-  END;
-  BEGIN
-    PERFORM public.delete_availability_rule(
-      (SELECT anna_rule_id FROM availability_test_rules)
-    );
-    RAISE EXCEPTION 'K: a specialist removed another specialist''s window';
+    RAISE EXCEPTION 'K: a specialist removed another specialist''s occurrence';
   EXCEPTION WHEN no_data_found THEN NULL;
   END;
 
   -- L: tables are written only through the functions.
   BEGIN
-    INSERT INTO public.specialist_availability_rules (
-      specialist_id, weekday, starts_at, ends_at, valid_from, mode
-    ) VALUES (ids.jan_id, 6, '09:00', '10:00', '2030-01-07', 'online');
+    INSERT INTO public.specialist_availability_exceptions (rule_id, date)
+    VALUES ((SELECT rule_id FROM availability_test_rules WHERE name = 'anna_workdays'), '2030-01-08');
     RAISE EXCEPTION 'L: a direct insert was accepted';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-
-  -- M: time off may not overlap his other time off.
-  PERFORM public.add_time_off(
-    p_starts_at => '2030-01-07 00:00+01', p_ends_at => '2030-01-14 00:00+01',
-    p_reason => 'Urlop'
-  );
-  BEGIN
-    PERFORM public.add_time_off(
-      p_starts_at => '2030-01-13 12:00+01', p_ends_at => '2030-01-13 14:00+01'
-    );
-    RAISE EXCEPTION 'M: overlapping time off was accepted';
-  EXCEPTION WHEN exclusion_violation THEN NULL;
-  END;
-  BEGIN
-    PERFORM public.add_time_off(
-      p_starts_at => '2030-01-20 12:00+01', p_ends_at => '2030-01-20 12:00+01'
-    );
-    RAISE EXCEPTION 'M: empty time off was accepted';
-  EXCEPTION WHEN check_violation THEN NULL;
-  END;
 END;
 $$;
-
 RESET ROLE;
 
--- N: the admin manages anyone's availability and removes windows.
-SELECT set_config(
-  'request.jwt.claims',
-  '{"sub":"70000000-0000-4000-8000-000000000001","role":"authenticated"}',
-  true
-);
+-- M–R: Anna removes and changes single occurrences, as in calendar apps.
+SELECT set_config('request.jwt.claims', '{"sub":"70000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 SET LOCAL ROLE authenticated;
 
 DO $$
 DECLARE
   ids availability_test_ids%ROWTYPE;
-  rule_id uuid;
+  workdays uuid := (SELECT rule_id FROM availability_test_rules WHERE name = 'anna_workdays');
+  new_id uuid;
 BEGIN
   SELECT * INTO ids FROM availability_test_ids;
 
-  rule_id := public.save_availability_rule(
+  -- M: "only this occurrence": Wednesday 2030-01-16 is skipped...
+  PERFORM public.delete_availability_occurrence(workdays, '2030-01-16', 'this');
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialist_availability_exceptions AS e WHERE e.rule_id = workdays AND e.date = '2030-01-16'
+  ) THEN
+    RAISE EXCEPTION 'M: the occurrence was not skipped';
+  END IF;
+  -- ...a date that is not an occurrence cannot be removed...
+  BEGIN
+    PERFORM public.delete_availability_occurrence(workdays, '2030-01-12', 'this');
+    RAISE EXCEPTION 'M: a Saturday was treated as an occurrence';
+  EXCEPTION WHEN no_data_found THEN NULL;
+  END;
+  -- ...and those hours are free that day.
+  PERFORM public.save_availability_rule(
+    p_recurrence => 'once', p_weekdays => ARRAY[3]::smallint[],
+    p_starts_at => '10:00', p_ends_at => '11:00',
+    p_valid_from => '2030-01-16', p_mode => 'online'
+  );
+
+  -- N: "only this occurrence" changed: Monday 2030-01-21 moves to 14:00–17:00.
+  new_id := public.edit_availability_occurrence(
+    p_rule_id => workdays, p_date => '2030-01-21', p_scope => 'this',
+    p_recurrence => 'once', p_weekdays => ARRAY[1]::smallint[],
+    p_starts_at => '14:00', p_ends_at => '17:00',
+    p_valid_from => '2030-01-21', p_mode => 'in_person', p_room_id => ids.room_1_id
+  );
+  IF (SELECT (recurrence, valid_from, starts_at) FROM public.specialist_availability_rules WHERE id = new_id)
+     IS DISTINCT FROM ('once'::public.availability_recurrence, '2030-01-21'::date, '14:00'::time)
+     OR NOT EXISTS (
+       SELECT 1 FROM public.specialist_availability_exceptions AS e WHERE e.rule_id = workdays AND e.date = '2030-01-21'
+     ) THEN
+    RAISE EXCEPTION 'N: the single occurrence was not replaced';
+  END IF;
+
+  -- O: "this and following", changed: from 2030-02-04 the rule is 08:00–11:00.
+  new_id := public.edit_availability_occurrence(
+    p_rule_id => workdays, p_date => '2030-02-04', p_scope => 'following',
+    p_recurrence => 'weekly', p_weekdays => ARRAY[1, 2, 3, 4, 5]::smallint[],
+    p_starts_at => '08:00', p_ends_at => '11:00',
+    p_valid_from => '2030-02-04', p_mode => 'in_person', p_room_id => ids.room_1_id
+  );
+  IF (SELECT valid_until FROM public.specialist_availability_rules WHERE id = workdays) <> '2030-02-03'
+     OR (SELECT (valid_from, starts_at) FROM public.specialist_availability_rules WHERE id = new_id)
+        IS DISTINCT FROM ('2030-02-04'::date, '08:00'::time) THEN
+    RAISE EXCEPTION 'O: the series was not split on 2030-02-04';
+  END IF;
+
+  -- P: "this and following", removed: the new series ends before 2030-03-04...
+  PERFORM public.delete_availability_occurrence(new_id, '2030-03-04', 'following');
+  IF (SELECT valid_until FROM public.specialist_availability_rules WHERE id = new_id) <> '2030-03-03' THEN
+    RAISE EXCEPTION 'P: the series did not end before 2030-03-04';
+  END IF;
+  -- ...and from its first occurrence the whole series goes.
+  PERFORM public.delete_availability_occurrence(new_id, '2030-02-04', 'following');
+  IF EXISTS (SELECT 1 FROM public.specialist_availability_rules WHERE id = new_id) THEN
+    RAISE EXCEPTION 'P: removing from the first occurrence should remove the series';
+  END IF;
+
+  -- Q: "all occurrences" removes the rule and its exceptions.
+  PERFORM public.delete_availability_occurrence(workdays, '2030-01-08', 'all');
+  IF EXISTS (SELECT 1 FROM public.specialist_availability_rules WHERE id = workdays)
+     OR EXISTS (SELECT 1 FROM public.specialist_availability_exceptions AS e WHERE e.rule_id = workdays) THEN
+    RAISE EXCEPTION 'Q: the rule or its exceptions were left behind';
+  END IF;
+
+  -- R: time off may not overlap other time off.
+  PERFORM public.add_time_off(p_starts_at => '2030-04-01 00:00+02', p_ends_at => '2030-04-08 00:00+02', p_reason => 'Urlop');
+  BEGIN
+    PERFORM public.add_time_off(p_starts_at => '2030-04-07 12:00+02', p_ends_at => '2030-04-07 14:00+02');
+    RAISE EXCEPTION 'R: overlapping time off was accepted';
+  EXCEPTION WHEN exclusion_violation THEN NULL;
+  END;
+END;
+$$;
+RESET ROLE;
+
+-- S: the admin manages anyone's availability.
+SELECT set_config('request.jwt.claims', '{"sub":"70000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+
+DO $$
+DECLARE
+  ids availability_test_ids%ROWTYPE;
+  v_rule uuid;
+BEGIN
+  SELECT * INTO ids FROM availability_test_ids;
+  v_rule := public.save_availability_rule(
     p_specialist_id => ids.anna_id,
-    p_recurrence => 'weekly', p_weekday => 6::smallint,
+    p_recurrence => 'weekly', p_weekdays => ARRAY[6]::smallint[],
     p_starts_at => '09:00', p_ends_at => '10:00',
     p_valid_from => '2030-01-07', p_mode => 'online'
   );
-  IF (SELECT count(*) FROM public.specialist_availability_rules
-      WHERE specialist_id IN (ids.anna_id, ids.jan_id)) < 10 THEN
-    RAISE EXCEPTION 'N: the admin could not read every specialist''s availability';
+  PERFORM public.delete_availability_occurrence(v_rule, '2030-01-12', 'this');
+  IF NOT EXISTS (SELECT 1 FROM public.specialist_availability_exceptions AS e WHERE e.rule_id = v_rule) THEN
+    RAISE EXCEPTION 'S: the admin could not read or skip an occurrence';
   END IF;
-
-  PERFORM public.delete_availability_rule(rule_id);
-  IF EXISTS (SELECT 1 FROM public.specialist_availability_rules WHERE id = rule_id) THEN
-    RAISE EXCEPTION 'N: the window was not removed';
-  END IF;
-
-  PERFORM public.add_time_off(
-    p_specialist_id => ids.anna_id,
-    p_starts_at => '2030-03-01 00:00+01', p_ends_at => '2030-03-02 00:00+01'
-  );
 END;
 $$;
-
 RESET ROLE;
 
--- O: anonymous visitors read nothing.
+-- T: anonymous visitors read nothing.
 SELECT set_config('request.jwt.claims', '', true);
 SET LOCAL ROLE anon;
 DO $$
 BEGIN
   BEGIN
     PERFORM 1 FROM public.specialist_availability_rules LIMIT 1;
-    RAISE EXCEPTION 'O: anon read availability';
+    RAISE EXCEPTION 'T: anon read availability';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
   BEGIN
-    PERFORM 1 FROM public.specialist_time_off LIMIT 1;
-    RAISE EXCEPTION 'O: anon read time off';
+    PERFORM 1 FROM public.specialist_availability_exceptions LIMIT 1;
+    RAISE EXCEPTION 'T: anon read exceptions';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
 END;

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  describeRecurrence,
   expandAvailability,
   localSpanToInterval,
+  nthOccurrenceDate,
   occursOn,
   type AvailabilityRule,
 } from "./availability";
@@ -13,7 +15,9 @@ function rule(overrides: Partial<AvailabilityRule> = {}): AvailabilityRule {
   return {
     id: "rule",
     recurrence: "weekly",
-    weekday: 1,
+    weekdays: [1],
+    intervalWeeks: 1,
+    exceptions: [],
     startsAt: "09:00",
     endsAt: "13:00",
     validFrom: "2030-01-07",
@@ -36,22 +40,37 @@ describe("occursOn", () => {
     expect(occursOn(weekly, "2029-12-31")).toBe(false);
   });
 
-  it("repeats fortnightly from the week it starts in", () => {
-    // Starts on a Wednesday: its week (from Monday 2030-01-07) counts.
+  it("repeats on each of its weekdays", () => {
+    const workdays = rule({ weekdays: [1, 2, 3, 4, 5] });
+    expect(occursOn(workdays, "2030-01-10")).toBe(true); // Thursday
+    expect(occursOn(workdays, "2030-01-12")).toBe(false); // Saturday
+  });
+
+  it("repeats every N weeks from the week it starts in", () => {
+    // Tuesdays and Thursdays every second week, starting on a Wednesday:
+    // its week (from Monday 2030-01-07) counts.
     const fortnightly = rule({
-      recurrence: "biweekly",
+      weekdays: [2, 4],
+      intervalWeeks: 2,
       validFrom: "2030-01-09",
     });
-    expect(occursOn(fortnightly, "2030-01-07")).toBe(false); // before it starts
-    expect(occursOn(fortnightly, "2030-01-14")).toBe(false);
-    expect(occursOn(fortnightly, "2030-01-21")).toBe(true);
-    expect(occursOn(fortnightly, "2030-01-28")).toBe(false);
+    expect(occursOn(fortnightly, "2030-01-08")).toBe(false); // before it starts
+    expect(occursOn(fortnightly, "2030-01-10")).toBe(true);
+    expect(occursOn(fortnightly, "2030-01-15")).toBe(false);
+    expect(occursOn(fortnightly, "2030-01-22")).toBe(true);
+    expect(occursOn(fortnightly, "2030-01-24")).toBe(true);
+  });
+
+  it("skips the dates removed from the series", () => {
+    const withGap = rule({ exceptions: ["2030-01-14"] });
+    expect(occursOn(withGap, "2030-01-07")).toBe(true);
+    expect(occursOn(withGap, "2030-01-14")).toBe(false);
   });
 
   it("happens once on its date", () => {
     const once = rule({
       recurrence: "once",
-      weekday: 3,
+      weekdays: [3],
       validFrom: "2030-01-09",
       validUntil: "2030-01-09",
     });
@@ -65,7 +84,7 @@ describe("expandAvailability", () => {
     const windows = expandAvailability({
       rules: [
         rule(),
-        rule({ id: "wed", weekday: 3, mode: "online", roomId: null }),
+        rule({ id: "wed", weekdays: [3], mode: "online", roomId: null }),
       ],
       timeOff: [],
       from: "2030-01-07",
@@ -166,5 +185,115 @@ describe("localSpanToInterval", () => {
       "2030-03-30T11:00:00.000Z",
       "2030-04-01T12:30:00.000Z",
     ]);
+  });
+});
+
+describe("nthOccurrenceDate", () => {
+  it("counts occurrences across the weekdays", () => {
+    // Mon, Wed, Fri from 2030-01-07: 7, 9, 11, 14, 16.
+    expect(
+      nthOccurrenceDate(
+        { weekdays: [1, 3, 5], intervalWeeks: 1, validFrom: "2030-01-07" },
+        5,
+      ),
+    ).toBe("2030-01-16");
+  });
+
+  it("skips the weeks in between", () => {
+    // Tuesdays every second week from 2030-01-07: 8, 22, 5 Feb.
+    expect(
+      nthOccurrenceDate(
+        { weekdays: [2], intervalWeeks: 2, validFrom: "2030-01-07" },
+        3,
+      ),
+    ).toBe("2030-02-05");
+  });
+});
+
+describe("describeRecurrence", () => {
+  const base = {
+    validFrom: "2030-01-07",
+    validUntil: null,
+    occurrenceCount: null,
+  };
+
+  it("names the days in Polish", () => {
+    expect(
+      describeRecurrence({
+        ...base,
+        recurrence: "weekly",
+        weekdays: [1],
+        intervalWeeks: 1,
+      }),
+    ).toBe("Co tydzień w poniedziałki");
+    expect(
+      describeRecurrence({
+        ...base,
+        recurrence: "weekly",
+        weekdays: [2, 4],
+        intervalWeeks: 2,
+      }),
+    ).toBe("Co 2 tygodnie we wtorki i czwartki");
+    expect(
+      describeRecurrence({
+        ...base,
+        recurrence: "weekly",
+        weekdays: [1, 3, 5],
+        intervalWeeks: 1,
+      }),
+    ).toBe("Co tydzień w poniedziałki, środy i piątki");
+  });
+
+  it("uses short names for working days and every day", () => {
+    expect(
+      describeRecurrence({
+        ...base,
+        recurrence: "weekly",
+        weekdays: [1, 2, 3, 4, 5],
+        intervalWeeks: 1,
+      }),
+    ).toBe("Co tydzień w dni robocze (pn–pt)");
+    expect(
+      describeRecurrence({
+        ...base,
+        recurrence: "weekly",
+        weekdays: [1, 2, 3, 4, 5, 6, 7],
+        intervalWeeks: 1,
+      }),
+    ).toBe("Codziennie");
+  });
+
+  it("says when the rule ends", () => {
+    expect(
+      describeRecurrence({
+        ...base,
+        recurrence: "weekly",
+        weekdays: [6],
+        intervalWeeks: 3,
+        validUntil: "2030-06-30",
+      }),
+    ).toBe("Co 3 tygodnie w soboty, do 30 czerwca 2030");
+    expect(
+      describeRecurrence({
+        ...base,
+        recurrence: "weekly",
+        weekdays: [7],
+        intervalWeeks: 4,
+        validUntil: "2030-03-31",
+        occurrenceCount: 5,
+      }),
+    ).toBe("Co 4 tygodnie w niedziele, 5 razy");
+  });
+
+  it("describes a one-off", () => {
+    expect(
+      describeRecurrence({
+        ...base,
+        recurrence: "once",
+        weekdays: [3],
+        intervalWeeks: 1,
+        validFrom: "2030-01-09",
+      }),
+    ).toBe("Jednorazowo");
   });
 });

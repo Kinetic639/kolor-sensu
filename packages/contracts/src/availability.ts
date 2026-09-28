@@ -1,14 +1,15 @@
 import { z } from "zod";
 
-// Specialist availability (docs/product/booking-plan.md, RD1). Times are the
+// Specialist availability (docs/product/booking-plan.md, "Reguły
+// powtarzania"): one-offs, and rules on several weekdays every N weeks that
+// end never, on a date or after N times, as calendar apps do. Times are the
 // centre's local wall-clock time; the database checks overlaps and rooms.
 
 export const availabilityModeSchema = z.enum(["in_person", "online", "hybrid"]);
-export const availabilityRecurrenceSchema = z.enum([
-  "weekly",
-  "biweekly",
-  "once",
-]);
+export const availabilityRecurrenceSchema = z.enum(["once", "weekly"]);
+export const recurrenceEndSchema = z.enum(["never", "until", "count"]);
+/** Which occurrences of a rule a change applies to. */
+export const occurrenceScopeSchema = z.enum(["this", "following", "all"]);
 
 const DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -48,11 +49,17 @@ const optionalText = z
 export const availabilityRuleInputSchema = z
   .object({
     recurrence: availabilityRecurrenceSchema,
-    weekday: z.number().int().min(1).max(7),
+    weekdays: z
+      .array(z.number().int().min(1).max(7))
+      .min(1, "Wybierz co najmniej jeden dzień.")
+      .max(7),
+    intervalWeeks: z.number().int().min(1).max(4),
     startsAt: quarterHourSchema,
     endsAt: quarterHourSchema,
     validFrom: localDateSchema,
+    ends: recurrenceEndSchema,
     validUntil: localDateSchema.nullable(),
+    occurrenceCount: z.number().int().nullable(),
     mode: availabilityModeSchema,
     roomId: z.uuid().nullable(),
     note: optionalText,
@@ -72,25 +79,56 @@ export const availabilityRuleInputSchema = z
         message: "Wybierz gabinet.",
       });
     }
+    if (value.recurrence === "once") return;
+    if (value.ends === "until") {
+      if (!value.validUntil) {
+        context.addIssue({
+          code: "custom",
+          path: ["validUntil"],
+          message: "Podaj datę końca.",
+        });
+      } else if (value.validUntil < value.validFrom) {
+        context.addIssue({
+          code: "custom",
+          path: ["validUntil"],
+          message: "Data końca nie może być przed datą początku.",
+        });
+      }
+    }
     if (
-      value.recurrence !== "once" &&
-      value.validUntil &&
-      value.validUntil < value.validFrom
+      value.ends === "count" &&
+      (!value.occurrenceCount ||
+        value.occurrenceCount < 1 ||
+        value.occurrenceCount > 200)
     ) {
       context.addIssue({
         code: "custom",
-        path: ["validUntil"],
-        message: "Data końca nie może być przed datą początku.",
+        path: ["occurrenceCount"],
+        message: "Podaj liczbę powtórzeń od 1 do 200.",
       });
     }
   })
-  .transform((value) => ({
-    ...value,
-    roomId: value.mode === "online" ? null : value.roomId,
-    ...(value.recurrence === "once"
-      ? { weekday: isoWeekday(value.validFrom), validUntil: value.validFrom }
-      : {}),
-  }));
+  .transform((value) => {
+    const roomId = value.mode === "online" ? null : value.roomId;
+    if (value.recurrence === "once") {
+      return {
+        ...value,
+        roomId,
+        weekdays: [isoWeekday(value.validFrom)],
+        intervalWeeks: 1,
+        ends: "never" as const,
+        validUntil: value.validFrom,
+        occurrenceCount: null,
+      };
+    }
+    return {
+      ...value,
+      roomId,
+      weekdays: [...new Set(value.weekdays)].sort((a, b) => a - b),
+      validUntil: value.ends === "until" ? value.validUntil : null,
+      occurrenceCount: value.ends === "count" ? value.occurrenceCount : null,
+    };
+  });
 
 /**
  * Time off in local dates, whole days (no times) or from a time on the
@@ -139,6 +177,8 @@ export type AvailabilityMode = z.infer<typeof availabilityModeSchema>;
 export type AvailabilityRecurrence = z.infer<
   typeof availabilityRecurrenceSchema
 >;
+export type RecurrenceEnd = z.infer<typeof recurrenceEndSchema>;
+export type OccurrenceScope = z.infer<typeof occurrenceScopeSchema>;
 export type AvailabilityRuleInput = z.input<typeof availabilityRuleInputSchema>;
 export type AvailabilityRuleValues = z.output<
   typeof availabilityRuleInputSchema
@@ -149,7 +189,13 @@ export interface SpecialistAvailabilityRule {
   id: string;
   specialistId: string;
   recurrence: AvailabilityRecurrence;
-  weekday: number;
+  /** ISO weekdays, 1 Monday … 7 Sunday. */
+  weekdays: number[];
+  intervalWeeks: number;
+  /** "after N times", for display; `validUntil` holds the last date. */
+  occurrenceCount: number | null;
+  /** Dates removed from the series. */
+  exceptions: string[];
   /** `HH:MM`, local. */
   startsAt: string;
   endsAt: string;

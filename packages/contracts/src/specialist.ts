@@ -98,10 +98,7 @@ export const specialistProfileSubmissionSchema = z.object({
     1,
     "Wybierz co najmniej jedną formę spotkań.",
   ),
-  clientGroups: profileFields.clientGroups.min(
-    1,
-    "Wybierz, z kim pracujesz.",
-  ),
+  clientGroups: profileFields.clientGroups.min(1, "Wybierz, z kim pracujesz."),
 });
 
 export const specialistProfileReviewInputSchema = z.discriminatedUnion(

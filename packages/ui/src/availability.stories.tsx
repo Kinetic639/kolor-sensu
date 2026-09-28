@@ -1,12 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, Pencil, RotateCw, Trash2 } from "lucide-react";
 import { expect, fn } from "storybook/test";
-import {
-  AvailabilityWeekPreview,
-  TimeOffItem,
-  WeeklySchedule,
-  type WeeklyScheduleDay,
-} from "./availability";
+import { AvailabilityRuleCard, StatDots, TimeOffItem } from "./availability";
 import { Button } from "./button";
 import { Card } from "./card";
 
@@ -18,185 +13,106 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const WEEKDAYS = [
-  "Poniedziałek",
-  "Wtorek",
-  "Środa",
-  "Czwartek",
-  "Piątek",
-  "Sobota",
-  "Niedziela",
-];
+const onEdit = fn();
 
-function windowActions(label: string, onEdit: () => void) {
+function ruleActions(label: string) {
   return (
     <>
-      <Button
-        aria-label={`Edytuj ${label}`}
-        onClick={onEdit}
-        size="icon"
-        variant="ghost"
-      >
-        <Pencil aria-hidden="true" className="size-4" />
+      <Button size="sm" variant="secondary">
+        <RotateCw aria-hidden="true" className="size-3.5" />
+        Na cały tydzień
       </Button>
-      <Button aria-label={`Usuń ${label}`} size="icon" variant="ghost">
+      <Button
+        aria-label={`Skopiuj na kolejny dzień: ${label}`}
+        size="icon"
+        variant="secondary"
+      >
+        <Copy aria-hidden="true" className="size-4" />
+      </Button>
+      <Button onClick={onEdit} size="sm" variant="secondary">
+        <Pencil aria-hidden="true" className="size-3.5" />
+        Edytuj regułę
+      </Button>
+      <Button aria-label={`Usuń regułę: ${label}`} size="icon" variant="ghost">
         <Trash2 aria-hidden="true" className="size-4" />
       </Button>
     </>
   );
 }
 
-function week(onEdit: () => void, onAdd: () => void): WeeklyScheduleDay[] {
-  return WEEKDAYS.map((label, index) => ({
-    weekday: index + 1,
-    label,
-    action: (
-      <Button
-        aria-label={`Dodaj godziny: ${label.toLowerCase()}`}
-        onClick={onAdd}
-        size="icon"
-        variant="ghost"
-      >
-        <Plus aria-hidden="true" className="size-4" />
-      </Button>
-    ),
-    windows:
-      index === 0
-        ? [
-            {
-              id: "mon-1",
-              timeLabel: "09:00–13:00",
-              placeLabel: "Gabinet 1",
-              mode: "hybrid",
-              recurrenceLabel: "Co tydzień",
-              note: "Pierwszorazowi do 11:00",
-              actions: windowActions("poniedziałek 09:00–13:00", onEdit),
-            },
-            {
-              id: "mon-2",
-              timeLabel: "15:00–18:00",
-              placeLabel: "Online",
-              mode: "online",
-              recurrenceLabel: "Co tydzień",
-              actions: windowActions("poniedziałek 15:00–18:00", onEdit),
-            },
-          ]
-        : index === 3
-          ? [
-              {
-                id: "thu-1",
-                timeLabel: "10:00–16:00",
-                placeLabel: "Gabinet 2",
-                mode: "in_person",
-                recurrenceLabel: "Co 2 tygodnie · od 9 stycznia 2030",
-                actions: windowActions("czwartek 10:00–16:00", onEdit),
-              },
-            ]
-          : [],
-  }));
-}
-
-const onEdit = fn();
-const onAdd = fn();
-
-export const Weekly: Story = {
-  render: () => <WeeklySchedule days={week(onEdit, onAdd)} />,
+export const RuleCards: Story = {
+  render: () => (
+    <div className="grid max-w-6xl gap-3">
+      <AvailabilityRuleCard
+        accent="var(--resource-2)"
+        actions={ruleActions("poniedziałek 09:00–15:00")}
+        durationLabel="6 godz."
+        mode="in_person"
+        note="Pierwszorazowi do 11:00"
+        occupancy={{
+          percent: 58,
+          bookedLabel: "3,5 godz. zajęte (3 wizyty)",
+          freeLabel: "2,5 godz. wolne",
+        }}
+        placeLabel="Gabinet 2"
+        recurrenceLabel="Co tydzień"
+        subtitle="od 7 stycznia 2030"
+        timeLabel="09:00 – 15:00"
+        title="Poniedziałek"
+      />
+      <AvailabilityRuleCard
+        accent="var(--info)"
+        actions={ruleActions("czwartek 16:00–19:00")}
+        durationLabel="3 godz."
+        mode="online"
+        occupancy={{
+          percent: 0,
+          bookedLabel: "0 godz. zajęte (0 wizyt)",
+          freeLabel: "3 godz. wolne",
+        }}
+        placeLabel="Online"
+        recurrenceLabel="Co 2 tygodnie"
+        subtitle="od 9 stycznia 2030"
+        timeLabel="16:00 – 19:00"
+        title="Czwartek"
+      />
+      <AvailabilityRuleCard
+        accent="var(--resource-1)"
+        durationLabel="2 godz."
+        mode="hybrid"
+        placeLabel="Gabinet 1"
+        recurrenceLabel="Jednorazowo"
+        subtitle="piątek, 11 stycznia 2030"
+        timeLabel="10:00 – 12:00"
+        title="11 stycznia 2030"
+      />
+    </div>
+  ),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
-      canvas.getByRole("button", { name: "Edytuj poniedziałek 09:00–13:00" }),
+      canvas.getAllByRole("button", { name: "Edytuj regułę" })[0]!,
     );
     await expect(onEdit).toHaveBeenCalled();
-    await userEvent.click(
-      canvas.getByRole("button", { name: "Dodaj godziny: środa" }),
-    );
-    await expect(onAdd).toHaveBeenCalled();
     await expect(
-      canvas.getByRole("region", { name: "Wtorek" }),
-    ).toHaveTextContent("Brak godzin");
+      canvas.getAllByRole("progressbar", { name: "Rezerwacje w tym bloku" })[0],
+    ).toHaveAttribute("aria-valuenow", "58");
   },
 };
 
-export const EmptyWeek: Story = {
+export const Stats: Story = {
   render: () => (
-    <WeeklySchedule
-      days={WEEKDAYS.map((label, index) => ({
-        weekday: index + 1,
-        label,
-        windows: [],
-      }))}
-    />
-  ),
-};
-
-export const WeekPreview: Story = {
-  render: () => (
-    <AvailabilityWeekPreview
-      days={[
+    <StatDots
+      items={[
+        { label: "Łączna dostępność", value: "6 godz.", tone: "primary" },
+        { label: "Zarezerwowane wizyty", value: "3,5 godz.", tone: "info" },
         {
-          date: "2030-01-07",
-          label: "pon. 7.01",
-          isToday: true,
-          windows: [
-            {
-              id: "a",
-              timeLabel: "09:00–13:00",
-              placeLabel: "Gabinet 1",
-              mode: "hybrid",
-            },
-            {
-              id: "b",
-              timeLabel: "15:00–18:00",
-              placeLabel: "Online",
-              mode: "online",
-            },
-          ],
-          timeOff: [],
+          label: "Wolny czas dla pacjentów",
+          value: "2,5 godz.",
+          tone: "warning",
         },
-        { date: "2030-01-08", label: "wt. 8.01", windows: [], timeOff: [] },
-        {
-          date: "2030-01-09",
-          label: "śr. 9.01",
-          windows: [
-            {
-              id: "c",
-              timeLabel: "10:00–12:00",
-              placeLabel: "Online",
-              mode: "online",
-            },
-          ],
-          timeOff: [],
-        },
-        {
-          date: "2030-01-10",
-          label: "czw. 10.01",
-          windows: [],
-          timeOff: [{ id: "t", label: "Cały dzień", reason: "Szkolenie" }],
-        },
-        { date: "2030-01-11", label: "pt. 11.01", windows: [], timeOff: [] },
-        { date: "2030-01-12", label: "sob. 12.01", windows: [], timeOff: [] },
-        { date: "2030-01-13", label: "niedz. 13.01", windows: [], timeOff: [] },
       ]}
-      navigation={
-        <div className="flex gap-2">
-          <Button size="sm" variant="secondary">
-            Poprzedni tydzień
-          </Button>
-          <Button size="sm" variant="secondary">
-            Następny tydzień
-          </Button>
-        </div>
-      }
-      title="Tydzień 7–13 stycznia 2030"
     />
   ),
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole("listitem", { name: "pon. 7.01" }),
-    ).toHaveAttribute("aria-current", "date");
-    await expect(
-      canvas.getByRole("listitem", { name: "czw. 10.01" }),
-    ).toHaveTextContent("Cały dzień: Szkolenie");
-  },
 };
 
 export const TimeOff: Story = {

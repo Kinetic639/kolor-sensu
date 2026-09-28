@@ -1,6 +1,10 @@
 import {
   availabilityRuleInputSchema,
+  localDateSchema,
+  occurrenceScopeSchema,
   type AvailabilityRuleInput,
+  type AvailabilityRuleValues,
+  type OccurrenceScope,
   type SpecialistAvailabilityRule,
   type SpecialistTimeOff,
 } from "@repo/contracts";
@@ -12,7 +16,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // through the database functions, which check overlaps and rooms.
 
 type RuleRow =
-  Database["public"]["Tables"]["specialist_availability_rules"]["Row"];
+  Database["public"]["Tables"]["specialist_availability_rules"]["Row"] & {
+    exceptions?: { date: string }[];
+  };
 type TimeOffRow = Database["public"]["Tables"]["specialist_time_off"]["Row"];
 
 export type AvailabilityErrorReason =
@@ -69,7 +75,10 @@ function mapRule(row: RuleRow): SpecialistAvailabilityRule {
     id: row.id,
     specialistId: row.specialist_id,
     recurrence: row.recurrence,
-    weekday: row.weekday,
+    weekdays: row.weekdays,
+    intervalWeeks: row.interval_weeks,
+    occurrenceCount: row.occurrence_count,
+    exceptions: (row.exceptions ?? []).map((one) => one.date).sort(),
     startsAt: row.starts_at.slice(0, 5),
     endsAt: row.ends_at.slice(0, 5),
     validFrom: row.valid_from,
@@ -99,9 +108,9 @@ export async function listAvailabilityRules(
 ): Promise<SpecialistAvailabilityRule[]> {
   const { data, error } = await client
     .from("specialist_availability_rules")
-    .select("*")
+    .select("*, exceptions:specialist_availability_exceptions(date)")
     .eq("specialist_id", specialistId)
-    .order("weekday")
+    .order("valid_from")
     .order("starts_at");
 
   if (error) throw error;
@@ -123,6 +132,73 @@ export async function listTimeOff(
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 }
 
+/** The database function's parameters for a validated window. */
+function ruleParams(rule: AvailabilityRuleValues) {
+  return {
+    p_recurrence: rule.recurrence,
+    p_weekdays: rule.weekdays,
+    p_interval_weeks: rule.intervalWeeks,
+    p_starts_at: rule.startsAt,
+    p_ends_at: rule.endsAt,
+    p_valid_from: rule.validFrom,
+    ...(rule.validUntil ? { p_valid_until: rule.validUntil } : {}),
+    ...(rule.occurrenceCount
+      ? { p_occurrence_count: rule.occurrenceCount }
+      : {}),
+    p_mode: rule.mode,
+    ...(rule.roomId ? { p_room_id: rule.roomId } : {}),
+    ...(rule.note ? { p_note: rule.note } : {}),
+  };
+}
+
+export interface OccurrenceTarget {
+  ruleId: string;
+  /** The occurrence's local date. */
+  date: string;
+  scope: OccurrenceScope;
+}
+
+function targetParams(target: OccurrenceTarget) {
+  return {
+    p_rule_id: target.ruleId,
+    p_date: localDateSchema.parse(target.date),
+    p_scope: occurrenceScopeSchema.parse(target.scope),
+  };
+}
+
+/**
+ * Removes an occurrence of a rule: only it, it and the following ones, or
+ * the whole rule — as calendar apps ask when deleting a repeating event.
+ */
+export async function deleteAvailabilityOccurrence(
+  client: SupabaseClient<Database>,
+  target: OccurrenceTarget,
+): Promise<void> {
+  const params = targetParams(target);
+  const { error } = await client.rpc("delete_availability_occurrence", params);
+  if (error) throw toAvailabilityError(error);
+}
+
+/**
+ * Changes an occurrence of a rule with the given values: only it (it is
+ * skipped and a one-off takes its place), it and the following ones (the
+ * series is split), or the whole rule.
+ */
+export async function editAvailabilityOccurrence(
+  client: SupabaseClient<Database>,
+  target: OccurrenceTarget,
+  input: AvailabilityRuleInput,
+): Promise<string> {
+  const params = targetParams(target);
+  const rule = availabilityRuleInputSchema.parse(input);
+  const { data, error } = await client.rpc("edit_availability_occurrence", {
+    ...params,
+    ...ruleParams(rule),
+  });
+  if (error) throw toAvailabilityError(error);
+  return data;
+}
+
 /**
  * Adds or (with `id`) edits a window. `specialistId` is for an admin
  * editing someone else's schedule; a specialist edits their own.
@@ -134,15 +210,7 @@ export async function saveAvailabilityRule(
 ): Promise<string> {
   const rule = availabilityRuleInputSchema.parse(input);
   const { data, error } = await client.rpc("save_availability_rule", {
-    p_recurrence: rule.recurrence,
-    p_weekday: rule.weekday,
-    p_starts_at: rule.startsAt,
-    p_ends_at: rule.endsAt,
-    p_valid_from: rule.validFrom,
-    ...(rule.validUntil ? { p_valid_until: rule.validUntil } : {}),
-    p_mode: rule.mode,
-    ...(rule.roomId ? { p_room_id: rule.roomId } : {}),
-    ...(rule.note ? { p_note: rule.note } : {}),
+    ...ruleParams(rule),
     ...(options.id ? { p_id: options.id } : {}),
     ...(options.specialistId ? { p_specialist_id: options.specialistId } : {}),
   });

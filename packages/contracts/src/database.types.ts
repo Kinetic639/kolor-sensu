@@ -492,13 +492,41 @@ export type Database = {
         };
         Relationships: [];
       };
+      specialist_availability_exceptions: {
+        Row: {
+          created_at: string;
+          date: string;
+          rule_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          date: string;
+          rule_id: string;
+        };
+        Update: {
+          created_at?: string;
+          date?: string;
+          rule_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "specialist_availability_exceptions_rule_id_fkey";
+            columns: ["rule_id"];
+            isOneToOne: false;
+            referencedRelation: "specialist_availability_rules";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       specialist_availability_rules: {
         Row: {
           created_at: string;
           ends_at: string;
           id: string;
+          interval_weeks: number;
           mode: Database["public"]["Enums"]["availability_mode"];
           note: string | null;
+          occurrence_count: number | null;
           recurrence: Database["public"]["Enums"]["availability_recurrence"];
           room_id: string | null;
           specialist_id: string;
@@ -506,14 +534,16 @@ export type Database = {
           updated_at: string;
           valid_from: string;
           valid_until: string | null;
-          weekday: number;
+          weekdays: number[];
         };
         Insert: {
           created_at?: string;
           ends_at: string;
           id?: string;
+          interval_weeks?: number;
           mode: Database["public"]["Enums"]["availability_mode"];
           note?: string | null;
+          occurrence_count?: number | null;
           recurrence?: Database["public"]["Enums"]["availability_recurrence"];
           room_id?: string | null;
           specialist_id: string;
@@ -521,7 +551,7 @@ export type Database = {
           updated_at?: string;
           valid_from: string;
           valid_until?: string | null;
-          weekday: number;
+          weekdays: number[];
         };
         Update: {
           created_at?: string;
@@ -529,6 +559,7 @@ export type Database = {
           id?: string;
           mode?: Database["public"]["Enums"]["availability_mode"];
           note?: string | null;
+          occurrence_count?: number | null;
           recurrence?: Database["public"]["Enums"]["availability_recurrence"];
           room_id?: string | null;
           specialist_id?: string;
@@ -536,7 +567,7 @@ export type Database = {
           updated_at?: string;
           valid_from?: string;
           valid_until?: string | null;
-          weekday?: number;
+          weekdays?: number[];
         };
         Relationships: [
           {
@@ -1035,7 +1066,30 @@ export type Database = {
         Args: { p_id: string };
         Returns: undefined;
       };
+      delete_availability_occurrence: {
+        Args: { p_date: string; p_rule_id: string; p_scope: string };
+        Returns: undefined;
+      };
       delete_time_off: { Args: { p_id: string }; Returns: undefined };
+      edit_availability_occurrence: {
+        Args: {
+          p_date: string;
+          p_ends_at: string;
+          p_interval_weeks?: number;
+          p_mode: Database["public"]["Enums"]["availability_mode"];
+          p_note?: string;
+          p_occurrence_count?: number;
+          p_recurrence: Database["public"]["Enums"]["availability_recurrence"];
+          p_room_id?: string;
+          p_rule_id: string;
+          p_scope: string;
+          p_starts_at: string;
+          p_valid_from: string;
+          p_valid_until?: string;
+          p_weekdays: number[];
+        };
+        Returns: string;
+      };
       has_role: {
         Args: { required_role: Database["public"]["Enums"]["app_role"] };
         Returns: boolean;
@@ -1091,15 +1145,17 @@ export type Database = {
         Args: {
           p_ends_at: string;
           p_id?: string;
+          p_interval_weeks?: number;
           p_mode: Database["public"]["Enums"]["availability_mode"];
           p_note?: string;
+          p_occurrence_count?: number;
           p_recurrence: Database["public"]["Enums"]["availability_recurrence"];
           p_room_id?: string;
           p_specialist_id?: string;
           p_starts_at: string;
           p_valid_from: string;
           p_valid_until?: string;
-          p_weekday: number;
+          p_weekdays: number[];
         };
         Returns: string;
       };
@@ -1134,7 +1190,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "specialist";
       availability_mode: "in_person" | "online" | "hybrid";
-      availability_recurrence: "weekly" | "biweekly" | "once";
+      availability_recurrence: "once" | "weekly";
       profile_publication_status:
         "draft" | "pending_review" | "published" | "rejected";
       room_availability_exception_type:
@@ -1277,7 +1333,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "specialist"],
       availability_mode: ["in_person", "online", "hybrid"],
-      availability_recurrence: ["weekly", "biweekly", "once"],
+      availability_recurrence: ["once", "weekly"],
       profile_publication_status: [
         "draft",
         "pending_review",

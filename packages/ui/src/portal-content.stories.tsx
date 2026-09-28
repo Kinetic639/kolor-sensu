@@ -8,6 +8,7 @@ import {
   MetricCard,
   PageHeader,
   SectionHeader,
+  StatTile,
   StatusBadge,
 } from "./portal-content";
 
@@ -109,6 +110,30 @@ export const States: Story = {
       />
       <LoadingState />
       <ErrorState />
+    </div>
+  ),
+};
+
+export const StatTiles: Story = {
+  render: () => (
+    <div className="grid max-w-5xl gap-3 sm:grid-cols-3">
+      <StatTile
+        detail="Rozłożone na 4 zdefiniowane bloki"
+        label="Łączny wymiar dyżurów"
+        tone="mint"
+        value="12 godz. / tydz."
+      />
+      <StatTile
+        detail="Obłożenie dyżurów w bieżącym tygodniu"
+        label="Zarezerwowane przez pacjentów"
+        value="3,5 godz. (29%)"
+      />
+      <StatTile
+        detail="Dostępne sloty na rejestrację nowych wizyt"
+        label="Wolne okna"
+        tone="blue"
+        value="8,5 godz."
+      />
     </div>
   ),
 };

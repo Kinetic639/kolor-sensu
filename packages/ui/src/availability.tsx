@@ -1,210 +1,292 @@
-import { CalendarOff, MapPin, Monitor } from "lucide-react";
-import type { ReactNode } from "react";
-import { Badge } from "./badge";
-import { Card } from "./card";
+import {
+  Building2,
+  CalendarOff,
+  Clock,
+  Layers,
+  RotateCw,
+  Video,
+} from "lucide-react";
+import type { CSSProperties, ReactNode } from "react";
 import { cn } from "./lib/utils";
 
-// Specialist availability (docs/product/booking-plan.md, R2): the weekly
-// schedule, a week's preview and time off. Presentational and rendered on
-// the server; buttons come in as slots from the portal.
+// Specialist availability (docs/product/booking-plan.md, R2), after the AI
+// Studio reference: calendar block bodies, rule cards, stats and time off.
+// Presentational; buttons come in as slots.
 
 export type AvailabilityWindowMode = "in_person" | "online" | "hybrid";
 
-export interface AvailabilityWindowView {
-  id: string;
-  timeLabel: string;
-  /** The room's name, or "Online". */
-  placeLabel: string;
-  mode: AvailabilityWindowMode;
-  recurrenceLabel?: string;
-  note?: string | null;
-  actions?: ReactNode;
+export function placeText(placeLabel: string, mode: AvailabilityWindowMode) {
+  return mode === "hybrid" ? `${placeLabel} + online` : placeLabel;
 }
 
-function placeText(
-  window: Pick<AvailabilityWindowView, "placeLabel" | "mode">,
-) {
-  return window.mode === "hybrid"
-    ? `${window.placeLabel} + online`
-    : window.placeLabel;
-}
-
-function PlaceIcon({ mode }: { mode: AvailabilityWindowMode }) {
-  const Icon = mode === "online" ? Monitor : MapPin;
-  return <Icon aria-hidden="true" className="size-4 shrink-0" />;
-}
-
-export function AvailabilityWindowItem({
-  window,
+function PlaceIcon({
+  mode,
+  className,
 }: {
-  window: AvailabilityWindowView;
+  mode: AvailabilityWindowMode;
+  className?: string;
 }) {
+  const Icon =
+    mode === "online" ? Video : mode === "hybrid" ? Layers : Building2;
   return (
-    <li className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-t border-[var(--border)] py-3 first:border-t-0 first:pt-0 last:pb-0">
-      <div className="grid gap-1">
-        <p className="font-semibold text-[var(--text)] tabular-nums">
-          {window.timeLabel}
-        </p>
-        <p className="flex items-center gap-1.5 text-sm text-[var(--text-muted)]">
-          <PlaceIcon mode={window.mode} />
-          <span>{placeText(window)}</span>
-        </p>
-        {window.recurrenceLabel || window.note ? (
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            {window.recurrenceLabel ? (
-              <Badge>{window.recurrenceLabel}</Badge>
-            ) : null}
-            {window.note ? (
-              <span className="text-[var(--text-muted)]">{window.note}</span>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-      {window.actions ? (
-        <div className="flex items-center gap-1">{window.actions}</div>
-      ) : null}
-    </li>
+    <Icon aria-hidden="true" className={cn("size-3.5 shrink-0", className)} />
   );
 }
 
-export interface WeeklyScheduleDay {
-  /** ISO weekday, 1 Monday … 7 Sunday. */
-  weekday: number;
-  label: string;
-  windows: AvailabilityWindowView[];
-  /** e.g. an "add a window" button for this day. */
-  action?: ReactNode;
-}
-
-/** The recurring week: every weekday with its windows. */
-export function WeeklySchedule({
-  days,
+/** A place chip: the room, "Online", or both. */
+export function PlaceChip({
+  placeLabel,
+  mode,
   className,
 }: {
-  days: WeeklyScheduleDay[];
+  placeLabel: string;
+  mode: AvailabilityWindowMode;
   className?: string;
 }) {
   return (
-    <div className={cn("grid gap-3 md:grid-cols-2 xl:grid-cols-3", className)}>
-      {days.map((day) => {
-        const headingId = `weekly-schedule-day-${day.weekday}`;
-        return (
-          <Card
-            aria-labelledby={headingId}
-            className="flex flex-col gap-3 p-4"
-            key={day.weekday}
-            role="region"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <h3
-                className="font-heading text-base font-semibold text-[var(--text)]"
-                id={headingId}
-              >
-                {day.label}
-              </h3>
-              {day.action}
-            </div>
-            {day.windows.length ? (
-              <ul>
-                {day.windows.map((window) => (
-                  <AvailabilityWindowItem key={window.id} window={window} />
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-[var(--text-muted)]">Brak godzin</p>
-            )}
-          </Card>
-        );
-      })}
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-[calc(var(--radius-control)*0.75)] border px-1.5 py-0.5 text-[0.6875rem] font-semibold",
+        mode === "online"
+          ? "border-[color-mix(in_srgb,var(--info)_30%,transparent)] bg-[var(--info-soft)] text-[var(--info)]"
+          : "border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_85%,transparent)] text-[var(--text)]",
+        className,
+      )}
+    >
+      <PlaceIcon mode={mode} />
+      {placeText(placeLabel, mode)}
+    </span>
+  );
+}
+
+/** What goes inside an availability block in the calendar. */
+export function AvailabilityBlockBody({
+  timeLabel,
+  placeLabel,
+  mode,
+  note,
+  hint,
+}: {
+  timeLabel: string;
+  placeLabel: string;
+  mode: AvailabilityWindowMode;
+  note?: string | null;
+  /** e.g. "Kliknij, aby edytować", shown when the block is tall enough. */
+  hint?: string;
+}) {
+  return (
+    <div className="flex h-full flex-col justify-between gap-1">
+      <div className="grid gap-1">
+        <p className="flex items-center gap-1 font-bold text-[var(--text)] tabular-nums">
+          <Clock
+            aria-hidden="true"
+            className="size-3.5 shrink-0 text-[var(--block-accent)]"
+          />
+          {timeLabel}
+        </p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <PlaceChip mode={mode} placeLabel={placeLabel} />
+          {note ? (
+            <span className="max-w-full truncate text-[0.6875rem] text-[var(--text-muted)] italic">
+              {note}
+            </span>
+          ) : null}
+        </div>
+      </div>
+      {hint ? (
+        <p className="text-[0.625rem] font-medium text-[var(--text-muted)]">
+          {hint}
+        </p>
+      ) : null}
     </div>
   );
 }
 
-export interface AvailabilityPreviewDay {
-  /** Local date, `YYYY-MM-DD`. */
-  date: string;
+export interface StatDotItem {
   label: string;
-  isToday?: boolean;
-  windows: Omit<AvailabilityWindowView, "actions" | "recurrenceLabel">[];
-  timeOff: { id: string; label: string; reason?: string | null }[];
+  value: string;
+  tone: "primary" | "info" | "warning";
 }
 
-/** A concrete week: what clients can book, after time off. */
-export function AvailabilityWeekPreview({
-  title,
-  days,
-  navigation,
+const DOT_TONES: Record<StatDotItem["tone"], string> = {
+  primary: "bg-[var(--primary)]",
+  info: "bg-[var(--info)]",
+  warning: "bg-[var(--warning)]",
+};
+
+/** A row of "● label: value" figures. */
+export function StatDots({
+  items,
   className,
 }: {
-  title: string;
-  days: AvailabilityPreviewDay[];
-  /** Previous / next week links. */
-  navigation?: ReactNode;
+  items: StatDotItem[];
   className?: string;
 }) {
   return (
-    <section
-      aria-labelledby="availability-week-preview-title"
-      className={cn("grid gap-3", className)}
+    <dl
+      className={cn(
+        "flex flex-wrap items-center gap-x-4 gap-y-1 text-xs",
+        className,
+      )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3
-          className="font-heading text-lg font-semibold text-[var(--text)]"
-          id="availability-week-preview-title"
-        >
-          {title}
-        </h3>
-        {navigation}
+      {items.map((item) => (
+        <div className="flex items-center gap-1.5" key={item.label}>
+          <span
+            aria-hidden="true"
+            className={cn("size-2.5 rounded-full", DOT_TONES[item.tone])}
+          />
+          <dt className="font-medium text-[var(--text-muted)]">
+            {item.label}:
+          </dt>
+          <dd className="font-bold text-[var(--text)]">{item.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+export function OccupancyBar({
+  label,
+  percent,
+  left,
+  right,
+  className,
+}: {
+  label: string;
+  percent: number;
+  left?: ReactNode;
+  right?: ReactNode;
+  className?: string;
+}) {
+  const value = Math.max(0, Math.min(100, Math.round(percent)));
+  return (
+    <div className={cn("grid gap-1.5 text-xs", className)}>
+      <div className="flex items-center justify-between">
+        <span className="font-medium text-[var(--text-muted)]">{label}</span>
+        <strong className="text-[var(--text)]">{value}%</strong>
       </div>
-      <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-7">
-        {days.map((day) => (
-          <li
-            aria-current={day.isToday ? "date" : undefined}
-            aria-label={day.label}
-            className={cn(
-              "flex min-h-28 flex-col gap-2 rounded-[var(--radius-surface)] border border-[var(--border)] bg-[var(--surface)] p-3",
-              day.isToday && "border-[var(--primary)]",
-            )}
-            key={day.date}
-          >
-            <p className="text-sm font-semibold text-[var(--text)]">
-              {day.label}
-            </p>
-            {day.windows.map((window) => (
-              <div
-                className={cn(
-                  "rounded-[var(--radius-control)] border-l-4 px-2 py-1.5 text-xs",
-                  window.mode === "online"
-                    ? "border-[var(--info)] bg-[var(--info-soft)]"
-                    : "border-[var(--primary)] bg-[var(--primary-soft)]",
-                )}
-                key={window.id}
-              >
-                <p className="font-semibold text-[var(--text)] tabular-nums">
-                  {window.timeLabel}
-                </p>
-                <p className="flex items-center gap-1 text-[var(--text-muted)]">
-                  <PlaceIcon mode={window.mode} />
-                  {placeText(window)}
-                </p>
-              </div>
-            ))}
-            {day.timeOff.map((off) => (
-              <p
-                className="flex items-center gap-1 rounded-[var(--radius-control)] bg-[var(--surface-muted)] px-2 py-1.5 text-xs text-[var(--text-muted)]"
-                key={off.id}
-              >
-                <CalendarOff aria-hidden="true" className="size-3.5 shrink-0" />
-                {off.reason ? `${off.label}: ${off.reason}` : off.label}
-              </p>
-            ))}
-            {day.windows.length === 0 && day.timeOff.length === 0 ? (
-              <p className="text-xs text-[var(--text-muted)]">Brak godzin</p>
+      <div
+        aria-label={label}
+        aria-valuemax={100}
+        aria-valuemin={0}
+        aria-valuenow={value}
+        className="h-2 overflow-hidden rounded-full bg-[var(--border)]"
+        role="progressbar"
+      >
+        <div
+          className="h-full rounded-full bg-[var(--primary)] transition-[width]"
+          style={{ width: `${value}%` }}
+        />
+      </div>
+      {left || right ? (
+        <div className="flex items-center justify-between gap-2 text-[0.6875rem] text-[var(--text-muted)]">
+          <span>{left}</span>
+          <span className="font-semibold text-[var(--primary)]">{right}</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export interface AvailabilityRuleCardProps {
+  title: string;
+  subtitle?: string;
+  recurrenceLabel: string;
+  timeLabel: string;
+  durationLabel: string;
+  placeLabel: string;
+  mode: AvailabilityWindowMode;
+  /** Accent colour of the room (a CSS value). */
+  accent?: string;
+  note?: string | null;
+  occupancy?: { percent: number; bookedLabel: string; freeLabel: string };
+  actions?: ReactNode;
+  className?: string;
+}
+
+/** One availability rule, as listed under "Reguły i bloki". */
+export function AvailabilityRuleCard({
+  title,
+  subtitle,
+  recurrenceLabel,
+  timeLabel,
+  durationLabel,
+  placeLabel,
+  mode,
+  accent = "var(--primary)",
+  note,
+  occupancy,
+  actions,
+  className,
+}: AvailabilityRuleCardProps) {
+  return (
+    <article
+      aria-label={title}
+      className={cn(
+        "rounded-[var(--radius-surface)] border border-l-[6px] border-[var(--border)] border-l-[var(--card-accent)] bg-[var(--surface)] p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5",
+        className,
+      )}
+      style={{ "--card-accent": accent } as CSSProperties}
+    >
+      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+        <div className="grid gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h3 className="text-base font-bold text-[var(--text)]">{title}</h3>
+            {subtitle ? (
+              <span className="text-xs text-[var(--text-muted)]">
+                {subtitle}
+              </span>
             ) : null}
-          </li>
-        ))}
-      </ol>
-    </section>
+            <span className="inline-flex items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--primary)_25%,transparent)] bg-[var(--primary-soft)] px-2.5 py-0.5 text-[0.6875rem] font-semibold text-[var(--primary)]">
+              <RotateCw aria-hidden="true" className="size-3" />
+              {recurrenceLabel}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1.5 font-bold text-[var(--text)] tabular-nums shadow-sm">
+              <Clock
+                aria-hidden="true"
+                className="size-4 text-[var(--primary)]"
+              />
+              {timeLabel}
+              <span className="font-normal text-[var(--text-subtle)]">
+                ({durationLabel})
+              </span>
+            </span>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border px-3 py-1.5 font-semibold shadow-sm",
+                mode === "online"
+                  ? "border-[color-mix(in_srgb,var(--info)_30%,transparent)] bg-[var(--info-soft)] text-[var(--info)]"
+                  : "border-[var(--border)] bg-[var(--surface-subtle)] text-[var(--text)]",
+              )}
+            >
+              <PlaceIcon className="size-4" mode={mode} />
+              {placeText(placeLabel, mode)}
+            </span>
+            {note ? (
+              <span className="text-[var(--text-muted)] italic">„{note}”</span>
+            ) : null}
+          </div>
+        </div>
+
+        {occupancy ? (
+          <OccupancyBar
+            className="shrink-0 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface-subtle)] p-3 lg:w-64"
+            label="Rezerwacje w tym bloku"
+            left={occupancy.bookedLabel}
+            percent={occupancy.percent}
+            right={occupancy.freeLabel}
+          />
+        ) : null}
+
+        {actions ? (
+          <div className="flex shrink-0 flex-wrap items-center gap-2 self-end lg:self-center">
+            {actions}
+          </div>
+        ) : null}
+      </div>
+    </article>
   );
 }
 
