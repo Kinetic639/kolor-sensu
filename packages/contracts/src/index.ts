@@ -1,6 +1,23 @@
 import { z } from "zod";
 
 export {
+  availabilityModeSchema,
+  availabilityRecurrenceSchema,
+  availabilityRuleInputSchema,
+  localDateSchema,
+  quarterHourSchema,
+  timeOffInputSchema,
+} from "@repo/contracts/availability";
+export type {
+  AvailabilityMode,
+  AvailabilityRecurrence,
+  AvailabilityRuleInput,
+  AvailabilityRuleValues,
+  SpecialistAvailabilityRule,
+  SpecialistTimeOff,
+  TimeOffInput,
+} from "@repo/contracts/availability";
+export {
   centerPublicProfileUpdateSchema,
   centerSettingsUpdateSchema,
   countryCodeSchema,

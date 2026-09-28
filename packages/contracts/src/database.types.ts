@@ -492,6 +492,69 @@ export type Database = {
         };
         Relationships: [];
       };
+      specialist_availability_rules: {
+        Row: {
+          created_at: string;
+          ends_at: string;
+          id: string;
+          mode: Database["public"]["Enums"]["availability_mode"];
+          note: string | null;
+          recurrence: Database["public"]["Enums"]["availability_recurrence"];
+          room_id: string | null;
+          specialist_id: string;
+          starts_at: string;
+          updated_at: string;
+          valid_from: string;
+          valid_until: string | null;
+          weekday: number;
+        };
+        Insert: {
+          created_at?: string;
+          ends_at: string;
+          id?: string;
+          mode: Database["public"]["Enums"]["availability_mode"];
+          note?: string | null;
+          recurrence?: Database["public"]["Enums"]["availability_recurrence"];
+          room_id?: string | null;
+          specialist_id: string;
+          starts_at: string;
+          updated_at?: string;
+          valid_from: string;
+          valid_until?: string | null;
+          weekday: number;
+        };
+        Update: {
+          created_at?: string;
+          ends_at?: string;
+          id?: string;
+          mode?: Database["public"]["Enums"]["availability_mode"];
+          note?: string | null;
+          recurrence?: Database["public"]["Enums"]["availability_recurrence"];
+          room_id?: string | null;
+          specialist_id?: string;
+          starts_at?: string;
+          updated_at?: string;
+          valid_from?: string;
+          valid_until?: string | null;
+          weekday?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "specialist_availability_rules_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "specialist_availability_rules_specialist_id_fkey";
+            columns: ["specialist_id"];
+            isOneToOne: false;
+            referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       specialist_profile_drafts: {
         Row: {
           certificates: string[];
@@ -746,6 +809,41 @@ export type Database = {
           },
         ];
       };
+      specialist_time_off: {
+        Row: {
+          created_at: string;
+          during: unknown;
+          id: string;
+          reason: string | null;
+          specialist_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          during: unknown;
+          id?: string;
+          reason?: string | null;
+          specialist_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          during?: unknown;
+          id?: string;
+          reason?: string | null;
+          specialist_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "specialist_time_off_specialist_id_fkey";
+            columns: ["specialist_id"];
+            isOneToOne: false;
+            referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       specialists: {
         Row: {
           accepting_new_clients: boolean;
@@ -920,10 +1018,24 @@ export type Database = {
         Args: { p_room_id: string; p_storage_path: string };
         Returns: string;
       };
+      add_time_off: {
+        Args: {
+          p_ends_at: string;
+          p_reason?: string;
+          p_specialist_id?: string;
+          p_starts_at: string;
+        };
+        Returns: string;
+      };
       approve_specialist_profile_draft: {
         Args: { p_draft_id: string; p_review_comment?: string };
         Returns: undefined;
       };
+      delete_availability_rule: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      delete_time_off: { Args: { p_id: string }; Returns: undefined };
       has_role: {
         Args: { required_role: Database["public"]["Enums"]["app_role"] };
         Returns: boolean;
@@ -975,6 +1087,22 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      save_availability_rule: {
+        Args: {
+          p_ends_at: string;
+          p_id?: string;
+          p_mode: Database["public"]["Enums"]["availability_mode"];
+          p_note?: string;
+          p_recurrence: Database["public"]["Enums"]["availability_recurrence"];
+          p_room_id?: string;
+          p_specialist_id?: string;
+          p_starts_at: string;
+          p_valid_from: string;
+          p_valid_until?: string;
+          p_weekday: number;
+        };
+        Returns: string;
+      };
       save_my_specialist_profile_draft: {
         Args: {
           p_certificates?: string[];
@@ -1005,6 +1133,8 @@ export type Database = {
     };
     Enums: {
       app_role: "admin" | "specialist";
+      availability_mode: "in_person" | "online" | "hybrid";
+      availability_recurrence: "weekly" | "biweekly" | "once";
       profile_publication_status:
         "draft" | "pending_review" | "published" | "rejected";
       room_availability_exception_type:
@@ -1146,6 +1276,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "specialist"],
+      availability_mode: ["in_person", "online", "hybrid"],
+      availability_recurrence: ["weekly", "biweekly", "once"],
       profile_publication_status: [
         "draft",
         "pending_review",

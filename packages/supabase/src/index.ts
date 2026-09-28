@@ -110,3 +110,14 @@ export {
   updateRoom,
   upsertRoomPublicProfile,
 } from "./rooms";
+export {
+  AvailabilityError,
+  addTimeOff,
+  deleteAvailabilityRule,
+  deleteTimeOff,
+  listAvailabilityRules,
+  listTimeOff,
+  parseTstzRange,
+  saveAvailabilityRule,
+} from "./availability";
+export type { AvailabilityErrorReason } from "./availability";

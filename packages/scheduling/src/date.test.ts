@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatZonedDateTime } from "./date.js";
+import { formatZonedDateTime } from "./date";
 
 describe("formatZonedDateTime", () => {
   it("formats a UTC instant in the configured timezone", () => {

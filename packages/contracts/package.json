@@ -5,6 +5,7 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
+    "./availability": "./src/availability.ts",
     "./center": "./src/center.ts",
     "./cms": "./src/cms.ts",
     "./database": "./src/database.types.ts",

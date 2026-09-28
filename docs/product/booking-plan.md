@@ -7,14 +7,16 @@ Etap R. Realizuje Fazę 4 [roadmapy strony publicznej](./public-site-roadmap.md)
 
 ## Decyzje (2026-09-28)
 
-| Temat         | Decyzja                                                                                                                                                     |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Płatność      | Online od pierwszej wersji: **Stripe** (karta, Apple/Google Pay, BLIK, Przelewy24 jako metody Stripe). Jedna integracja zamiast dwóch.                      |
-| Konto klienta | Nie jest potrzebne. Rezerwacja jako gość; w e-mailu podpisany link do przełożenia i anulowania. Konta („Moje rezerwacje”) później, na tych samych tabelach. |
-| E-mail        | **Resend** (React Email), domena kolorsensu.pl zweryfikowana w DNS.                                                                                         |
-| Potwierdzenie | Od razu po opłaceniu: wolny termin z grafiku jest pewnym terminem.                                                                                          |
-| Stan kreatora | W adresie URL, przez **nuqs** (`createLoader` / `createSerializer` na serwerze, `useQueryStates` tylko w wyspach klienckich).                               |
-| Poza zakresem | Pakiety wizyt, warsztaty, vouchery, konta klientów, faktury. Wracają po działającym rdzeniu (referencje „pakiety” i „warsztat” zostają na później).         |
+| Temat         | Decyzja                                                                                                                                                                                                                                                                                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Płatność      | Online od pierwszej wersji: **Stripe** (karta, Apple/Google Pay, BLIK, Przelewy24 jako metody Stripe). Jedna integracja zamiast dwóch.                                                                                                                                                                                                                  |
+| Konto klienta | Nie jest potrzebne. Rezerwacja jako gość; w e-mailu podpisany link do przełożenia i anulowania. Konta („Moje rezerwacje”) później, na tych samych tabelach.                                                                                                                                                                                             |
+| E-mail        | **Resend** (React Email), domena kolorsensu.pl zweryfikowana w DNS.                                                                                                                                                                                                                                                                                     |
+| Potwierdzenie | Od razu po opłaceniu: wolny termin z grafiku jest pewnym terminem.                                                                                                                                                                                                                                                                                      |
+| Stan kreatora | W adresie URL, przez **nuqs** (`createLoader` / `createSerializer` na serwerze, `useQueryStates` tylko w wyspach klienckich).                                                                                                                                                                                                                           |
+| Gabinet       | Okno dostępności stacjonarnej ma **konkretny gabinet** (jak w referencji AI Studio); klient dostaje gabinet z okna. Baza nie pozwala dwóm specjalistom zająć gabinetu w tym samym czasie.                                                                                                                                                               |
+| Siatka godzin | Wizyty startują co `slot_step_minutes` (ustawienie centrum, domyślnie **60**: 9:00, 10:00…). Wizyta musi zmieścić się w oknie, a przerwa oddziela ją od innych wizyt. Przerwa między wizytami to `default_visit_buffer_minutes`; przy siatce 60 min i wizytach 50 min musi wynosić **10 min** (dziś w bazie jest 15, co zostawiałoby co drugą godzinę). |
+| Poza zakresem | Pakiety wizyt, warsztaty, vouchery, konta klientów, faktury. Wracają po działającym rdzeniu (referencje „pakiety” i „warsztat” zostają na później).                                                                                                                                                                                                     |
 
 ## Przepływ
 
@@ -43,14 +45,14 @@ Usługa → Forma → Specjalista → Termin → Dane → Płatność → Potwie
 
 ### Parametry URL (nuqs)
 
-| Parametr      | Wartość                          | Uwagi                                          |
-| ------------- | -------------------------------- | ---------------------------------------------- |
-| `usluga`      | slug usługi                      |                                                |
-| `forma`       | `stacjonarnie` \| `online`       |                                                |
-| `lokalizacja` | slug lokalizacji                 | Pomijany, gdy lokalizacja jest jedna           |
-| `specjalista` | slug specjalisty                 | Zgodny z linkiem z profilu (F1-11)             |
-| `tydzien`     | data poniedziałku (`2026-10-05`) | Nawigacja po tygodniach w kroku „Termin”       |
-| `termin`      | początek wizyty, ISO z offsetem  | Walidowany na serwerze względem wolnych slotów |
+| Parametr      | Wartość                                                    | Uwagi                                          |
+| ------------- | ---------------------------------------------------------- | ---------------------------------------------- |
+| `usluga`      | slug usługi                                                |                                                |
+| `forma`       | `stacjonarnie` \| `online`                                 |                                                |
+| `lokalizacja` | slug lokalizacji                                           | Pomijany, gdy lokalizacja jest jedna           |
+| `specjalista` | slug specjalisty                                           | Zgodny z linkiem z profilu (F1-11)             |
+| `tydzien`     | data poniedziałku (`2026-10-05`)                           | Nawigacja po tygodniach w kroku „Termin”       |
+| `termin`      | początek wizyty, czas lokalny centrum (`2026-10-07T10:00`) | Walidowany na serwerze względem wolnych slotów |
 
 Krok wynika z parametrów (pierwszy brakujący), a nie z osobnego `krok`, więc
 nie da się wejść na krok bez wcześniejszych wyborów. „Zmień” to link, który
@@ -78,14 +80,17 @@ terminu dalsze kroki idą po identyfikatorze holdu w ciasteczku `httpOnly`.
 
 ### Model danych (etap RD)
 
-- `specialist_availability_rules`: specjalista, dzień tygodnia (1–7),
-  `starts_at`/`ends_at` (czas lokalny centrum), forma: lokalizacja (stacjonarnie)
-  albo online, okres obowiązywania (`valid_from`, `valid_until`). Bez nakładania
-  w obrębie specjalisty (wykluczenie GiST).
-- `specialist_availability_exceptions`: data, cały dzień wolny / blokada
-  przedziału / dodatkowy przedział (wzór z `room_availability_exceptions`).
+Dostępność specjalistów (RD1) — szczegóły w sekcji
+[Dostępność specjalistów](#dostępność-specjalistów-rd1-r1-r2):
+
+- `specialist_availability_rules`: okna cykliczne.
+- `specialist_availability_windows`: okna jednorazowe („tylko tego dnia”).
+- `specialist_time_off`: nieobecności (urlop, zablokowane popołudnie).
+
+Wizyty i płatności (RD2):
+
 - `appointments`: numer (`KS-20261005-7843`), usługa, oferta, specjalista,
-  forma, lokalizacja, **sala przydzielana automatycznie**, `during
+  forma, **gabinet z okna dostępności**, `during
 tstzrange`, migawka ceny i czasu trwania, status (`held`,
   `awaiting_payment`, `confirmed`, `cancelled`, `expired`), `hold_expires_at`,
   dane klienta, zgody z czasem akceptacji, hash tokenu zarządzania.
@@ -95,6 +100,61 @@ tstzrange`, migawka ceny i czasu trwania, status (`held`,
   - To samo dla sali (`room_id`).
 - `payments`: wizyta, `stripe_payment_intent_id` / `checkout_session_id`,
   kwota, waluta, status, zwroty; `stripe_events` dla idempotencji webhooka.
+
+### Dostępność specjalistów (RD1, R1, R2)
+
+Specjalista określa, kiedy i gdzie przyjmuje; z tego (minus nieobecności i
+zajęte terminy) powstają wolne terminy w kreatorze. Wzorce: referencja AI
+Studio (`SpecialistAvailabilityDrawer`, widok reguł) i tabele godzin sal.
+
+**Model (RD1):**
+
+- `specialist_availability_rules` — okno cykliczne: dzień tygodnia (1–7),
+  `starts_at`–`ends_at` (czas lokalny centrum), forma `in_person` |
+  `online` | `hybrid` (gabinet + online), `room_id` (wymagany poza
+  `online`), co ile tygodni (1 albo 2, z tygodniem startowym), okres
+  `valid_from`–`valid_until` (opcjonalnie), notatka wewnętrzna.
+- `specialist_availability_windows` — okno jednorazowe (data + godziny, forma,
+  gabinet, notatka): „tylko w tym tygodniu”, dodatkowe godziny.
+- `specialist_time_off` — nieobecność jako przedział `tstzrange` (od–do,
+  cały dzień albo godziny), powód wewnętrzny. Wygrywa z oknami.
+- Ograniczenia w bazie: `starts_at < ends_at`, siatka 15 min, okna jednego
+  specjalisty się nie nakładają, **gabinet nie jest zajęty przez innego
+  specjalistę** w tym samym czasie (sprawdzane w funkcjach zapisu dla reguł i
+  okien, bo reguły cykliczne nie dają się wyrazić jednym `EXCLUDE`), gabinet
+  musi być aktywny.
+- Uprawnienia: specjalista czyta i zmienia tylko swoje (przez RPC z
+  walidacją), admin czyta wszystko i może edytować w imieniu specjalisty,
+  anon nic. Strona publiczna dostaje tylko wolne terminy.
+- Zmiana grafiku nie odwołuje umówionych wizyt; podgląd tygodnia pokazuje
+  wizyty poza grafikiem jako konflikt do rozwiązania.
+
+**Domena (R1, `packages/scheduling`, TDD):**
+
+- `expandAvailability(rules, windows, timeOff, zakres, strefa)` → okna jako
+  instanty z formą i gabinetem (DST: tydzień zmiany czasu w testach).
+- `freeSlots(okna, zajęte, { duration, buffer, step, leadTime, horizon, now,
+mode })` → początki wizyt na siatce `step`, gdzie wizyta + przerwa mieści
+  się w oknie i nie koliduje z wizytą (z jej przerwą).
+- `groupByDay` / `weekOf` dla kroku „Termin” i podglądu tygodnia.
+- To samo sprawdzenie „czy termin mieści się w grafiku” jest w SQL
+  (`private.slot_is_available`) i blokuje hold; wspólne przypadki testowe
+  w Vitest i w `supabase/tests/availability_domain.sql`.
+
+**Portal specjalisty (R2, `/dostepnosc`):**
+
+- **Grafik tygodniowy**: dni tygodnia z oknami (godziny, gabinet albo online,
+  cykliczność); dodawanie i edycja w `Sheet` (formularz RHF + Zod: dzień,
+  od–do co 15 min, forma, gabinet z listy aktywnych, co tydzień / co 2
+  tygodnie, obowiązuje od–do, notatka); usuwanie przez `AlertDialog`;
+  „Skopiuj dzień” do innych dni.
+- **Nieobecności i dodatkowe okna**: lista nadchodzących z dodawaniem
+  (urlop od–do, zablokowane godziny, dodatkowe okno jednego dnia).
+- **Podgląd tygodnia**: renderowana na serwerze siatka tygodnia z wyliczonej
+  dostępności (ta sama funkcja co w kreatorze), z nawigacją `?tydzien=`
+  (nuqs), konfliktami gabinetów i wizytami poza grafikiem.
+- Kalendarz z przeciąganiem (K3) później, na tych samych danych.
+- Admin (R9 / K5): podgląd grafików wszystkich i obłożenia gabinetów.
 
 ### Bezpieczeństwo
 
@@ -189,20 +249,21 @@ na stronę Stripe.
 Statusy: `NOT STARTED`, `IN PROGRESS`, `DONE`, `SKIPPED` (z uzasadnieniem).
 Każdy commit realizujący zadanie aktualizuje status i wpisuje hash commitu.
 
-| ID  | Zadanie                                                                                                  | Roadmapa | Status        | Commit / PR | Uwagi                          |
-| --- | -------------------------------------------------------------------------------------------------------- | -------- | ------------- | ----------- | ------------------------------ |
-| R0  | Plan (ten dokument), nuqs w `apps/web`, kontrakty parametrów kreatora                                    | F4-01    | `IN PROGRESS` |             |                                |
-| RD  | Schemat: dostępność specjalistów, wizyty, płatności, wykluczenia, RPC slotów i holdu, testy SQL          | F4-02    | `NOT STARTED` |             |                                |
-| R1  | Domena slotów w `packages/scheduling` (DST, reguły, wyjątki, zajętość, bufor, lead time, horyzont) z TDD | F4-02    | `NOT STARTED` |             |                                |
-| R2  | Portal specjalisty: grafik tygodniowy i wyjątki (formularz, bez kalendarza K3)                           | F4-02    | `NOT STARTED` |             | Pełny kalendarz: etap K        |
-| R3  | UI `@repo/ui/booking`: stepper, podsumowanie, karty wyboru, siatka tygodnia, lista dnia, legenda         | F4-03    | `NOT STARTED` |             | Stories + testy a11y           |
-| R4  | `/umow-wizyte`: kroki Usługa → Forma → Specjalista → Termin z nuqs, SSR                                  | F4-03    | `NOT STARTED` |             |                                |
-| R5  | Hold terminu, krok „Dane” (Turnstile, limity), zgody                                                     | F4-03    | `NOT STARTED` |             | Klucze Turnstile               |
-| R6  | Płatność Stripe: Payment Element, webhook, „Oczekujemy na potwierdzenie”, wygasanie                      | F4-03    | `NOT STARTED` |             | Klucze testowe Stripe          |
-| R7  | Potwierdzenie i e-maile (Resend): potwierdzenie z linkiem i plikiem `.ics`                               | F4-04    | `NOT STARTED` |             | Klucz Resend, DNS domeny       |
-| R8  | Zarządzanie z linku: szczegóły, przełożenie, anulowanie ze zwrotem                                       | F4-04    | `NOT STARTED` |             |                                |
-| R9  | Portale: lista wizyt specjalisty i admina, anulowanie przez centrum                                      | F4-04    | `NOT STARTED` |             | Widoki kalendarza: etap K (K5) |
-| R10 | Przypomnienia e-mail 24 h przed wizytą, włączenie `booking_enabled` na produkcji                         | F4-04    | `NOT STARTED` |             |                                |
+| ID  | Zadanie                                                                                                  | Roadmapa | Status        | Commit / PR | Uwagi                                       |
+| --- | -------------------------------------------------------------------------------------------------------- | -------- | ------------- | ----------- | ------------------------------------------- |
+| R0  | Plan (ten dokument), nuqs w `apps/web`, kontrakty parametrów kreatora                                    | F4-01    | `DONE`        | 84acd31     |                                             |
+| RD1 | Schemat dostępności: reguły, okna jednorazowe, nieobecności, konflikty gabinetów, RPC zapisu, testy SQL  | F4-02    | `DONE`        |             |                                             |
+| RD2 | Schemat wizyt i płatności: wykluczenia, RPC wolnych terminów i holdu, `slot_is_available`, testy SQL     | F4-02    | `NOT STARTED` |             |                                             |
+| R1  | Domena slotów w `packages/scheduling` (DST, reguły, wyjątki, zajętość, bufor, lead time, horyzont) z TDD | F4-02    | `IN PROGRESS` |             | Okna i wolne terminy gotowe; zajętość z RD2 |
+| R2  | Portal specjalisty `/dostepnosc`: grafik tygodniowy, nieobecności, okna jednorazowe, podgląd tygodnia    | F4-02    | `DONE`        |             | Pełny kalendarz: etap K                     |
+| R3  | UI `@repo/ui/booking`: stepper, podsumowanie, karty wyboru, siatka tygodnia, lista dnia, legenda         | F4-03    | `NOT STARTED` |             | Stories + testy a11y                        |
+| R4  | `/umow-wizyte`: kroki Usługa → Forma → Specjalista → Termin z nuqs, SSR                                  | F4-03    | `NOT STARTED` |             |                                             |
+| R5  | Hold terminu, krok „Dane” (Turnstile, limity), zgody                                                     | F4-03    | `NOT STARTED` |             | Klucze Turnstile                            |
+| R6  | Płatność Stripe: Payment Element, webhook, „Oczekujemy na potwierdzenie”, wygasanie                      | F4-03    | `NOT STARTED` |             | Klucze testowe Stripe                       |
+| R7  | Potwierdzenie i e-maile (Resend): potwierdzenie z linkiem i plikiem `.ics`                               | F4-04    | `NOT STARTED` |             | Klucz Resend, DNS domeny                    |
+| R8  | Zarządzanie z linku: szczegóły, przełożenie, anulowanie ze zwrotem                                       | F4-04    | `NOT STARTED` |             |                                             |
+| R9  | Portale: lista wizyt specjalisty i admina, anulowanie przez centrum                                      | F4-04    | `NOT STARTED` |             | Widoki kalendarza: etap K (K5)              |
+| R10 | Przypomnienia e-mail 24 h przed wizytą, włączenie `booking_enabled` na produkcji                         | F4-04    | `NOT STARTED` |             |                                             |
 
 ### Potrzebne od centrum przed R5–R7
 
