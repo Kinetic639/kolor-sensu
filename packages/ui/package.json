@@ -11,6 +11,7 @@
     "./avatar": "./src/avatar.tsx",
     "./auth-shell": "./src/auth-shell.tsx",
     "./badge": "./src/badge.tsx",
+    "./booking": "./src/booking/index.ts",
     "./breadcrumb": "./src/breadcrumb.tsx",
     "./button": "./src/button.tsx",
     "./card": "./src/card.tsx",
