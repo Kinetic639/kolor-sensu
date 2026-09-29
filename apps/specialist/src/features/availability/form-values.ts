@@ -89,11 +89,18 @@ export function roomConflicts(
 }
 
 /**
- * After a drag: those hours on that day only, in the first free room (none
+ * After a drag: those hours on that day only, in the room shown over the
+ * calendar or else the first free one (none
  * when all are taken: the specialist picks online or other hours).
  */
 export function quickCreateDefaults(
-  selection: { date: string; startsAt: string; endsAt: string },
+  selection: {
+    date: string;
+    startsAt: string;
+    endsAt: string;
+    /** The room shown over the calendar, preferred when free. */
+    roomId?: string | null;
+  },
   rooms: { id: string }[],
   occupancy: RoomOccupancy[] = [],
 ): AvailabilityRuleInput {
@@ -104,7 +111,8 @@ export function quickCreateDefaults(
     startsAt: selection.startsAt,
     endsAt: selection.endsAt,
   });
-  const room = rooms.find((one) => !taken.has(one.id));
+  const free = rooms.filter((one) => !taken.has(one.id));
+  const room = free.find((one) => one.id === selection.roomId) ?? free[0];
   return oneOff(selection.date, {
     startsAt: selection.startsAt,
     endsAt: selection.endsAt,

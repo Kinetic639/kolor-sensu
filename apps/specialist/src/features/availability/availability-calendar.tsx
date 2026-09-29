@@ -20,12 +20,15 @@ export function AvailabilityCalendar({
   range,
   rules,
   roomAccent,
+  roomId,
 }: {
   days: CalendarDayViewModel[];
   range: MinuteRange;
   rules: SpecialistAvailabilityRule[];
   /** Colour of the room shown over the calendar. */
   roomAccent?: string;
+  /** The room shown over the calendar: its taken and closed hours cannot be selected. */
+  roomId?: string | null;
 }) {
   const editor = useAvailabilityEditor();
   const ruleById = useMemo(
@@ -45,11 +48,20 @@ export function AvailabilityCalendar({
         startsAt: minutesToTime(selection.start),
         endsAt: minutesToTime(selection.end),
         dayLabel: day?.fullLabel ?? selection.columnKey,
+        roomId,
       });
     },
-    [dayByDate, editor],
+    [dayByDate, editor, roomId],
   );
-  const drag = useDragToCreate({ range, onCreate });
+  // The chosen room's taken and closed hours: dragging keeps out of them.
+  const blocked = useCallback(
+    (date: string) => {
+      const day = dayByDate.get(date);
+      return day ? [...day.room.busy, ...day.room.closed] : [];
+    },
+    [dayByDate],
+  );
+  const drag = useDragToCreate({ range, onCreate, blocked });
 
   return (
     <CalendarWeekGrid

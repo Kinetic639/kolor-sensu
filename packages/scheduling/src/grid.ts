@@ -50,6 +50,34 @@ export function dragRange(from: number, to: number, range: MinuteRange) {
   return { start: Math.max(start, range.start), end };
 }
 
+const MIN_LEFT = 15;
+
+/**
+ * `dragRange` that keeps out of blocked times (e.g. a room someone else
+ * has, or its closed hours): a press on one does nothing (null), a drag
+ * stops where one begins or ends, and less than 15 minutes left is nothing.
+ */
+export function dragRangeAround(
+  from: number,
+  to: number,
+  range: MinuteRange,
+  blocked: MinuteRange[],
+): MinuteRange | null {
+  if (blocked.some((one) => one.start <= from && from < one.end)) return null;
+  const selection = dragRange(from, to, range);
+  const lower = Math.max(
+    range.start,
+    ...blocked.filter((one) => one.end <= from).map((one) => one.end),
+  );
+  const upper = Math.min(
+    range.end,
+    ...blocked.filter((one) => one.start > from).map((one) => one.start),
+  );
+  const start = Math.max(selection.start, lower);
+  const end = Math.min(selection.end, upper);
+  return end - start >= MIN_LEFT ? { start, end } : null;
+}
+
 /** 8:00–20:00, widened to whole hours around anything outside it. */
 export function visibleRange(
   blocks: MinuteRange[],

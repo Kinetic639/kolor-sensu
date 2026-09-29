@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   dragRange,
+  dragRangeAround,
   formatHours,
   minutesToTime,
   pointerToMinutes,
@@ -53,6 +54,60 @@ describe("dragRange", () => {
   it("keeps half an hour or more as dragged, within the range", () => {
     expect(dragRange(600, 630, range)).toEqual({ start: 600, end: 630 });
     expect(dragRange(1170, 1170, range)).toEqual({ start: 1140, end: 1200 });
+  });
+});
+
+describe("dragRangeAround", () => {
+  const range = { start: 8 * 60, end: 20 * 60 };
+  // Someone else has the room 10:00–12:00; it is closed from 18:00.
+  const blocked = [
+    { start: 600, end: 720 },
+    { start: 1080, end: 1200 },
+  ];
+
+  it("does nothing when the press is on a blocked time", () => {
+    expect(dragRangeAround(660, 780, range, blocked)).toBeNull();
+    expect(dragRangeAround(600, 540, range, blocked)).toBeNull();
+    expect(dragRangeAround(1080, 1100, range, blocked)).toBeNull();
+  });
+
+  it("stops a drag down where the blocked time begins", () => {
+    expect(dragRangeAround(540, 780, range, blocked)).toEqual({
+      start: 540,
+      end: 600,
+    });
+    // A click just before it: only the time that is left.
+    expect(dragRangeAround(570, 570, range, blocked)).toEqual({
+      start: 570,
+      end: 600,
+    });
+  });
+
+  it("stops a drag up where the blocked time ends", () => {
+    expect(dragRangeAround(780, 540, range, blocked)).toEqual({
+      start: 720,
+      end: 780,
+    });
+    // Right after it is free again.
+    expect(dragRangeAround(720, 780, range, blocked)).toEqual({
+      start: 720,
+      end: 780,
+    });
+  });
+
+  it("gives nothing when less than 15 minutes are left", () => {
+    expect(
+      dragRangeAround(600, 600, range, [{ start: 615, end: 700 }]),
+    ).toEqual({ start: 600, end: 615 });
+    expect(
+      dragRangeAround(595, 595, range, [{ start: 600, end: 700 }]),
+    ).toBeNull();
+  });
+
+  it("is dragRange when nothing is blocked", () => {
+    expect(dragRangeAround(600, 600, range, [])).toEqual(
+      dragRange(600, 600, range),
+    );
   });
 });
 

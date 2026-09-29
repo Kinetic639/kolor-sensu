@@ -140,6 +140,21 @@ describe("roomConflicts", () => {
 });
 
 describe("quickCreateDefaults with others' hours", () => {
+  it("prefers the room shown over the calendar, when free", () => {
+    const other = "20000000-0000-4000-8000-000000000002";
+    expect(
+      quickCreateDefaults(
+        {
+          date: "2030-01-08",
+          startsAt: "10:00",
+          endsAt: "11:00",
+          roomId: other,
+        },
+        [{ id: ROOM }, { id: other }],
+      ).roomId,
+    ).toBe(other);
+  });
+
   it("proposes no room when every room is taken", () => {
     expect(
       quickCreateDefaults(

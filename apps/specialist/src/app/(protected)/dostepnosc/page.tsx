@@ -105,19 +105,27 @@ function RoomFocusBar({
         />
       </div>
       {focus ? (
-        <p className="text-xs text-[var(--text-muted)]">
-          <strong className="font-semibold text-[var(--text)]">
-            {focus.name}
-          </strong>
-          {" · "}
-          {focus.hoursLabel
-            ? `Otwarty: ${focus.hoursLabel}`
-            : "Bez ustalonych godzin otwarcia"}
-          {" · "}
-          {focus.busyLabel
-            ? `W tym tygodniu: ${focus.busyLabel}. Skontaktuj się z osobą, która ma gabinet, jeśli chcesz zamienić godziny.`
-            : "W tym tygodniu nikt inny go nie zajmuje."}
-        </p>
+        <>
+          <p className="text-xs text-[var(--text-muted)]">
+            <strong className="font-semibold text-[var(--text)]">
+              {focus.name}
+            </strong>
+            {" · "}
+            {focus.hoursLabel
+              ? `Otwarty: ${focus.hoursLabel}`
+              : "Bez ustalonych godzin otwarcia"}
+            {" · "}
+            {focus.busyLabel
+              ? `W tym tygodniu: ${focus.busyLabel}. Skontaktuj się z osobą, która ma gabinet, jeśli chcesz zamienić godziny.`
+              : "W tym tygodniu nikt inny go nie zajmuje."}
+          </p>
+          <p className="text-xs text-[var(--text-muted)]">
+            Zaznaczanie na siatce omija zajęte i zamknięte godziny tego
+            gabinetu. Dyżur online albo w innym gabinecie w tym czasie dodasz po
+            wybraniu innego gabinetu lub „Ukryj”, albo przyciskiem „+” przy
+            dniu.
+          </p>
+        </>
       ) : null}
     </Card>
   );
@@ -277,6 +285,7 @@ function CalendarView({
           days={calendar.days}
           range={calendar.range}
           roomAccent={calendar.roomFocus?.accent}
+          roomId={calendar.roomFocus?.id}
           rules={rules}
         />
       </Card>

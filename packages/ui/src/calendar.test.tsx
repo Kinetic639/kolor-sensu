@@ -107,8 +107,14 @@ describe("CalendarBlock", () => {
   });
 });
 
-function DragHarness({ onCreate }: { onCreate: (value: unknown) => void }) {
-  const drag = useDragToCreate({ range, onCreate });
+function DragHarness({
+  onCreate,
+  blocked,
+}: {
+  onCreate: (value: unknown) => void;
+  blocked?: (columnKey: string) => { start: number; end: number }[];
+}) {
+  const drag = useDragToCreate({ range, onCreate, blocked });
   return (
     <CalendarWeekGrid
       columns={columns.map((column) => ({
@@ -153,6 +159,43 @@ describe("useDragToCreate", () => {
       end: 11 * 60,
     });
     expect(screen.queryByLabelText("Podgląd")).not.toBeInTheDocument();
+  });
+
+  describe("around blocked times", () => {
+    // Tuesday 10:00–12:00 is someone else's (1 px per minute from 8:00).
+    const blocked = (key: string) =>
+      key === "2030-01-08" ? [{ start: 600, end: 720 }] : [];
+
+    function tuesday(onCreate = vi.fn()) {
+      render(<DragHarness blocked={blocked} onCreate={onCreate} />);
+      const column = screen.getByRole("group", { name: "Wt" });
+      column.getBoundingClientRect = () =>
+        ({ top: 0, height: 720, left: 0, width: 100 }) as DOMRect;
+      return { column, onCreate };
+    }
+
+    it("stops a drag where the blocked time begins", () => {
+      const { column, onCreate } = tuesday();
+      // 9:00 down to 13:00.
+      fireEvent.pointerDown(column, { button: 0, clientY: 60, pointerId: 1 });
+      fireEvent.pointerMove(column, { clientY: 300, pointerId: 1 });
+      fireEvent.pointerUp(column, { clientY: 300, pointerId: 1 });
+      expect(onCreate).toHaveBeenCalledWith({
+        columnKey: "2030-01-08",
+        start: 9 * 60,
+        end: 10 * 60,
+      });
+    });
+
+    it("does nothing when the press is on the blocked time", () => {
+      const { column, onCreate } = tuesday();
+      // 11:00 down to 13:00.
+      fireEvent.pointerDown(column, { button: 0, clientY: 180, pointerId: 1 });
+      fireEvent.pointerMove(column, { clientY: 300, pointerId: 1 });
+      expect(screen.queryByLabelText("Podgląd")).not.toBeInTheDocument();
+      fireEvent.pointerUp(column, { clientY: 300, pointerId: 1 });
+      expect(onCreate).not.toHaveBeenCalled();
+    });
   });
 
   it("keeps the day columns' dividers when it adds its handlers", () => {

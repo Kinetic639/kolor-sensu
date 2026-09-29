@@ -630,6 +630,8 @@ export interface QuickCreateValues {
   date: string;
   startsAt: string;
   endsAt: string;
+  /** The room shown over the calendar, if any. */
+  roomId?: string | null;
 }
 
 /** The short form after dragging on the calendar: this day, unless a rule. */

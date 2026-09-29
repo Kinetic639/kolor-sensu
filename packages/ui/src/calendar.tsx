@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  dragRange,
+  dragRangeAround,
   minutesToTime,
   pointerToMinutes,
   type MinuteRange,
@@ -259,17 +259,21 @@ export interface DragSelection {
 /**
  * Press and drag down a day column to select a time range, snapped to
  * `step` minutes. Presses on blocks or buttons (`[data-calendar-item]`,
- * `button`, `a`) are left alone. Keyboard users need another way in, such
- * as an "add" button per day.
+ * `button`, `a`) are left alone. `blocked` times of a column (e.g. a
+ * room someone else has) cannot be selected: a press on one does nothing,
+ * a drag stops at one. Keyboard users need another way in, such as an
+ * "add" button per day.
  */
 export function useDragToCreate({
   range,
   step = 15,
   onCreate,
+  blocked,
 }: {
   range: MinuteRange;
   step?: number;
   onCreate: (selection: DragSelection) => void;
+  blocked?: (columnKey: string) => MinuteRange[];
 }) {
   const [preview, setPreview] = useState<DragSelection | null>(null);
   const origin = useRef<{ columnKey: string; minute: number } | null>(null);
@@ -286,6 +290,19 @@ export function useDragToCreate({
     [range, step],
   );
 
+  const selectionFor = useCallback(
+    (columnKey: string, from: number, to: number) => {
+      const selection = dragRangeAround(
+        from,
+        to,
+        range,
+        blocked?.(columnKey) ?? [],
+      );
+      return selection ? { columnKey, ...selection } : null;
+    },
+    [blocked, range],
+  );
+
   const columnProps = useCallback(
     (columnKey: string): HTMLAttributes<HTMLDivElement> => ({
       className: "cursor-crosshair touch-none select-none",
@@ -295,18 +312,18 @@ export function useDragToCreate({
         if (target.closest("[data-calendar-item],button,a")) return;
         // No text selection while dragging across the grid.
         event.preventDefault();
-        event.currentTarget.setPointerCapture?.(event.pointerId);
         const minute = minuteAt(event);
+        const selection = selectionFor(columnKey, minute, minute);
+        // A press on a blocked time starts nothing.
+        if (!selection) return;
+        event.currentTarget.setPointerCapture?.(event.pointerId);
         origin.current = { columnKey, minute };
-        setPreview({ columnKey, ...dragRange(minute, minute, range) });
+        setPreview(selection);
       },
       onPointerMove: (event) => {
         const start = origin.current;
         if (!start || start.columnKey !== columnKey) return;
-        setPreview({
-          columnKey,
-          ...dragRange(start.minute, minuteAt(event), range),
-        });
+        setPreview(selectionFor(columnKey, start.minute, minuteAt(event)));
       },
       onPointerUp: (event) => {
         const start = origin.current;
@@ -314,17 +331,19 @@ export function useDragToCreate({
         setPreview(null);
         if (!start || start.columnKey !== columnKey) return;
         event.currentTarget.releasePointerCapture?.(event.pointerId);
-        onCreate({
+        const selection = selectionFor(
           columnKey,
-          ...dragRange(start.minute, minuteAt(event), range),
-        });
+          start.minute,
+          minuteAt(event),
+        );
+        if (selection) onCreate(selection);
       },
       onPointerCancel: () => {
         origin.current = null;
         setPreview(null);
       },
     }),
-    [minuteAt, onCreate, range],
+    [minuteAt, onCreate, selectionFor],
   );
 
   return { preview, columnProps };
