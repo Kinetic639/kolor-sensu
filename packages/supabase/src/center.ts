@@ -57,6 +57,8 @@ function mapCenterSettings(row: CenterSettingsRow): CenterSettings {
     defaultCurrency: row.default_currency,
     bookingEnabled: row.booking_enabled,
     defaultVisitBufferMinutes: row.default_visit_buffer_minutes,
+    slotStepMinutes: row.slot_step_minutes,
+    holdMinutes: row.hold_minutes,
     minBookingLeadMinutes: row.min_booking_lead_minutes,
     maxBookingHorizonDays: row.max_booking_horizon_days,
     cancellationWindowHours: row.cancellation_window_hours,

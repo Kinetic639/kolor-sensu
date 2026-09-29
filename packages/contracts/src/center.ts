@@ -88,6 +88,10 @@ export interface CenterSettings {
   defaultCurrency: string;
   bookingEnabled: boolean;
   defaultVisitBufferMinutes: number;
+  /** Visits start every so many minutes from local midnight. */
+  slotStepMinutes: number;
+  /** How long a chosen time is held while the client books it. */
+  holdMinutes: number;
   minBookingLeadMinutes: number;
   maxBookingHorizonDays: number;
   cancellationWindowHours: number;

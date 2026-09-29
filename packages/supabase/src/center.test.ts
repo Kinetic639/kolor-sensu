@@ -97,7 +97,9 @@ describe("center domain mapping", () => {
         default_locale: "pl-PL",
         default_currency: "PLN",
         booking_enabled: false,
-        default_visit_buffer_minutes: 15,
+        default_visit_buffer_minutes: 10,
+        slot_step_minutes: 60,
+        hold_minutes: 10,
         min_booking_lead_minutes: 60,
         max_booking_horizon_days: 60,
         cancellation_window_hours: 24,
@@ -110,6 +112,9 @@ describe("center domain mapping", () => {
       businessName: "Kolor Sensu",
       timezone: "Europe/Warsaw",
       bookingEnabled: false,
+      defaultVisitBufferMinutes: 10,
+      slotStepMinutes: 60,
+      holdMinutes: 10,
     });
   });
 

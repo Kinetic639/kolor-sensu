@@ -14,6 +14,135 @@ export type Database = {
   };
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          access_token_hash: string;
+          availability_rule_id: string | null;
+          blocks: unknown;
+          buffer_minutes: number;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          client_email: string | null;
+          client_name: string | null;
+          client_notes: string | null;
+          client_phone: string | null;
+          confirmed_at: string | null;
+          created_at: string;
+          currency_code: string;
+          duration_minutes: number;
+          during: unknown;
+          hold_expires_at: string | null;
+          id: string;
+          mode: Database["public"]["Enums"]["visit_mode"];
+          price_minor: number;
+          privacy_accepted_at: string | null;
+          reference: string;
+          room_id: string | null;
+          service_id: string;
+          specialist_id: string;
+          specialist_service_id: string;
+          status: Database["public"]["Enums"]["appointment_status"];
+          terms_accepted_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          access_token_hash: string;
+          availability_rule_id?: string | null;
+          blocks: unknown;
+          buffer_minutes: number;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          client_email?: string | null;
+          client_name?: string | null;
+          client_notes?: string | null;
+          client_phone?: string | null;
+          confirmed_at?: string | null;
+          created_at?: string;
+          currency_code: string;
+          duration_minutes: number;
+          during: unknown;
+          hold_expires_at?: string | null;
+          id?: string;
+          mode: Database["public"]["Enums"]["visit_mode"];
+          price_minor: number;
+          privacy_accepted_at?: string | null;
+          reference: string;
+          room_id?: string | null;
+          service_id: string;
+          specialist_id: string;
+          specialist_service_id: string;
+          status?: Database["public"]["Enums"]["appointment_status"];
+          terms_accepted_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          access_token_hash?: string;
+          availability_rule_id?: string | null;
+          blocks?: unknown;
+          buffer_minutes?: number;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          client_email?: string | null;
+          client_name?: string | null;
+          client_notes?: string | null;
+          client_phone?: string | null;
+          confirmed_at?: string | null;
+          created_at?: string;
+          currency_code?: string;
+          duration_minutes?: number;
+          during?: unknown;
+          hold_expires_at?: string | null;
+          id?: string;
+          mode?: Database["public"]["Enums"]["visit_mode"];
+          price_minor?: number;
+          privacy_accepted_at?: string | null;
+          reference?: string;
+          room_id?: string | null;
+          service_id?: string;
+          specialist_id?: string;
+          specialist_service_id?: string;
+          status?: Database["public"]["Enums"]["appointment_status"];
+          terms_accepted_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "appointments_availability_rule_id_fkey";
+            columns: ["availability_rule_id"];
+            isOneToOne: false;
+            referencedRelation: "specialist_availability_rules";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointments_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointments_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointments_specialist_id_fkey";
+            columns: ["specialist_id"];
+            isOneToOne: false;
+            referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointments_specialist_service_id_fkey";
+            columns: ["specialist_service_id"];
+            isOneToOne: false;
+            referencedRelation: "specialist_services";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       center_public_profile: {
         Row: {
           created_at: string;
@@ -69,10 +198,12 @@ export type Database = {
           default_locale: string;
           default_visit_buffer_minutes: number;
           email: string | null;
+          hold_minutes: number;
           id: number;
           max_booking_horizon_days: number;
           min_booking_lead_minutes: number;
           phone: string | null;
+          slot_step_minutes: number;
           timezone: string;
           updated_at: string;
         };
@@ -85,10 +216,12 @@ export type Database = {
           default_locale?: string;
           default_visit_buffer_minutes?: number;
           email?: string | null;
+          hold_minutes?: number;
           id?: number;
           max_booking_horizon_days?: number;
           min_booking_lead_minutes?: number;
           phone?: string | null;
+          slot_step_minutes?: number;
           timezone?: string;
           updated_at?: string;
         };
@@ -101,10 +234,12 @@ export type Database = {
           default_locale?: string;
           default_visit_buffer_minutes?: number;
           email?: string | null;
+          hold_minutes?: number;
           id?: number;
           max_booking_horizon_days?: number;
           min_booking_lead_minutes?: number;
           phone?: string | null;
+          slot_step_minutes?: number;
           timezone?: string;
           updated_at?: string;
         };
@@ -166,6 +301,53 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [];
+      };
+      payments: {
+        Row: {
+          amount_minor: number;
+          appointment_id: string;
+          checkout_session_id: string;
+          created_at: string;
+          currency_code: string;
+          id: string;
+          payment_intent_id: string | null;
+          refunded_minor: number;
+          status: Database["public"]["Enums"]["payment_status"];
+          updated_at: string;
+        };
+        Insert: {
+          amount_minor: number;
+          appointment_id: string;
+          checkout_session_id: string;
+          created_at?: string;
+          currency_code: string;
+          id?: string;
+          payment_intent_id?: string | null;
+          refunded_minor?: number;
+          status?: Database["public"]["Enums"]["payment_status"];
+          updated_at?: string;
+        };
+        Update: {
+          amount_minor?: number;
+          appointment_id?: string;
+          checkout_session_id?: string;
+          created_at?: string;
+          currency_code?: string;
+          id?: string;
+          payment_intent_id?: string | null;
+          refunded_minor?: number;
+          status?: Database["public"]["Enums"]["payment_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payments_appointment_id_fkey";
+            columns: ["appointment_id"];
+            isOneToOne: false;
+            referencedRelation: "appointments";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       profiles: {
         Row: {
@@ -560,6 +742,7 @@ export type Database = {
           created_at?: string;
           ends_at?: string;
           id?: string;
+          interval_weeks?: number;
           mode?: Database["public"]["Enums"]["availability_mode"];
           note?: string | null;
           occurrence_count?: number | null;
@@ -937,6 +1120,24 @@ export type Database = {
           },
         ];
       };
+      stripe_events: {
+        Row: {
+          id: string;
+          received_at: string;
+          type: string;
+        };
+        Insert: {
+          id: string;
+          received_at?: string;
+          type: string;
+        };
+        Update: {
+          id?: string;
+          received_at?: string;
+          type?: string;
+        };
+        Relationships: [];
+      };
       user_roles: {
         Row: {
           created_at: string;
@@ -1080,14 +1281,11 @@ export type Database = {
         Args: { p_draft_id: string; p_review_comment?: string };
         Returns: undefined;
       };
-      delete_availability_rule: {
-        Args: { p_id: string };
-        Returns: undefined;
-      };
       delete_availability_occurrence: {
         Args: { p_date: string; p_rule_id: string; p_scope: string };
         Returns: undefined;
       };
+      delete_availability_rule: { Args: { p_id: string }; Returns: undefined };
       delete_time_off: { Args: { p_id: string }; Returns: undefined };
       edit_availability_occurrence: {
         Args: {
@@ -1108,9 +1306,55 @@ export type Database = {
         };
         Returns: string;
       };
+      get_booking: {
+        Args: { p_access_token: string };
+        Returns: {
+          currency_code: string;
+          ends_at: string;
+          hold_expires_at: string;
+          location_name: string;
+          mode: Database["public"]["Enums"]["visit_mode"];
+          price_minor: number;
+          reference: string;
+          room_name: string;
+          service_name: string;
+          specialist_name: string;
+          starts_at: string;
+          status: Database["public"]["Enums"]["appointment_status"];
+        }[];
+      };
       has_role: {
         Args: { required_role: Database["public"]["Enums"]["app_role"] };
         Returns: boolean;
+      };
+      hold_slot: {
+        Args: {
+          p_location_slug?: string;
+          p_mode: Database["public"]["Enums"]["visit_mode"];
+          p_service_slug: string;
+          p_specialist_slug: string;
+          p_starts_at: string;
+        };
+        Returns: {
+          access_token: string;
+          appointment_id: string;
+          hold_expires_at: string;
+          reference: string;
+        }[];
+      };
+      list_free_slots: {
+        Args: {
+          p_from: string;
+          p_location_slug?: string;
+          p_mode: Database["public"]["Enums"]["visit_mode"];
+          p_service_slug: string;
+          p_specialist_slug: string;
+          p_to: string;
+        };
+        Returns: {
+          ends_at: string;
+          starts_at: string;
+        }[];
       };
       list_public_room_locations: {
         Args: never;
@@ -1150,6 +1394,7 @@ export type Database = {
         Args: { p_draft_id: string; p_review_comment: string };
         Returns: undefined;
       };
+      release_hold: { Args: { p_access_token: string }; Returns: boolean };
       remove_room_image: { Args: { p_image_id: string }; Returns: string };
       reorder_room_images: {
         Args: { p_image_ids: string[]; p_room_id: string };
@@ -1227,8 +1472,17 @@ export type Database = {
     };
     Enums: {
       app_role: "admin" | "specialist";
+      appointment_status:
+        "held" | "awaiting_payment" | "confirmed" | "cancelled" | "expired";
       availability_mode: "in_person" | "online" | "hybrid";
       availability_recurrence: "once" | "weekly";
+      payment_status:
+        | "pending"
+        | "succeeded"
+        | "failed"
+        | "expired"
+        | "refunded"
+        | "partially_refunded";
       profile_publication_status:
         "draft" | "pending_review" | "published" | "rejected";
       room_availability_exception_type:
@@ -1240,6 +1494,7 @@ export type Database = {
         | "assessment"
         | "workshop_related"
         | "other";
+      visit_mode: "in_person" | "online";
       workshop_modality: "in_person" | "online";
       workshop_status: "draft" | "published" | "cancelled" | "completed";
     };
@@ -1370,8 +1625,23 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "specialist"],
+      appointment_status: [
+        "held",
+        "awaiting_payment",
+        "confirmed",
+        "cancelled",
+        "expired",
+      ],
       availability_mode: ["in_person", "online", "hybrid"],
       availability_recurrence: ["once", "weekly"],
+      payment_status: [
+        "pending",
+        "succeeded",
+        "failed",
+        "expired",
+        "refunded",
+        "partially_refunded",
+      ],
       profile_publication_status: [
         "draft",
         "pending_review",
@@ -1391,6 +1661,7 @@ export const Constants = {
         "workshop_related",
         "other",
       ],
+      visit_mode: ["in_person", "online"],
       workshop_modality: ["in_person", "online"],
       workshop_status: ["draft", "published", "cancelled", "completed"],
     },
