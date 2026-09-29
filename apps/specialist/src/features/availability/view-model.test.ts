@@ -346,6 +346,9 @@ describe("room occupancy in the calendar", () => {
       endsAt: "12:00",
       specialistId: "anna",
       specialistName: "Anna Nowak",
+      specialistInitials: "AN",
+      specialistAvatarUrl: "https://signed/anna",
+      specialistPhotoPath: "anna/photo.webp",
     },
     // Someone in room 2: another room, not shown.
     {
@@ -355,6 +358,9 @@ describe("room occupancy in the calendar", () => {
       endsAt: "12:00",
       specialistId: "jan",
       specialistName: "Jan Kowalski",
+      specialistInitials: "JK",
+      specialistAvatarUrl: null,
+      specialistPhotoPath: null,
     },
     // My own hours in room 1 are my windows, not someone else's.
     {
@@ -364,6 +370,9 @@ describe("room occupancy in the calendar", () => {
       endsAt: "13:00",
       specialistId: "specialist",
       specialistName: "Ja",
+      specialistInitials: "J",
+      specialistAvatarUrl: null,
+      specialistPhotoPath: null,
     },
   ];
 
@@ -399,6 +408,8 @@ describe("room occupancy in the calendar", () => {
         end: 720,
         timeLabel: "10:00 – 12:00",
         specialistName: "Anna Nowak",
+        initials: "AN",
+        avatarUrl: "https://signed/anna",
         label: "Gabinet 1 zajęty: Anna Nowak, 10:00 – 12:00",
       },
     ]);

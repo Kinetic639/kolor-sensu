@@ -10,7 +10,9 @@ import {
   buildSpecialistMediaPath,
   pickPortalAvatarPath,
   getSpecialistSlugRedirect,
+  saveMySpecialistProfileDraft,
   setSpecialistPublicSlugAdmin,
+  signSpecialistPhotos,
   specialistMappers,
   uploadSpecialistProfileImage,
   validateSpecialistImage,
@@ -131,7 +133,8 @@ describe("specialist domain schemas", () => {
 
 describe("specialist profile submission", () => {
   const complete = {
-    displayName: "Anna Kowalska",
+    firstName: "Anna",
+    lastName: "Kowalska",
     professionalTitle: "Psychoterapeutka",
     shortBio: "Pomagam dorosłym.",
     longBio: emptyRichTextDocument,
@@ -175,7 +178,8 @@ describe("specialist profile submission", () => {
   it("names each missing required field", () => {
     const result = specialistProfileSubmissionSchema.safeParse({
       ...complete,
-      displayName: " ",
+      firstName: " ",
+      lastName: "",
       professionalTitle: "",
       shortBio: "",
       specializations: [],
@@ -188,7 +192,8 @@ describe("specialist profile submission", () => {
       result.error?.issues.map((issue) => issue.path.join(".")).sort(),
     ).toEqual([
       "clientGroups",
-      "displayName",
+      "firstName",
+      "lastName",
       "modalities",
       "professionalTitle",
       "shortBio",
@@ -266,6 +271,8 @@ describe("specialist draft mapping", () => {
   const draftRow = {
     id: "draft-id",
     specialist_id: "specialist-id",
+    first_name: "Anna",
+    last_name: "Kowalska",
     display_name: "Anna Kowalska",
     professional_title: "Psychoterapeutka",
     short_bio: "Opis",
@@ -294,8 +301,11 @@ describe("specialist draft mapping", () => {
     updated_at: "2026-09-27T00:00:00Z",
   };
 
-  it("maps the title and the rich text bio", () => {
+  it("maps the name, the title and the rich text bio", () => {
     expect(specialistMappers.draft(draftRow)).toMatchObject({
+      firstName: "Anna",
+      lastName: "Kowalska",
+      displayName: "Anna Kowalska",
       professionalTitle: "Psychoterapeutka",
       longBio: draftRow.long_bio,
       clientGroups: ["adults", "couples"],
@@ -407,5 +417,85 @@ describe("pickPortalAvatarPath", () => {
         publishedPhotoPath: null,
       }),
     ).toBeNull();
+  });
+});
+
+describe("saveMySpecialistProfileDraft", () => {
+  it("sends the first and last name separately", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: "draft-id", error: null });
+    await saveMySpecialistProfileDraft({ rpc } as never, {
+      firstName: " Anna ",
+      lastName: "Nowak-Kowalska",
+      professionalTitle: "",
+      shortBio: "",
+      longBio: emptyRichTextDocument,
+      profilePhotoUrl: null,
+      portraitPhotoUrl: null,
+      languages: [],
+      therapyApproaches: [],
+      specializations: [],
+      education: [],
+      certificates: [],
+      modalities: [],
+      clientGroups: [],
+    });
+    expect(rpc).toHaveBeenCalledWith(
+      "save_my_specialist_profile_draft",
+      expect.objectContaining({
+        p_first_name: "Anna",
+        p_last_name: "Nowak-Kowalska",
+      }),
+    );
+    expect(rpc.mock.calls[0]![1]).not.toHaveProperty("p_display_name");
+  });
+});
+
+describe("signSpecialistPhotos", () => {
+  it("signs every distinct photo at once", async () => {
+    const createSignedUrls = vi.fn().mockResolvedValue({
+      data: [
+        { path: "a/1.webp", signedUrl: "https://signed/1", error: null },
+        { path: "b/2.webp", signedUrl: null, error: "Not found" },
+      ],
+      error: null,
+    });
+    const from = vi.fn(() => ({ createSignedUrls }));
+
+    const urls = await signSpecialistPhotos({ storage: { from } } as never, [
+      "a/1.webp",
+      null,
+      "b/2.webp",
+      "a/1.webp",
+    ]);
+
+    expect(from).toHaveBeenCalledWith("specialist-profile-media");
+    expect(createSignedUrls).toHaveBeenCalledWith(
+      ["a/1.webp", "b/2.webp"],
+      1800,
+    );
+    expect(urls.get("a/1.webp")).toBe("https://signed/1");
+    expect(urls.has("b/2.webp")).toBe(false);
+  });
+
+  it("gives no photos rather than failing the page", async () => {
+    const createSignedUrls = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: new Error("down") });
+    const from = vi.fn(() => ({ createSignedUrls }));
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const urls = await signSpecialistPhotos({ storage: { from } } as never, [
+      "a/1.webp",
+    ]);
+    expect(urls.size).toBe(0);
+    error.mockRestore();
+  });
+
+  it("asks for nothing without photos", async () => {
+    const from = vi.fn();
+    expect(
+      (await signSpecialistPhotos({ storage: { from } } as never, [null])).size,
+    ).toBe(0);
+    expect(from).not.toHaveBeenCalled();
   });
 });

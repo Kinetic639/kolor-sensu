@@ -126,6 +126,8 @@ export function AvailabilityCalendar({
                 variant="taken"
               >
                 <RoomTakenBody
+                  avatarUrl={one.avatarUrl}
+                  initials={one.initials}
                   name={one.specialistName}
                   timeLabel={one.timeLabel}
                 />

@@ -79,15 +79,29 @@ BEGIN
     RAISE EXCEPTION 'A/B: specialist unexpectedly saw another draft specialist''s record';
   END IF;
 
+  -- A new specialist's public profile starts with the account's name.
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialist_public_profiles
+    WHERE specialist_id = (SELECT first_specialist_id FROM domain_test_ids)
+      AND first_name = 'Reviewer' AND last_name = 'Specialist'
+      AND display_name = 'Reviewer Specialist'
+  ) THEN
+    RAISE EXCEPTION 'T: a new public profile did not take the account''s name';
+  END IF;
+
   SELECT public.save_my_specialist_profile_draft(
-    p_display_name => 'Approved Specialist',
+    p_first_name => ' Approved ',
+    p_last_name => 'Specialist',
     p_short_bio => 'Pending biography',
     p_languages => ARRAY['pl']
   ) INTO own_draft_id;
 
+  -- The name on the site is made of the first and last name.
   IF NOT EXISTS (
     SELECT 1 FROM public.specialist_profile_drafts
-    WHERE id = own_draft_id AND display_name = 'Approved Specialist'
+    WHERE id = own_draft_id
+      AND first_name = 'Approved' AND last_name = 'Specialist'
+      AND display_name = 'Approved Specialist'
   ) THEN
     RAISE EXCEPTION 'C: specialist could not create and read their own draft';
   END IF;
@@ -136,7 +150,8 @@ DECLARE
   own_draft_id uuid;
 BEGIN
   SELECT public.save_my_specialist_profile_draft(
-    p_display_name => 'Dual Role Specialist'
+    p_first_name => 'Dual Role',
+    p_last_name => 'Specialist'
   ) INTO own_draft_id;
   PERFORM public.submit_my_specialist_profile_draft(own_draft_id);
 
@@ -165,8 +180,22 @@ DO $$
 DECLARE
   own_draft_id uuid;
 BEGIN
+  -- Without a last name the draft cannot be sent for review.
   SELECT public.save_my_specialist_profile_draft(
-    p_display_name => 'Rejected Specialist',
+    p_first_name => 'Rejected',
+    p_last_name => '',
+    p_short_bio => 'Needs revision'
+  ) INTO own_draft_id;
+  BEGIN
+    PERFORM public.submit_my_specialist_profile_draft(own_draft_id);
+    RAISE EXCEPTION 'U: a draft without a last name was sent for review';
+  EXCEPTION
+    WHEN no_data_found THEN NULL;
+  END;
+
+  SELECT public.save_my_specialist_profile_draft(
+    p_first_name => 'Rejected',
+    p_last_name => 'Specialist',
     p_short_bio => 'Needs revision'
   ) INTO own_draft_id;
   PERFORM public.submit_my_specialist_profile_draft(own_draft_id);
@@ -232,6 +261,8 @@ BEGIN
       ON draft.specialist_id = profile.specialist_id
     WHERE profile.specialist_id = (SELECT first_specialist_id FROM domain_test_ids)
       AND profile.display_name = 'Approved Specialist'
+      AND profile.first_name = 'Approved'
+      AND profile.last_name = 'Specialist'
       AND profile.publication_status = 'published'
       AND profile.published_at IS NOT NULL
       AND draft.id = approval_draft_id
@@ -240,6 +271,15 @@ BEGIN
       AND draft.reviewed_at IS NOT NULL
   ) THEN
     RAISE EXCEPTION 'H/N: approval did not atomically publish and resolve the draft';
+  END IF;
+
+  -- The approved name becomes the account's name too.
+  IF NOT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = '20000000-0000-4000-8000-000000000001'
+      AND first_name = 'Approved' AND last_name = 'Specialist'
+  ) THEN
+    RAISE EXCEPTION 'V: approval did not update the account''s name';
   END IF;
 
   SELECT id INTO rejection_draft_id
@@ -334,8 +374,12 @@ BEGIN
 END;
 $$;
 
--- Only admins rename a specialist's public address.
+-- Only admins rename a specialist's public address. The specialist is
+-- active again: redirects are readable only for published, active ones.
 RESET ROLE;
+UPDATE public.specialists
+SET active = true
+WHERE id = (SELECT first_specialist_id FROM domain_test_ids);
 SELECT set_config(
   'request.jwt.claims',
   '{"sub":"20000000-0000-4000-8000-000000000001","role":"authenticated"}',

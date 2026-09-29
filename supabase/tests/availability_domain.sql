@@ -427,6 +427,8 @@ BEGIN
     WHERE busy.room_id = ids.room_2_id AND busy.day = '2030-01-08'
       AND busy.starts_at = '13:00' AND busy.ends_at = '16:00'
       AND busy.specialist_id = ids.anna_id AND busy.specialist_name = 'Anna Test'
+      AND busy.specialist_first_name = 'Anna' AND busy.specialist_last_name = 'Test'
+      AND busy.specialist_avatar_url IS NULL AND busy.specialist_photo_path IS NULL
   ) THEN
     RAISE EXCEPTION 'V: room occupancy is missing Anna''s room 2';
   END IF;

@@ -209,7 +209,12 @@ export interface SpecialistAvailabilityRule {
 /** A window in a room, with whose it is (for the room's schedule). */
 export interface RoomAvailabilityRule extends SpecialistAvailabilityRule {
   specialistName: string;
+  /** From the first and the last name: "AN" for Anna Maria Nowak. */
+  specialistInitials: string;
+  /** The account's picture (a URL), if any. */
   specialistAvatarUrl: string | null;
+  /** The published profile photo (a storage path, to be signed). */
+  specialistPhotoPath: string | null;
 }
 
 /** Who has a room when, on one date (for colleagues and admins). */
@@ -221,6 +226,12 @@ export interface RoomOccupancy {
   endsAt: string;
   specialistId: string;
   specialistName: string;
+  /** From the first and the last name. */
+  specialistInitials: string;
+  /** The account's picture (a URL), if any. */
+  specialistAvatarUrl: string | null;
+  /** The published profile photo (a storage path, to be signed). */
+  specialistPhotoPath: string | null;
 }
 
 export interface SpecialistTimeOff {

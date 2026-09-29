@@ -26,12 +26,10 @@ export async function loadProfileEditor() {
     specialist,
     published,
     draft,
-    fallbackName: [
-      authorization.profile.first_name,
-      authorization.profile.last_name,
-    ]
-      .filter(Boolean)
-      .join(" "),
+    fallbackName: {
+      firstName: authorization.profile.first_name ?? "",
+      lastName: authorization.profile.last_name ?? "",
+    },
     media: { profilePhotoUrl: null, portraitPhotoUrl: null },
     webUrl: process.env.NEXT_PUBLIC_WEB_URL ?? "http://localhost:3000",
   });

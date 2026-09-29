@@ -593,8 +593,10 @@ export type Database = {
           created_at: string;
           display_name: string;
           education: string[];
+          first_name: string;
           id: string;
           languages: string[];
+          last_name: string;
           long_bio: Json;
           modalities: string[];
           portrait_photo_url: string | null;
@@ -618,8 +620,10 @@ export type Database = {
           created_at?: string;
           display_name?: string;
           education?: string[];
+          first_name?: string;
           id?: string;
           languages?: string[];
+          last_name?: string;
           long_bio?: Json;
           modalities?: string[];
           portrait_photo_url?: string | null;
@@ -643,8 +647,10 @@ export type Database = {
           created_at?: string;
           display_name?: string;
           education?: string[];
+          first_name?: string;
           id?: string;
           languages?: string[];
+          last_name?: string;
           long_bio?: Json;
           modalities?: string[];
           portrait_photo_url?: string | null;
@@ -693,7 +699,9 @@ export type Database = {
           created_at: string;
           display_name: string;
           education: string[];
+          first_name: string;
           languages: string[];
+          last_name: string;
           long_bio: Json;
           modalities: string[];
           portrait_photo_url: string | null;
@@ -712,7 +720,9 @@ export type Database = {
           created_at?: string;
           display_name?: string;
           education?: string[];
+          first_name?: string;
           languages?: string[];
+          last_name?: string;
           long_bio?: Json;
           modalities?: string[];
           portrait_photo_url?: string | null;
@@ -731,7 +741,9 @@ export type Database = {
           created_at?: string;
           display_name?: string;
           education?: string[];
+          first_name?: string;
           languages?: string[];
+          last_name?: string;
           long_bio?: Json;
           modalities?: string[];
           portrait_photo_url?: string | null;
@@ -1118,8 +1130,12 @@ export type Database = {
           day: string;
           ends_at: string;
           room_id: string;
+          specialist_avatar_url: string | null;
+          specialist_first_name: string;
           specialist_id: string;
+          specialist_last_name: string;
           specialist_name: string;
+          specialist_photo_path: string | null;
           starts_at: string;
         }[];
       };
@@ -1174,9 +1190,10 @@ export type Database = {
         Args: {
           p_certificates?: string[];
           p_client_groups?: string[];
-          p_display_name: string;
           p_education?: string[];
+          p_first_name: string;
           p_languages?: string[];
+          p_last_name: string;
           p_long_bio?: Json;
           p_modalities?: string[];
           p_portrait_photo_url?: string;

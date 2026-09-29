@@ -274,11 +274,16 @@ describe("listRoomAvailabilityRules", () => {
           exceptions: [],
           specialist: {
             profile: {
-              first_name: "Anna",
+              first_name: "Anna Maria",
               last_name: "Nowak",
               avatar_url: null,
             },
-            public_profile: { display_name: "Anna Nowak-Kowal" },
+            public_profile: {
+              first_name: "Anna",
+              last_name: "Nowak-Kowal",
+              display_name: "Anna Nowak-Kowal",
+              profile_photo_url: "anna/photo.webp",
+            },
           },
         },
         {
@@ -300,7 +305,13 @@ describe("listRoomAvailabilityRules", () => {
           exceptions: [],
           specialist: {
             profile: { first_name: "", last_name: "", avatar_url: null },
-            public_profile: { display_name: "Jan Kowalski" },
+            public_profile: {
+              first_name: "Jan",
+              last_name: "Kowalski",
+              display_name: "Jan Kowalski",
+              profile_photo_url: null,
+              portrait_photo_url: "jan/portrait.webp",
+            },
           },
         },
       ],
@@ -316,11 +327,21 @@ describe("listRoomAvailabilityRules", () => {
       expect.objectContaining({
         id: "rule",
         startsAt: "09:00",
-        specialistName: "Anna Nowak",
+        specialistName: "Anna Maria Nowak",
+        // From the first and the last name, not from every word.
+        specialistInitials: "AN",
         specialistAvatarUrl: null,
+        // The profile photo, signed by the page that shows it.
+        specialistPhotoPath: "anna/photo.webp",
       }),
       // Without a name on the account, the public profile's name.
-      expect.objectContaining({ id: "rule-2", specialistName: "Jan Kowalski" }),
+      expect.objectContaining({
+        id: "rule-2",
+        specialistName: "Jan Kowalski",
+        specialistInitials: "JK",
+        // No profile photo: no picture (the portrait is not an avatar).
+        specialistPhotoPath: null,
+      }),
     ]);
   });
 });
@@ -335,7 +356,11 @@ describe("listRoomOccupancy", () => {
           starts_at: "13:00:00",
           ends_at: "16:00:00",
           specialist_id: "anna",
-          specialist_name: "Anna Nowak",
+          specialist_name: "Anna Maria Nowak",
+          specialist_first_name: "Anna Maria",
+          specialist_last_name: "Nowak",
+          specialist_avatar_url: null,
+          specialist_photo_path: "anna/photo.webp",
         },
       ],
       error: null,
@@ -350,7 +375,10 @@ describe("listRoomOccupancy", () => {
         startsAt: "13:00",
         endsAt: "16:00",
         specialistId: "anna",
-        specialistName: "Anna Nowak",
+        specialistName: "Anna Maria Nowak",
+        specialistInitials: "AN",
+        specialistAvatarUrl: null,
+        specialistPhotoPath: "anna/photo.webp",
       },
     ]);
     expect(rpc).toHaveBeenCalledWith("list_room_occupancy", {

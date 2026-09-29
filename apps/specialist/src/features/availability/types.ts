@@ -50,6 +50,8 @@ export interface CalendarDayViewModel {
       end: number;
       timeLabel: string;
       specialistName: string;
+      initials: string;
+      avatarUrl: string | null;
       label: string;
     }[];
     closed: { start: number; end: number; label: string }[];

@@ -107,15 +107,6 @@ export interface RoomScheduleViewModel {
 const RESOURCE_COLOURS = 6;
 const UPCOMING = 4;
 
-export function initialsOf(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]!.toUpperCase())
-    .join("");
-}
-
 const rangeLabel = (ranges: MinuteRange[]) =>
   ranges
     .map((one) => `${minutesToTime(one.start)}–${minutesToTime(one.end)}`)
@@ -155,7 +146,7 @@ export function mapRoomScheduleViewModel({
         {
           id: one.specialistId,
           name: one.specialistName,
-          initials: initialsOf(one.specialistName),
+          initials: one.specialistInitials,
           avatarUrl: one.specialistAvatarUrl,
         },
       ]),
@@ -239,7 +230,7 @@ export function mapRoomScheduleViewModel({
           timeLabel: `${local(one.start, "HH:mm")} – ${local(one.end, "HH:mm")}`,
           specialistId: rule.specialistId,
           specialistName: rule.specialistName,
-          initials: initialsOf(rule.specialistName),
+          initials: rule.specialistInitials,
           avatarUrl: rule.specialistAvatarUrl,
           ...colours.get(rule.specialistId)!,
           mode: one.mode,

@@ -41,6 +41,24 @@ export function clientGroupLabels(groups: readonly ClientGroup[]): string[] {
     .map((group) => CLIENT_GROUP_LABELS[group]);
 }
 
+export interface PersonName {
+  firstName: string;
+  lastName: string;
+}
+
+/** "Anna Nowak": the first and last name, blanks left out. */
+export function personName({ firstName, lastName }: PersonName) {
+  return [firstName.trim(), lastName.trim()].filter(Boolean).join(" ");
+}
+
+/** "AN": the first letter of the first and of the last name. */
+export function personInitials({ firstName, lastName }: PersonName) {
+  return [firstName.trim(), lastName.trim()]
+    .filter(Boolean)
+    .map((part) => part[0]!.toLocaleUpperCase("pl-PL"))
+    .join("");
+}
+
 const optionalMediaPathSchema = z
   .string()
   .max(2048)
@@ -51,7 +69,8 @@ const optionalMediaPathSchema = z
   .nullable();
 
 const profileFields = {
-  displayName: z.string().trim().max(160),
+  firstName: z.string().trim().max(80),
+  lastName: z.string().trim().max(80),
   professionalTitle: z.string().trim().max(160),
   shortBio: z.string().trim().max(500),
   // Rich text (docs/architecture/rich-text-platform.md), 10 000 characters.
@@ -80,7 +99,8 @@ export const specialistProfileDraftInputSchema = z.object(profileFields);
  */
 export const specialistProfileSubmissionSchema = z.object({
   ...profileFields,
-  displayName: profileFields.displayName.min(1, "Podaj imię i nazwisko."),
+  firstName: profileFields.firstName.min(1, "Podaj imię."),
+  lastName: profileFields.lastName.min(1, "Podaj nazwisko."),
   professionalTitle: profileFields.professionalTitle.min(
     1,
     "Podaj tytuł zawodowy.",
@@ -170,6 +190,9 @@ export interface SpecialistPublicProfile {
   acceptingNewClients: boolean;
   professionalTitle: string | null;
   joinedAt: string | null;
+  firstName: string;
+  lastName: string;
+  /** The first and last name, as shown on the site. */
   displayName: string;
   shortBio: string;
   longBio: RichTextDocument;
@@ -191,6 +214,9 @@ export interface SpecialistPublicProfile {
 export interface SpecialistProfileDraft {
   id: string;
   specialistId: string;
+  firstName: string;
+  lastName: string;
+  /** The first and last name, as shown on the site. */
   displayName: string;
   professionalTitle: string | null;
   shortBio: string;

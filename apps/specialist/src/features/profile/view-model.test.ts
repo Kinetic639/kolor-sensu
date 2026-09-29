@@ -22,6 +22,8 @@ const specialist: Specialist = {
 };
 
 const content = {
+  firstName: "Anna",
+  lastName: "Kowalska",
   displayName: "Anna Kowalska",
   shortBio: "Opis",
   longBio: emptyRichTextDocument as RichTextDocument,
@@ -77,7 +79,7 @@ const media = {
 };
 const base = {
   specialist,
-  fallbackName: "Anna Kowalska",
+  fallbackName: { firstName: "Anna", lastName: "Kowalska" },
   media,
   webUrl: "https://kolorsensu.pl",
 };
@@ -93,7 +95,11 @@ describe("mapProfileEditorViewModel", () => {
 
     expect(model.status).toBeNull();
     expect(model.editable).toBe(true);
-    expect(model.values.displayName).toBe("Anna Kowalska");
+    expect(model.values).toMatchObject({
+      firstName: "Anna",
+      lastName: "Kowalska",
+    });
+    expect(model.values).not.toHaveProperty("displayName");
     expect(model.values.specializations).toEqual([]);
     expect(model.values.clientGroups).toEqual([]);
     expect(model.publicUrl).toBeNull();

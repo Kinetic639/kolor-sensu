@@ -1,5 +1,6 @@
 import {
   emptyRichTextDocument,
+  type PersonName,
   type Specialist,
   type SpecialistProfileDraft,
   type SpecialistPublicProfile,
@@ -11,7 +12,8 @@ function pickContent(
   fallbackTitle: string | null,
 ): ProfileFormValues {
   return {
-    displayName: source.displayName,
+    firstName: source.firstName,
+    lastName: source.lastName,
     professionalTitle: source.professionalTitle ?? fallbackTitle ?? "",
     shortBio: source.shortBio,
     longBio: source.longBio,
@@ -28,11 +30,12 @@ function pickContent(
 }
 
 function emptyContent(
-  displayName: string,
+  name: PersonName,
   professionalTitle: string | null,
 ): ProfileFormValues {
   return {
-    displayName,
+    firstName: name.firstName,
+    lastName: name.lastName,
     professionalTitle: professionalTitle ?? "",
     shortBio: "",
     longBio: emptyRichTextDocument,
@@ -63,7 +66,8 @@ export function mapProfileEditorViewModel({
   specialist: Specialist;
   published: SpecialistPublicProfile | null;
   draft: SpecialistProfileDraft | null;
-  fallbackName: string;
+  /** The account's name, for a profile not saved yet. */
+  fallbackName: PersonName;
   media: ProfileEditorViewModel["photoPreviews"];
   webUrl: string;
 }): ProfileEditorViewModel {

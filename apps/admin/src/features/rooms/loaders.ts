@@ -16,6 +16,7 @@ import {
   listRoomOpeningHours,
   listRoomsAdmin,
   listTimeOffForSpecialists,
+  signSpecialistPhotos,
 } from "@repo/supabase";
 import { formatInTimeZone } from "date-fns-tz";
 import { mapRoomScheduleViewModel } from "./schedule-view-model";
@@ -94,13 +95,29 @@ export async function loadRoomSchedule(
     listRoomAvailabilityRules(client, base.room.id),
     listRoomExceptions(client, base.room.id, monday),
   ]);
-  const timeOff = await listTimeOffForSpecialists(client, [
-    ...new Set(rules.map((rule) => rule.specialistId)),
+  const [timeOff, photos] = await Promise.all([
+    listTimeOffForSpecialists(client, [
+      ...new Set(rules.map((rule) => rule.specialistId)),
+    ]),
+    // The account's picture, else the published profile photo.
+    signSpecialistPhotos(
+      client,
+      rules.map((rule) =>
+        rule.specialistAvatarUrl ? null : rule.specialistPhotoPath,
+      ),
+    ),
   ]);
   return {
     today,
     model: mapRoomScheduleViewModel({
-      rules,
+      rules: rules.map((rule) => ({
+        ...rule,
+        specialistAvatarUrl:
+          rule.specialistAvatarUrl ??
+          (rule.specialistPhotoPath
+            ? (photos.get(rule.specialistPhotoPath) ?? null)
+            : null),
+      })),
       timeOff,
       hours: base.openingHours,
       exceptions,

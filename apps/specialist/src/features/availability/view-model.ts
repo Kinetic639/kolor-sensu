@@ -257,6 +257,8 @@ export function mapAvailabilityViewModel({
               ...busySpan(one),
               timeLabel,
               specialistName: one.specialistName,
+              initials: one.specialistInitials,
+              avatarUrl: one.specialistAvatarUrl,
               label: `${roomName} zajęty: ${one.specialistName}, ${timeLabel}`,
             };
           }),

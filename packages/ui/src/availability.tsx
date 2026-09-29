@@ -8,6 +8,7 @@ import {
   Video,
 } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 import { cn } from "./lib/utils";
 
 // Specialist availability (docs/product/booking-plan.md, R2), after the AI
@@ -63,17 +64,30 @@ export function PlaceChip({
 /** A colleague's hours in the chosen room: taken, by whom, when. */
 export function RoomTakenBody({
   name,
+  initials,
+  avatarUrl,
   timeLabel,
 }: {
   name: string;
+  /** Shown until (or instead of) the photo. */
+  initials: string;
+  avatarUrl?: string | null;
   timeLabel: string;
 }) {
   return (
-    <div className="grid content-start gap-0.5 text-[0.6875rem] leading-tight">
-      <p className="flex items-center gap-1 font-bold text-[var(--text-muted)] uppercase">
-        <Lock aria-hidden="true" className="size-3 shrink-0" />
-        Zajęte
-      </p>
+    <div className="grid content-start gap-1 text-[0.6875rem] leading-tight">
+      <div className="flex items-center gap-1.5">
+        <Avatar className="size-6 ring-2 ring-[var(--block-accent)]">
+          {avatarUrl ? <AvatarImage alt="" src={avatarUrl} /> : null}
+          <AvatarFallback className="bg-[var(--surface)] text-[0.5625rem] font-bold text-[var(--text)]">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+        <p className="flex items-center gap-1 font-bold text-[var(--text-muted)] uppercase">
+          <Lock aria-hidden="true" className="size-3 shrink-0" />
+          Zajęte
+        </p>
+      </div>
       <p className="line-clamp-2 font-semibold break-words text-[var(--text)]">
         {name}
       </p>

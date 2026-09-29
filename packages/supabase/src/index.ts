@@ -48,6 +48,7 @@ export {
   specialistMappers,
   submitProfileForReview,
   createSpecialistMediaSignedUrl,
+  signSpecialistPhotos,
   getPortalAvatarUrl,
   getSpecialistSlugRedirect,
   pickPortalAvatarPath,

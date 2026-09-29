@@ -202,7 +202,11 @@ export const RoomOccupancy: Story = {
                 start={10 * 60}
                 variant="taken"
               >
-                <RoomTakenBody name="Anna Nowak" timeLabel="10:00 – 12:00" />
+                <RoomTakenBody
+                  initials="AN"
+                  name="Anna Nowak"
+                  timeLabel="10:00 – 12:00"
+                />
               </CalendarBlock>
               <CalendarBlock
                 accent="var(--resource-1)"

@@ -26,11 +26,19 @@ describe("AvailabilityBlockBody", () => {
 });
 
 describe("RoomTakenBody", () => {
-  it("says the room is taken, by whom and when", () => {
-    render(<RoomTakenBody name="Anna Nowak" timeLabel="10:00 – 12:00" />);
+  it("says the room is taken, by whom and when, with their initials", () => {
+    render(
+      <RoomTakenBody
+        initials="AN"
+        name="Anna Nowak"
+        timeLabel="10:00 – 12:00"
+      />,
+    );
     expect(screen.getByText("Zajęte")).toBeInTheDocument();
     expect(screen.getByText("Anna Nowak")).toBeInTheDocument();
     expect(screen.getByText("10:00 – 12:00")).toBeInTheDocument();
+    // Without a photo, the initials stand in.
+    expect(screen.getByText("AN")).toBeInTheDocument();
   });
 });
 

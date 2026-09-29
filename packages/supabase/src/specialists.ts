@@ -99,6 +99,8 @@ function mapPublicProfile(row: PublicProfileQueryRow): SpecialistPublicProfile {
     acceptingNewClients: row.specialists.accepting_new_clients,
     professionalTitle: row.specialists.professional_title,
     joinedAt: row.specialists.joined_at,
+    firstName: row.first_name,
+    lastName: row.last_name,
     displayName: row.display_name,
     shortBio: row.short_bio,
     longBio: readRichText(row.long_bio),
@@ -122,6 +124,8 @@ function mapDraft(row: DraftRow): SpecialistProfileDraft {
   return {
     id: row.id,
     specialistId: row.specialist_id,
+    firstName: row.first_name,
+    lastName: row.last_name,
     displayName: row.display_name,
     professionalTitle: row.professional_title,
     shortBio: row.short_bio,
@@ -176,6 +180,8 @@ function mapAdminSpecialistSummary(
 
 const publicProfileSelection = `
   specialist_id,
+  first_name,
+  last_name,
   display_name,
   short_bio,
   long_bio,
@@ -307,7 +313,8 @@ export async function saveMySpecialistProfileDraft(
 ): Promise<string> {
   const draft = specialistProfileDraftInputSchema.parse(input);
   const { data, error } = await client.rpc("save_my_specialist_profile_draft", {
-    p_display_name: draft.displayName,
+    p_first_name: draft.firstName,
+    p_last_name: draft.lastName,
     p_short_bio: draft.shortBio,
     p_long_bio: draft.longBio as unknown as Json,
     p_professional_title: draft.professionalTitle,
@@ -434,6 +441,8 @@ export async function getSpecialistPublicProfileAdmin(
     acceptingNewClients: specialist.acceptingNewClients,
     professionalTitle: specialist.professionalTitle,
     joinedAt: specialist.joinedAt,
+    firstName: data.first_name,
+    lastName: data.last_name,
     displayName: data.display_name,
     shortBio: data.short_bio,
     longBio: readRichText(data.long_bio),
@@ -480,6 +489,33 @@ export async function createSpecialistMediaSignedUrl(
 
   if (error) throw error;
   return data.signedUrl;
+}
+
+/**
+ * Signed URLs for many specialists' photos at once (e.g. a week of a room),
+ * by storage path. Missing or failing photos are left out: the page then
+ * shows initials instead of failing.
+ */
+export async function signSpecialistPhotos(
+  client: SupabaseClient<Database>,
+  paths: (string | null)[],
+): Promise<Map<string, string>> {
+  const unique = [...new Set(paths.filter((path): path is string => !!path))];
+  const urls = new Map<string, string>();
+  if (!unique.length) return urls;
+
+  const { data, error } = await client.storage
+    .from(specialistMediaBucket)
+    .createSignedUrls(unique, 60 * 30);
+  if (error) {
+    console.error("[specialists] photos not signed:", error);
+    return urls;
+  }
+  for (const one of data) {
+    if (one.path && one.signedUrl && !one.error)
+      urls.set(one.path, one.signedUrl);
+  }
+  return urls;
 }
 
 const specialistImageExtensions = {

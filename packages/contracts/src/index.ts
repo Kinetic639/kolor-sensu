@@ -49,6 +49,8 @@ export {
   CLIENT_GROUP_LABELS,
   clientGroupLabels,
   clientGroupSchema,
+  personInitials,
+  personName,
   profilePublicationStatusSchema,
   specialistImageMetadataSchema,
   specialistProfileDraftInputSchema,
@@ -59,6 +61,7 @@ export {
 } from "@repo/contracts/specialist";
 export type {
   ClientGroup,
+  PersonName,
   ProfilePublicationStatus,
   Specialist,
   SpecialistImageMetadata,

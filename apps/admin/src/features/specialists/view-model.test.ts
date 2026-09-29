@@ -12,6 +12,8 @@ type Content = Omit<
 >;
 
 const snapshot: Content = {
+  firstName: "Anna",
+  lastName: "Kowalska",
   displayName: "Anna Kowalska",
   professionalTitle: "Psychoterapeutka",
   shortBio: "Opis",
@@ -106,7 +108,24 @@ describe("createProfileDiff", () => {
       changed: true,
       proposedValue: "Polski, Angielski",
     });
-    expect(byId(fields, "displayName")?.changed).toBe(false);
+    expect(byId(fields, "firstName")?.changed).toBe(false);
+  });
+
+  it("compares the first and the last name each on its own", () => {
+    const fields = createProfileDiff(
+      detail({ lastName: "Nowak", displayName: "Anna Nowak" }),
+    );
+    expect(byId(fields, "firstName")).toMatchObject({
+      label: "Imię",
+      changed: false,
+    });
+    expect(byId(fields, "lastName")).toMatchObject({
+      label: "Nazwisko",
+      changed: true,
+      currentValue: "Kowalska",
+      proposedValue: "Nowak",
+    });
+    expect(byId(fields, "displayName")).toBeUndefined();
   });
 
   it("shows who the specialist proposes to work with", () => {

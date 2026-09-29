@@ -26,6 +26,8 @@ export interface SpecialistsListViewModel {
 }
 
 export interface SpecialistProfileSnapshotViewModel {
+  firstName: string;
+  lastName: string;
   displayName: string;
   professionalTitle: string | null;
   shortBio: string;

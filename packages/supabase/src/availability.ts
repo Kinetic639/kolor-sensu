@@ -2,6 +2,8 @@ import {
   availabilityRuleInputSchema,
   localDateSchema,
   occurrenceScopeSchema,
+  personInitials,
+  personName,
   type AvailabilityRuleInput,
   type AvailabilityRuleValues,
   type OccurrenceScope,
@@ -162,7 +164,12 @@ type RoomRuleRow = RuleRow & {
       last_name: string;
       avatar_url: string | null;
     };
-    public_profile: { display_name: string } | null;
+    public_profile: {
+      first_name: string;
+      last_name: string;
+      display_name: string;
+      profile_photo_url: string | null;
+    } | null;
   };
 };
 
@@ -179,7 +186,7 @@ export async function listRoomAvailabilityRules(
         exceptions:specialist_availability_exceptions (date),
         specialist:specialists!inner (
           profile:profiles!specialists_user_id_fkey (first_name, last_name, avatar_url),
-          public_profile:specialist_public_profiles (display_name)
+          public_profile:specialist_public_profiles (first_name, last_name, display_name, profile_photo_url)
         )
       `,
     )
@@ -190,18 +197,35 @@ export async function listRoomAvailabilityRules(
   if (error) throw error;
   return (data as unknown as RoomRuleRow[]).map((row) => {
     const { profile, public_profile } = row.specialist;
+    // The account's name, else the public profile's (accounts made by
+    // invitation may have no name yet).
+    const account = {
+      firstName: profile.first_name,
+      lastName: profile.last_name,
+    };
+    const published = public_profile
+      ? {
+          firstName: public_profile.first_name,
+          lastName: public_profile.last_name,
+        }
+      : null;
+    const person = personName(account)
+      ? account
+      : published && personName(published)
+        ? published
+        : null;
+    const name =
+      (person && personName(person)) ||
+      public_profile?.display_name.trim() ||
+      "Specjalista";
     return {
       ...mapRule(row),
-      // The account's name, else the public profile's (accounts made by
-      // invitation may have no name yet).
-      specialistName:
-        [profile.first_name, profile.last_name]
-          .map((part) => part.trim())
-          .filter(Boolean)
-          .join(" ") ||
-        public_profile?.display_name.trim() ||
-        "Specjalista",
+      specialistName: name,
+      specialistInitials: person
+        ? personInitials(person)
+        : name[0]!.toUpperCase(),
       specialistAvatarUrl: profile.avatar_url,
+      specialistPhotoPath: public_profile?.profile_photo_url ?? null,
     };
   });
 }
@@ -227,6 +251,13 @@ export async function listRoomOccupancy(
     endsAt: row.ends_at.slice(0, 5),
     specialistId: row.specialist_id,
     specialistName: row.specialist_name,
+    specialistInitials:
+      personInitials({
+        firstName: row.specialist_first_name,
+        lastName: row.specialist_last_name,
+      }) || row.specialist_name[0]!.toUpperCase(),
+    specialistAvatarUrl: row.specialist_avatar_url,
+    specialistPhotoPath: row.specialist_photo_path,
   }));
 }
 

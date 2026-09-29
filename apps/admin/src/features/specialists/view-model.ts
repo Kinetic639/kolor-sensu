@@ -2,7 +2,10 @@ import type { AdminSpecialistSummary, PortalProfile } from "@repo/supabase";
 import {
   clientGroupLabels,
   emptyRichTextDocument,
+  personInitials,
+  personName,
   plainTextFromRichText,
+  type PersonName,
 } from "@repo/contracts";
 import type {
   Service,
@@ -18,7 +21,9 @@ import type {
   SpecialistsListViewModel,
 } from "./types";
 
-function getInitials(name: string) {
+/** From the first and last name when known, else the first two words. */
+function getInitials(name: string, parts?: PersonName | null) {
+  if (parts && personName(parts)) return personInitials(parts);
   return name
     .split(" ")
     .map((part) => part[0])
@@ -54,7 +59,7 @@ export function mapSpecialistsListViewModel(
     return {
       id: summary.id,
       displayName,
-      initials: getInitials(displayName),
+      initials: getInitials(displayName, summary),
       avatarUrl: summary.avatarUrl,
       professionalTitle: summary.professionalTitle ?? "Tytuł nieuzupełniony",
       active: summary.active,
@@ -111,7 +116,13 @@ export function mapSpecialistDetailViewModel({
     id: specialist.id,
     userId: specialist.userId,
     displayName,
-    initials: getInitials(displayName),
+    initials: getInitials(
+      displayName,
+      publicProfile ?? {
+        firstName: identity.first_name,
+        lastName: identity.last_name,
+      },
+    ),
     avatarUrl: media.publicProfilePhotoUrl ?? identity.avatar_url,
     professionalTitle: specialist.professionalTitle ?? "Tytuł nieuzupełniony",
     publicSlug: specialist.publicSlug,
@@ -121,6 +132,8 @@ export function mapSpecialistDetailViewModel({
     acceptingNewClients: specialist.acceptingNewClients,
     publicProfile: publicProfile
       ? {
+          firstName: publicProfile.firstName,
+          lastName: publicProfile.lastName,
           displayName: publicProfile.displayName,
           professionalTitle: publicProfile.professionalTitle,
           shortBio: publicProfile.shortBio,
@@ -143,6 +156,8 @@ export function mapSpecialistDetailViewModel({
     draft: draft
       ? {
           id: draft.id,
+          firstName: draft.firstName,
+          lastName: draft.lastName,
           displayName: draft.displayName,
           professionalTitle: draft.professionalTitle,
           shortBio: draft.shortBio,
@@ -194,12 +209,8 @@ export function createProfileDiff(
   if (!detail.draft) return [];
   const current = detail.publicProfile;
   const fields = [
-    [
-      "displayName",
-      "Nazwa publiczna",
-      current?.displayName,
-      detail.draft.displayName,
-    ],
+    ["firstName", "Imię", current?.firstName, detail.draft.firstName],
+    ["lastName", "Nazwisko", current?.lastName, detail.draft.lastName],
     [
       "professionalTitle",
       "Tytuł zawodowy",

@@ -6,6 +6,7 @@ import {
   CLIENT_GROUP_LABELS,
   clientGroupLabels,
   clientGroupSchema,
+  personName,
   specialistProfileDraftInputSchema,
   specialistProfileSubmissionSchema,
 } from "@repo/contracts";
@@ -109,6 +110,7 @@ export function ProfileEditor({ model }: { model: ProfileEditorViewModel }) {
     defaultValues: model.values,
   });
   const values = watch();
+  const fullName = personName(values);
   const locked = !model.editable;
   const busy = isPending || uploading !== null;
 
@@ -284,7 +286,7 @@ export function ProfileEditor({ model }: { model: ProfileEditorViewModel }) {
               />
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <ProfilePhotoField
-                  alt={`Zdjęcie profilowe: ${values.displayName}`}
+                  alt={`Zdjęcie profilowe: ${fullName}`}
                   description="Widoczne na listach specjalistów."
                   error={photoErrors.profile}
                   hint="JPG, PNG lub WebP do 20 MB. Po wybraniu dopasujesz kadr."
@@ -297,7 +299,7 @@ export function ProfileEditor({ model }: { model: ProfileEditorViewModel }) {
                   pending={uploading === "profile"}
                 />
                 <ProfilePhotoField
-                  alt={`Portret: ${values.displayName}`}
+                  alt={`Portret: ${fullName}`}
                   description="Widoczne na Twojej stronie w serwisie."
                   error={photoErrors.portrait}
                   hint="JPG, PNG lub WebP do 20 MB. Kadr 3:4, dopasujesz go po wybraniu."
@@ -335,19 +337,37 @@ export function ProfileEditor({ model }: { model: ProfileEditorViewModel }) {
               />
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="display-name">
-                    Imię i nazwisko
+                  <Label htmlFor="first-name">
+                    Imię
                     <RequiredMark />
                   </Label>
                   <Input
-                    aria-describedby="display-name-error"
-                    aria-invalid={errorOf("displayName") ? true : undefined}
-                    id="display-name"
-                    {...register("displayName")}
+                    aria-describedby="first-name-error"
+                    aria-invalid={errorOf("firstName") ? true : undefined}
+                    autoComplete="given-name"
+                    id="first-name"
+                    {...register("firstName")}
                   />
                   <FieldError
-                    id="display-name-error"
-                    message={errorOf("displayName")}
+                    id="first-name-error"
+                    message={errorOf("firstName")}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="last-name">
+                    Nazwisko
+                    <RequiredMark />
+                  </Label>
+                  <Input
+                    aria-describedby="last-name-error"
+                    aria-invalid={errorOf("lastName") ? true : undefined}
+                    autoComplete="family-name"
+                    id="last-name"
+                    {...register("lastName")}
+                  />
+                  <FieldError
+                    id="last-name-error"
+                    message={errorOf("lastName")}
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -623,7 +643,7 @@ export function ProfileEditor({ model }: { model: ProfileEditorViewModel }) {
             ) : null}
           </div>
           <SpecialistProfilePreview
-            displayName={values.displayName}
+            displayName={fullName}
             modalities={values.modalities}
             photoUrl={previews.profilePhotoUrl}
             professionalTitle={values.professionalTitle || null}

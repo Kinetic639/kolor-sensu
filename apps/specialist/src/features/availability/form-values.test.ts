@@ -93,6 +93,9 @@ describe("roomConflicts", () => {
     endsAt: "12:00",
     specialistId: "anna",
     specialistName: "Anna Nowak",
+    specialistInitials: "AN",
+    specialistAvatarUrl: null,
+    specialistPhotoPath: null,
   };
 
   it("finds who has a room at a one-off's hours", () => {
@@ -168,6 +171,9 @@ describe("quickCreateDefaults with others' hours", () => {
             endsAt: "12:00",
             specialistId: "anna",
             specialistName: "Anna Nowak",
+            specialistInitials: "AN",
+            specialistAvatarUrl: null,
+            specialistPhotoPath: null,
           },
         ],
       ),
@@ -188,6 +194,9 @@ describe("quickCreateDefaults with others' hours", () => {
             endsAt: "12:00",
             specialistId: "anna",
             specialistName: "Anna Nowak",
+            specialistInitials: "AN",
+            specialistAvatarUrl: null,
+            specialistPhotoPath: null,
           },
         ],
       ).roomId,

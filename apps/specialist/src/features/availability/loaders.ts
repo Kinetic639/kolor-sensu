@@ -2,6 +2,10 @@ import "server-only";
 
 import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import type {
+  RoomAvailabilityException,
+  RoomOpeningHoursInterval,
+} from "@repo/contracts";
 import { addDays, DEFAULT_TIME_ZONE, mondayOf } from "@repo/scheduling";
 import {
   getMyPublishedProfile,
@@ -12,6 +16,7 @@ import {
   listRoomOccupancy,
   listRoomOpeningHours,
   listTimeOff,
+  signSpecialistPhotos,
 } from "@repo/supabase";
 import { formatInTimeZone } from "date-fns-tz";
 import type { AvailabilityParams } from "./search-params";
@@ -43,12 +48,26 @@ export async function loadAvailability(params: AvailabilityParams) {
       ? null
       : ((rooms.find((room) => room.id === params.gabinet) ?? rooms[0])?.id ??
         null);
-  const [hours, exceptions] = roomId
-    ? await Promise.all([
-        listRoomOpeningHours(client, roomId),
-        listRoomExceptions(client, roomId, week),
-      ])
-    : [[], []];
+  const [[hours, exceptions], photos] = await Promise.all([
+    roomId
+      ? Promise.all([
+          listRoomOpeningHours(client, roomId),
+          listRoomExceptions(client, roomId, week),
+        ])
+      : Promise.resolve([[], []] as [
+          RoomOpeningHoursInterval[],
+          RoomAvailabilityException[],
+        ]),
+    // Colleagues' pictures: the account's, else the profile photo.
+    signSpecialistPhotos(
+      client,
+      occupancy
+        .filter((one) => one.specialistId !== specialist.id)
+        .map((one) =>
+          one.specialistAvatarUrl ? null : one.specialistPhotoPath,
+        ),
+    ),
+  ]);
 
   // The account's name, else the public profile's (accounts made by
   // invitation may have no name yet).
@@ -77,7 +96,14 @@ export async function loadAvailability(params: AvailabilityParams) {
       filters: { day: params.dzien, mode: params.forma },
       timeZone: DEFAULT_TIME_ZONE,
       specialistId: specialist.id,
-      occupancy,
+      occupancy: occupancy.map((one) => ({
+        ...one,
+        specialistAvatarUrl:
+          one.specialistAvatarUrl ??
+          (one.specialistPhotoPath
+            ? (photos.get(one.specialistPhotoPath) ?? null)
+            : null),
+      })),
       room: roomId ? { id: roomId, hours, exceptions } : null,
     }),
   };
