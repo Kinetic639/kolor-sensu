@@ -9,7 +9,6 @@ import {
   ScheduleFigure,
 } from "@repo/ui/room-schedule";
 import {
-  Building2,
   CalendarClock,
   CalendarDays,
   ChevronLeft,
@@ -33,20 +32,22 @@ function blocksLabel(count: number) {
   return `${count} ${few ? "bloki" : "bloków"}`;
 }
 
+/** "‹ 28 września – 4 października 2026 ›": the shown week, and its neighbours. */
 function WeekNav({
   roomId,
   model,
-  today,
 }: {
   roomId: string;
   model: RoomScheduleViewModel;
-  today: string;
 }) {
   const href = (week: string) =>
     roomHref(roomId, { zakladka: "grafik", tydzien: week }) as Route;
   return (
-    <nav aria-label="Tydzień" className="flex items-center gap-1.5">
-      <Button asChild size="icon" variant="secondary">
+    <nav
+      aria-label="Tydzień"
+      className="flex items-center justify-between gap-2 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface)] p-1"
+    >
+      <Button asChild size="icon" variant="ghost">
         <Link
           aria-label="Poprzedni tydzień"
           href={href(model.previousWeek)}
@@ -55,12 +56,14 @@ function WeekNav({
           <ChevronLeft aria-hidden="true" className="size-4" />
         </Link>
       </Button>
-      <Button asChild size="sm" variant="secondary">
-        <Link href={href(today)} scroll={false}>
-          Dziś
-        </Link>
-      </Button>
-      <Button asChild size="icon" variant="secondary">
+      <p
+        aria-live="polite"
+        className="text-center text-sm font-semibold whitespace-nowrap text-[var(--text)]"
+        title={model.title}
+      >
+        {model.shortTitle}
+      </p>
+      <Button asChild size="icon" variant="ghost">
         <Link
           aria-label="Następny tydzień"
           href={href(model.nextWeek)}
@@ -76,19 +79,40 @@ function WeekNav({
 function Summary({
   roomId,
   model,
+  today,
 }: {
   roomId: string;
   model: RoomScheduleViewModel;
+  today: string;
 }) {
   const { summary } = model;
+  const thisWeek = model.week <= today && today <= model.lastDay;
   return (
     <aside
       aria-label="Podsumowanie tygodnia"
       className="grid content-start gap-4 border-t border-[var(--border)] bg-[var(--surface-subtle)] p-4 xl:border-t-0 xl:border-l"
     >
-      <p className="text-[0.6875rem] font-bold tracking-wide text-[var(--text-muted)] uppercase">
-        Podsumowanie tygodnia
-      </p>
+      <WeekNav model={model} roomId={roomId} />
+      <div className="flex min-h-8 items-center justify-between gap-2">
+        <p className="text-[0.6875rem] font-bold tracking-wide text-[var(--text-muted)] uppercase">
+          Podsumowanie tygodnia
+        </p>
+        {thisWeek ? null : (
+          <Button asChild size="sm" variant="secondary">
+            <Link
+              href={
+                roomHref(roomId, {
+                  zakladka: "grafik",
+                  tydzien: today,
+                }) as Route
+              }
+              scroll={false}
+            >
+              Dziś
+            </Link>
+          </Button>
+        )}
+      </div>
       <OccupancyRing
         detail={
           summary.hasHours
@@ -204,34 +228,16 @@ function Summary({
 /** Gabinety → Grafik: who has the room when, week by week. */
 export function RoomScheduleView({
   roomId,
-  roomName,
   model,
   today,
 }: {
   roomId: string;
-  roomName: string;
   model: RoomScheduleViewModel;
   today: string;
 }) {
   const { range } = model;
   return (
     <div className="space-y-4">
-      <Card className="flex flex-wrap items-center justify-between gap-3 p-3.5">
-        <h2 className="flex items-center gap-2 text-sm font-bold text-[var(--text)]">
-          <Building2
-            aria-hidden="true"
-            className="size-4 text-[var(--primary)]"
-          />
-          Tydzień gabinetu: {roomName} ({model.title})
-        </h2>
-        <WeekNav model={model} roomId={roomId} today={today} />
-        {model.hiddenDays ? (
-          <p className="w-full text-xs text-[var(--text-muted)]">
-            Bez dni, w które gabinet jest zamknięty: {model.hiddenDays}.
-          </p>
-        ) : null}
-      </Card>
-
       <Card className="grid overflow-hidden p-0 xl:grid-cols-[minmax(0,1fr)_19rem]">
         <CalendarWeekGrid
           className="min-w-0"
@@ -243,9 +249,21 @@ export function RoomScheduleView({
               sublabel: day.sublabel,
               isToday: day.isToday,
               ariaLabel: day.fullLabel,
-              summary: (
-                <span className="text-[0.625rem] font-medium text-[var(--text-muted)]">
-                  {day.openLabel ?? day.reservedLabel ?? " "}
+              // On hover or focus: when the room is open that day.
+              hint: (
+                <span>
+                  <span className="block">
+                    {day.openLabel === null
+                      ? "Bez godzin otwarcia"
+                      : day.openLabel === "Zamknięte"
+                        ? "Zamknięte"
+                        : `Otwarte ${day.openLabel}`}
+                  </span>
+                  {day.reservedLabel ? (
+                    <span className="block font-normal text-[var(--text-muted)]">
+                      Dyżury: {day.reservedLabel}
+                    </span>
+                  ) : null}
                 </span>
               ),
               content: (
@@ -287,7 +305,7 @@ export function RoomScheduleView({
             }))}
           range={range}
         />
-        <Summary model={model} roomId={roomId} />
+        <Summary model={model} roomId={roomId} today={today} />
       </Card>
     </div>
   );

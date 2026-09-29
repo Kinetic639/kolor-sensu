@@ -23,6 +23,11 @@ export interface PortalShellProps {
   profileHref?: string;
   portalSwitch?: AppHeaderProps["portalSwitch"];
   logoutAction?: AppHeaderProps["logoutAction"];
+  /**
+   * The trail, rendered on the server (e.g. a `@breadcrumb` parallel route
+   * that knows a detail page's name). Without it, it follows the path.
+   */
+  breadcrumbs?: ReactNode;
 }
 
 export function PortalShell({
@@ -36,6 +41,7 @@ export function PortalShell({
   profileHref,
   portalSwitch,
   logoutAction,
+  breadcrumbs,
 }: PortalShellProps) {
   const pathname = usePathname();
   return (
@@ -48,7 +54,8 @@ export function PortalShell({
       <SidebarInset>
         <div className="sticky top-0 z-30">
           <AppHeader
-            breadcrumbs={portalBreadcrumbs(navigation, pathname, brandSubtitle)}
+            breadcrumbTrail={breadcrumbs}
+            breadcrumbs={portalBreadcrumbs(navigation, pathname)}
             logoutAction={logoutAction}
             navigationTrigger={
               <SidebarTrigger className="hidden md:inline-flex" />

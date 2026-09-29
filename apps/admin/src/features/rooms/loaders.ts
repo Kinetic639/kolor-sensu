@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import { createClient } from "@/lib/supabase/server";
 import {
   DEFAULT_TIME_ZONE,
@@ -48,7 +50,7 @@ export async function loadAdminRooms() {
  * What every tab of a room shows: the room, its place, its opening hours
  * and the other rooms (to switch between them).
  */
-export async function loadAdminRoom(roomId: string) {
+async function readAdminRoom(roomId: string) {
   const client = await createClient();
   const [room, locations, rooms, openingHours] = await Promise.all([
     getRoomByIdAdmin(client, roomId),
@@ -64,9 +66,15 @@ export async function loadAdminRoom(roomId: string) {
     // On the site only when the room is public and its profile published.
     onSite: room.publiclyVisible && Boolean(summary?.publicProfilePublished),
     locationName: location?.name ?? "Nieznana lokalizacja",
+    // In full, for the location's tooltip in the header.
     address:
-      [location?.addressLine1, location?.city].filter(Boolean).join(", ") ||
-      null,
+      [
+        location?.addressLine1,
+        location?.addressLine2,
+        [location?.postalCode, location?.city].filter(Boolean).join(" "),
+      ]
+        .filter(Boolean)
+        .join(", ") || null,
     locations: toLocationOptions(locations),
     rooms: rooms.map((one) => ({
       id: one.id,
@@ -77,6 +85,9 @@ export async function loadAdminRoom(roomId: string) {
     openingHoursLabel: summarizeOpeningHours(openingHours),
   };
 }
+
+/** Cached per request: the page and its breadcrumb share one load. */
+export const loadAdminRoom = cache(readAdminRoom);
 
 export type AdminRoomModel = NonNullable<
   Awaited<ReturnType<typeof loadAdminRoom>>

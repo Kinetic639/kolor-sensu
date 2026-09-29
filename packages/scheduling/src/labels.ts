@@ -55,3 +55,22 @@ export function formatDateRange(from: string, to: string) {
   }
   return `${formatDate(from)} – ${formatDate(to)}`;
 }
+
+const dayMonthShort = new Intl.DateTimeFormat("pl-PL", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+
+/** `7–13 sty 2030`, `28 wrz – 4 paź 2026`: for tight places. */
+export function formatDateRangeShort(from: string, to: string) {
+  const year = (date: string) => date.slice(0, 4);
+  const short = (date: string) => dayMonthShort.format(atNoon(date));
+  if (year(from) !== year(to)) {
+    return `${short(from)} ${year(from)} – ${short(to)} ${year(to)}`;
+  }
+  if (from.slice(0, 7) === to.slice(0, 7)) {
+    return `${Number(from.slice(8))}–${short(to)} ${year(to)}`;
+  }
+  return `${short(from)} – ${short(to)} ${year(to)}`;
+}

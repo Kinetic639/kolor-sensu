@@ -1,8 +1,14 @@
-import { AlertTriangle, Building2, Layers, Video } from "lucide-react";
+import { AlertTriangle, Blend, Building2, Video } from "lucide-react";
 import type { ReactNode } from "react";
 import type { AvailabilityWindowMode } from "./availability";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 import { cn } from "./lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./tooltip";
 
 // A room's week (admin, Gabinety → Grafik), after the AI Studio reference:
 // who has the room when, and a summary of how full it is. Presentational.
@@ -10,12 +16,17 @@ import { cn } from "./lib/utils";
 const MODE_LABELS: Record<AvailabilityWindowMode, string> = {
   in_person: "Stacjonarnie",
   online: "Online",
-  hybrid: "Stacjonarnie + online",
+  hybrid: "Hybrydowo",
 };
 
-const MODE_ICONS = { in_person: Building2, online: Video, hybrid: Layers };
+// Hybrid: two overlapping circles, the room and online at once.
+const MODE_ICONS = { in_person: Building2, online: Video, hybrid: Blend };
 
-/** What goes inside a specialist's block in the room's calendar. */
+/**
+ * What goes inside a specialist's block in the room's calendar: the
+ * avatar, the hours and the name beside it, and the form of work as an
+ * icon in the corner (named in a tooltip and for screen readers).
+ */
 export function RoomScheduleBlockBody({
   name,
   initials,
@@ -33,28 +44,43 @@ export function RoomScheduleBlockBody({
   warning?: string;
 }) {
   const Icon = MODE_ICONS[mode];
+  const modeLabel = MODE_LABELS[mode];
   return (
-    // Day columns are narrow: the avatar sits by the hours, the rest takes
-    // the block's full width.
     <div className="grid min-w-0 content-start gap-1">
-      <div className="flex items-start gap-1.5">
-        <Avatar className="size-6 ring-2 ring-[var(--block-accent)]">
+      <div className="flex items-center gap-1.5">
+        <Avatar className="size-8 ring-2 ring-[var(--block-accent)]">
           {avatarUrl ? <AvatarImage alt="" src={avatarUrl} /> : null}
-          <AvatarFallback className="bg-[var(--surface)] text-[0.5625rem] font-bold text-[var(--text)]">
+          <AvatarFallback className="bg-[var(--surface)] text-[0.625rem] font-bold text-[var(--text)]">
             {initials}
           </AvatarFallback>
         </Avatar>
-        <p className="min-w-0 leading-tight font-bold text-[var(--text)] tabular-nums">
-          {timeLabel}
-        </p>
+        <div className="grid min-w-0 flex-1">
+          {/* The hours and the form's icon share a line, centred together;
+              the icon's button does not make the line taller. */}
+          <div className="flex items-center justify-between gap-1">
+            <p className="leading-tight font-bold whitespace-nowrap text-[var(--text)] tabular-nums">
+              {timeLabel}
+            </p>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    aria-label={`Forma pracy: ${modeLabel.toLowerCase()}`}
+                    className="-my-1.5 -mr-1 flex size-6 shrink-0 items-center justify-center rounded text-[var(--text-muted)] hover:bg-[color-mix(in_srgb,var(--text)_8%,transparent)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+                    type="button"
+                  >
+                    <Icon aria-hidden="true" className="size-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{modeLabel}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <p className="line-clamp-2 leading-tight font-semibold break-words text-[var(--text)]">
+            {name}
+          </p>
+        </div>
       </div>
-      <p className="line-clamp-2 leading-tight font-semibold break-words text-[var(--text)]">
-        {name}
-      </p>
-      <p className="flex min-w-0 items-center gap-1 text-[0.6875rem] text-[var(--text-muted)]">
-        <Icon aria-hidden="true" className="size-3 shrink-0" />
-        <span className="truncate">{MODE_LABELS[mode]}</span>
-      </p>
       {warning ? (
         <p className="flex items-start gap-1 text-[0.6875rem] leading-tight font-semibold text-[var(--warning-foreground)]">
           <AlertTriangle aria-hidden="true" className="mt-px size-3 shrink-0" />

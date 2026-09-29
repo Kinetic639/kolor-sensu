@@ -32,7 +32,6 @@ async function RoomTabContent({
         <RoomScheduleView
           model={schedule.model}
           roomId={model.room.id}
-          roomName={model.room.name}
           today={schedule.today}
         />
       );

@@ -86,6 +86,8 @@ describe("mapRoomScheduleViewModel", () => {
   it("shows the week of the room with each specialist's windows", () => {
     const { days, title } = model();
     expect(title).toBe("7–13 stycznia 2030");
+    expect(model().lastDay).toBe("2030-01-13");
+    expect(model().shortTitle).toBe("7–13 sty 2030");
     expect(days).toHaveLength(7);
     expect(days[0]).toMatchObject({
       date: "2030-01-07",
@@ -141,7 +143,7 @@ describe("mapRoomScheduleViewModel", () => {
   });
 
   it("hides the days the room is always closed, unless someone is in", () => {
-    const { days, hiddenDays } = model();
+    const { days } = model();
     expect(days.map((day) => day.hidden)).toEqual([
       false,
       false,
@@ -152,7 +154,6 @@ describe("mapRoomScheduleViewModel", () => {
       true,
       true,
     ]);
-    expect(hiddenDays).toBe("sobota, niedziela");
 
     // A window on a closed weekday keeps the day, to show it.
     const saturday = rule({
@@ -164,7 +165,6 @@ describe("mapRoomScheduleViewModel", () => {
     });
     const withSaturday = model({ rules: [anna, jan, saturday] });
     expect(withSaturday.days[5]!.hidden).toBe(false);
-    expect(withSaturday.hiddenDays).toBe("niedziela");
   });
 
   it("sums up the week against the opening hours", () => {

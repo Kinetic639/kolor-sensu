@@ -28,8 +28,13 @@ export interface CalendarColumn {
   isToday?: boolean;
   /** Accessible name of the day column. */
   ariaLabel: string;
-  /** Under the date in the header, e.g. the day's hours. */
+  /** Under the date in the header, always shown (e.g. an "add" button). */
   summary?: ReactNode;
+  /**
+   * Shown in place of the date while the header is hovered or focused
+   * (e.g. the day's opening hours); screen readers always get it.
+   */
+  hint?: ReactNode;
   /** Blocks placed in the column. */
   content?: ReactNode;
   /** Event handlers for the column, e.g. from useDragToCreate. */
@@ -65,31 +70,46 @@ export function CalendarWeekGrid({
           className="sticky top-0 z-20 grid border-b border-[var(--border)] bg-[var(--surface-subtle)]"
           style={{ gridTemplateColumns: template }}
         >
-          <div className="border-r border-[var(--border)] p-3 text-center text-[0.6875rem] font-semibold text-[var(--text-subtle)]">
+          <div className="flex items-center justify-center border-r border-[var(--border)] px-2 py-1.5 text-[0.6875rem] font-semibold text-[var(--text-subtle)]">
             {cornerLabel}
           </div>
           {columns.map((column) => (
             <div
               aria-current={column.isToday ? "date" : undefined}
               className={cn(
-                "border-r border-[var(--border)] p-2.5 text-center last:border-r-0",
+                "group/header relative border-r border-[var(--border)] px-2 py-1.5 text-center outline-none last:border-r-0 focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-inset",
                 column.isToday && "bg-[var(--primary-soft)]",
               )}
+              data-column-header=""
               key={column.key}
+              tabIndex={column.hint ? 0 : undefined}
             >
-              <p className="flex items-center justify-center gap-1.5 text-xs font-bold text-[var(--text)]">
-                {column.label}
-                {column.isToday ? (
-                  <span
-                    aria-hidden="true"
-                    className="size-1.5 rounded-full bg-[var(--primary)]"
-                  />
-                ) : null}
-              </p>
-              {column.sublabel ? (
-                <p className="text-[0.6875rem] text-[var(--text-muted)]">
-                  {column.sublabel}
+              <div
+                className={cn(
+                  "leading-tight transition-opacity",
+                  column.hint &&
+                    "group-hover/header:opacity-0 group-focus-visible/header:opacity-0",
+                )}
+              >
+                <p className="flex items-center justify-center gap-1.5 text-xs font-bold text-[var(--text)]">
+                  {column.label}
+                  {column.isToday ? (
+                    <span
+                      aria-hidden="true"
+                      className="size-1.5 rounded-full bg-[var(--primary)]"
+                    />
+                  ) : null}
                 </p>
+                {column.sublabel ? (
+                  <p className="text-[0.6875rem] text-[var(--text-muted)]">
+                    {column.sublabel}
+                  </p>
+                ) : null}
+              </div>
+              {column.hint ? (
+                <div className="absolute inset-0 flex items-center justify-center px-1 text-[0.6875rem] leading-tight font-semibold text-[var(--text)] opacity-0 transition-opacity group-hover/header:opacity-100 group-focus-visible/header:opacity-100">
+                  {column.hint}
+                </div>
               ) : null}
               {column.summary ? (
                 <div className="mt-1">{column.summary}</div>

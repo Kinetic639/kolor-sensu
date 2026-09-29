@@ -8,17 +8,10 @@ import {
   Sprout,
   UserRound,
 } from "lucide-react";
-import { Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "./breadcrumb";
 import { Button } from "./button";
+import { PortalBreadcrumbTrail } from "./portal-layout";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,8 +36,10 @@ export interface PortalSwitchLink {
 
 export interface AppHeaderProps {
   user: AppHeaderUser;
-  /** Where the user is: the portal, then the page (the last one is current). */
+  /** Where the user is: the dashboard, then the page (the last is current). */
   breadcrumbs?: { label: string; href?: string }[];
+  /** A trail rendered elsewhere (e.g. on the server); wins over `breadcrumbs`. */
+  breadcrumbTrail?: ReactNode;
   notificationCount?: number;
   navigationTrigger?: ReactNode;
   profileHref?: string;
@@ -57,6 +52,7 @@ export interface AppHeaderProps {
 export function AppHeader({
   user,
   breadcrumbs = [],
+  breadcrumbTrail,
   notificationCount = 0,
   navigationTrigger,
   profileHref,
@@ -118,33 +114,9 @@ export function AppHeader({
         </span>
       </div>
 
-      {breadcrumbs.length ? (
-        <Breadcrumb className="hidden min-w-0 md:block">
-          <BreadcrumbList className="flex-nowrap text-xs sm:gap-1.5">
-            {breadcrumbs.map((crumb, index) => {
-              const last = index === breadcrumbs.length - 1;
-              return (
-                <Fragment key={`${crumb.label}-${index}`}>
-                  <BreadcrumbItem className="min-w-0">
-                    {last ? (
-                      <BreadcrumbPage className="truncate font-semibold text-[var(--primary)]">
-                        {crumb.label}
-                      </BreadcrumbPage>
-                    ) : crumb.href ? (
-                      <BreadcrumbLink className="truncate" href={crumb.href}>
-                        {crumb.label}
-                      </BreadcrumbLink>
-                    ) : (
-                      <span className="truncate">{crumb.label}</span>
-                    )}
-                  </BreadcrumbItem>
-                  {last ? null : <BreadcrumbSeparator />}
-                </Fragment>
-              );
-            })}
-          </BreadcrumbList>
-        </Breadcrumb>
-      ) : null}
+      <div className="hidden min-w-0 md:block">
+        {breadcrumbTrail ?? <PortalBreadcrumbTrail items={breadcrumbs} />}
+      </div>
 
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2.5">
         <Button

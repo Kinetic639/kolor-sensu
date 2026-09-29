@@ -1,4 +1,6 @@
 import "server-only";
+
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import {
   getServiceByIdAdmin,
@@ -10,7 +12,7 @@ import { mapServiceDetail, mapServicesList } from "./view-model";
 export async function loadAdminServices() {
   return mapServicesList(await listServiceSummariesAdmin(await createClient()));
 }
-export async function loadAdminServiceDetail(id: string) {
+async function readAdminServiceDetail(id: string) {
   const client = await createClient();
   const [service, offers] = await Promise.all([
     getServiceByIdAdmin(client, id),
@@ -18,3 +20,6 @@ export async function loadAdminServiceDetail(id: string) {
   ]);
   return service ? mapServiceDetail(service, offers) : null;
 }
+
+/** Cached per request: the page and its breadcrumb share one load. */
+export const loadAdminServiceDetail = cache(readAdminServiceDetail);

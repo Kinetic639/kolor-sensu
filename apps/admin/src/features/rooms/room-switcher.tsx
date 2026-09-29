@@ -36,11 +36,14 @@ export function RoomSwitcher({
       }
       value={roomId}
     >
+      {/* Looks like a field (border, chevron) so it reads as a choice. */}
       <SelectTrigger
         aria-label="Wybierz gabinet"
-        className="font-heading h-auto min-w-0 border-0 px-0 py-0 text-xl font-semibold shadow-none focus-visible:ring-2 sm:text-2xl"
+        className="font-heading h-auto w-auto max-w-full min-w-0 gap-3 border-[var(--border)] bg-[var(--surface-subtle)] py-1.5 pr-3 pl-3.5 text-xl font-semibold hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)] data-[state=open]:border-[var(--ring)] sm:text-2xl [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:opacity-70"
       >
-        <SelectValue>{current}</SelectValue>
+        <span className="min-w-0 truncate">
+          <SelectValue>{current}</SelectValue>
+        </span>
       </SelectTrigger>
       <SelectContent>
         {rooms.map((room) => (

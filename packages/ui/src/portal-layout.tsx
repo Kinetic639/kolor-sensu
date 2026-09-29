@@ -11,7 +11,15 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { Fragment, type ElementType, type ReactNode } from "react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "./breadcrumb";
 import { cn } from "./lib/utils";
 import {
   Sidebar,
@@ -67,20 +75,76 @@ export interface PortalBreadcrumb {
 }
 
 /**
- * The header trail: the portal, then the navigation item the path is in
- * (the most specific one wins).
+ * The header trail: the dashboard, the section the path is in (the most
+ * specific navigation item) and, on a detail page, what it shows
+ * (`detail`, e.g. a room's name).
  */
 export function portalBreadcrumbs(
   sections: PortalNavigationSection[],
   pathname: string,
-  rootLabel: string,
+  detail?: string | null,
 ): PortalBreadcrumb[] {
-  const current = sections
-    .flatMap((section) => section.items)
+  const items = sections.flatMap((section) => section.items);
+  const home = items.find((item) => item.href === "/")?.label ?? "Dashboard";
+  if (pathname === "/") return [{ label: home }];
+
+  const current = items
+    .filter((item) => item.href !== "/")
     .filter((item) => isPortalPathActive(pathname, item.href))
     .sort((a, b) => b.href.length - a.href.length)[0];
-  if (!current) return [{ label: rootLabel }];
-  return [{ label: rootLabel, href: "/" }, { label: current.label }];
+  if (!current) return [{ label: home, href: "/" }];
+
+  const trail: PortalBreadcrumb[] = [{ label: home, href: "/" }];
+  if (detail && pathname !== current.href) {
+    trail.push({ label: current.label, href: current.href });
+    trail.push({ label: detail });
+  } else {
+    trail.push({ label: current.label });
+  }
+  return trail;
+}
+
+/**
+ * The trail as links (all but the last, the current page). Renders on the
+ * server; pass next/link as `linkAs` for client-side navigation.
+ */
+export function PortalBreadcrumbTrail({
+  items,
+  linkAs: Link = "a",
+  className,
+}: {
+  items: PortalBreadcrumb[];
+  linkAs?: ElementType;
+  className?: string;
+}) {
+  if (!items.length) return null;
+  return (
+    <Breadcrumb className={cn("min-w-0", className)}>
+      <BreadcrumbList className="flex-nowrap text-xs sm:gap-1.5">
+        {items.map((crumb, index) => {
+          const last = index === items.length - 1;
+          return (
+            <Fragment key={`${crumb.label}-${index}`}>
+              <BreadcrumbItem className="min-w-0">
+                {last ? (
+                  <BreadcrumbPage className="truncate font-semibold text-[var(--primary)]">
+                    {crumb.label}
+                  </BreadcrumbPage>
+                ) : crumb.href ? (
+                  <BreadcrumbLink asChild className="truncate">
+                    <Link href={crumb.href}>{crumb.label}</Link>
+                  </BreadcrumbLink>
+                ) : (
+                  <span className="truncate">{crumb.label}</span>
+                )}
+              </BreadcrumbItem>
+              {last ? null : <BreadcrumbSeparator />}
+            </Fragment>
+          );
+        })}
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
 }
 
 export interface AppSidebarProps {

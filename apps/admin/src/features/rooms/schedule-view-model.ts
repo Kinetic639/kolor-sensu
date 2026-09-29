@@ -10,6 +10,7 @@ import {
   expandAvailability,
   formatDate,
   formatDateRange,
+  formatDateRangeShort,
   formatDayMonth,
   formatHours,
   minutesToTime,
@@ -79,13 +80,15 @@ export interface RoomScheduleSpecialist {
 
 export interface RoomScheduleViewModel {
   title: string;
+  /** "28 wrz – 4 paź 2026", for the week switcher. */
+  shortTitle: string;
   week: string;
+  /** The Sunday of the shown week. */
+  lastDay: string;
   previousWeek: string;
   nextWeek: string;
   range: MinuteRange;
   days: RoomScheduleDay[];
-  /** "sobota, niedziela": the hidden days, or null when all are shown. */
-  hiddenDays: string | null;
   summary: {
     hasHours: boolean;
     openLabel: string | null;
@@ -290,15 +293,10 @@ export function mapRoomScheduleViewModel({
       accent: one.accent,
     }));
 
-  const hiddenDays = days
-    .flatMap((day, index) =>
-      day.hidden ? [WEEKDAY_NAMES[index]!.toLowerCase()] : [],
-    )
-    .join(", ");
-
   return {
     title: formatDateRange(week, weekEnd),
-    hiddenDays: hiddenDays || null,
+    shortTitle: formatDateRangeShort(week, weekEnd),
+    lastDay: weekEnd,
     week,
     previousWeek: addDays(week, -7),
     nextWeek: addDays(week, 7),

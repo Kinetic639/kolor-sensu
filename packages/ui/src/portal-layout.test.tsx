@@ -7,6 +7,7 @@ import {
   MobileBottomNav,
   isPortalPathActive,
   portalBreadcrumbs,
+  PortalBreadcrumbTrail,
 } from "./portal-layout";
 import { SidebarProvider, SidebarTrigger } from "./sidebar";
 
@@ -165,30 +166,59 @@ describe("AppHeader", () => {
 });
 
 describe("portal breadcrumbs", () => {
-  it("names the portal and the current page", () => {
-    expect(
-      portalBreadcrumbs(navigation, "/specjalisci/abc", "Portal specjalisty"),
-    ).toEqual([
-      { label: "Portal specjalisty", href: "/" },
+  it("starts at the dashboard, without the portal's name", () => {
+    expect(portalBreadcrumbs(navigation, "/")).toEqual([
+      { label: "Dashboard" },
+    ]);
+    expect(portalBreadcrumbs(navigation, "/specjalisci")).toEqual([
+      { label: "Dashboard", href: "/" },
       { label: "Specjaliści" },
     ]);
   });
 
-  it("shows only the portal on the start page or an unknown path", () => {
-    expect(portalBreadcrumbs(navigation, "/", "Panel")).toEqual([
-      { label: "Panel", href: "/" },
-      { label: "Dashboard" },
+  it("names what a detail page shows, under its section", () => {
+    expect(
+      portalBreadcrumbs(navigation, "/specjalisci/abc", "Anna Nowak"),
+    ).toEqual([
+      { label: "Dashboard", href: "/" },
+      { label: "Specjaliści", href: "/specjalisci" },
+      { label: "Anna Nowak" },
     ]);
-    expect(portalBreadcrumbs(navigation, "/nie-ma", "Panel")).toEqual([
-      { label: "Panel" },
+    // Without a name, the section is where one is.
+    expect(portalBreadcrumbs(navigation, "/specjalisci/abc")).toEqual([
+      { label: "Dashboard", href: "/" },
+      { label: "Specjaliści" },
     ]);
+  });
+
+  it("shows only the dashboard on an unknown path", () => {
+    expect(portalBreadcrumbs(navigation, "/nie-ma")).toEqual([
+      { label: "Dashboard", href: "/" },
+    ]);
+  });
+
+  it("renders a trail with links and the current page", () => {
+    render(
+      <PortalBreadcrumbTrail
+        items={portalBreadcrumbs(navigation, "/specjalisci/abc", "Anna Nowak")}
+      />,
+    );
+    const trail = screen.getByRole("navigation", { name: "Okruszki" });
+    expect(
+      within(trail).getByRole("link", { name: "Specjaliści" }),
+    ).toHaveAttribute("href", "/specjalisci");
+    expect(within(trail).getByText("Anna Nowak")).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(trail.querySelectorAll("li li")).toHaveLength(0);
   });
 
   it("renders the trail in the header instead of a search box", () => {
     render(
       <AppHeader
         breadcrumbs={[
-          { label: "Portal specjalisty", href: "/" },
+          { label: "Dashboard", href: "/" },
           { label: "Dostępność" },
         ]}
         user={{ name: "Anna Kowalska", role: "Psychoterapeutka" }}
@@ -197,7 +227,7 @@ describe("portal breadcrumbs", () => {
 
     const trail = screen.getByRole("navigation", { name: "Okruszki" });
     expect(
-      within(trail).getByRole("link", { name: "Portal specjalisty" }),
+      within(trail).getByRole("link", { name: "Dashboard" }),
     ).toHaveAttribute("href", "/");
     expect(within(trail).getByText("Dostępność")).toHaveAttribute(
       "aria-current",

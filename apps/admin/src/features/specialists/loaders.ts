@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import { createClient } from "@/lib/supabase/server";
 import {
   createSpecialistMediaSignedUrl,
@@ -23,7 +25,7 @@ export async function loadAdminSpecialists() {
   );
 }
 
-export async function loadAdminSpecialistDetail(specialistId: string) {
+async function readAdminSpecialistDetail(specialistId: string) {
   const client = await createClient();
   const specialistPromise = getSpecialistByIdAdmin(client, specialistId);
   const [specialist, draft, offers, services] = await Promise.all([
@@ -74,3 +76,6 @@ export async function loadAdminSpecialistDetail(specialistId: string) {
     },
   });
 }
+
+/** Cached per request: the page and its breadcrumb share one load. */
+export const loadAdminSpecialistDetail = cache(readAdminSpecialistDetail);

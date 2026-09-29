@@ -130,11 +130,9 @@ export const Week: Story = {
             sublabel: `${7 + index} sty`,
             isToday: index === 0,
             ariaLabel: label,
-            summary: (
-              <span className="text-[0.625rem] text-[var(--text-muted)]">
-                {index < 5 && index !== 2 ? "08:00–18:00" : "Zamknięte"}
-              </span>
-            ),
+            // Shown on hover or focus, in place of the date.
+            hint:
+              index < 5 && index !== 2 ? "Otwarte 08:00–18:00" : "Zamknięte",
             content: content[index],
           }))}
           range={range}
@@ -180,6 +178,8 @@ export const Week: Story = {
     await expect(
       canvas.getByRole("progressbar", { name: "Obłożenie gabinetu" }),
     ).toHaveAttribute("aria-valuenow", "18");
+    // The day's hours are there for screen readers, shown on hover.
+    await expect(canvas.getAllByText("Otwarte 08:00–18:00")).toHaveLength(4);
   },
 };
 

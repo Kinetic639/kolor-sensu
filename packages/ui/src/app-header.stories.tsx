@@ -12,7 +12,7 @@ const meta = {
     },
     notificationCount: 3,
     breadcrumbs: [
-      { label: "Portal specjalisty", href: "/" },
+      { label: "Dashboard", href: "/" },
       { label: "Dostępność" },
     ],
     profileHref: "/profil",

@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import {
   OccupancyRing,
@@ -7,7 +8,7 @@ import {
 } from "./room-schedule";
 
 describe("RoomScheduleBlockBody", () => {
-  it("shows who and when, with the form of work", () => {
+  it("shows who and when, and the form of work as an icon", () => {
     render(
       <RoomScheduleBlockBody
         initials="AN"
@@ -19,7 +20,27 @@ describe("RoomScheduleBlockBody", () => {
     expect(screen.getByText("09:00 – 12:00")).toBeInTheDocument();
     expect(screen.getByText("Anna Nowak")).toBeInTheDocument();
     expect(screen.getByText("AN")).toBeInTheDocument();
-    expect(screen.getByText("Stacjonarnie + online")).toBeInTheDocument();
+    // The form is an icon now, named for screen readers and in a tooltip.
+    expect(screen.queryByText("Stacjonarnie + online")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Forma pracy: hybrydowo" }),
+    ).toBeInTheDocument();
+  });
+
+  it("explains the icon in a tooltip", async () => {
+    const user = userEvent.setup();
+    render(
+      <RoomScheduleBlockBody
+        initials="JK"
+        mode="online"
+        name="Jan Kowalski"
+        timeLabel="10:00 – 11:00"
+      />,
+    );
+    await user.hover(
+      screen.getByRole("button", { name: "Forma pracy: online" }),
+    );
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Online");
   });
 
   it("warns about hours outside the opening hours", () => {

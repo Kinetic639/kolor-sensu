@@ -11,7 +11,8 @@ import { cookies } from "next/headers";
 
 export default async function ProtectedLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+  breadcrumb,
+}: Readonly<{ children: React.ReactNode; breadcrumb: React.ReactNode }>) {
   const [authorization, cookieStore, client] = await Promise.all([
     requirePortalRole(),
     cookies(),
@@ -35,6 +36,7 @@ export default async function ProtectedLayout({
   return (
     <PortalShell
       brandSubtitle="Panel administracyjny"
+      breadcrumbs={breadcrumb}
       defaultSidebarOpen={
         cookieStore.get("kolor_sensu_sidebar")?.value !== "false"
       }

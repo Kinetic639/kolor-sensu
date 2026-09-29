@@ -32,6 +32,31 @@ describe("CalendarWeekGrid", () => {
   });
 });
 
+describe("CalendarWeekGrid: header hints", () => {
+  it("shows the date, and the hint on hover or focus, always for screen readers", () => {
+    render(
+      <CalendarWeekGrid
+        columns={[
+          {
+            key: "2030-01-07",
+            label: "Pon",
+            sublabel: "7 sty",
+            ariaLabel: "Poniedziałek, 7 stycznia 2030",
+            hint: "Otwarte 08:00–18:00",
+          },
+        ]}
+        range={range}
+      />,
+    );
+    const header = screen.getByText("Pon").closest("[data-column-header]")!;
+    // Reachable with the keyboard, to show the hint.
+    expect(header).toHaveAttribute("tabindex", "0");
+    const hint = within(header as HTMLElement).getByText("Otwarte 08:00–18:00");
+    expect(hint.className).toContain("group-hover/header:opacity-100");
+    expect(hint.className).toContain("group-focus-visible/header:opacity-100");
+  });
+});
+
 describe("CalendarBlock", () => {
   it("shows someone else's hours behind one's own, not in the way", () => {
     render(
