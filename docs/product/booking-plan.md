@@ -310,6 +310,14 @@ na stronę Stripe.
   - jedna idempotentna funkcja `fulfill(sessionId)` (odczyt sesji z API,
     zapis w `stripe_events`), wołana też ze strony powrotu, bo webhook może
     przyjść później niż klient.
+- **W bazie (migracja `20260929175408_booking_payments`):**
+  `attach_checkout_session` (sesja tylko do żywej blokady z danymi i z kwotą
+  wizyty; blokada trwa tyle co sesja), `fulfill_checkout_session`
+  (idempotentne: `confirmed`, `already_confirmed`, `awaiting_payment`,
+  `slot_lost` → serwer zwraca pieniądze, `unknown_session`),
+  `fail_checkout_session`, `record_refund`, `pending_checkout_session`.
+  Stripe dostaje tylko e-mail i numer wizyty, nigdy imienia, telefonu ani
+  uwag.
 - **Zwroty:** `refunds.create({ payment_intent })` przy anulowaniu w oknie
   `cancellation_window_hours`; zdarzenie `charge.refunded` aktualizuje
   `payments`. Okno zwrotu: BLIK do 13 miesięcy, P24 do 180 dni.
@@ -348,7 +356,7 @@ Każdy commit realizujący zadanie aktualizuje status i wpisuje hash commitu.
 | R3  | UI `@repo/ui/booking`: stepper, podsumowanie, karty wyboru, siatka tygodnia, lista dnia, legenda                                     | F4-03    | `DONE`        | f124e86     | Tylko wolne terminy, bez „Zajęte”           |
 | R4  | `/umow-wizyte`: kroki Usługa → Forma → Specjalista → Termin z nuqs, SSR                                                              | F4-03    | `DONE`        | 3756d84     | Katalog z bazy; hold przy „Przejdź dalej”   |
 | R5  | Hold terminu, krok „Dane” (Turnstile, limity), zgody                                                                                 | F4-03    | `DONE`        | 582f74f     | Klucze testowe Turnstile w DEV              |
-| R6  | Płatność Stripe: Payment Element, webhook, „Oczekujemy na potwierdzenie”, wygasanie                                                  | F4-03    | `NOT STARTED` |             | Klucze testowe Stripe                       |
+| R6  | Płatność Stripe: Payment Element, webhook, „Oczekujemy na potwierdzenie”, wygasanie                                                  | F4-03    | `DONE`        |             | Webhook sprawdzony przez Stripe CLI         |
 | R7  | Potwierdzenie i e-maile (Resend): potwierdzenie z linkiem i plikiem `.ics`                                                           | F4-04    | `NOT STARTED` |             | Klucz Resend, DNS domeny                    |
 | R8  | Zarządzanie z linku: szczegóły, przełożenie, anulowanie ze zwrotem                                                                   | F4-04    | `NOT STARTED` |             |                                             |
 | R9  | Portale: lista wizyt specjalisty i admina, anulowanie przez centrum                                                                  | F4-04    | `NOT STARTED` |             | Widoki kalendarza: etap K (K5)              |

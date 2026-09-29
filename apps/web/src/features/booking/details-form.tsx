@@ -25,8 +25,7 @@ export function DetailsForm({ saved }: { saved: DetailsFormValues | null }) {
           className="rounded-card-sm bg-primary-soft text-small text-ink p-4"
           role="status"
         >
-          Dane zapisane. Płatność online pojawi się tu w kolejnym etapie
-          rezerwacji.
+          Twoje dane są zapisane. Możesz je poprawić albo przejść do płatności.
         </p>
       ) : null}
       {state.status === "invalid" && state.message ? (
@@ -112,7 +111,7 @@ export function DetailsForm({ saved }: { saved: DetailsFormValues | null }) {
         disabled={pending}
         type="submit"
       >
-        {state.status === "saved" ? "Zapisz zmiany" : "Zapisz dane"}
+        Zapisz i przejdź do płatności
       </PrimaryButton>
     </form>
   );

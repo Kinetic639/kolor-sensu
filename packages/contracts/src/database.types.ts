@@ -1281,6 +1281,16 @@ export type Database = {
         Args: { p_draft_id: string; p_review_comment?: string };
         Returns: undefined;
       };
+      attach_checkout_session: {
+        Args: {
+          p_access_token: string;
+          p_amount_minor: number;
+          p_currency_code: string;
+          p_expires_at: string;
+          p_session_id: string;
+        };
+        Returns: undefined;
+      };
       booking_window: {
         Args: never;
         Returns: {
@@ -1311,6 +1321,18 @@ export type Database = {
           p_valid_from: string;
           p_valid_until?: string;
           p_weekdays: number[];
+        };
+        Returns: string;
+      };
+      fail_checkout_session: {
+        Args: { p_reason: string; p_session_id: string };
+        Returns: undefined;
+      };
+      fulfill_checkout_session: {
+        Args: {
+          p_paid: boolean;
+          p_payment_intent_id: string;
+          p_session_id: string;
         };
         Returns: string;
       };
@@ -1424,7 +1446,17 @@ export type Database = {
           starts_at: string;
         }[];
       };
+      pending_checkout_session: {
+        Args: { p_access_token: string };
+        Returns: {
+          checkout_session_id: string;
+        }[];
+      };
       publish_site_content: { Args: { p_key: string }; Returns: undefined };
+      record_refund: {
+        Args: { p_payment_intent_id: string; p_refunded_minor: number };
+        Returns: boolean;
+      };
       reject_specialist_profile_draft: {
         Args: { p_draft_id: string; p_review_comment: string };
         Returns: undefined;

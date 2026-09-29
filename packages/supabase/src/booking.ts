@@ -37,6 +37,8 @@ export type BookingErrorCode =
   | "hold_expired"
   | "consent_required"
   | "invalid_details"
+  | "details_required"
+  | "amount_mismatch"
   | "unknown";
 
 const BOOKING_ERROR_CODES = new Set<string>([

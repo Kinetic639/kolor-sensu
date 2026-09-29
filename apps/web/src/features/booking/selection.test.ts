@@ -65,6 +65,7 @@ const empty: BookingParams = {
   specjalista: null,
   tydzien: null,
   termin: null,
+  uwaga: null,
 };
 
 describe("resolveBookingSelection", () => {

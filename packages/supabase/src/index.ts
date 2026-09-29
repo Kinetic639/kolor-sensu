@@ -159,3 +159,16 @@ export type {
   HoldSlotInput,
   VisitMode,
 } from "./booking";
+export {
+  attachCheckoutSession,
+  claimStripeEvent,
+  failCheckoutSession,
+  fulfillCheckoutSession,
+  pendingCheckoutSession,
+  recordRefund,
+  releaseStripeEvent,
+} from "./booking-payments";
+export type {
+  CheckoutSessionLink,
+  FulfillmentOutcome,
+} from "./booking-payments";

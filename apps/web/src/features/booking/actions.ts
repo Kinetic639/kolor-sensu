@@ -1,14 +1,19 @@
 "use server";
 
 import {
+  attachCheckoutSession,
   BookingError,
+  getBooking,
   holdSlot,
+  pendingCheckoutSession,
   releaseHold,
   saveBookingDetails,
 } from "@repo/supabase";
 import type { Route } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getBookingWindow } from "@/lib/public-data";
+import { stripeServer } from "@/lib/stripe";
 import { createSecretClient } from "@/lib/supabase/secret";
 import {
   readDetailsForm,
@@ -18,17 +23,21 @@ import {
 import { clientIp, turnstileKeys, verifyTurnstile, visitorKey } from "./guards";
 import { clearHoldToken, readHoldToken, saveHoldToken } from "./hold-cookie";
 import { loadWizard } from "./load-wizard";
+import { checkoutSessionParams } from "./payment";
+import { expireSession } from "./payment-server";
 import {
   bookingHref,
   bookingNoticeHref,
   loadBookingParams,
 } from "./search-params";
+import { visitLabel } from "./visit-label";
 
 // The booking steps that write. The forms carry only the wizard's choices
 // and the client's details; the time's instant, the offer and the price
 // are worked out again here and in the database, never taken from a form.
 
 const DETAILS_PATH = "/umow-wizyte/dane" as Route;
+const PAYMENT_PATH = "/umow-wizyte/platnosc" as Route;
 
 function formParams(formData: FormData) {
   return loadBookingParams(
@@ -92,10 +101,86 @@ export async function holdTimeAction(formData: FormData) {
 export async function releaseHoldAction() {
   const token = await readHoldToken();
   if (token) {
-    await releaseHold(createSecretClient(), token).catch(() => false);
+    const db = createSecretClient();
+    // A payment started for this time stops too.
+    const session = await pendingCheckoutSession(db, token).catch(() => null);
+    if (session) await expireSession(session);
+    await releaseHold(db, token).catch(() => false);
     await clearHoldToken();
   }
   redirect(bookingHref({}));
+}
+
+/** The site's own address, for Stripe's return link. */
+async function siteOrigin() {
+  const configured = process.env.NEXT_PUBLIC_WEB_URL;
+  if (configured) return configured.replace(/\/$/, "");
+  const all = await headers();
+  const host = all.get("x-forwarded-host") ?? all.get("host");
+  const proto = all.get("x-forwarded-proto") ?? "http";
+  return `${proto}://${host}`;
+}
+
+/**
+ * "Przejdź do płatności": a Stripe Checkout Session for the held visit,
+ * with its price from the database; an open one is reused.
+ */
+export async function startPaymentAction() {
+  const token = await readHoldToken();
+  if (!token) redirect(EXPIRED);
+  return goToPayment(token);
+}
+
+async function goToPayment(token: string): Promise<never> {
+  const db = createSecretClient();
+
+  const pending = await pendingCheckoutSession(db, token);
+  if (pending) {
+    const session = await stripeServer()
+      .checkout.sessions.retrieve(pending)
+      .catch(() => null);
+    const current = await getBooking(db, token);
+    // Reused while open and for the same e-mail; otherwise a new one.
+    if (
+      session?.status === "open" &&
+      session.customer_email === current?.details?.email
+    ) {
+      redirect(PAYMENT_PATH);
+    }
+    if (session?.status === "open") await expireSession(session.id);
+  }
+
+  const booking = await getBooking(db, token);
+  if (!booking || booking.status !== "held") redirect(EXPIRED);
+  if (!booking.details) redirect(DETAILS_PATH);
+  const timeZone = (await getBookingWindow())?.timeZone ?? "Europe/Warsaw";
+
+  const session = await stripeServer().checkout.sessions.create(
+    checkoutSessionParams({
+      booking,
+      returnUrl: `${await siteOrigin()}/umow-wizyte/potwierdzenie`,
+      visitLabel: visitLabel(booking.startsAt, timeZone),
+    }),
+    // One session per visit and minute, even if the button is pressed twice.
+    {
+      idempotencyKey: `checkout:${booking.reference}:${Math.floor(Date.now() / 60_000)}`,
+    },
+  );
+  try {
+    await attachCheckoutSession(db, token, {
+      sessionId: session.id,
+      expiresAt: new Date(session.expires_at * 1000).toISOString(),
+      amountMinor: session.amount_total ?? 0,
+      currencyCode: session.currency ?? "",
+    });
+  } catch (error) {
+    await expireSession(session.id);
+    if (error instanceof BookingError && error.code === "hold_expired") {
+      redirect(EXPIRED);
+    }
+    throw error;
+  }
+  redirect(PAYMENT_PATH);
 }
 
 export type DetailsFormState =
@@ -149,5 +234,6 @@ export async function saveDetailsAction(
     }
     throw error;
   }
-  return { status: "saved" };
+  // Saved: straight on to the payment.
+  return goToPayment(token);
 }

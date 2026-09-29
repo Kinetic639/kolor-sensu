@@ -213,4 +213,11 @@ describe("HoldNotice", () => {
     );
     expect(screen.getByRole("status")).toHaveTextContent("do 10:42");
   });
+
+  it("can say what to do before then", () => {
+    render(<HoldNotice hint="Dokończ płatność." until="10:42" />);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "do 10:42. Dokończ płatność.",
+    );
+  });
 });

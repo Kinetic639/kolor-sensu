@@ -550,4 +550,160 @@ END;
 $body$;
 RESET ROLE;
 
+-- Q: paying. The Stripe session is tied to a hold that has the client's
+-- details; paying confirms the visit once, whatever arrives first (the
+-- return page or the webhook); a failed or expired session frees the time;
+-- money for a time that was lost in the meantime is to be refunded.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  visit public.appointments%ROWTYPE;
+  outcome text;
+  hint text;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'online',
+    pg_temp.at(t.monday, '14:00'), p_client_key => 'visitor-5'
+  );
+
+  -- Not before the details.
+  BEGIN
+    PERFORM public.attach_checkout_session(held.access_token, 'cs_test_1', now() + interval '30 minutes', 25000, 'PLN');
+    RAISE EXCEPTION 'Q: a session without the details';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'Q:%' THEN RAISE; END IF;
+    GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
+    IF hint <> 'details_required' THEN RAISE EXCEPTION 'Q: expected details_required, got %', hint; END IF;
+  END;
+  PERFORM public.save_booking_details(held.access_token, 'Ewa Test', 'ewa@example.com',
+    '600100200', NULL, true, true);
+
+  -- Not for another amount than the visit's.
+  BEGIN
+    PERFORM public.attach_checkout_session(held.access_token, 'cs_test_1', now() + interval '30 minutes', 100, 'PLN');
+    RAISE EXCEPTION 'Q: a session for a wrong amount';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'Q:%' THEN RAISE; END IF;
+    GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
+    IF hint <> 'amount_mismatch' THEN RAISE EXCEPTION 'Q: expected amount_mismatch, got %', hint; END IF;
+  END;
+
+  -- The hold lasts as long as the session.
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_test_1', now() + interval '30 minutes', 25000, 'PLN');
+  SELECT * INTO visit FROM public.appointments WHERE id = held.appointment_id;
+  IF visit.hold_expires_at < now() + interval '29 minutes' THEN
+    RAISE EXCEPTION 'Q: the hold was not extended to the session';
+  END IF;
+  IF (SELECT (status, amount_minor) FROM public.payments WHERE checkout_session_id = 'cs_test_1')
+     IS DISTINCT FROM ('pending'::public.payment_status, 25000) THEN
+    RAISE EXCEPTION 'Q: the payment was not recorded';
+  END IF;
+  IF (SELECT checkout_session_id FROM public.pending_checkout_session(held.access_token)) <> 'cs_test_1' THEN
+    RAISE EXCEPTION 'Q: pending_checkout_session';
+  END IF;
+
+  -- Paid: confirmed once.
+  outcome := public.fulfill_checkout_session('cs_test_1', true, 'pi_test_1');
+  IF outcome <> 'confirmed' THEN RAISE EXCEPTION 'Q: fulfil gave %', outcome; END IF;
+  outcome := public.fulfill_checkout_session('cs_test_1', true, 'pi_test_1');
+  IF outcome <> 'already_confirmed' THEN RAISE EXCEPTION 'Q: a second fulfil gave %', outcome; END IF;
+  SELECT * INTO visit FROM public.appointments WHERE id = held.appointment_id;
+  IF visit.status <> 'confirmed' OR visit.confirmed_at IS NULL OR visit.hold_expires_at IS NOT NULL
+     OR (SELECT (status, payment_intent_id) FROM public.payments WHERE checkout_session_id = 'cs_test_1')
+        IS DISTINCT FROM ('succeeded'::public.payment_status, 'pi_test_1'::text) THEN
+    RAISE EXCEPTION 'Q: the visit was not confirmed: %', row_to_json(visit);
+  END IF;
+  -- A confirmed visit keeps its time.
+  IF pg_temp.free_times('online', t.monday) LIKE '%14:00%' THEN
+    RAISE EXCEPTION 'Q: a confirmed visit left its time free';
+  END IF;
+
+  -- A refund is recorded against the payment.
+  PERFORM public.record_refund('pi_test_1', 25000);
+  IF (SELECT (status, refunded_minor) FROM public.payments WHERE checkout_session_id = 'cs_test_1')
+     IS DISTINCT FROM ('refunded'::public.payment_status, 25000) THEN
+    RAISE EXCEPTION 'Q: the refund was not recorded';
+  END IF;
+END;
+$body$;
+
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  other record;
+  outcome text;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+
+  -- Paid later (BLIK, Przelewy24): the time waits for the money.
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.tuesday, '10:00'), p_client_key => 'visitor-6'
+  );
+  PERFORM public.save_booking_details(held.access_token, 'Ola Test', 'ola@example.com',
+    '600100200', NULL, true, true);
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_test_2', now() + interval '30 minutes', 25000, 'PLN');
+  outcome := public.fulfill_checkout_session('cs_test_2', false, NULL);
+  IF outcome <> 'awaiting_payment'
+     OR (SELECT status FROM public.appointments WHERE id = held.appointment_id) <> 'awaiting_payment' THEN
+    RAISE EXCEPTION 'Q: an unpaid session gave %', outcome;
+  END IF;
+  -- The payment failed: the time is free again.
+  PERFORM public.fail_checkout_session('cs_test_2', 'failed');
+  IF (SELECT status FROM public.appointments WHERE id = held.appointment_id) <> 'expired'
+     OR (SELECT status FROM public.payments WHERE checkout_session_id = 'cs_test_2') <> 'failed'
+     OR pg_temp.free_times('in_person', t.tuesday) NOT LIKE '%10:00%' THEN
+    RAISE EXCEPTION 'Q: a failed payment kept the time';
+  END IF;
+
+  -- Paid after the hold lapsed and someone else took the time: to refund.
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.tuesday, '10:00'), p_client_key => 'visitor-7'
+  );
+  PERFORM public.save_booking_details(held.access_token, 'Piotr Test', 'piotr@example.com',
+    '600100200', NULL, true, true);
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_test_3', now() + interval '30 minutes', 25000, 'PLN');
+  UPDATE public.appointments SET hold_expires_at = now() - interval '1 second'
+  WHERE id = held.appointment_id;
+  SELECT * INTO other FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.tuesday, '10:00'), p_client_key => 'visitor-8'
+  );
+  outcome := public.fulfill_checkout_session('cs_test_3', true, 'pi_test_3');
+  IF outcome <> 'slot_lost'
+     OR (SELECT status FROM public.appointments WHERE id = held.appointment_id) <> 'expired'
+     OR (SELECT status FROM public.payments WHERE checkout_session_id = 'cs_test_3') <> 'succeeded' THEN
+    RAISE EXCEPTION 'Q: a lost time gave %', outcome;
+  END IF;
+
+  -- Paid after the hold lapsed, the time still free: confirmed anyway.
+  UPDATE public.appointments SET status = 'cancelled' WHERE id = other.appointment_id;
+  outcome := public.fulfill_checkout_session('cs_test_3', true, 'pi_test_3');
+  IF outcome <> 'confirmed' THEN RAISE EXCEPTION 'Q: a free lapsed time gave %', outcome; END IF;
+
+  -- An unknown session.
+  IF public.fulfill_checkout_session('cs_unknown', true, NULL) <> 'unknown_session' THEN
+    RAISE EXCEPTION 'Q: an unknown session';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.fulfill_checkout_session('cs_test_1', true, NULL);
+    RAISE EXCEPTION 'Q: anon confirmed a payment';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;
