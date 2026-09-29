@@ -10,6 +10,7 @@ import {
   toRoomDetailsFormValues,
   toRoomProfileFormValues,
   toRoomProfileInput,
+  roomProfileForVisibility,
   newRoomFormSchema,
   toRoomCreate,
   toRoomUpdate,
@@ -34,12 +35,11 @@ const profile: RoomPublicProfile = {
 };
 
 describe("room profile form", () => {
-  it("starts a new profile from the room's name, unpublished", () => {
+  it("starts a new profile from the room's name", () => {
     expect(toRoomProfileFormValues(null, "Sala 1")).toEqual({
       displayName: "Sala 1",
       shortDescription: "",
       longDescription: emptyRichTextDocument,
-      published: false,
     });
   });
 
@@ -52,8 +52,12 @@ describe("room profile form", () => {
       accessibilityNotes: "Próg przy wejściu",
       imagePath: "rooms/green.jpg",
       amenities: ["Fotele"],
+      // Visibility is set in the settings; the profile keeps it.
       published: true,
     });
+    expect(
+      toRoomProfileInput(values, { ...profile, published: false }).published,
+    ).toBe(false);
   });
 
   it("requires a public name", () => {
@@ -63,6 +67,36 @@ describe("room profile form", () => {
     expect(result.error?.issues[0]?.message).toBe(
       "Podaj nazwę widoczną na stronie.",
     );
+  });
+});
+
+describe("visibility on the site", () => {
+  it("publishes or hides an existing profile, keeping its content", () => {
+    expect(roomProfileForVisibility(profile, "Sala 1", false)).toEqual({
+      displayName: "Gabinet Zielony",
+      shortDescription: "Jasny gabinet",
+      longDescription: profile.longDescription,
+      accessibilityNotes: "Próg przy wejściu",
+      imagePath: "rooms/green.jpg",
+      amenities: ["Fotele"],
+      published: false,
+    });
+  });
+
+  it("makes a profile from the room's name when shown for the first time", () => {
+    expect(roomProfileForVisibility(null, "Sala 1", true)).toEqual({
+      displayName: "Sala 1",
+      shortDescription: null,
+      longDescription: emptyRichTextDocument,
+      accessibilityNotes: null,
+      imagePath: null,
+      amenities: [],
+      published: true,
+    });
+  });
+
+  it("needs nothing to hide a room without a profile", () => {
+    expect(roomProfileForVisibility(null, "Sala 1", false)).toBeNull();
   });
 });
 
@@ -83,33 +117,36 @@ describe("room details form", () => {
   };
 
   it("round-trips a room, storing an empty note as null", () => {
-    const values = toRoomDetailsFormValues(room);
+    const values = toRoomDetailsFormValues(room, false);
     expect(values).toEqual({
       name: "Gabinet Zielony",
       locationId: "location-1",
       description: "",
       capacity: "2",
       active: true,
+      onSite: false,
       color: "#16a34a",
     });
-    // Visibility on the site is set with the public profile, not here.
-    expect(toRoomUpdate(values)).toEqual({
+    // Visibility on the site is set here, with the room's other settings.
+    expect(toRoomUpdate({ ...values, onSite: true })).toEqual({
       name: "Gabinet Zielony",
       locationId: "location-1",
       description: null,
       capacity: 2,
       active: true,
+      publiclyVisible: true,
       color: "#16a34a",
     });
   });
 
   it("keeps the automatic colour as null and refuses a wrong code", () => {
     expect(
-      toRoomUpdate({ ...toRoomDetailsFormValues(room), color: null }).color,
+      toRoomUpdate({ ...toRoomDetailsFormValues(room, false), color: null })
+        .color,
     ).toBeNull();
     expect(
       roomDetailsFormSchema.safeParse({
-        ...toRoomDetailsFormValues(room),
+        ...toRoomDetailsFormValues(room, false),
         color: "zielony",
       }).success,
     ).toBe(false);
@@ -117,7 +154,7 @@ describe("room details form", () => {
 
   it("explains a missing name and an impossible capacity", () => {
     const result = roomDetailsFormSchema.safeParse({
-      ...toRoomDetailsFormValues(room),
+      ...toRoomDetailsFormValues(room, false),
       name: " ",
       locationId: "",
       capacity: "0",

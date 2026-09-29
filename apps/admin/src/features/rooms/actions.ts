@@ -23,6 +23,7 @@ import {
 } from "./exception-form";
 import {
   newRoomFormSchema,
+  roomProfileForVisibility,
   roomDetailsFormSchema,
   roomProfileFormSchema,
   toRoomProfileInput,
@@ -75,7 +76,16 @@ export async function saveRoomDetailsAction(
   const parsed = roomDetailsFormSchema.safeParse(values);
   if (!parsed.success) return { ok: false, message: "Sprawdź dane gabinetu." };
   try {
-    await updateRoom(await createClient(), roomId, toRoomUpdate(parsed.data));
+    const client = await createClient();
+    const room = await updateRoom(client, roomId, toRoomUpdate(parsed.data));
+    // On the site takes the room public and its profile published (or
+    // neither); a room shown for the first time gets a profile from its name.
+    const profile = roomProfileForVisibility(
+      await getRoomPublicProfileAdmin(client, roomId),
+      room.name,
+      parsed.data.onSite,
+    );
+    if (profile) await upsertRoomPublicProfile(client, roomId, profile);
     await refresh(roomId);
     return { ok: true };
   } catch (error) {
@@ -93,16 +103,12 @@ export async function saveRoomProfileAction(
   try {
     const client = await createClient();
     const current = await getRoomPublicProfileAdmin(client, roomId);
+    // Whether it is on the site stays as set in the room's settings.
     await upsertRoomPublicProfile(
       client,
       roomId,
       toRoomProfileInput(parsed.data, current),
     );
-    // One switch decides whether the room is on the site: it publishes the
-    // profile and makes the room public together.
-    await updateRoom(client, roomId, {
-      publiclyVisible: parsed.data.published,
-    });
     await refresh(roomId);
     return { ok: true };
   } catch (error) {

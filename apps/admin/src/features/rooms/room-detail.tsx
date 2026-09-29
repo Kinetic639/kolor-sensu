@@ -54,16 +54,26 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 
 function SwitchField({
   label,
+  description,
   checked,
   onCheckedChange,
 }: {
   label: string;
+  /** What the switch does, under its label. */
+  description?: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex min-h-11 items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--border)] px-3 text-sm">
-      <span>{label}</span>
+    <label className="flex min-h-11 items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--border)] px-3 py-2.5 text-sm">
+      <span className="grid gap-0.5">
+        <span className="font-medium text-[var(--text)]">{label}</span>
+        {description ? (
+          <span className="text-xs text-[var(--text-muted)]">
+            {description}
+          </span>
+        ) : null}
+      </span>
       <Switch
         aria-label={label}
         checked={checked}
@@ -214,18 +224,17 @@ function RoomProfileCard({ model }: { model: AdminRoomDetailModel }) {
     resolver: zodResolver(
       roomProfileFormSchema,
     ) as unknown as Resolver<RoomProfileFormValues>,
-    defaultValues: {
-      ...toRoomProfileFormValues(model.publicProfile, model.room.name),
-      // The page's one switch sets both the profile and the room public.
-      published: model.onSite,
-    },
+    defaultValues: toRoomProfileFormValues(
+      model.publicProfile,
+      model.room.name,
+    ),
   });
 
   return (
     <Card>
       <SectionHeader
         title="Profil publiczny"
-        description="Treści widoczne na stronie w zakładce Gabinety."
+        description="Treści widoczne na stronie w zakładce Gabinety. Czy gabinet jest na stronie, ustawiasz w Ustawieniach."
       />
       <form
         className="mt-5 space-y-4"
@@ -282,17 +291,6 @@ function RoomProfileCard({ model }: { model: AdminRoomDetailModel }) {
             (Ustawienia centrum).
           </p>
         </div>
-        <Controller
-          control={control}
-          name="published"
-          render={({ field }) => (
-            <SwitchField
-              checked={field.value}
-              label="Widoczny na stronie"
-              onCheckedChange={field.onChange}
-            />
-          )}
-        />
         <div className="flex justify-end">
           <Button disabled={!isDirty} loading={isPending} type="submit">
             Zapisz profil
@@ -313,14 +311,14 @@ function RoomDetailsCard({ model }: { model: AdminRoomModel }) {
     formState: { errors, isDirty },
   } = useForm<RoomDetailsFormValues>({
     resolver: zodResolver(roomDetailsFormSchema),
-    defaultValues: toRoomDetailsFormValues(model.room),
+    defaultValues: toRoomDetailsFormValues(model.room, model.onSite),
   });
 
   return (
     <Card>
       <SectionHeader
         title="Dane gabinetu"
-        description="Nazwa, lokalizacja i pojemność. Widoczność na stronie ustawiasz w profilu publicznym."
+        description="Dane gabinetu, jego kolor oraz to, czy działa i czy jest widoczny na stronie."
       />
       <form
         className="mt-5 space-y-4"
@@ -409,7 +407,20 @@ function RoomDetailsCard({ model }: { model: AdminRoomModel }) {
           render={({ field }) => (
             <SwitchField
               checked={field.value}
+              description="W użyciu w centrum: specjaliści mogą ustawiać w nim dyżury, pacjenci rezerwować wizyty."
               label="Gabinet aktywny"
+              onCheckedChange={field.onChange}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="onSite"
+          render={({ field }) => (
+            <SwitchField
+              checked={field.value}
+              description="Wizytówka ze zdjęciami i opisem na stronie, w zakładce Gabinety. Nieaktywnego gabinetu strona nie pokaże."
+              label="Widoczny na stronie"
               onCheckedChange={field.onChange}
             />
           )}
