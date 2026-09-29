@@ -7,6 +7,8 @@ export interface SpecialistListItemViewModel {
   id: string;
   displayName: string;
   initials: string;
+  /** Their colour in schedules and lists (set or automatic). */
+  accent: string;
   avatarUrl: string | null;
   professionalTitle: string;
   active: boolean;
@@ -76,6 +78,12 @@ export interface SpecialistDetailViewModel {
   userId: string;
   displayName: string;
   initials: string;
+  /** Set by an admin; null: the automatic colour. */
+  color: string | null;
+  /** Their colour now (set or automatic). */
+  accent: string;
+  /** What the automatic colour is. */
+  automaticAccent: string;
   avatarUrl: string | null;
   professionalTitle: string;
   publicSlug: string;

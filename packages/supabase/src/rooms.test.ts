@@ -3,6 +3,7 @@ import {
   roomCapacitySchema,
   roomCreateSchema,
   roomSlugSchema,
+  roomUpdateSchema,
 } from "@repo/contracts";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -47,6 +48,30 @@ describe("room domain schemas", () => {
   });
 });
 
+describe("room colour", () => {
+  it("is mapped with the room and validated on update", async () => {
+    expect(
+      roomMappers.room({
+        id: "room-id",
+        location_id: "location-id",
+        name: "Sala 1",
+        slug: "sala-1",
+        description: null,
+        active: true,
+        publicly_visible: false,
+        capacity: 1,
+        sort_order: 0,
+        color: "#2f5fa7",
+        created_at: "",
+        updated_at: "",
+      }).color,
+    ).toBe("#2f5fa7");
+    expect(roomUpdateSchema.parse({ color: "#2F5FA7" }).color).toBe("#2f5fa7");
+    expect(roomUpdateSchema.parse({ color: null }).color).toBeNull();
+    expect(roomUpdateSchema.safeParse({ color: "blue" }).success).toBe(false);
+  });
+});
+
 describe("room domain mapping", () => {
   it("maps room database naming into client-agnostic domain naming", () => {
     expect(
@@ -60,6 +85,7 @@ describe("room domain mapping", () => {
         publicly_visible: false,
         capacity: 4,
         sort_order: 0,
+        color: null,
         created_at: "2026-09-20T00:00:00Z",
         updated_at: "2026-09-20T00:00:00Z",
       }),
@@ -81,6 +107,7 @@ describe("room domain mapping", () => {
     publicly_visible: false,
     capacity: 4,
     sort_order: 0,
+    color: null,
     created_at: "2026-09-20T00:00:00Z",
     updated_at: "2026-09-20T00:00:00Z",
     locations: { name: "Centrum Główne", slug: "centrum-glowne" },

@@ -8,6 +8,7 @@
     "./availability": "./src/availability.ts",
     "./center": "./src/center.ts",
     "./cms": "./src/cms.ts",
+    "./colors": "./src/colors.ts",
     "./database": "./src/database.types.ts",
     "./partial-update": "./src/partial-update.ts",
     "./rich-text": "./src/rich-text.ts",

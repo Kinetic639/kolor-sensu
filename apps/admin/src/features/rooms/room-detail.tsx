@@ -6,6 +6,7 @@ import { ROOM_IMAGE_LIMIT } from "@repo/contracts";
 import { uploadRoomImage } from "@repo/supabase";
 import { Button } from "@repo/ui/button";
 import { Card } from "@repo/ui/card";
+import { ColorField, resourceColors } from "@repo/ui/color-field";
 import { ImageCropDialog } from "@repo/ui/image-crop-dialog";
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
@@ -389,6 +390,19 @@ function RoomDetailsCard({ model }: { model: AdminRoomModel }) {
             Widoczna tylko w portalach, nie na stronie.
           </p>
         </div>
+        <Controller
+          control={control}
+          name="color"
+          render={({ field }) => (
+            <ColorField
+              automaticColor={resourceColors(null, model.room.id).accent}
+              description="Wyróżnia gabinet w grafikach i kalendarzach specjalistów."
+              label="Kolor gabinetu"
+              onChange={field.onChange}
+              value={field.value}
+            />
+          )}
+        />
         <Controller
           control={control}
           name="active"

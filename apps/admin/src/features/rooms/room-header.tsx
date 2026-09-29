@@ -1,6 +1,7 @@
 import { Button } from "@repo/ui/button";
 import { Card } from "@repo/ui/card";
 import { LinkTabs } from "@repo/ui/link-tabs";
+import { resourceColors } from "@repo/ui/resource-colors";
 import { StatusBadge } from "@repo/ui/portal-content";
 import { ArrowLeft, Building2, Clock } from "lucide-react";
 import type { Route } from "next";
@@ -42,7 +43,11 @@ export function RoomHeader({
         <div className="flex min-w-0 items-start gap-3.5">
           <span
             aria-hidden="true"
-            className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)]"
+            className="flex size-12 shrink-0 items-center justify-center rounded-full text-white"
+            // The room's colour (or its automatic one).
+            style={{
+              backgroundColor: resourceColors(room.color, room.id).accent,
+            }}
           >
             <Building2 className="size-6" />
           </span>

@@ -209,6 +209,8 @@ export interface SpecialistAvailabilityRule {
 /** A window in a room, with whose it is (for the room's schedule). */
 export interface RoomAvailabilityRule extends SpecialistAvailabilityRule {
   specialistName: string;
+  /** The specialist's colour, or null for the automatic one. */
+  specialistColor: string | null;
   /** From the first and the last name: "AN" for Anna Maria Nowak. */
   specialistInitials: string;
   /** The account's picture (a URL), if any. */

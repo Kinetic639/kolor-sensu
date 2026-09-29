@@ -11,6 +11,7 @@ import {
   pickPortalAvatarPath,
   getSpecialistSlugRedirect,
   saveMySpecialistProfileDraft,
+  setSpecialistColorAdmin,
   setSpecialistPublicSlugAdmin,
   signSpecialistPhotos,
   specialistMappers,
@@ -214,6 +215,7 @@ describe("specialist domain mapping", () => {
         public_slug: "anna-maria",
         professional_title: null,
         joined_at: null,
+        color: null,
         created_at: "2026-09-19T00:00:00Z",
         updated_at: "2026-09-19T00:00:00Z",
       }),
@@ -235,6 +237,7 @@ describe("specialist domain mapping", () => {
         public_slug: "anna-kowalska",
         professional_title: "Psychoterapeutka",
         joined_at: "2026-09-01T00:00:00Z",
+        color: null,
         created_at: "2026-09-01T00:00:00Z",
         updated_at: "2026-09-01T00:00:00Z",
         profile: {
@@ -497,5 +500,55 @@ describe("signSpecialistPhotos", () => {
       (await signSpecialistPhotos({ storage: { from } } as never, [null])).size,
     ).toBe(0);
     expect(from).not.toHaveBeenCalled();
+  });
+});
+
+describe("setSpecialistColorAdmin", () => {
+  it("sends a normalised colour, or none for the automatic one", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: "#b4436c", error: null });
+    expect(
+      await setSpecialistColorAdmin(
+        { rpc } as never,
+        "specialist-id",
+        "#B4436C",
+      ),
+    ).toBe("#b4436c");
+    expect(rpc).toHaveBeenCalledWith("set_specialist_color", {
+      p_specialist_id: "specialist-id",
+      p_color: "#b4436c",
+    });
+
+    await setSpecialistColorAdmin({ rpc } as never, "specialist-id", null);
+    expect(rpc).toHaveBeenLastCalledWith("set_specialist_color", {
+      p_specialist_id: "specialist-id",
+      p_color: null,
+    });
+  });
+
+  it("rejects a colour that is not #rrggbb before calling the database", async () => {
+    const rpc = vi.fn();
+    await expect(
+      setSpecialistColorAdmin({ rpc } as never, "specialist-id", "pink"),
+    ).rejects.toThrow();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+});
+
+describe("specialist colour", () => {
+  it("is mapped with the specialist", () => {
+    expect(
+      specialistMappers.specialist({
+        id: "specialist-id",
+        user_id: "user-id",
+        active: true,
+        accepting_new_clients: true,
+        public_slug: "anna",
+        professional_title: null,
+        joined_at: null,
+        color: "#2f5fa7",
+        created_at: "",
+        updated_at: "",
+      }).color,
+    ).toBe("#2f5fa7");
   });
 });

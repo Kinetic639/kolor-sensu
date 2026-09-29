@@ -90,7 +90,11 @@ export async function loadAvailability(params: AvailabilityParams) {
     model: mapAvailabilityViewModel({
       rules,
       timeOff,
-      rooms: rooms.map((room) => ({ id: room.id, name: room.name })),
+      rooms: rooms.map((room) => ({
+        id: room.id,
+        name: room.name,
+        color: room.color,
+      })),
       now,
       week,
       filters: { day: params.dzien, mode: params.forma },

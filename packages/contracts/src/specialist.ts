@@ -179,6 +179,8 @@ export interface Specialist {
   publicSlug: string;
   professionalTitle: string | null;
   joinedAt: string | null;
+  /** `#rrggbb`, or null for the automatic colour (set by admins). */
+  color: string | null;
   createdAt: string;
   updatedAt: string;
 }

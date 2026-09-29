@@ -54,6 +54,7 @@ function mapRoom(row: RoomRow): Room {
     publiclyVisible: row.publicly_visible,
     capacity: row.capacity,
     sortOrder: row.sort_order,
+    color: row.color,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -121,6 +122,7 @@ export async function createRoom(
       publicly_visible: room.publiclyVisible,
       capacity: room.capacity,
       sort_order: room.sortOrder,
+      color: room.color,
     })
     .select("*")
     .single();
@@ -146,6 +148,7 @@ export async function updateRoom(
       publicly_visible: patch.publiclyVisible,
       capacity: patch.capacity,
       sort_order: patch.sortOrder,
+      color: patch.color,
     })
     .eq("id", id)
     .select("*")

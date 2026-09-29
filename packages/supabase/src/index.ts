@@ -52,6 +52,7 @@ export {
   getPortalAvatarUrl,
   getSpecialistSlugRedirect,
   pickPortalAvatarPath,
+  setSpecialistColorAdmin,
   setSpecialistPublicSlugAdmin,
   buildSpecialistMediaPath,
   SPECIALIST_IMAGE_MAX_BYTES,

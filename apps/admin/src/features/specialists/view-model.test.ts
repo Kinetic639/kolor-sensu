@@ -4,7 +4,7 @@ import type {
   SpecialistDetailViewModel,
   SpecialistDraftViewModel,
 } from "./types";
-import { createProfileDiff } from "./view-model";
+import { createProfileDiff, mapSpecialistsListViewModel } from "./view-model";
 
 type Content = Omit<
   SpecialistDraftViewModel,
@@ -37,6 +37,9 @@ function detail(draft: Partial<Content>): SpecialistDetailViewModel {
     userId: "u",
     displayName: "Anna Kowalska",
     initials: "AK",
+    color: null,
+    accent: "var(--resource-1)",
+    automaticAccent: "var(--resource-1)",
     avatarUrl: null,
     professionalTitle: "Psychoterapeutka",
     publicSlug: "anna",
@@ -190,5 +193,37 @@ describe("createProfileDiff: title and rich text bio", () => {
       proposedValue: "Opis (zmienione formatowanie)",
       changed: true,
     });
+  });
+});
+
+describe("mapSpecialistsListViewModel: colours", () => {
+  const summary = {
+    id: "specialist-1",
+    userId: "user-1",
+    firstName: "Anna",
+    lastName: "Kowalska",
+    avatarUrl: null,
+    accountActive: true,
+    active: true,
+    acceptingNewClients: true,
+    publicSlug: "anna-kowalska",
+    professionalTitle: "Psychoterapeutka",
+    joinedAt: null,
+    color: "#7c3aed",
+    publicDisplayName: "Anna Kowalska",
+    publicProfilePhotoUrl: null,
+    publicationStatus: "published" as const,
+    pendingDraftId: null,
+    pendingDraftSubmittedAt: null,
+    serviceCount: 0,
+  };
+
+  it("shows each specialist in their colour, or the automatic one", () => {
+    const { items } = mapSpecialistsListViewModel([
+      summary,
+      { ...summary, id: "specialist-2", color: null },
+    ]);
+    expect(items[0]!.accent).toBe("#7c3aed");
+    expect(items[1]!.accent).toMatch(/^var\(--resource-[1-6]\)$/);
   });
 });

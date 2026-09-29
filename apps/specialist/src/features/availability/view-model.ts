@@ -24,6 +24,7 @@ import {
   type OpeningHoursInterval,
   type RoomDateException,
 } from "@repo/scheduling";
+import { resourceColors } from "@repo/ui/resource-colors";
 import { formatInTimeZone } from "date-fns-tz";
 import type {
   AvailabilityViewModel,
@@ -36,7 +37,6 @@ export { formatDate, formatDateRange };
 
 const WEEKDAYS = WEEKDAY_NAMES;
 const WEEKDAYS_SHORT = WEEKDAY_SHORT;
-const RESOURCE_COLOURS = 6;
 
 function local(instant: Date | string, timeZone: string) {
   return {
@@ -87,18 +87,15 @@ function skippedLabel(count: number) {
   return few ? `${count} terminy pominięte` : `${count} terminów pominiętych`;
 }
 
+/** A room's colour (or its automatic one, from its id); online is blue. */
 function colours(
   rule: Pick<SpecialistAvailabilityRule, "mode" | "roomId">,
-  roomIndex: Map<string, number>,
+  roomColors: Map<string, string | null>,
 ) {
   if (rule.mode === "online" || !rule.roomId) {
     return { accent: "var(--info)", tint: "var(--info-soft)" };
   }
-  const index = ((roomIndex.get(rule.roomId) ?? 0) % RESOURCE_COLOURS) + 1;
-  return {
-    accent: `var(--resource-${index})`,
-    tint: `var(--resource-${index}-soft)`,
-  };
+  return resourceColors(roomColors.get(rule.roomId) ?? null, rule.roomId);
 }
 
 function placeLabel(
@@ -131,7 +128,7 @@ export function mapAvailabilityViewModel({
 }: {
   rules: SpecialistAvailabilityRule[];
   timeOff: SpecialistTimeOff[];
-  rooms: { id: string; name: string }[];
+  rooms: { id: string; name: string; color?: string | null }[];
   now: Date;
   /** The Monday of the shown week. */
   week: string;
@@ -150,11 +147,13 @@ export function mapAvailabilityViewModel({
 }): AvailabilityViewModel {
   const today = local(now, timeZone).date;
   const roomNames = new Map(rooms.map((room) => [room.id, room.name]));
-  const roomIndex = new Map(rooms.map((room, index) => [room.id, index]));
+  const roomColors = new Map(
+    rooms.map((room) => [room.id, room.color ?? null]),
+  );
   const roomViews: RoomViewModel[] = rooms.map((room) => ({
     id: room.id,
     name: room.name,
-    accent: colours({ mode: "in_person", roomId: room.id }, roomIndex).accent,
+    accent: colours({ mode: "in_person", roomId: room.id }, roomColors).accent,
   }));
   const ruleById = new Map(rules.map((rule) => [rule.id, rule]));
 
@@ -228,7 +227,7 @@ export function mapAvailabilityViewModel({
           ),
           placeLabel: placeLabel(window, roomNames),
           mode: window.mode,
-          ...colours(window, roomIndex),
+          ...colours(window, roomColors),
           note: rule.note,
           recurring,
           recurrenceLabel: describeRecurrence(rule),
@@ -336,7 +335,7 @@ export function mapAvailabilityViewModel({
         durationLabel: formatHours(minutes),
         placeLabel: placeLabel(rule, roomNames),
         mode: rule.mode,
-        accent: colours(rule, roomIndex).accent,
+        accent: colours(rule, roomColors).accent,
         note: rule.note,
         // Visits come with booking (RD2); until then nothing is booked.
         occupancy: {
@@ -364,7 +363,7 @@ export function mapAvailabilityViewModel({
         ? {
             id: room.id,
             name: roomName!,
-            accent: colours({ mode: "in_person", roomId: room.id }, roomIndex)
+            accent: colours({ mode: "in_person", roomId: room.id }, roomColors)
               .accent,
             hoursLabel: summarizeOpeningHours(room.hours),
             busyLabel: roomBusy.length

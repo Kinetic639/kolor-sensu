@@ -5,9 +5,11 @@ import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import { createClient } from "@/lib/supabase/server";
 import {
   reviewSpecialistProfileDraft,
+  setSpecialistColorAdmin,
   setSpecialistPublicSlugAdmin,
   updateSpecialistOfferStateAdmin,
 } from "@repo/supabase";
+import { hexColorSchema } from "@repo/contracts";
 import { revalidatePath } from "next/cache";
 import { loadAdminSpecialistDetail, loadAdminSpecialists } from "./loaders";
 import { reviewErrorMessage } from "./review-errors";
@@ -103,5 +105,32 @@ export async function setSpecialistSlugAction(input: {
             ? "Brak uprawnień administratora."
             : "Nie udało się zmienić adresu. Spróbuj ponownie.",
     };
+  }
+}
+
+/** The specialist's colour in schedules and lists; null for automatic. */
+export async function setSpecialistColorAction(input: {
+  specialistId: string;
+  color: string | null;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  await requirePortalRole();
+  const parsed = hexColorSchema.nullable().safeParse(input.color);
+  if (!parsed.success) {
+    return { ok: false, message: "Podaj kolor w formacie #RRGGBB." };
+  }
+  try {
+    await setSpecialistColorAdmin(
+      await createClient(),
+      input.specialistId,
+      parsed.data,
+    );
+    revalidatePath("/specjalisci");
+    revalidatePath(`/specjalisci/${input.specialistId}`);
+    // The room schedules show it too.
+    revalidatePath("/gabinety", "layout");
+    return { ok: true };
+  } catch (error) {
+    console.error("[specialists] colour change failed:", error);
+    return { ok: false, message: "Nie udało się zapisać koloru." };
   }
 }

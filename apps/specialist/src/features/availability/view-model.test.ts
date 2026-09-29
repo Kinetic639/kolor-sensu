@@ -43,8 +43,8 @@ function timeOff(
 
 const base = {
   rooms: [
-    { id: "room-1", name: "Gabinet 1" },
-    { id: "room-2", name: "Gabinet 2" },
+    { id: "room-1", name: "Gabinet 1", color: "#16a34a" },
+    { id: "room-2", name: "Gabinet 2", color: "#ea580c" },
   ],
   timeOff: [],
   // Monday 2030-01-07, 08:00 local.
@@ -55,12 +55,25 @@ const base = {
 };
 
 describe("rooms", () => {
-  it("gives each room a colour by position; online is blue", () => {
+  it("shows each room in its colour; online is blue", () => {
     const model = mapAvailabilityViewModel({ ...base, rules: [] });
     expect(model.rooms).toEqual([
-      { id: "room-1", name: "Gabinet 1", accent: "var(--resource-1)" },
-      { id: "room-2", name: "Gabinet 2", accent: "var(--resource-2)" },
+      { id: "room-1", name: "Gabinet 1", accent: "#16a34a" },
+      { id: "room-2", name: "Gabinet 2", accent: "#ea580c" },
     ]);
+  });
+
+  it("gives a room without a colour an automatic one from its id", () => {
+    const rooms = [{ id: "room-3", name: "Gabinet 3", color: null }];
+    const first = mapAvailabilityViewModel({ ...base, rooms, rules: [] });
+    const again = mapAvailabilityViewModel({
+      ...base,
+      rooms: [{ id: "room-0", name: "Nowy", color: null }, ...rooms],
+      rules: [],
+    });
+    expect(first.rooms[0]!.accent).toMatch(/^var\(--resource-[1-6]\)$/);
+    // Another room coming first does not change it.
+    expect(again.rooms[1]!.accent).toBe(first.rooms[0]!.accent);
   });
 });
 
@@ -106,8 +119,8 @@ describe("calendar week", () => {
         end: 780,
         timeLabel: "09:00 – 13:00",
         placeLabel: "Gabinet 1",
-        accent: "var(--resource-1)",
-        tint: "var(--resource-1-soft)",
+        accent: "#16a34a",
+        tint: "color-mix(in srgb, #16a34a 8%, var(--surface))",
       },
       {
         ruleId: "online",
@@ -118,7 +131,7 @@ describe("calendar week", () => {
     ]);
     expect(tuesday!.windows[0]).toMatchObject({
       placeLabel: "Gabinet 2",
-      accent: "var(--resource-2)",
+      accent: "#ea580c",
       note: "Tylko dorośli",
     });
     expect(calendar.days[2]!.hoursLabel).toBeNull();
@@ -207,7 +220,7 @@ describe("rules list", () => {
       timeLabel: "09:00 – 13:00",
       durationLabel: "4 godz.",
       placeLabel: "Gabinet 1",
-      accent: "var(--resource-1)",
+      accent: "#16a34a",
       occupancy: {
         percent: 0,
         bookedLabel: "0 godz. zajęte (0 wizyt)",
@@ -397,7 +410,7 @@ describe("room occupancy in the calendar", () => {
     expect(calendar.roomFocus).toEqual({
       id: "room-1",
       name: "Gabinet 1",
-      accent: "var(--resource-1)",
+      accent: "#16a34a",
       hoursLabel: "Pn–Pt 08:00–18:00",
       busyLabel: "1 blok innych specjalistów",
     });

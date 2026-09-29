@@ -111,19 +111,23 @@
   --sidebar-accent: #34d399;
   --sidebar-ring: #34d399;
 
-  /* Calendar resources (rooms), assigned by position; online uses --info. */
-  --resource-1: #286e4d;
-  --resource-1-soft: #ebf7f0;
-  --resource-2: #cf5c2e;
-  --resource-2-soft: #fef3ed;
-  --resource-3: #725aa6;
-  --resource-3-soft: #f4f1fc;
-  --resource-4: #a86a14;
-  --resource-4-soft: #fbf5eb;
-  --resource-5: #217a86;
-  --resource-5-soft: #eaf6f7;
-  --resource-6: #b4436c;
-  --resource-6-soft: #fcedf2;
+  /* Automatic colours of rooms and specialists (from their id) when none
+     is set: the first six of the palette (packages/contracts/src/colors.ts),
+     each at least 3:1 on white; -soft is 8% of it on white
+     (muted text on it keeps 4.5:1). Online uses
+     --info. */
+  --resource-1: #16a34a;
+  --resource-1-soft: #ecf8f1;
+  --resource-2: #ea580c;
+  --resource-2-soft: #fdf2ec;
+  --resource-3: #7c3aed;
+  --resource-3-soft: #f5effe;
+  --resource-4: #d97706;
+  --resource-4-soft: #fcf4eb;
+  --resource-5: #0891b2;
+  --resource-5-soft: #ebf6f9;
+  --resource-6: #db2777;
+  --resource-6-soft: #fceef4;
 }
 
 /* Inside the sidebar (desktop panel and mobile sheet alike) the general

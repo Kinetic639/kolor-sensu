@@ -14,6 +14,7 @@ import type {
   SpecialistPublicProfile,
   SpecialistService,
 } from "@repo/contracts";
+import { resourceColors } from "@repo/ui/resource-colors";
 import type {
   ProfileDiffFieldViewModel,
   SpecialistDetailViewModel,
@@ -60,6 +61,7 @@ export function mapSpecialistsListViewModel(
       id: summary.id,
       displayName,
       initials: getInitials(displayName, summary),
+      accent: resourceColors(summary.color, summary.id).accent,
       avatarUrl: summary.avatarUrl,
       professionalTitle: summary.professionalTitle ?? "Tytuł nieuzupełniony",
       active: summary.active,
@@ -116,6 +118,9 @@ export function mapSpecialistDetailViewModel({
     id: specialist.id,
     userId: specialist.userId,
     displayName,
+    color: specialist.color,
+    accent: resourceColors(specialist.color, specialist.id).accent,
+    automaticAccent: resourceColors(null, specialist.id).accent,
     initials: getInitials(
       displayName,
       publicProfile ?? {

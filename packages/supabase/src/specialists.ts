@@ -1,6 +1,7 @@
 import {
   clientGroupSchema,
   emptyRichTextDocument,
+  hexColorSchema,
   richTextDocumentSchema,
   specialistProfileDraftInputSchema,
   specialistProfileReviewInputSchema,
@@ -57,6 +58,7 @@ export interface AdminSpecialistSummary {
   publicSlug: string;
   professionalTitle: string | null;
   joinedAt: string | null;
+  color: string | null;
   publicDisplayName: string | null;
   publicProfilePhotoUrl: string | null;
   publicationStatus: SpecialistPublicProfile["publicationStatus"] | null;
@@ -86,6 +88,7 @@ function mapSpecialist(row: SpecialistRow): Specialist {
     publicSlug: row.public_slug,
     professionalTitle: row.professional_title,
     joinedAt: row.joined_at,
+    color: row.color,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -169,6 +172,7 @@ function mapAdminSpecialistSummary(
     publicSlug: row.public_slug,
     professionalTitle: row.professional_title,
     joinedAt: row.joined_at,
+    color: row.color,
     publicDisplayName: row.public_profile?.display_name ?? null,
     publicProfilePhotoUrl: row.public_profile?.profile_photo_url ?? null,
     publicationStatus: row.public_profile?.publication_status ?? null,
@@ -372,6 +376,7 @@ export async function listSpecialistSummariesForAdmin(
         public_slug,
         professional_title,
         joined_at,
+        color,
         created_at,
         updated_at,
         profile:profiles!specialists_user_id_fkey (
@@ -593,6 +598,22 @@ export async function setSpecialistPublicSlugAdmin(
   const { data, error } = await client.rpc("set_specialist_public_slug", {
     p_specialist_id: specialistId,
     p_public_slug: publicSlug,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+/** Sets a specialist's colour (admins only); null for the automatic one. */
+export async function setSpecialistColorAdmin(
+  client: SupabaseClient<Database>,
+  specialistId: string,
+  color: string | null,
+): Promise<string | null> {
+  const value = color === null ? null : hexColorSchema.parse(color);
+  const { data, error } = await client.rpc("set_specialist_color", {
+    p_specialist_id: specialistId,
+    p_color: value,
   });
 
   if (error) throw error;

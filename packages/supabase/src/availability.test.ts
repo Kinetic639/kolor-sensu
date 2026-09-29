@@ -273,6 +273,7 @@ describe("listRoomAvailabilityRules", () => {
           updated_at: "",
           exceptions: [],
           specialist: {
+            color: "#2f5fa7",
             profile: {
               first_name: "Anna Maria",
               last_name: "Nowak",
@@ -304,6 +305,7 @@ describe("listRoomAvailabilityRules", () => {
           updated_at: "",
           exceptions: [],
           specialist: {
+            color: "#2f5fa7",
             profile: { first_name: "", last_name: "", avatar_url: null },
             public_profile: {
               first_name: "Jan",
@@ -328,6 +330,7 @@ describe("listRoomAvailabilityRules", () => {
         id: "rule",
         startsAt: "09:00",
         specialistName: "Anna Maria Nowak",
+        specialistColor: "#2f5fa7",
         // From the first and the last name, not from every word.
         specialistInitials: "AN",
         specialistAvatarUrl: null,

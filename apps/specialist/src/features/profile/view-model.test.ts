@@ -17,6 +17,7 @@ const specialist: Specialist = {
   publicSlug: "anna-kowalska",
   professionalTitle: "Psychoterapeutka",
   joinedAt: null,
+  color: null,
   createdAt: "2026-09-01T10:00:00Z",
   updatedAt: "2026-09-01T10:00:00Z",
 };

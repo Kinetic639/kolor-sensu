@@ -159,6 +159,7 @@ export async function listAvailabilityRules(
 
 type RoomRuleRow = RuleRow & {
   specialist: {
+    color: string | null;
     profile: {
       first_name: string;
       last_name: string;
@@ -185,6 +186,7 @@ export async function listRoomAvailabilityRules(
         *,
         exceptions:specialist_availability_exceptions (date),
         specialist:specialists!inner (
+          color,
           profile:profiles!specialists_user_id_fkey (first_name, last_name, avatar_url),
           public_profile:specialist_public_profiles (first_name, last_name, display_name, profile_photo_url)
         )
@@ -221,6 +223,7 @@ export async function listRoomAvailabilityRules(
     return {
       ...mapRule(row),
       specialistName: name,
+      specialistColor: row.specialist.color,
       specialistInitials: person
         ? personInitials(person)
         : name[0]!.toUpperCase(),

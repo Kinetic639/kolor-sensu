@@ -371,6 +371,7 @@ export type Database = {
         Row: {
           active: boolean;
           capacity: number;
+          color: string | null;
           created_at: string;
           description: string | null;
           id: string;
@@ -384,6 +385,7 @@ export type Database = {
         Insert: {
           active?: boolean;
           capacity?: number;
+          color?: string | null;
           created_at?: string;
           description?: string | null;
           id?: string;
@@ -397,6 +399,7 @@ export type Database = {
         Update: {
           active?: boolean;
           capacity?: number;
+          color?: string | null;
           created_at?: string;
           description?: string | null;
           id?: string;
@@ -891,6 +894,7 @@ export type Database = {
         Row: {
           accepting_new_clients: boolean;
           active: boolean;
+          color: string | null;
           created_at: string;
           id: string;
           joined_at: string | null;
@@ -902,6 +906,7 @@ export type Database = {
         Insert: {
           accepting_new_clients?: boolean;
           active?: boolean;
+          color?: string | null;
           created_at?: string;
           id?: string;
           joined_at?: string | null;
@@ -913,6 +918,7 @@ export type Database = {
         Update: {
           accepting_new_clients?: boolean;
           active?: boolean;
+          color?: string | null;
           created_at?: string;
           id?: string;
           joined_at?: string | null;
@@ -1206,6 +1212,10 @@ export type Database = {
         Returns: string;
       };
       set_room_main_image: { Args: { p_image_id: string }; Returns: undefined };
+      set_specialist_color: {
+        Args: { p_color: string | null; p_specialist_id: string };
+        Returns: string | null;
+      };
       set_specialist_public_slug: {
         Args: { p_public_slug: string; p_specialist_id: string };
         Returns: string;

@@ -23,6 +23,7 @@ import {
   type OpeningHoursInterval,
   type RoomDateException,
 } from "@repo/scheduling";
+import { resourceColors } from "@repo/ui/resource-colors";
 import { formatInTimeZone } from "date-fns-tz";
 
 // The room's week (admin, Gabinety → Grafik): the hours specialists have
@@ -104,7 +105,6 @@ export interface RoomScheduleViewModel {
   }[];
 }
 
-const RESOURCE_COLOURS = 6;
 const UPCOMING = 4;
 
 const rangeLabel = (ranges: MinuteRange[]) =>
@@ -152,14 +152,15 @@ export function mapRoomScheduleViewModel({
       ]),
     ).values(),
   ].sort((a, b) => a.name.localeCompare(b.name, "pl"));
+  // Each specialist's colour: theirs, or the automatic one from their id.
+  const colourOf = new Map(
+    rules.map((one) => [one.specialistId, one.specialistColor]),
+  );
   const colours = new Map(
-    people.map((person, index) => {
-      const n = (index % RESOURCE_COLOURS) + 1;
-      return [
-        person.id,
-        { accent: `var(--resource-${n})`, tint: `var(--resource-${n}-soft)` },
-      ];
-    }),
+    people.map((person) => [
+      person.id,
+      resourceColors(colourOf.get(person.id) ?? null, person.id),
+    ]),
   );
   const ruleById = new Map(rules.map((one) => [one.id, one]));
 

@@ -162,3 +162,10 @@ export interface Appointment {
   serviceId: string;
   startsAt: string;
 }
+export {
+  COLOR_PALETTE,
+  contrastRatio,
+  hexColorSchema,
+  isReadableOnLight,
+} from "@repo/contracts/colors";
+export type { PaletteColor } from "@repo/contracts/colors";

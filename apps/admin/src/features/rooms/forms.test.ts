@@ -77,6 +77,7 @@ describe("room details form", () => {
     publiclyVisible: false,
     capacity: 2,
     sortOrder: 0,
+    color: "#16a34a",
     createdAt: "",
     updatedAt: "",
   };
@@ -89,6 +90,7 @@ describe("room details form", () => {
       description: "",
       capacity: "2",
       active: true,
+      color: "#16a34a",
     });
     // Visibility on the site is set with the public profile, not here.
     expect(toRoomUpdate(values)).toEqual({
@@ -97,7 +99,20 @@ describe("room details form", () => {
       description: null,
       capacity: 2,
       active: true,
+      color: "#16a34a",
     });
+  });
+
+  it("keeps the automatic colour as null and refuses a wrong code", () => {
+    expect(
+      toRoomUpdate({ ...toRoomDetailsFormValues(room), color: null }).color,
+    ).toBeNull();
+    expect(
+      roomDetailsFormSchema.safeParse({
+        ...toRoomDetailsFormValues(room),
+        color: "zielony",
+      }).success,
+    ).toBe(false);
   });
 
   it("explains a missing name and an impossible capacity", () => {
@@ -136,6 +151,8 @@ describe("new room form", () => {
       active: true,
       publiclyVisible: false,
       sortOrder: 0,
+      // A new room takes the automatic colour.
+      color: null,
     });
   });
 

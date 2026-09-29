@@ -27,7 +27,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Search } from "lucide-react";
 import Link from "next/link";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState, type CSSProperties } from "react";
 
 type ActivityFilter = "all" | "active" | "inactive";
 type PublicationFilter = "all" | "published" | "pending" | "missing";
@@ -51,7 +51,11 @@ function publicationBadge(item: SpecialistListItemViewModel) {
 function SpecialistIdentity({ item }: { item: SpecialistListItemViewModel }) {
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <Avatar>
+      {/* A ring in the specialist's colour, as in the schedules. */}
+      <Avatar
+        className="ring-2 ring-[var(--specialist-accent)] ring-offset-2 ring-offset-[var(--surface)]"
+        style={{ "--specialist-accent": item.accent } as CSSProperties}
+      >
         {item.avatarUrl ? <AvatarImage alt="" src={item.avatarUrl} /> : null}
         <AvatarFallback>{item.initials}</AvatarFallback>
       </Avatar>

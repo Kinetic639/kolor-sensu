@@ -1,3 +1,4 @@
+import { hexColorSchema } from "@repo/contracts/colors";
 import { partialUpdateSchema } from "@repo/contracts/partial-update";
 import {
   emptyRichTextDocument,
@@ -22,6 +23,8 @@ export const roomCreateSchema = z.object({
   publiclyVisible: z.boolean().default(false),
   capacity: roomCapacitySchema.default(1),
   sortOrder: z.number().int().min(0).max(10_000).default(0),
+  /** For schedules and lists; null: automatic (by position). */
+  color: hexColorSchema.nullable().default(null),
 });
 
 export const roomUpdateSchema = partialUpdateSchema(roomCreateSchema);
@@ -114,6 +117,8 @@ export interface Room {
   publiclyVisible: boolean;
   capacity: number;
   sortOrder: number;
+  /** `#rrggbb`, or null for the automatic colour. */
+  color: string | null;
   createdAt: string;
   updatedAt: string;
 }

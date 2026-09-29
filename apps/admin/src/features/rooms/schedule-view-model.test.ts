@@ -10,6 +10,7 @@ function rule(overrides: Partial<RoomAvailabilityRule>): RoomAvailabilityRule {
     id: "rule",
     specialistId: "anna",
     specialistName: "Anna Nowak",
+    specialistColor: null,
     specialistInitials: "AN",
     specialistAvatarUrl: null,
     specialistPhotoPath: null,
@@ -34,6 +35,7 @@ const jan = rule({
   id: "jan-tue",
   specialistId: "jan",
   specialistName: "Jan Kowalski",
+  specialistColor: "#2f5fa7",
   specialistInitials: "JK",
   recurrence: "once",
   weekdays: [2],
@@ -105,7 +107,12 @@ describe("mapRoomScheduleViewModel", () => {
 
   it("gives each specialist their own colour", () => {
     const { days, specialists } = model();
-    expect(days[0]!.windows[0]!.accent).not.toBe(days[1]!.windows[0]!.accent);
+    // Jan's colour is set; Anna's is automatic.
+    expect(days[1]!.windows[0]).toMatchObject({
+      accent: "#2f5fa7",
+      tint: "color-mix(in srgb, #2f5fa7 8%, var(--surface))",
+    });
+    expect(days[0]!.windows[0]!.accent).toMatch(/^var\(--resource-[1-6]\)$/);
     expect(specialists.map((one) => one.name)).toEqual([
       "Anna Nowak",
       "Jan Kowalski",

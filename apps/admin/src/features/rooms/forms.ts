@@ -1,5 +1,6 @@
 import {
   emptyRichTextDocument,
+  hexColorSchema,
   richTextDocumentWithMaxCharacters,
   type Room,
   type RoomCreate,
@@ -71,6 +72,8 @@ export const roomDetailsFormSchema = z.object({
   description: z.string().trim().max(2000),
   capacity: capacityField,
   active: z.boolean(),
+  /** For schedules and lists; null: automatic. */
+  color: hexColorSchema.nullable(),
 });
 
 export type RoomDetailsFormValues = z.infer<typeof roomDetailsFormSchema>;
@@ -82,6 +85,7 @@ export function toRoomDetailsFormValues(room: Room): RoomDetailsFormValues {
     description: room.description ?? "",
     capacity: String(room.capacity),
     active: room.active,
+    color: room.color,
   };
 }
 
@@ -92,6 +96,7 @@ export function toRoomUpdate(values: RoomDetailsFormValues): RoomUpdate {
     description: nullIfEmpty(values.description),
     capacity: Number(values.capacity),
     active: values.active,
+    color: values.color,
   };
 }
 
@@ -122,5 +127,6 @@ export function toRoomCreate(values: NewRoomFormValues): RoomCreate {
     active: true,
     publiclyVisible: false,
     sortOrder: 0,
+    color: null,
   };
 }

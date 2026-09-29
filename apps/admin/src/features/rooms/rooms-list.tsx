@@ -1,5 +1,7 @@
 import type { AdminRoomSummary } from "@repo/contracts";
 import { Card } from "@repo/ui/card";
+import { ColorSwatch } from "@repo/ui/color-field";
+import { resourceColors } from "@repo/ui/resource-colors";
 import { StatusBadge } from "@repo/ui/portal-content";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -11,16 +13,22 @@ export function RoomsList({ rooms }: { rooms: AdminRoomSummary[] }) {
       {rooms.map((room) => (
         <li key={room.id}>
           <Card className="relative flex flex-wrap items-center justify-between gap-3 transition-colors focus-within:ring-2 focus-within:ring-[var(--ring)] hover:border-[var(--border-strong)]">
-            <div>
-              <Link
-                className="font-heading font-semibold text-[var(--text)] outline-none after:absolute after:inset-0 after:content-['']"
-                href={`/gabinety/${room.id}`}
-              >
-                {room.name}
-              </Link>
-              <p className="text-sm text-[var(--text-muted)]">
-                {room.locationName} &middot; pojemność {room.capacity}
-              </p>
+            <div className="flex items-start gap-3">
+              <ColorSwatch
+                className="mt-1.5"
+                color={resourceColors(room.color, room.id).accent}
+              />
+              <div>
+                <Link
+                  className="font-heading font-semibold text-[var(--text)] outline-none after:absolute after:inset-0 after:content-['']"
+                  href={`/gabinety/${room.id}`}
+                >
+                  {room.name}
+                </Link>
+                <p className="text-sm text-[var(--text-muted)]">
+                  {room.locationName} &middot; pojemność {room.capacity}
+                </p>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge tone={room.active ? "success" : "neutral"}>

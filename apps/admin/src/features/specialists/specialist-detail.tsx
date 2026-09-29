@@ -11,6 +11,7 @@ import type {
   SpecialistDetailViewModel,
   SpecialistProfileSnapshotViewModel,
 } from "@/features/specialists/types";
+import { SpecialistSettings } from "@/features/specialists/specialist-settings";
 import { createProfileDiff } from "@/features/specialists/view-model";
 import {
   publicSlugFormSchema,
@@ -56,7 +57,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 import { toast } from "sonner";
 
 function formatDate(value: string | null) {
@@ -520,7 +521,10 @@ export function SpecialistDetail({
         </Link>
       </Button>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <Avatar className="size-16">
+        <Avatar
+          className="size-16 ring-4 ring-[var(--specialist-accent)] ring-offset-2 ring-offset-[var(--surface)]"
+          style={{ "--specialist-accent": detail.accent } as CSSProperties}
+        >
           {detail.avatarUrl ? (
             <AvatarImage alt="" src={detail.avatarUrl} />
           ) : null}
@@ -548,6 +552,7 @@ export function SpecialistDetail({
             <TabsTrigger value="schedule">Grafik</TabsTrigger>
             <TabsTrigger value="services">Usługi i cennik</TabsTrigger>
             <TabsTrigger value="profile">Profil publiczny</TabsTrigger>
+            <TabsTrigger value="settings">Ustawienia</TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="overview" className="space-y-5">
@@ -608,6 +613,9 @@ export function SpecialistDetail({
         </TabsContent>
         <TabsContent value="services">
           <ServicesTab detail={detail} />
+        </TabsContent>
+        <TabsContent value="settings">
+          <SpecialistSettings detail={detail} />
         </TabsContent>
         <TabsContent value="profile" className="space-y-5">
           <DraftReview detail={detail} />
