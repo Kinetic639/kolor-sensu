@@ -11,6 +11,9 @@ import type {
   SpecialistWithMedia,
 } from "@/lib/public-data";
 import { serviceHref, serviceTitle } from "@/lib/site-frame";
+import { formatDuration, formatPrice } from "./format";
+
+export { formatDuration, formatPrice };
 
 // Database records as the public-site components show them.
 
@@ -60,29 +63,12 @@ export function toOfferTile(
   };
 }
 
-const money = (currency: string) =>
-  new Intl.NumberFormat("pl-PL", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  });
-
-export function formatPrice(
-  offer: Pick<PublicOffer, "priceMinor" | "currencyCode">,
-) {
-  return money(offer.currencyCode).format(offer.priceMinor / 100);
-}
-
 /** "od 180 zł" for a service offered at several prices. */
 export function priceRange(offers: PublicOffer[]) {
   if (offers.length === 0) return null;
   const lowest = offers.reduce((a, b) => (b.priceMinor < a.priceMinor ? b : a));
   const same = offers.every((offer) => offer.priceMinor === lowest.priceMinor);
   return same ? formatPrice(lowest) : `od ${formatPrice(lowest)}`;
-}
-
-export function formatDuration(minutes: number) {
-  return `${minutes} min`;
 }
 
 export function offerModes(offer: PublicOffer) {

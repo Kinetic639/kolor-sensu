@@ -32,8 +32,10 @@ Usługa → Forma → Specjalista → Termin → Dane → Płatność → Potwie
 - Specjalista: tylko ci, którzy mają aktywną ofertę na tę usługę, formę i
   przyjmują nowe osoby; cena z ich oferty.
 - Termin: tydzień (desktop: siatka dni × godziny, mobile: dni + lista godzin),
-  tylko wolne sloty. Wybór terminu **blokuje go na 10 minut** („Twój termin
-  jest tymczasowo zarezerwowany”).
+  tylko wolne sloty. Kliknięcie godziny tylko zaznacza ją w adresie; dopiero
+  „Przejdź dalej” (formularz POST) **blokuje termin na 10 minut** („Twój termin
+  jest tymczasowo zarezerwowany”). Otwarcie linku nigdy niczego nie blokuje
+  (prefetch, boty).
 - Dane: imię i nazwisko, e-mail, telefon, uwagi (opcjonalnie), akceptacja
   regulaminu i polityki prywatności.
 - Płatność: Stripe; po powrocie strona „Oczekujemy na potwierdzenie
@@ -117,12 +119,14 @@ przedziały), żywe wizyty specjalisty i gabinetu z przerwą. `@repo/scheduling`
 tylko odczytuje wynik w strefie centrum i grupuje po dniach (`toFreeSlots`,
 `groupSlotsByDay`).
 
-| RPC               | Kto                            | Co robi                                                                                             |
-| ----------------- | ------------------------------ | --------------------------------------------------------------------------------------------------- |
-| `list_free_slots` | publiczne (anon)               | Początki i końce wolnych wizyt usługi u specjalisty, w formie (i lokalizacji), do 14 dni            |
-| `hold_slot`       | serwer strony (`service_role`) | Sprawdza termin ponownie, blokuje go na `hold_minutes`, zwraca numer i token (jedyny raz poza bazą) |
-| `release_hold`    | serwer strony                  | Zwalnia hold (klient zmienił termin albo zrezygnował)                                               |
-| `get_booking`     | serwer strony                  | Wizyta po tokenie: usługa, specjalista, gabinet, lokalizacja, cena, status                          |
+| RPC                    | Kto                            | Co robi                                                                                                                                           |
+| ---------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `list_bookable_offers` | publiczne (anon)               | Co da się teraz zarezerwować (usługi, specjaliści, ceny, formy) wg tych samych reguł co wolne terminy (migracja `20260929073743_booking_catalog`) |
+| `booking_window`       | publiczne (anon)               | Strefa czasowa centrum, horyzont i czas blokady                                                                                                   |
+| `list_free_slots`      | publiczne (anon)               | Początki i końce wolnych wizyt usługi u specjalisty, w formie (i lokalizacji), do 14 dni                                                          |
+| `hold_slot`            | serwer strony (`service_role`) | Sprawdza termin ponownie, blokuje go na `hold_minutes`, zwraca numer i token (jedyny raz poza bazą)                                               |
+| `release_hold`         | serwer strony                  | Zwalnia hold (klient zmienił termin albo zrezygnował)                                                                                             |
+| `get_booking`          | serwer strony                  | Wizyta po tokenie: usługa, specjalista, gabinet, lokalizacja, cena, status                                                                        |
 
 Holdy wygasają **leniwie**, bez harmonogramu: przeterminowany hold nie
 blokuje wolnych terminów, a każdy nowy hold oznacza przeterminowane jako
@@ -336,7 +340,7 @@ Każdy commit realizujący zadanie aktualizuje status i wpisuje hash commitu.
 | RG1 | Admin `/gabinety/[id]`: zakładki, grafik gabinetu, godziny otwarcia z wyjątkami, limit dostępności; zajętość gabinetów u specjalisty | F4-02    | `DONE`        | f166482     | Sprawdzone na koncie admina                 |
 | R2  | Portal specjalisty `/dostepnosc`: grafik tygodniowy, nieobecności, okna jednorazowe, podgląd tygodnia                                | F4-02    | `DONE`        | f980622     | Pełny kalendarz: etap K                     |
 | R3  | UI `@repo/ui/booking`: stepper, podsumowanie, karty wyboru, siatka tygodnia, lista dnia, legenda                                     | F4-03    | `DONE`        |             | Tylko wolne terminy, bez „Zajęte”           |
-| R4  | `/umow-wizyte`: kroki Usługa → Forma → Specjalista → Termin z nuqs, SSR                                                              | F4-03    | `NOT STARTED` |             |                                             |
+| R4  | `/umow-wizyte`: kroki Usługa → Forma → Specjalista → Termin z nuqs, SSR                                                              | F4-03    | `DONE`        |             | Katalog z bazy; hold przy „Przejdź dalej”   |
 | R5  | Hold terminu, krok „Dane” (Turnstile, limity), zgody                                                                                 | F4-03    | `NOT STARTED` |             | Klucze Turnstile                            |
 | R6  | Płatność Stripe: Payment Element, webhook, „Oczekujemy na potwierdzenie”, wygasanie                                                  | F4-03    | `NOT STARTED` |             | Klucze testowe Stripe                       |
 | R7  | Potwierdzenie i e-maile (Resend): potwierdzenie z linkiem i plikiem `.ics`                                                           | F4-04    | `NOT STARTED` |             | Klucz Resend, DNS domeny                    |

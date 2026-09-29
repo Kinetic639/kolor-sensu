@@ -1281,6 +1281,14 @@ export type Database = {
         Args: { p_draft_id: string; p_review_comment?: string };
         Returns: undefined;
       };
+      booking_window: {
+        Args: never;
+        Returns: {
+          hold_minutes: number;
+          horizon_days: number;
+          time_zone: string;
+        }[];
+      };
       delete_availability_occurrence: {
         Args: { p_date: string; p_rule_id: string; p_scope: string };
         Returns: undefined;
@@ -1340,6 +1348,27 @@ export type Database = {
           appointment_id: string;
           hold_expires_at: string;
           reference: string;
+        }[];
+      };
+      list_bookable_offers: {
+        Args: never;
+        Returns: {
+          currency_code: string;
+          duration_minutes: number;
+          price_minor: number;
+          service_category: Database["public"]["Enums"]["service_category"];
+          service_default_duration_minutes: number;
+          service_description: string | null;
+          service_id: string;
+          service_name: string;
+          service_short_description: string | null;
+          service_slug: string;
+          specialist_name: string;
+          specialist_photo_path: string | null;
+          specialist_slug: string;
+          specialist_title: string | null;
+          supports_in_person: boolean;
+          supports_online: boolean;
         }[];
       };
       list_free_slots: {

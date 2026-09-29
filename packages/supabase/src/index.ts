@@ -137,3 +137,24 @@ export type {
   OccurrenceTarget,
   RoomConflict,
 } from "./availability";
+export {
+  BookingError,
+  getBooking,
+  getBookingWindow,
+  holdSlot,
+  listBookableCatalog,
+  listFreeSlots,
+  releaseHold,
+} from "./booking";
+export type {
+  AppointmentStatus,
+  BookableCatalog,
+  BookableOffer,
+  BookingErrorCode,
+  BookingWindow,
+  FreeSlotsQuery,
+  GuestBooking,
+  HeldSlot,
+  HoldSlotInput,
+  VisitMode,
+} from "./booking";

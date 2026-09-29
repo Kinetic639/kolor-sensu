@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   bookingHref,
+  bookingNoticeHref,
   changeBookingHref,
   loadBookingParams,
   selectBookingHref,
@@ -23,6 +24,7 @@ describe("booking search params", () => {
       specjalista: "anna-nowak",
       tydzien: "2026-10-05",
       termin: "2026-10-07T10:00",
+      uwaga: null,
     });
   });
 
@@ -38,6 +40,7 @@ describe("booking search params", () => {
       specjalista: null,
       tydzien: null,
       termin: null,
+      uwaga: null,
     });
   });
 
@@ -76,5 +79,23 @@ describe("booking search params", () => {
     expect(changeBookingHref(params, "specjalista")).toBe(
       "/umow-wizyte?usluga=konsultacja&forma=online",
     );
+  });
+});
+
+describe("a notice after a refused hold", () => {
+  it("is shown once: links from that page leave it out", () => {
+    const params = load(
+      "usluga=konsultacja&forma=online&specjalista=anna&termin=2026-10-07T10:00",
+    );
+    const notice = bookingNoticeHref(params, "termin-zajety");
+    expect(notice).toBe(
+      "/umow-wizyte?usluga=konsultacja&forma=online&specjalista=anna&tydzien=2026-10-07&uwaga=termin-zajety",
+    );
+    const shown = load(notice.split("?")[1]!);
+    expect(shown.uwaga).toBe("termin-zajety");
+    expect(bookingHref(shown)).not.toContain("uwaga");
+    expect(
+      selectBookingHref(shown, "termin", "2026-10-08T10:00"),
+    ).not.toContain("uwaga");
   });
 });

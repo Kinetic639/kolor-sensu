@@ -351,6 +351,45 @@ BEGIN
 END;
 $$;
 
+-- N: the wizard's catalogue: what can be booked, by the same rules as the
+-- free times, and the centre's booking window.
+SET LOCAL ROLE anon;
+DO $$
+DECLARE
+  offer record;
+BEGIN
+  SELECT * INTO offer FROM public.list_bookable_offers()
+  WHERE specialist_slug = 'booking-test-anna';
+  IF offer IS NULL OR offer.service_slug <> 'booking-test-consultation'
+     OR offer.service_name <> 'Booking Consultation' OR offer.specialist_name <> 'Anna Test'
+     OR offer.duration_minutes <> 50 OR offer.price_minor <> 25000
+     OR NOT offer.supports_in_person OR NOT offer.supports_online THEN
+    RAISE EXCEPTION 'N: Anna''s offer: %', row_to_json(offer);
+  END IF;
+  IF (SELECT (time_zone, horizon_days, hold_minutes) FROM public.booking_window())
+     IS DISTINCT FROM ('Europe/Warsaw'::text, 60, 10) THEN
+    RAISE EXCEPTION 'N: booking_window';
+  END IF;
+END;
+$$;
+RESET ROLE;
+DO $$
+BEGIN
+  UPDATE public.specialist_services SET accepting_new_clients = false
+  WHERE specialist_id = (SELECT anna_id FROM booking_test);
+  IF EXISTS (SELECT 1 FROM public.list_bookable_offers() WHERE specialist_slug = 'booking-test-anna') THEN
+    RAISE EXCEPTION 'N: an offer not taking new clients was listed';
+  END IF;
+  UPDATE public.specialist_services SET accepting_new_clients = true
+  WHERE specialist_id = (SELECT anna_id FROM booking_test);
+  UPDATE public.center_settings SET booking_enabled = false;
+  IF EXISTS (SELECT 1 FROM public.list_bookable_offers()) THEN
+    RAISE EXCEPTION 'N: offers listed with bookings off';
+  END IF;
+  UPDATE public.center_settings SET booking_enabled = true;
+END;
+$$;
+
 -- M: specialists read their own visits, admins all; nobody reads tokens.
 SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 SET LOCAL ROLE authenticated;

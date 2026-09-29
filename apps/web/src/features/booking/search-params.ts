@@ -60,6 +60,9 @@ const parseAsLocalTime = createParser({
 export const BOOKING_MODES = ["stacjonarnie", "online"] as const;
 export type BookingMode = (typeof BOOKING_MODES)[number];
 
+export const BOOKING_NOTICES = ["termin-zajety", "rezerwacja-wygasla"] as const;
+export type BookingNotice = (typeof BOOKING_NOTICES)[number];
+
 export const bookingParsers = {
   usluga: parseAsSlug,
   forma: parseAsStringLiteral(BOOKING_MODES),
@@ -67,6 +70,8 @@ export const bookingParsers = {
   specjalista: parseAsSlug,
   tydzien: parseAsDay,
   termin: parseAsLocalTime,
+  /** A notice shown once, e.g. after the chosen time was taken. */
+  uwaga: parseAsStringLiteral(BOOKING_NOTICES),
 };
 
 export type BookingParams = inferParserType<typeof bookingParsers>;
@@ -78,9 +83,23 @@ const serialize = createSerializer(bookingParsers);
 
 const BOOKING_PATH = "/umow-wizyte";
 
-/** The wizard with the given choices; unset values are left out. */
+/** The wizard with the given choices; unset values (and notices) left out. */
 export function bookingHref(values: Partial<BookingParams>): Route {
-  return serialize(BOOKING_PATH, values) as Route;
+  return serialize(BOOKING_PATH, { ...values, uwaga: null }) as Route;
+}
+
+/** The wizard with a notice, and without the time that was refused. */
+export function bookingNoticeHref(
+  params: BookingParams,
+  notice: BookingNotice,
+): Route {
+  return serialize(BOOKING_PATH, {
+    ...params,
+    // Back to the week of the refused time.
+    tydzien: params.tydzien ?? params.termin?.slice(0, 10) ?? null,
+    termin: null,
+    uwaga: notice,
+  }) as Route;
 }
 
 /** Choose a value; any other choice drops the chosen time. */

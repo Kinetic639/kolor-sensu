@@ -1,11 +1,13 @@
 import {
   createSpecialistMediaSignedUrl,
+  getBookingWindow as readBookingWindow,
   getPublicCenterProfile,
   getPublicServiceBySlug,
   getPublishedHomeContent,
   getPublishedRoomsPageContent,
   getPublishedSpecialistBySlug,
   getSpecialistSlugRedirect,
+  listBookableCatalog,
   listPublicLocations,
   listPublishedRoomPlacements,
   listPublishedRoomProfiles,
@@ -203,3 +205,13 @@ export const getPriceList = cache(async () => {
     })),
   );
 });
+
+/** What can be booked online now (empty when bookings are off). */
+export const getBookableCatalog = cache(() =>
+  load("bookable offers", listBookableCatalog, { services: [], offers: [] }),
+);
+
+/** The centre's time zone and booking horizon. */
+export const getBookingWindow = cache(() =>
+  load("booking window", readBookingWindow, null),
+);
