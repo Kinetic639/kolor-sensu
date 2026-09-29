@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   BookingError,
   getBooking,
+  saveBookingDetails,
   getBookingWindow,
   holdSlot,
   listBookableCatalog,
@@ -120,6 +121,7 @@ describe("holdSlot", () => {
     specialistSlug: "anna",
     mode: "online" as const,
     startsAt: "2030-01-07T12:00:00.000Z",
+    clientKey: "visitor-key",
   };
 
   it("holds a time and returns its token", async () => {
@@ -142,6 +144,7 @@ describe("holdSlot", () => {
       p_specialist_slug: "anna",
       p_mode: "online",
       p_starts_at: "2030-01-07T12:00:00.000Z",
+      p_client_key: "visitor-key",
       p_location_slug: undefined,
     });
   });
@@ -156,6 +159,13 @@ describe("holdSlot", () => {
       code: "slot_unavailable",
     });
     await expect(holdSlot(client, input)).rejects.toBeInstanceOf(BookingError);
+    const { client: busy } = rpcClient(null, {
+      message: "Too many",
+      hint: "too_many_holds",
+    });
+    await expect(holdSlot(busy, input)).rejects.toMatchObject({
+      code: "too_many_holds",
+    });
   });
 });
 
@@ -174,8 +184,19 @@ describe("a guest's visit by token", () => {
       location_name: "Siedziba",
       price_minor: 25000,
       currency_code: "PLN",
+      client_name: "Jan Kowalski",
+      client_email: "jan@example.com",
+      client_phone: "600100200",
+      client_notes: null,
+      details_saved: true,
     };
     expect(await getBooking(rpcClient([row]).client, "token")).toMatchObject({
+      details: {
+        name: "Jan Kowalski",
+        email: "jan@example.com",
+        phone: "600100200",
+        notes: null,
+      },
       reference: "KS-20300107-1234",
       status: "held",
       startsAt: "2030-01-07T09:00:00+00:00",
@@ -189,6 +210,43 @@ describe("a guest's visit by token", () => {
     expect(await releaseHold(client, "token")).toBe(true);
     expect(rpc).toHaveBeenCalledWith("release_hold", {
       p_access_token: "token",
+    });
+  });
+});
+
+describe("saveBookingDetails", () => {
+  const details = {
+    name: "Jan Kowalski",
+    email: "jan@example.com",
+    phone: "600100200",
+    notes: null,
+    acceptTerms: true as const,
+    acceptPrivacy: true as const,
+  };
+
+  it("saves the details and consents to the held visit", async () => {
+    const { client, rpc } = rpcClient(null);
+    await saveBookingDetails(client, "token", details);
+    expect(rpc).toHaveBeenCalledWith("save_booking_details", {
+      p_access_token: "token",
+      p_name: "Jan Kowalski",
+      p_email: "jan@example.com",
+      p_phone: "600100200",
+      p_notes: "",
+      p_accept_terms: true,
+      p_accept_privacy: true,
+    });
+  });
+
+  it("says when the hold has expired", async () => {
+    const { client } = rpcClient(null, {
+      message: "expired",
+      hint: "hold_expired",
+    });
+    await expect(
+      saveBookingDetails(client, "token", details),
+    ).rejects.toMatchObject({
+      code: "hold_expired",
     });
   });
 });

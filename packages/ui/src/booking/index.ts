@@ -2,6 +2,8 @@
 // the app imports @repo/ui/public-site.css. Server-rendered; choices are
 // links that set the address, so the wizard works without JavaScript.
 export { BookingChoiceCard } from "./booking-choice-card";
+export { BookingField, ConsentCheckbox } from "./booking-fields";
+export type { ConsentCheckboxProps } from "./booking-fields";
 export type { BookingChoiceCardProps } from "./booking-choice-card";
 export { BookingStepper } from "./booking-stepper";
 export type { BookingStep, BookingStepperProps } from "./booking-stepper";

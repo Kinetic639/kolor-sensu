@@ -251,8 +251,14 @@ reguła. Admin (R9 / K5): podgląd grafików wszystkich i obłożenia gabinetów
   podpisu (sekret tylko na serwerze), idempotentnie.
 - Nieopłacone holdy wygasają (`pg_cron` co minutę + sprawdzenie
   `hold_expires_at` w ograniczeniu i w RPC).
-- Anti-abuse: Cloudflare Turnstile przy danych, limit holdów na IP/e-mail w
-  oknie czasu, honeypot. Zod na każdej granicy (Server Action, RPC params).
+- Anti-abuse (R5): Cloudflare Turnstile przed blokadą terminu (w DEV testowe
+  klucze Cloudflare, na produkcji bez kluczy rezerwacja nie ruszy), limit
+  5 blokad w 15 minut na odwiedzającego (HMAC adresu IP z sekretem serwera,
+  w `private.booking_holds`, trzymane godzinę), jedna blokada na
+  odwiedzającego (nowa zwalnia poprzednią), pole-pułapka w formularzu
+  danych. Zod na każdej granicy (Server Action, RPC params); dane klienta
+  zapisuje tylko `save_booking_details` do żywej blokady, z obiema zgodami
+  i czasem ich akceptacji.
 - Dane klienta to dane o zdrowiu w rozumieniu RODO (sam fakt terapii): tylko
   niezbędne pola, uwagi opcjonalne i ograniczone, brak danych osobowych w
   URL, logach i metadanych Stripe (tylko numer wizyty), retencja opisana w
@@ -341,7 +347,7 @@ Każdy commit realizujący zadanie aktualizuje status i wpisuje hash commitu.
 | R2  | Portal specjalisty `/dostepnosc`: grafik tygodniowy, nieobecności, okna jednorazowe, podgląd tygodnia                                | F4-02    | `DONE`        | f980622     | Pełny kalendarz: etap K                     |
 | R3  | UI `@repo/ui/booking`: stepper, podsumowanie, karty wyboru, siatka tygodnia, lista dnia, legenda                                     | F4-03    | `DONE`        | f124e86     | Tylko wolne terminy, bez „Zajęte”           |
 | R4  | `/umow-wizyte`: kroki Usługa → Forma → Specjalista → Termin z nuqs, SSR                                                              | F4-03    | `DONE`        | 3756d84     | Katalog z bazy; hold przy „Przejdź dalej”   |
-| R5  | Hold terminu, krok „Dane” (Turnstile, limity), zgody                                                                                 | F4-03    | `NOT STARTED` |             | Klucze Turnstile                            |
+| R5  | Hold terminu, krok „Dane” (Turnstile, limity), zgody                                                                                 | F4-03    | `DONE`        |             | Klucze testowe Turnstile w DEV              |
 | R6  | Płatność Stripe: Payment Element, webhook, „Oczekujemy na potwierdzenie”, wygasanie                                                  | F4-03    | `NOT STARTED` |             | Klucze testowe Stripe                       |
 | R7  | Potwierdzenie i e-maile (Resend): potwierdzenie z linkiem i plikiem `.ics`                                                           | F4-04    | `NOT STARTED` |             | Klucz Resend, DNS domeny                    |
 | R8  | Zarządzanie z linku: szczegóły, przełożenie, anulowanie ze zwrotem                                                                   | F4-04    | `NOT STARTED` |             |                                             |

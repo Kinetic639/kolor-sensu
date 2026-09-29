@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BookingContact } from "@/features/booking/booking-contact";
 import { BookingWizard } from "@/features/booking/booking-wizard";
+import { turnstileKeys } from "@/features/booking/guards";
 import { loadWizard } from "@/features/booking/load-wizard";
 import { loadBookingParams } from "@/features/booking/search-params";
 
@@ -19,5 +20,11 @@ export default async function BookingPage({
   const params = await loadBookingParams(searchParams);
   const wizard = await loadWizard(params);
   if (!wizard) return <BookingContact specjalista={params.specjalista} />;
-  return <BookingWizard params={wizard.params} view={wizard.view} />;
+  return (
+    <BookingWizard
+      params={wizard.params}
+      turnstileSiteKey={turnstileKeys().siteKey}
+      view={wizard.view}
+    />
+  );
 }

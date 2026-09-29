@@ -60,7 +60,12 @@ const parseAsLocalTime = createParser({
 export const BOOKING_MODES = ["stacjonarnie", "online"] as const;
 export type BookingMode = (typeof BOOKING_MODES)[number];
 
-export const BOOKING_NOTICES = ["termin-zajety", "rezerwacja-wygasla"] as const;
+export const BOOKING_NOTICES = [
+  "termin-zajety",
+  "rezerwacja-wygasla",
+  "za-duzo-prob",
+  "weryfikacja",
+] as const;
 export type BookingNotice = (typeof BOOKING_NOTICES)[number];
 
 export const bookingParsers = {
@@ -88,16 +93,20 @@ export function bookingHref(values: Partial<BookingParams>): Route {
   return serialize(BOOKING_PATH, { ...values, uwaga: null }) as Route;
 }
 
-/** The wizard with a notice, and without the time that was refused. */
+/**
+ * The wizard with a notice, without the time that was refused (or with it,
+ * when only the check failed and the client can simply try again).
+ */
 export function bookingNoticeHref(
   params: BookingParams,
   notice: BookingNotice,
+  keepTime = false,
 ): Route {
   return serialize(BOOKING_PATH, {
     ...params,
     // Back to the week of the refused time.
     tydzien: params.tydzien ?? params.termin?.slice(0, 10) ?? null,
-    termin: null,
+    termin: keepTime ? params.termin : null,
     uwaga: notice,
   }) as Route;
 }

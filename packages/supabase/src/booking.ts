@@ -3,6 +3,7 @@ import type {
   PublicSpecialistOffer,
   ServiceCategory,
 } from "@repo/contracts";
+import type { BookingDetails } from "@repo/contracts/booking";
 import type { Database } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -29,7 +30,23 @@ export interface BookableCatalog {
 }
 
 /** Why a booking step was refused (the RPC's hint). */
-export type BookingErrorCode = "slot_unavailable" | "not_bookable" | "unknown";
+export type BookingErrorCode =
+  | "slot_unavailable"
+  | "not_bookable"
+  | "too_many_holds"
+  | "hold_expired"
+  | "consent_required"
+  | "invalid_details"
+  | "unknown";
+
+const BOOKING_ERROR_CODES = new Set<string>([
+  "slot_unavailable",
+  "not_bookable",
+  "too_many_holds",
+  "hold_expired",
+  "consent_required",
+  "invalid_details",
+]);
 
 export class BookingError extends Error {
   override name = "BookingError";
@@ -43,8 +60,8 @@ export class BookingError extends Error {
 
 function bookingError(error: { message: string; hint?: string | null }) {
   const code =
-    error.hint === "slot_unavailable" || error.hint === "not_bookable"
-      ? error.hint
+    error.hint && BOOKING_ERROR_CODES.has(error.hint)
+      ? (error.hint as BookingErrorCode)
       : "unknown";
   return new BookingError(code, error.message);
 }
@@ -136,6 +153,8 @@ export async function listFreeSlots(client: Client, query: FreeSlotsQuery) {
 export interface HoldSlotInput extends Omit<FreeSlotsQuery, "from" | "to"> {
   /** The slot's start, as list_free_slots gave it. */
   startsAt: string;
+  /** Who is holding (their IP, hashed by the server): at most 5 in 15 min. */
+  clientKey: string;
 }
 
 export interface HeldSlot {
@@ -156,6 +175,7 @@ export async function holdSlot(
     p_specialist_slug: input.specialistSlug,
     p_mode: input.mode,
     p_starts_at: input.startsAt,
+    p_client_key: input.clientKey,
     p_location_slug: input.locationSlug,
   });
   if (error) throw bookingError(error);
@@ -191,6 +211,13 @@ export interface GuestBooking {
   locationName: string | null;
   priceMinor: number;
   currencyCode: string;
+  /** The client's details, once saved with the consents. */
+  details: {
+    name: string;
+    email: string;
+    phone: string;
+    notes: string | null;
+  } | null;
 }
 
 /** A guest's visit by its token, or null. */
@@ -217,6 +244,32 @@ export async function getBooking(
         locationName: row.location_name ?? null,
         priceMinor: row.price_minor,
         currencyCode: row.currency_code,
+        details: row.details_saved
+          ? {
+              name: row.client_name,
+              email: row.client_email,
+              phone: row.client_phone,
+              notes: row.client_notes ?? null,
+            }
+          : null,
       }
     : null;
+}
+
+/** Saves the client's details to their live hold. Throws a BookingError. */
+export async function saveBookingDetails(
+  client: Client,
+  accessToken: string,
+  details: BookingDetails,
+) {
+  const { error } = await client.rpc("save_booking_details", {
+    p_access_token: accessToken,
+    p_name: details.name,
+    p_email: details.email,
+    p_phone: details.phone,
+    p_notes: details.notes ?? "",
+    p_accept_terms: details.acceptTerms,
+    p_accept_privacy: details.acceptPrivacy,
+  });
+  if (error) throw bookingError(error);
 }

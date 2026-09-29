@@ -153,7 +153,7 @@ BEGIN
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
   BEGIN
-    PERFORM public.hold_slot('booking-test-consultation', 'booking-test-anna', 'in_person', pg_temp.at(t.monday, '10:00'));
+    PERFORM public.hold_slot('booking-test-consultation', 'booking-test-anna', 'in_person', pg_temp.at(t.monday, '10:00'), p_client_key => 'visitor-1');
     RAISE EXCEPTION 'B: anon held a time';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
@@ -178,7 +178,7 @@ BEGIN
   -- C: a hold takes the room of the window, the offer's price, and a token
   -- the database keeps only as a hash.
   SELECT * INTO held FROM public.hold_slot(
-    'booking-test-consultation', 'booking-test-anna', 'in_person', pg_temp.at(t.monday, '10:00')
+    'booking-test-consultation', 'booking-test-anna', 'in_person', pg_temp.at(t.monday, '10:00'), p_client_key => 'visitor-1'
   );
   INSERT INTO booking_test_holds VALUES ('monday_10', held.access_token, held.appointment_id);
   SELECT * INTO visit FROM public.appointments WHERE id = held.appointment_id;
@@ -209,7 +209,7 @@ BEGIN
   FOREACH hint IN ARRAY ARRAY['10:00', '10:30', '12:00'] LOOP
     BEGIN
       PERFORM public.hold_slot(
-        'booking-test-consultation', 'booking-test-anna', 'in_person', pg_temp.at(t.monday, hint::time)
+        'booking-test-consultation', 'booking-test-anna', 'in_person', pg_temp.at(t.monday, hint::time), p_client_key => 'visitor-1'
       );
       RAISE EXCEPTION 'E: % was held', hint;
     EXCEPTION WHEN raise_exception THEN
@@ -252,7 +252,7 @@ BEGIN
 
   -- G: a hold left to expire frees the time, and it can be held again.
   SELECT * INTO held FROM public.hold_slot(
-    'booking-test-consultation', 'booking-test-anna', 'online', pg_temp.at(t.monday, '13:00')
+    'booking-test-consultation', 'booking-test-anna', 'online', pg_temp.at(t.monday, '13:00'), p_client_key => 'visitor-1'
   );
   INSERT INTO booking_test_holds VALUES ('monday_13', held.access_token, held.appointment_id);
   UPDATE public.appointments SET hold_expires_at = now() - interval '1 second'
@@ -261,7 +261,7 @@ BEGIN
     RAISE EXCEPTION 'G: an expired hold still blocks: %', pg_temp.free_times('online', t.monday);
   END IF;
   PERFORM public.hold_slot(
-    'booking-test-consultation', 'booking-test-anna', 'online', pg_temp.at(t.monday, '13:00')
+    'booking-test-consultation', 'booking-test-anna', 'online', pg_temp.at(t.monday, '13:00'), p_client_key => 'visitor-1'
   );
   IF (SELECT status FROM public.appointments WHERE id = held.appointment_id) <> 'expired' THEN
     RAISE EXCEPTION 'G: the old hold was not marked expired';
@@ -436,6 +436,118 @@ BEGIN
   PERFORM 1 FROM public.payments LIMIT 1;
 END;
 $$;
+RESET ROLE;
+
+-- O: one visitor cannot hold time after time (5 holds in 15 minutes).
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  hint text;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  FOR i IN 1..5 LOOP
+    SELECT * INTO held FROM public.hold_slot(
+      'booking-test-consultation', 'booking-test-anna', 'in_person',
+      pg_temp.at(t.tuesday, '09:00'), p_client_key => 'visitor-2'
+    );
+    PERFORM public.release_hold(held.access_token);
+  END LOOP;
+  BEGIN
+    PERFORM public.hold_slot(
+      'booking-test-consultation', 'booking-test-anna', 'in_person',
+      pg_temp.at(t.tuesday, '09:00'), p_client_key => 'visitor-2'
+    );
+    RAISE EXCEPTION 'O: a sixth hold was allowed';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'O:%' THEN RAISE; END IF;
+    GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
+    IF hint <> 'too_many_holds' THEN RAISE EXCEPTION 'O: expected too_many_holds, got %', hint; END IF;
+  END;
+  -- Another visitor still can.
+  PERFORM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.tuesday, '09:00'), p_client_key => 'visitor-3'
+  );
+END;
+$body$;
+
+-- P: the client's details go to their held visit, with the consents.
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  visit public.appointments%ROWTYPE;
+  hint text;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.tuesday, '10:00'), p_client_key => 'visitor-4'
+  );
+
+  -- Both consents are needed.
+  BEGIN
+    PERFORM public.save_booking_details(held.access_token, 'Jan Kowalski',
+      'jan@example.com', '600100200', NULL, true, false);
+    RAISE EXCEPTION 'P: saved without the privacy consent';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'P:%' THEN RAISE; END IF;
+    GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
+    IF hint <> 'consent_required' THEN RAISE EXCEPTION 'P: expected consent_required, got %', hint; END IF;
+  END;
+  -- Details the database would not keep.
+  BEGIN
+    PERFORM public.save_booking_details(held.access_token, 'Jan Kowalski',
+      'not-an-email', '600100200', NULL, true, true);
+    RAISE EXCEPTION 'P: saved a wrong e-mail';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'P:%' THEN RAISE; END IF;
+    GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
+    IF hint <> 'invalid_details' THEN RAISE EXCEPTION 'P: expected invalid_details, got %', hint; END IF;
+  END;
+
+  PERFORM public.save_booking_details(held.access_token, 'Jan Kowalski',
+    'jan@example.com', '+48 600 100 200', 'Pierwsza wizyta', true, true);
+  SELECT * INTO visit FROM public.appointments WHERE id = held.appointment_id;
+  IF (visit.client_name, visit.client_email, visit.client_phone, visit.client_notes, visit.status)
+     IS DISTINCT FROM ('Jan Kowalski'::text, 'jan@example.com'::text, '+48 600 100 200'::text,
+       'Pierwsza wizyta'::text, 'held'::public.appointment_status)
+     OR visit.terms_accepted_at IS NULL OR visit.privacy_accepted_at IS NULL THEN
+    RAISE EXCEPTION 'P: the details were not saved: %', row_to_json(visit);
+  END IF;
+  IF (SELECT (client_name, client_email, details_saved) FROM public.get_booking(held.access_token))
+     IS DISTINCT FROM ('Jan Kowalski'::text, 'jan@example.com'::text, true) THEN
+    RAISE EXCEPTION 'P: get_booking does not show the details';
+  END IF;
+
+  -- Not after the hold expired.
+  UPDATE public.appointments SET hold_expires_at = now() - interval '1 second'
+  WHERE id = held.appointment_id;
+  BEGIN
+    PERFORM public.save_booking_details(held.access_token, 'Jan Kowalski',
+      'jan@example.com', '600100200', NULL, true, true);
+    RAISE EXCEPTION 'P: saved on an expired hold';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'P:%' THEN RAISE; END IF;
+    GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
+    IF hint <> 'hold_expired' THEN RAISE EXCEPTION 'P: expected hold_expired, got %', hint; END IF;
+  END;
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.save_booking_details('x', 'a', 'a@b.pl', '600100200', NULL, true, true);
+    RAISE EXCEPTION 'P: anon saved details';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
 RESET ROLE;
 
 ROLLBACK;

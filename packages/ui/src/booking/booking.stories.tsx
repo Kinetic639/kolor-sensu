@@ -11,7 +11,9 @@ import { expect } from "storybook/test";
 import { PrimaryButton } from "../public-site/actions";
 import {
   BookingChoiceCard,
+  BookingField,
   BookingStepper,
+  ConsentCheckbox,
   BookingSummary,
   HoldNotice,
   SlotPicker,
@@ -269,4 +271,71 @@ export const TimeStep: Story = {
       </div>
     </div>
   ),
+};
+
+// Step 5's fields, after a submit with a wrong e-mail and no consents.
+export const DetailsWithErrors: Story = {
+  render: () => (
+    <form
+      className="rounded-card bg-surface grid max-w-2xl gap-5 p-6"
+      noValidate
+    >
+      <div className="grid gap-5 sm:grid-cols-2">
+        <BookingField
+          autoComplete="name"
+          defaultValue="Jan Kowalski"
+          label="Imię i nazwisko"
+          name="name"
+          required
+        />
+        <BookingField
+          autoComplete="tel"
+          defaultValue="600 100 200"
+          label="Telefon"
+          name="phone"
+          required
+          type="tel"
+        />
+      </div>
+      <BookingField
+        autoComplete="email"
+        defaultValue="jan@"
+        error="Podaj poprawny adres e-mail."
+        hint="Wyślemy na niego potwierdzenie i link do zarządzania wizytą."
+        label="E-mail"
+        name="email"
+        required
+        type="email"
+      />
+      <BookingField label="Uwagi (opcjonalnie)" multiline name="notes" />
+      <fieldset className="grid gap-3">
+        <legend className="sr-only">Zgody</legend>
+        <ConsentCheckbox
+          error="Zaakceptuj regulamin, aby zarezerwować wizytę."
+          linkHref="#regulamin"
+          linkLabel="regulamin rezerwacji"
+          name="acceptTerms"
+          text="Akceptuję"
+        />
+        <ConsentCheckbox
+          error="Zaakceptuj politykę prywatności, aby zarezerwować wizytę."
+          linkHref="#polityka"
+          linkLabel="polityką prywatności"
+          name="acceptPrivacy"
+          text="Zapoznałem(-am) się z"
+        />
+      </fieldset>
+      <PrimaryButton arrow className="justify-self-start" type="submit">
+        Zapisz dane
+      </PrimaryButton>
+    </form>
+  ),
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole("textbox", { name: "E-mail" }),
+    ).toHaveAttribute("aria-invalid", "true");
+    await expect(
+      canvas.getByRole("checkbox", { name: "Akceptuję regulamin rezerwacji" }),
+    ).toBeRequired();
+  },
 };

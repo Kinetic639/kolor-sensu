@@ -94,6 +94,9 @@ describe("a notice after a refused hold", () => {
     const shown = load(notice.split("?")[1]!);
     expect(shown.uwaga).toBe("termin-zajety");
     expect(bookingHref(shown)).not.toContain("uwaga");
+    expect(bookingNoticeHref(params, "weryfikacja", true)).toContain(
+      "termin=2026-10-07T10:00&uwaga=weryfikacja",
+    );
     expect(
       selectBookingHref(shown, "termin", "2026-10-08T10:00"),
     ).not.toContain("uwaga");

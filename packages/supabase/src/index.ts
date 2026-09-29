@@ -145,6 +145,7 @@ export {
   listBookableCatalog,
   listFreeSlots,
   releaseHold,
+  saveBookingDetails,
 } from "./booking";
 export type {
   AppointmentStatus,

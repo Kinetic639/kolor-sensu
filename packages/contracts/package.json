@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./availability": "./src/availability.ts",
+    "./booking": "./src/booking.ts",
     "./center": "./src/center.ts",
     "./cms": "./src/cms.ts",
     "./colors": "./src/colors.ts",

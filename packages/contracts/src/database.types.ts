@@ -1317,7 +1317,12 @@ export type Database = {
       get_booking: {
         Args: { p_access_token: string };
         Returns: {
+          client_email: string;
+          client_name: string;
+          client_notes: string;
+          client_phone: string;
           currency_code: string;
+          details_saved: boolean;
           ends_at: string;
           hold_expires_at: string;
           location_name: string;
@@ -1337,6 +1342,7 @@ export type Database = {
       };
       hold_slot: {
         Args: {
+          p_client_key: string;
           p_location_slug?: string;
           p_mode: Database["public"]["Enums"]["visit_mode"];
           p_service_slug: string;
@@ -1465,6 +1471,18 @@ export type Database = {
           p_weekdays: number[];
         };
         Returns: string;
+      };
+      save_booking_details: {
+        Args: {
+          p_accept_privacy: boolean;
+          p_accept_terms: boolean;
+          p_access_token: string;
+          p_email: string;
+          p_name: string;
+          p_notes: string;
+          p_phone: string;
+        };
+        Returns: undefined;
       };
       save_my_specialist_profile_draft: {
         Args: {

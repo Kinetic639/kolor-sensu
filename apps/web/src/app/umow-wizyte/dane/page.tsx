@@ -6,6 +6,7 @@ import { CalendarDays, FileText, House, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { releaseHoldAction } from "@/features/booking/actions";
+import { DetailsForm } from "@/features/booking/details-form";
 import { readHoldToken } from "@/features/booking/hold-cookie";
 import {
   bookingHref,
@@ -40,8 +41,8 @@ function local(
   );
 }
 
-// Step 5: the held visit, found by the guest's cookie (never the address).
-// The details form and the payment come next (R5, R6).
+// Step 5: the held visit, found by the guest's cookie (never the address),
+// and the client's details. The payment comes next (R6).
 export default async function BookingDetailsPage() {
   const token = await readHoldToken();
   const booking = token
@@ -101,11 +102,24 @@ export default async function BookingDetailsPage() {
             Numer rezerwacji:{" "}
             <strong className="text-ink">{booking.reference}</strong>
           </p>
-          <p className="text-body text-text-muted mt-5">
-            Formularz danych i płatność pojawią się tu w kolejnym etapie
-            rezerwacji online.
-          </p>
-          <form action={releaseHoldAction} className="mt-6">
+          <div className="mt-6">
+            <DetailsForm
+              saved={
+                booking.details
+                  ? {
+                      ...booking.details,
+                      notes: booking.details.notes ?? "",
+                      acceptTerms: true,
+                      acceptPrivacy: true,
+                    }
+                  : null
+              }
+            />
+          </div>
+          <form
+            action={releaseHoldAction}
+            className="border-border/70 mt-8 border-t pt-6"
+          >
             <SecondaryButton size="sm" type="submit">
               Zmień termin
             </SecondaryButton>

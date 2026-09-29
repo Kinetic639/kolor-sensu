@@ -8,6 +8,7 @@ import { PrimaryButton } from "@repo/ui/public-site";
 import { CalendarDays, FileText, House, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { holdTimeAction } from "./actions";
+import { TurnstileWidget } from "./turnstile-widget";
 import type { BookingNotice, BookingParams } from "./search-params";
 import type { WizardSummaryRow, WizardView } from "./wizard";
 
@@ -27,14 +28,20 @@ const NOTICES: Record<BookingNotice, string> = {
     "Ten termin został właśnie zajęty. Wybierz, proszę, inny wolny termin.",
   "rezerwacja-wygasla":
     "Czas na dokończenie rezerwacji minął i termin został zwolniony. Wybierz termin ponownie.",
+  "za-duzo-prob":
+    "Zbyt wiele prób rezerwacji w krótkim czasie. Spróbuj ponownie za kilkanaście minut albo zadzwoń do nas.",
+  weryfikacja:
+    "Nie udało się potwierdzić, że rezerwuje człowiek. Spróbuj ponownie.",
 };
 
 export function BookingWizard({
   view,
   params,
+  turnstileSiteKey,
 }: {
   view: WizardView;
   params: BookingParams;
+  turnstileSiteKey: string;
 }) {
   const { panel } = view;
   const chosen = panel.kind === "slots" ? panel.chosen : null;
@@ -108,12 +115,13 @@ export function BookingWizard({
           }))}
         >
           {chosen ? (
-            <form action={holdTimeAction}>
+            <form action={holdTimeAction} className="grid gap-3">
               {Object.entries(params).map(([key, value]) =>
                 value && key !== "uwaga" ? (
                   <input key={key} name={key} type="hidden" value={value} />
                 ) : null,
               )}
+              <TurnstileWidget siteKey={turnstileSiteKey} />
               <PrimaryButton arrow className="w-full" type="submit">
                 Przejdź dalej
               </PrimaryButton>
