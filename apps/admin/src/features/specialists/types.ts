@@ -9,6 +9,8 @@ export interface SpecialistListItemViewModel {
   initials: string;
   /** Their colour in schedules and lists (set or automatic). */
   accent: string;
+  /** A light tint of it, behind initials. */
+  tint: string;
   avatarUrl: string | null;
   professionalTitle: string;
   active: boolean;
@@ -82,6 +84,8 @@ export interface SpecialistDetailViewModel {
   color: string | null;
   /** Their colour now (set or automatic). */
   accent: string;
+  /** A light tint of it, behind initials. */
+  tint: string;
   /** What the automatic colour is. */
   automaticAccent: string;
   avatarUrl: string | null;

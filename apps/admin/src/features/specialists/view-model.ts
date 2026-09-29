@@ -15,6 +15,7 @@ import type {
   SpecialistService,
 } from "@repo/contracts";
 import { resourceColors } from "@repo/ui/resource-colors";
+import type { ResourceListItem } from "@repo/ui/resource-list";
 import type {
   ProfileDiffFieldViewModel,
   SpecialistDetailViewModel,
@@ -45,10 +46,16 @@ function getIdentityName({
   return [firstName, lastName].filter(Boolean).join(" ") || fallback;
 }
 
+/**
+ * `photos`: signed URLs of the published profile photos, by storage path
+ * (the picture when the account has none).
+ */
 export function mapSpecialistsListViewModel(
   summaries: AdminSpecialistSummary[],
+  photos: Map<string, string> = new Map(),
 ): SpecialistsListViewModel {
   const items: SpecialistListItemViewModel[] = summaries.map((summary) => {
+    const colors = resourceColors(summary.color, summary.id);
     const displayName =
       summary.publicDisplayName ||
       getIdentityName({
@@ -61,8 +68,13 @@ export function mapSpecialistsListViewModel(
       id: summary.id,
       displayName,
       initials: getInitials(displayName, summary),
-      accent: resourceColors(summary.color, summary.id).accent,
-      avatarUrl: summary.avatarUrl,
+      accent: colors.accent,
+      tint: colors.tint,
+      avatarUrl:
+        summary.avatarUrl ??
+        (summary.publicProfilePhotoUrl
+          ? (photos.get(summary.publicProfilePhotoUrl) ?? null)
+          : null),
       professionalTitle: summary.professionalTitle ?? "Tytuł nieuzupełniony",
       active: summary.active,
       accountActive: summary.accountActive,
@@ -81,6 +93,66 @@ export function mapSpecialistsListViewModel(
       .length,
     pendingReviewCount: items.filter((item) => item.pendingDraft).length,
   };
+}
+
+/** "1 usługa", "2 usługi", "5 usług", "22 usługi". */
+function servicesLabel(count: number) {
+  const tens = count % 100;
+  const ones = count % 10;
+  if (count === 1) return "1 usługa";
+  if (ones >= 2 && ones <= 4 && (tens < 12 || tens > 14)) {
+    return `${count} usługi`;
+  }
+  return `${count} usług`;
+}
+
+function profileStatus(
+  item: SpecialistListItemViewModel,
+): NonNullable<ResourceListItem["statuses"]>[number] {
+  if (item.pendingDraft) return { label: "Do weryfikacji", tone: "warning" };
+  switch (item.publicationStatus) {
+    case "published":
+      return { label: "Opublikowany", tone: "success" };
+    case "rejected":
+      return { label: "Odrzucony", tone: "danger" };
+    case "draft":
+      return { label: "Szkic", tone: "neutral" };
+    default:
+      return { label: "Brak profilu", tone: "neutral" };
+  }
+}
+
+/** The specialists as rows of the admin list; the filters are their tags. */
+export function toSpecialistListItems(
+  items: SpecialistListItemViewModel[],
+): ResourceListItem[] {
+  return items.map((item) => {
+    const active = item.active && item.accountActive;
+    return {
+      id: item.id,
+      href: `/specjalisci/${item.id}`,
+      name: item.displayName,
+      description: item.professionalTitle,
+      avatar: {
+        url: item.avatarUrl,
+        initials: item.initials,
+        accent: item.accent,
+        tint: item.tint,
+      },
+      facts: [servicesLabel(item.serviceCount)],
+      statuses: [
+        active
+          ? { label: "Aktywny", tone: "success" }
+          : { label: "Nieaktywny", tone: "neutral" },
+        profileStatus(item),
+      ],
+      tags: [
+        active ? "active" : "inactive",
+        ...(item.pendingDraft ? ["pending"] : []),
+      ],
+      muted: !active,
+    };
+  });
 }
 
 export function mapSpecialistDetailViewModel({
@@ -120,6 +192,7 @@ export function mapSpecialistDetailViewModel({
     displayName,
     color: specialist.color,
     accent: resourceColors(specialist.color, specialist.id).accent,
+    tint: resourceColors(specialist.color, specialist.id).tint,
     automaticAccent: resourceColors(null, specialist.id).accent,
     initials: getInitials(
       displayName,

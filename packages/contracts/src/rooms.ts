@@ -127,7 +127,8 @@ export interface AdminRoomSummary extends Room {
   locationName: string;
   locationSlug: string;
   publicProfilePublished: boolean;
-  hasOpeningHours: boolean;
+  /** The weekdays (1 = Monday) with opening hours, in order. */
+  openWeekdays: number[];
   upcomingExceptionCount: number;
 }
 

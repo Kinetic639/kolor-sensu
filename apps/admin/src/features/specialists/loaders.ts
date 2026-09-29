@@ -12,6 +12,7 @@ import {
   listServicesAdmin,
   listSpecialistOffersForAdmin,
   listSpecialistSummariesForAdmin,
+  signSpecialistPhotos,
 } from "@repo/supabase";
 import {
   mapSpecialistDetailViewModel,
@@ -20,9 +21,13 @@ import {
 
 export async function loadAdminSpecialists() {
   const client = await createClient();
-  return mapSpecialistsListViewModel(
-    await listSpecialistSummariesForAdmin(client),
+  const summaries = await listSpecialistSummariesForAdmin(client);
+  // Each picture: the account's, else the published profile photo.
+  const photos = await signSpecialistPhotos(
+    client,
+    summaries.map((one) => (one.avatarUrl ? null : one.publicProfilePhotoUrl)),
   );
+  return mapSpecialistsListViewModel(summaries, photos);
 }
 
 async function readAdminSpecialistDetail(specialistId: string) {

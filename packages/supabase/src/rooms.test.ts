@@ -112,7 +112,7 @@ describe("room domain mapping", () => {
     updated_at: "2026-09-20T00:00:00Z",
     locations: { name: "Centrum Główne", slug: "centrum-glowne" },
     room_public_profiles: { published: true },
-    room_opening_hours: [{ id: "hours-1" }, { id: "hours-2" }],
+    room_opening_hours: [{ weekday: 3 }, { weekday: 1 }, { weekday: 1 }],
     room_availability_exceptions: [{ id: "exception-1" }],
   };
 
@@ -126,7 +126,7 @@ describe("room domain mapping", () => {
   it("summarises the room's public profile, opening hours and upcoming exceptions", () => {
     expect(roomMappers.adminRoomSummary(summaryRow)).toMatchObject({
       publicProfilePublished: true,
-      hasOpeningHours: true,
+      openWeekdays: [1, 3],
       upcomingExceptionCount: 1,
     });
     // A new room: no profile, no hours, no exceptions.
@@ -139,7 +139,7 @@ describe("room domain mapping", () => {
       }),
     ).toMatchObject({
       publicProfilePublished: false,
-      hasOpeningHours: false,
+      openWeekdays: [],
       upcomingExceptionCount: 0,
     });
   });

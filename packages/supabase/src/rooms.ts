@@ -30,7 +30,7 @@ type RoomWithLocationRow = RoomRow & {
 type RoomSummaryRow = RoomWithLocationRow & {
   // One-to-one: the room's public profile, if it has one.
   room_public_profiles: { published: boolean } | null;
-  room_opening_hours: { id: string }[];
+  room_opening_hours: { weekday: number }[];
   // Only today's and later ones (filtered in the query).
   room_availability_exceptions: { id: string }[];
 };
@@ -66,7 +66,9 @@ function mapAdminRoomSummary(row: RoomSummaryRow): AdminRoomSummary {
     locationName: row.locations.name,
     locationSlug: row.locations.slug,
     publicProfilePublished: row.room_public_profiles?.published ?? false,
-    hasOpeningHours: row.room_opening_hours.length > 0,
+    openWeekdays: [
+      ...new Set(row.room_opening_hours.map((one) => one.weekday)),
+    ].sort((a, b) => a - b),
     upcomingExceptionCount: row.room_availability_exceptions.length,
   };
 }
@@ -81,7 +83,7 @@ export async function listRoomsAdmin(
         *,
         locations!inner (name, slug),
         room_public_profiles (published),
-        room_opening_hours (id),
+        room_opening_hours (weekday),
         room_availability_exceptions (id)
       `,
     )

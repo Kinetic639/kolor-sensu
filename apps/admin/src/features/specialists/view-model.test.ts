@@ -4,7 +4,11 @@ import type {
   SpecialistDetailViewModel,
   SpecialistDraftViewModel,
 } from "./types";
-import { createProfileDiff, mapSpecialistsListViewModel } from "./view-model";
+import {
+  createProfileDiff,
+  mapSpecialistsListViewModel,
+  toSpecialistListItems,
+} from "./view-model";
 
 type Content = Omit<
   SpecialistDraftViewModel,
@@ -39,6 +43,7 @@ function detail(draft: Partial<Content>): SpecialistDetailViewModel {
     initials: "AK",
     color: null,
     accent: "var(--resource-1)",
+    tint: "var(--resource-1-soft)",
     automaticAccent: "var(--resource-1)",
     avatarUrl: null,
     professionalTitle: "Psychoterapeutka",
@@ -224,6 +229,109 @@ describe("mapSpecialistsListViewModel: colours", () => {
       { ...summary, id: "specialist-2", color: null },
     ]);
     expect(items[0]!.accent).toBe("#7c3aed");
+    // The whole avatar in their colour: a light tint behind the initials.
+    expect(items[0]!.tint).toBe(
+      "color-mix(in srgb, #7c3aed 8%, var(--surface))",
+    );
     expect(items[1]!.accent).toMatch(/^var\(--resource-[1-6]\)$/);
+  });
+
+  it("shows the account's picture, else the published profile photo", () => {
+    const photos = new Map([["anna/photo.webp", "https://signed/anna"]]);
+    const { items } = mapSpecialistsListViewModel(
+      [
+        { ...summary, publicProfilePhotoUrl: "anna/photo.webp" },
+        {
+          ...summary,
+          id: "specialist-2",
+          avatarUrl: "https://account/jan.png",
+          publicProfilePhotoUrl: "jan/photo.webp",
+        },
+        { ...summary, id: "specialist-3", publicProfilePhotoUrl: null },
+      ],
+      photos,
+    );
+    expect(items.map((item) => item.avatarUrl)).toEqual([
+      "https://signed/anna",
+      "https://account/jan.png",
+      null,
+    ]);
+  });
+});
+
+describe("toSpecialistListItems", () => {
+  const base = mapSpecialistsListViewModel([
+    {
+      id: "specialist-1",
+      userId: "user-1",
+      firstName: "Anna",
+      lastName: "Kowalska",
+      avatarUrl: null,
+      accountActive: true,
+      active: true,
+      acceptingNewClients: true,
+      publicSlug: "anna-kowalska",
+      professionalTitle: "Psychoterapeutka",
+      joinedAt: null,
+      color: "#7c3aed",
+      publicDisplayName: "Anna Kowalska",
+      publicProfilePhotoUrl: null,
+      publicationStatus: "published",
+      pendingDraftId: null,
+      pendingDraftSubmittedAt: null,
+      serviceCount: 1,
+    },
+  ]).items[0]!;
+
+  it("lists a specialist with their picture, title, services and statuses", () => {
+    const [item] = toSpecialistListItems([base]);
+    expect(item).toMatchObject({
+      id: "specialist-1",
+      href: "/specjalisci/specialist-1",
+      name: "Anna Kowalska",
+      description: "Psychoterapeutka",
+      avatar: { url: null, initials: base.initials, accent: "#7c3aed" },
+      facts: ["1 usługa"],
+      statuses: [
+        { label: "Aktywny", tone: "success" },
+        { label: "Opublikowany", tone: "success" },
+      ],
+      tags: ["active"],
+      muted: false,
+    });
+  });
+
+  it("counts services in Polish", () => {
+    const facts = [0, 2, 5, 12, 22].map(
+      (serviceCount) =>
+        toSpecialistListItems([{ ...base, serviceCount }])[0]!.facts,
+    );
+    expect(facts).toEqual([
+      ["0 usług"],
+      ["2 usługi"],
+      ["5 usług"],
+      ["12 usług"],
+      ["22 usługi"],
+    ]);
+  });
+
+  it("files a profile waiting for review under its filter", () => {
+    const [item] = toSpecialistListItems([{ ...base, pendingDraft: true }]);
+    expect(item!.tags).toEqual(["active", "pending"]);
+    expect(item!.statuses).toContainEqual({
+      label: "Do weryfikacji",
+      tone: "warning",
+    });
+  });
+
+  it("dims an inactive specialist, or one whose account is off", () => {
+    for (const change of [{ active: false }, { accountActive: false }]) {
+      const [item] = toSpecialistListItems([{ ...base, ...change }]);
+      expect(item).toMatchObject({ tags: ["inactive"], muted: true });
+      expect(item!.statuses![0]).toEqual({
+        label: "Nieaktywny",
+        tone: "neutral",
+      });
+    }
   });
 });

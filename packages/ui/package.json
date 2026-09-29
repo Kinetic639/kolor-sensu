@@ -48,6 +48,7 @@
     "./choice-card": "./src/choice-card.tsx",
     "./link-tabs": "./src/link-tabs.tsx",
     "./recurrence": "./src/recurrence.tsx",
+    "./resource-list": "./src/resource-list.tsx",
     "./specialist-profile": "./src/specialist-profile.tsx",
     "./sheet": "./src/sheet.tsx",
     "./sortable-image-gallery": "./src/sortable-image-gallery.tsx",

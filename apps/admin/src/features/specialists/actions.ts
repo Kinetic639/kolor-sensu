@@ -11,14 +11,9 @@ import {
 } from "@repo/supabase";
 import { hexColorSchema } from "@repo/contracts";
 import { revalidatePath } from "next/cache";
-import { loadAdminSpecialistDetail, loadAdminSpecialists } from "./loaders";
+import { loadAdminSpecialistDetail } from "./loaders";
 import { reviewErrorMessage } from "./review-errors";
 import { publicSlugFormSchema } from "./slug-form";
-
-export async function getAdminSpecialistsAction() {
-  await requirePortalRole();
-  return loadAdminSpecialists();
-}
 
 export async function getAdminSpecialistDetailAction(specialistId: string) {
   await requirePortalRole();

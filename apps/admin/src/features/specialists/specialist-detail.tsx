@@ -523,12 +523,19 @@ export function SpecialistDetail({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <Avatar
           className="size-16 ring-4 ring-[var(--specialist-accent)] ring-offset-2 ring-offset-[var(--surface)]"
-          style={{ "--specialist-accent": detail.accent } as CSSProperties}
+          style={
+            {
+              "--specialist-accent": detail.accent,
+              "--specialist-tint": detail.tint,
+            } as CSSProperties
+          }
         >
           {detail.avatarUrl ? (
             <AvatarImage alt="" src={detail.avatarUrl} />
           ) : null}
-          <AvatarFallback className="text-lg">{detail.initials}</AvatarFallback>
+          <AvatarFallback className="bg-[var(--specialist-tint)] text-lg text-[var(--text)]">
+            {detail.initials}
+          </AvatarFallback>
         </Avatar>
         <PageHeader
           className="flex-1"

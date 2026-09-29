@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createService, updateService } from "@repo/supabase";
 import type { ServiceCreate, ServiceUpdate } from "@repo/contracts";
 import { revalidatePath } from "next/cache";
-import { loadAdminServiceDetail, loadAdminServices } from "./loaders";
+import { loadAdminServiceDetail } from "./loaders";
 
 function safeMessage(error: unknown) {
   if (
@@ -22,10 +22,6 @@ function safeMessage(error: unknown) {
   )
     return "Sprawdź poprawność danych formularza.";
   return "Nie udało się zapisać usługi. Spróbuj ponownie.";
-}
-export async function getAdminServicesAction() {
-  await requirePortalRole();
-  return loadAdminServices();
 }
 export async function getAdminServiceAction(id: string) {
   await requirePortalRole();

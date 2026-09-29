@@ -3,7 +3,12 @@ import type {
   AdminServiceSummary,
 } from "@repo/supabase";
 import type { Service, ServiceCategory } from "@repo/contracts";
-import type { ServiceDetailViewModel, ServicesListViewModel } from "./types";
+import type { ResourceListItem } from "@repo/ui/resource-list";
+import type {
+  ServiceDetailViewModel,
+  ServiceListItemViewModel,
+  ServicesListViewModel,
+} from "./types";
 
 export const categoryLabels: Record<ServiceCategory, string> = {
   consultation: "Konsultacja",
@@ -37,6 +42,38 @@ export function mapServicesList(
     publicCount: items.filter((item) => item.publiclyVisible).length,
     bookingCount: items.filter((item) => item.bookingEnabled).length,
   };
+}
+/** The services as rows of the admin list; the filters are their tags. */
+export function toServiceListItems(
+  items: ServiceListItemViewModel[],
+): ResourceListItem[] {
+  return items.map((item) => {
+    // An inactive service is neither on the site nor bookable.
+    const onSite = item.active && item.publiclyVisible;
+    const booking = item.active && item.bookingEnabled;
+    return {
+      id: item.id,
+      href: `/oferta/${item.id}`,
+      name: item.name,
+      description: item.categoryLabel,
+      facts: [item.durationLabel, `Specjaliści: ${item.specialistOfferCount}`],
+      statuses: [
+        item.active
+          ? { label: "Aktywna", tone: "success" as const }
+          : { label: "Nieaktywna", tone: "neutral" as const },
+        ...(onSite ? [{ label: "Na stronie", tone: "info" as const }] : []),
+        ...(booking
+          ? [{ label: "Rezerwacja online", tone: "info" as const }]
+          : []),
+      ],
+      tags: [
+        item.active ? "active" : "inactive",
+        ...(onSite ? ["on-site"] : []),
+        ...(booking ? ["booking"] : []),
+      ],
+      muted: !item.active,
+    };
+  });
 }
 export function mapServiceDetail(
   service: Service,

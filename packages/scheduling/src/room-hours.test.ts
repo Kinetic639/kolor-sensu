@@ -5,6 +5,7 @@ import {
   openIntervalsOn,
   overlapMinutes,
   summarizeOpeningHours,
+  weekdaysLabel,
   type OpeningHoursInterval,
 } from "./room-hours";
 
@@ -141,5 +142,13 @@ describe("summarizeOpeningHours", () => {
 
   it("is null without hours", () => {
     expect(summarizeOpeningHours([])).toBeNull();
+  });
+});
+
+describe("weekdaysLabel", () => {
+  it("joins three or more days in a row into a range", () => {
+    expect(weekdaysLabel([1, 2, 3, 4, 5])).toBe("Pn–Pt");
+    expect(weekdaysLabel([1, 2, 5, 6, 7])).toBe("Pn, Wt, Pt–Nd");
+    expect(weekdaysLabel([])).toBe("");
   });
 });

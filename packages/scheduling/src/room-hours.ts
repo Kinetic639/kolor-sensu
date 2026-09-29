@@ -95,7 +95,8 @@ export function overlapMinutes(blocks: MinuteRange[], open: MinuteRange[]) {
 
 const DAY_SHORT = ["Pn", "Wt", "Śr", "Czw", "Pt", "Sob", "Nd"];
 
-function daysLabel(days: number[]) {
+/** Weekdays (1 = Monday), short, with runs of three or more as ranges: `Pn–Pt, Nd`. */
+export function weekdaysLabel(days: number[]) {
   const runs: number[][] = [];
   for (const day of days) {
     const run = runs.at(-1);
@@ -131,6 +132,6 @@ export function summarizeOpeningHours(
   }
   if (!byHours.size) return null;
   return [...byHours]
-    .map(([text, days]) => `${daysLabel(days)} ${text}`)
+    .map(([text, days]) => `${weekdaysLabel(days)} ${text}`)
     .join(" · ");
 }
