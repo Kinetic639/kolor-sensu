@@ -102,6 +102,11 @@ export function visitEventRows(
         const start = day(d.starts_at);
         const end = at(d.ends_at, "HH:mm");
         detail = start ? `${start}${end ? `–${end}` : ""}` : null;
+        // Booked in a portal: confirmed at once, paid on site.
+        if (event.actor === "centre") {
+          title = "Centrum zapisało wizytę";
+          detail = detail ? `${detail} · płatność na miejscu` : detail;
+        }
         break;
       }
       case "rescheduled": {
@@ -139,7 +144,10 @@ export function visitEventRows(
       actor: event.actorName
         ? `${ACTORS[event.actor]} · ${event.actorName}`
         : ACTORS[event.actor],
-      tone: known?.tone ?? "neutral",
+      tone:
+        event.kind === "created" && event.actor === "centre"
+          ? "success"
+          : (known?.tone ?? "neutral"),
       restored: d.restored === true,
     };
   });

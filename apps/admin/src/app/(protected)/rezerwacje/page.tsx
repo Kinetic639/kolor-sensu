@@ -114,6 +114,7 @@ export default async function BookingsPage({
                     reference: open.row.reference,
                     label: visitLabel(open.row),
                     paid: open.row.paid,
+                    email: open.row.email,
                   }}
                 />
               ) : null

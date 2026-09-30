@@ -4,7 +4,8 @@ import type { BookingWindow, GuestBooking } from "@repo/supabase";
 // R8), by the centre's settings: cancelling is always possible before the
 // visit, with the money back only until cancellationWindowHours before it;
 // moving until rescheduleWindowHours before, at most maxSelfReschedules
-// times. The database checks the same rules again when they act.
+// times. A visit the centre booked is paid on site, so there is nothing to
+// give back. The database checks the same rules again when they act.
 
 export type ChangePolicy = Pick<
   BookingWindow,
@@ -32,7 +33,7 @@ const HOUR = 3_600_000;
 export function visitChanges(
   visit: Pick<
     GuestBooking,
-    "status" | "startsAt" | "rescheduleCount" | "priceMinor"
+    "status" | "startsAt" | "rescheduleCount" | "priceMinor" | "paid"
   >,
   policy: ChangePolicy,
   now = new Date(),
@@ -56,7 +57,11 @@ export function visitChanges(
   return {
     cancel: {
       allowed: upcoming,
-      refund: upcoming && visit.priceMinor > 0 && now.getTime() <= refundUntil,
+      refund:
+        upcoming &&
+        visit.paid &&
+        visit.priceMinor > 0 &&
+        now.getTime() <= refundUntil,
       refundUntil: new Date(refundUntil).toISOString(),
     },
     reschedule: {

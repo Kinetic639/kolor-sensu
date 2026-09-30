@@ -1,12 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
+import { AddVisitBanner, AddVisitButton } from "./add-visit";
 import { AvailabilityPanel } from "./availability-panel";
+import { NewVisitPanel } from "./new-visit-panel";
 import { ScheduleAgenda, WeekAgenda } from "./schedule-agenda";
 import { ScheduleCanvas } from "./schedule-controls";
 import {
   annaWeek,
+  offers,
   people,
+  rooms,
   roomsDay,
   roomsWeek,
   specialistsDay,
@@ -49,6 +53,7 @@ function Calendar({
   collapsed = [],
   open,
   window = false,
+  adding,
 }: {
   kind: Kind;
   query?: string;
@@ -56,6 +61,8 @@ function Calendar({
   open?: string;
   /** The first specialist's first window open in the side panel. */
   window?: boolean;
+  /** Adding a visit: picking in the grid, or the form open. */
+  adding?: "pick" | "form";
 }) {
   const week = kind.startsWith("week") || kind === "personal";
   const byRoom = kind.endsWith("rooms");
@@ -95,7 +102,19 @@ function Calendar({
                 : ["puste", "wyszarz", "wizyty", "dostepnosc"]
           }
           views={segments(["Dzień", "Tydzień"], week ? 1 : 0)}
+          actions={
+            <AddVisitButton
+              active={Boolean(adding)}
+              href={adding ? "?" : "?nowa=true"}
+            />
+          }
         />
+        {adding === "pick" ? (
+          <AddVisitBanner
+            cancelHref="?"
+            manualHref="?nowa=true&termin=2030-10-02T09:00"
+          />
+        ) : null}
         <ScheduleFrame
           aside={
             window ? null : personal ? (
@@ -135,8 +154,9 @@ function Calendar({
               />
             ) : (
               <DaySchedule
+                adding={adding === "pick"}
                 ariaLabel="Kalendarz dnia"
-                availabilityHref={availabilityHref}
+                availabilityHref={adding ? undefined : availabilityHref}
                 collapseHref={collapseHref}
                 collapsed={collapsed}
                 mode={byRoom ? "rooms" : "specialists"}
@@ -173,7 +193,29 @@ function Calendar({
             )
           }
           panel={
-            window ? (
+            adding === "form" ? (
+              <NewVisitPanel
+                action={fn()}
+                closeHref="?"
+                defaults={{
+                  specialistId: "anna",
+                  date: "2030-10-02",
+                  time: "14:15",
+                  mode: "in_person",
+                  roomId: "g1",
+                }}
+                offers={offers}
+                rooms={rooms.map((room) => ({
+                  id: room.id,
+                  name: room.name,
+                  locationName: "Mokotowska 46",
+                }))}
+                specialists={people.map((one) => ({
+                  id: one.id,
+                  name: one.name,
+                }))}
+              />
+            ) : window ? (
               <AvailabilityPanel
                 closeHref="?"
                 column={specialistsDay.columns[0]!}
@@ -301,5 +343,31 @@ export const AvailabilityOpen: Story = {
     await expect(
       canvas.getByRole("complementary", { name: "Gabinet 1" }),
     ).toHaveTextContent("Wizyty w tym oknie");
+  },
+};
+
+export const AddingPickATime: Story = {
+  args: { kind: "day-specialists", adding: "pick" },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole("button", { name: "Anuluj wybór" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      canvas.getByRole("link", { name: "Otwórz formularz ręcznie" }),
+    ).toBeInTheDocument();
+  },
+};
+
+export const AddingTheForm: Story = {
+  args: { kind: "day-specialists", adding: "form" },
+  play: async ({ canvas }) => {
+    const panel = canvas.getByRole("complementary", { name: "Nowa wizyta" });
+    await expect(within(panel).getByLabelText("Godzina")).toHaveValue("14:15");
+    await userEvent.click(
+      within(panel).getByRole("button", { name: "Zapisz wizytę" }),
+    );
+    await expect(
+      await within(panel).findByText("Podaj imię i nazwisko."),
+    ).toBeInTheDocument();
   },
 };

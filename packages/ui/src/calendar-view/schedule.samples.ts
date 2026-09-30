@@ -390,3 +390,14 @@ export const roomsWeek = weekComparison({
 });
 
 export const annaWeek = personalWeek({ ...input, week, person: people[0]! });
+
+/** What the centre can book, for the new visit's form. */
+export const offers = people.slice(0, 5).map((one, index) => ({
+  id: `offer-${one.id}`,
+  specialistId: one.id,
+  serviceName: index % 2 ? "Psychoterapia indywidualna" : "Konsultacja",
+  priceMinor: 22000,
+  currencyCode: "PLN",
+  durationMinutes: 50,
+  modes: ["in_person", "online"] as ("in_person" | "online")[],
+}));

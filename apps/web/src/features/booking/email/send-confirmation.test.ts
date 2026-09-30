@@ -21,6 +21,8 @@ const claimed: ClaimedBookingEmail = {
   clientEmail: "jan@example.com",
   manageToken: "link-token",
   cancelledBy: null,
+  bookedBy: "client",
+  paid: true,
 };
 
 function deps(overrides: Partial<ConfirmationEmailDeps> = {}) {

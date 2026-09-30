@@ -203,3 +203,9 @@ export type {
   VisitSort,
   VisitsQuery,
 } from "./visits";
+export { centreBookVisit, listCentreOffers } from "./centre-bookings";
+export type {
+  CentreBookedVisit,
+  CentreBookingInput,
+  CentreOffer,
+} from "./centre-bookings";

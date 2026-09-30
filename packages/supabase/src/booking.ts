@@ -42,6 +42,13 @@ export type BookingErrorCode =
   | "not_found"
   | "not_cancellable"
   | "not_reschedulable"
+  | "specialist_busy"
+  | "room_busy"
+  | "room_closed"
+  | "room_required"
+  | "time_off"
+  | "in_the_past"
+  | "forbidden"
   | "unknown";
 
 const BOOKING_ERROR_CODES = new Set<string>([
@@ -54,6 +61,12 @@ const BOOKING_ERROR_CODES = new Set<string>([
   "not_found",
   "not_cancellable",
   "not_reschedulable",
+  "specialist_busy",
+  "room_busy",
+  "room_closed",
+  "room_required",
+  "time_off",
+  "in_the_past",
 ]);
 
 export class BookingError extends Error {
@@ -242,6 +255,10 @@ export interface GuestBooking {
   refundDueMinor: number | null;
   /** What Stripe has given back so far. */
   refundedMinor: number;
+  /** The client online, or the centre (then paid on site). */
+  bookedBy: "client" | "centre";
+  /** Paid online. */
+  paid: boolean;
 }
 
 /** A guest's visit by its token, or null. */
@@ -283,6 +300,8 @@ export async function getBooking(
             : null,
         refundDueMinor: row.refund_due_minor ?? null,
         refundedMinor: row.refunded_minor,
+        bookedBy: row.booked_by === "centre" ? "centre" : "client",
+        paid: row.paid,
       }
     : null;
 }

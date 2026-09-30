@@ -23,6 +23,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/utils";
 import { PageLink as Link } from "../public-site/page-link";
 import { resourceColors, scheduleTheme } from "../resource-colors";
+import { HOUR_HEIGHT, minutesToPx, rangeHeight } from "./schedule-geometry";
 
 // The pieces of the calendar views, after the AI Studio reference: the
 // time axis, the grid lines, the column headers with their occupancy ring,
@@ -31,14 +32,7 @@ import { resourceColors, scheduleTheme } from "../resource-colors";
 // narrow lanes). Server components: positions in pixels from minutes,
 // visits are links (the details open beside the calendar).
 
-/** Height of an hour, in pixels (the reference's). */
-export const HOUR_HEIGHT = 68;
-
-export const minutesToPx = (minutes: number) => (minutes / 60) * HOUR_HEIGHT;
-
-export function rangeHeight(range: MinuteRange) {
-  return minutesToPx(Math.max(60, range.end - range.start));
-}
+export { HOUR_HEIGHT, minutesToPx, rangeHeight };
 
 function place(range: MinuteRange, slot: MinuteRange): CSSProperties {
   return {

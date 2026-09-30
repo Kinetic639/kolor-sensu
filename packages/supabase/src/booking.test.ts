@@ -203,6 +203,8 @@ describe("a guest's visit by token", () => {
       cancelled_by: null,
       refund_due_minor: null,
       refunded_minor: 0,
+      booked_by: "client",
+      paid: true,
     };
     expect(await getBooking(rpcClient([row]).client, "token")).toMatchObject({
       details: {
@@ -219,6 +221,8 @@ describe("a guest's visit by token", () => {
       cancelledBy: null,
       refundDueMinor: null,
       refundedMinor: 0,
+      bookedBy: "client",
+      paid: true,
     });
     expect(await getBooking(rpcClient([]).client, "wrong")).toBeNull();
   });

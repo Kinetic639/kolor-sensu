@@ -44,6 +44,7 @@ export function visitPageCopy({
     | "cancelledBy"
     | "refundDueMinor"
     | "refundedMinor"
+    | "paid"
   >;
   policy: ChangePolicy;
   timeZone: string;
@@ -59,7 +60,9 @@ export function visitPageCopy({
     const due = booking.refundDueMinor;
     cancelledLead =
       due === 0
-        ? "Wizyta została odwołana bez zwrotu opłaty."
+        ? booking.paid
+          ? "Wizyta została odwołana bez zwrotu opłaty."
+          : "Wizyta została odwołana."
         : booking.refundedMinor >= due
           ? `Zleciliśmy zwrot ${money(due)} tą samą metodą, którą zapłacono. Pieniądze zwykle wracają w ciągu kilku dni roboczych.`
           : `Zwrot ${money(due)} zleci centrum. Pieniądze zwykle wracają w ciągu kilku dni roboczych.`;
@@ -92,7 +95,7 @@ export function visitPageCopy({
     ? {
         text: cancel.refund
           ? `Odwołując wizytę do ${deadlineLabel(cancel.refundUntil, timeZone)}, otrzymasz pełny zwrot (${money(booking.priceMinor)}). Później odwołanie jest możliwe już bez zwrotu.`
-          : booking.priceMinor > 0
+          : booking.paid && booking.priceMinor > 0
             ? `Do wizyty zostało mniej niż ${policy.cancellationWindowHours} godz., więc odwołanie jest możliwe już bez zwrotu opłaty.`
             : "Możesz odwołać wizytę, jeśli nie możesz przyjść.",
         href: `/wizyta/${token}/odwolaj` as Route,

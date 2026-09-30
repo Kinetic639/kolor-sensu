@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  calendarAddHref,
   calendarAvailabilityHref,
   calendarCollapseHref,
   calendarHref,
@@ -8,6 +9,7 @@ import {
   calendarPanelTabs,
   calendarPeriod,
   calendarPerspectiveTabs,
+  calendarPickHref,
   calendarViewTabs,
   dayLabel,
   loadCalendarParams,
@@ -37,6 +39,9 @@ describe("the calendar's address", () => {
       lokalizacja: null,
       q: null,
       zwiniete: [],
+      nowa: false,
+      termin: null,
+      kolumna: null,
       wizyta: null,
       okno: null,
       karta: "szczegoly",
@@ -174,5 +179,37 @@ describe("the calendar's links", () => {
     expect(calendarPanelCloseHref(path, params)).toBe(
       "/kalendarz?data=2030-10-03",
     );
+  });
+});
+
+describe("adding a visit", () => {
+  it("reads the mode, the picked time and the column", () => {
+    expect(
+      load(`nowa=true&termin=2030-10-02T12:15&kolumna=${anna}`),
+    ).toMatchObject({ nowa: true, termin: "2030-10-02T12:15", kolumna: anna });
+    expect(load("termin=2030-13-02T25:00&kolumna=x")).toMatchObject({
+      termin: null,
+      kolumna: null,
+    });
+  });
+
+  it("turns adding on and off, closing any panel", () => {
+    const params = load(`data=2030-10-02&wizyta=${visit}`);
+    expect(calendarAddHref(path, params, true)).toBe(
+      "/kalendarz?data=2030-10-02&nowa=true",
+    );
+    expect(
+      calendarAddHref(
+        path,
+        load("data=2030-10-02&nowa=true&termin=2030-10-02T12:15"),
+        false,
+      ),
+    ).toBe("/kalendarz?data=2030-10-02");
+  });
+
+  it("opens the form at a time, in a column", () => {
+    expect(
+      calendarPickHref(path, load("nowa=true"), "2030-10-02T09:00", anna),
+    ).toBe(`/kalendarz?nowa=true&termin=2030-10-02T09:00&kolumna=${anna}`);
   });
 });

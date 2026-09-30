@@ -1436,4 +1436,211 @@ END;
 $body$;
 RESET ROLE;
 
+-- X: the centre books a visit (K5, "+ Nowa wizyta"). An admin for anyone, a
+-- specialist for themselves; any time the specialist and the room are free
+-- (inside availability or not), never in the past, in a closed room or
+-- during time off. Confirmed at once, paid on site, no consents recorded;
+-- the history says the centre did it, the e-mail knows it is unpaid.
+CREATE TEMP TABLE x_day AS
+SELECT monday + 14 AS day,
+  (SELECT id FROM public.specialist_services WHERE specialist_id = anna_id) AS anna_offer,
+  (SELECT id FROM public.specialist_services WHERE specialist_id = jan_id) AS jan_offer,
+  room_id
+FROM booking_test;
+GRANT SELECT ON x_day TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION pg_temp.at(date, time) TO authenticated;
+CREATE TEMP TABLE x_visits (name text PRIMARY KEY, id uuid, reference text);
+GRANT ALL ON x_visits TO authenticated, service_role;
+
+-- Anna is away that day from 18:00; the room is closed the day after.
+INSERT INTO public.specialist_time_off (specialist_id, during)
+SELECT anna_id, tstzrange(pg_temp.at(x.day, '18:00'), pg_temp.at(x.day, '20:00'))
+FROM booking_test, x_day AS x;
+INSERT INTO public.room_availability_exceptions (room_id, date, type, reason)
+SELECT room_id, day + 1, 'closed_all_day', 'Remont' FROM x_day;
+
+CREATE FUNCTION pg_temp.book(
+  p_offer uuid, p_mode public.visit_mode, p_at timestamptz, p_room uuid,
+  p_name text DEFAULT 'Ewa Klientka', p_email text DEFAULT 'ewa@example.invalid',
+  p_phone text DEFAULT NULL
+)
+RETURNS uuid
+LANGUAGE sql
+AS $$
+  SELECT appointment_id FROM public.centre_book_visit(
+    p_offer, p_mode, p_at, p_room, p_name, p_email, p_phone, 'Pierwsza wizyta'
+  );
+$$;
+GRANT EXECUTE ON FUNCTION pg_temp.book(uuid, public.visit_mode, timestamptz, uuid, text, text, text) TO authenticated, anon;
+
+-- The hint a booking stops with ('' when it goes through).
+CREATE FUNCTION pg_temp.refusal(
+  p_offer uuid, p_mode public.visit_mode, p_at timestamptz, p_room uuid,
+  p_email text DEFAULT 'ewa@example.invalid', p_phone text DEFAULT NULL
+)
+RETURNS text
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_hint text;
+BEGIN
+  PERFORM pg_temp.book(p_offer, p_mode, p_at, p_room, 'Ewa Klientka', p_email, p_phone);
+  RETURN '';
+EXCEPTION
+  WHEN insufficient_privilege THEN RETURN 'forbidden';
+  WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_hint = PG_EXCEPTION_HINT;
+    RETURN coalesce(nullif(v_hint, ''), SQLERRM);
+END;
+$$;
+GRANT EXECUTE ON FUNCTION pg_temp.refusal(uuid, public.visit_mode, timestamptz, uuid, text, text) TO authenticated, anon;
+
+-- The admin.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  x x_day%ROWTYPE;
+  v_id uuid;
+BEGIN
+  SELECT * INTO x FROM x_day;
+
+  -- Outside Anna's hours (her room window ends at 12:00) and off the grid.
+  v_id := pg_temp.book(x.anna_offer, 'in_person', pg_temp.at(x.day, '12:15'), x.room_id);
+  INSERT INTO x_visits VALUES ('x1', v_id, NULL);
+  -- A client reachable by phone only.
+  v_id := pg_temp.book(x.anna_offer, 'online', pg_temp.at(x.day, '16:00'), NULL,
+    'Jan Telefon', NULL, '600 100 200');
+  INSERT INTO x_visits VALUES ('x2', v_id, NULL);
+
+  IF (SELECT count(*) FROM public.list_visits(x.day, x.day)
+      WHERE id IN (SELECT id FROM x_visits) AND status = 'confirmed' AND NOT paid) <> 2 THEN
+    RAISE EXCEPTION 'X: the admin does not see the booked visits, confirmed and unpaid';
+  END IF;
+
+  -- The same time for Anna, and the room for Jan: taken.
+  IF pg_temp.refusal(x.anna_offer, 'online', pg_temp.at(x.day, '12:30'), NULL) <> 'specialist_busy' THEN
+    RAISE EXCEPTION 'X: Anna booked twice';
+  END IF;
+  -- The room keeps the buffer after Anna's visit (12:15 to 13:05, then 10 minutes).
+  IF pg_temp.refusal(x.jan_offer, 'in_person', pg_temp.at(x.day, '13:10'), x.room_id) <> 'room_busy' THEN
+    RAISE EXCEPTION 'X: the room was double-booked';
+  END IF;
+  IF pg_temp.refusal(x.jan_offer, 'in_person', pg_temp.at(x.day, '13:15'), x.room_id) <> '' THEN
+    RAISE EXCEPTION 'X: the room after the buffer was refused';
+  END IF;
+
+  IF pg_temp.refusal(x.anna_offer, 'online', now() - interval '1 hour', NULL) <> 'in_the_past' THEN
+    RAISE EXCEPTION 'X: booked in the past';
+  END IF;
+  IF pg_temp.refusal(x.anna_offer, 'in_person', pg_temp.at(x.day, '08:00'), NULL) <> 'room_required' THEN
+    RAISE EXCEPTION 'X: in person without a room';
+  END IF;
+  IF pg_temp.refusal(x.anna_offer, 'online', pg_temp.at(x.day, '08:00'), x.room_id) <> 'not_bookable' THEN
+    RAISE EXCEPTION 'X: online in a room';
+  END IF;
+  IF pg_temp.refusal(x.anna_offer, 'in_person', pg_temp.at(x.day + 1, '10:00'), x.room_id) <> 'room_closed' THEN
+    RAISE EXCEPTION 'X: booked a closed room';
+  END IF;
+  IF pg_temp.refusal(x.anna_offer, 'online', pg_temp.at(x.day, '18:30'), NULL) <> 'time_off' THEN
+    RAISE EXCEPTION 'X: booked during time off';
+  END IF;
+  IF pg_temp.refusal(x.anna_offer, 'online', pg_temp.at(x.day, '09:00'), NULL, NULL, NULL) <> 'invalid_details' THEN
+    RAISE EXCEPTION 'X: booked a client nobody can reach';
+  END IF;
+  IF pg_temp.refusal(x.anna_offer, 'online', pg_temp.at(x.day, '09:00'), NULL, 'not an e-mail') <> 'invalid_details' THEN
+    RAISE EXCEPTION 'X: booked with a wrong e-mail';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+DO $body$
+DECLARE
+  v public.appointments%ROWTYPE;
+BEGIN
+  SELECT * INTO v FROM public.appointments WHERE id = (SELECT id FROM x_visits WHERE name = 'x1');
+  IF v.status <> 'confirmed' OR v.booked_by <> 'centre' OR v.confirmed_at IS NULL
+     OR v.terms_accepted_at IS NOT NULL OR v.privacy_accepted_at IS NOT NULL
+     OR v.duration_minutes <> 50 OR v.buffer_minutes <> 10 OR v.price_minor <> 25000
+     OR v.client_email <> 'ewa@example.invalid' OR v.client_notes <> 'Pierwsza wizyta' THEN
+    RAISE EXCEPTION 'X: the booked visit: %', row_to_json(v);
+  END IF;
+  -- The history: created by the centre, by that admin, already confirmed.
+  IF NOT EXISTS (
+    SELECT 1 FROM public.appointment_events
+    WHERE appointment_id = v.id AND kind = 'created' AND actor = 'centre'
+      AND actor_user_id = '71000000-0000-4000-8000-000000000001'
+      AND details ->> 'status' = 'confirmed'
+  ) THEN
+    RAISE EXCEPTION 'X: the history does not say the centre booked it';
+  END IF;
+  UPDATE x_visits SET reference = (SELECT reference FROM public.appointments WHERE id = x_visits.id);
+END;
+$body$;
+
+-- The e-mails: the confirmation knows the visit is the centre's, unpaid,
+-- and gives a link that opens it; no e-mail for a client without one.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  c record;
+  b record;
+BEGIN
+  SELECT * INTO c FROM public.claim_booking_email((SELECT reference FROM x_visits WHERE name = 'x1'), 'confirmation');
+  IF c.reference IS NULL OR c.booked_by <> 'centre' OR c.paid OR c.manage_token IS NULL THEN
+    RAISE EXCEPTION 'X: the confirmation claim: %', row_to_json(c);
+  END IF;
+  SELECT * INTO b FROM public.get_booking(c.manage_token);
+  IF b.reference <> c.reference OR b.booked_by <> 'centre' OR b.paid OR b.status <> 'confirmed' THEN
+    RAISE EXCEPTION 'X: the visit page: %', row_to_json(b);
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.claim_booking_email((SELECT reference FROM x_visits WHERE name = 'x2'), 'confirmation')) THEN
+    RAISE EXCEPTION 'X: claimed an e-mail for a client without one';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Anna books for herself, not for Jan; nobody books without signing in.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  x x_day%ROWTYPE;
+BEGIN
+  SELECT * INTO x FROM x_day;
+  IF pg_temp.refusal(x.anna_offer, 'online', pg_temp.at(x.day, '14:00'), NULL) <> '' THEN
+    RAISE EXCEPTION 'X: Anna could not book for herself';
+  END IF;
+  IF pg_temp.refusal(x.jan_offer, 'online', pg_temp.at(x.day, '15:00'), NULL) <> 'forbidden' THEN
+    RAISE EXCEPTION 'X: Anna booked for Jan';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '', true);
+SET LOCAL ROLE anon;
+DO $body$
+DECLARE
+  x x_day%ROWTYPE;
+BEGIN
+  SELECT * INTO x FROM x_day;
+  PERFORM public.centre_book_visit(x.anna_offer, 'online', pg_temp.at(x.day, '08:00'), NULL, 'A', 'a@example.invalid', NULL, NULL);
+  RAISE EXCEPTION 'X: a visitor booked as the centre';
+EXCEPTION WHEN insufficient_privilege THEN NULL;
+END;
+$body$;
+RESET ROLE;
+
+-- Online bookings still need the consents.
+DO $body$
+BEGIN
+  UPDATE public.appointments SET terms_accepted_at = NULL
+  WHERE id = (SELECT id FROM public.appointments WHERE booked_by = 'client' AND status = 'confirmed' LIMIT 1);
+  RAISE EXCEPTION 'X: an online booking lost its consents';
+EXCEPTION WHEN check_violation THEN NULL;
+END;
+$body$;
+
 ROLLBACK;

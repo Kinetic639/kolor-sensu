@@ -25,6 +25,7 @@ import {
   TimeAxis,
   VisitCard,
 } from "./schedule-parts";
+import { SlotPickLayer } from "./slot-picker";
 
 // The calendar's grids, after the reference: the day (a column per
 // specialist, room or day, full or collapsed) and the week comparison (per
@@ -67,6 +68,8 @@ interface ColumnBodyProps {
   visitHref: (visitId: string) => string;
   availabilityHref?: (key: string) => string;
   openVisitId?: string | null;
+  /** Adding a visit: a click on the column picks the time. */
+  adding?: boolean;
   className?: string;
 }
 
@@ -80,6 +83,7 @@ function ColumnBody({
   visitHref,
   availabilityHref,
   openVisitId,
+  adding = false,
   className,
 }: ColumnBodyProps) {
   const byRoom = mode === "rooms";
@@ -156,6 +160,13 @@ function ColumnBody({
       ) : (
         <EmptyMarker column={column} compact={compact} />
       )}
+      {adding ? (
+        <SlotPickLayer
+          column={column.kind === "day" ? null : column.key}
+          date={column.date}
+          range={range}
+        />
+      ) : null}
       {column.isToday ? <NowLine now={now} range={range} /> : null}
     </div>
   );
@@ -168,6 +179,8 @@ export interface DayScheduleProps {
   /** Where an availability window's details open. */
   availabilityHref?: (key: string) => string;
   openVisitId?: string | null;
+  /** Adding a visit: clicks on the grid pick the time. */
+  adding?: boolean;
   /** Keys of the columns shown narrow. */
   collapsed?: string[];
   /** Where a column's "zwiń / rozwiń" leads; none: no collapsing. */
@@ -183,6 +196,7 @@ export function DaySchedule({
   visitHref,
   availabilityHref,
   openVisitId,
+  adding = false,
   collapsed = [],
   collapseHref,
   ariaLabel,
@@ -246,6 +260,7 @@ export function DaySchedule({
               openVisitId={openVisitId}
               range={view.range}
               visitHref={visitHref}
+              adding={adding}
               availabilityHref={availabilityHref}
             />
           ))}
@@ -315,6 +330,8 @@ export interface WeekComparisonProps {
   visitHref: (visitId: string) => string;
   availabilityHref?: (key: string) => string;
   openVisitId?: string | null;
+  /** Adding a visit: clicks on the lanes pick the time. */
+  adding?: boolean;
   ariaLabel: string;
 }
 
@@ -328,6 +345,7 @@ export function WeekComparison({
   visitHref,
   availabilityHref,
   openVisitId,
+  adding = false,
   ariaLabel,
 }: WeekComparisonProps) {
   const height = rangeHeight(view.range);
@@ -430,6 +448,7 @@ export function WeekComparison({
                     openVisitId={openVisitId}
                     range={view.range}
                     visitHref={visitHref}
+                    adding={adding}
                     availabilityHref={availabilityHref}
                   />
                 ))

@@ -139,3 +139,31 @@ describe("visitEventRows", () => {
     expect(row!.title).toBe("sms_sent");
   });
 });
+
+describe("a visit the centre booked", () => {
+  it("says the centre booked it, paid on site", () => {
+    const [row] = visitEventRows(
+      [
+        {
+          id: 9,
+          occurredAt: "2026-09-30T20:30:00Z",
+          kind: "created",
+          actor: "centre",
+          actorName: "Michał Stępień",
+          details: {
+            starts_at: "2026-10-14T08:15:00+00:00",
+            ends_at: "2026-10-14T09:05:00+00:00",
+            status: "confirmed",
+          },
+        },
+      ],
+      options,
+    );
+    expect(row).toMatchObject({
+      title: "Centrum zapisało wizytę",
+      actor: "Centrum · Michał Stępień",
+      tone: "success",
+    });
+    expect(row!.detail).toMatch(/10:15–11:05 · płatność na miejscu$/);
+  });
+});

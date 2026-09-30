@@ -7,6 +7,12 @@ if (typeof document !== "undefined") {
   Range.prototype.getClientRects ??= () => [] as unknown as DOMRectList;
   Range.prototype.getBoundingClientRect ??= () => new DOMRect();
   HTMLElement.prototype.scrollIntoView ??= () => undefined;
+  // Radix measures some controls (e.g. the checkbox) with it.
+  globalThis.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
 }
 
 afterEach(() => {

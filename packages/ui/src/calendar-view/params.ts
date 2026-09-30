@@ -45,6 +45,15 @@ const parseAsWindow = createParser({
   serialize: (value: string) => value,
 });
 
+/** A picked time: the centre's local date and time, `2030-10-02T12:15`. */
+const parseAsSlot = createParser({
+  parse: (value) => {
+    const match = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):([0-5]\d)$/.exec(value);
+    return match && parseAsDay.parse(match[1]!) ? value : null;
+  },
+  serialize: (value: string) => value,
+});
+
 export const calendarParsers = {
   /** None: the portal's own (a day for the centre, a week for a specialist). */
   widok: parseAsStringLiteral(CALENDAR_VIEWS),
@@ -67,6 +76,12 @@ export const calendarParsers = {
   /** The day's columns shown narrow. */
   zwiniete: parseAsArrayOf(parseAsColumn).withDefault([]),
   wizyta: parseAsId,
+  /** Adding a visit: pick a time in the grid. */
+  nowa: parseAsBoolean.withDefault(false),
+  /** The time picked for the new visit (the form opens). */
+  termin: parseAsSlot,
+  /** The column it was picked in (a specialist, room or online). */
+  kolumna: parseAsColumn,
   /** The availability window open in the side panel. */
   okno: parseAsWindow,
   karta: parseAsStringLiteral(["szczegoly", "historia"] as const).withDefault(
@@ -197,6 +212,38 @@ export function calendarCollapseHref(
     zwiniete: collapsed
       ? params.zwiniete.filter((one) => one !== key)
       : [...params.zwiniete, key],
+  });
+}
+
+/** Adding on (pick a time) or off; any open panel closes. */
+export function calendarAddHref(
+  path: string,
+  params: CalendarParams,
+  on: boolean,
+) {
+  return calendarHref(path, params, {
+    nowa: on,
+    termin: null,
+    kolumna: null,
+    wizyta: null,
+    okno: null,
+    karta: "szczegoly",
+  });
+}
+
+/** The new visit's form at a time, in a column. */
+export function calendarPickHref(
+  path: string,
+  params: CalendarParams,
+  slot: string,
+  column: string | null,
+) {
+  return calendarHref(path, params, {
+    nowa: true,
+    termin: slot,
+    kolumna: column,
+    wizyta: null,
+    okno: null,
   });
 }
 

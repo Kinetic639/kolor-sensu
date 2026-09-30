@@ -31,6 +31,10 @@ export interface ClaimedBookingEmail {
   manageToken: string | null;
   /** For "cancelled": who cancelled it. */
   cancelledBy: "client" | "centre" | null;
+  /** The client online, or the centre (then paid on site). */
+  bookedBy: "client" | "centre";
+  /** Paid online. */
+  paid: boolean;
 }
 
 /** What the e-mail needs, or null when it is not this caller's to send. */
@@ -65,6 +69,8 @@ export async function claimBookingEmail(
           row.cancelled_by === "client" || row.cancelled_by === "centre"
             ? row.cancelled_by
             : null,
+        bookedBy: row.booked_by === "centre" ? "centre" : "client",
+        paid: row.paid,
       }
     : null;
 }

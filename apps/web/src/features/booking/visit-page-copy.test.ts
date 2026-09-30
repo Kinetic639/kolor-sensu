@@ -16,6 +16,7 @@ const booking = {
   cancelledBy: null,
   refundDueMinor: null,
   refundedMinor: 0,
+  paid: true,
 };
 const input = { token, booking, policy, timeZone: "Europe/Warsaw" };
 const at = (iso: string) => new Date(iso);
@@ -91,7 +92,27 @@ describe("visitPageCopy", () => {
     ).toBe("Wizyta została odwołana bez zwrotu opłaty.");
   });
 
-  it("says what just changed", () => {
+  it("paid on site (booked by the centre): nothing to give back", () => {
+    const now = at("2030-10-01T09:00:00Z");
+    const unpaid = { ...booking, paid: false };
+    expect(
+      visitPageCopy({ ...input, booking: unpaid, now }).cancel?.text,
+    ).toBe("Możesz odwołać wizytę, jeśli nie możesz przyjść.");
+    expect(
+      visitPageCopy({
+        ...input,
+        booking: {
+          ...unpaid,
+          status: "cancelled" as const,
+          cancelledBy: "client" as const,
+          refundDueMinor: 0,
+        },
+        now,
+      }).cancelledLead,
+    ).toBe("Wizyta została odwołana.");
+  });
+
+    it("says what just changed", () => {
     const now = at("2030-10-01T09:00:00Z");
     expect(visitPageCopy({ ...input, now, change: "przelozona" }).notice).toBe(
       "Wizyta została przełożona. Wysłaliśmy e-mail z nowym terminem.",

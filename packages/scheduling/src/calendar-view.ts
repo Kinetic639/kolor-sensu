@@ -994,3 +994,48 @@ export function findAvailability(
   }
   return null;
 }
+
+export interface NewVisitDefaults {
+  specialistId: string | null;
+  /** The centre's local date and time. */
+  date: string;
+  time: string;
+  mode: "in_person" | "online" | null;
+  roomId: string | null;
+}
+
+/**
+ * What a new visit picked in the grid starts with: the specialist of the
+ * column (or of one's own week), and where they work then (their window's
+ * room, or online); in a room's column, that room.
+ */
+export function newVisitDefaults(
+  columns: CalendarColumn[],
+  key: string | null,
+  slot: string,
+): NewVisitDefaults {
+  const [date = "", time = ""] = slot.split("T");
+  const minute = timeToMinutes(time);
+  const column =
+    columns.find(
+      (one) =>
+        one.date === date && (key ? one.key === key : one.kind === "day"),
+    ) ?? null;
+  const none = { specialistId: null, date, time, mode: null, roomId: null };
+  if (!column) return none;
+  if (column.kind === "room") {
+    return { ...none, mode: "in_person", roomId: column.key };
+  }
+  if (column.kind === "online") return { ...none, mode: "online" };
+
+  const window = column.availability.find(
+    (one) => one.start <= minute && minute < one.end,
+  );
+  const specialistId = column.kind === "day" ? column.colorSeed : column.key;
+  if (!window || window.place.id === IN_PERSON.id) {
+    return { ...none, specialistId };
+  }
+  return window.place.online
+    ? { ...none, specialistId, mode: "online" }
+    : { ...none, specialistId, mode: "in_person", roomId: window.place.id };
+}

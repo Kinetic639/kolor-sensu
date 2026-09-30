@@ -1,20 +1,27 @@
+import { bookVisitAction } from "@/features/calendar/actions";
 import { loadMyCalendar } from "@/features/calendar/loaders";
 import {
   findAvailability,
   formatDate,
   formatWeekday,
   mondayOf,
+  newVisitDefaults,
 } from "@repo/scheduling";
 import {
+  AddVisitBanner,
+  AddVisitButton,
   AvailabilityPanel,
+  calendarAddHref,
   calendarAvailabilityHref,
   calendarNav,
   calendarPanelCloseHref,
   calendarPanelTabs,
+  calendarPickHref,
   calendarViewTabs,
   calendarVisitHref,
   DaySchedule,
   loadCalendarParams,
+  NewVisitPanel,
   PersonalSummaryPanel,
   ScheduleAgenda,
   ScheduleCanvas,
@@ -27,8 +34,9 @@ import { VisitPanel } from "@repo/ui/visit-table";
 // Mój kalendarz (stage K5), after the AI Studio reference: the
 // specialist's week (or day), their visits over their availability in its
 // rooms' colours, the week summed up beside it; a visit's details open
-// beside the calendar (?wizyta=…). Changes go through the centre; hours
-// and time off are set in /dostepnosc.
+// beside the calendar (?wizyta=…); "+ Nowa wizyta" books a client in (pick
+// a place in the grid, the form opens). Other changes go through the
+// centre; hours and time off are set in /dostepnosc.
 
 const PATH = "/kalendarz";
 
@@ -50,13 +58,16 @@ export default async function CalendarPage({
     );
   }
 
-  const { today, me, week, day, open } = calendar;
+  const { today, period, me, week, day, open, booking } = calendar;
   const context = { today, defaultView: "tydzien" as const };
   const visitHref = (id: string) => calendarVisitHref(PATH, params, id);
   const view = (week ?? day)!;
   const label = week ? "Mój tydzień" : "Mój dzień";
-  const availabilityHref = (key: string) =>
-    calendarAvailabilityHref(PATH, params, key);
+  // Adding: the grid picks a time until the form is open.
+  const picking = params.nowa && !params.termin;
+  const availabilityHref = picking
+    ? undefined
+    : (key: string) => calendarAvailabilityHref(PATH, params, key);
   const shown = findAvailability(view.columns, params.okno);
   const empty = week
     ? "W tym tygodniu nie masz dostępności ani wizyt."
@@ -73,11 +84,28 @@ export default async function CalendarPage({
               ? ["puste", "wyszarz", "wizyty", "dostepnosc", "podsumowanie"]
               : ["wyszarz", "wizyty", "dostepnosc"]
           }
+          actions={
+            <AddVisitButton
+              active={params.nowa}
+              href={calendarAddHref(PATH, params, !params.nowa)}
+            />
+          }
           views={calendarViewTabs(PATH, params, context.defaultView)}
         />
+        {picking ? (
+          <AddVisitBanner
+            cancelHref={calendarAddHref(PATH, params, false)}
+            manualHref={calendarPickHref(
+              PATH,
+              params,
+              `${period.date}T09:00`,
+              null,
+            )}
+          />
+        ) : null}
         <ScheduleFrame
           aside={
-            week && !open && !shown ? (
+            week && !open && !shown && !booking ? (
               <PersonalSummaryPanel
                 availabilityHref="/dostepnosc"
                 name={me.name}
@@ -89,6 +117,7 @@ export default async function CalendarPage({
           }
           desktop={
             <DaySchedule
+              adding={picking}
               availabilityHref={availabilityHref}
               ariaLabel={label}
               empty={empty}
@@ -109,7 +138,20 @@ export default async function CalendarPage({
             />
           }
           panel={
-            open ? (
+            booking && params.termin ? (
+              <NewVisitPanel
+                action={bookVisitAction}
+                closeHref={calendarAddHref(PATH, params, false)}
+                defaults={newVisitDefaults(
+                  view.columns,
+                  params.kolumna,
+                  params.termin,
+                )}
+                offers={booking.offers}
+                rooms={booking.rooms}
+                specialists={booking.specialists}
+              />
+            ) : open ? (
               <VisitPanel
                 closeHref={calendarPanelCloseHref(PATH, params)}
                 events={open.events}

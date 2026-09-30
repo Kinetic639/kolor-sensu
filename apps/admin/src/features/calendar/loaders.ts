@@ -14,6 +14,7 @@ import {
   getCenterSettings,
   getVisit,
   listAvailabilityRulesForSpecialists,
+  listCentreOffers,
   listRoomSchedules,
   listRoomsAdmin,
   listSpecialistSummariesForAdmin,
@@ -29,7 +30,8 @@ import { formatInTimeZone } from "date-fns-tz";
 // or the week compared. Only the shown dates are read, in parallel:
 // everyone's availability rules in force then (expanded here, time off
 // cut out and kept as blocked time), the rooms' hours and exceptions, the
-// booked visits, and the visit open in the side panel.
+// booked visits, and the visit open in the side panel (or the offers, for
+// the new visit's form).
 
 export async function loadAdminCalendar(params: CalendarParams) {
   const client = await createClient();
@@ -66,7 +68,9 @@ export async function loadAdminCalendar(params: CalendarParams) {
 
   const ids = active.map((one) => one.id);
   const history = params.wizyta && params.karta === "historia";
-  const [rules, timeOff, schedules, visits, photos, open, events] =
+  // The new visit's form needs the offers (only when it is open).
+  const booking = params.nowa && params.termin;
+  const [rules, timeOff, schedules, visits, photos, open, events, offers] =
     await Promise.all([
       listAvailabilityRulesForSpecialists(client, {
         specialistIds: ids,
@@ -87,6 +91,7 @@ export async function loadAdminCalendar(params: CalendarParams) {
       ),
       params.wizyta ? getVisit(client, params.wizyta).catch(() => null) : null,
       history ? listVisitEvents(client, params.wizyta!).catch(() => []) : null,
+      booking ? listCentreOffers(client) : null,
     ]);
 
   const people: CalendarPerson[] = active.map((one) => ({
@@ -139,6 +144,17 @@ export async function loadAdminCalendar(params: CalendarParams) {
     today,
     period,
     locations,
+    booking: offers
+      ? {
+          offers,
+          specialists: people.map((one) => ({ id: one.id, name: one.name })),
+          rooms: activeRooms.map((room) => ({
+            id: room.id,
+            name: room.name,
+            locationName: room.locationName,
+          })),
+        }
+      : null,
     day:
       period.view === "dzien"
         ? dayView({

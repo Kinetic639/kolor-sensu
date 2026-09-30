@@ -5,6 +5,7 @@
 export {
   CALENDAR_PERSPECTIVES,
   CALENDAR_VIEWS,
+  calendarAddHref,
   calendarAvailabilityHref,
   calendarCollapseHref,
   calendarDisplayParsers,
@@ -15,6 +16,7 @@ export {
   calendarParsers,
   calendarPeriod,
   calendarPerspectiveTabs,
+  calendarPickHref,
   calendarViewTabs,
   calendarVisitHref,
   dayLabel,
@@ -25,7 +27,10 @@ export type {
   CalendarPerspectiveParam,
   CalendarView,
 } from "./params";
+export { AddVisitBanner, AddVisitButton } from "./add-visit";
 export { AvailabilityPanel } from "./availability-panel";
+export { NewVisitPanel } from "./new-visit-panel";
+export type { NewVisitOffer, NewVisitPanelProps } from "./new-visit-panel";
 export { ScheduleCanvas } from "./schedule-controls";
 export type { ScheduleSwitch } from "./schedule-controls";
 export {

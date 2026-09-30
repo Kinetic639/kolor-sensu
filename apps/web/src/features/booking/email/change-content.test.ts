@@ -18,6 +18,8 @@ const visit: ClaimedBookingEmail = {
   clientEmail: "jan@example.com",
   manageToken: null,
   cancelledBy: null,
+  bookedBy: "client",
+  paid: true,
 };
 
 const options = {

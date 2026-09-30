@@ -17,6 +17,7 @@ import {
   getVisit,
   listActiveRoomsForSpecialist,
   listAvailabilityRulesForSpecialists,
+  listCentreOffers,
   listTimeOff,
   listVisitEvents,
   listVisits,
@@ -50,22 +51,26 @@ export async function loadMyCalendar(params: CalendarParams) {
   const period = calendarPeriod(params, { today, defaultView: "tydzien" });
   const history = params.wizyta && params.karta === "historia";
 
-  const [rules, timeOff, rooms, visits, open, events] = await Promise.all([
-    listAvailabilityRulesForSpecialists(client, {
-      specialistIds: [specialist.id],
-      from: period.from,
-      to: period.to,
-    }),
-    listTimeOff(client, specialist.id),
-    listActiveRoomsForSpecialist(client),
-    listVisits(client, { from: period.from, to: period.to, own: true }),
-    params.wizyta
-      ? getVisit(client, params.wizyta, { own: true }).catch(() => null)
-      : null,
-    history
-      ? listVisitEvents(client, params.wizyta!, { own: true }).catch(() => [])
-      : null,
-  ]);
+  const withForm = params.nowa && params.termin;
+  const [rules, timeOff, rooms, visits, open, events, offers] =
+    await Promise.all([
+      listAvailabilityRulesForSpecialists(client, {
+        specialistIds: [specialist.id],
+        from: period.from,
+        to: period.to,
+      }),
+      listTimeOff(client, specialist.id),
+      listActiveRoomsForSpecialist(client),
+      listVisits(client, { from: period.from, to: period.to, own: true }),
+      params.wizyta
+        ? getVisit(client, params.wizyta, { own: true }).catch(() => null)
+        : null,
+      history
+        ? listVisitEvents(client, params.wizyta!, { own: true }).catch(() => [])
+        : null,
+      // The new visit's form: their own offers (RLS), only when it is open.
+      withForm ? listCentreOffers(client) : null,
+    ]);
 
   const me: CalendarPerson = {
     id: specialist.id,
@@ -109,6 +114,13 @@ export async function loadMyCalendar(params: CalendarParams) {
     today,
     period,
     me,
+    booking: offers
+      ? {
+          offers: offers.filter((offer) => offer.specialistId === me.id),
+          specialists: [{ id: me.id, name: me.name }],
+          rooms: rooms.map((room) => ({ id: room.id, name: room.name })),
+        }
+      : null,
     week:
       period.view === "tydzien"
         ? personalWeek({

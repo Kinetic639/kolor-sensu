@@ -27,6 +27,8 @@ export interface CancellableVisit {
   /** `Jan Kowalski, czwartek, 1 października 2026, 09:00–09:50` */
   label: string;
   paid: boolean;
+  /** Where the e-mail about it goes; none: the client is told another way. */
+  email: string | null;
 }
 
 export function CancelVisitDialog({
@@ -46,10 +48,12 @@ export function CancelVisitDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Odwołać wizytę {visit.reference}?</AlertDialogTitle>
           <AlertDialogDescription>
-            {visit.label}.{" "}
-            {visit.paid
-              ? "Klient otrzyma pełny zwrot i e-mail z przeprosinami."
-              : "Klient otrzyma e-mail o odwołaniu."}{" "}
+            {visit.label}. {visit.paid ? "Klient otrzyma pełny zwrot. " : ""}
+            {visit.email
+              ? visit.paid
+                ? "Klient dostanie e-mail z przeprosinami."
+                : "Klient dostanie e-mail o odwołaniu."
+              : "Klient nie ma adresu e-mail: powiadom go telefonicznie."}{" "}
             Termin wróci do puli wolnych terminów.
           </AlertDialogDescription>
         </AlertDialogHeader>

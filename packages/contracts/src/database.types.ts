@@ -57,6 +57,7 @@ export type Database = {
           access_token_hash: string;
           availability_rule_id: string | null;
           blocks: unknown;
+          booked_by: string;
           buffer_minutes: number;
           cancelled_at: string | null;
           cancelled_by: string | null;
@@ -90,6 +91,7 @@ export type Database = {
           access_token_hash: string;
           availability_rule_id?: string | null;
           blocks: unknown;
+          booked_by?: string;
           buffer_minutes: number;
           cancelled_at?: string | null;
           cancelled_by?: string | null;
@@ -123,6 +125,7 @@ export type Database = {
           access_token_hash?: string;
           availability_rule_id?: string | null;
           blocks?: unknown;
+          booked_by?: string;
           buffer_minutes?: number;
           cancelled_at?: string | null;
           cancelled_by?: string | null;
@@ -1395,6 +1398,24 @@ export type Database = {
           refund_minor: number;
         }[];
       };
+      centre_book_visit: {
+        Args: {
+          p_client_email: string | null;
+          p_client_name: string;
+          p_client_notes: string | null;
+          p_client_phone: string | null;
+          p_mode: Database["public"]["Enums"]["visit_mode"];
+          p_offer_id: string;
+          p_room_id: string | null;
+          p_starts_at: string;
+        };
+        Returns: {
+          appointment_id: string;
+          ends_at: string;
+          reference: string;
+          starts_at: string;
+        }[];
+      };
       centre_cancel_visit: {
         Args: { p_appointment_id: string };
         Returns: {
@@ -1407,6 +1428,7 @@ export type Database = {
       claim_booking_email: {
         Args: { p_kind: string; p_reference: string };
         Returns: {
+          booked_by: string;
           cancelled_by: string | null;
           client_email: string;
           client_name: string;
@@ -1416,6 +1438,7 @@ export type Database = {
           location_name: string;
           manage_token: string | null;
           mode: Database["public"]["Enums"]["visit_mode"];
+          paid: boolean;
           price_minor: number;
           reference: string;
           room_name: string;
@@ -1464,6 +1487,7 @@ export type Database = {
       get_booking: {
         Args: { p_access_token: string };
         Returns: {
+          booked_by: string;
           cancelled_by: string | null;
           client_email: string;
           client_name: string;
@@ -1475,6 +1499,7 @@ export type Database = {
           hold_expires_at: string;
           location_name: string;
           mode: Database["public"]["Enums"]["visit_mode"];
+          paid: boolean;
           price_minor: number;
           reference: string;
           refund_due_minor: number | null;

@@ -11,6 +11,7 @@ const visit = {
   startsAt: "2030-10-10T09:00:00.000Z",
   rescheduleCount: 0,
   priceMinor: 20000,
+  paid: true,
 };
 const hoursBefore = (hours: number) =>
   new Date(Date.parse(visit.startsAt) - hours * 3_600_000);
@@ -58,6 +59,16 @@ describe("visitChanges", () => {
       blockedBy: "limit",
     });
     expect(changes.cancel.refund).toBe(true);
+  });
+
+  it("booked by the centre, paid on site: cancelling gives nothing back", () => {
+    const changes = visitChanges(
+      { ...visit, paid: false },
+      policy,
+      hoursBefore(100),
+    );
+    expect(changes.cancel).toMatchObject({ allowed: true, refund: false });
+    expect(changes.reschedule.allowed).toBe(true);
   });
 
   it("the centre turned self-moving off", () => {

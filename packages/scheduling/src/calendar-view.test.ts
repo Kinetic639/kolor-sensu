@@ -3,6 +3,7 @@ import {
   calendarWindows,
   dayView,
   findAvailability,
+  newVisitDefaults,
   occupancyOf,
   personalWeek,
   placeShort,
@@ -526,5 +527,67 @@ describe("findAvailability", () => {
     });
     expect(findAvailability(view.columns, "nope")).toBeNull();
     expect(findAvailability(view.columns, null)).toBeNull();
+  });
+});
+
+describe("newVisitDefaults", () => {
+  const day = dayView({
+    ...base,
+    date: "2030-10-02",
+    perspective: "specialists",
+  });
+  const rooms = dayView({ ...base, date: "2030-10-02", perspective: "rooms" });
+
+  it("in a specialist's column: them, and the room of their window then", () => {
+    expect(newVisitDefaults(day.columns, "anna", "2030-10-02T09:30")).toEqual({
+      specialistId: "anna",
+      date: "2030-10-02",
+      time: "09:30",
+      mode: "in_person",
+      roomId: "green",
+    });
+    // Her online window after noon.
+    expect(
+      newVisitDefaults(day.columns, "anna", "2030-10-02T12:30"),
+    ).toMatchObject({
+      mode: "online",
+      roomId: null,
+    });
+    // Outside her hours: nothing assumed about where.
+    expect(
+      newVisitDefaults(day.columns, "anna", "2030-10-02T19:00"),
+    ).toMatchObject({
+      specialistId: "anna",
+      mode: null,
+      roomId: null,
+    });
+  });
+
+  it("in a room's column: the room; online in the online one", () => {
+    expect(
+      newVisitDefaults(rooms.columns, "green", "2030-10-02T10:00"),
+    ).toEqual({
+      specialistId: null,
+      date: "2030-10-02",
+      time: "10:00",
+      mode: "in_person",
+      roomId: "green",
+    });
+    expect(
+      newVisitDefaults(rooms.columns, "online", "2030-10-02T12:00"),
+    ).toMatchObject({
+      mode: "online",
+      roomId: null,
+    });
+  });
+
+  it("without a column (the form opened by hand): only the time", () => {
+    expect(newVisitDefaults([], null, "2030-10-02T09:00")).toEqual({
+      specialistId: null,
+      date: "2030-10-02",
+      time: "09:00",
+      mode: null,
+      roomId: null,
+    });
   });
 });

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { bookingDetailsSchema } from "./booking";
+import {
+  bookingDetailsSchema,
+  centreBookingMessage,
+  centreBookingSchema,
+} from "./booking";
 
 const valid = {
   name: "  Anna Nowak ",
@@ -56,5 +60,74 @@ describe("bookingDetailsSchema", () => {
       acceptPrivacy:
         "Zaakceptuj politykę prywatności, aby zarezerwować wizytę.",
     });
+  });
+});
+
+describe("centreBookingSchema", () => {
+  const booking = {
+    offerId: "10000000-0000-4000-8000-000000000001",
+    mode: "in_person",
+    date: "2030-10-02",
+    time: "12:15",
+    roomId: "20000000-0000-4000-8000-000000000001",
+    name: " Ewa Klientka ",
+    email: " Ewa@Example.com ",
+    phone: "",
+    notes: "",
+    sendEmail: true,
+  };
+  const problems = (input: object) => {
+    const result = centreBookingSchema.safeParse({ ...booking, ...input });
+    return result.success
+      ? {}
+      : Object.fromEntries(
+          result.error.issues.map((issue) => [issue.path[0], issue.message]),
+        );
+  };
+
+  it("cleans a booking up", () => {
+    expect(centreBookingSchema.parse(booking)).toEqual({
+      ...booking,
+      name: "Ewa Klientka",
+      email: "ewa@example.com",
+      phone: null,
+      notes: null,
+    });
+  });
+
+  it("needs a way to reach the client, a room in person and a real time", () => {
+    expect(problems({ email: "", phone: "" })).toEqual({
+      email: "Podaj e-mail albo telefon klienta.",
+    });
+    expect(
+      problems({ email: "", phone: "600 100 200", sendEmail: false }),
+    ).toEqual({});
+    expect(problems({ email: "", phone: "600 100 200" })).toEqual({
+      sendEmail: "Potwierdzenie wyślemy tylko na adres e-mail.",
+    });
+    expect(problems({ roomId: null })).toEqual({ roomId: "Wybierz gabinet." });
+    expect(problems({ mode: "online", roomId: null })).toEqual({});
+    expect(problems({ time: "25:00", date: "2030-02-30" })).toEqual({
+      date: "Podaj poprawną datę.",
+      time: "Podaj godzinę (GG:MM).",
+    });
+    expect(problems({ offerId: "", name: "E" })).toEqual({
+      offerId: "Wybierz usługę.",
+      name: "Podaj imię i nazwisko.",
+    });
+  });
+});
+
+describe("centreBookingMessage", () => {
+  it("says why in Polish, with a fallback", () => {
+    expect(centreBookingMessage("room_busy")).toBe(
+      "Gabinet jest wtedy zajęty.",
+    );
+    expect(centreBookingMessage("whatever")).toBe(
+      "Nie udało się zapisać wizyty.",
+    );
+    expect(centreBookingMessage(undefined)).toBe(
+      "Nie udało się zapisać wizyty.",
+    );
   });
 });

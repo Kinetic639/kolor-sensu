@@ -1,3 +1,4 @@
+import { bookVisitAction } from "@/features/calendar/actions";
 import { loadAdminCalendar } from "@/features/calendar/loaders";
 import { CancelVisitButton } from "@/features/visits/cancel-visit";
 import {
@@ -6,9 +7,13 @@ import {
   formatDateRangeShort,
   formatWeekday,
   mondayOf,
+  newVisitDefaults,
 } from "@repo/scheduling";
 import {
+  AddVisitBanner,
+  AddVisitButton,
   AvailabilityPanel,
+  calendarAddHref,
   calendarAvailabilityHref,
   calendarCollapseHref,
   calendarHref,
@@ -16,11 +21,13 @@ import {
   calendarPanelCloseHref,
   calendarPanelTabs,
   calendarPerspectiveTabs,
+  calendarPickHref,
   calendarViewTabs,
   calendarVisitHref,
   ComparisonSummaryPanel,
   DaySchedule,
   loadCalendarParams,
+  NewVisitPanel,
   ScheduleAgenda,
   ScheduleCanvas,
   ScheduleFrame,
@@ -35,7 +42,8 @@ import { VisitPanel } from "@repo/ui/visit-table";
 // column per specialist or room (collapsible), or the week compared in
 // narrow lanes with its summary. The address holds the state: the view,
 // the date, the switches, the location, the search and the visit open in
-// the side panel (?wizyta=…), where the centre may cancel it. The
+// the side panel (?wizyta=…), where the centre may cancel it, and adding a
+// visit ("+ Nowa wizyta": pick a place in the grid, the form opens). The
 // bookings table is /rezerwacje.
 
 const PATH = "/kalendarz";
@@ -44,17 +52,20 @@ export default async function CalendarPage({
   searchParams,
 }: PageProps<"/kalendarz">) {
   const params = loadCalendarParams(await searchParams);
-  const { today, period, locations, day, week, open } =
+  const { today, period, locations, day, week, open, booking } =
     await loadAdminCalendar(params);
   const context = { today, defaultView: "dzien" as const };
   const byRoom = params.perspektywa === "gabinety";
   const visitHref = (id: string) => calendarVisitHref(PATH, params, id);
-  const availabilityHref = (key: string) =>
-    calendarAvailabilityHref(PATH, params, key);
-  const shown = findAvailability(
-    day ? day.columns : (week?.days.flatMap((one) => one.lanes) ?? []),
-    params.okno,
-  );
+  const columns = day
+    ? day.columns
+    : (week?.days.flatMap((one) => one.lanes) ?? []);
+  // Adding: the grid picks a time until the form is open.
+  const picking = params.nowa && !params.termin;
+  const availabilityHref = picking
+    ? undefined
+    : (key: string) => calendarAvailabilityHref(PATH, params, key);
+  const shown = findAvailability(columns, params.okno);
   const empty = byRoom
     ? "Brak aktywnych gabinetów w tej lokalizacji."
     : "Brak aktywnych specjalistów.";
@@ -75,11 +86,28 @@ export default async function CalendarPage({
               ? ["puste", "wyszarz", "wizyty", "dostepnosc", "podsumowanie"]
               : ["puste", "wyszarz", "wizyty", "dostepnosc"]
           }
+          actions={
+            <AddVisitButton
+              active={params.nowa}
+              href={calendarAddHref(PATH, params, !params.nowa)}
+            />
+          }
           views={calendarViewTabs(PATH, params, context.defaultView)}
         />
+        {picking ? (
+          <AddVisitBanner
+            cancelHref={calendarAddHref(PATH, params, false)}
+            manualHref={calendarPickHref(
+              PATH,
+              params,
+              `${period.date}T09:00`,
+              null,
+            )}
+          />
+        ) : null}
         <ScheduleFrame
           aside={
-            week && !open && !shown ? (
+            week && !open && !shown && !booking ? (
               <ComparisonSummaryPanel
                 byRoom={byRoom}
                 period={`Tydzień ${formatDateRangeShort(period.from, period.to)}`}
@@ -90,6 +118,7 @@ export default async function CalendarPage({
           desktop={
             week ? (
               <WeekComparison
+                adding={picking}
                 availabilityHref={availabilityHref}
                 ariaLabel={
                   byRoom ? "Porównanie gabinetów" : "Porównanie specjalistów"
@@ -101,6 +130,7 @@ export default async function CalendarPage({
               />
             ) : day ? (
               <DaySchedule
+                adding={picking}
                 availabilityHref={availabilityHref}
                 ariaLabel="Kalendarz dnia"
                 collapseHref={(key) => calendarCollapseHref(PATH, params, key)}
@@ -142,7 +172,20 @@ export default async function CalendarPage({
             ) : null
           }
           panel={
-            open ? (
+            booking && params.termin ? (
+              <NewVisitPanel
+                action={bookVisitAction}
+                closeHref={calendarAddHref(PATH, params, false)}
+                defaults={newVisitDefaults(
+                  columns,
+                  params.kolumna,
+                  params.termin,
+                )}
+                offers={booking.offers}
+                rooms={booking.rooms}
+                specialists={booking.specialists}
+              />
+            ) : open ? (
               <VisitPanel
                 closeHref={calendarPanelCloseHref(PATH, params)}
                 events={open.events}
@@ -157,6 +200,7 @@ export default async function CalendarPage({
                         reference: open.row.reference,
                         label: `${open.row.clientName}, ${open.row.weekday}, ${open.row.dateLabel}, ${open.row.time}`,
                         paid: open.row.paid,
+                        email: open.row.email,
                       }}
                     />
                   ) : null
