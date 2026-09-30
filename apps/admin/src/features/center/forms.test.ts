@@ -1,12 +1,15 @@
 import type { CenterPublicProfile, Location } from "@repo/contracts";
 import { describe, expect, it } from "vitest";
 import {
+  bookingSettingsFormSchema,
   centerProfileFormSchema,
   locationFormSchema,
   toCenterProfileFormValues,
   toCenterProfileUpdate,
   toLocationFormValues,
   toLocationInput,
+  toBookingSettingsFormValues,
+  toBookingSettingsUpdate,
 } from "./forms";
 
 const profile: CenterPublicProfile = {
@@ -118,5 +121,69 @@ describe("location form", () => {
       "name",
       "slug",
     ]);
+  });
+});
+
+describe("booking settings", () => {
+  const settings = {
+    businessName: "Kolor Sensu",
+    timezone: "Europe/Warsaw",
+    defaultLocale: "pl-PL",
+    defaultCurrency: "PLN",
+    bookingEnabled: true,
+    defaultVisitBufferMinutes: 10,
+    slotStepMinutes: 60,
+    holdMinutes: 10,
+    minBookingLeadMinutes: 120,
+    maxBookingHorizonDays: 60,
+    cancellationWindowHours: 48,
+    rescheduleWindowHours: 48,
+    maxSelfReschedules: 1,
+    phone: null,
+    email: null,
+    createdAt: "2026-09-19T00:00:00Z",
+    updatedAt: "2026-09-19T00:00:00Z",
+  };
+
+  it("shows the notice in hours and saves it in minutes", () => {
+    const values = toBookingSettingsFormValues(settings);
+    expect(values).toEqual({
+      bookingEnabled: true,
+      slotStepMinutes: "60",
+      defaultVisitBufferMinutes: 10,
+      minBookingLeadHours: 2,
+      maxBookingHorizonDays: 60,
+      holdMinutes: 10,
+      cancellationWindowHours: 48,
+      rescheduleWindowHours: 48,
+      maxSelfReschedules: 1,
+    });
+    expect(toBookingSettingsUpdate(values)).toEqual({
+      bookingEnabled: true,
+      slotStepMinutes: 60,
+      defaultVisitBufferMinutes: 10,
+      minBookingLeadMinutes: 120,
+      maxBookingHorizonDays: 60,
+      holdMinutes: 10,
+      cancellationWindowHours: 48,
+      rescheduleWindowHours: 48,
+      maxSelfReschedules: 1,
+    });
+  });
+
+  it("keeps each setting within what the booking can work with", () => {
+    const valid = toBookingSettingsFormValues(settings);
+    const error = (change: object) =>
+      bookingSettingsFormSchema.safeParse({ ...valid, ...change }).error
+        ?.issues[0]?.message;
+    expect(error({ slotStepMinutes: "45" })).toBe("Wybierz siatkę godzin.");
+    expect(error({ holdMinutes: 60 })).toBe(
+      "Blokada terminu trwa od 5 do 30 minut.",
+    );
+    expect(error({ maxBookingHorizonDays: 0 })).toBe("Podaj od 1 do 730 dni.");
+    expect(error({ maxSelfReschedules: 6 })).toBe("Podaj od 0 do 5.");
+    expect(error({ cancellationWindowHours: -1 })).toBe(
+      "Podaj od 0 do 720 godzin.",
+    );
   });
 });

@@ -1,7 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { CenterPublicProfile, Location } from "@repo/contracts";
+import type {
+  CenterPublicProfile,
+  CenterSettings as CenterSettingsData,
+  Location,
+} from "@repo/contracts";
 import { Badge } from "@repo/ui/badge";
 import { Button } from "@repo/ui/button";
 import { Card } from "@repo/ui/card";
@@ -15,7 +19,15 @@ import {
 } from "@repo/ui/dialog";
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
-import { EmptyState, PageHeader, SectionHeader } from "@repo/ui/portal-content";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/ui/select";
+import { EmptyState, PageTitle, SectionHeader } from "@repo/ui/portal-content";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/tabs";
 import { TagListField } from "@repo/ui/specialist-profile";
 import { Switch } from "@repo/ui/switch";
 import { Textarea } from "@repo/ui/textarea";
@@ -28,12 +40,20 @@ import {
   type UseFormRegisterReturn,
 } from "react-hook-form";
 import { toast } from "sonner";
-import { saveLocationAction, updateCenterProfileAction } from "./actions";
 import {
+  saveLocationAction,
+  updateBookingSettingsAction,
+  updateCenterProfileAction,
+} from "./actions";
+import {
+  bookingSettingsFormSchema,
   centerProfileFormSchema,
+  SLOT_STEPS,
+  toBookingSettingsFormValues,
   locationFormSchema,
   toCenterProfileFormValues,
   toLocationFormValues,
+  type BookingSettingsFormValues,
   type CenterProfileFormValues,
   type LocationFormValues,
 } from "./forms";
@@ -55,7 +75,7 @@ function TextField({
   registration: UseFormRegisterReturn;
   multiline?: boolean;
   type?: string;
-  inputMode?: "email" | "tel" | "url";
+  inputMode?: "email" | "tel" | "url" | "numeric";
   placeholder?: string;
 }) {
   const describedBy =
@@ -509,23 +529,189 @@ function LocationsCard({ locations }: { locations: Location[] }) {
   );
 }
 
+function BookingSettingsCard({ settings }: { settings: CenterSettingsData }) {
+  const { isPending, run } = useSaving();
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isDirty },
+  } = useForm<BookingSettingsFormValues>({
+    resolver: zodResolver(bookingSettingsFormSchema),
+    defaultValues: toBookingSettingsFormValues(settings),
+  });
+  const number = (name: keyof BookingSettingsFormValues) =>
+    register(name, { valueAsNumber: true });
+
+  return (
+    <Card>
+      <SectionHeader
+        title="Rezerwacje online"
+        description="Jak klienci umawiają wizyty na stronie i co mogą w nich sami zmienić. Zmiany obowiązują od razu dla nowych rezerwacji; umówione wizyty zostają bez zmian."
+      />
+      <form
+        className="mt-5 space-y-6"
+        noValidate
+        onSubmit={handleSubmit((values) =>
+          run(
+            () => updateBookingSettingsAction(values),
+            "Zapisano ustawienia rezerwacji",
+            () => reset(values),
+          ),
+        )}
+      >
+        <Controller
+          control={control}
+          name="bookingEnabled"
+          render={({ field }) => (
+            <SwitchField
+              checked={field.value}
+              label="Rezerwacje online włączone"
+              onCheckedChange={field.onChange}
+            />
+          )}
+        />
+
+        <fieldset className="space-y-4">
+          <legend className="text-sm font-semibold text-[var(--text)]">
+            Terminy
+          </legend>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="booking-step">Siatka godzin</Label>
+              <Controller
+                control={control}
+                name="slotStepMinutes"
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger id="booking-step">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SLOT_STEPS.map((step) => (
+                        <SelectItem key={step} value={step}>
+                          co {step} min
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <p className="text-xs text-[var(--text-muted)]">
+                Co ile minut mogą zaczynać się wizyty (60: o pełnych godzinach).
+              </p>
+            </div>
+            <TextField
+              error={errors.defaultVisitBufferMinutes?.message}
+              hint="Czas po każdej wizycie, zanim zacznie się następna."
+              id="booking-buffer"
+              inputMode="numeric"
+              label="Przerwa między wizytami (min)"
+              registration={number("defaultVisitBufferMinutes")}
+              type="number"
+            />
+            <TextField
+              error={errors.minBookingLeadHours?.message}
+              hint="Najkrótszy czas od rezerwacji do wizyty."
+              id="booking-lead"
+              inputMode="numeric"
+              label="Minimalne wyprzedzenie (godz.)"
+              registration={number("minBookingLeadHours")}
+              type="number"
+            />
+            <TextField
+              error={errors.maxBookingHorizonDays?.message}
+              hint="Jak daleko w przód klienci widzą wolne terminy."
+              id="booking-horizon"
+              inputMode="numeric"
+              label="Rezerwacje na (dni do przodu)"
+              registration={number("maxBookingHorizonDays")}
+              type="number"
+            />
+            <TextField
+              error={errors.holdMinutes?.message}
+              hint="Tyle czasu klient ma na podanie danych; przejście do płatności przedłuża blokadę do 30 min."
+              id="booking-hold"
+              inputMode="numeric"
+              label="Blokada wybranego terminu (min)"
+              registration={number("holdMinutes")}
+              type="number"
+            />
+          </div>
+        </fieldset>
+
+        <fieldset className="space-y-4">
+          <legend className="text-sm font-semibold text-[var(--text)]">
+            Zmiany i odwołania przez klienta
+          </legend>
+          <div className="grid gap-4 md:grid-cols-2">
+            <TextField
+              error={errors.cancellationWindowHours?.message}
+              hint="Odwołanie wcześniej: pełny zwrot. Później: bez zwrotu."
+              id="booking-cancel"
+              inputMode="numeric"
+              label="Odwołanie ze zwrotem do (godz. przed wizytą)"
+              registration={number("cancellationWindowHours")}
+              type="number"
+            />
+            <TextField
+              error={errors.rescheduleWindowHours?.message}
+              hint="Później przełożenie tylko przez kontakt z centrum."
+              id="booking-reschedule"
+              inputMode="numeric"
+              label="Samodzielne przełożenie do (godz. przed wizytą)"
+              registration={number("rescheduleWindowHours")}
+              type="number"
+            />
+            <TextField
+              error={errors.maxSelfReschedules?.message}
+              hint="Kolejne przełożenia przez kontakt z centrum; 0 wyłącza samodzielne przełożenie."
+              id="booking-reschedules"
+              inputMode="numeric"
+              label="Ile razy klient może sam przełożyć wizytę"
+              registration={number("maxSelfReschedules")}
+              type="number"
+            />
+          </div>
+        </fieldset>
+
+        <Button disabled={!isDirty} loading={isPending} type="submit">
+          Zapisz ustawienia rezerwacji
+        </Button>
+      </form>
+    </Card>
+  );
+}
+
 export function CenterSettings({
   profile,
   locations,
+  settings,
 }: {
   profile: CenterPublicProfile | null;
   locations: Location[];
+  settings: CenterSettingsData;
 }) {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Ustawienia centrum"
-        description="Dane centrum widoczne na stronie publicznej. Zmiany pojawiają się na stronie od razu po zapisaniu."
-      />
-      <div className="grid gap-6 xl:grid-cols-2 xl:items-start">
-        <CenterProfileCard profile={profile} />
-        <LocationsCard locations={locations} />
-      </div>
+    <div className="space-y-5">
+      <PageTitle>Ustawienia centrum</PageTitle>
+      <Tabs defaultValue="profile">
+        <TabsList>
+          <TabsTrigger value="profile">Profil centrum</TabsTrigger>
+          <TabsTrigger value="locations">Lokalizacje</TabsTrigger>
+          <TabsTrigger value="booking">Rezerwacje online</TabsTrigger>
+        </TabsList>
+        <TabsContent value="profile">
+          <CenterProfileCard profile={profile} />
+        </TabsContent>
+        <TabsContent value="locations">
+          <LocationsCard locations={locations} />
+        </TabsContent>
+        <TabsContent value="booking">
+          <BookingSettingsCard settings={settings} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

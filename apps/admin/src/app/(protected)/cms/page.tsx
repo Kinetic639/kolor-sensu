@@ -1,5 +1,5 @@
 import { loadHomeContent, loadRoomsPageContent } from "@/features/cms/loaders";
-import { PageHeader } from "@repo/ui/portal-content";
+import { PageTitle } from "@repo/ui/portal-content";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/tabs";
 import { CmsHomeEditor } from "./cms-home-editor";
 import { CmsRoomsEditor } from "./cms-rooms-editor";
@@ -12,10 +12,7 @@ export default async function CmsPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        description="Treści publikowane w serwisie Kolor Sensu."
-        title="CMS"
-      />
+      <PageTitle>CMS</PageTitle>
       <Tabs defaultValue="home">
         <TabsList>
           <TabsTrigger value="home">Strona główna</TabsTrigger>

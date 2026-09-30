@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import {
-  getCenterSettings,
   listLocations,
   listPendingSpecialistDrafts,
   listServicesAdmin,
@@ -21,14 +20,12 @@ export default async function Home() {
   const [
     specialists,
     pendingDrafts,
-    centerSettings,
     locations,
     services,
     specialistOffers,
   ] = await Promise.all([
     listSpecialistsForAdmin(client),
     listPendingSpecialistDrafts(client),
-    getCenterSettings(client),
     listLocations(client),
     listServicesAdmin(client),
     listSpecialistOffersAdmin(client),
@@ -56,10 +53,6 @@ export default async function Home() {
   return (
     <AdminDashboard
       title="Centrum zarządzania ośrodkiem"
-      description={`${centerSettings.businessName} · dane operacyjne dostępne w bieżących modułach`}
-      dateLabel={new Intl.DateTimeFormat("pl-PL", {
-        dateStyle: "long",
-      }).format(new Date())}
       metrics={[
         {
           id: "appointments",

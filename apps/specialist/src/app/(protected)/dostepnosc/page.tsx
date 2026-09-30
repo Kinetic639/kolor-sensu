@@ -24,7 +24,7 @@ import {
 import { Button } from "@repo/ui/button";
 import { Card } from "@repo/ui/card";
 import { LinkTabs } from "@repo/ui/link-tabs";
-import { EmptyState, PageHeader, StatTile } from "@repo/ui/portal-content";
+import { EmptyState, PageTitle, StatTile } from "@repo/ui/portal-content";
 import {
   Building2,
   Calendar,
@@ -491,7 +491,7 @@ export default async function AvailabilityPage({
   if (!data) {
     return (
       <div className="space-y-5">
-        <PageHeader title="Dostępność" />
+        <PageTitle>Dostępność</PageTitle>
         <EmptyState
           title="Brak profilu specjalisty"
           description="Twoje konto nie jest jeszcze powiązane z profilem specjalisty. Skontaktuj się z administratorem centrum."
@@ -511,7 +511,7 @@ export default async function AvailabilityPage({
       today={data.today}
     >
       <div className="space-y-4">
-        <h1 className="sr-only">Dostępność</h1>
+        <PageTitle>Dostępność</PageTitle>
         <Card className="flex flex-wrap items-center justify-between gap-3 p-2.5">
           <LinkTabs
             ariaLabel="Widok dostępności"

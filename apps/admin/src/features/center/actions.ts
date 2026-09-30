@@ -6,14 +6,18 @@ import { createClient } from "@/lib/supabase/server";
 import {
   createLocation,
   updateCenterPublicProfile,
+  updateCenterSettings,
   updateLocation,
 } from "@repo/supabase";
 import { revalidatePath } from "next/cache";
 import {
+  bookingSettingsFormSchema,
   centerProfileFormSchema,
   locationFormSchema,
+  toBookingSettingsUpdate,
   toCenterProfileUpdate,
   toLocationInput,
+  type BookingSettingsFormValues,
   type CenterProfileFormValues,
   type LocationFormValues,
 } from "./forms";
@@ -82,6 +86,33 @@ export async function saveLocationAction(
     return {
       ok: false,
       message: safeMessage(error, "Nie udało się zapisać lokalizacji."),
+    };
+  }
+}
+
+/**
+ * Online booking settings. The booking pages read them on every request,
+ * so a change applies at once to new bookings (booked visits keep theirs).
+ */
+export async function updateBookingSettingsAction(
+  values: BookingSettingsFormValues,
+): Promise<ActionResult> {
+  await requirePortalRole();
+  const parsed = bookingSettingsFormSchema.safeParse(values);
+  if (!parsed.success)
+    return { ok: false, message: "Sprawdź ustawienia rezerwacji." };
+  try {
+    await updateCenterSettings(
+      await createClient(),
+      toBookingSettingsUpdate(parsed.data),
+    );
+    revalidatePath("/ustawienia");
+    await revalidateWeb([{ path: "/umow-wizyte", type: "page" }]);
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      message: safeMessage(error, "Nie udało się zapisać ustawień rezerwacji."),
     };
   }
 }

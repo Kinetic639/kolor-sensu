@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, waitFor } from "storybook/test";
 import { CalendarDays, Clock3 } from "lucide-react";
-import { MetricCard, PageHeader } from "./portal-content";
+import { MetricCard, PageTitle } from "./portal-content";
 import type {
   PortalNavigationItem,
   PortalNavigationSection,
@@ -52,11 +52,8 @@ function PortalShellExample({
       profileHref="/profil"
       user={{ name: "Anna Kowalska", role: "Psychoterapeutka" }}
     >
-      <PageHeader
-        title="Panel główny"
-        description="Wspólny produkcyjny shell portalu bez logiki konkretnej funkcji."
-      />
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <PageTitle>Panel główny</PageTitle>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           detail="z 4 zaplanowanych"
           icon={CalendarDays}

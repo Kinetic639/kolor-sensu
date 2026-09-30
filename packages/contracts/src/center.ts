@@ -36,6 +36,15 @@ export const centerSettingsUpdateSchema = z
     minBookingLeadMinutes: z.number().int().min(0).max(10_080),
     maxBookingHorizonDays: z.number().int().min(1).max(730),
     cancellationWindowHours: z.number().int().min(0).max(720),
+    slotStepMinutes: z.union([
+      z.literal(15),
+      z.literal(20),
+      z.literal(30),
+      z.literal(60),
+    ]),
+    holdMinutes: z.number().int().min(5).max(30),
+    rescheduleWindowHours: z.number().int().min(0).max(720),
+    maxSelfReschedules: z.number().int().min(0).max(5),
     phone: z.string().trim().max(40).nullable(),
     email: z.email().max(320).nullable(),
   })
@@ -94,7 +103,12 @@ export interface CenterSettings {
   holdMinutes: number;
   minBookingLeadMinutes: number;
   maxBookingHorizonDays: number;
+  /** A full refund when cancelled at least this long before the visit. */
   cancellationWindowHours: number;
+  /** A client may move their visit themselves this long before it… */
+  rescheduleWindowHours: number;
+  /** …this many times (0: only through the centre). */
+  maxSelfReschedules: number;
   phone: string | null;
   email: string | null;
   createdAt: string;

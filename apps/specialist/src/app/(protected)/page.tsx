@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import {
-  getCenterPublicProfile,
   getMyDraft,
   getMyPublishedProfile,
   getMySpecialist,
@@ -24,14 +23,12 @@ export default async function Home() {
   const [
     publishedProfile,
     draft,
-    centerProfile,
     locations,
     availableServices,
     myServices,
   ] = await Promise.all([
     specialist ? getMyPublishedProfile(client, specialist.id) : null,
     specialist ? getMyDraft(client, specialist.id) : null,
-    getCenterPublicProfile(client),
     listLocations(client),
     listAvailableServicesForSpecialist(client),
     listMySpecialistServices(client, specialist?.id),
@@ -82,10 +79,6 @@ export default async function Home() {
   return (
     <SpecialistDashboard
       title="Panel główny"
-      description={`${centerProfile?.displayName ?? "Kolor Sensu"} · podsumowanie Twojego profilu i oferty`}
-      dateLabel={new Intl.DateTimeFormat("pl-PL", {
-        dateStyle: "long",
-      }).format(new Date())}
       metrics={[
         {
           id: "appointments",

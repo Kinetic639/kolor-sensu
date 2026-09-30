@@ -5,7 +5,6 @@ import { AdminDashboard, SpecialistDashboard } from "./portal-dashboards";
 
 const baseProps = {
   title: "Panel główny",
-  description: "Najważniejsze informacje na dziś.",
   metrics: [
     {
       id: "visits",

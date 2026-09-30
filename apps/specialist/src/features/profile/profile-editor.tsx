@@ -21,7 +21,7 @@ import { Checkbox } from "@repo/ui/checkbox";
 import { ImageCropDialog } from "@repo/ui/image-crop-dialog";
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
-import { PageHeader, SectionHeader } from "@repo/ui/portal-content";
+import { PageTitle, SectionHeader } from "@repo/ui/portal-content";
 import { RichTextEditor } from "@repo/ui/rich-text-editor";
 import {
   ProfilePhotoField,
@@ -254,20 +254,15 @@ export function ProfileEditor({ model }: { model: ProfileEditorViewModel }) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Mój profil"
-        description="Zarządzaj swoim publicznym profilem. Po akceptacji zmiany są widoczne dla klientów na stronie Kolor Sensu."
-        meta={
-          model.lastModified ? (
-            <p className="text-right text-xs text-[var(--text-muted)]">
-              Ostatnia modyfikacja
-              <span className="block text-sm font-semibold text-[var(--text)]">
-                {formatDateTime(model.lastModified)}
-              </span>
-            </p>
-          ) : null
-        }
-      />
+      <PageTitle>Mój profil</PageTitle>
+      {model.lastModified ? (
+        <p className="text-xs text-[var(--text-muted)] sm:text-right">
+          Ostatnia modyfikacja:{" "}
+          <span className="font-semibold text-[var(--text)]">
+            {formatDateTime(model.lastModified)}
+          </span>
+        </p>
+      ) : null}
 
       {model.status ? (
         <ProfileStatusBanner

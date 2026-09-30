@@ -16,7 +16,7 @@ import { Label } from "@repo/ui/label";
 import {
   EmptyState,
   MetricCard,
-  PageHeader,
+  PageTitle,
   SectionHeader,
 } from "@repo/ui/portal-content";
 import {
@@ -230,10 +230,7 @@ export function MyServices({ model }: { model: MyServicesViewModel }) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Moje usługi i stawki"
-        description="Zarządzaj swoimi usługami, cenami, czasem trwania i formą spotkań oraz zdecyduj, czy przyjmujesz nowych klientów."
-      />
+      <PageTitle>Moje usługi i stawki</PageTitle>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <MetricCard

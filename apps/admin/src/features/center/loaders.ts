@@ -1,13 +1,18 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { getCenterPublicProfile, listLocations } from "@repo/supabase";
+import {
+  getCenterPublicProfile,
+  getCenterSettings,
+  listLocations,
+} from "@repo/supabase";
 
 export async function loadCenterSettings() {
   const client = await createClient();
-  const [profile, locations] = await Promise.all([
+  const [profile, locations, settings] = await Promise.all([
     getCenterPublicProfile(client),
     listLocations(client),
+    getCenterSettings(client),
   ]);
-  return { profile, locations };
+  return { profile, locations, settings };
 }

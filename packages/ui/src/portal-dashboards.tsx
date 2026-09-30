@@ -1,5 +1,5 @@
 import type { MetricCardProps } from "./portal-content";
-import { MetricCard, PageHeader } from "./portal-content";
+import { MetricCard, PageTitle } from "./portal-content";
 import {
   AppointmentList,
   AttentionList,
@@ -19,8 +19,6 @@ type DashboardMetric = MetricCardProps & { id: string };
 
 interface DashboardBaseProps {
   title: string;
-  description: string;
-  dateLabel?: string;
   metrics: DashboardMetric[];
   appointments: AppointmentItemData[];
   attention: AttentionItemData[];
@@ -48,8 +46,6 @@ function DashboardMetrics({ metrics }: { metrics: DashboardMetric[] }) {
 
 export function AdminDashboard({
   title,
-  description,
-  dateLabel,
   metrics,
   appointments,
   attention,
@@ -59,17 +55,7 @@ export function AdminDashboard({
 }: AdminDashboardProps) {
   return (
     <div className="space-y-5">
-      <PageHeader
-        title={title}
-        description={description}
-        meta={
-          dateLabel ? (
-            <span className="text-sm font-semibold text-[var(--text-muted)]">
-              {dateLabel}
-            </span>
-          ) : null
-        }
-      />
+      <PageTitle>{title}</PageTitle>
       <DashboardMetrics metrics={metrics} />
       <div className="grid gap-4 xl:grid-cols-12">
         <DashboardSection
@@ -151,8 +137,6 @@ export interface SpecialistDashboardProps extends DashboardBaseProps {
 
 export function SpecialistDashboard({
   title,
-  description,
-  dateLabel,
   metrics,
   appointments,
   attention,
@@ -162,17 +146,7 @@ export function SpecialistDashboard({
 }: SpecialistDashboardProps) {
   return (
     <div className="space-y-5">
-      <PageHeader
-        title={title}
-        description={description}
-        meta={
-          dateLabel ? (
-            <span className="text-sm font-semibold text-[var(--text-muted)]">
-              {dateLabel}
-            </span>
-          ) : null
-        }
-      />
+      <PageTitle>{title}</PageTitle>
       <DashboardMetrics metrics={metrics} />
       <div className="grid gap-4 xl:grid-cols-12">
         <DashboardSection

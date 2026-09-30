@@ -60,6 +60,15 @@ export function PageHeader({
   );
 }
 
+/**
+ * The page's name for screen readers and the document outline. Portal pages
+ * show no visible header: the breadcrumb says where you are and the page
+ * starts with its toolbar or content.
+ */
+export function PageTitle({ children }: { children: ReactNode }) {
+  return <h1 className="sr-only">{children}</h1>;
+}
+
 export interface SectionHeaderProps {
   title: string;
   description?: string;
@@ -264,16 +273,10 @@ export function EmptyState(props: StateProps) {
   return <StateFrame icon={<Inbox className="size-6" />} {...props} />;
 }
 
-export function PortalRoutePlaceholder({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
+export function PortalRoutePlaceholder({ title }: { title: string }) {
   return (
     <div className="space-y-5">
-      <PageHeader title={title} description={description} />
+      <PageTitle>{title}</PageTitle>
       <EmptyState
         title="Moduł jest przygotowywany"
         description="Ta trasa korzysta już ze wspólnej powłoki portalu. Funkcjonalność zostanie dodana w osobnym zadaniu."

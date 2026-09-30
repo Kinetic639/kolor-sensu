@@ -1,7 +1,7 @@
 import { Card } from "@repo/ui/card";
 import { LinkTabs } from "@repo/ui/link-tabs";
 import { resourceColors } from "@repo/ui/resource-colors";
-import { StatusBadge } from "@repo/ui/portal-content";
+import { PageTitle, StatusBadge } from "@repo/ui/portal-content";
 import {
   Tooltip,
   TooltipContent,
@@ -52,7 +52,7 @@ export function RoomHeader({
         } as CSSProperties
       }
     >
-      <h1 className="sr-only">{room.name}</h1>
+      <PageTitle>{room.name}</PageTitle>
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div className="grid min-w-0 gap-1.5">
           <div className="flex flex-wrap gap-2">

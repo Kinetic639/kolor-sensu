@@ -1,6 +1,8 @@
 import type {
   CenterPublicProfile,
   CenterPublicProfileUpdate,
+  CenterSettings,
+  CenterSettingsUpdate,
   Location,
   LocationCreate,
 } from "@repo/contracts";
@@ -122,5 +124,64 @@ export function toLocationInput(
     accessibilityNotes: nullIfEmpty(values.accessibilityNotes),
     active: values.active,
     publiclyVisible: values.publiclyVisible,
+  };
+}
+
+// Online booking: the grid, notice, horizon and hold, and the rules for
+// changing a booked visit. The notice is shown in hours, kept in minutes.
+
+const whole = (min: number, max: number, message: string) =>
+  z.number({ error: message }).int(message).min(min, message).max(max, message);
+
+export const SLOT_STEPS = ["15", "20", "30", "60"] as const;
+
+export const bookingSettingsFormSchema = z.object({
+  bookingEnabled: z.boolean(),
+  slotStepMinutes: z.enum(SLOT_STEPS, { error: "Wybierz siatkę godzin." }),
+  defaultVisitBufferMinutes: whole(0, 240, "Podaj od 0 do 240 minut."),
+  minBookingLeadHours: whole(0, 168, "Podaj od 0 do 168 godzin."),
+  maxBookingHorizonDays: whole(1, 730, "Podaj od 1 do 730 dni."),
+  holdMinutes: whole(5, 30, "Blokada terminu trwa od 5 do 30 minut."),
+  cancellationWindowHours: whole(0, 720, "Podaj od 0 do 720 godzin."),
+  rescheduleWindowHours: whole(0, 720, "Podaj od 0 do 720 godzin."),
+  maxSelfReschedules: whole(0, 5, "Podaj od 0 do 5."),
+});
+
+export type BookingSettingsFormValues = z.infer<
+  typeof bookingSettingsFormSchema
+>;
+
+export function toBookingSettingsFormValues(
+  settings: CenterSettings,
+): BookingSettingsFormValues {
+  const step = String(settings.slotStepMinutes);
+  return {
+    bookingEnabled: settings.bookingEnabled,
+    slotStepMinutes: (SLOT_STEPS as readonly string[]).includes(step)
+      ? (step as BookingSettingsFormValues["slotStepMinutes"])
+      : "60",
+    defaultVisitBufferMinutes: settings.defaultVisitBufferMinutes,
+    minBookingLeadHours: Math.round(settings.minBookingLeadMinutes / 60),
+    maxBookingHorizonDays: settings.maxBookingHorizonDays,
+    holdMinutes: settings.holdMinutes,
+    cancellationWindowHours: settings.cancellationWindowHours,
+    rescheduleWindowHours: settings.rescheduleWindowHours,
+    maxSelfReschedules: settings.maxSelfReschedules,
+  };
+}
+
+export function toBookingSettingsUpdate(
+  values: BookingSettingsFormValues,
+): CenterSettingsUpdate {
+  return {
+    bookingEnabled: values.bookingEnabled,
+    slotStepMinutes: Number(values.slotStepMinutes) as 15 | 20 | 30 | 60,
+    defaultVisitBufferMinutes: values.defaultVisitBufferMinutes,
+    minBookingLeadMinutes: values.minBookingLeadHours * 60,
+    maxBookingHorizonDays: values.maxBookingHorizonDays,
+    holdMinutes: values.holdMinutes,
+    cancellationWindowHours: values.cancellationWindowHours,
+    rescheduleWindowHours: values.rescheduleWindowHours,
+    maxSelfReschedules: values.maxSelfReschedules,
   };
 }

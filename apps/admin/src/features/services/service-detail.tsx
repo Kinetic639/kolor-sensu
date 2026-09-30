@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@repo/ui/dialog";
-import { EmptyState, PageHeader, SectionHeader } from "@repo/ui/portal-content";
+import { EmptyState, SectionHeader } from "@repo/ui/portal-content";
 import {
   ServiceStatusBadges,
   SpecialistOfferSummary,
@@ -81,33 +81,36 @@ export function ServiceDetail({
           Wróć do oferty
         </Link>
       </Button>
-      <PageHeader
-        eyebrow="Usługa"
-        title={service.name}
-        description={service.shortDescription ?? "Brak krótkiego opisu"}
-        actions={
-          <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogTrigger asChild>
-              <Button>Edytuj usługę</Button>
-            </DialogTrigger>
-            <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Edytuj usługę</DialogTitle>
-                <DialogDescription>
-                  Cenniki specjalistów pozostają niezależne.
-                </DialogDescription>
-              </DialogHeader>
-              <ServiceForm
-                defaultValues={defaults}
-                error={error}
-                pending={mutation.isPending}
-                submitLabel="Zapisz zmiany"
-                onSubmit={(values) => mutation.mutate(values)}
-              />
-            </DialogContent>
-          </Dialog>
-        }
-      />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="font-heading text-xl leading-tight font-semibold text-[var(--text)]">
+            {service.name}
+          </h1>
+          <p className="text-sm text-[var(--text-muted)]">
+            {service.shortDescription ?? "Brak krótkiego opisu"}
+          </p>
+        </div>
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogTrigger asChild>
+            <Button>Edytuj usługę</Button>
+          </DialogTrigger>
+          <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edytuj usługę</DialogTitle>
+              <DialogDescription>
+                Cenniki specjalistów pozostają niezależne.
+              </DialogDescription>
+            </DialogHeader>
+            <ServiceForm
+              defaultValues={defaults}
+              error={error}
+              pending={mutation.isPending}
+              submitLabel="Zapisz zmiany"
+              onSubmit={(values) => mutation.mutate(values)}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
       <ServiceStatusBadges {...service} />
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>

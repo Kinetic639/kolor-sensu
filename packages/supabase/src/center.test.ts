@@ -100,9 +100,11 @@ describe("center domain mapping", () => {
         default_visit_buffer_minutes: 10,
         slot_step_minutes: 60,
         hold_minutes: 10,
+        reschedule_window_hours: 48,
+        max_self_reschedules: 1,
         min_booking_lead_minutes: 60,
         max_booking_horizon_days: 60,
-        cancellation_window_hours: 24,
+        cancellation_window_hours: 48,
         phone: null,
         email: null,
         created_at: "2026-09-19T00:00:00Z",
@@ -115,6 +117,9 @@ describe("center domain mapping", () => {
       defaultVisitBufferMinutes: 10,
       slotStepMinutes: 60,
       holdMinutes: 10,
+      cancellationWindowHours: 48,
+      rescheduleWindowHours: 48,
+      maxSelfReschedules: 1,
     });
   });
 

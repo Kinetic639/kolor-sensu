@@ -236,8 +236,10 @@ export type Database = {
           hold_minutes: number;
           id: number;
           max_booking_horizon_days: number;
+          max_self_reschedules: number;
           min_booking_lead_minutes: number;
           phone: string | null;
+          reschedule_window_hours: number;
           slot_step_minutes: number;
           timezone: string;
           updated_at: string;
@@ -254,8 +256,10 @@ export type Database = {
           hold_minutes?: number;
           id?: number;
           max_booking_horizon_days?: number;
+          max_self_reschedules?: number;
           min_booking_lead_minutes?: number;
           phone?: string | null;
+          reschedule_window_hours?: number;
           slot_step_minutes?: number;
           timezone?: string;
           updated_at?: string;
@@ -272,8 +276,10 @@ export type Database = {
           hold_minutes?: number;
           id?: number;
           max_booking_horizon_days?: number;
+          max_self_reschedules?: number;
           min_booking_lead_minutes?: number;
           phone?: string | null;
+          reschedule_window_hours?: number;
           slot_step_minutes?: number;
           timezone?: string;
           updated_at?: string;

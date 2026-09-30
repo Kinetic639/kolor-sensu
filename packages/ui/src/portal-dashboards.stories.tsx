@@ -143,8 +143,6 @@ const attention = [
 
 const adminDashboardProps: AdminDashboardProps = {
   title: "Dzień dobry, Michale",
-  description: "Oto co dzieje się dziś w Kolorze Sensu.",
-  dateLabel: "Poniedziałek, 21 września",
   metrics: [
     {
       id: "today",
@@ -253,9 +251,6 @@ const adminDashboardProps: AdminDashboardProps = {
 
 const specialistDashboardProps: SpecialistDashboardProps = {
   title: "Panel główny",
-  description:
-    "Dzień dobry, Anno. Sprawdź swój plan i najważniejsze sprawy na dziś.",
-  dateLabel: "Poniedziałek, 21 września",
   metrics: [
     {
       id: "today",

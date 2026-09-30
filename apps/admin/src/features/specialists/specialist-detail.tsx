@@ -43,7 +43,7 @@ import {
 } from "@repo/ui/dialog";
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
-import { EmptyState, PageHeader, SectionHeader } from "@repo/ui/portal-content";
+import { EmptyState, SectionHeader } from "@repo/ui/portal-content";
 import {
   ProfileReviewDiff,
   SpecialistOfferRow,
@@ -520,7 +520,7 @@ export function SpecialistDetail({
           Wróć do listy
         </Link>
       </Button>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+      <div className="flex items-center gap-4">
         <Avatar
           className="size-16 ring-4 ring-[var(--specialist-accent)] ring-offset-2 ring-offset-[var(--surface)]"
           style={
@@ -537,12 +537,16 @@ export function SpecialistDetail({
             {detail.initials}
           </AvatarFallback>
         </Avatar>
-        <PageHeader
-          className="flex-1"
-          eyebrow="Specjalista"
-          title={detail.displayName}
-          description={detail.professionalTitle}
-        />
+        <div className="min-w-0">
+          <h1 className="font-heading text-xl leading-tight font-semibold text-[var(--text)]">
+            {detail.displayName}
+          </h1>
+          {detail.professionalTitle ? (
+            <p className="text-sm text-[var(--text-muted)]">
+              {detail.professionalTitle}
+            </p>
+          ) : null}
+        </div>
       </div>
       <SpecialistStatusSummary
         active={detail.active}
