@@ -4,7 +4,7 @@ import { visitDays, type VisitLike } from "@repo/scheduling";
 
 const base: VisitLike = {
   id: "v1",
-  reference: "KS-20301002-1534",
+  reference: "3010-017",
   status: "confirmed",
   mode: "in_person",
   startsAt: "2030-10-02T07:00:00Z",
@@ -31,7 +31,7 @@ export const sampleVisits: VisitLike[] = [
   {
     ...base,
     id: "v2",
-    reference: "KS-20301002-2211",
+    reference: "3010-018",
     mode: "online",
     room: null,
     startsAt: "2030-10-02T09:00:00Z",
@@ -48,7 +48,7 @@ export const sampleVisits: VisitLike[] = [
   {
     ...base,
     id: "v3",
-    reference: "KS-20301003-0412",
+    reference: "3010-019",
     startsAt: "2030-10-03T12:00:00Z",
     endsAt: "2030-10-03T12:50:00Z",
     status: "cancelled",
@@ -59,7 +59,7 @@ export const sampleVisits: VisitLike[] = [
   {
     ...base,
     id: "v4",
-    reference: "KS-20301003-7730",
+    reference: "3010-020",
     startsAt: "2030-10-03T14:00:00Z",
     endsAt: "2030-10-03T14:50:00Z",
     status: "awaiting_payment",

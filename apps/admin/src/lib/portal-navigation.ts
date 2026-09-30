@@ -8,11 +8,14 @@ export const adminNavigation: PortalNavigationSection[] = [
     label: "PRACA / OPERACJE",
     items: [
       { label: "Dashboard", href: "/", icon: "dashboard" },
-      {
-        label: "Kalendarz i rezerwacje",
-        href: "/kalendarz",
-        icon: "calendar",
-      },
+      { label: "Kalendarz", href: "/kalendarz", icon: "calendar" },
+    ],
+  },
+  {
+    label: "KLIENCI I REZERWACJE",
+    items: [
+      { label: "Rezerwacje", href: "/rezerwacje", icon: "bookings" },
+      { label: "Klienci", href: "/klienci", icon: "clients" },
     ],
   },
   {
@@ -21,7 +24,6 @@ export const adminNavigation: PortalNavigationSection[] = [
       { label: "Specjaliści", href: "/specjalisci", icon: "specialists" },
       { label: "Gabinety", href: "/gabinety", icon: "rooms" },
       { label: "Oferta", href: "/oferta", icon: "services" },
-      { label: "Klienci", href: "/klienci", icon: "clients" },
     ],
   },
   {
@@ -37,7 +39,7 @@ export const adminNavigation: PortalNavigationSection[] = [
 export const adminMobileNavigation: PortalNavigationItem[] = [
   { label: "Start", href: "/", icon: "dashboard" },
   { label: "Kalendarz", href: "/kalendarz", icon: "calendar" },
+  { label: "Rezerwacje", href: "/rezerwacje", icon: "bookings" },
   { label: "Zespół", href: "/specjalisci", icon: "specialists" },
-  { label: "Gabinety", href: "/gabinety", icon: "rooms" },
   { label: "Więcej", href: "/ustawienia", icon: "settings" },
 ];

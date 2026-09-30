@@ -324,19 +324,33 @@ export function SidebarGroup({
   );
 }
 
+/**
+ * A group's title; collapsed to icons, a thin line between the groups
+ * instead (a hidden title would leave a gap, or lie over the icons).
+ */
 export function SidebarGroupLabel({
   className,
+  children,
   ...props
 }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "mb-1 flex h-7 items-center px-2 text-[0.6875rem] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase transition-[margin,opacity] duration-200",
-        "group-data-[collapsible=icon]/sidebar:-mt-8 group-data-[collapsible=icon]/sidebar:opacity-0",
+        "mb-1 flex h-7 items-center px-2 text-[0.6875rem] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase",
+        "group-data-[collapsible=icon]/sidebar:mb-2 group-data-[collapsible=icon]/sidebar:h-3 group-data-[collapsible=icon]/sidebar:px-3",
         className,
       )}
       {...props}
-    />
+    >
+      <span className="group-data-[collapsible=icon]/sidebar:hidden">
+        {children}
+      </span>
+      <span
+        aria-hidden="true"
+        className="hidden h-px w-full bg-[var(--sidebar-border,var(--border))] group-data-[collapsible=icon]/sidebar:block"
+        data-sidebar-separator=""
+      />
+    </div>
   );
 }
 

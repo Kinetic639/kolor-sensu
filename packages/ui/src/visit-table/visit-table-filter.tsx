@@ -40,10 +40,18 @@ export function VisitTableFilter({
             : "border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:border-[var(--border-strong)]",
         )}
       >
-        <span className={highlighted ? undefined : "text-[var(--text-muted)]"}>
-          {label}:
-        </span>
-        <span className="font-semibold">{active?.label}</span>
+        {/* Unused, only its name ("Status"); in use, also its value. */}
+        {highlighted ? (
+          <>
+            <span>{label}:</span>
+            <span className="font-semibold">{active?.label}</span>
+          </>
+        ) : (
+          <>
+            <span>{label}</span>
+            <span className="sr-only">: {active?.label}</span>
+          </>
+        )}
         <ChevronDown aria-hidden="true" className="size-3.5 opacity-70" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-44">

@@ -14,6 +14,44 @@ export type Database = {
   };
   public: {
     Tables: {
+      appointment_events: {
+        Row: {
+          actor: string;
+          actor_user_id: string | null;
+          appointment_id: string;
+          details: Json;
+          id: number;
+          kind: string;
+          occurred_at: string;
+        };
+        Insert: {
+          actor: string;
+          actor_user_id?: string | null;
+          appointment_id: string;
+          details?: Json;
+          id?: never;
+          kind: string;
+          occurred_at?: string;
+        };
+        Update: {
+          actor?: string;
+          actor_user_id?: string | null;
+          appointment_id?: string;
+          details?: Json;
+          id?: never;
+          kind?: string;
+          occurred_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "appointment_events_appointment_id_fkey";
+            columns: ["appointment_id"];
+            isOneToOne: false;
+            referencedRelation: "appointments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       appointments: {
         Row: {
           access_token_hash: string;
@@ -1449,6 +1487,41 @@ export type Database = {
           status: Database["public"]["Enums"]["appointment_status"];
         }[];
       };
+      get_visit: {
+        Args: { p_id: string; p_own?: boolean };
+        Returns: {
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          client_email: string | null;
+          client_name: string | null;
+          client_notes: string | null;
+          client_phone: string | null;
+          confirmed_at: string | null;
+          created_at: string;
+          currency_code: string;
+          emails: Json | null;
+          ends_at: string;
+          id: string;
+          location_name: string | null;
+          mode: Database["public"]["Enums"]["visit_mode"];
+          paid: boolean | null;
+          price_minor: number;
+          reference: string;
+          refund_due_minor: number | null;
+          refunded_minor: number | null;
+          reschedule_count: number;
+          room_color: string | null;
+          room_id: string | null;
+          room_name: string | null;
+          service_id: string;
+          service_name: string;
+          specialist_color: string | null;
+          specialist_id: string;
+          specialist_name: string;
+          starts_at: string;
+          status: Database["public"]["Enums"]["appointment_status"];
+        }[];
+      };
       has_role: {
         Args: { required_role: Database["public"]["Enums"]["app_role"] };
         Returns: boolean;
@@ -1542,6 +1615,17 @@ export type Database = {
           specialist_name: string;
           specialist_photo_path: string | null;
           starts_at: string;
+        }[];
+      };
+      list_visit_events: {
+        Args: { p_id: string; p_own?: boolean };
+        Returns: {
+          actor: string;
+          actor_name: string | null;
+          details: Json;
+          id: number;
+          kind: string;
+          occurred_at: string;
         }[];
       };
       list_visits: {
@@ -1692,9 +1776,12 @@ export type Database = {
           p_from?: string;
           p_limit?: number;
           p_offset?: number;
+          p_online?: boolean;
           p_own?: boolean;
+          p_payment?: string;
           p_query?: string;
-          p_refund_due?: boolean;
+          p_room_id?: string;
+          p_service_id?: string;
           p_sort?: string;
           p_specialist_id?: string;
           p_statuses?: string[];
@@ -1707,6 +1794,8 @@ export type Database = {
           client_name: string | null;
           client_notes: string | null;
           client_phone: string | null;
+          confirmed_at: string | null;
+          created_at: string;
           currency_code: string;
           ends_at: string;
           id: string;
@@ -1721,6 +1810,7 @@ export type Database = {
           room_color: string | null;
           room_id: string | null;
           room_name: string | null;
+          service_id: string;
           service_name: string;
           specialist_color: string | null;
           specialist_id: string;

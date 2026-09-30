@@ -1,34 +1,53 @@
 import { describe, expect, it } from "vitest";
 import {
+  isFiltered,
   loadVisitTableParams,
   sortDirection,
   sortHref,
   toVisitSearch,
+  visitPanelCloseHref,
+  visitPanelTabs,
+  visitPeriod,
   visitTableHref,
 } from "./params";
 
 const path = "/kalendarz";
 const anna = "0b8f1f6e-2c1d-4c3a-9a55-3f1d2e4b5c6d";
+const room = "5c2e7a10-9f3b-4d1e-8a6c-2b7d9e0f1a3c";
 const load = (query: string) =>
   loadVisitTableParams(new URLSearchParams(query));
+const timeZone = "Europe/Warsaw";
+// Wednesday 1 October 2030, 10:00 in Warsaw.
+const now = new Date("2030-10-02T08:00:00Z");
 
 describe("the bookings table's address", () => {
   it("reads only allowed values; anything else is the default", () => {
     expect(
       load(
-        "q=%20Kowalski%20&status=do-zwrotu&zakres=wszystko&sort=email&strona=abc&wierszy=1000&specjalista=anna",
+        "q=%20Kowalski%20&status=do-zwrotu&platnosc=wszystko&zakres=kiedys&sort=email&strona=abc&wierszy=1000&specjalista=anna&miejsce=piwnica&od=2030-02-30&wizyta=1",
       ),
     ).toEqual({
       q: "Kowalski",
-      status: "do-zwrotu",
+      status: null,
+      platnosc: null,
       specjalista: null,
+      usluga: null,
+      miejsce: null,
       zakres: "nadchodzace",
+      od: null,
+      do: null,
       sort: "termin",
       kierunek: null,
       strona: 1,
       wierszy: 20,
+      wizyta: null,
+      karta: "szczegoly",
     });
     expect(load("q=" + "a".repeat(300)).q).toHaveLength(100);
+    expect(load(`miejsce=online&wizyta=${anna}`)).toMatchObject({
+      miejsce: "online",
+      wizyta: anna,
+    });
   });
 
   it("leaves defaults out of links", () => {
@@ -42,10 +61,10 @@ describe("the bookings table's address", () => {
   });
 
   it("sorts by a column, then turns the direction round, from page 1", () => {
-    const params = load("strona=3");
-    expect(sortHref(path, params, "klient")).toBe("/kalendarz?sort=klient");
-    const byClient = load("sort=klient&strona=3");
-    expect(sortHref(path, byClient, "klient")).toBe(
+    expect(sortHref(path, load("strona=3"), "miejsce")).toBe(
+      "/kalendarz?sort=miejsce",
+    );
+    expect(sortHref(path, load("sort=klient&strona=3"), "klient")).toBe(
       "/kalendarz?sort=klient&kierunek=malejaco",
     );
   });
@@ -55,25 +74,64 @@ describe("the bookings table's address", () => {
     expect(sortDirection(load("zakres=minione&kierunek=rosnaco"))).toBe("asc");
     expect(sortDirection(load(""))).toBe("asc");
   });
+
+  it("knows when the table is narrowed (not by the panel or the page)", () => {
+    expect(isFiltered(load(`wizyta=${anna}&strona=2`))).toBe(false);
+    expect(isFiltered(load(`miejsce=online`))).toBe(true);
+    expect(isFiltered(load(`od=2030-10-01`))).toBe(true);
+  });
+});
+
+describe("visitPeriod", () => {
+  const period = (query: string) => visitPeriod(load(query), now, timeZone);
+
+  it("ready ranges, in the centre's days", () => {
+    expect(period("zakres=dzis")).toEqual({
+      from: "2030-10-01T22:00:00.000Z",
+      to: "2030-10-02T22:00:00.000Z",
+    });
+    expect(period("zakres=ten-tydzien")).toEqual({
+      from: "2030-09-29T22:00:00.000Z",
+      to: "2030-10-06T22:00:00.000Z",
+    });
+    expect(period("zakres=ten-miesiac")).toEqual({
+      from: "2030-09-30T22:00:00.000Z",
+      to: "2030-10-31T23:00:00.000Z",
+    });
+    expect(period("")).toEqual({ from: now.toISOString(), to: null });
+    expect(period("zakres=wszystkie")).toEqual({ from: null, to: null });
+  });
+
+  it("days of one's own, both ends included, over the ready range", () => {
+    expect(period("zakres=minione&od=2030-10-05&do=2030-10-06")).toEqual({
+      from: "2030-10-04T22:00:00.000Z",
+      to: "2030-10-06T22:00:00.000Z",
+    });
+    expect(period("do=2030-10-06")).toEqual({
+      from: null,
+      to: "2030-10-06T22:00:00.000Z",
+    });
+  });
 });
 
 describe("toVisitSearch", () => {
-  const now = new Date("2030-10-01T08:00:00Z");
-
-  it("asks for the page of upcoming visits, sorted", () => {
+  it("asks for the page, filtered and sorted", () => {
     expect(
       toVisitSearch(
-        load("q=jan&status=odwolane&sort=kwota&strona=3&wierszy=10"),
-        {
-          now,
-        },
+        load(
+          `q=jan&status=odwolane&platnosc=do-zwrotu&usluga=${anna}&miejsce=${room}&sort=kwota&strona=3&wierszy=10`,
+        ),
+        { now, timeZone },
       ),
     ).toEqual({
       query: "jan",
       statuses: ["cancelled"],
-      refundDue: false,
+      payment: "refund_due",
       specialistId: null,
-      from: "2030-10-01T08:00:00.000Z",
+      serviceId: anna,
+      roomId: room,
+      online: null,
+      from: now.toISOString(),
       to: null,
       sort: "price",
       descending: false,
@@ -83,27 +141,40 @@ describe("toVisitSearch", () => {
     });
   });
 
-  it("refunds to settle, past visits, one specialist", () => {
+  it("online visits; a specialist's own ignore the specialist and payment", () => {
     expect(
       toVisitSearch(
-        load(`status=do-zwrotu&zakres=minione&specjalista=${anna}`),
+        load(`miejsce=online&specjalista=${anna}&platnosc=oplacone`),
         {
           now,
+          own: true,
         },
       ),
     ).toMatchObject({
-      statuses: null,
-      refundDue: true,
-      from: null,
-      to: "2030-10-01T08:00:00.000Z",
-      specialistId: anna,
-      descending: true,
+      online: true,
+      roomId: null,
+      specialistId: null,
+      payment: null,
+      own: true,
     });
   });
+});
 
-  it("a specialist's own visits ignore the specialist filter", () => {
-    expect(
-      toVisitSearch(load(`specjalista=${anna}`), { now, own: true }),
-    ).toMatchObject({ specialistId: null, own: true });
+describe("the side panel's links", () => {
+  it("tabs keep the table and the visit; closing drops both", () => {
+    const params = load(`strona=2&wizyta=${anna}&karta=historia`);
+    expect(visitPanelTabs(path, params)).toEqual([
+      {
+        key: "szczegoly",
+        label: "Szczegóły",
+        href: `/kalendarz?strona=2&wizyta=${anna}`,
+      },
+      {
+        key: "historia",
+        label: "Historia",
+        href: `/kalendarz?strona=2&wizyta=${anna}&karta=historia`,
+      },
+    ]);
+    expect(visitPanelCloseHref(path, params)).toBe("/kalendarz?strona=2");
   });
 });

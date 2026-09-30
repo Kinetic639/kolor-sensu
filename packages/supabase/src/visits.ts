@@ -68,15 +68,25 @@ export async function listVisits(
 }
 
 export type VisitSort =
-  "starts_at" | "client" | "specialist" | "service" | "price" | "status";
+  | "starts_at"
+  | "client"
+  | "specialist"
+  | "service"
+  | "price"
+  | "status"
+  | "place";
 
 export interface VisitSearch {
   /** Words to find in the client, reference, service or specialist. */
   query?: string | null;
   statuses?: ("confirmed" | "awaiting_payment" | "cancelled")[] | null;
-  /** Cancelled visits whose money has not gone back (admins). */
-  refundDue?: boolean;
+  /** Paid, unpaid, refunds to settle, refunded (admins). */
+  payment?: "paid" | "unpaid" | "refund_due" | "refunded" | null;
   specialistId?: string | null;
+  serviceId?: string | null;
+  roomId?: string | null;
+  /** True: online visits only; false: in person only. */
+  online?: boolean | null;
   /** Instants (ISO): visits starting from, and before. */
   from?: string | null;
   to?: string | null;
@@ -96,8 +106,11 @@ export async function searchVisits(
   const { data, error } = await client.rpc("search_visits", {
     p_query: search.query ?? undefined,
     p_statuses: search.statuses ?? undefined,
-    p_refund_due: search.refundDue,
+    p_payment: search.payment ?? undefined,
     p_specialist_id: search.specialistId ?? undefined,
+    p_service_id: search.serviceId ?? undefined,
+    p_room_id: search.roomId ?? undefined,
+    p_online: search.online ?? undefined,
     p_from: search.from ?? undefined,
     p_to: search.to ?? undefined,
     p_sort: search.sort,
@@ -111,6 +124,41 @@ export async function searchVisits(
   return {
     visits: rows.map(toVisit),
     total: Number(rows[0]?.total_count ?? 0),
+  };
+}
+
+/** A visit with what the side panel adds: its history and e-mails. */
+export interface VisitDetail extends Visit {
+  createdAt: string;
+  confirmedAt: string | null;
+  /** E-mails sent about it (admins; null for a specialist). */
+  emails: { kind: string; sentAt: string }[] | null;
+}
+
+/** One visit for the side panel, or null (none, or not the caller's). */
+export async function getVisit(
+  client: Client,
+  id: string,
+  { own = false }: { own?: boolean } = {},
+): Promise<VisitDetail | null> {
+  const { data, error } = await client.rpc("get_visit", {
+    p_id: id,
+    p_own: own,
+  });
+  if (error) throw error;
+  const row = data?.[0];
+  if (!row) return null;
+  const emails = Array.isArray(row.emails)
+    ? (row.emails as { kind: string; sent_at: string }[]).map((email) => ({
+        kind: email.kind,
+        sentAt: email.sent_at,
+      }))
+    : null;
+  return {
+    ...toVisit(row),
+    createdAt: row.created_at,
+    confirmedAt: row.confirmed_at ?? null,
+    emails,
   };
 }
 
@@ -189,4 +237,45 @@ export async function centreCancelVisit(
     paymentIntentId: row.payment_intent_id ?? null,
     rescheduleCount: row.reschedule_count,
   };
+}
+
+export type VisitEventActor = "client" | "centre" | "payment" | "system";
+
+/** One entry of a visit's history (the audit log). */
+export interface VisitEvent {
+  id: number;
+  occurredAt: string;
+  kind: string;
+  actor: VisitEventActor;
+  /** The signed-in person behind it (an admin), if any. */
+  actorName: string | null;
+  details: Record<string, unknown>;
+}
+
+/** A visit's history, oldest first; the money only for admins. */
+export async function listVisitEvents(
+  client: Client,
+  id: string,
+  { own = false }: { own?: boolean } = {},
+): Promise<VisitEvent[]> {
+  const { data, error } = await client.rpc("list_visit_events", {
+    p_id: id,
+    p_own: own,
+  });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    occurredAt: row.occurred_at,
+    kind: row.kind,
+    actor: (["client", "centre", "payment", "system"].includes(row.actor)
+      ? row.actor
+      : "system") as VisitEventActor,
+    actorName: row.actor_name ?? null,
+    details:
+      row.details &&
+      typeof row.details === "object" &&
+      !Array.isArray(row.details)
+        ? (row.details as Record<string, unknown>)
+        : {},
+  }));
 }

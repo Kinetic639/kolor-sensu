@@ -14,6 +14,7 @@ import { cn } from "../lib/utils";
 import { PageLink as Link } from "../public-site/page-link";
 import { resourceColors } from "../resource-colors";
 import {
+  isFiltered,
   PAGE_SIZES,
   sortDirection,
   sortHref,
@@ -25,6 +26,8 @@ import {
   VisitTableFilter,
   type VisitTableFilterOption,
 } from "./visit-table-filter";
+import { VisitTablePeriodFilter } from "./visit-table-period";
+import { VisitTableRow } from "./visit-table-row";
 import { VisitTableSearch } from "./visit-table-search";
 
 // The bookings table (docs/product/booking-plan.md, R9), rendered on the
@@ -83,7 +86,8 @@ function dateCell(date: string) {
 // the row's hover) and a line where the rest scrolls under them.
 const STICKY_LEFT = "sticky left-0 z-10 shadow-[inset_-1px_0_0_var(--border)]";
 const STICKY_RIGHT = "sticky right-0 z-10 shadow-[inset_1px_0_0_var(--border)]";
-const STICKY_BG = "bg-[var(--surface)] group-hover:bg-[var(--surface-subtle)]";
+const STICKY_BG =
+  "bg-[var(--surface)] group-hover:bg-[var(--surface-subtle)] group-data-[selected]:bg-[var(--primary-soft)]";
 
 const TH =
   "h-9 border-b border-[var(--border)] bg-[var(--surface-muted)] px-3 text-left text-xs font-semibold whitespace-nowrap text-[var(--text-muted)]";
@@ -155,16 +159,31 @@ export interface VisitTableToolbarProps {
   params: VisitTableParams;
   /** The specialist filter (admins). */
   specialists?: { id: string; name: string }[];
-  /** "Zwrot do zlecenia" among the statuses (admins). */
-  showRefunds?: boolean;
+  services?: { id: string; name: string }[];
+  rooms?: { id: string; name: string }[];
+  /** The payment filter (admins). */
+  showPayments?: boolean;
 }
 
-/** The search box and the filters, in one compact row. */
+const PERIODS: { label: string; zakres: VisitTableParams["zakres"] }[] = [
+  { label: "Nadchodzące", zakres: "nadchodzace" },
+  { label: "Dziś", zakres: "dzis" },
+  { label: "Jutro", zakres: "jutro" },
+  { label: "Ten tydzień", zakres: "ten-tydzien" },
+  { label: "Przyszły tydzień", zakres: "nastepny-tydzien" },
+  { label: "Ten miesiąc", zakres: "ten-miesiac" },
+  { label: "Minione", zakres: "minione" },
+  { label: "Wszystkie", zakres: "wszystkie" },
+];
+
+/** The search box and a filter per column with a few values, in a row. */
 export function VisitTableToolbar({
   path,
   params,
   specialists,
-  showRefunds = false,
+  services,
+  rooms,
+  showPayments = false,
 }: VisitTableToolbarProps) {
   const option = (
     label: string,
@@ -172,9 +191,20 @@ export function VisitTableToolbar({
     active: boolean,
   ): VisitTableFilterOption => ({
     label,
-    href: visitTableHref(path, params, { ...patch, strona: 1 }),
+    // A new filter starts at page 1 and closes the side panel.
+    href: visitTableHref(path, params, { ...patch, strona: 1, wizyta: null }),
     active,
   });
+  const choices = <Key extends "specjalista" | "usluga" | "miejsce">(
+    key: Key,
+    all: string,
+    items: { id: string; name: string }[],
+  ) => [
+    option(all, { [key]: null }, !params[key]),
+    ...items.map((item) =>
+      option(item.name, { [key]: item.id }, params[key] === item.id),
+    ),
+  ];
 
   const statuses = [
     option("Wszystkie", { status: null }, !params.status),
@@ -189,38 +219,36 @@ export function VisitTableToolbar({
       params.status === "oczekujace",
     ),
     option("Odwołane", { status: "odwolane" }, params.status === "odwolane"),
-    ...(showRefunds
-      ? [
-          option(
-            "Zwrot do zlecenia",
-            { status: "do-zwrotu" },
-            params.status === "do-zwrotu",
-          ),
-        ]
-      : []),
   ];
-  const scopes = [
+  const payments = [
+    option("Wszystkie", { platnosc: null }, !params.platnosc),
     option(
-      "Nadchodzące",
-      { zakres: "nadchodzace", kierunek: null },
-      params.zakres === "nadchodzace",
+      "Opłacone",
+      { platnosc: "oplacone" },
+      params.platnosc === "oplacone",
     ),
     option(
-      "Minione",
-      { zakres: "minione", kierunek: null },
-      params.zakres === "minione",
+      "Nieopłacone",
+      { platnosc: "nieoplacone" },
+      params.platnosc === "nieoplacone",
     ),
     option(
-      "Wszystkie",
-      { zakres: "wszystkie", kierunek: null },
-      params.zakres === "wszystkie",
+      "Zwrot do zlecenia",
+      { platnosc: "do-zwrotu" },
+      params.platnosc === "do-zwrotu",
+    ),
+    option(
+      "Zwrócone",
+      { platnosc: "zwrocone" },
+      params.platnosc === "zwrocone",
     ),
   ];
-  const filtered = Boolean(
-    params.q ||
-    params.status ||
-    params.specjalista ||
-    params.zakres !== "nadchodzace",
+  const periods = PERIODS.map((period) =>
+    option(
+      period.label,
+      { zakres: period.zakres, od: null, do: null, kierunek: null },
+      params.zakres === period.zakres,
+    ),
   );
 
   return (
@@ -229,33 +257,51 @@ export function VisitTableToolbar({
       <span className="ml-1 text-xs font-semibold text-[var(--text-muted)]">
         Filtruj:
       </span>
-      <VisitTableFilter
-        highlighted={params.zakres !== "nadchodzace"}
-        label="Termin"
-        options={scopes}
+      <VisitTablePeriodFilter
+        from={params.od}
+        highlighted={
+          params.zakres !== "nadchodzace" || Boolean(params.od || params.do)
+        }
+        options={periods}
+        to={params.do}
       />
       <VisitTableFilter
         highlighted={Boolean(params.status)}
         label="Status"
         options={statuses}
       />
+      {showPayments ? (
+        <VisitTableFilter
+          highlighted={Boolean(params.platnosc)}
+          label="Płatność"
+          options={payments}
+        />
+      ) : null}
       {specialists?.length ? (
         <VisitTableFilter
           highlighted={Boolean(params.specjalista)}
           label="Specjalista"
-          options={[
-            option("Wszyscy", { specjalista: null }, !params.specjalista),
-            ...specialists.map((specialist) =>
-              option(
-                specialist.name,
-                { specjalista: specialist.id },
-                params.specjalista === specialist.id,
-              ),
-            ),
-          ]}
+          options={choices("specjalista", "Wszyscy", specialists)}
         />
       ) : null}
-      {filtered ? (
+      {services?.length ? (
+        <VisitTableFilter
+          highlighted={Boolean(params.usluga)}
+          label="Usługa"
+          options={choices("usluga", "Wszystkie", services)}
+        />
+      ) : null}
+      {rooms ? (
+        <VisitTableFilter
+          highlighted={Boolean(params.miejsce)}
+          label="Miejsce"
+          options={choices("miejsce", "Wszystkie", [
+            { id: "online", name: "Online" },
+            ...rooms,
+          ])}
+        />
+      ) : null}
+      {isFiltered(params) ? (
         <Link
           className="inline-flex h-8 items-center gap-1 rounded px-1.5 text-xs font-semibold text-[var(--primary)] hover:underline focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
           href={path}
@@ -439,7 +485,7 @@ export function VisitTable({
                 <Head>Telefon</Head>
                 <Head>E-mail</Head>
                 {sort("usluga", "Usługa")}
-                <Head>Miejsce</Head>
+                {sort("miejsce", "Miejsce")}
                 {showSpecialist ? sort("specjalista", "Specjalista") : null}
                 {sort("status", "Status")}
                 {showPayment ? <Head>Płatność</Head> : null}
@@ -466,11 +512,13 @@ export function VisitTable({
                 rows.map((row) => {
                   const day = dateCell(row.date);
                   const muted = row.cancelled && "text-[var(--text-muted)]";
+                  const selected = params.wizyta === row.id;
+                  // A click opens the visit in the side panel (again: closes it).
+                  const href = visitTableHref(path, params, {
+                    wizyta: selected ? null : row.id,
+                  });
                   return (
-                    <tr
-                      className="group hover:bg-[var(--surface-subtle)]"
-                      key={row.id}
-                    >
+                    <VisitTableRow href={href} key={row.id} selected={selected}>
                       <th
                         className={cn(
                           TD,
@@ -480,7 +528,14 @@ export function VisitTable({
                         )}
                         scope="row"
                       >
-                        {row.reference}
+                        <Link
+                          aria-current={selected ? "true" : undefined}
+                          className="rounded hover:text-[var(--primary)] hover:underline focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+                          href={href}
+                          scroll={false}
+                        >
+                          {row.reference}
+                        </Link>
                       </th>
                       <td className={cn(TD, muted, "tabular-nums")}>
                         <span className="text-[var(--text-muted)]">
@@ -590,7 +645,7 @@ export function VisitTable({
                       >
                         {actions[row.id]}
                       </td>
-                    </tr>
+                    </VisitTableRow>
                   );
                 })
               )}

@@ -184,10 +184,19 @@ export {
   rescheduleBooking,
 } from "./booking-changes";
 export type { CancelledBooking, RescheduledBooking } from "./booking-changes";
-export { centreCancelVisit, listVisits, searchVisits } from "./visits";
+export {
+  centreCancelVisit,
+  getVisit,
+  listVisitEvents,
+  listVisits,
+  searchVisits,
+} from "./visits";
 export type {
   CentreCancelledVisit,
   Visit,
+  VisitDetail,
+  VisitEvent,
+  VisitEventActor,
   VisitSearch,
   VisitSort,
   VisitsQuery,

@@ -47,7 +47,7 @@ export async function cancelVisitAsCentreAction(
         message: MESSAGES[body?.error ?? ""] ?? "Nie udało się odwołać wizyty.",
       };
     }
-    revalidatePath("/kalendarz");
+    revalidatePath("/rezerwacje");
     return { ok: true, refundFailed: Boolean(body?.refundFailed) };
   } catch (error) {
     console.error("[visits] cancelling as the centre failed:", error);

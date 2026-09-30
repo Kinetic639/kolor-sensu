@@ -193,7 +193,8 @@ BEGIN
      OR length(held.access_token) < 40 THEN
     RAISE EXCEPTION 'C: the token';
   END IF;
-  IF held.reference !~ ('^KS-' || to_char(t.monday, 'YYYYMMDD') || '-[0-9]{4}$') THEN
+  -- The year and month it was booked, and its number in that month.
+  IF held.reference !~ ('^' || to_char(now() AT TIME ZONE 'Europe/Warsaw', 'YYMM') || '-[0-9]{3,}$') THEN
     RAISE EXCEPTION 'C: the reference %', held.reference;
   END IF;
   IF held.hold_expires_at NOT BETWEEN now() + interval '9 minutes' AND now() + interval '11 minutes' THEN
@@ -430,7 +431,7 @@ SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-0000000
 SET LOCAL ROLE authenticated;
 DO $$
 BEGIN
-  IF (SELECT count(*) FROM public.appointments WHERE reference LIKE 'KS-%') < 3 THEN
+  IF (SELECT count(*) FROM public.appointments WHERE reference ~ '^[0-9]{4}-[0-9]{3,}$') < 3 THEN
     RAISE EXCEPTION 'M: the admin should see every visit';
   END IF;
   PERFORM 1 FROM public.payments LIMIT 1;
@@ -808,7 +809,7 @@ GRANT SELECT, INSERT ON s_visits TO service_role;
 CREATE FUNCTION pg_temp.paid_visit(p_name text, p_time time)
 RETURNS void
 LANGUAGE plpgsql
-AS $
+AS $$
 DECLARE
   held record;
   mail record;
@@ -825,13 +826,13 @@ BEGIN
   SELECT * INTO mail FROM public.claim_booking_email(held.reference, 'confirmation');
   INSERT INTO s_visits VALUES (p_name, held.reference, held.access_token, mail.manage_token);
 END;
-$;
+$$;
 
 -- The hint of what a statement raised ('' when it raised nothing).
 CREATE FUNCTION pg_temp.hint_of(p_sql text)
 RETURNS text
 LANGUAGE plpgsql
-AS $
+AS $$
 DECLARE
   hint text;
 BEGIN
@@ -841,17 +842,17 @@ EXCEPTION WHEN raise_exception THEN
   GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
   RETURN hint;
 END;
-$;
+$$;
 
 -- Wednesday's free times for anyone, as local `HH:MM`.
 CREATE FUNCTION pg_temp.wednesday_times()
 RETURNS text
 LANGUAGE sql
-AS $
+AS $$
   SELECT coalesce(string_agg(to_char(starts_at AT TIME ZONE 'Europe/Warsaw', 'HH24:MI'), ' ' ORDER BY starts_at), '')
   FROM public.list_free_slots('booking-test-consultation', 'booking-test-anna', 'in_person',
     (SELECT monday + 2 FROM booking_test), (SELECT monday + 2 FROM booking_test));
-$;
+$$;
 
 GRANT EXECUTE ON FUNCTION pg_temp.paid_visit(text, time) TO service_role;
 GRANT EXECUTE ON FUNCTION pg_temp.hint_of(text) TO service_role;
@@ -1277,6 +1278,160 @@ BEGIN
   PERFORM public.search_visits();
   RAISE EXCEPTION 'U: anon searched visits';
 EXCEPTION WHEN insufficient_privilege THEN NULL;
+END;
+$body$;
+RESET ROLE;
+
+-- V: the table's other filters (service, place, payment) and one visit's
+-- details for the side panel, with the e-mails sent (admins only).
+SELECT public.mark_booking_email_sent(
+  (SELECT reference FROM s_visits WHERE name = 'u1'), 'confirmation', 'msg_u1');
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  u1 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'u1'));
+  service uuid := (SELECT id FROM public.services WHERE slug = 'booking-test-consultation');
+  detail record;
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.search_visits(p_service_id => service, p_online => false, p_payment => 'paid') WHERE id = u1) THEN
+    RAISE EXCEPTION 'V: service, place and payment filters';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.search_visits(p_online => true) WHERE id = u1) THEN
+    RAISE EXCEPTION 'V: an in-person visit found as online';
+  END IF;
+  BEGIN
+    PERFORM public.search_visits(p_payment => 'everything');
+    RAISE EXCEPTION 'V: an unknown payment filter';
+  EXCEPTION WHEN invalid_parameter_value THEN NULL;
+  END;
+  SELECT * INTO detail FROM public.get_visit(u1);
+  IF detail IS NULL OR detail.client_name <> 'Ola Test' OR detail.confirmed_at IS NULL
+     OR NOT detail.emails @> '[{"kind": "confirmation"}]'::jsonb THEN
+    RAISE EXCEPTION 'V: the visit''s details: %', row_to_json(detail);
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Anna sees her visit without payments or e-mails; Jan does not see it.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  detail record;
+BEGIN
+  SELECT * INTO detail FROM public.get_visit(
+    (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'u1')));
+  IF detail IS NULL OR detail.emails IS NOT NULL OR detail.paid IS NOT NULL THEN
+    RAISE EXCEPTION 'V: Anna''s view of her visit: %', row_to_json(detail);
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.search_visits(p_payment => 'paid')) THEN
+    RAISE EXCEPTION 'V: a specialist filtered by payments';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.get_visit(
+      (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'u1')))) THEN
+    RAISE EXCEPTION 'V: Jan saw Anna''s visit';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- W: every reservation keeps its history (the audit log), written by the
+-- database itself: the hold, the details, the payment, the confirmation,
+-- the e-mails, a move, a cancellation and the refund, each with who did
+-- it. Admins read all of it; specialists their own visits without the
+-- money; nobody writes it by hand.
+SET LOCAL ROLE service_role;
+SELECT pg_temp.paid_visit('w1', '12:00');
+DO $body$
+DECLARE
+  w s_visits%ROWTYPE;
+BEGIN
+  SELECT * INTO w FROM s_visits WHERE name = 'w1';
+  PERFORM public.mark_booking_email_sent(w.reference, 'confirmation', 'msg_w1');
+END;
+$body$;
+RESET ROLE;
+-- The centre allows moving and a refund; the client moves, then cancels.
+UPDATE public.center_settings
+SET cancellation_window_hours = 0, reschedule_window_hours = 0, max_self_reschedules = 1;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  w s_visits%ROWTYPE;
+  wed date;
+BEGIN
+  SELECT monday + 2 INTO wed FROM booking_test;
+  SELECT * INTO w FROM s_visits WHERE name = 'w1';
+  PERFORM public.reschedule_booking(w.link_token, pg_temp.at(wed, '10:00'));
+  PERFORM public.cancel_booking(w.link_token);
+  PERFORM public.record_refund('pi_test_w1', 25000);
+END;
+$body$;
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  w1 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'w1'));
+  log text;
+BEGIN
+  SELECT string_agg(kind || '/' || actor, ' ' ORDER BY occurred_at, id) INTO log
+  FROM public.list_visit_events(w1);
+  IF log IS DISTINCT FROM
+     'created/client details_saved/client payment_started/payment payment_succeeded/payment '
+     || 'confirmed/payment email_sent/system rescheduled/client cancelled/client refund_recorded/payment' THEN
+    RAISE EXCEPTION 'W: the history: %', log;
+  END IF;
+  IF (SELECT details ->> 'refund_due_minor' FROM public.list_visit_events(w1) WHERE kind = 'cancelled') <> '25000' THEN
+    RAISE EXCEPTION 'W: the admin sees the money';
+  END IF;
+  -- The log is written only by the database.
+  BEGIN
+    INSERT INTO public.appointment_events (appointment_id, kind, actor) VALUES (w1, 'created', 'centre');
+    RAISE EXCEPTION 'W: an admin wrote the log by hand';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
+-- Anna: her visit's history, without the money.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  w1 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'w1'));
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.list_visit_events(w1) WHERE kind = 'rescheduled') THEN
+    RAISE EXCEPTION 'W: Anna does not see her visit''s history';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.list_visit_events(w1)
+             WHERE kind LIKE 'payment_%' OR kind = 'refund_recorded' OR details ? 'refund_due_minor') THEN
+    RAISE EXCEPTION 'W: a specialist saw the money';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Jan: nothing of Anna's.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.list_visit_events(
+      (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'w1')))) THEN
+    RAISE EXCEPTION 'W: Jan read Anna''s visit''s history';
+  END IF;
 END;
 $body$;
 RESET ROLE;

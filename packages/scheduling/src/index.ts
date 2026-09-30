@@ -6,6 +6,7 @@ export * from "./grid";
 export * from "./labels";
 export * from "./room-hours";
 export * from "./slots";
+export * from "./visit-events";
 export * from "./visits";
 
 /** Shared scheduling primitives will live here without UI or persistence concerns. */

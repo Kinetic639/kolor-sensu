@@ -61,6 +61,7 @@
     "./visit-table": "./src/visit-table/index.ts",
     "./table": "./src/table.tsx",
     "./row-actions": "./src/row-actions.tsx",
+    "./icon-action": "./src/icon-action.tsx",
     "./period-nav": "./src/period-nav.tsx",
     "./tabs": "./src/tabs.tsx",
     "./test-content-block": "./src/test-content-block.tsx",

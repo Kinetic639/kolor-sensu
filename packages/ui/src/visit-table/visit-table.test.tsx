@@ -1,13 +1,20 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { VisitPanel } from "./visit-panel";
 import { VisitTable, VisitTableToolbar } from "./visit-table";
 import {
   adminRows,
+  panelTabs,
+  sampleEvents,
   sampleSpecialists,
   specialistRows,
   tableParams,
 } from "./visit-table.samples";
+
+const push = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+beforeEach(() => push.mockClear());
 
 const path = "/kalendarz";
 
@@ -31,7 +38,7 @@ describe("VisitTable", () => {
     expect(rows[1]).toHaveTextContent(/200\s*zł/);
     // The reference heads the row, for screen readers too.
     expect(within(rows[1]!).getByRole("rowheader")).toHaveTextContent(
-      "KS-20301002-1534",
+      "3010-017",
     );
     expect(
       screen.getByRole("columnheader", { name: /Klient/ }),
@@ -43,6 +50,37 @@ describe("VisitTable", () => {
     expect(screen.getByRole("link", { name: /Data/ })).toHaveAttribute(
       "href",
       "/kalendarz",
+    );
+  });
+
+  it("a click on a row opens the visit in the side panel; again, closes it", () => {
+    const { rerender } = render(
+      <VisitTable
+        params={tableParams()}
+        path={path}
+        rows={adminRows}
+        total={4}
+      />,
+    );
+    fireEvent.click(screen.getByText("Jan Kowalski"));
+    expect(push).toHaveBeenCalledWith("/kalendarz?wizyta=v1", {
+      scroll: false,
+    });
+    expect(screen.getByRole("link", { name: "3010-017" })).toHaveAttribute(
+      "href",
+      "/kalendarz?wizyta=v1",
+    );
+    rerender(
+      <VisitTable
+        params={{ ...tableParams(), wizyta: "v1" }}
+        path={path}
+        rows={adminRows}
+        total={4}
+      />,
+    );
+    expect(screen.getByRole("link", { name: "3010-017" })).toHaveAttribute(
+      "aria-current",
+      "true",
     );
   });
 
@@ -105,7 +143,7 @@ describe("VisitTableToolbar", () => {
       <VisitTableToolbar
         params={tableParams("q=jan&status=odwolane")}
         path={path}
-        showRefunds
+        showPayments
         specialists={sampleSpecialists}
       />,
       { wrapper: withNuqsTestingAdapter({ searchParams: "?q=jan" }) },
@@ -122,5 +160,60 @@ describe("VisitTableToolbar", () => {
     expect(
       screen.getByRole("link", { name: "Wyczyść filtry" }),
     ).toHaveAttribute("href", "/kalendarz");
+  });
+});
+
+describe("VisitPanel", () => {
+  it("details: when, who, the money; the contact with its icon actions", () => {
+    render(
+      <VisitPanel
+        closeHref="/kalendarz"
+        events={null}
+        row={adminRows[0]!}
+        tab="szczegoly"
+        tabs={panelTabs}
+      />,
+    );
+    const panel = screen.getByRole("complementary", { name: "Jan Kowalski" });
+    expect(panel).toHaveTextContent("3010-017");
+    expect(panel).toHaveTextContent("Opłacona");
+    expect(
+      within(panel).getByRole("link", { name: "Zadzwoń" }),
+    ).toHaveAttribute("href", "tel:600100200");
+    expect(
+      within(panel).getByRole("button", { name: "Kopiuj adres e-mail" }),
+    ).toBeInTheDocument();
+    expect(
+      within(panel).getByRole("toolbar", { name: "Akcje rezerwacji" }),
+    ).toContainElement(
+      within(panel).getByRole("button", { name: "Kopiuj numer rezerwacji" }),
+    );
+    expect(
+      within(panel).getByRole("link", { name: "Szczegóły" }),
+    ).toHaveAttribute("aria-current", "page");
+    expect(
+      within(panel).getByRole("link", { name: "Zamknij szczegóły wizyty" }),
+    ).toHaveAttribute("href", "/kalendarz");
+  });
+
+  it("history: every event, oldest first, with who did it", () => {
+    render(
+      <VisitPanel
+        closeHref="/kalendarz"
+        events={sampleEvents}
+        row={adminRows[0]!}
+        tab="historia"
+        tabs={panelTabs}
+      />,
+    );
+    const items = within(
+      screen.getByRole("list", { name: "Historia rezerwacji" }),
+    ).getAllByRole("listitem");
+    expect(items).toHaveLength(4);
+    expect(items[0]).toHaveTextContent("Zarezerwowano termin");
+    expect(items[1]).toHaveTextContent("Płatność (Stripe)");
+    expect(items[3]).toHaveTextContent(
+      "Wysłano e-mail: Potwierdzenie rezerwacji",
+    );
   });
 });

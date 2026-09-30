@@ -8,18 +8,19 @@ export const specialistNavigation: PortalNavigationSection[] = [
     label: "PRACA",
     items: [
       { label: "Dashboard", href: "/", icon: "dashboard" },
-      {
-        label: "Mój kalendarz",
-        href: "/kalendarz",
-        icon: "calendar",
-        badge: "Wizyty",
-      },
+      { label: "Mój kalendarz", href: "/kalendarz", icon: "calendar" },
       {
         label: "Dostępność",
         href: "/dostepnosc",
         icon: "clock",
         badge: "Dyżury",
       },
+    ],
+  },
+  {
+    label: "REZERWACJE",
+    items: [
+      { label: "Moje rezerwacje", href: "/rezerwacje", icon: "bookings" },
     ],
   },
   {
@@ -41,7 +42,7 @@ export const specialistNavigation: PortalNavigationSection[] = [
 export const specialistMobileNavigation: PortalNavigationItem[] = [
   { label: "Start", href: "/", icon: "dashboard" },
   { label: "Kalendarz", href: "/kalendarz", icon: "calendar" },
+  { label: "Rezerwacje", href: "/rezerwacje", icon: "bookings" },
   { label: "Dostępność", href: "/dostepnosc", icon: "clock" },
-  { label: "Usługi", href: "/uslugi", icon: "services" },
   { label: "Profil", href: "/profil", icon: "specialist" },
 ];

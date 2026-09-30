@@ -1,5 +1,6 @@
 import {
   Armchair,
+  CalendarCheck,
   CalendarDays,
   Clock3,
   ContactRound,
@@ -36,6 +37,7 @@ import {
 } from "./sidebar";
 
 const portalIcons = {
+  bookings: CalendarCheck,
   calendar: CalendarDays,
   clients: ContactRound,
   clock: Clock3,
@@ -191,7 +193,16 @@ export function AppSidebar({
           {sections.map((section, sectionIndex) => (
             <SidebarGroup key={section.label ?? sectionIndex}>
               {section.label ? (
-                <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+                <SidebarGroupLabel
+                  // Collapsed, a line between groups; none above the first.
+                  className={
+                    sectionIndex === 0
+                      ? "group-data-[collapsible=icon]/sidebar:hidden"
+                      : undefined
+                  }
+                >
+                  {section.label}
+                </SidebarGroupLabel>
               ) : null}
               <SidebarGroupContent>
                 <SidebarMenu>

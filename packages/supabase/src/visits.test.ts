@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { centreCancelVisit, listVisits, searchVisits } from "./visits";
+import {
+  centreCancelVisit,
+  getVisit,
+  listVisitEvents,
+  listVisits,
+  searchVisits,
+} from "./visits";
 
 function rpcClient(data: unknown, error: unknown = null) {
   const rpc = vi.fn().mockResolvedValue({ data, error });
@@ -130,8 +136,11 @@ describe("searchVisits", () => {
     const page = await searchVisits(client, {
       query: "kowalski",
       statuses: ["confirmed"],
-      refundDue: false,
+      payment: "paid",
       specialistId: "anna",
+      serviceId: "service-1",
+      roomId: null,
+      online: true,
       from: "2030-09-30T00:00:00.000Z",
       to: null,
       sort: "client",
@@ -143,8 +152,11 @@ describe("searchVisits", () => {
     expect(rpc).toHaveBeenCalledWith("search_visits", {
       p_query: "kowalski",
       p_statuses: ["confirmed"],
-      p_refund_due: false,
+      p_payment: "paid",
       p_specialist_id: "anna",
+      p_service_id: "service-1",
+      p_room_id: undefined,
+      p_online: true,
       p_from: "2030-09-30T00:00:00.000Z",
       p_to: undefined,
       p_sort: "client",
@@ -170,5 +182,83 @@ describe("searchVisits", () => {
         offset: 0,
       }),
     ).toEqual({ visits: [], total: 0 });
+  });
+});
+
+describe("getVisit", () => {
+  it("reads one visit with its history and e-mails", async () => {
+    const { client, rpc } = rpcClient([
+      {
+        ...row,
+        created_at: "2030-09-01T10:00:00+00:00",
+        confirmed_at: "2030-09-01T10:05:00+00:00",
+        emails: [
+          { kind: "confirmation", sent_at: "2030-09-01T10:06:00+00:00" },
+        ],
+      },
+    ]);
+    expect(await getVisit(client, "visit-1")).toMatchObject({
+      id: "visit-1",
+      createdAt: "2030-09-01T10:00:00+00:00",
+      confirmedAt: "2030-09-01T10:05:00+00:00",
+      emails: [{ kind: "confirmation", sentAt: "2030-09-01T10:06:00+00:00" }],
+    });
+    expect(rpc).toHaveBeenCalledWith("get_visit", {
+      p_id: "visit-1",
+      p_own: false,
+    });
+  });
+
+  it("a specialist gets no e-mails; nothing for someone else's", async () => {
+    const { client } = rpcClient([
+      { ...row, created_at: "x", confirmed_at: null, emails: null },
+    ]);
+    expect((await getVisit(client, "v", { own: true }))?.emails).toBeNull();
+    expect(await getVisit(rpcClient([]).client, "v")).toBeNull();
+  });
+});
+
+describe("listVisitEvents", () => {
+  it("reads a visit's history, oldest first", async () => {
+    const { client, rpc } = rpcClient([
+      {
+        id: 1,
+        occurred_at: "2030-09-20T10:00:00Z",
+        kind: "created",
+        actor: "client",
+        actor_name: null,
+        details: { reference: "3010-017" },
+      },
+      {
+        id: 2,
+        occurred_at: "2030-09-21T10:00:00Z",
+        kind: "cancelled",
+        actor: "centre",
+        actor_name: "Michał Stępień",
+        details: null,
+      },
+    ]);
+    expect(await listVisitEvents(client, "visit-1", { own: true })).toEqual([
+      {
+        id: 1,
+        occurredAt: "2030-09-20T10:00:00Z",
+        kind: "created",
+        actor: "client",
+        actorName: null,
+        details: { reference: "3010-017" },
+      },
+      {
+        id: 2,
+        occurredAt: "2030-09-21T10:00:00Z",
+        kind: "cancelled",
+        actor: "centre",
+        actorName: "Michał Stępień",
+        details: {},
+      },
+    ]);
+    expect(rpc).toHaveBeenCalledWith("list_visit_events", {
+      p_id: "visit-1",
+      p_own: true,
+    });
   });
 });

@@ -1,23 +1,31 @@
 // The bookings table (docs/product/booking-plan.md, R9): server-rendered,
-// state in the URL, one page from the database.
+// state in the URL, one page from the database, a side panel per visit.
 export {
+  isFiltered,
   loadVisitTableParams,
   PAGE_SIZES,
   sortDirection,
   sortHref,
   toVisitSearch,
+  VISIT_PAYMENT_FILTERS,
   VISIT_SCOPES,
   VISIT_SORTS,
   VISIT_STATUS_FILTERS,
+  visitPanelCloseHref,
+  visitPanelTabs,
+  visitPeriod,
   visitTableHref,
   visitTableParsers,
 } from "./params";
 export type {
+  VisitPaymentFilter,
   VisitScope,
   VisitSortColumn,
   VisitStatusFilter,
   VisitTableParams,
 } from "./params";
+export { VisitPanel } from "./visit-panel";
+export type { VisitPanelTab } from "./visit-panel";
 export {
   VisitTable,
   VisitTablePagination,

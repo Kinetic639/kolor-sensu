@@ -92,7 +92,7 @@ Dostępność specjalistów (RD1) — szczegóły w sekcji
 Wizyty i płatności (RD2, migracja `20260929065425_appointments_and_payments`,
 test `supabase/tests/booking_domain.sql`):
 
-- `appointments`: numer (`KS-20261005-7843`), usługa, oferta, specjalista,
+- `appointments`: numer (`2610-017`: rok i miesiąc rezerwacji, kolejny numer w miesiącu), usługa, oferta, specjalista,
   okno dostępności, forma (`visit_mode`: `in_person` / `online`),
   **gabinet z okna** (tylko stacjonarnie), `during tstzrange` i `blocks`
   (`during` plus przerwa, z triggera), migawka ceny, czasu i przerwy,
@@ -139,7 +139,7 @@ dostępności, w którym są przyszłe wizyty (wizyty zostają, bo są niezależ
 od okna), oraz ponowne sprawdzenie godzin otwarcia gabinetu przy liczeniu
 terminów (dziś pilnuje ich zapis okna).
 
-**Wizyty w portalach (R9):** `/kalendarz` w obu portalach to tabela
+**Wizyty w portalach (R9):** `/rezerwacje` w obu portalach to tabela
 rezerwacji (wzorzec data table z shadcn, bez TanStacka): renderowana na
 serwerze, stan w adresie (nuqs: `q`, `status`, `specjalista`, `zakres`,
 `sort`, `kierunek`, `strona`, `wierszy`), nagłówki sortowania, filtry i
@@ -153,6 +153,17 @@ wysyła odwołanie do trasy strony `/api/centrum/wizyty/[id]/odwolanie` z
 tokenem sesji admina (Stripe i Resend są tylko w aplikacji strony, a
 uprawnienia sprawdza baza). Nieudany zwrot zostaje przy wizycie
 (`refund_due_minor`): komunikat z liczbą i filtr „Zwrot do zlecenia”.
+
+**Szuflada rezerwacji i historia:** kliknięcie wiersza otwiera szufladę
+(`?wizyta=…`, zakładki `?karta=szczegoly|historia`). Historia to pełny
+dziennik zdarzeń (`appointment_events`), zapisywany przez wyzwalacze na
+wizytach, płatnościach i e-mailach (każda ścieżka zostawia ślad): utworzenie,
+dane klienta, statusy, przełożenia (skąd, dokąd), płatności, zwroty, e-maile;
+z tym, kto to zrobił (klient, centrum z nazwiskiem, płatność, system). Wpisów
+nikt nie zmienia ani nie usuwa; czyta się je przez `list_visit_events`
+(specjalista: swoje wizyty, bez pieniędzy). Wizyty sprzed dziennika mają
+historię odtworzoną z danych. Numer rezerwacji: `2610-017` (rok i miesiąc
+rezerwacji, kolejny numer w miesiącu, nadawany przez bazę).
 
 ### Dostępność specjalistów (RD1, R1, R2)
 
