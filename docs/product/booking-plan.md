@@ -376,7 +376,7 @@ Każdy commit realizujący zadanie aktualizuje status i wpisuje hash commitu.
 | R6  | Płatność Stripe: Payment Element, webhook, „Oczekujemy na potwierdzenie”, wygasanie                                                  | F4-03    | `DONE`        | 6147dfe     | Webhook sprawdzony przez Stripe CLI         |
 | R7  | Potwierdzenie i e-maile (Resend): potwierdzenie z linkiem i plikiem `.ics`                                                           | F4-04    | `DONE`        | eb75315     | Domena testowa; docelowa przed R10          |
 | R8  | Zarządzanie z linku: szczegóły, przełożenie, anulowanie ze zwrotem                                                                   | F4-04    | `DONE`        | 0b9c898     | Okna i limit w Ustawieniach (48 h, 1 raz)   |
-| R9  | Portale: lista wizyt specjalisty i admina, anulowanie przez centrum                                                                  | F4-04    | `DONE`        |             | Widoki kalendarza: etap K (K5)              |
+| R9  | Portale: lista wizyt specjalisty i admina, anulowanie przez centrum                                                                  | F4-04    | `DONE`        | 25a64eb     | Widoki kalendarza: etap K (K5)              |
 | R10 | Przypomnienia e-mail 24 h przed wizytą, włączenie `booking_enabled` na produkcji                                                     | F4-04    | `NOT STARTED` |             |                                             |
 
 ### Potrzebne od centrum przed R5–R7
