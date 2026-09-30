@@ -12,16 +12,16 @@ Statusy: `NOT STARTED`, `IN PROGRESS`, `DONE`, `SKIPPED` (z uzasadnieniem).
 Każdy commit realizujący zadanie aktualizuje jego status i wpisuje hash commitu
 (albo numer PR).
 
-| ID  | Zadanie                                                                                           | Status        | Commit / PR | Uwagi             |
-| --- | ------------------------------------------------------------------------------------------------- | ------------- | ----------- | ----------------- |
-| K0  | Zrzuty referencji (każdy widok, desktop i 390 px) do `docs/design/references/scheduling/`         | `NOT STARTED` |             |                   |
-| KD  | Schemat DB dostępności, reguł i wizyt (migracje + `packages/supabase`)                            | `NOT STARTED` |             | Wymagane przed K3 |
-| K1  | Domena w `packages/scheduling` (czas, siatka, layout kolumny, zajętość, reguły cykliczne) z TDD   | `NOT STARTED` |             |                   |
-| K2  | Prymitywy UI: `TimeAxis`, `HourGrid`, `EventBlock`, `NowIndicator`, `Legend` (stories i testy)    | `NOT STARTED` |             |                   |
-| K3  | Specjalista: kalendarz dostępności (tydzień) z drag-to-create, alternatywą z klawiatury i `Sheet` | `NOT STARTED` |             |                   |
-| K4  | Specjalista: widok reguł dostępności i duplikowanie dnia / tygodnia                               | `NOT STARTED` |             |                   |
-| K5  | Admin: widok dnia (specjaliści / sale), potem tydzień zasobu, na końcu porównanie tygodni         | `NOT STARTED` |             |                   |
-| K6  | Mobile: agenda i harmonogram                                                                      | `NOT STARTED` |             |                   |
+| ID  | Zadanie                                                                                           | Status        | Commit / PR | Uwagi                                                                                                             |
+| --- | ------------------------------------------------------------------------------------------------- | ------------- | ----------- | ----------------------------------------------------------------------------------------------------------------- |
+| K0  | Zrzuty referencji (każdy widok, desktop i 390 px) do `docs/design/references/scheduling/`         | `NOT STARTED` |             |                                                                                                                   |
+| KD  | Schemat DB dostępności, reguł i wizyt (migracje + `packages/supabase`)                            | `NOT STARTED` |             | Wymagane przed K3                                                                                                 |
+| K1  | Domena w `packages/scheduling` (czas, siatka, layout kolumny, zajętość, reguły cykliczne) z TDD   | `NOT STARTED` |             |                                                                                                                   |
+| K2  | Prymitywy UI: `TimeAxis`, `HourGrid`, `EventBlock`, `NowIndicator`, `Legend` (stories i testy)    | `NOT STARTED` |             |                                                                                                                   |
+| K3  | Specjalista: kalendarz dostępności (tydzień) z drag-to-create, alternatywą z klawiatury i `Sheet` | `NOT STARTED` |             |                                                                                                                   |
+| K4  | Specjalista: widok reguł dostępności i duplikowanie dnia / tygodnia                               | `NOT STARTED` |             |                                                                                                                   |
+| K5  | Admin: widok dnia (specjaliści / sale), potem tydzień zasobu, na końcu porównanie tygodni         | `IN PROGRESS` |             | Dzień i tydzień zasobu + tydzień specjalisty (`/kalendarz`, `@repo/ui/calendar-view`); porównanie tygodni później |
+| K6  | Mobile: agenda i harmonogram                                                                      | `NOT STARTED` |             |                                                                                                                   |
 
 ## Warstwy
 

@@ -48,6 +48,7 @@ export async function cancelVisitAsCentreAction(
       };
     }
     revalidatePath("/rezerwacje");
+    revalidatePath("/kalendarz");
     return { ok: true, refundFailed: Boolean(body?.refundFailed) };
   } catch (error) {
     console.error("[visits] cancelling as the centre failed:", error);

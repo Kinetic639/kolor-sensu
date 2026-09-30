@@ -6,6 +6,7 @@ import {
   deleteAvailabilityOccurrence,
   deleteAvailabilityRule,
   editAvailabilityOccurrence,
+  listAvailabilityRulesForSpecialists,
   listRoomAvailabilityRules,
   listRoomOccupancy,
   parseTstzRange,
@@ -424,5 +425,77 @@ describe("a taken room", () => {
     await expect(
       saveAvailabilityRule({ rpc } as never, input),
     ).rejects.toMatchObject({ reason: "room_taken", conflict: null });
+  });
+});
+
+describe("listAvailabilityRulesForSpecialists", () => {
+  it("reads the rules of several specialists in force over the dates", async () => {
+    const order = vi.fn();
+    const query = {
+      select: vi.fn(() => query),
+      in: vi.fn(() => query),
+      lte: vi.fn(() => query),
+      or: vi.fn(() => query),
+      order,
+    };
+    order.mockReturnValueOnce(query).mockResolvedValueOnce({
+      data: [
+        {
+          id: "rule",
+          specialist_id: "a",
+          recurrence: "once",
+          weekdays: [3],
+          interval_weeks: 1,
+          occurrence_count: null,
+          starts_at: "09:00:00",
+          ends_at: "12:00:00",
+          valid_from: "2030-10-02",
+          valid_until: "2030-10-02",
+          mode: "online",
+          room_id: null,
+          note: null,
+          created_at: "",
+          updated_at: "",
+          exceptions: null,
+        },
+      ],
+      error: null,
+    });
+    const client = { from: vi.fn(() => query) };
+
+    const rules = await listAvailabilityRulesForSpecialists(client as never, {
+      specialistIds: ["a", "b"],
+      from: "2030-09-30",
+      to: "2030-10-06",
+    });
+
+    expect(client.from).toHaveBeenCalledWith("specialist_availability_rules");
+    expect(query.in).toHaveBeenCalledWith("specialist_id", ["a", "b"]);
+    expect(query.lte).toHaveBeenCalledWith("valid_from", "2030-10-06");
+    expect(query.or).toHaveBeenCalledWith(
+      "valid_until.is.null,valid_until.gte.2030-09-30",
+    );
+    expect(rules).toMatchObject([
+      { id: "rule", specialistId: "a", startsAt: "09:00", exceptions: [] },
+    ]);
+  });
+
+  it("asks nothing for nobody, and rejects a malformed date", async () => {
+    const client = { from: vi.fn() };
+    await expect(
+      listAvailabilityRulesForSpecialists(client as never, {
+        specialistIds: [],
+        from: "2030-09-30",
+        to: "2030-10-06",
+      }),
+    ).resolves.toEqual([]);
+    await expect(
+      listAvailabilityRulesForSpecialists(client as never, {
+        specialistIds: ["a"],
+        from: "2030-09-30,valid_until.is.null",
+        to: "2030-10-06",
+      }),
+    ).rejects.toThrow();
+    expect(client.from).not.toHaveBeenCalled();
   });
 });

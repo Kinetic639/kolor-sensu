@@ -46,6 +46,7 @@
     "./specialist-admin": "./src/specialist-admin.tsx",
     "./availability": "./src/availability.tsx",
     "./calendar": "./src/calendar.tsx",
+    "./calendar-view": "./src/calendar-view/index.ts",
     "./choice-card": "./src/choice-card.tsx",
     "./link-tabs": "./src/link-tabs.tsx",
     "./recurrence": "./src/recurrence.tsx",

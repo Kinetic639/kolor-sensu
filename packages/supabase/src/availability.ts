@@ -157,6 +157,31 @@ export async function listAvailabilityRules(
   return data.map(mapRule);
 }
 
+/**
+ * The rules of several specialists in force between two local dates (the
+ * calendar views; admins read everyone's, by RLS).
+ */
+export async function listAvailabilityRulesForSpecialists(
+  client: SupabaseClient<Database>,
+  query: { specialistIds: string[]; from: string; to: string },
+): Promise<SpecialistAvailabilityRule[]> {
+  // Checked first: the dates go into a filter expression.
+  const from = localDateSchema.parse(query.from);
+  const to = localDateSchema.parse(query.to);
+  if (!query.specialistIds.length) return [];
+  const { data, error } = await client
+    .from("specialist_availability_rules")
+    .select("*, exceptions:specialist_availability_exceptions(date)")
+    .in("specialist_id", query.specialistIds)
+    .lte("valid_from", to)
+    .or(`valid_until.is.null,valid_until.gte.${from}`)
+    .order("valid_from")
+    .order("starts_at");
+
+  if (error) throw error;
+  return data.map(mapRule);
+}
+
 type RoomRuleRow = RuleRow & {
   specialist: {
     color: string | null;

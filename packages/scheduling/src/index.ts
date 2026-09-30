@@ -1,6 +1,7 @@
 import type { Appointment } from "@repo/contracts";
 
 export * from "./availability";
+export * from "./calendar-view";
 export { DEFAULT_TIME_ZONE, formatZonedDateTime } from "./date";
 export * from "./grid";
 export * from "./labels";

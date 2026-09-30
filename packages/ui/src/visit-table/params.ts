@@ -61,7 +61,7 @@ export const parseAsSearch = createParser({
   serialize: (value: string) => value,
 });
 
-const parseAsId = createParser({
+export const parseAsId = createParser({
   parse: (value) => (UUID.test(value) ? value : null),
   serialize: (value: string) => value,
 });

@@ -125,6 +125,7 @@ export {
   editAvailabilityOccurrence,
   deleteTimeOff,
   listAvailabilityRules,
+  listAvailabilityRulesForSpecialists,
   listRoomAvailabilityRules,
   listRoomOccupancy,
   listTimeOff,

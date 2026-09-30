@@ -10,12 +10,18 @@ import {
   useCallback,
   useRef,
   useState,
-  type CSSProperties,
   type HTMLAttributes,
   type PointerEvent,
   type ReactNode,
 } from "react";
+import {
+  blockStyle,
+  CALENDAR_BLOCK_CLASSES,
+  type CalendarBlockVariant,
+} from "./calendar-block-style";
 import { cn } from "./lib/utils";
+
+export type { CalendarBlockVariant };
 
 // Week calendar primitives (docs/product/scheduling-ui-plan.md, K2): a grid
 // of day columns over an hour axis, blocks placed by minutes (percentages,
@@ -25,6 +31,8 @@ export interface CalendarColumn {
   key: string;
   label: string;
   sublabel?: string;
+  /** Before the label, e.g. a specialist's picture. */
+  icon?: ReactNode;
   isToday?: boolean;
   /** Accessible name of the day column. */
   ariaLabel: string;
@@ -92,7 +100,8 @@ export function CalendarWeekGrid({
                 )}
               >
                 <p className="flex items-center justify-center gap-1.5 text-xs font-bold text-[var(--text)]">
-                  {column.label}
+                  {column.icon}
+                  <span className="truncate">{column.label}</span>
                   {column.isToday ? (
                     <span
                       aria-hidden="true"
@@ -181,9 +190,6 @@ export function CalendarWeekGrid({
   );
 }
 
-export type CalendarBlockVariant =
-  "availability" | "appointment" | "blocked" | "closed" | "taken" | "preview";
-
 export interface CalendarBlockProps {
   range: MinuteRange;
   start: number;
@@ -200,24 +206,6 @@ export interface CalendarBlockProps {
   className?: string;
 }
 
-const VARIANT_CLASSES: Record<CalendarBlockVariant, string> = {
-  availability:
-    "inset-x-1 rounded-[var(--radius-control)] border border-l-[5px] border-[color-mix(in_srgb,var(--block-accent)_18%,transparent)] border-l-[var(--block-accent)] bg-[var(--block-tint)] shadow-sm",
-  appointment:
-    "inset-x-2 rounded-[var(--radius-control)] border border-l-4 border-[var(--border-strong)] border-l-[var(--block-accent)] bg-[var(--surface)] shadow-sm",
-  blocked:
-    "inset-x-1 rounded-[var(--radius-control)] border border-dashed border-[var(--border-strong)] bg-[repeating-linear-gradient(135deg,var(--surface-muted)_0_6px,transparent_6px_12px)]",
-  // Hours a room is closed: a background band under the other blocks.
-  closed:
-    "pointer-events-none inset-x-0 z-0 bg-[repeating-linear-gradient(135deg,var(--surface-muted)_0_6px,transparent_6px_12px)] p-1.5 text-[0.625rem] font-medium text-[var(--text-subtle)]",
-  // Someone else's hours (e.g. a colleague in the room): behind one's own
-  // blocks, and not in the way of dragging.
-  taken:
-    "pointer-events-none inset-x-1 z-0 rounded-[var(--radius-control)] border border-dashed border-[color-mix(in_srgb,var(--block-accent)_55%,transparent)] bg-[repeating-linear-gradient(135deg,color-mix(in_srgb,var(--block-accent)_12%,transparent)_0_6px,transparent_6px_12px)] p-1.5",
-  preview:
-    "pointer-events-none inset-x-1 z-30 rounded-[var(--radius-control)] border-2 border-dashed border-[var(--primary)] bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] shadow-lg",
-};
-
 /** A block in a day column, placed by its minutes. */
 export function CalendarBlock({
   range,
@@ -231,16 +219,10 @@ export function CalendarBlock({
   children,
   className,
 }: CalendarBlockProps) {
-  const total = range.end - range.start;
-  const style = {
-    top: `${((start - range.start) / total) * 100}%`,
-    height: `${((end - start) / total) * 100}%`,
-    "--block-accent": accent,
-    "--block-tint": tint,
-  } as CSSProperties;
+  const style = blockStyle({ range, start, end, accent, tint });
   const classes = cn(
     "absolute z-10 overflow-hidden p-2 text-left text-xs",
-    VARIANT_CLASSES[variant],
+    CALENDAR_BLOCK_CLASSES[variant],
     onClick &&
       "cursor-pointer transition-shadow hover:z-20 hover:shadow-md focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
     className,
