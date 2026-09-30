@@ -1,5 +1,6 @@
 import { QueryProvider } from "@repo/app-runtime/query-provider";
 import { AppToaster } from "@repo/ui/toaster";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="pl">
       <body>
-        <QueryProvider>{children}</QueryProvider>
+        <NuqsAdapter>
+          <QueryProvider>{children}</QueryProvider>
+        </NuqsAdapter>
         <AppToaster />
       </body>
     </html>

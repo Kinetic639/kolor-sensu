@@ -28,6 +28,7 @@ describe("claimBookingEmail", () => {
         client_name: "Jan Kowalski",
         client_email: "jan@example.com",
         manage_token: "link-token",
+        cancelled_by: null,
       },
     ]);
     expect(
@@ -47,6 +48,7 @@ describe("claimBookingEmail", () => {
       clientName: "Jan Kowalski",
       clientEmail: "jan@example.com",
       manageToken: "link-token",
+      cancelledBy: null,
     });
     expect(rpc).toHaveBeenCalledWith("claim_booking_email", {
       p_reference: "KS-20301002-1534",

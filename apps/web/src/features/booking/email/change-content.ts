@@ -113,6 +113,7 @@ export function cancelledContent(
     options,
     true,
   );
+  const byCentre = visit.cancelledBy === "centre";
   const refund =
     options.refundMinor > 0
       ? formatPrice({
@@ -127,11 +128,15 @@ export function cancelledContent(
       : []),
     ["Odwołany termin", span],
     ["Numer rezerwacji", visit.reference],
-    ["Zwrot", refund ?? "Bez zwrotu"],
+    ["Zwrot", refund ?? (byCentre ? "Nie dotyczy" : "Bez zwrotu")],
   ];
-  const intro = refund
+  const money = refund
     ? `Zwrócimy ${refund} tą samą metodą, którą zapłacono. Pieniądze zwykle wracają w ciągu kilku dni roboczych.`
-    : "Wizyta została odwołana po terminie bezpłatnego odwołania, dlatego opłata nie podlega zwrotowi.";
+    : null;
+  const intro = byCentre
+    ? `Przepraszamy, musieliśmy odwołać Twoją wizytę. ${money ?? "Skontaktuj się z nami, a pomożemy umówić nowy termin."}`
+    : (money ??
+      "Wizyta została odwołana po terminie bezpłatnego odwołania, dlatego opłata nie podlega zwrotowi.");
   return {
     subject: `Wizyta ${visit.reference} została odwołana`,
     preview: refund ? `Zwrot ${refund}` : "Wizyta odwołana",

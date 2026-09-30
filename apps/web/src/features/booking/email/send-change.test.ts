@@ -17,6 +17,7 @@ const claimed: ClaimedBookingEmail = {
   clientName: "Jan Kowalski",
   clientEmail: "jan@example.com",
   manageToken: null,
+  cancelledBy: null,
 };
 
 function deps(overrides: Partial<ChangeEmailDeps> = {}) {

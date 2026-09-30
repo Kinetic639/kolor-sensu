@@ -133,9 +133,26 @@ blokuje wolnych terminów, a każdy nowy hold oznacza przeterminowane jako
 `expired`. Holdowanie idzie przez serwer strony z kluczem
 `SUPABASE_SECRET_KEY` (limity na IP i Turnstile w R5), nie z przeglądarki.
 
-Do zrobienia przy kolejnych etapach: zmiana lub usunięcie okna dostępności
-z przyszłymi wizytami (R9), ponowne sprawdzenie godzin otwarcia gabinetu
-przy liczeniu terminów (dziś pilnuje ich zapis okna).
+Do zrobienia przy kolejnych etapach (etap K, edycja dostępności na
+kalendarzu z wizytami): ostrzeżenie przy zmianie lub usunięciu okna
+dostępności, w którym są przyszłe wizyty (wizyty zostają, bo są niezależne
+od okna), oraz ponowne sprawdzenie godzin otwarcia gabinetu przy liczeniu
+terminów (dziś pilnuje ich zapis okna).
+
+**Wizyty w portalach (R9):** `/kalendarz` w obu portalach to tabela
+rezerwacji (wzorzec data table z shadcn, bez TanStacka): renderowana na
+serwerze, stan w adresie (nuqs: `q`, `status`, `specjalista`, `zakres`,
+`sort`, `kierunek`, `strona`, `wierszy`), nagłówki sortowania, filtry i
+strony to linki, w przeglądarce działa tylko pole wyszukiwania (debounce,
+`shallow: false`). Wyszukiwanie, filtry, sortowanie z białej listy i
+stronicowanie robi `search_visits` (z łączną liczbą), jak `list_visits`
+(zakres dat, dla kalendarza w etapie K): admin wszystkie z płatnościami,
+specjalista swoje (`p_own` także, gdy jest adminem), zwolnione holdy się nie
+liczą. `centre_cancel_visit` (admin, zawsze pełny zwrot): portal admina
+wysyła odwołanie do trasy strony `/api/centrum/wizyty/[id]/odwolanie` z
+tokenem sesji admina (Stripe i Resend są tylko w aplikacji strony, a
+uprawnienia sprawdza baza). Nieudany zwrot zostaje przy wizycie
+(`refund_due_minor`): komunikat z liczbą i filtr „Zwrot do zlecenia”.
 
 ### Dostępność specjalistów (RD1, R1, R2)
 
@@ -359,7 +376,7 @@ Każdy commit realizujący zadanie aktualizuje status i wpisuje hash commitu.
 | R6  | Płatność Stripe: Payment Element, webhook, „Oczekujemy na potwierdzenie”, wygasanie                                                  | F4-03    | `DONE`        | 6147dfe     | Webhook sprawdzony przez Stripe CLI         |
 | R7  | Potwierdzenie i e-maile (Resend): potwierdzenie z linkiem i plikiem `.ics`                                                           | F4-04    | `DONE`        | eb75315     | Domena testowa; docelowa przed R10          |
 | R8  | Zarządzanie z linku: szczegóły, przełożenie, anulowanie ze zwrotem                                                                   | F4-04    | `DONE`        | 0b9c898     | Okna i limit w Ustawieniach (48 h, 1 raz)   |
-| R9  | Portale: lista wizyt specjalisty i admina, anulowanie przez centrum                                                                  | F4-04    | `NOT STARTED` |             | Widoki kalendarza: etap K (K5)              |
+| R9  | Portale: lista wizyt specjalisty i admina, anulowanie przez centrum                                                                  | F4-04    | `DONE`        |             | Widoki kalendarza: etap K (K5)              |
 | R10 | Przypomnienia e-mail 24 h przed wizytą, włączenie `booking_enabled` na produkcji                                                     | F4-04    | `NOT STARTED` |             |                                             |
 
 ### Potrzebne od centrum przed R5–R7

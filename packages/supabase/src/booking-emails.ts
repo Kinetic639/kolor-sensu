@@ -29,6 +29,8 @@ export interface ClaimedBookingEmail {
    * "cancelled" and "rescheduled", sent with the link the client already has.
    */
   manageToken: string | null;
+  /** For "cancelled": who cancelled it. */
+  cancelledBy: "client" | "centre" | null;
 }
 
 /** What the e-mail needs, or null when it is not this caller's to send. */
@@ -59,6 +61,10 @@ export async function claimBookingEmail(
         clientName: row.client_name,
         clientEmail: row.client_email,
         manageToken: row.manage_token ?? null,
+        cancelledBy:
+          row.cancelled_by === "client" || row.cancelled_by === "centre"
+            ? row.cancelled_by
+            : null,
       }
     : null;
 }

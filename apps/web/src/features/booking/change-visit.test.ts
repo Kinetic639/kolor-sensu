@@ -2,6 +2,7 @@ import { BookingError } from "@repo/supabase";
 import { describe, expect, it, vi } from "vitest";
 import {
   cancelVisit,
+  cancelVisitAsCentre,
   rescheduleVisit,
   type ChangeVisitDeps,
 } from "./change-visit";
@@ -111,6 +112,46 @@ describe("rescheduleVisit", () => {
     expect(await rescheduleVisit("t", "x", d)).toEqual({
       ok: false,
       code: "slot_unavailable",
+    });
+  });
+});
+
+describe("cancelVisitAsCentre", () => {
+  it("gives all the money back; the e-mail brings a new link", async () => {
+    const d = {
+      ...deps(),
+      centreCancel: vi.fn().mockResolvedValue({
+        reference: "KS-1",
+        refundMinor: 20000,
+        paymentIntentId: "pi_1",
+        rescheduleCount: 1,
+      }),
+    };
+    expect(await cancelVisitAsCentre("visit-1", d)).toEqual({
+      ok: true,
+      refundMinor: 20000,
+      refundFailed: false,
+    });
+    expect(d.refund).toHaveBeenCalledWith("pi_1", 20000, "KS-1");
+    expect(d.notify).toHaveBeenCalledWith({
+      kind: "cancelled",
+      reference: "KS-1",
+      manageToken: null,
+      sequence: 2,
+      refundMinor: 20000,
+    });
+  });
+
+  it("refuses what the database refuses", async () => {
+    const d = {
+      ...deps(),
+      centreCancel: vi
+        .fn()
+        .mockRejectedValue(new BookingError("not_cancellable", "no")),
+    };
+    expect(await cancelVisitAsCentre("visit-1", d)).toEqual({
+      ok: false,
+      code: "not_cancellable",
     });
   });
 });

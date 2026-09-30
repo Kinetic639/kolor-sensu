@@ -1357,9 +1357,19 @@ export type Database = {
           refund_minor: number;
         }[];
       };
+      centre_cancel_visit: {
+        Args: { p_appointment_id: string };
+        Returns: {
+          payment_intent_id: string | null;
+          reference: string;
+          refund_minor: number;
+          reschedule_count: number;
+        }[];
+      };
       claim_booking_email: {
         Args: { p_kind: string; p_reference: string };
         Returns: {
+          cancelled_by: string | null;
           client_email: string;
           client_name: string;
           currency_code: string;
@@ -1534,6 +1544,42 @@ export type Database = {
           starts_at: string;
         }[];
       };
+      list_visits: {
+        Args: {
+          p_from: string;
+          p_own?: boolean;
+          p_specialist_id?: string;
+          p_to: string;
+        };
+        Returns: {
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          client_email: string | null;
+          client_name: string | null;
+          client_notes: string | null;
+          client_phone: string | null;
+          currency_code: string;
+          ends_at: string;
+          id: string;
+          location_name: string | null;
+          mode: Database["public"]["Enums"]["visit_mode"];
+          paid: boolean | null;
+          price_minor: number;
+          reference: string;
+          refund_due_minor: number | null;
+          refunded_minor: number | null;
+          reschedule_count: number;
+          room_color: string | null;
+          room_id: string | null;
+          room_name: string | null;
+          service_name: string;
+          specialist_color: string | null;
+          specialist_id: string;
+          specialist_name: string;
+          starts_at: string;
+          status: Database["public"]["Enums"]["appointment_status"];
+        }[];
+      };
       mark_booking_email_sent: {
         Args: { p_kind: string; p_message_id: string; p_reference: string };
         Returns: undefined;
@@ -1639,6 +1685,50 @@ export type Database = {
           p_therapy_approaches?: string[];
         };
         Returns: string;
+      };
+      search_visits: {
+        Args: {
+          p_desc?: boolean;
+          p_from?: string;
+          p_limit?: number;
+          p_offset?: number;
+          p_own?: boolean;
+          p_query?: string;
+          p_refund_due?: boolean;
+          p_sort?: string;
+          p_specialist_id?: string;
+          p_statuses?: string[];
+          p_to?: string;
+        };
+        Returns: {
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          client_email: string | null;
+          client_name: string | null;
+          client_notes: string | null;
+          client_phone: string | null;
+          currency_code: string;
+          ends_at: string;
+          id: string;
+          location_name: string | null;
+          mode: Database["public"]["Enums"]["visit_mode"];
+          paid: boolean | null;
+          price_minor: number;
+          reference: string;
+          refund_due_minor: number | null;
+          refunded_minor: number | null;
+          reschedule_count: number;
+          room_color: string | null;
+          room_id: string | null;
+          room_name: string | null;
+          service_name: string;
+          specialist_color: string | null;
+          specialist_id: string;
+          specialist_name: string;
+          starts_at: string;
+          status: Database["public"]["Enums"]["appointment_status"];
+          total_count: number;
+        }[];
       };
       set_room_main_image: { Args: { p_image_id: string }; Returns: undefined };
       set_specialist_color: {

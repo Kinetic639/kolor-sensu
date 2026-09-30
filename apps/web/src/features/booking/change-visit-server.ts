@@ -1,5 +1,12 @@
-import { cancelBooking, recordRefund, rescheduleBooking } from "@repo/supabase";
+import {
+  cancelBooking,
+  centreCancelVisit,
+  recordRefund,
+  rescheduleBooking,
+} from "@repo/supabase";
+import { createSupabasePublicClient } from "@repo/supabase/public";
 import { stripeServer } from "@/lib/stripe";
+import { getPublicSupabaseEnvironment } from "@/lib/supabase/environment";
 import { createSecretClient } from "@/lib/supabase/secret";
 import type { ChangeVisitDeps } from "./change-visit";
 import { sendVisitChangeEmail } from "./email/confirmation-server";
@@ -28,5 +35,22 @@ export function changeVisitDeps(): ChangeVisitDeps {
       recordRefund(db, paymentIntentId, refundedMinor),
     reschedule: (token, startsAt) => rescheduleBooking(db, token, startsAt),
     notify: sendVisitChangeEmail,
+  };
+}
+
+/**
+ * Cancelling from the admin portal: the database acts as the admin whose
+ * access token came with the request (it checks the role); the refund and
+ * the e-mail go as for the client's own cancellation.
+ */
+export function centreCancelDeps(accessToken: string) {
+  const asAdmin = createSupabasePublicClient(
+    getPublicSupabaseEnvironment(),
+    accessToken,
+  );
+  return {
+    ...changeVisitDeps(),
+    centreCancel: (appointmentId: string) =>
+      centreCancelVisit(asAdmin, appointmentId),
   };
 }

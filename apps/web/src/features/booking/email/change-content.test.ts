@@ -17,6 +17,7 @@ const visit: ClaimedBookingEmail = {
   clientName: "Jan Kowalski",
   clientEmail: "jan@example.com",
   manageToken: null,
+  cancelledBy: null,
 };
 
 const options = {
@@ -62,6 +63,17 @@ describe("cancelledContent", () => {
     expect(content.intro).toContain("Zwrócimy 200 zł");
     expect(content.ics).toContain("STATUS:CANCELLED");
     expect(content.ics).toContain("SEQUENCE:1");
+  });
+
+  it("apologises when the centre cancelled, with all the money back", () => {
+    const content = cancelledContent(
+      { ...visit, cancelledBy: "centre" },
+      { ...options, sequence: 1, refundMinor: 20000 },
+    );
+    expect(content.intro).toBe(
+      "Przepraszamy, musieliśmy odwołać Twoją wizytę. Zwrócimy 200 zł tą samą metodą, którą zapłacono. Pieniądze zwykle wracają w ciągu kilku dni roboczych.",
+    );
+    expect(content.text).toContain("Przepraszamy");
   });
 
   it("says plainly when there is no refund", () => {

@@ -1058,4 +1058,227 @@ END;
 $body$;
 RESET ROLE;
 
+-- T: visits in the portals (R9). Specialists list their own, admins all
+-- (with payments); holds are not visits. Only the centre cancels from the
+-- portal, always with the money back; its e-mail carries a new link.
+GRANT SELECT ON s_visits TO authenticated, anon;
+SET LOCAL ROLE service_role;
+SELECT pg_temp.paid_visit('t1', '12:00');
+-- A hold given back in the wizard: cancelled, but never a visit.
+SELECT public.release_hold((SELECT access_token FROM public.hold_slot(
+  'booking-test-consultation', 'booking-test-anna', 'in_person',
+  pg_temp.at((SELECT monday + 2 FROM booking_test), '10:00'), p_client_key => 'visitor-t2')));
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  week date;
+  row record;
+  hint text;
+BEGIN
+  SELECT monday INTO week FROM booking_test;
+  SELECT * INTO row FROM public.list_visits(week, week + 6)
+  WHERE reference = (SELECT reference FROM s_visits WHERE name = 't1');
+  IF row IS NULL OR row.status <> 'confirmed' OR row.client_name <> 'Ola Test'
+     OR row.service_name <> 'Booking Consultation' OR row.room_name <> 'Booking Room'
+     OR row.starts_at <> pg_temp.at(week + 2, '12:00') THEN
+    RAISE EXCEPTION 'T: Anna''s visit: %', row_to_json(row);
+  END IF;
+  -- Payments are the centre's.
+  IF row.paid IS NOT NULL OR row.refunded_minor IS NOT NULL THEN
+    RAISE EXCEPTION 'T: a specialist saw payments';
+  END IF;
+  -- Booked visits only, never holds (live or given back).
+  IF EXISTS (SELECT 1 FROM public.list_visits(week, week + 6)
+             WHERE status NOT IN ('confirmed', 'awaiting_payment', 'cancelled')
+                OR starts_at = pg_temp.at(week + 2, '10:00')) THEN
+    RAISE EXCEPTION 'T: a hold listed as a visit';
+  END IF;
+  BEGIN
+    PERFORM public.centre_cancel_visit(row.id);
+    RAISE EXCEPTION 'T: a specialist cancelled from the portal';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.list_visits(week, week + 70);
+    RAISE EXCEPTION 'T: a range too long';
+  EXCEPTION WHEN invalid_parameter_value THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.list_visits(
+      (SELECT monday FROM booking_test), (SELECT monday + 6 FROM booking_test))) THEN
+    RAISE EXCEPTION 'T: Jan saw Anna''s visits';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  week date;
+  row record;
+  cancelled record;
+BEGIN
+  SELECT monday INTO week FROM booking_test;
+  SELECT * INTO row FROM public.list_visits(week, week + 6)
+  WHERE reference = (SELECT reference FROM s_visits WHERE name = 't1');
+  IF row IS NULL OR row.paid IS DISTINCT FROM true OR row.refunded_minor <> 0 THEN
+    RAISE EXCEPTION 'T: the admin''s view: %', row_to_json(row);
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.list_visits(week, week + 6, (SELECT jan_id FROM booking_test))) THEN
+    RAISE EXCEPTION 'T: the specialist filter';
+  END IF;
+  -- The specialist portal: own visits only, even for an admin (who has none).
+  BEGIN
+    PERFORM public.list_visits(week, week + 6, p_own => true);
+    RAISE EXCEPTION 'T: an admin without a specialist profile listed "own" visits';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+
+  SELECT * INTO cancelled FROM public.centre_cancel_visit(row.id);
+  IF (cancelled.refund_minor, cancelled.payment_intent_id) IS DISTINCT FROM (25000, 'pi_test_t1'::text) THEN
+    RAISE EXCEPTION 'T: the centre''s cancellation: %', row_to_json(cancelled);
+  END IF;
+  SELECT * INTO row FROM public.list_visits(week, week + 6) WHERE id = row.id;
+  IF (row.status, row.cancelled_by, row.refund_due_minor)
+     IS DISTINCT FROM ('cancelled'::public.appointment_status, 'centre'::text, 25000) THEN
+    RAISE EXCEPTION 'T: the cancelled visit: %', row_to_json(row);
+  END IF;
+  BEGIN
+    PERFORM public.centre_cancel_visit(row.id);
+    RAISE EXCEPTION 'T: cancelled twice';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'T:%' THEN RAISE; END IF;
+  END;
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  mail record;
+BEGIN
+  SELECT * INTO mail FROM public.claim_booking_email(
+    (SELECT reference FROM s_visits WHERE name = 't1'), 'cancelled');
+  IF mail IS NULL OR mail.cancelled_by <> 'centre' OR length(mail.manage_token) < 40
+     OR NOT EXISTS (SELECT 1 FROM public.get_booking(mail.manage_token)) THEN
+    RAISE EXCEPTION 'T: the centre''s cancellation e-mail: %', row_to_json(mail);
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.list_visits(current_date, current_date);
+    RAISE EXCEPTION 'T: anon listed visits';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.centre_cancel_visit(gen_random_uuid());
+    RAISE EXCEPTION 'T: anon cancelled';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
+-- U: the bookings table (R9). The database searches, filters, sorts and
+-- pages, with the number of all matches; a search is literal text; the
+-- same people see the same visits as in list_visits.
+SET LOCAL ROLE service_role;
+SELECT pg_temp.paid_visit('u1', '09:00');
+SELECT pg_temp.paid_visit('u2', '11:00');
+RESET ROLE;
+UPDATE public.appointments SET client_name = 'Zofia 100% Test'
+WHERE reference = (SELECT reference FROM s_visits WHERE name = 'u2');
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  week date;
+  total bigint;
+  first text;
+BEGIN
+  SELECT monday INTO week FROM booking_test;
+  -- One page, and how many there are in all.
+  SELECT max(total_count) INTO total
+  FROM public.search_visits(p_from => pg_temp.at(week, '00:00'), p_limit => 1);
+  IF total < 2 THEN RAISE EXCEPTION 'U: the total count'; END IF;
+  IF (SELECT count(*) FROM public.search_visits(p_from => pg_temp.at(week, '00:00'), p_limit => 1)) <> 1 THEN
+    RAISE EXCEPTION 'U: a page of one';
+  END IF;
+  -- A search is literal: "%" finds the name with a per cent sign only.
+  IF (SELECT array_agg(reference) FROM public.search_visits(p_query => '100%'))
+     IS DISTINCT FROM ARRAY[(SELECT reference FROM s_visits WHERE name = 'u2')] THEN
+    RAISE EXCEPTION 'U: a literal search';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.search_visits(p_query => '_ofia')) THEN
+    RAISE EXCEPTION 'U: "_" matched as a wildcard';
+  END IF;
+  -- Sorted as asked: the latest first.
+  SELECT reference INTO first FROM public.search_visits(
+    p_query => 'Test', p_from => pg_temp.at(week + 2, '00:00'),
+    p_to => pg_temp.at(week + 3, '00:00'), p_statuses => ARRAY['confirmed'],
+    p_desc => true, p_limit => 1);
+  IF first <> (SELECT reference FROM s_visits WHERE name = 'u2') THEN
+    RAISE EXCEPTION 'U: sorting by time, latest first: %', first;
+  END IF;
+  -- Only allowed sorts, statuses and page sizes.
+  BEGIN
+    PERFORM public.search_visits(p_sort => 'client_email; DROP TABLE x');
+    RAISE EXCEPTION 'U: an unknown sort';
+  EXCEPTION WHEN invalid_parameter_value THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.search_visits(p_statuses => ARRAY['held']);
+    RAISE EXCEPTION 'U: holds as a status';
+  EXCEPTION WHEN invalid_parameter_value THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.search_visits(p_limit => 1000);
+    RAISE EXCEPTION 'U: a page too large';
+  EXCEPTION WHEN invalid_parameter_value THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
+-- Jan (another specialist) finds none of Anna's visits.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.search_visits(p_query => 'Test')) THEN
+    RAISE EXCEPTION 'U: Jan found Anna''s visits';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  PERFORM public.search_visits();
+  RAISE EXCEPTION 'U: anon searched visits';
+EXCEPTION WHEN insufficient_privilege THEN NULL;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

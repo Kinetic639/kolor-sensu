@@ -17,6 +17,7 @@ const visit = {
   clientName: "Jan Kowalski",
   clientEmail: "jan@example.com",
   manageToken: "link-token",
+  cancelledBy: null,
 } satisfies ClaimedBookingEmail;
 
 const options = {

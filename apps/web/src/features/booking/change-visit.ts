@@ -2,6 +2,7 @@ import {
   BookingError,
   type BookingErrorCode,
   type CancelledBooking,
+  type CentreCancelledVisit,
   type RescheduledBooking,
 } from "@repo/supabase";
 import type { VisitChange } from "./email/send-change";
@@ -51,8 +52,37 @@ export async function cancelVisit(
   } catch (error) {
     return refused(error);
   }
-  const { reference, refundMinor, paymentIntentId } = cancelled;
+  return settleCancellation(cancelled, { manageToken, sequence }, deps);
+}
 
+/**
+ * Cancelling by the centre (an admin, from the portal): always the money
+ * back; the e-mail brings the client a new link.
+ */
+export async function cancelVisitAsCentre(
+  appointmentId: string,
+  deps: Omit<ChangeVisitDeps, "cancel" | "reschedule"> & {
+    centreCancel: (appointmentId: string) => Promise<CentreCancelledVisit>;
+  },
+): Promise<{ ok: true; refundMinor: number; refundFailed: boolean } | Refused> {
+  let cancelled: CentreCancelledVisit;
+  try {
+    cancelled = await deps.centreCancel(appointmentId);
+  } catch (error) {
+    return refused(error);
+  }
+  return settleCancellation(
+    cancelled,
+    { manageToken: null, sequence: cancelled.rescheduleCount + 1 },
+    deps,
+  );
+}
+
+async function settleCancellation(
+  { reference, refundMinor, paymentIntentId }: CancelledBooking,
+  { manageToken, sequence }: { manageToken: string | null; sequence: number },
+  deps: Pick<ChangeVisitDeps, "refund" | "recordRefund" | "notify">,
+): Promise<{ ok: true; refundMinor: number; refundFailed: boolean }> {
   let refundFailed = false;
   if (refundMinor > 0 && paymentIntentId) {
     try {

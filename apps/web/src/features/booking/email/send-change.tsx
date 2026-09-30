@@ -20,7 +20,8 @@ export type VisitChange =
   | {
       kind: "cancelled";
       reference: string;
-      manageToken: string;
+      /** Null when the centre cancels: the claim brings a new link. */
+      manageToken: string | null;
       sequence: number;
       refundMinor: number;
     };
@@ -51,7 +52,9 @@ export async function sendChangeEmail(
   const visit = await deps.claim(reference, kind);
   if (!visit) return "skipped";
   try {
-    const options = { ...deps, ...change };
+    const manageToken = change.manageToken ?? visit.manageToken;
+    if (!manageToken) throw new Error("No link token for the e-mail");
+    const options = { ...deps, ...change, manageToken };
     const content =
       change.kind === "cancelled"
         ? cancelledContent(visit, {
