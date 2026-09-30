@@ -178,3 +178,9 @@ export {
   releaseBookingEmail,
 } from "./booking-emails";
 export type { BookingEmailKind, ClaimedBookingEmail } from "./booking-emails";
+export {
+  cancelBooking,
+  listRescheduleSlots,
+  rescheduleBooking,
+} from "./booking-changes";
+export type { CancelledBooking, RescheduledBooking } from "./booking-changes";

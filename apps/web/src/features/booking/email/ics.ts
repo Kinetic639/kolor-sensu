@@ -10,6 +10,9 @@ export interface IcsEvent {
   location?: string | null;
   description?: string | null;
   url?: string | null;
+  /** Bumped on every change, so calendars update the same event. */
+  sequence?: number;
+  cancelled?: boolean;
   now?: Date;
 }
 
@@ -56,9 +59,10 @@ export function visitIcs(event: IcsEvent) {
     "VERSION:2.0",
     "PRODID:-//Kolor Sensu//Rezerwacje//PL",
     "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
+    event.cancelled ? "METHOD:CANCEL" : "METHOD:PUBLISH",
     "BEGIN:VEVENT",
     `UID:${event.uid}`,
+    `SEQUENCE:${event.sequence ?? 0}`,
     `DTSTAMP:${utc(event.now ?? new Date())}`,
     `DTSTART:${utc(event.startsAt)}`,
     `DTEND:${utc(event.endsAt)}`,
@@ -66,7 +70,7 @@ export function visitIcs(event: IcsEvent) {
     event.location ? `LOCATION:${escapeText(event.location)}` : null,
     event.description ? `DESCRIPTION:${escapeText(event.description)}` : null,
     event.url ? `URL:${event.url}` : null,
-    "STATUS:CONFIRMED",
+    event.cancelled ? "STATUS:CANCELLED" : "STATUS:CONFIRMED",
     "END:VEVENT",
     "END:VCALENDAR",
   ].filter((line): line is string => line !== null);

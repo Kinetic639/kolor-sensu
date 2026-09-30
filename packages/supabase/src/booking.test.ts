@@ -74,14 +74,24 @@ describe("listBookableCatalog", () => {
 });
 
 describe("getBookingWindow", () => {
-  it("reads the centre's time zone, horizon and hold", async () => {
+  it("reads the centre's time zone, horizon, hold and change policy", async () => {
     const { client } = rpcClient([
-      { time_zone: "Europe/Warsaw", horizon_days: 60, hold_minutes: 10 },
+      {
+        time_zone: "Europe/Warsaw",
+        horizon_days: 60,
+        hold_minutes: 10,
+        cancellation_window_hours: 48,
+        reschedule_window_hours: 48,
+        max_self_reschedules: 1,
+      },
     ]);
     expect(await getBookingWindow(client)).toEqual({
       timeZone: "Europe/Warsaw",
       horizonDays: 60,
       holdMinutes: 10,
+      cancellationWindowHours: 48,
+      rescheduleWindowHours: 48,
+      maxSelfReschedules: 1,
     });
   });
 });
@@ -189,6 +199,10 @@ describe("a guest's visit by token", () => {
       client_phone: "600100200",
       client_notes: null,
       details_saved: true,
+      reschedule_count: 1,
+      cancelled_by: null,
+      refund_due_minor: null,
+      refunded_minor: 0,
     };
     expect(await getBooking(rpcClient([row]).client, "token")).toMatchObject({
       details: {
@@ -201,6 +215,10 @@ describe("a guest's visit by token", () => {
       status: "held",
       startsAt: "2030-01-07T09:00:00+00:00",
       roomName: "Gabinet Zielony",
+      rescheduleCount: 1,
+      cancelledBy: null,
+      refundDueMinor: null,
+      refundedMinor: 0,
     });
     expect(await getBooking(rpcClient([]).client, "wrong")).toBeNull();
   });

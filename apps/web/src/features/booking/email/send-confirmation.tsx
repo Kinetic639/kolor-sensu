@@ -44,7 +44,9 @@ export async function sendConfirmationEmail(
   const visit = await deps.claim(reference);
   if (!visit) return "skipped";
   try {
-    const content = confirmationContent(visit, deps);
+    const { manageToken } = visit;
+    if (!manageToken) throw new Error("The claim gave no link token");
+    const content = confirmationContent({ ...visit, manageToken }, deps);
     const { id } = await deps.send(
       {
         from: deps.from,
@@ -60,7 +62,7 @@ export async function sendConfirmationEmail(
           },
         ],
       },
-      `confirmation:${visit.reference}:${claimKey(visit.manageToken)}`,
+      `confirmation:${visit.reference}:${claimKey(manageToken)}`,
     );
     await deps.markSent(reference, id);
     return "sent";

@@ -2,7 +2,7 @@ import type { ClaimedBookingEmail } from "@repo/supabase";
 import { describe, expect, it } from "vitest";
 import { confirmationContent } from "./confirmation-content";
 
-const visit: ClaimedBookingEmail = {
+const visit = {
   reference: "KS-20301002-1534",
   mode: "in_person",
   startsAt: "2030-10-02T09:00:00+00:00",
@@ -17,7 +17,7 @@ const visit: ClaimedBookingEmail = {
   clientName: "Jan Kowalski",
   clientEmail: "jan@example.com",
   manageToken: "link-token",
-};
+} satisfies ClaimedBookingEmail;
 
 const options = {
   siteUrl: "https://kolorsensu.pl",

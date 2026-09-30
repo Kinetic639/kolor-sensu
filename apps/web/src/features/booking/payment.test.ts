@@ -26,6 +26,10 @@ const booking: GuestBooking = {
     phone: "600100200",
     notes: null,
   },
+  rescheduleCount: 0,
+  cancelledBy: null,
+  refundDueMinor: null,
+  refundedMinor: 0,
 };
 
 describe("checkoutSessionParams", () => {

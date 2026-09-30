@@ -52,4 +52,18 @@ describe("visitIcs", () => {
     );
     expect(long).not.toContain("�");
   });
+
+  it("updates the same event when the visit moves or is cancelled", () => {
+    expect(lines).toContain("SEQUENCE:0");
+    expect(lines).toContain("STATUS:CONFIRMED");
+    const moved = visitIcs({ ...event, sequence: 1 }).split("\r\n");
+    expect(moved).toContain("SEQUENCE:1");
+    const cancelled = visitIcs({ ...event, sequence: 2, cancelled: true });
+    expect(cancelled.split("\r\n")).toEqual(
+      expect.arrayContaining(["STATUS:CANCELLED", "METHOD:CANCEL"]),
+    );
+    expect(
+      cancelled.split("\r\n").filter((line) => line.startsWith("UID:")),
+    ).toEqual(lines.filter((line) => line.startsWith("UID:")));
+  });
 });

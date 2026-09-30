@@ -10,9 +10,9 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-import type { ConfirmationContent } from "./confirmation-content";
+import type { VisitEmailContent } from "./confirmation-content";
 
-// The confirmation e-mail's look: simple, readable in every mail client,
+// A visit e-mail's look (the confirmation, a new time, a cancellation): simple, readable in every mail client,
 // in the public site's colours (inline, as e-mail needs).
 
 const colors = {
@@ -24,11 +24,7 @@ const colors = {
   border: "#e3e0d8",
 };
 
-export function ConfirmationEmail({
-  content,
-}: {
-  content: ConfirmationContent;
-}) {
+export function ConfirmationEmail({ content }: { content: VisitEmailContent }) {
   return (
     <Html lang="pl">
       <Head />
@@ -60,10 +56,10 @@ export function ConfirmationEmail({
             as="h1"
             style={{ fontSize: 24, lineHeight: "32px", margin: "8px 0 16px" }}
           >
-            Twoja wizyta jest potwierdzona
+            {content.heading}
           </Heading>
           <Text style={{ fontSize: 16, lineHeight: "24px" }}>
-            {content.greeting} Dziękujemy za rezerwację i płatność.
+            {content.greeting} {content.intro}
           </Text>
 
           <Section
@@ -96,14 +92,16 @@ export function ConfirmationEmail({
               padding: "12px 24px",
             }}
           >
-            Zobacz swoją wizytę
+            {content.buttonLabel}
           </Button>
 
-          <Text
-            style={{ color: colors.muted, fontSize: 14, lineHeight: "22px" }}
-          >
-            W załączniku jest plik, który doda wizytę do Twojego kalendarza.
-          </Text>
+          {content.note ? (
+            <Text
+              style={{ color: colors.muted, fontSize: 14, lineHeight: "22px" }}
+            >
+              {content.note}
+            </Text>
+          ) : null}
 
           <Hr style={{ borderColor: colors.border, margin: "24px 0" }} />
           {content.contactLine ? (

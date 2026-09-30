@@ -33,6 +33,7 @@ export async function GET(
       .filter(Boolean)
       .join("\n"),
     url: `${siteUrl()}/wizyta/${token}`,
+    sequence: booking.rescheduleCount,
   });
   return new Response(body, {
     headers: {

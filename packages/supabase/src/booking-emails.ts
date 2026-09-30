@@ -24,8 +24,11 @@ export interface ClaimedBookingEmail {
   currencyCode: string;
   clientName: string;
   clientEmail: string;
-  /** For the e-mail's link only; the database keeps its hash. */
-  manageToken: string;
+  /**
+   * A new link token for the e-mail (the database keeps its hash); null for
+   * "cancelled" and "rescheduled", sent with the link the client already has.
+   */
+  manageToken: string | null;
 }
 
 /** What the e-mail needs, or null when it is not this caller's to send. */
@@ -55,7 +58,7 @@ export async function claimBookingEmail(
         currencyCode: row.currency_code,
         clientName: row.client_name,
         clientEmail: row.client_email,
-        manageToken: row.manage_token,
+        manageToken: row.manage_token ?? null,
       }
     : null;
 }

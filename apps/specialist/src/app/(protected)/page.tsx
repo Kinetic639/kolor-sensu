@@ -20,19 +20,14 @@ import {
 export default async function Home() {
   const client = await createClient();
   const specialist = await getMySpecialist(client);
-  const [
-    publishedProfile,
-    draft,
-    locations,
-    availableServices,
-    myServices,
-  ] = await Promise.all([
-    specialist ? getMyPublishedProfile(client, specialist.id) : null,
-    specialist ? getMyDraft(client, specialist.id) : null,
-    listLocations(client),
-    listAvailableServicesForSpecialist(client),
-    listMySpecialistServices(client, specialist?.id),
-  ]);
+  const [publishedProfile, draft, locations, availableServices, myServices] =
+    await Promise.all([
+      specialist ? getMyPublishedProfile(client, specialist.id) : null,
+      specialist ? getMyDraft(client, specialist.id) : null,
+      listLocations(client),
+      listAvailableServicesForSpecialist(client),
+      listMySpecialistServices(client, specialist?.id),
+    ]);
   const serviceById = new Map(
     availableServices.map((service) => [service.id, service]),
   );

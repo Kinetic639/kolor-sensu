@@ -17,19 +17,14 @@ import {
 
 export default async function Home() {
   const client = await createClient();
-  const [
-    specialists,
-    pendingDrafts,
-    locations,
-    services,
-    specialistOffers,
-  ] = await Promise.all([
-    listSpecialistsForAdmin(client),
-    listPendingSpecialistDrafts(client),
-    listLocations(client),
-    listServicesAdmin(client),
-    listSpecialistOffersAdmin(client),
-  ]);
+  const [specialists, pendingDrafts, locations, services, specialistOffers] =
+    await Promise.all([
+      listSpecialistsForAdmin(client),
+      listPendingSpecialistDrafts(client),
+      listLocations(client),
+      listServicesAdmin(client),
+      listSpecialistOffersAdmin(client),
+    ]);
   const activeSpecialists = specialists.filter(
     (specialist) => specialist.active,
   );

@@ -6,12 +6,16 @@ import { ConfirmationEmail } from "./confirmation-email";
 const content: ConfirmationContent = {
   subject: "Potwierdzenie wizyty KS-1",
   preview: "Konsultacja, środa",
+  heading: "Twoja wizyta jest potwierdzona",
   greeting: "Dzień dobry, Jan <b>Kowalski</b>!",
+  intro: "Dziękujemy za rezerwację i płatność.",
   rows: [
     ["Usługa", "Konsultacja"],
     ["Numer rezerwacji", "KS-1"],
   ],
   manageUrl: "https://kolorsensu.pl/wizyta/link-token",
+  buttonLabel: "Zobacz swoją wizytę",
+  note: "W załączniku jest plik, który doda wizytę do Twojego kalendarza.",
   contactLine: "+48 600 100 200",
   text: "",
   ics: "",

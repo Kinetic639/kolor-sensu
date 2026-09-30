@@ -1,10 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import {
-  PageTitle,
-  PortalRoutePlaceholder,
-  StatTile,
-} from "./portal-content";
+import { PageTitle, PortalRoutePlaceholder, StatTile } from "./portal-content";
 
 describe("StatTile", () => {
   it("shows a figure with its label and detail", () => {
@@ -35,9 +31,7 @@ describe("PageTitle", () => {
 
 describe("PortalRoutePlaceholder", () => {
   it("has no visible page header", () => {
-    render(
-      <PortalRoutePlaceholder title="Kalendarz" />,
-    );
+    render(<PortalRoutePlaceholder title="Kalendarz" />);
     expect(
       screen.getByRole("heading", { level: 1, name: "Kalendarz" }),
     ).toHaveClass("sr-only");

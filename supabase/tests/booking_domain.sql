@@ -786,4 +786,276 @@ END;
 $body$;
 RESET ROLE;
 
+-- S: the client changes a visit from the e-mail link (R8). Only the link's
+-- token works. Cancelling gives the money back until the centre's window,
+-- nothing after; moving goes to another free time of the same offer, as
+-- many times as the centre allows and not later than its window. The
+-- e-mails about it keep the client's link working.
+-- Anna: Wednesday 9–13 in the room. The windows are set by the test (0 or
+-- 720 hours), so the day it runs on does not matter.
+INSERT INTO public.specialist_availability_rules (
+  specialist_id, recurrence, weekdays, starts_at, ends_at, valid_from, mode, room_id
+)
+SELECT anna_id, 'weekly', ARRAY[3]::smallint[], '09:00', '13:00', monday, 'in_person', room_id
+FROM booking_test;
+UPDATE public.center_settings
+SET cancellation_window_hours = 0, reschedule_window_hours = 0, max_self_reschedules = 1;
+
+CREATE TEMP TABLE s_visits (name text PRIMARY KEY, reference text, hold_token text, link_token text);
+GRANT SELECT, INSERT ON s_visits TO service_role;
+
+-- A confirmed, paid visit on Wednesday, kept by name with its tokens.
+CREATE FUNCTION pg_temp.paid_visit(p_name text, p_time time)
+RETURNS void
+LANGUAGE plpgsql
+AS $
+DECLARE
+  held record;
+  mail record;
+BEGIN
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at((SELECT monday + 2 FROM booking_test), p_time), p_client_key => 'visitor-' || p_name
+  );
+  PERFORM public.save_booking_details(held.access_token, 'Ola Test', 'ola@example.com',
+    '600100200', NULL, true, true);
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_test_' || p_name,
+    now() + interval '30 minutes', 25000, 'PLN');
+  PERFORM public.fulfill_checkout_session('cs_test_' || p_name, true, 'pi_test_' || p_name);
+  SELECT * INTO mail FROM public.claim_booking_email(held.reference, 'confirmation');
+  INSERT INTO s_visits VALUES (p_name, held.reference, held.access_token, mail.manage_token);
+END;
+$;
+
+-- The hint of what a statement raised ('' when it raised nothing).
+CREATE FUNCTION pg_temp.hint_of(p_sql text)
+RETURNS text
+LANGUAGE plpgsql
+AS $
+DECLARE
+  hint text;
+BEGIN
+  EXECUTE p_sql;
+  RETURN '';
+EXCEPTION WHEN raise_exception THEN
+  GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
+  RETURN hint;
+END;
+$;
+
+-- Wednesday's free times for anyone, as local `HH:MM`.
+CREATE FUNCTION pg_temp.wednesday_times()
+RETURNS text
+LANGUAGE sql
+AS $
+  SELECT coalesce(string_agg(to_char(starts_at AT TIME ZONE 'Europe/Warsaw', 'HH24:MI'), ' ' ORDER BY starts_at), '')
+  FROM public.list_free_slots('booking-test-consultation', 'booking-test-anna', 'in_person',
+    (SELECT monday + 2 FROM booking_test), (SELECT monday + 2 FROM booking_test));
+$;
+
+GRANT EXECUTE ON FUNCTION pg_temp.paid_visit(text, time) TO service_role;
+GRANT EXECUTE ON FUNCTION pg_temp.hint_of(text) TO service_role;
+GRANT EXECUTE ON FUNCTION pg_temp.wednesday_times() TO service_role;
+
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  wed date;
+  a s_visits%ROWTYPE;
+  moved record;
+  mail record;
+  times text;
+BEGIN
+  SELECT monday + 2 INTO wed FROM booking_test;
+  PERFORM pg_temp.paid_visit('s1', '09:00');
+  SELECT * INTO a FROM s_visits WHERE name = 's1';
+
+  -- The policy is in the booking window.
+  IF (SELECT (cancellation_window_hours, reschedule_window_hours, max_self_reschedules)
+      FROM public.booking_window()) IS DISTINCT FROM (0, 0, 1) THEN
+    RAISE EXCEPTION 'S: the booking window has no change policy';
+  END IF;
+
+  -- Times to move to: the day's other free times; its own time is not
+  -- one, and it does not block the times next to it.
+  SELECT string_agg(to_char(starts_at AT TIME ZONE 'Europe/Warsaw', 'HH24:MI'), ' ' ORDER BY starts_at)
+  INTO times FROM public.list_reschedule_slots(a.link_token, wed, wed);
+  IF times IS DISTINCT FROM '10:00 11:00 12:00' THEN
+    RAISE EXCEPTION 'S: times to move to: %', times;
+  END IF;
+  -- The hold's token (the wizard's cookie) changes nothing.
+  IF EXISTS (SELECT 1 FROM public.list_reschedule_slots(a.hold_token, wed, wed)) THEN
+    RAISE EXCEPTION 'S: the hold token lists times to move to';
+  END IF;
+  IF pg_temp.hint_of(format('SELECT public.reschedule_booking(%L, %L)', a.hold_token, pg_temp.at(wed, '10:00'))) <> 'not_found'
+     OR pg_temp.hint_of(format('SELECT public.cancel_booking(%L)', a.hold_token)) <> 'not_found' THEN
+    RAISE EXCEPTION 'S: the hold token changed the visit';
+  END IF;
+  -- Not to a time that is not free, nor to its own.
+  IF pg_temp.hint_of(format('SELECT public.reschedule_booking(%L, %L)', a.link_token, pg_temp.at(wed, '10:30'))) <> 'slot_unavailable'
+     OR pg_temp.hint_of(format('SELECT public.reschedule_booking(%L, %L)', a.link_token, pg_temp.at(wed, '09:00'))) <> 'slot_unavailable' THEN
+    RAISE EXCEPTION 'S: moved to a time that is not free';
+  END IF;
+
+  -- Moving: the new time, with its buffer; the old one is free again.
+  SELECT * INTO moved FROM public.reschedule_booking(a.link_token, pg_temp.at(wed, '10:00'));
+  IF moved.reference <> a.reference OR moved.starts_at <> pg_temp.at(wed, '10:00')
+     OR moved.ends_at <> pg_temp.at(wed, '10:50') OR moved.reschedule_count <> 1 THEN
+    RAISE EXCEPTION 'S: the move: %', row_to_json(moved);
+  END IF;
+  IF (SELECT (status, starts_at, reschedule_count, price_minor) FROM public.get_booking(a.link_token))
+     IS DISTINCT FROM ('confirmed'::public.appointment_status, pg_temp.at(wed, '10:00'), 1, 25000) THEN
+    RAISE EXCEPTION 'S: the moved visit';
+  END IF;
+  IF (SELECT blocks FROM public.appointments WHERE reference = a.reference)
+     <> tstzrange(pg_temp.at(wed, '10:00'), pg_temp.at(wed, '11:00')) THEN
+    RAISE EXCEPTION 'S: the moved visit does not block its new time';
+  END IF;
+  IF pg_temp.wednesday_times() <> '09:00 11:00 12:00' THEN
+    RAISE EXCEPTION 'S: free times after the move: %', pg_temp.wednesday_times();
+  END IF;
+
+  -- The e-mail about it: once per move, and no new link (theirs works).
+  SELECT * INTO mail FROM public.claim_booking_email(a.reference, 'rescheduled');
+  IF mail IS NULL OR mail.manage_token IS NOT NULL OR mail.starts_at <> pg_temp.at(wed, '10:00') THEN
+    RAISE EXCEPTION 'S: the rescheduled e-mail: %', row_to_json(mail);
+  END IF;
+  PERFORM public.mark_booking_email_sent(a.reference, 'rescheduled', 'msg_s1');
+  IF EXISTS (SELECT 1 FROM public.claim_booking_email(a.reference, 'rescheduled')) THEN
+    RAISE EXCEPTION 'S: the rescheduled e-mail claimed twice';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.get_booking(a.link_token)) THEN
+    RAISE EXCEPTION 'S: the link stopped working';
+  END IF;
+
+  -- Once only (the centre's limit): then nothing to move to.
+  IF pg_temp.hint_of(format('SELECT public.reschedule_booking(%L, %L)', a.link_token, pg_temp.at(wed, '11:00'))) <> 'not_reschedulable'
+     OR EXISTS (SELECT 1 FROM public.list_reschedule_slots(a.link_token, wed, wed)) THEN
+    RAISE EXCEPTION 'S: moved more times than allowed';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- The centre allows a second move: it goes, and its e-mail goes again.
+UPDATE public.center_settings SET max_self_reschedules = 2;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  wed date;
+  a s_visits%ROWTYPE;
+BEGIN
+  SELECT monday + 2 INTO wed FROM booking_test;
+  SELECT * INTO a FROM s_visits WHERE name = 's1';
+  IF (SELECT reschedule_count FROM public.reschedule_booking(a.link_token, pg_temp.at(wed, '11:00'))) <> 2 THEN
+    RAISE EXCEPTION 'S: the second move';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.claim_booking_email(a.reference, 'rescheduled')) THEN
+    RAISE EXCEPTION 'S: no e-mail about the second move';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Inside the centre's window (720 hours): no moving, no refund.
+UPDATE public.center_settings
+SET max_self_reschedules = 5, reschedule_window_hours = 720, cancellation_window_hours = 720;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  wed date;
+  b s_visits%ROWTYPE;
+  cancelled record;
+BEGIN
+  SELECT monday + 2 INTO wed FROM booking_test;
+  PERFORM pg_temp.paid_visit('s2', '09:00');
+  SELECT * INTO b FROM s_visits WHERE name = 's2';
+  IF pg_temp.hint_of(format('SELECT public.reschedule_booking(%L, %L)', b.link_token, pg_temp.at(wed, '12:00'))) <> 'not_reschedulable'
+     OR EXISTS (SELECT 1 FROM public.list_reschedule_slots(b.link_token, wed, wed)) THEN
+    RAISE EXCEPTION 'S: moved inside the window';
+  END IF;
+
+  SELECT * INTO cancelled FROM public.cancel_booking(b.link_token);
+  IF (cancelled.reference, cancelled.refund_minor, cancelled.payment_intent_id)
+     IS DISTINCT FROM (b.reference, 0, 'pi_test_s2'::text) THEN
+    RAISE EXCEPTION 'S: a late cancellation: %', row_to_json(cancelled);
+  END IF;
+  IF (SELECT (status, cancelled_by, refund_due_minor) FROM public.get_booking(b.link_token))
+     IS DISTINCT FROM ('cancelled'::public.appointment_status, 'client'::text, 0) THEN
+    RAISE EXCEPTION 'S: the late-cancelled visit';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Before the window: cancelling gives it all back and frees the time.
+UPDATE public.center_settings SET cancellation_window_hours = 0;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  a s_visits%ROWTYPE;
+  cancelled record;
+  mail record;
+BEGIN
+  SELECT * INTO a FROM s_visits WHERE name = 's1';
+  SELECT * INTO cancelled FROM public.cancel_booking(a.link_token);
+  IF (cancelled.refund_minor, cancelled.payment_intent_id) IS DISTINCT FROM (25000, 'pi_test_s1'::text) THEN
+    RAISE EXCEPTION 'S: an early cancellation: %', row_to_json(cancelled);
+  END IF;
+  IF (SELECT (status, refund_due_minor) FROM public.get_booking(a.link_token))
+     IS DISTINCT FROM ('cancelled'::public.appointment_status, 25000) THEN
+    RAISE EXCEPTION 'S: the cancelled visit';
+  END IF;
+  IF pg_temp.wednesday_times() <> '09:00 10:00 11:00 12:00' THEN
+    RAISE EXCEPTION 'S: free times after cancelling: %', pg_temp.wednesday_times();
+  END IF;
+  -- Once; and no moving a cancelled visit.
+  IF pg_temp.hint_of(format('SELECT public.cancel_booking(%L)', a.link_token)) <> 'not_cancellable'
+     OR pg_temp.hint_of(format('SELECT public.reschedule_booking(%L, %L)', a.link_token,
+          pg_temp.at((SELECT monday + 2 FROM booking_test), '12:00'))) <> 'not_reschedulable' THEN
+    RAISE EXCEPTION 'S: a cancelled visit changed again';
+  END IF;
+
+  -- The e-mail: "cancelled" only, and the link still shows the visit.
+  SELECT * INTO mail FROM public.claim_booking_email(a.reference, 'cancelled');
+  IF mail IS NULL OR mail.manage_token IS NOT NULL THEN
+    RAISE EXCEPTION 'S: the cancelled e-mail: %', row_to_json(mail);
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.claim_booking_email(a.reference, 'reminder')) THEN
+    RAISE EXCEPTION 'S: a reminder for a cancelled visit';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.get_booking(a.link_token)) THEN
+    RAISE EXCEPTION 'S: the link stopped working after cancelling';
+  END IF;
+  -- The refund, recorded from Stripe's event.
+  PERFORM public.record_refund('pi_test_s1', 25000);
+  IF (SELECT refunded_minor FROM public.get_booking(a.link_token)) <> 25000 THEN
+    RAISE EXCEPTION 'S: the refund was not recorded';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.cancel_booking('x');
+    RAISE EXCEPTION 'S: anon cancelled';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.reschedule_booking('x', now());
+    RAISE EXCEPTION 'S: anon moved a visit';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.list_reschedule_slots('x', current_date, current_date);
+    RAISE EXCEPTION 'S: anon listed times to move to';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

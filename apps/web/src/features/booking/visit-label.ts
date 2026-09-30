@@ -19,8 +19,8 @@ export function localTime(instant: string, timeZone: string) {
 }
 
 /** `czwartek, 2 października 2030, godz. 10:00` */
-export function visitLabel(startsAt: string, timeZone: string) {
-  const date = local(startsAt, timeZone, {
+function localDate(instant: string, timeZone: string) {
+  return local(instant, timeZone, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -28,5 +28,14 @@ export function visitLabel(startsAt: string, timeZone: string) {
     .split(".")
     .reverse()
     .join("-");
+}
+
+/** `8 października 2030, godz. 11:00` (a deadline, after "do"). */
+export function deadlineLabel(instant: string, timeZone: string) {
+  return `${formatDate(localDate(instant, timeZone))}, godz. ${localTime(instant, timeZone)}`;
+}
+
+export function visitLabel(startsAt: string, timeZone: string) {
+  const date = localDate(startsAt, timeZone);
   return `${formatWeekday(date)}, ${formatDate(date)}, godz. ${localTime(startsAt, timeZone)}`;
 }

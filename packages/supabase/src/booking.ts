@@ -39,6 +39,9 @@ export type BookingErrorCode =
   | "invalid_details"
   | "details_required"
   | "amount_mismatch"
+  | "not_found"
+  | "not_cancellable"
+  | "not_reschedulable"
   | "unknown";
 
 const BOOKING_ERROR_CODES = new Set<string>([
@@ -48,6 +51,9 @@ const BOOKING_ERROR_CODES = new Set<string>([
   "hold_expired",
   "consent_required",
   "invalid_details",
+  "not_found",
+  "not_cancellable",
+  "not_reschedulable",
 ]);
 
 export class BookingError extends Error {
@@ -60,7 +66,7 @@ export class BookingError extends Error {
   }
 }
 
-function bookingError(error: { message: string; hint?: string | null }) {
+export function bookingError(error: { message: string; hint?: string | null }) {
   const code =
     error.hint && BOOKING_ERROR_CODES.has(error.hint)
       ? (error.hint as BookingErrorCode)
@@ -111,6 +117,12 @@ export interface BookingWindow {
   timeZone: string;
   horizonDays: number;
   holdMinutes: number;
+  /** Cancelled at least this long before the visit: money back. */
+  cancellationWindowHours: number;
+  /** The client moves the visit themselves until this long before it… */
+  rescheduleWindowHours: number;
+  /** …and at most this many times. */
+  maxSelfReschedules: number;
 }
 
 export async function getBookingWindow(
@@ -124,6 +136,9 @@ export async function getBookingWindow(
         timeZone: row.time_zone,
         horizonDays: row.horizon_days,
         holdMinutes: row.hold_minutes,
+        cancellationWindowHours: row.cancellation_window_hours,
+        rescheduleWindowHours: row.reschedule_window_hours,
+        maxSelfReschedules: row.max_self_reschedules,
       }
     : null;
 }
@@ -220,6 +235,13 @@ export interface GuestBooking {
     phone: string;
     notes: string | null;
   } | null;
+  /** Times the client has moved it themselves. */
+  rescheduleCount: number;
+  cancelledBy: "client" | "centre" | null;
+  /** What the client was owed on cancelling (null: not cancelled by them). */
+  refundDueMinor: number | null;
+  /** What Stripe has given back so far. */
+  refundedMinor: number;
 }
 
 /** A guest's visit by its token, or null. */
@@ -254,6 +276,13 @@ export async function getBooking(
               notes: row.client_notes ?? null,
             }
           : null,
+        rescheduleCount: row.reschedule_count,
+        cancelledBy:
+          row.cancelled_by === "client" || row.cancelled_by === "centre"
+            ? row.cancelled_by
+            : null,
+        refundDueMinor: row.refund_due_minor ?? null,
+        refundedMinor: row.refunded_minor,
       }
     : null;
 }

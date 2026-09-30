@@ -227,6 +227,34 @@ function specialistsPanel({
   };
 }
 
+/** A week's days with their free times, each a link choosing it. */
+export function weekOfSlots(
+  week: string,
+  slots: FreeSlot[],
+  hrefFor: (value: string) => string,
+  chosen: string | null,
+): SlotPickerProps["days"] {
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = addDays(week, index);
+    return {
+      date,
+      weekday: WEEKDAY_SHORT[index]!,
+      label: formatDayMonth(date),
+      fullLabel: `${formatWeekday(date)}, ${formatDayMonth(date)}`,
+      slots: slots
+        .filter((slot) => slot.date === date)
+        .map((slot) => {
+          const value = `${slot.date}T${slot.localTime}`;
+          return {
+            time: slot.localTime,
+            href: hrefFor(value),
+            selected: chosen === value,
+          };
+        }),
+    };
+  });
+}
+
 function slotsPanel(input: WizardInput, chosen: FreeSlot | null): WizardPanel {
   const { params, today, horizonDays, slots } = input;
   const week = bookingWeek(params, today);
@@ -251,22 +279,12 @@ function slotsPanel(input: WizardInput, chosen: FreeSlot | null): WizardPanel {
         addDays(week, 7) <= lastDay
           ? bookingHref({ ...params, tydzien: addDays(week, 7), termin: null })
           : null,
-      days: days.map((date, index) => ({
-        date,
-        weekday: WEEKDAY_SHORT[index]!,
-        label: formatDayMonth(date),
-        fullLabel: `${formatWeekday(date)}, ${formatDayMonth(date)}`,
-        slots: slots
-          .filter((slot) => slot.date === date)
-          .map((slot) => {
-            const value = `${slot.date}T${slot.localTime}`;
-            return {
-              time: slot.localTime,
-              href: selectBookingHref(keep, "termin", value),
-              selected: params.termin === value,
-            };
-          }),
-      })),
+      days: weekOfSlots(
+        week,
+        slots,
+        (value) => selectBookingHref(keep, "termin", value),
+        params.termin,
+      ),
     },
   };
 }

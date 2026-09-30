@@ -15,18 +15,27 @@ export interface ConfirmationOptions {
   contact: { phone?: string; email?: string };
 }
 
-export interface ConfirmationContent {
+/** What a visit e-mail says; the template (./confirmation-email) lays it out. */
+export interface VisitEmailContent {
   subject: string;
   preview: string;
+  heading: string;
   greeting: string;
+  /** Follows the greeting. */
+  intro: string;
   rows: [label: string, value: string][];
   manageUrl: string;
+  buttonLabel: string;
+  /** Under the button, e.g. about the calendar file. */
+  note: string | null;
   contactLine: string | null;
   text: string;
   ics: string;
 }
 
-function place(visit: ClaimedBookingEmail) {
+export type ConfirmationContent = VisitEmailContent;
+
+export function place(visit: ClaimedBookingEmail) {
   if (visit.mode === "online") return "Online";
   const where = [visit.locationName, visit.locationAddress]
     .filter(Boolean)
@@ -35,8 +44,13 @@ function place(visit: ClaimedBookingEmail) {
   return `${where || "Stacjonarnie"}${room}`;
 }
 
+/** `+48 600 100 200 · kontakt@kolorsensu.pl`, or null. */
+export function contactLineOf(contact: ConfirmationOptions["contact"]) {
+  return [contact.phone, contact.email].filter(Boolean).join(" · ") || null;
+}
+
 export function confirmationContent(
-  visit: ClaimedBookingEmail,
+  visit: ClaimedBookingEmail & { manageToken: string },
   { siteUrl, timeZone, contact }: ConfirmationOptions,
 ): ConfirmationContent {
   const when = visitLabel(visit.startsAt, timeZone);
@@ -51,8 +65,7 @@ export function confirmationContent(
     ["Zapłacono", formatPrice(visit)],
     ["Numer rezerwacji", visit.reference],
   ];
-  const contactLine =
-    [contact.phone, contact.email].filter(Boolean).join(" · ") || null;
+  const contactLine = contactLineOf(contact);
   const greeting = `Dzień dobry, ${visit.clientName}!`;
 
   const text = [
@@ -76,9 +89,13 @@ export function confirmationContent(
   return {
     subject: `Potwierdzenie wizyty ${visit.reference} – ${when}`,
     preview: `${visit.serviceName}, ${when}`,
+    heading: "Twoja wizyta jest potwierdzona",
     greeting,
+    intro: "Dziękujemy za rezerwację i płatność.",
     rows,
     manageUrl,
+    buttonLabel: "Zobacz swoją wizytę",
+    note: "W załączniku jest plik, który doda wizytę do Twojego kalendarza.",
     contactLine,
     text,
     ics: visitIcs({

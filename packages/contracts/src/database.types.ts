@@ -38,6 +38,8 @@ export type Database = {
           price_minor: number;
           privacy_accepted_at: string | null;
           reference: string;
+          refund_due_minor: number | null;
+          reschedule_count: number;
           room_id: string | null;
           service_id: string;
           specialist_id: string;
@@ -69,6 +71,8 @@ export type Database = {
           price_minor: number;
           privacy_accepted_at?: string | null;
           reference: string;
+          refund_due_minor?: number | null;
+          reschedule_count?: number;
           room_id?: string | null;
           service_id: string;
           specialist_id: string;
@@ -100,6 +104,8 @@ export type Database = {
           price_minor?: number;
           privacy_accepted_at?: string | null;
           reference?: string;
+          refund_due_minor?: number | null;
+          reschedule_count?: number;
           room_id?: string | null;
           service_id?: string;
           specialist_id?: string;
@@ -1335,9 +1341,20 @@ export type Database = {
       booking_window: {
         Args: never;
         Returns: {
+          cancellation_window_hours: number;
           hold_minutes: number;
           horizon_days: number;
+          max_self_reschedules: number;
+          reschedule_window_hours: number;
           time_zone: string;
+        }[];
+      };
+      cancel_booking: {
+        Args: { p_manage_token: string };
+        Returns: {
+          payment_intent_id: string | null;
+          reference: string;
+          refund_minor: number;
         }[];
       };
       claim_booking_email: {
@@ -1349,7 +1366,7 @@ export type Database = {
           ends_at: string;
           location_address: string;
           location_name: string;
-          manage_token: string;
+          manage_token: string | null;
           mode: Database["public"]["Enums"]["visit_mode"];
           price_minor: number;
           reference: string;
@@ -1399,6 +1416,7 @@ export type Database = {
       get_booking: {
         Args: { p_access_token: string };
         Returns: {
+          cancelled_by: string | null;
           client_email: string;
           client_name: string;
           client_notes: string;
@@ -1411,6 +1429,9 @@ export type Database = {
           mode: Database["public"]["Enums"]["visit_mode"];
           price_minor: number;
           reference: string;
+          refund_due_minor: number | null;
+          refunded_minor: number;
+          reschedule_count: number;
           room_name: string;
           service_name: string;
           specialist_name: string;
@@ -1491,6 +1512,13 @@ export type Database = {
           sort_order: number;
         }[];
       };
+      list_reschedule_slots: {
+        Args: { p_from: string; p_manage_token: string; p_to: string };
+        Returns: {
+          ends_at: string;
+          starts_at: string;
+        }[];
+      };
       list_room_occupancy: {
         Args: { p_from: string; p_to: string };
         Returns: {
@@ -1553,6 +1581,15 @@ export type Database = {
           isOneToOne: false;
           isSetofReturn: true;
         };
+      };
+      reschedule_booking: {
+        Args: { p_manage_token: string; p_starts_at: string };
+        Returns: {
+          ends_at: string;
+          reference: string;
+          reschedule_count: number;
+          starts_at: string;
+        }[];
       };
       save_availability_rule: {
         Args: {
