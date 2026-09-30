@@ -5,7 +5,9 @@ export default defineConfig({
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
+  // Next keeps JSX as is (tsconfig "preserve"); tests need it compiled.
+  oxc: { jsx: { runtime: "automatic" } },
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,tsx}"],
   },
 });

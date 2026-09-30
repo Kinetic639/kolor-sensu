@@ -2,7 +2,9 @@ import { PrimaryButton, SecondaryButton } from "@repo/ui/public-site";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { BookingStep, readGuestVisit } from "@/features/booking/booking-step";
+import { sendVisitConfirmation } from "@/features/booking/email/confirmation-server";
 import { settleSession } from "@/features/booking/payment";
 import { paymentDeps } from "@/features/booking/payment-server";
 import { RefreshWhileWaiting } from "@/features/booking/refresh-while-waiting";
@@ -34,7 +36,13 @@ export default async function BookingConfirmationPage({
 
   const outcome =
     session.status === "complete"
-      ? await settleSession(session, paymentDeps())
+      ? await settleSession(session, {
+          ...paymentDeps(),
+          // The e-mail goes after the page is sent, not before.
+          onConfirmed: async (reference) => {
+            after(() => sendVisitConfirmation(reference));
+          },
+        })
       : null;
   // Only the visit this payment was for (the cookie may hold another).
   const guest = await readGuestVisit();

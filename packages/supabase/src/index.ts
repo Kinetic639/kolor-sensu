@@ -172,3 +172,9 @@ export type {
   CheckoutSessionLink,
   FulfillmentOutcome,
 } from "./booking-payments";
+export {
+  claimBookingEmail,
+  markBookingEmailSent,
+  releaseBookingEmail,
+} from "./booking-emails";
+export type { BookingEmailKind, ClaimedBookingEmail } from "./booking-emails";

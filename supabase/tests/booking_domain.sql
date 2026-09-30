@@ -706,4 +706,84 @@ END;
 $body$;
 RESET ROLE;
 
+-- R: the confirmation e-mail. Claimed once per visit (a second claim finds
+-- nothing), with a fresh link token only the e-mail carries; the link opens
+-- the visit; a failed send gives the claim back for a retry.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  mail record;
+  hint text;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.monday, '09:00'), p_client_key => 'visitor-9'
+  );
+  PERFORM public.save_booking_details(held.access_token, 'Marta Test', 'marta@example.com',
+    '600100200', NULL, true, true);
+
+  -- Not before the visit is confirmed.
+  IF EXISTS (SELECT 1 FROM public.claim_booking_email(held.reference, 'confirmation')) THEN
+    RAISE EXCEPTION 'R: an e-mail for an unpaid visit';
+  END IF;
+
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_test_r', now() + interval '30 minutes', 25000, 'PLN');
+  PERFORM public.fulfill_checkout_session('cs_test_r', true, 'pi_test_r');
+
+  SELECT * INTO mail FROM public.claim_booking_email(held.reference, 'confirmation');
+  IF mail IS NULL OR mail.client_email <> 'marta@example.com' OR mail.client_name <> 'Marta Test'
+     OR mail.service_name <> 'Booking Consultation' OR mail.room_name <> 'Booking Room'
+     OR mail.location_name <> 'Booking Location' OR mail.mode <> 'in_person'
+     OR mail.starts_at <> pg_temp.at(t.monday, '09:00') OR length(mail.manage_token) < 40 THEN
+    RAISE EXCEPTION 'R: the claim: %', row_to_json(mail);
+  END IF;
+  -- The link token is not the hold's token, and opens the visit.
+  IF mail.manage_token = held.access_token
+     OR (SELECT status FROM public.get_booking(mail.manage_token)) <> 'confirmed' THEN
+    RAISE EXCEPTION 'R: the link token';
+  END IF;
+
+  -- Claimed: nobody else sends it.
+  IF EXISTS (SELECT 1 FROM public.claim_booking_email(held.reference, 'confirmation')) THEN
+    RAISE EXCEPTION 'R: claimed twice';
+  END IF;
+
+  -- A failed send gives it back; a new claim gets a new link token.
+  PERFORM public.release_booking_email(held.reference, 'confirmation');
+  SELECT * INTO mail FROM public.claim_booking_email(held.reference, 'confirmation');
+  IF mail IS NULL THEN RAISE EXCEPTION 'R: a released e-mail was not claimable'; END IF;
+  PERFORM public.mark_booking_email_sent(held.reference, 'confirmation', 'msg_1');
+  IF (SELECT (sent_at IS NOT NULL, provider_message_id) FROM public.booking_emails
+      WHERE appointment_id = held.appointment_id AND kind = 'confirmation')
+     IS DISTINCT FROM (true, 'msg_1'::text) THEN
+    RAISE EXCEPTION 'R: the sent e-mail was not recorded';
+  END IF;
+  -- Sent: never again.
+  PERFORM public.release_booking_email(held.reference, 'confirmation');
+  IF EXISTS (SELECT 1 FROM public.claim_booking_email(held.reference, 'confirmation')) THEN
+    RAISE EXCEPTION 'R: a sent e-mail was claimed again';
+  END IF;
+  -- The latest link works; the first one no longer does.
+  IF (SELECT count(*) FROM public.get_booking(mail.manage_token)) <> 1 THEN
+    RAISE EXCEPTION 'R: the latest link does not open the visit';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.claim_booking_email('KS-X', 'confirmation');
+    RAISE EXCEPTION 'R: anon claimed an e-mail';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

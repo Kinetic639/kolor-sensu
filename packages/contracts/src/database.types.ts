@@ -33,6 +33,7 @@ export type Database = {
           during: unknown;
           hold_expires_at: string | null;
           id: string;
+          manage_token_hash: string | null;
           mode: Database["public"]["Enums"]["visit_mode"];
           price_minor: number;
           privacy_accepted_at: string | null;
@@ -63,6 +64,7 @@ export type Database = {
           during: unknown;
           hold_expires_at?: string | null;
           id?: string;
+          manage_token_hash?: string | null;
           mode: Database["public"]["Enums"]["visit_mode"];
           price_minor: number;
           privacy_accepted_at?: string | null;
@@ -93,6 +95,7 @@ export type Database = {
           during?: unknown;
           hold_expires_at?: string | null;
           id?: string;
+          manage_token_hash?: string | null;
           mode?: Database["public"]["Enums"]["visit_mode"];
           price_minor?: number;
           privacy_accepted_at?: string | null;
@@ -139,6 +142,38 @@ export type Database = {
             columns: ["specialist_service_id"];
             isOneToOne: false;
             referencedRelation: "specialist_services";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      booking_emails: {
+        Row: {
+          appointment_id: string;
+          claimed_at: string;
+          kind: string;
+          provider_message_id: string | null;
+          sent_at: string | null;
+        };
+        Insert: {
+          appointment_id: string;
+          claimed_at?: string;
+          kind: string;
+          provider_message_id?: string | null;
+          sent_at?: string | null;
+        };
+        Update: {
+          appointment_id?: string;
+          claimed_at?: string;
+          kind?: string;
+          provider_message_id?: string | null;
+          sent_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "booking_emails_appointment_id_fkey";
+            columns: ["appointment_id"];
+            isOneToOne: false;
+            referencedRelation: "appointments";
             referencedColumns: ["id"];
           },
         ];
@@ -1299,6 +1334,25 @@ export type Database = {
           time_zone: string;
         }[];
       };
+      claim_booking_email: {
+        Args: { p_kind: string; p_reference: string };
+        Returns: {
+          client_email: string;
+          client_name: string;
+          currency_code: string;
+          ends_at: string;
+          location_address: string;
+          location_name: string;
+          manage_token: string;
+          mode: Database["public"]["Enums"]["visit_mode"];
+          price_minor: number;
+          reference: string;
+          room_name: string;
+          service_name: string;
+          specialist_name: string;
+          starts_at: string;
+        }[];
+      };
       delete_availability_occurrence: {
         Args: { p_date: string; p_rule_id: string; p_scope: string };
         Returns: undefined;
@@ -1446,6 +1500,10 @@ export type Database = {
           starts_at: string;
         }[];
       };
+      mark_booking_email_sent: {
+        Args: { p_kind: string; p_message_id: string; p_reference: string };
+        Returns: undefined;
+      };
       pending_checkout_session: {
         Args: { p_access_token: string };
         Returns: {
@@ -1459,6 +1517,10 @@ export type Database = {
       };
       reject_specialist_profile_draft: {
         Args: { p_draft_id: string; p_review_comment: string };
+        Returns: undefined;
+      };
+      release_booking_email: {
+        Args: { p_kind: string; p_reference: string };
         Returns: undefined;
       };
       release_hold: { Args: { p_access_token: string }; Returns: boolean };

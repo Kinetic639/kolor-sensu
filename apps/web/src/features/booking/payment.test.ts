@@ -100,6 +100,7 @@ function event(type: string, object: object) {
 
 const session = {
   id: "cs_1",
+  metadata: { appointment_reference: "KS-20301002-6422" },
   object: "checkout.session",
   payment_status: "paid",
   payment_intent: "pi_1",
@@ -127,6 +128,24 @@ describe("handleStripeEvent", () => {
       d,
     );
     expect(d.fulfill).toHaveBeenLastCalledWith("cs_1", true, "pi_1");
+  });
+
+  it("sends the confirmation e-mail once the visit is confirmed", async () => {
+    const d = { ...deps(), onConfirmed: vi.fn().mockResolvedValue(undefined) };
+    await handleStripeEvent(event("checkout.session.completed", session), d);
+    expect(d.onConfirmed).toHaveBeenCalledWith("KS-20301002-6422");
+    const waiting = {
+      ...deps("awaiting_payment" as never),
+      onConfirmed: vi.fn(),
+    };
+    await handleStripeEvent(
+      event("checkout.session.completed", {
+        ...session,
+        payment_status: "unpaid",
+      }),
+      waiting,
+    );
+    expect(waiting.onConfirmed).not.toHaveBeenCalled();
   });
 
   it("refunds money for a time that was lost meanwhile", async () => {

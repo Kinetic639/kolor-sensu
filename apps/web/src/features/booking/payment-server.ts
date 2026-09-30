@@ -6,6 +6,7 @@ import {
 import type Stripe from "stripe";
 import { createSecretClient } from "@/lib/supabase/secret";
 import { stripeServer } from "@/lib/stripe";
+import { sendVisitConfirmation } from "./email/confirmation-server";
 import type { PaymentDeps } from "./payment";
 
 // The payment steps' real dependencies: the database (secret client) and
@@ -26,6 +27,7 @@ export function paymentDeps(): PaymentDeps {
     },
     recordRefund: (paymentIntentId, refundedMinor) =>
       recordRefund(db, paymentIntentId, refundedMinor),
+    onConfirmed: sendVisitConfirmation,
   };
 }
 

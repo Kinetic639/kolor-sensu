@@ -66,6 +66,8 @@ export interface PaymentDeps {
     paymentIntentId: string,
     refundedMinor: number,
   ) => Promise<unknown>;
+  /** The visit is confirmed (again, possibly): send its e-mail, once. */
+  onConfirmed?: (reference: string) => Promise<unknown>;
 }
 
 function paymentIntentId(value: string | { id: string } | null) {
@@ -80,9 +82,9 @@ function paymentIntentId(value: string | { id: string } | null) {
 export async function settleSession(
   session: Pick<
     Stripe.Checkout.Session,
-    "id" | "payment_status" | "payment_intent"
+    "id" | "payment_status" | "payment_intent" | "metadata"
   >,
-  deps: Pick<PaymentDeps, "fulfill" | "refundLostSlot">,
+  deps: Pick<PaymentDeps, "fulfill" | "refundLostSlot" | "onConfirmed">,
 ) {
   const paid =
     session.payment_status === "paid" ||
@@ -91,6 +93,13 @@ export async function settleSession(
   const outcome = await deps.fulfill(session.id, paid, intent);
   if (outcome === "slot_lost" && paid && intent) {
     await deps.refundLostSlot(session.id, intent);
+  }
+  const reference = session.metadata?.appointment_reference;
+  if (
+    reference &&
+    (outcome === "confirmed" || outcome === "already_confirmed")
+  ) {
+    await deps.onConfirmed?.(reference);
   }
   return outcome;
 }
