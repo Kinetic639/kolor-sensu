@@ -44,7 +44,7 @@ describe("WatercolorImage on the server", () => {
     }
   });
 
-  it("keeps client-only code to small islands: reveals, caption motion, navigation, cookie notice, room gallery", () => {
+  it("keeps client-only code to small islands: reveals, caption motion, navigation, cookie notice, room gallery, the living homepage's scroll story and interactive sections", () => {
     const clientFiles = readdirSync(here)
       .filter(
         (file) => /\.tsx?$/.test(file) && !/\.(test|stories)\./.test(file),
@@ -55,9 +55,12 @@ describe("WatercolorImage on the server", () => {
       .sort();
 
     expect(clientFiles).toEqual([
+      "bento-section.tsx",
       "cookie-consent.tsx",
+      "guided-choice-section.tsx",
       "offer-reveal.tsx",
       "room-gallery.tsx",
+      "scroll-story.tsx",
       "site-mobile-nav.tsx",
       "site-navigation.tsx",
       "specialist-reveal.tsx",

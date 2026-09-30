@@ -74,6 +74,16 @@ export interface WatercolorRevealDebug {
 export const WatercolorRevealDebugContext =
   createContext<WatercolorRevealDebug | null>(null);
 
+/**
+ * Optional gate before the reveal plays: resolves when the picture may
+ * start painting. ScrollStoryPath (scroll-story.tsx) provides one, so its
+ * pictures wait for the scroll story's paint front to reach them. Without
+ * a provider the reveal plays as soon as the picture is in view.
+ */
+export const WatercolorRevealGateContext = createContext<
+  ((root: HTMLElement) => Promise<void>) | null
+>(null);
+
 export interface WatercolorRevealProps {
   as: "div" | "figure";
   reducedMotionMode: ReducedMotionMode;
@@ -94,6 +104,7 @@ export function WatercolorReveal({
 }: WatercolorRevealProps) {
   const ref = useRef<HTMLElement>(null);
   const debug = useContext(WatercolorRevealDebugContext);
+  const gate = useContext(WatercolorRevealGateContext);
 
   useGSAP(
     (_, contextSafe) => {
@@ -202,6 +213,7 @@ export function WatercolorReveal({
 
       const start = async () => {
         await prepare();
+        if (gate && debug?.freezeAt === undefined) await gate(root);
         if (cancelled) return;
         if (reduce) fade();
         else paint();

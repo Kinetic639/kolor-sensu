@@ -564,7 +564,58 @@ islands hydrate: the desktop dropdown, the phone menu and the cookie notice.
   and Public site/Pages (the home page at every width, first visit, phone
   menu open, a subpage).
 
-## 13. What NOT to do
+## 13. Scroll story (the "living" homepage, a proposal)
+
+Public site/Living homepage in Storybook is a proposal for a livelier
+homepage. It keeps every section of the current homepage where it is and
+adds a separate narrative layer behind them, so scroll changes the state
+of the composition instead of fading sections in one by one.
+
+- **The watercolor path** (`ScrollStoryPath`, `scroll-story.tsx`): one
+  organic painted ribbon behind the first screens (hero, first steps,
+  offer, guided choice, team). It is not a wave: it swells and narrows,
+  turns locally, has short branches and stretches where it thins to
+  dry-brush streaks or stops altogether. Pink starts the story and turns
+  into green through the backdrop's own wet-on-wet mixing zone; pink
+  branches meet the green again further down. It runs behind the
+  pictures, down the gap beside the steps, across the gaps between
+  sections and along the margins, never under body copy. The phone has its
+  own, more vertical path that hugs the edges (mostly off the screen
+  beside text) and dives behind the pictures.
+- **Painted in by the scroll:** its paint front follows a line at 62 % of
+  the viewport's height (`FRONT_LINE`), eased by GSAP (`quickTo`), through
+  a paint matte like §11's: a time map per tile (along the brush path, the
+  belly of the brush ahead of its edges, frayed along the bristles) and an
+  SVG threshold filter. On load the brush first paints down to the fold.
+  Only the tile the front is in is filtered; painted tiles have no mask,
+  unreached ones are hidden.
+- **Stations:** `[data-story-station]` elements get a local reaction when
+  the front reaches them (the steps: number circled with a brush, title in
+  ink, a 10 px settle); the text stays readable before that (muted, never
+  faded). WatercolorImages inside the path wait for the front before they
+  paint themselves in (`WatercolorRevealGateContext`).
+- **Side washes** (`StorySplash`): the supplied splash patches flowing in
+  from the edge of the screen in blooms, scrubbed by scroll; brushwork in
+  the middle, splashes only at the sides.
+- **Parallax, very subtle:** a picture's watercolor backdrop moves 2 px,
+  its photo 9 px, the side washes 30 px, the caption as before.
+- **Microinteractions:** arrows move a few px, icons turn a little, cards
+  and pills lift 2–3 px, "read more" links draw their underline in.
+- **Progressive disclosure:** the guided choice ("Nie wiesz, od czego
+  zacząć?": for whom, what about, how to meet → a form of support and one
+  or two specialists; its picture follows the first answer and is painted
+  in again), expandable bento tiles, the FAQ accordion.
+- **Bento, once:** "Kolor Sensu w skrócie" is the page's only modular
+  section, painted patches rather than boxes.
+- **Artwork:** `pnpm --filter @repo/design-system generate:story`
+  (`generate-scroll-story.mjs`): the ribbon's pigment is sampled from the
+  approved backdrop picture laid along the spine; its waypoints were placed
+  around the sections as measured in Storybook at 1440 and 390 px. When
+  sections change size a lot, move the waypoints and regenerate.
+- **Fallbacks:** without a script, with reduced motion or in WebKit
+  everything is shown painted and nothing moves.
+
+## 14. What NOT to do
 
 - No generic SaaS gradients (purple-blue, mesh, "aurora").
 - No neon or saturated colour; no colour outside the palette.

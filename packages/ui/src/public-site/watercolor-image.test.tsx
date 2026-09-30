@@ -240,7 +240,7 @@ describe("WatercolorImage", () => {
       if (!/--ks-reveal|animation\b/.test(body)) continue;
       if (context.some((at) => at.startsWith("@keyframes"))) continue;
       expect(selector).toMatch(
-        /\[data-(animation|reduced-motion|reveal|intro)[=\]]/,
+        /\[data-(animation|reduced-motion|reveal|intro|path|splash)[=\]]/,
       );
     }
   });

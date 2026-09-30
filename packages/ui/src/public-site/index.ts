@@ -71,3 +71,17 @@ export { SpecialistsSection } from "./specialists-section";
 export type { SpecialistsSectionProps } from "./specialists-section";
 export { defaultWatercolorSrc, WatercolorImage } from "./watercolor-image";
 export type { WatercolorImageProps } from "./watercolor-image";
+export { BentoSection } from "./bento-section";
+export type { BentoItem, BentoSectionProps } from "./bento-section";
+export { GuidedChoiceSection } from "./guided-choice-section";
+export type { GuidedChoiceSectionProps } from "./guided-choice-section";
+export { matchSupport } from "./guided-choice-match";
+export type {
+  GuidedAnswers,
+  GuidedSpecialist,
+  GuidedSuggestion,
+} from "./guided-choice-match";
+export { ScrollStory, ScrollStoryPath, StorySplash } from "./scroll-story";
+export type { StorySplashProps } from "./scroll-story";
+export { StoryStepsSection } from "./story-steps-section";
+export type { StoryStep, StoryStepsSectionProps } from "./story-steps-section";

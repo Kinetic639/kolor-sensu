@@ -28,7 +28,11 @@ export function HeroPoints({ points, className }: HeroPointsProps) {
   return (
     <ul className={cn("grid grid-cols-2 gap-6 sm:grid-cols-4", className)}>
       {points.map(({ icon, label, tone = "primary" }) => (
-        <li key={label} className="text-small grid content-start gap-2">
+        <li
+          key={label}
+          data-hero-point
+          className="text-small grid content-start gap-2"
+        >
           <span
             aria-hidden="true"
             className={cn("[&_svg]:size-7 [&_svg]:stroke-[1.25]", tones[tone])}

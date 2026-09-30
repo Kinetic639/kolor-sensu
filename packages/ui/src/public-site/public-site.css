@@ -685,4 +685,384 @@
   .ks-paint--band {
     --ks-paint-mask: url("/watercolor/band.svg");
   }
+
+  /* ======================================================= living homepage */
+
+  /* Microinteractions, all small: a card lifts 3 px, a link's underline is
+     drawn in from the left, arrows move a few px (in the components). */
+  .ks-lift {
+    transition: translate 0.35s var(--ease-soft);
+  }
+
+  .ks-lift:hover,
+  .ks-lift:focus-within {
+    translate: 0 -3px;
+  }
+
+  .ks-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    padding-bottom: 2px;
+    transition: background-size 0.4s var(--ease-soft);
+  }
+
+  .ks-underline:hover,
+  .ks-underline:focus-visible {
+    background-size: 100% 1px;
+  }
+
+  /* ------------------------------------------------------ StoryStepsSection */
+
+  .ks-steps {
+    display: grid;
+    gap: clamp(3rem, 2rem + 4vw, 6.5rem);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ks-step {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .ks-step__number {
+    position: relative;
+    display: grid;
+    place-items: center;
+    height: 3.6rem;
+    color: var(--color-pink);
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.7s var(--ease-soft);
+  }
+
+  .ks-step[data-tone="sage"] .ks-step__number {
+    color: var(--color-primary);
+  }
+
+  .ks-step__ring {
+    position: absolute;
+    inset: -0.35rem -0.2rem;
+    width: calc(100% + 0.4rem);
+    height: calc(100% + 0.7rem);
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    opacity: 0.75;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1.1s var(--ease-soft) 0.15s;
+  }
+
+  .ks-step h3 {
+    transition: color 0.7s var(--ease-soft);
+  }
+
+  .ks-step > div {
+    transition: translate 0.9s var(--ease-soft);
+  }
+
+  /* Stations waiting for the path: quieter (their text stays readable:
+     muted, not faded), a few px lower, their number not yet circled. Only
+     once the story's script runs (data-story="live"). */
+  .ks-story[data-story="live"]
+    [data-story-station]:not([data-reached])
+    .ks-step__ring {
+    stroke-dashoffset: 1;
+  }
+
+  .ks-story[data-story="live"]
+    [data-story-station]:not([data-reached])
+    :is(.ks-step__number, h3) {
+    color: var(--color-text-muted);
+  }
+
+  .ks-story[data-story="live"] [data-story-station]:not([data-reached]) > div {
+    translate: 0 10px;
+  }
+
+  /* ---------------------------------------------------- GuidedChoiceSection */
+
+  .ks-choice {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .ks-choice__label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.15rem;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-button);
+    background: color-mix(in oklab, var(--color-surface) 80%, transparent);
+    color: var(--color-ink);
+    font-size: var(--text-small);
+    font-weight: 600;
+    transition:
+      background-color 0.25s var(--ease-soft),
+      border-color 0.25s var(--ease-soft),
+      color 0.25s var(--ease-soft),
+      translate 0.3s var(--ease-soft);
+  }
+
+  .ks-choice:hover .ks-choice__label {
+    border-color: var(--color-primary);
+    translate: 0 -2px;
+  }
+
+  .ks-choice input:checked + .ks-choice__label {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  .ks-choice input:focus-visible + .ks-choice__label {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 3px;
+  }
+
+  .ks-guided__result {
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* ----------------------------------------------------------- BentoSection */
+
+  .ks-bento {
+    display: grid;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (width >= 40rem) {
+    .ks-bento {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ks-bento__cell[data-size="wide"] {
+      grid-column: span 2;
+    }
+  }
+
+  @media (width >= 64rem) {
+    .ks-bento {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-auto-flow: dense;
+    }
+
+    .ks-bento__cell[data-size="tall"] {
+      grid-row: span 2;
+    }
+  }
+
+  .ks-bento__tile {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    height: 100%;
+    min-height: 13rem;
+    padding: 1.9rem 1.75rem 1.6rem;
+  }
+
+  .ks-bento__icon {
+    color: var(--color-primary-strong);
+  }
+
+  .ks-bento__tile[data-tone="blush"] .ks-bento__icon {
+    color: var(--color-pink-strong);
+  }
+
+  .ks-bento__icon svg {
+    width: 1.9rem;
+    height: 1.9rem;
+    stroke-width: 1.25;
+    transition: rotate 0.45s var(--ease-soft);
+  }
+
+  .ks-bento__tile:hover .ks-bento__icon svg {
+    rotate: -10deg;
+  }
+
+  /* ----------------------------------------------------------- ScrollStory */
+
+  /* Its own stacking context: the side washes (z-index -1) sit behind the
+     sections but above the page's paper. */
+  .ks-story {
+    position: relative;
+    isolation: isolate;
+  }
+
+  /* ------------------------------------------------------- ScrollStoryPath */
+
+  /* The path runs behind the sections it wraps: a layer as tall as they
+     are, its artwork cut into horizontal tiles placed in percentages of
+     that height (scroll-story.data.ts), stretched to the width. One
+     artwork per layout: the phone's below 64 rem, the desktop's above. */
+  .ks-story-path {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .ks-story-path__layer {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: clip;
+    pointer-events: none;
+  }
+
+  .ks-story-path__art {
+    position: absolute;
+    inset: 0;
+  }
+
+  .ks-story-path__art[data-layout="desktop"] {
+    display: none;
+  }
+
+  @media (width >= 64rem) {
+    .ks-story-path__art[data-layout="desktop"] {
+      display: block;
+    }
+
+    .ks-story-path__art[data-layout="mobile"] {
+      display: none;
+    }
+  }
+
+  .ks-story-path__tile {
+    position: absolute;
+    left: 0;
+    width: 100%;
+  }
+
+  .ks-story-path__tile img {
+    object-fit: fill;
+  }
+
+  /* -------------------------------------------------------- StorySplash */
+
+  /* A supplied splash patch half off the edge of the screen, drawn from
+     the left edge (mirrored on the right). */
+  .ks-story-splash {
+    position: absolute;
+    z-index: -1;
+    width: clamp(9rem, 26vw, 26rem);
+    aspect-ratio: 3 / 4;
+    pointer-events: none;
+    opacity: 0.72;
+  }
+
+  .ks-story-splash[data-side="left"] {
+    left: 0;
+    translate: -58% 0;
+  }
+
+  .ks-story-splash[data-side="right"] {
+    right: 0;
+    translate: 58% 0;
+  }
+
+  .ks-story-splash__paint {
+    position: absolute;
+    inset: 0;
+  }
+
+  .ks-story-splash[data-side="right"] .ks-story-splash__paint {
+    scale: -1 1;
+  }
+
+  /* The <svg> holding a matte: draws nothing, takes no room. */
+  .ks-story__matte {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /* While a script paints them: a tile or splash shows through its matte
+     (--ks-tile-mask, set by the script), and nothing before the script
+     takes over. Not in WebKit (no SVG masks on HTML elements), nor with
+     reduced motion: there the finished artwork shows. */
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    @supports not (font: -apple-system-body) {
+      .ks-story-path:not([data-path="done"]) .ks-story-path__tile,
+      .ks-story-splash:not([data-splash="done"]) .ks-story-splash__paint {
+        mask-image: var(
+          --ks-tile-mask,
+          var(--ks-story-hidden, linear-gradient(transparent, transparent))
+        );
+        mask-size: 100% 100%;
+        mask-repeat: no-repeat;
+      }
+    }
+  }
+
+  /* Safety net: no script after 3 s, show everything painted. */
+  @media (scripting: enabled) {
+    .ks-story-path:not([data-path]),
+    .ks-story-splash:not([data-splash]) {
+      animation: ks-story-fallback 1ms 3s forwards;
+    }
+  }
+
+  @keyframes ks-story-fallback {
+    to {
+      --ks-story-hidden: none;
+    }
+  }
+}
+
+/* Inside a scroll story, the site's "read more" links trade their static
+   underline for one drawn on hover, and the hero's icons answer a hover.
+   Outside the components layer, so they win over the utilities they
+   restyle. */
+.ks-story a.group\/link {
+  text-decoration-color: transparent;
+  background-image: linear-gradient(var(--color-primary), var(--color-primary));
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 28% 1px;
+  padding-bottom: 3px;
+  transition: background-size 0.45s var(--ease-soft);
+}
+
+.ks-story a.group\/link:hover,
+.ks-story a.group\/link:focus-visible {
+  background-size: 100% 1px;
+}
+
+.ks-story a.group\/link svg {
+  transition-duration: 0.3s;
+}
+
+.ks-story a.group\/link:hover svg {
+  translate: 3px 0;
+}
+
+.ks-story [data-hero-point] svg {
+  transition:
+    rotate 0.4s var(--ease-soft),
+    scale 0.4s var(--ease-soft);
+}
+
+.ks-story [data-hero-point]:hover svg {
+  rotate: -8deg;
+  scale: 1.08;
 }
