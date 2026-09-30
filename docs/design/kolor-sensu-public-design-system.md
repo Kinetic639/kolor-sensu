@@ -567,7 +567,8 @@ islands hydrate: the desktop dropdown, the phone menu and the cookie notice.
 ## 13. Scroll story (the "living" homepage, a proposal)
 
 Public site/Living homepage in Storybook is a proposal for a livelier
-homepage. It keeps every section of the current homepage where it is and
+homepage, also wired into apps/web's homepage (`app/page.tsx`) on its
+branch so it can be judged live. It keeps every section of the current homepage where it is and
 adds a separate narrative layer behind them, so scroll changes the state
 of the composition instead of fading sections in one by one.
 
@@ -582,6 +583,13 @@ of the composition instead of fading sections in one by one.
   sections and along the margins, never under body copy. The phone has its
   own, more vertical path that hugs the edges (mostly off the screen
   beside text) and dives behind the pictures.
+- **Laid over the real sections:** the artwork was drawn around sections
+  measured in Storybook. Each section after the hero sits in a
+  `StoryAnchor` (steps, offer, guided, specialists); the page stretches the
+  artwork between anchors to the sections' real heights (a missing section
+  merges its stretch into its neighbour's). Across, the desktop artwork
+  scales with the page's 78 rem column and stays centred on it; wider than
+  90 rem it fades out in the margins.
 - **Painted in by the scroll:** its paint front follows a line at 62 % of
   the viewport's height (`FRONT_LINE`), eased by GSAP (`quickTo`), through
   a paint matte like §11's: a time map per tile (along the brush path, the

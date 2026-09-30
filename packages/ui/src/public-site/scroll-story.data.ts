@@ -6,6 +6,12 @@ export const scrollStory = {
     desktop: {
       width: 1440,
       height: 2806,
+      anchors: {
+        steps: 569,
+        offer: 1377,
+        guided: 1816,
+        specialists: 2352,
+      },
       length: 3936,
       tiles: [
         {
@@ -160,6 +166,12 @@ export const scrollStory = {
     mobile: {
       width: 390,
       height: 5455,
+      anchors: {
+        steps: 936,
+        offer: 2055,
+        guided: 2949,
+        specialists: 3764,
+      },
       length: 4659,
       tiles: [
         {

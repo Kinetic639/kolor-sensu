@@ -140,6 +140,61 @@ export function ScrollStory({
 
 // --------------------------------------------------------- ScrollStoryPath
 
+// Design px of a path ↔ px from the top of the ScrollStoryPath element.
+interface Scale {
+  toPage: [number, number][];
+  fromPage: [number, number][];
+}
+const plainScale: Scale = {
+  toPage: [
+    [0, 0],
+    [1, 1],
+  ],
+  fromPage: [
+    [0, 0],
+    [1, 1],
+  ],
+};
+
+function measureScale(
+  root: HTMLElement,
+  rect: DOMRect,
+  path: (typeof scrollStory.paths)[PathLayout],
+): Scale {
+  const rows: [number, number][] = [[0, 0]];
+  const anchors = Object.entries(path.anchors).sort((a, b) => a[1] - b[1]);
+  for (const [name, designTop] of anchors) {
+    const element = root.querySelector(`[data-story-anchor="${name}"]`);
+    if (!element) continue;
+    const top = element.getBoundingClientRect().top - rect.top;
+    if (top > rows[rows.length - 1]![1] && top < rect.height) {
+      rows.push([designTop, top]);
+    }
+  }
+  rows.push([
+    path.height,
+    Math.max(rect.height, rows[rows.length - 1]![1] + 1),
+  ]);
+  return { toPage: rows, fromPage: rows.map(([a, b]) => [b, a]) };
+}
+
+export type StoryAnchorName =
+  keyof (typeof scrollStory.paths)["desktop"]["anchors"];
+
+/**
+ * Marks where a section of a ScrollStoryPath starts, so the path's artwork
+ * is laid beside it (the names are the sections the artwork was drawn for).
+ */
+export function StoryAnchor({
+  name,
+  children,
+}: {
+  name: StoryAnchorName;
+  children: ReactNode;
+}) {
+  return <div data-story-anchor={name}>{children}</div>;
+}
+
 interface Waiting {
   element: HTMLElement;
   resolve: () => void;
@@ -164,6 +219,47 @@ export function ScrollStoryPath({
         check.current();
       }),
     [],
+  );
+
+  // Lay the artwork over the real sections: between two anchors
+  // (StoryAnchor) the path is stretched to the section's real height, so it
+  // stays beside the same sections whatever their content. Without anchors,
+  // over the whole box.
+  const scales = useRef<Record<PathLayout, Scale>>({
+    desktop: plainScale,
+    mobile: plainScale,
+  });
+
+  useGSAP(
+    () => {
+      const root = ref.current;
+      if (!root) return;
+      const lay = () => {
+        const rect = root.getBoundingClientRect();
+        for (const name of pathLayouts) {
+          const path = scrollStory.paths[name];
+          const scale = measureScale(root, rect, path);
+          scales.current[name] = scale;
+          const tiles = root.querySelectorAll<HTMLElement>(
+            `.ks-story-path__art[data-layout="${name}"] .ks-story-path__tile`,
+          );
+          path.tiles.forEach((tile, index) => {
+            const element = tiles[index];
+            if (!element) return;
+            const top = interpolate(scale.toPage, tile.top);
+            const bottom = interpolate(scale.toPage, tile.top + tile.height);
+            element.style.top = `${top}px`;
+            element.style.height = `${bottom - top}px`;
+          });
+        }
+      };
+      lay();
+      const observer =
+        typeof ResizeObserver === "function" ? new ResizeObserver(lay) : null;
+      observer?.observe(root);
+      return () => observer?.disconnect();
+    },
+    { scope: ref },
   );
 
   useGSAP(
@@ -213,12 +309,13 @@ export function ScrollStoryPath({
         const rect = root.getBoundingClientRect();
         box = { top: rect.top + window.scrollY, height: rect.height || 1 };
       };
+      const fromPage = (y: number) =>
+        interpolate(scales.current[layout].fromPage, y);
       const designY = (element: HTMLElement, share: number) => {
         const rect = element.getBoundingClientRect();
         const top = rect.top + window.scrollY - box.top;
-        return ((top + rect.height * share) / box.height) * path.height;
+        return fromPage(top + rect.height * share);
       };
-
       const state = { time: 0 };
       const render = () => {
         const time = state.time;
@@ -266,7 +363,7 @@ export function ScrollStoryPath({
       // Where the front should be for the current scroll.
       const target = () => {
         const line = window.scrollY + window.innerHeight * FRONT_LINE - box.top;
-        return interpolate(toTime, (line / box.height) * path.height);
+        return interpolate(toTime, fromPage(line));
       };
       const follow = gsap.quickTo(state, "time", {
         duration: 0.9,

@@ -936,10 +936,32 @@
   }
 
   @media (width >= 64rem) {
+    /* The desktop artwork was drawn at 1440 wide around a 78 rem page:
+       scaled with the page's column and centred on it, so the path keeps
+       to the same gaps on a wider or narrower screen. On a wide screen it
+       ends in the margins, fading out. */
     .ks-story-path__art[data-layout="desktop"] {
       display: block;
+      right: auto;
+      left: 50%;
+      width: calc(min(100%, 78rem) * 1.1538);
+      translate: -50% 0;
     }
+  }
 
+  @media (width > 90rem) {
+    .ks-story-path__art[data-layout="desktop"] {
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 10%,
+        #000 90%,
+        transparent
+      );
+    }
+  }
+
+  @media (width >= 64rem) {
     .ks-story-path__art[data-layout="mobile"] {
       display: none;
     }

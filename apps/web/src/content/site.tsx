@@ -1,12 +1,24 @@
-import type { FaqItem, HeroSectionProps } from "@repo/ui/public-site";
+import type {
+  BentoItem,
+  FaqItem,
+  GuidedChoiceSectionProps,
+  HeroSectionProps,
+  StoryStep,
+} from "@repo/ui/public-site";
 import {
   Brain,
+  CalendarCheck,
+  HandHeart,
   Heart,
   HeartHandshake,
   House,
   Leaf,
+  LockKeyhole,
   MessagesSquare,
+  MonitorSmartphone,
+  Phone,
   Sparkles,
+  Sprout,
   User,
   Users,
 } from "lucide-react";
@@ -20,7 +32,9 @@ import type { ReactNode } from "react";
 // To confirm with the centre before launch (taken over from the design's
 // sample copy, not verified facts): the opening hours, the FAQ answers
 // (session length, cancellation rules, online sessions), the rooms'
-// amenities and the "O nas" values.
+// amenities and the "O nas" values. On the homepage also: the steps of a
+// first visit, the guided choice's questions and suggestions, and the
+// facts in the modular section (online sessions, confidentiality).
 
 export const siteName = "Kolor Sensu";
 export const siteTagline = "Centrum psychoterapii i rozwoju";
@@ -109,6 +123,134 @@ export const workshops = {
     alt: "Uczestnicy warsztatu rozmawiają w kręgu",
   },
 };
+
+// The homepage's scroll story: the steps of a first visit ("Jak zaczynamy").
+export const storySteps = [
+  {
+    title: "Pierwszy kontakt",
+    description:
+      "Piszesz albo dzwonisz. Pytamy krótko, czego szukasz, i proponujemy termin, który Ci pasuje.",
+  },
+  {
+    title: "Konsultacja",
+    description:
+      "Spokojna rozmowa o tym, co Cię sprowadza. Bez oceniania i bez pośpiechu, w gabinecie lub online.",
+  },
+  {
+    title: "Wspólny plan",
+    description:
+      "Razem wybieramy formę wsparcia i specjalistę. Wiesz, jak często będziemy się spotykać i dlaczego.",
+  },
+  {
+    title: "Regularne spotkania",
+    description:
+      "Małe kroki, które z czasem składają się w zmianę. W każdej chwili możesz zapytać, gdzie jesteśmy.",
+  },
+] satisfies StoryStep[];
+
+// "Nie wiesz, od czego zacząć?": the questions. The specialists come from
+// the database (lib/guided-choice.ts).
+export const guidedChoice = {
+  audiences: [
+    {
+      value: "self",
+      label: "Dla siebie",
+      image: {
+        src: "/images/gabinet-fotel.webp",
+        alt: "Jasny gabinet z fotelem przy dużym oknie",
+        objectPosition: "55% 50%",
+      },
+    },
+    {
+      value: "couple",
+      label: "Dla nas, jako pary",
+      image: {
+        src: "/images/gabinet.jpg",
+        alt: "Gabinet z fotelem, stolikiem i roślinami",
+        objectPosition: "50% 55%",
+      },
+    },
+    {
+      value: "child",
+      label: "Dla dziecka lub nastolatka",
+      image: {
+        src: "/images/warsztaty.jpg",
+        alt: "Spotkanie w kręgu w jasnej sali",
+        objectPosition: "50% 40%",
+      },
+    },
+  ],
+  concerns: [
+    { value: "anxiety", label: "Lęk i stres" },
+    { value: "mood", label: "Obniżony nastrój" },
+    { value: "relations", label: "Relacje i komunikacja" },
+    { value: "crisis", label: "Trudne wydarzenie" },
+    { value: "growth", label: "Rozwój i samopoznanie" },
+  ],
+  formats: [
+    { value: "office", label: "W gabinecie" },
+    { value: "online", label: "Online" },
+    { value: "any", label: "Bez różnicy" },
+  ],
+  bookingHref: bookingCta.href,
+} satisfies Omit<GuidedChoiceSectionProps, "specialists" | "id" | "className">;
+
+// The homepage's one modular (bento) section.
+export const bento = [
+  {
+    id: "first-visit",
+    size: "wide",
+    tone: "blush",
+    icon: <CalendarCheck />,
+    title: "Bez skierowania",
+    description:
+      "Termin konsultacji wybierasz sam w kalendarzu online albo przez telefon.",
+    more: "Wybierasz usługę, specjalistę i termin w kalendarzu. Jeśli nie wiesz, co wybrać, zacznij od konsultacji albo napisz do nas.",
+  },
+  {
+    id: "online",
+    size: "small",
+    tone: "sage",
+    icon: <MonitorSmartphone />,
+    title: "Online albo w gabinecie",
+    description: "Tak, jak Ci wygodniej.",
+    more: "Przy każdej usłudze i każdym specjaliście widać, czy spotkania mogą odbywać się online.",
+  },
+  {
+    id: "privacy",
+    size: "small",
+    tone: "cream",
+    icon: <LockKeyhole />,
+    title: "Poufność",
+    description: "Tajemnica zawodowa i bezpieczne dane.",
+  },
+  {
+    id: "crisis",
+    size: "small",
+    tone: "blush",
+    icon: <Phone />,
+    title: "W nagłej sytuacji",
+    description:
+      "Gdy zagrożone jest życie, dzwoń pod 112 albo na całodobowy numer 800 70 2222.",
+  },
+  {
+    id: "growth",
+    size: "wide",
+    tone: "sage",
+    icon: <Sprout />,
+    title: "Warsztaty i grupy wsparcia",
+    description: "Kameralne spotkania w małych grupach.",
+    more: "Warsztaty, grupy rozwojowe i spotkania tematyczne dla osób, które chcą lepiej siebie rozumieć.",
+  },
+  {
+    id: "team",
+    size: "small",
+    tone: "cream",
+    icon: <HandHeart />,
+    title: "Zespół, który się zna",
+    description: "Psychoterapeuci i psycholodzy, którzy pracują razem.",
+  },
+] satisfies BentoItem[];
 
 export const closingCta = "Zrób pierwszy krok do lepszego samopoczucia";
 

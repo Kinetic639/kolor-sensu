@@ -70,10 +70,14 @@ const preview = argv.includes("--preview");
 // hero, steps, offer, guided choice, specialists), measured in Storybook
 // at 1440 and 390 wide. w: half-width; rho: paint density (1 full, 0
 // nothing, in between dry-brush streaks only); mix: 0 pink, 1 green.
+// anchors: where each section starts (StoryAnchor names), from the same
+// measurement: the page stretches the artwork between them so the path
+// stays beside the same sections whatever their real height.
 const layouts = {
   desktop: {
     width: 1440,
     height: 2806,
+    anchors: { steps: 569, offer: 1377, guided: 1816, specialists: 2352 },
     scale: 1,
     tiles: 6,
     seed: 11,
@@ -124,6 +128,7 @@ const layouts = {
   mobile: {
     width: 390,
     height: 5455,
+    anchors: { steps: 936, offer: 2055, guided: 2949, specialists: 3764 },
     scale: 1.5,
     tiles: 8,
     seed: 23,
@@ -618,6 +623,7 @@ async function generatePath(name, layout, texture) {
   return {
     width: layout.width,
     height: layout.height,
+    anchors: layout.anchors,
     length: round(L),
     tiles,
     front,
