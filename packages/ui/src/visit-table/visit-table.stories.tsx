@@ -1,7 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { Mail, Phone, XCircle } from "lucide-react";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
-import { expect } from "storybook/test";
-import { Button } from "../button";
+import { expect, fn, within } from "storybook/test";
+import {
+  RowActionButton,
+  RowActionLink,
+  RowActions,
+  RowActionSeparator,
+} from "../row-actions";
 import { VisitTable, VisitTableToolbar } from "./visit-table";
 import {
   adminRows,
@@ -10,8 +16,11 @@ import {
   tableParams,
 } from "./visit-table.samples";
 
-// The bookings table as the portals show it: the toolbar above, the page
-// of visits, the pages below.
+// The bookings table as the portals show it: search and filters with the
+// page count above, one dense line a visit, the reference and the "⋮"
+// menu stuck to the edges, the pages below.
+
+const cancel = fn();
 
 function BookingsTable({
   query,
@@ -26,33 +35,56 @@ function BookingsTable({
   const rows = empty ? [] : admin ? adminRows : specialistRows;
   return (
     <NuqsTestingAdapter searchParams={query}>
-      <div className="max-w-6xl space-y-4">
-        <VisitTableToolbar
-          params={params}
-          path="/kalendarz"
-          showRefunds={admin}
-          specialists={admin ? sampleSpecialists : undefined}
-        />
+      <div className="max-w-6xl">
         <VisitTable
-          actions={
-            admin
-              ? Object.fromEntries(
-                  rows
-                    .filter((row) => row.cancellable)
-                    .map((row) => [
-                      row.id,
-                      <Button key={row.id} size="sm" variant="secondary">
-                        Odwołaj
-                      </Button>,
-                    ]),
-                )
-              : undefined
-          }
+          actions={Object.fromEntries(
+            rows.map((row) => [
+              row.id,
+              <RowActions key={row.id} label={row.reference}>
+                {row.phone ? (
+                  <RowActionLink
+                    href={`tel:${row.phone}`}
+                    icon={<Phone aria-hidden="true" className="size-4" />}
+                  >
+                    Zadzwoń
+                  </RowActionLink>
+                ) : null}
+                {row.email ? (
+                  <RowActionLink
+                    href={`mailto:${row.email}`}
+                    icon={<Mail aria-hidden="true" className="size-4" />}
+                  >
+                    Napisz e-mail
+                  </RowActionLink>
+                ) : null}
+                {admin && row.cancellable ? (
+                  <>
+                    <RowActionSeparator />
+                    <RowActionButton
+                      destructive
+                      icon={<XCircle aria-hidden="true" className="size-4" />}
+                      onSelect={cancel}
+                    >
+                      Odwołaj wizytę
+                    </RowActionButton>
+                  </>
+                ) : null}
+              </RowActions>,
+            ]),
+          )}
           params={params}
           path="/kalendarz"
           rows={rows}
           showPayment={admin}
           showSpecialist={admin}
+          toolbar={
+            <VisitTableToolbar
+              params={params}
+              path="/kalendarz"
+              showRefunds={admin}
+              specialists={admin ? sampleSpecialists : undefined}
+            />
+          }
           total={empty ? 0 : admin ? 42 : rows.length}
         />
       </div>
@@ -69,14 +101,23 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The admin: everyone's visits, payments, cancelling, 42 in all. */
+/** The admin: everyone's visits, payments, the "⋮" menu, 42 in all. */
 export const Admin: Story = {
   args: { query: "strona=2&wierszy=10", admin: true },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText("11–14 z 42")).toBeVisible();
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    await expect(canvas.getByText("11–14 z 42 · strona 2 z 5")).toBeVisible();
     await expect(
-      canvas.getByRole("columnheader", { name: /Termin/ }),
+      canvas.getByRole("columnheader", { name: /Data/ }),
     ).toHaveAttribute("aria-sort", "ascending");
+    await userEvent.click(
+      canvas.getByRole("button", { name: "Akcje: KS-20301002-1534" }),
+    );
+    // The menu opens in a portal, outside the story.
+    const menu = within(canvasElement.ownerDocument.body);
+    await userEvent.click(
+      await menu.findByRole("menuitem", { name: "Odwołaj wizytę" }),
+    );
+    await expect(cancel).toHaveBeenCalled();
   },
 };
 
@@ -88,7 +129,7 @@ export const SortedAndFiltered: Story = {
   },
 };
 
-/** A specialist: their own visits, no payments, no actions. */
+/** A specialist: their own visits, no payments, contact in the menu. */
 export const Specialist: Story = {
   args: { query: "", admin: false },
 };

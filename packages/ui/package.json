@@ -60,6 +60,7 @@
     "./visit-list": "./src/visit-list.tsx",
     "./visit-table": "./src/visit-table/index.ts",
     "./table": "./src/table.tsx",
+    "./row-actions": "./src/row-actions.tsx",
     "./period-nav": "./src/period-nav.tsx",
     "./tabs": "./src/tabs.tsx",
     "./test-content-block": "./src/test-content-block.tsx",

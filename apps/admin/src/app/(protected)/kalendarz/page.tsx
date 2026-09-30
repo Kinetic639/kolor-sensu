@@ -1,4 +1,4 @@
-import { CancelVisitButton } from "@/features/visits/cancel-visit-button";
+import { VisitActions } from "@/features/visits/visit-actions";
 import { loadAdminVisits } from "@/features/visits/loaders";
 import { PageTitle } from "@repo/ui/portal-content";
 import {
@@ -48,31 +48,37 @@ export default async function CalendarPage({
           </Link>
         </p>
       ) : null}
-      <VisitTableToolbar
-        params={params}
-        path={PATH}
-        showRefunds
-        specialists={specialists}
-      />
       <VisitTable
         actions={Object.fromEntries(
-          rows
-            .filter((row) => row.cancellable)
-            .map((row) => [
-              row.id,
-              <CancelVisitButton
-                appointmentId={row.id}
-                key={row.id}
-                label={`${row.clientName}, ${row.weekday}, ${row.dateLabel}, ${row.time}`}
-                paid={row.paid}
-              />,
-            ]),
+          rows.map((row) => [
+            row.id,
+            <VisitActions
+              key={row.id}
+              visit={{
+                id: row.id,
+                reference: row.reference,
+                label: `${row.clientName}, ${row.weekday}, ${row.dateLabel}, ${row.time}`,
+                phone: row.phone,
+                email: row.email,
+                paid: row.paid,
+                cancellable: row.cancellable,
+              }}
+            />,
+          ]),
         )}
         params={params}
         path={PATH}
         rows={rows}
         showPayment
         showSpecialist
+        toolbar={
+          <VisitTableToolbar
+            params={params}
+            path={PATH}
+            showRefunds
+            specialists={specialists}
+          />
+        }
         total={total}
       />
     </div>

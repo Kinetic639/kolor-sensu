@@ -53,7 +53,16 @@ export interface VisitRow {
   specialistId: string;
   specialistName: string;
   specialistColor: string | null;
+  /** `Gabinet Zielony · Siedziba Główna`, or `Online`. */
   place: string;
+  /** `Gabinet Zielony`, or `Online`. */
+  room: string;
+  locationName: string | null;
+  phone: string | null;
+  email: string | null;
+  notes: string | null;
+  /** The price, or what is owed back on a cancelled visit: `200 zł`. */
+  amount: string;
   status: { label: string; tone: VisitTone };
   /** Paid (admins only; false for a specialist). */
   paid: boolean;
@@ -109,17 +118,14 @@ function paymentOf(visit: VisitLike): VisitRow["payment"] {
       };
     }
     return payment.refundedMinor >= due
-      ? { label: `Zwrócono · ${money(due, visit.currencyCode)}`, tone: "info" }
+      ? { label: "Zwrócono", tone: "info" }
       : {
-          label: `Zwrot do zlecenia · ${money(due, visit.currencyCode)}`,
+          label: "Zwrot do zlecenia",
           tone: "danger",
         };
   }
   return payment.paid
-    ? {
-        label: `Opłacona · ${money(visit.priceMinor, visit.currencyCode)}`,
-        tone: "success",
-      }
+    ? { label: "Opłacona", tone: "success" }
     : { label: "Nieopłacona", tone: "warning" };
 }
 
@@ -158,6 +164,18 @@ function rowOf(visit: VisitLike, timeZone: string, now: Date): VisitRow {
           "Stacjonarnie",
     status: statusOf(visit),
     paid: visit.payment?.paid ?? false,
+    room:
+      visit.mode === "online" ? "Online" : (visit.room?.name ?? "Stacjonarnie"),
+    locationName: visit.mode === "online" ? null : visit.locationName,
+    phone: visit.client.phone,
+    email: visit.client.email,
+    notes: visit.client.notes,
+    amount: money(
+      visit.status === "cancelled" && visit.payment?.refundDueMinor
+        ? visit.payment.refundDueMinor
+        : visit.priceMinor,
+      visit.currencyCode,
+    ),
     payment: paymentOf(visit),
     contact,
     note: visit.rescheduleCount > 0 ? "Przełożona przez klienta" : null,

@@ -28,6 +28,11 @@ describe("VisitTable", () => {
     expect(rows).toHaveLength(adminRows.length + 1);
     expect(rows[1]).toHaveTextContent("Jan Kowalski");
     expect(rows[1]).toHaveTextContent("Opłacona");
+    expect(rows[1]).toHaveTextContent(/200\s*zł/);
+    // The reference heads the row, for screen readers too.
+    expect(within(rows[1]!).getByRole("rowheader")).toHaveTextContent(
+      "KS-20301002-1534",
+    );
     expect(
       screen.getByRole("columnheader", { name: /Klient/ }),
     ).toHaveAttribute("aria-sort", "ascending");
@@ -35,7 +40,7 @@ describe("VisitTable", () => {
       "href",
       "/kalendarz?sort=klient&kierunek=malejaco",
     );
-    expect(screen.getByRole("link", { name: /Termin/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Data/ })).toHaveAttribute(
       "href",
       "/kalendarz",
     );
@@ -50,11 +55,9 @@ describe("VisitTable", () => {
         total={42}
       />,
     );
-    expect(screen.getByText("11–14 z 42")).toBeInTheDocument();
-    expect(screen.getByText("Strona 2 z 5")).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Następna strona" }),
-    ).toHaveAttribute("href", "/kalendarz?strona=3&wierszy=10");
+    expect(screen.getByText("11–14 z 42 · strona 2 z 5")).toBeInTheDocument();
+    const [next] = screen.getAllByRole("link", { name: "Następna strona" });
+    expect(next).toHaveAttribute("href", "/kalendarz?strona=3&wierszy=10");
     expect(
       screen.getByRole("link", { name: "Pierwsza strona" }),
     ).toHaveAttribute("href", "/kalendarz?wierszy=10");
@@ -73,9 +76,11 @@ describe("VisitTable", () => {
     expect(
       screen.queryByRole("columnheader", { name: /Specjalista/ }),
     ).toBeNull();
-    expect(
-      screen.getByRole("button", { name: "Następna strona" }),
-    ).toBeDisabled();
+    for (const next of screen.getAllByRole("link", {
+      name: "Następna strona",
+    })) {
+      expect(next).toHaveAttribute("aria-disabled", "true");
+    }
   });
 
   it("says when nothing matches", () => {
@@ -90,7 +95,7 @@ describe("VisitTable", () => {
     expect(
       screen.getByText("Brak rezerwacji pasujących do wyszukiwania i filtrów."),
     ).toBeInTheDocument();
-    expect(screen.getByText("Brak wyników")).toBeInTheDocument();
+    expect(screen.getByText("0 z 0 · strona 1 z 1")).toBeInTheDocument();
   });
 });
 

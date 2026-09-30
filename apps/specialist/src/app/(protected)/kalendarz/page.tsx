@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { visitRows } from "@repo/scheduling";
 import { getBookingWindow, searchVisits } from "@repo/supabase";
 import { EmptyState, PageTitle } from "@repo/ui/portal-content";
+import { RowActionLink, RowActions } from "@repo/ui/row-actions";
 import {
   loadVisitTableParams,
   toVisitSearch,
@@ -43,17 +44,36 @@ export default async function CalendarPage({
     );
   }
 
+  const rows = visitRows(page.visits, {
+    timeZone: window?.timeZone ?? "Europe/Warsaw",
+  });
+
   return (
     <div className="space-y-4">
       <PageTitle>Kalendarz</PageTitle>
-      <VisitTableToolbar params={params} path={PATH} />
       <VisitTable
         caption="Moje wizyty"
         params={params}
         path={PATH}
-        rows={visitRows(page.visits, {
-          timeZone: window?.timeZone ?? "Europe/Warsaw",
-        })}
+        actions={Object.fromEntries(
+          rows.map((row) => [
+            row.id,
+            <RowActions key={row.id} label={row.reference}>
+              {row.phone ? (
+                <RowActionLink href={`tel:${row.phone.replace(/\s/g, "")}`}>
+                  Zadzwoń
+                </RowActionLink>
+              ) : null}
+              {row.email ? (
+                <RowActionLink href={`mailto:${row.email}`}>
+                  Napisz e-mail
+                </RowActionLink>
+              ) : null}
+            </RowActions>,
+          ]),
+        )}
+        rows={rows}
+        toolbar={<VisitTableToolbar params={params} path={PATH} />}
         total={page.total}
       />
       <p className="text-sm text-[var(--text-muted)]">

@@ -59,8 +59,13 @@ describe("visitDays", () => {
       serviceName: "Konsultacja psychologiczna",
       specialistName: "Anna Test",
       place: "Gabinet Zielony · Siedziba",
+      room: "Gabinet Zielony",
+      locationName: "Siedziba",
+      phone: "600100200",
+      notes: "Pierwsza wizyta",
+      amount: "200 zł",
       status: { label: "Potwierdzona", tone: "success" },
-      payment: { label: "Opłacona · 200 zł", tone: "success" },
+      payment: { label: "Opłacona", tone: "success" },
       cancellable: true,
       note: null,
     });
@@ -105,8 +110,8 @@ describe("visitDays", () => {
       ]),
     ).toEqual([
       ["Odwołana przez klienta", "Bez zwrotu", false],
-      ["Odwołana przez centrum", "Zwrot do zlecenia · 200 zł", false],
-      ["Odwołana przez klienta", "Zwrócono · 200 zł", false],
+      ["Odwołana przez centrum", "Zwrot do zlecenia", false],
+      ["Odwołana przez klienta", "Zwrócono", false],
     ]);
   });
 

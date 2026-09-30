@@ -10,7 +10,7 @@ import { parseAsSearch, visitTableParsers } from "./params";
 // renders the results), once they pause; a new search starts at page 1.
 
 export function VisitTableSearch({
-  placeholder = "Szukaj klienta, numeru lub usługi…",
+  placeholder = "Szukaj: klient, numer, usługa…",
 }: {
   placeholder?: string;
 }) {
@@ -20,21 +20,21 @@ export function VisitTableSearch({
     { shallow: false, startTransition, clearOnDefault: true },
   );
   return (
-    <label className="relative block w-full sm:w-72">
+    <label className="relative block w-full sm:w-64">
       <span className="sr-only">Szukaj rezerwacji</span>
       {pending ? (
         <LoaderCircle
           aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 animate-spin text-[var(--text-muted)]"
+          className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 animate-spin text-[var(--text-muted)]"
         />
       ) : (
         <Search
           aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[var(--text-muted)]"
+          className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-[var(--text-muted)]"
         />
       )}
       <input
-        className="h-10 w-full rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface)] pr-3 pl-9 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+        className="h-8 w-full rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface)] pr-2.5 pl-8 text-[0.8125rem] text-[var(--text)] placeholder:text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
         maxLength={100}
         onChange={(event) =>
           setParams(
