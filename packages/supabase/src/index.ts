@@ -99,6 +99,7 @@ export {
   deleteRoomException,
   listRoomExceptions,
   listRoomOpeningHours,
+  listRoomSchedules,
   replaceRoomOpeningHours,
   disableRoom,
   getRoomByIdAdmin,

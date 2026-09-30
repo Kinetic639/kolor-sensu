@@ -12,6 +12,7 @@ import {
   deleteRoomException,
   listRoomExceptions,
   listRoomOpeningHours,
+  listRoomSchedules,
   replaceRoomOpeningHours,
   listPublishedRoomPlacements,
   listPublishedRoomProfiles,
@@ -514,5 +515,85 @@ describe("room exceptions", () => {
 
     await deleteRoomException({ from } as never, "e1");
     expect(eq).toHaveBeenCalledWith("id", "e1");
+  });
+});
+
+describe("listRoomSchedules", () => {
+  it("reads the hours and the dates' exceptions of several rooms at once", async () => {
+    const hoursQuery = {
+      select: vi.fn(() => hoursQuery),
+      in: vi.fn(() => hoursQuery),
+      order: vi.fn(),
+    };
+    hoursQuery.order.mockReturnValueOnce(hoursQuery).mockResolvedValueOnce({
+      data: [
+        {
+          id: "h",
+          room_id: ROOM_ID,
+          weekday: 1,
+          starts_at: "08:00:00",
+          ends_at: "18:00:00",
+          created_at: "",
+          updated_at: "",
+        },
+      ],
+      error: null,
+    });
+    const exceptionsQuery = {
+      select: vi.fn(() => exceptionsQuery),
+      in: vi.fn(() => exceptionsQuery),
+      gte: vi.fn(() => exceptionsQuery),
+      lte: vi.fn(() => exceptionsQuery),
+      order: vi.fn(),
+    };
+    exceptionsQuery.order
+      .mockReturnValueOnce(exceptionsQuery)
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: "e",
+            room_id: ROOM_ID,
+            date: "2030-01-08",
+            type: "closed_all_day",
+            starts_at: null,
+            ends_at: null,
+            reason: "Remont",
+            created_at: "",
+            updated_at: "",
+          },
+        ],
+        error: null,
+      });
+    const from = vi.fn((table: string) =>
+      table === "room_opening_hours" ? hoursQuery : exceptionsQuery,
+    );
+
+    const result = await listRoomSchedules({ from } as never, {
+      roomIds: [ROOM_ID],
+      from: "2030-01-07",
+      to: "2030-01-13",
+    });
+
+    expect(hoursQuery.in).toHaveBeenCalledWith("room_id", [ROOM_ID]);
+    expect(exceptionsQuery.gte).toHaveBeenCalledWith("date", "2030-01-07");
+    expect(exceptionsQuery.lte).toHaveBeenCalledWith("date", "2030-01-13");
+    expect(result.hours).toMatchObject([
+      { roomId: ROOM_ID, weekday: 1, startsAt: "08:00", endsAt: "18:00" },
+    ]);
+    expect(result.exceptions).toMatchObject([
+      { roomId: ROOM_ID, type: "closed_all_day", reason: "Remont" },
+    ]);
+  });
+
+  it("asks nothing for no rooms", async () => {
+    const from = vi.fn();
+    expect(
+      await listRoomSchedules({ from } as never, {
+        roomIds: [],
+        from: "2030-01-07",
+        to: "2030-01-13",
+      }),
+    ).toEqual({ hours: [], exceptions: [] });
+    expect(from).not.toHaveBeenCalled();
   });
 });

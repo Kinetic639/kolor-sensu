@@ -2,445 +2,529 @@ import { describe, expect, it } from "vitest";
 import {
   calendarWindows,
   dayView,
-  laneLayout,
+  findAvailability,
+  occupancyOf,
+  personalWeek,
+  placeShort,
+  scheduleRange,
   visitsLabel,
-  weekView,
+  weekComparison,
+  type CalendarPerson,
+  type CalendarRoom,
+  type CalendarTimeOff,
   type CalendarWindow,
 } from "./calendar-view";
 import type { VisitLike } from "./visits";
 
 const timeZone = "Europe/Warsaw";
-// Wednesday 2 October 2030, noon in Warsaw.
-const now = new Date("2030-10-02T10:00:00Z");
+// Wednesday 2 October 2030, 12:37 in Warsaw.
+const now = new Date("2030-10-02T10:37:00Z");
+const at = (day: number, time: string) =>
+  new Date(`2030-10-0${day}T${time}:00+02:00`);
 
-const anna = { id: "anna", name: "Anna Test", color: "#5f9e8f" };
-const jan = { id: "jan", name: "Jan Test", color: null };
-const green = { id: "green", name: "Gabinet Zielony", color: "#7fb3a6" };
-const blue = { id: "blue", name: "Gabinet Niebieski", color: null };
+const anna: CalendarPerson = {
+  id: "anna",
+  name: "Anna Nowak",
+  title: "Psychoterapeutka CBT",
+  avatarUrl: "https://example.com/anna.jpg",
+  color: "#5f9e8f",
+};
+const jan: CalendarPerson = {
+  id: "jan",
+  name: "Jan Lis",
+  title: null,
+  avatarUrl: null,
+  color: null,
+};
+const ewa: CalendarPerson = {
+  id: "ewa",
+  name: "Ewa Wójcik",
+  title: "Psycholożka",
+  avatarUrl: null,
+  color: null,
+};
+const green: CalendarRoom = {
+  id: "green",
+  name: "Gabinet 1",
+  color: "#286e4d",
+  locationId: "loc",
+  hours: [{ weekday: 3, startsAt: "08:00", endsAt: "18:00" }],
+  exceptions: [],
+};
+const blue: CalendarRoom = {
+  id: "blue",
+  name: "Gabinet Niebieski",
+  color: null,
+  locationId: "loc",
+  hours: [],
+  exceptions: [
+    {
+      date: "2030-10-02",
+      type: "closed_all_day",
+      startsAt: null,
+      endsAt: null,
+      reason: "Remont",
+    },
+  ],
+};
 
 const windows: CalendarWindow[] = [
   {
     id: "w1",
-    specialist: anna,
-    room: green,
-    start: new Date("2030-10-02T07:00:00Z"),
-    end: new Date("2030-10-02T11:00:00Z"),
-    mode: "in_person",
+    specialistId: "anna",
+    placeId: "green",
+    start: at(2, "08:00"),
+    end: at(2, "12:00"),
   },
   {
     id: "w2",
-    specialist: jan,
-    room: null,
-    start: new Date("2030-10-02T15:00:00Z"),
-    end: new Date("2030-10-02T19:30:00Z"),
-    mode: "online",
+    specialistId: "anna",
+    placeId: "online",
+    start: at(2, "12:00"),
+    end: at(2, "14:00"),
   },
   {
     id: "w3",
-    specialist: anna,
-    room: green,
-    start: new Date("2030-10-03T07:00:00Z"),
-    end: new Date("2030-10-03T09:00:00Z"),
-    mode: "in_person",
+    specialistId: "jan",
+    placeId: "green",
+    start: at(2, "14:00"),
+    end: at(2, "17:00"),
+  },
+  {
+    id: "w4",
+    specialistId: "anna",
+    placeId: "green",
+    start: at(3, "09:00"),
+    end: at(3, "11:00"),
+  },
+];
+const timeOff: CalendarTimeOff[] = [
+  {
+    specialistId: "jan",
+    start: at(2, "17:00"),
+    end: at(2, "18:00"),
+    reason: "Szkolenie",
   },
 ];
 
-const visit: VisitLike = {
+const visit = (patch: Partial<VisitLike>): VisitLike => ({
   id: "v1",
   reference: "3010-001",
   status: "confirmed",
   mode: "in_person",
-  startsAt: "2030-10-02T08:00:00Z",
-  endsAt: "2030-10-02T08:50:00Z",
-  serviceName: "Konsultacja",
-  specialist: anna,
-  room: green,
+  startsAt: at(2, "09:00").toISOString(),
+  endsAt: at(2, "10:30").toISOString(),
+  serviceName: "Psychoterapia",
+  specialist: { id: "anna", name: "Anna Nowak", color: null },
+  room: { id: "green", name: "Gabinet 1", color: "#286e4d" },
   locationName: "Siedziba",
-  client: { name: "Jan Kowalski", email: null, phone: null, notes: null },
+  client: { name: "Ewa Kowalska", email: null, phone: null, notes: null },
   priceMinor: 20000,
   currencyCode: "PLN",
   payment: null,
   cancelledBy: null,
   rescheduleCount: 0,
-};
-const cancelled: VisitLike = {
-  ...visit,
-  id: "v2",
-  status: "cancelled",
-  cancelledBy: "client",
-  startsAt: "2030-10-02T09:00:00Z",
-  endsAt: "2030-10-02T09:50:00Z",
-};
-const online: VisitLike = {
-  ...visit,
-  id: "v3",
-  mode: "online",
-  room: null,
-  status: "awaiting_payment",
-  specialist: jan,
-  startsAt: "2030-10-02T16:00:00Z",
-  endsAt: "2030-10-02T16:50:00Z",
-  client: { ...visit.client, name: null },
+  ...patch,
+});
+const visits: VisitLike[] = [
+  visit({}),
+  visit({
+    id: "v2",
+    mode: "online",
+    room: null,
+    status: "awaiting_payment",
+    startsAt: at(2, "12:30").toISOString(),
+    endsAt: at(2, "13:00").toISOString(),
+    client: { name: "Piotr Zieliński", email: null, phone: null, notes: null },
+  }),
+  visit({ id: "v3", status: "cancelled", cancelledBy: "client" }),
+];
+
+const base = {
+  timeZone,
+  people: [anna, jan, ewa],
+  rooms: [green, blue],
+  windows,
+  timeOff,
+  visits,
+  now,
 };
 
-describe("visitsLabel", () => {
+describe("helpers", () => {
   it("counts visits in Polish", () => {
-    expect([0, 1, 2, 5, 12, 22].map(visitsLabel)).toEqual([
+    expect([0, 1, 2, 5, 22].map(visitsLabel)).toEqual([
       "0 wizyt",
       "1 wizyta",
       "2 wizyty",
       "5 wizyt",
-      "12 wizyt",
       "22 wizyty",
     ]);
   });
-});
 
-describe("laneLayout", () => {
-  it("side by side only while overlapping", () => {
+  it("shortens room names as the reference does", () => {
     expect(
-      laneLayout([
-        { start: 60, end: 120 },
-        { start: 90, end: 150 },
-        { start: 100, end: 110 },
-        { start: 200, end: 260 },
-      ]),
-    ).toEqual([
-      { lane: 0, lanes: 3 },
-      { lane: 1, lanes: 3 },
-      { lane: 2, lanes: 3 },
-      { lane: 0, lanes: 1 },
-    ]);
+      ["Gabinet 1", "Gabinet Zielony", "Sala warsztatowa", "Online"].map(
+        placeShort,
+      ),
+    ).toEqual(["G1", "GZ", "SW", "ONL"]);
   });
 
-  it("reuses a lane once it is free", () => {
+  it("occupancy: booked over available, over 100% is overbooking", () => {
     expect(
-      laneLayout([
-        { start: 0, end: 60 },
-        { start: 30, end: 90 },
-        { start: 60, end: 120 },
-      ]),
-    ).toEqual([
-      { lane: 0, lanes: 2 },
-      { lane: 1, lanes: 2 },
-      { lane: 0, lanes: 2 },
-    ]);
-  });
-});
-
-describe("dayView", () => {
-  const specialistsDay = () =>
-    dayView({
-      date: "2030-10-02",
-      timeZone,
-      perspective: "specialists",
-      resources: [anna, jan],
-      windows,
-      visits: [visit, cancelled, online],
-      now,
-    });
-
-  it("a column per specialist: their hours and visits, in local minutes", () => {
-    const view = specialistsDay();
-    expect(view.columns.map((column) => column.label)).toEqual([
-      "Anna Test",
-      "Jan Test",
-    ]);
-    const [annaColumn] = view.columns;
-    expect(
-      annaColumn!.blocks.map((block) => [
-        block.kind,
-        block.start,
-        block.end,
-        block.title,
-      ]),
-    ).toEqual([
-      ["availability", 9 * 60, 13 * 60, "Gabinet Zielony"],
-      ["visit", 10 * 60, 10 * 60 + 50, "Jan Kowalski"],
-    ]);
-    expect(annaColumn!.blocks[0]).toMatchObject({
-      time: "09:00–13:00",
-      label: "Dostępność 09:00–13:00, Gabinet Zielony",
-      color: "#7fb3a6",
-      colorSeed: "green",
-    });
-    expect(annaColumn!.blocks[1]).toMatchObject({
-      visitId: "v1",
-      subtitle: "Konsultacja",
-      meta: "Gabinet Zielony",
-      time: "10:00–10:50",
-      pending: false,
-      label:
-        "Jan Kowalski, Konsultacja, 10:00–10:50, Gabinet Zielony · Siedziba",
-      lane: 0,
-      lanes: 1,
-    });
-  });
-
-  it("sums up each column: hours, visits and how full it is", () => {
-    const [annaColumn, janColumn] = specialistsDay().columns;
-    expect(annaColumn).toMatchObject({
-      hours: "09:00–13:00",
+      occupancyOf([{ start: 0, end: 90 }], [{ start: 0, end: 240 }]),
+    ).toEqual({
       visitCount: 1,
-      summary: "1 wizyta · 0,8 godz. z 4 godz.",
-      occupancy: 21,
-    });
-    expect(janColumn!.blocks[0]).toMatchObject({
-      title: "Online",
-      start: 17 * 60,
-      end: 21 * 60 + 30,
-      color: null,
-      colorSeed: "online",
-    });
-    // Awaiting payment is shown, marked; a client without a name is "Klient".
-    expect(janColumn!.blocks[1]).toMatchObject({
-      title: "Klient",
-      pending: true,
-      meta: "Online",
-    });
-  });
-
-  it("an empty column says so", () => {
-    const view = dayView({
-      date: "2030-10-02",
-      timeZone,
-      perspective: "specialists",
-      resources: [{ id: "ewa", name: "Ewa", color: null }],
-      windows,
-      visits: [],
-      now,
-    });
-    expect(view.columns[0]).toMatchObject({
-      hours: null,
-      visitCount: 0,
-      occupancy: null,
-      summary: "0 wizyt",
-      blocks: [],
-    });
-  });
-
-  it("hours from 8 to 20, widened to whole hours; the line for now", () => {
-    const view = specialistsDay();
-    // Jan's evening ends at 21:30.
-    expect(view.range).toEqual({ start: 8 * 60, end: 22 * 60 });
-    expect(view.nowMinute).toBe(12 * 60);
-    expect(view.today).toBe(true);
-  });
-
-  it("no line for now on another day", () => {
-    const view = dayView({
-      date: "2030-10-03",
-      timeZone,
-      perspective: "specialists",
-      resources: [anna],
-      windows,
-      visits: [],
-      now,
-    });
-    expect(view.nowMinute).toBeNull();
-    expect(view.today).toBe(false);
-  });
-
-  it("a column per room: who has it, and the visits in it, by specialist", () => {
-    const view = dayView({
-      date: "2030-10-02",
-      timeZone,
-      perspective: "rooms",
-      resources: [green, blue],
-      windows,
-      visits: [visit, online],
-      now,
-    });
-    expect(view.columns.map((column) => column.label)).toEqual([
-      "Gabinet Zielony",
-      "Gabinet Niebieski",
-      "Online",
-    ]);
-    const [greenColumn, , onlineColumn] = view.columns;
-    expect(
-      greenColumn!.blocks.map((block) => [
-        block.title,
-        block.meta,
-        block.colorSeed,
-      ]),
-    ).toEqual([
-      ["Anna Test", null, "anna"],
-      ["Jan Kowalski", "Anna Test", "anna"],
-    ]);
-    expect(onlineColumn!.blocks.map((block) => block.title)).toEqual([
-      "Jan Test",
-      "Klient",
-    ]);
-  });
-
-  it("no online column for rooms when nothing happens online", () => {
-    const view = dayView({
-      date: "2030-10-03",
-      timeZone,
-      perspective: "rooms",
-      resources: [green],
-      windows,
-      visits: [],
-      now,
-    });
-    expect(view.columns.map((column) => column.label)).toEqual([
-      "Gabinet Zielony",
-    ]);
-  });
-
-  it("overlapping visits share the column", () => {
-    const view = dayView({
-      date: "2030-10-02",
-      timeZone,
-      perspective: "specialists",
-      resources: [anna],
-      windows: [],
-      visits: [visit, { ...visit, id: "v4", startsAt: "2030-10-02T08:30:00Z" }],
-      now,
+      bookedMinutes: 90,
+      availableMinutes: 240,
+      bookedHours: 1.5,
+      availableHours: 4,
+      freeHours: 2.5,
+      percent: 38,
+      overbooked: false,
+      overMinutes: 0,
     });
     expect(
-      view.columns[0]!.blocks.map((block) => [block.lane, block.lanes]),
-    ).toEqual([
-      [0, 2],
-      [1, 2],
-    ]);
+      occupancyOf([{ start: 0, end: 390 }], [{ start: 0, end: 360 }]),
+    ).toMatchObject({ percent: 108, overbooked: true, overMinutes: 30 });
+    expect(occupancyOf([{ start: 0, end: 60 }], [])).toMatchObject({
+      percent: 100,
+      overbooked: true,
+    });
+    expect(occupancyOf([], [])).toMatchObject({ percent: 0 });
   });
 
-  it("cuts what crosses midnight at the day's edges", () => {
-    const view = dayView({
-      date: "2030-10-02",
-      timeZone,
-      perspective: "specialists",
-      resources: [anna],
-      windows: [
-        {
-          ...windows[0]!,
-          start: new Date("2030-10-02T19:00:00Z"),
-          end: new Date("2030-10-03T01:00:00Z"),
-        },
-      ],
-      visits: [],
-      now,
+  it("shows half an hour around what there is, else 8 to 18", () => {
+    expect(scheduleRange([{ start: 9 * 60, end: 17 * 60 }])).toEqual({
+      start: 8 * 60 + 30,
+      end: 17 * 60 + 30,
     });
-    expect(view.columns[0]!.blocks[0]).toMatchObject({
-      start: 21 * 60,
-      end: 24 * 60,
-    });
-    expect(view.range.end).toBe(24 * 60);
-  });
-});
-
-describe("weekView", () => {
-  it("the working days of one specialist, today marked; weekends when used", () => {
-    const view = weekView({
-      week: "2030-09-30",
-      timeZone,
-      resource: { kind: "specialist", id: "anna" },
-      windows: [
-        ...windows,
-        {
-          ...windows[0]!,
-          id: "w4",
-          start: new Date("2030-10-05T08:00:00Z"),
-          end: new Date("2030-10-05T10:00:00Z"),
-        },
-      ],
-      visits: [visit, online],
-      now,
-    });
-    expect(view.columns.map((column) => column.key)).toEqual([
-      "2030-09-30",
-      "2030-10-01",
-      "2030-10-02",
-      "2030-10-03",
-      "2030-10-04",
-      "2030-10-05",
-    ]);
-    expect(view.columns[2]).toMatchObject({
-      label: "Śr",
-      sublabel: "2 października",
-      isToday: true,
-      visitCount: 1,
-    });
-    expect(view.columns[3]!.blocks).toHaveLength(1);
-    expect(view.columns[0]!.blocks).toHaveLength(0);
-    expect(view.nowMinute).toBe(12 * 60);
-    expect(view.today).toBe(true);
-  });
-
-  it("a room's week holds everyone's hours in it", () => {
-    const view = weekView({
-      week: "2030-09-30",
-      timeZone,
-      resource: { kind: "room", id: "green" },
-      windows,
-      visits: [online],
-      now,
-    });
-    expect(view.columns).toHaveLength(5);
-    expect(view.columns[2]!.blocks.map((block) => block.title)).toEqual([
-      "Anna Test",
-    ]);
-  });
-
-  it("no line for now in another week", () => {
-    const view = weekView({
-      week: "2030-10-07",
-      timeZone,
-      resource: { kind: "specialist", id: "anna" },
-      windows,
-      visits: [],
-      now,
-    });
-    expect(view.today).toBe(false);
-    expect(view.columns.some((column) => column.isToday)).toBe(false);
+    expect(scheduleRange([])).toEqual({ start: 8 * 60, end: 18 * 60 });
   });
 });
 
 describe("calendarWindows", () => {
-  const rule = {
-    id: "r1",
-    recurrence: "weekly" as const,
-    weekdays: [3],
-    intervalWeeks: 1,
-    exceptions: [],
-    startsAt: "09:00",
-    endsAt: "13:00",
-    validFrom: "2030-01-01",
-    validUntil: null,
-    mode: "in_person" as const,
-  };
-
-  it("everyone's rules as windows, with rooms and without time off", () => {
+  it("expands rules, cuts time off out and keeps it as blocked time", () => {
+    const rule = {
+      id: "r",
+      specialistId: "jan",
+      recurrence: "weekly" as const,
+      weekdays: [3],
+      intervalWeeks: 1,
+      exceptions: [],
+      startsAt: "14:00",
+      endsAt: "18:00",
+      validFrom: "2030-01-01",
+      validUntil: null,
+      mode: "in_person" as const,
+      roomId: "green",
+    };
     const result = calendarWindows({
-      specialists: [anna, jan],
-      rooms: [green],
-      rules: [
-        { ...rule, specialistId: "anna", roomId: "green" },
-        { ...rule, id: "r2", specialistId: "jan", roomId: null, mode: "online" },
-        // Someone not shown.
-        { ...rule, id: "r3", specialistId: "ewa", roomId: null },
-      ],
+      specialistIds: ["jan"],
+      rules: [rule, { ...rule, id: "x", specialistId: "nobody" }],
       timeOff: [
         {
           specialistId: "jan",
-          startsAt: "2030-10-02T00:00:00Z",
-          endsAt: "2030-10-03T00:00:00Z",
+          startsAt: at(2, "17:00").toISOString(),
+          endsAt: at(2, "20:00").toISOString(),
+          reason: null,
         },
       ],
-      from: "2030-09-30",
-      to: "2030-10-06",
+      from: "2030-10-02",
+      to: "2030-10-02",
       timeZone,
     });
-    expect(result).toEqual([
+    expect(result.windows).toEqual([
       {
-        id: "r1:2030-10-02T07:00:00.000Z",
-        specialist: anna,
-        room: green,
-        start: new Date("2030-10-02T07:00:00Z"),
-        end: new Date("2030-10-02T11:00:00Z"),
-        mode: "in_person",
+        id: "r:2030-10-02T12:00:00.000Z",
+        specialistId: "jan",
+        placeId: "green",
+        start: at(2, "14:00"),
+        end: at(2, "17:00"),
       },
     ]);
+    // Only where they would have worked.
+    expect(result.timeOff).toEqual([
+      {
+        specialistId: "jan",
+        start: at(2, "17:00"),
+        end: at(2, "18:00"),
+        reason: null,
+      },
+    ]);
+  });
+});
+
+describe("dayView by specialist", () => {
+  const view = dayView({
+    ...base,
+    date: "2030-10-02",
+    perspective: "specialists",
+  });
+  const [annaColumn, janColumn, ewaColumn] = view.columns;
+
+  it("a column per specialist, their day summed up", () => {
+    expect(annaColumn).toMatchObject({
+      key: "anna",
+      kind: "specialist",
+      title: "Anna Nowak",
+      subtitle: "Psychoterapeutka CBT",
+      avatarUrl: "https://example.com/anna.jpg",
+      initials: "AN",
+      hours: "08:00 – 14:00",
+      unavailable: false,
+      closed: null,
+      occupancy: {
+        visitCount: 2,
+        percent: 33,
+        bookedHours: 2,
+        availableHours: 6,
+      },
+    });
+    expect(ewaColumn).toMatchObject({
+      hours: null,
+      unavailable: true,
+      occupancy: { percent: 0, visitCount: 0 },
+    });
+  });
+
+  it("availability wears its room's colour, with the boundary chip text", () => {
+    expect(annaColumn!.availability).toEqual([
+      expect.objectContaining({
+        start: 8 * 60,
+        end: 12 * 60,
+        time: "08:00–12:00",
+        place: expect.objectContaining({
+          id: "green",
+          name: "Gabinet 1",
+          short: "G1",
+        }),
+        adjacentToPrevious: false,
+        label: "Dostępność 08:00–12:00, Gabinet 1",
+      }),
+      expect.objectContaining({
+        start: 12 * 60,
+        place: expect.objectContaining({ id: "online", online: true }),
+        adjacentToPrevious: true,
+      }),
+    ]);
+  });
+
+  it("visits: time, client, service, place; not cancelled ones", () => {
+    expect(annaColumn!.visits).toEqual([
+      expect.objectContaining({
+        visitId: "v1",
+        start: 9 * 60,
+        end: 10 * 60 + 30,
+        minutes: 90,
+        time: "09:00 – 10:30",
+        startTime: "09:00",
+        client: "Ewa Kowalska",
+        clientInitials: "EK",
+        service: "Psychoterapia",
+        place: expect.objectContaining({ id: "green" }),
+        person: expect.objectContaining({ id: "anna", initials: "AN" }),
+        pending: false,
+        dimmed: false,
+      }),
+      expect.objectContaining({
+        visitId: "v2",
+        pending: true,
+        place: expect.objectContaining({ id: "online" }),
+        label:
+          "Piotr Zieliński, Psychoterapia, 12:30 – 13:00, Online, czeka na płatność",
+      }),
+    ]);
+  });
+
+  it("time off is blocked time", () => {
+    expect(janColumn!.blocked).toEqual([
+      expect.objectContaining({
+        start: 17 * 60,
+        end: 18 * 60,
+        time: "17:00 – 18:00",
+        label: "Szkolenie",
+      }),
+    ]);
+  });
+
+  it("the range around everything, and now on today", () => {
+    expect(view.range).toEqual({ start: 7 * 60 + 30, end: 18 * 60 + 30 });
+    expect(view.now).toEqual({ minute: 12 * 60 + 37, label: "12:37" });
+  });
+
+  it("hides empty columns when asked", () => {
+    expect(
+      dayView({
+        ...base,
+        date: "2030-10-02",
+        perspective: "specialists",
+        hideEmpty: true,
+      }).columns.map((column) => column.key),
+    ).toEqual(["anna", "jan"]);
+  });
+
+  it("dims visits that do not match the search", () => {
+    const searched = dayView({
+      ...base,
+      date: "2030-10-02",
+      perspective: "specialists",
+      query: "piotr",
+    });
+    expect(searched.columns[0]!.visits.map((one) => one.dimmed)).toEqual([
+      true,
+      false,
+    ]);
+  });
+
+  it("no now on another day", () => {
+    expect(
+      dayView({ ...base, date: "2030-10-03", perspective: "specialists" }).now,
+    ).toBeNull();
+  });
+});
+
+describe("dayView by room", () => {
+  const view = dayView({ ...base, date: "2030-10-02", perspective: "rooms" });
+  const [greenColumn, blueColumn, onlineColumn] = view.columns;
+
+  it("a room is available in its opening hours, with who is in it", () => {
+    expect(greenColumn).toMatchObject({
+      kind: "room",
+      title: "Gabinet 1",
+      short: "G1",
+      hours: "08:00 – 18:00",
+      closed: null,
+      occupancy: { visitCount: 1, availableHours: 10 },
+    });
+    expect(greenColumn!.availability).toEqual([
+      expect.objectContaining({
+        start: 8 * 60,
+        end: 18 * 60,
+        time: "08:00–18:00",
+      }),
+    ]);
+    expect(greenColumn!.visits[0]).toMatchObject({
+      person: expect.objectContaining({ name: "Anna Nowak" }),
+    });
+  });
+
+  it("a room closed all day says why", () => {
+    expect(blueColumn).toMatchObject({
+      closed: "Remont",
+      unavailable: true,
+      availability: [],
+    });
+  });
+
+  it("online work has a column of its own", () => {
+    expect(onlineColumn).toMatchObject({ kind: "online", title: "Online" });
+    expect(onlineColumn!.availability).toHaveLength(1);
+    expect(onlineColumn!.visits.map((one) => one.visitId)).toEqual(["v2"]);
+  });
+});
+
+describe("weekComparison", () => {
+  const view = weekComparison({
+    ...base,
+    week: "2030-09-30",
+    perspective: "specialists",
+  });
+
+  it("the working days, a lane per specialist in each", () => {
+    expect(view.days.map((day) => day.label)).toEqual([
+      "Pon, 30",
+      "Wt, 1",
+      "Śr, 2",
+      "Czw, 3",
+      "Pt, 4",
+    ]);
+    const wednesday = view.days[2]!;
+    expect(wednesday).toMatchObject({ date: "2030-10-02", isToday: true });
+    expect(wednesday.lanes.map((lane) => lane.key)).toEqual([
+      "anna",
+      "jan",
+      "ewa",
+    ]);
+    expect(wednesday.occupancy.visitCount).toBe(2);
+    expect(view.now).toEqual({ minute: 12 * 60 + 37, label: "12:37" });
+  });
+
+  it("sums up the week per specialist, with the extremes", () => {
+    expect(view.summary).toMatchObject({
+      visitCount: 2,
+      occupancy: { bookedHours: 2, availableHours: 11 },
+      highest: { id: "anna", percent: 25 },
+      lowest: { id: "jan", percent: 0 },
+    });
+    expect(view.summary.items.map((item) => item.id)).toEqual([
+      "anna",
+      "jan",
+      "ewa",
+    ]);
+  });
+
+  it("hides empty lanes per day", () => {
+    const hidden = weekComparison({
+      ...base,
+      week: "2030-09-30",
+      perspective: "specialists",
+      hideEmpty: true,
+    });
+    expect(hidden.days[2]!.lanes.map((lane) => lane.key)).toEqual([
+      "anna",
+      "jan",
+    ]);
+    expect(hidden.days[0]!.lanes).toEqual([]);
+  });
+});
+
+describe("personalWeek", () => {
+  it("a specialist's own days, and their week summed up", () => {
+    const view = personalWeek({
+      ...base,
+      week: "2030-09-30",
+      person: anna,
+    });
+    expect(
+      view.columns.map((column) => [column.title, column.subtitle]),
+    ).toEqual([
+      ["Pon", "30 września"],
+      ["Wt", "1 października"],
+      ["Śr", "2 października"],
+      ["Czw", "3 października"],
+      ["Pt", "4 października"],
+    ]);
+    expect(view.columns[2]).toMatchObject({ kind: "day", isToday: true });
+    expect(
+      personalWeek({
+        ...base,
+        week: "2030-09-30",
+        person: anna,
+        hideEmpty: true,
+      }).columns.map((column) => column.title),
+    ).toEqual(["Śr", "Czw"]);
+    // Not finished yet: the one going on now.
+    expect(view.summary).toMatchObject({
+      visitCount: 2,
+      occupancy: { availableHours: 8 },
+      upcoming: [expect.objectContaining({ visitId: "v2", day: "Śr, 2 paź" })],
+    });
+  });
+});
+
+describe("findAvailability", () => {
+  it("finds a shown window and its column", () => {
+    const view = dayView({
+      ...base,
+      date: "2030-10-02",
+      perspective: "specialists",
+    });
+    const key = view.columns[0]!.availability[0]!.key;
+    expect(findAvailability(view.columns, key)).toMatchObject({
+      slot: { time: "08:00–12:00" },
+      column: { key: "anna" },
+    });
+    expect(findAvailability(view.columns, "nope")).toBeNull();
+    expect(findAvailability(view.columns, null)).toBeNull();
   });
 });

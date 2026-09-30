@@ -67,7 +67,7 @@ export const parseAsId = createParser({
 });
 
 /** `online`, or a room's id. */
-const parseAsPlace = createParser({
+export const parseAsPlace = createParser({
   parse: (value) => (value === "online" || UUID.test(value) ? value : null),
   serialize: (value: string) => value,
 });

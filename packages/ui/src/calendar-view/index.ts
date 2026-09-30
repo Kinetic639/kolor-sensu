@@ -1,9 +1,13 @@
-// The calendar views (docs/product/scheduling-ui-plan.md, K5): a day by
-// specialist or room, a week of one of them; server-rendered, state in
-// the URL, a visit's details in the side panel.
+// The calendar views (docs/product/scheduling-ui-plan.md, K5), after the AI
+// Studio reference: the centre's day by specialist or room, the week
+// compared, a specialist's own week; server-rendered, state in the URL, a
+// visit's details in the side panel.
 export {
   CALENDAR_PERSPECTIVES,
   CALENDAR_VIEWS,
+  calendarAvailabilityHref,
+  calendarCollapseHref,
+  calendarDisplayParsers,
   calendarHref,
   calendarNav,
   calendarPanelCloseHref,
@@ -13,6 +17,7 @@ export {
   calendarPerspectiveTabs,
   calendarViewTabs,
   calendarVisitHref,
+  dayLabel,
   loadCalendarParams,
 } from "./params";
 export type {
@@ -20,10 +25,24 @@ export type {
   CalendarPerspectiveParam,
   CalendarView,
 } from "./params";
-export { CalendarLegend, CalendarToolbar } from "./calendar-toolbar";
+export { AvailabilityPanel } from "./availability-panel";
+export { ScheduleCanvas } from "./schedule-controls";
+export type { ScheduleSwitch } from "./schedule-controls";
+export {
+  ComparisonSummaryPanel,
+  PersonalSummaryPanel,
+} from "./schedule-summary";
+export { ScheduleToolbar } from "./schedule-toolbar";
 export type {
-  CalendarResourceTab,
-  CalendarToolbarProps,
-} from "./calendar-toolbar";
-export { ResourceCalendar } from "./resource-calendar";
-export type { ResourceCalendarProps } from "./resource-calendar";
+  ScheduleNav,
+  ScheduleToolbarProps,
+  SegmentLink,
+} from "./schedule-toolbar";
+export { ScheduleAgenda, WeekAgenda } from "./schedule-agenda";
+export type { ScheduleAgendaProps } from "./schedule-agenda";
+export { DaySchedule, ScheduleFrame, WeekComparison } from "./schedule-views";
+export type {
+  DayScheduleProps,
+  ScheduleMode,
+  WeekComparisonProps,
+} from "./schedule-views";

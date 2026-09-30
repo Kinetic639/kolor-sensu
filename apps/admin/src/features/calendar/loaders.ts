@@ -6,13 +6,15 @@ import {
   dayView,
   visitEventRows,
   visitRows,
-  weekView,
-  type CalendarResource,
+  weekComparison,
+  type CalendarPerson,
+  type CalendarRoom,
 } from "@repo/scheduling";
 import {
   getCenterSettings,
   getVisit,
   listAvailabilityRulesForSpecialists,
+  listRoomSchedules,
   listRoomsAdmin,
   listSpecialistSummariesForAdmin,
   listTimeOffForSpecialists,
@@ -24,8 +26,9 @@ import { calendarPeriod, type CalendarParams } from "@repo/ui/calendar-view";
 import { formatInTimeZone } from "date-fns-tz";
 
 // Kalendarz (stage K5): the centre's day, a column per specialist or room,
-// or the week of one of them. Only the shown dates are read: everyone's
-// availability rules in force then (expanded here, time off cut out), the
+// or the week compared. Only the shown dates are read, in parallel:
+// everyone's availability rules in force then (expanded here, time off
+// cut out and kept as blocked time), the rooms' hours and exceptions, the
 // booked visits, and the visit open in the side panel.
 
 export async function loadAdminCalendar(params: CalendarParams) {
@@ -41,107 +44,119 @@ export async function loadAdminCalendar(params: CalendarParams) {
   const period = calendarPeriod(params, { today, defaultView: "dzien" });
 
   const active = summaries.filter((one) => one.active);
-  const specialists: CalendarResource[] = active.map((one) => ({
+  const activeRooms = allRooms
+    .filter((room) => room.active)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+  // The locations to choose from: those of the active rooms.
+  const locations = [
+    ...new Map(activeRooms.map((room) => [room.locationId, room.locationName])),
+  ].map(([value, label]) => ({ value, label }));
+
+  // Where the calendar looks: one location's rooms, online, or everywhere.
+  const where = params.lokalizacja;
+  const shownRooms =
+    where === "online"
+      ? []
+      : activeRooms.filter((room) => !where || room.locationId === where);
+  const placeAllowed = (placeId: string) =>
+    !where ||
+    (where === "online"
+      ? placeId === "online"
+      : shownRooms.some((room) => room.id === placeId));
+
+  const ids = active.map((one) => one.id);
+  const history = params.wizyta && params.karta === "historia";
+  const [rules, timeOff, schedules, visits, photos, open, events] =
+    await Promise.all([
+      listAvailabilityRulesForSpecialists(client, {
+        specialistIds: ids,
+        from: period.from,
+        to: period.to,
+      }),
+      listTimeOffForSpecialists(client, ids),
+      listRoomSchedules(client, {
+        roomIds: shownRooms.map((room) => room.id),
+        from: period.from,
+        to: period.to,
+      }),
+      listVisits(client, { from: period.from, to: period.to }),
+      // Pictures: the account's, else the published profile photo.
+      signSpecialistPhotos(
+        client,
+        active.map((one) => (one.avatarUrl ? null : one.publicProfilePhotoUrl)),
+      ),
+      params.wizyta ? getVisit(client, params.wizyta).catch(() => null) : null,
+      history ? listVisitEvents(client, params.wizyta!).catch(() => []) : null,
+    ]);
+
+  const people: CalendarPerson[] = active.map((one) => ({
     id: one.id,
     name:
       one.publicDisplayName ??
       (`${one.firstName} ${one.lastName}`.trim() || "Specjalista"),
+    title: one.professionalTitle,
+    avatarUrl:
+      one.avatarUrl ??
+      (one.publicProfilePhotoUrl
+        ? (photos.get(one.publicProfilePhotoUrl) ?? null)
+        : null),
     color: one.color,
   }));
-  const rooms: CalendarResource[] = allRooms
-    .filter((room) => room.active)
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((room) => ({ id: room.id, name: room.name, color: room.color }));
-
-  const byRoom = params.perspektywa === "gabinety";
-  const resources = byRoom ? rooms : specialists;
-  // A week is of one of them: the one asked for, else the first.
-  const focus =
-    period.view === "tydzien"
-      ? (resources.find((one) => one.id === params.zasob) ??
-        resources[0] ??
-        null)
-      : null;
-  // A specialist's week needs only their hours and visits.
-  const shownSpecialists =
-    focus && !byRoom
-      ? specialists.filter((one) => one.id === focus.id)
-      : specialists;
-  const ids = shownSpecialists.map((one) => one.id);
-  const history = params.wizyta && params.karta === "historia";
-
-  const [rules, timeOff, visits, photos, open, events] = await Promise.all([
-    listAvailabilityRulesForSpecialists(client, {
-      specialistIds: ids,
-      from: period.from,
-      to: period.to,
-    }),
-    listTimeOffForSpecialists(client, ids),
-    listVisits(client, {
-      from: period.from,
-      to: period.to,
-      ...(focus && !byRoom ? { specialistId: focus.id } : {}),
-    }),
-    // Pictures for the day's specialist columns: the account's, else the
-    // published profile photo.
-    period.view === "dzien" && !byRoom
-      ? signSpecialistPhotos(
-          client,
-          active.map((one) =>
-            one.avatarUrl ? null : one.publicProfilePhotoUrl,
-          ),
-        )
-      : new Map<string, string>(),
-    params.wizyta ? getVisit(client, params.wizyta).catch(() => null) : null,
-    history ? listVisitEvents(client, params.wizyta!).catch(() => []) : null,
-  ]);
-
-  const windows = calendarWindows({
-    specialists: shownSpecialists,
-    rooms,
+  const rooms: CalendarRoom[] = shownRooms.map((room) => ({
+    id: room.id,
+    name: room.name,
+    color: room.color,
+    locationId: room.locationId,
+    hours: schedules.hours.filter((one) => one.roomId === room.id),
+    exceptions: schedules.exceptions.filter((one) => one.roomId === room.id),
+  }));
+  const expanded = calendarWindows({
+    specialistIds: ids,
     rules,
     timeOff,
     from: period.from,
     to: period.to,
     timeZone,
   });
-  const view =
-    period.view === "dzien"
-      ? dayView({
-          date: period.date,
-          timeZone,
-          perspective: byRoom ? "rooms" : "specialists",
-          resources,
-          windows,
-          visits,
-          now,
-        })
-      : weekView({
-          week: period.from,
-          timeZone,
-          resource: {
-            kind: byRoom ? "room" : "specialist",
-            id: focus?.id ?? "",
-          },
-          windows,
-          visits,
-          now,
-        });
+  const input = {
+    timeZone,
+    now,
+    people,
+    rooms,
+    windows: expanded.windows.filter((one) => placeAllowed(one.placeId)),
+    timeOff: expanded.timeOff,
+    visits: visits.filter((visit) =>
+      placeAllowed(
+        visit.mode === "online" ? "online" : (visit.room?.id ?? "online"),
+      ),
+    ),
+    query: params.q,
+  };
+  const perspective =
+    params.perspektywa === "gabinety" ? "rooms" : ("specialists" as const);
 
   return {
     today,
-    view,
-    resources,
-    focusId: focus?.id ?? null,
-    avatars: Object.fromEntries(
-      active.map((one) => [
-        one.id,
-        one.avatarUrl ??
-          (one.publicProfilePhotoUrl
-            ? (photos.get(one.publicProfilePhotoUrl) ?? null)
-            : null),
-      ]),
-    ),
+    period,
+    locations,
+    day:
+      period.view === "dzien"
+        ? dayView({
+            ...input,
+            date: period.date,
+            perspective,
+            hideEmpty: params.puste,
+          })
+        : null,
+    week:
+      period.view === "tydzien"
+        ? weekComparison({
+            ...input,
+            week: period.from,
+            perspective,
+            hideEmpty: params.puste,
+          })
+        : null,
     open: open
       ? {
           row: visitRows([open], { timeZone })[0]!,

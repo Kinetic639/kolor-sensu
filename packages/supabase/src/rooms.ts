@@ -491,6 +491,44 @@ export async function listRoomExceptions(
   return data.map(mapRoomException);
 }
 
+/**
+ * Several rooms' weekly hours and their exceptions between two dates, in
+ * two queries (the calendar's room columns).
+ */
+export async function listRoomSchedules(
+  client: SupabaseClient<Database>,
+  query: { roomIds: string[]; from: string; to: string },
+): Promise<{
+  hours: RoomOpeningHoursInterval[];
+  exceptions: RoomAvailabilityException[];
+}> {
+  if (!query.roomIds.length) return { hours: [], exceptions: [] };
+  const [hours, exceptions] = await Promise.all([
+    client
+      .from("room_opening_hours")
+      .select(
+        "id, room_id, weekday, starts_at, ends_at, created_at, updated_at",
+      )
+      .in("room_id", query.roomIds)
+      .order("weekday")
+      .order("starts_at"),
+    client
+      .from("room_availability_exceptions")
+      .select("*")
+      .in("room_id", query.roomIds)
+      .gte("date", query.from)
+      .lte("date", query.to)
+      .order("date")
+      .order("starts_at"),
+  ]);
+  if (hours.error) throw hours.error;
+  if (exceptions.error) throw exceptions.error;
+  return {
+    hours: hours.data.map(mapOpeningHours),
+    exceptions: exceptions.data.map(mapRoomException),
+  };
+}
+
 export async function addRoomException(
   client: SupabaseClient<Database>,
   input: z.input<typeof roomAvailabilityExceptionCreateSchema>,
