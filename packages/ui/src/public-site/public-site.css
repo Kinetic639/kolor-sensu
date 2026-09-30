@@ -902,10 +902,8 @@
 
   /* Its own stacking context: the side washes (z-index -1) sit behind the
      sections but above the page's paper. */
-  .ks-story {
-    position: relative;
-    isolation: isolate;
-  }
+  /* The story's layers sit behind the whole page: they are positioned in
+     SiteLayout's root (relative, its own stacking context), not here. */
 
   /* ------------------------------------------------------- ScrollStoryPath */
 
@@ -913,11 +911,6 @@
      are, its artwork cut into horizontal tiles placed in percentages of
      that height (scroll-story.data.ts), stretched to the width. One
      artwork per layout: the phone's below 64 rem, the desktop's above. */
-  .ks-story-path {
-    position: relative;
-    isolation: isolate;
-  }
-
   .ks-story-path__layer {
     position: absolute;
     inset: 0;

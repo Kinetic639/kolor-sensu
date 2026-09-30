@@ -9,20 +9,24 @@
 //                     still, its photo a little more, the side washes
 //                     slower than the page) and marks the stations that no
 //                     path runs to when they come into view.
-//   ScrollStoryPath   one long watercolor path behind the sections it wraps
-//                     (3 to 5 screens), painted in by the scroll: its paint
-//                     front follows a line a little below the middle of the
-//                     screen, so the brush seems to lead the reader down the
-//                     page. Stations ([data-story-station]) get their local
-//                     reaction when the front reaches them, and the
-//                     WatercolorImages inside wait for it before painting
-//                     themselves in. Artwork, time maps and the front's
-//                     table: scroll-story.data.ts (generate-scroll-story.mjs).
-//                     Desktop and phone have their own path: the phone's
-//                     runs more vertically, along the edges and behind the
-//                     pictures.
-//   StorySplash       a wash flowing in from the side of the screen, in
-//                     blooms, as its section scrolls in.
+//   ScrollStoryPath   one long, wide watercolor band behind the whole page,
+//                     from its top left corner down behind the footer,
+//                     painted in by the scroll: its paint front follows a
+//                     line a little below the middle of the screen, so the
+//                     brush seems to lead the reader down the page. Its
+//                     layer is positioned in SiteLayout's root (relative,
+//                     its own stacking context), so it spans the header and
+//                     the footer too. The artwork is laid between anchors
+//                     (StoryAnchor, the footer's data-story-anchor) to the
+//                     sections' real heights. Stations ([data-story-station])
+//                     get their local reaction when the front reaches them,
+//                     and the WatercolorImages inside wait for it before
+//                     painting themselves in. Artwork, time maps and the
+//                     front's table: scroll-story.data.ts
+//                     (generate-scroll-story.mjs). Desktop and phone have
+//                     their own path.
+//   StorySplash       paint spilled at the side of the screen: it lands and
+//                     spreads out in blooms, once, as its section comes in.
 //
 // Server HTML and no script, reduced motion or WebKit (no SVG masks on
 // HTML elements): the finished composition, everything painted. With a
@@ -157,14 +161,15 @@ const plainScale: Scale = {
 };
 
 function measureScale(
-  root: HTMLElement,
   rect: DOMRect,
   path: (typeof scrollStory.paths)[PathLayout],
 ): Scale {
   const rows: [number, number][] = [[0, 0]];
-  const anchors = Object.entries(path.anchors).sort((a, b) => a[1] - b[1]);
+  const anchors = (
+    Object.entries(path.anchors) as [StoryAnchorName, number][]
+  ).sort((a, b) => a[1] - b[1]);
   for (const [name, designTop] of anchors) {
-    const element = root.querySelector(`[data-story-anchor="${name}"]`);
+    const element = document.querySelector(`[data-story-anchor="${name}"]`);
     if (!element) continue;
     const top = element.getBoundingClientRect().top - rect.top;
     if (top > rows[rows.length - 1]![1] && top < rect.height) {
@@ -179,7 +184,17 @@ function measureScale(
 }
 
 export type StoryAnchorName =
-  keyof (typeof scrollStory.paths)["desktop"]["anchors"];
+  | "hero"
+  | "steps"
+  | "offer"
+  | "guided"
+  | "specialists"
+  | "bento"
+  | "rooms"
+  | "workshops"
+  | "faq"
+  | "cta"
+  | "footer";
 
 /**
  * Marks where a section of a ScrollStoryPath starts, so the path's artwork
@@ -187,12 +202,18 @@ export type StoryAnchorName =
  */
 export function StoryAnchor({
   name,
+  className,
   children,
 }: {
   name: StoryAnchorName;
+  className?: string;
   children: ReactNode;
 }) {
-  return <div data-story-anchor={name}>{children}</div>;
+  return (
+    <div data-story-anchor={name} className={className}>
+      {children}
+    </div>
+  );
 }
 
 interface Waiting {
@@ -234,11 +255,13 @@ export function ScrollStoryPath({
     () => {
       const root = ref.current;
       if (!root) return;
+      const layer = root.querySelector<HTMLElement>(".ks-story-path__layer");
+      if (!layer) return;
       const lay = () => {
-        const rect = root.getBoundingClientRect();
+        const rect = layer.getBoundingClientRect();
         for (const name of pathLayouts) {
           const path = scrollStory.paths[name];
-          const scale = measureScale(root, rect, path);
+          const scale = measureScale(rect, path);
           scales.current[name] = scale;
           const tiles = root.querySelectorAll<HTMLElement>(
             `.ks-story-path__art[data-layout="${name}"] .ks-story-path__tile`,
@@ -256,7 +279,7 @@ export function ScrollStoryPath({
       lay();
       const observer =
         typeof ResizeObserver === "function" ? new ResizeObserver(lay) : null;
-      observer?.observe(root);
+      observer?.observe(layer);
       return () => observer?.disconnect();
     },
     { scope: ref },
@@ -305,8 +328,9 @@ export function ScrollStoryPath({
 
       // Heights on the page, in the path's design px.
       let box = { top: 0, height: 1 };
+      const layer = root.querySelector<HTMLElement>(".ks-story-path__layer")!;
       const measure = () => {
-        const rect = root.getBoundingClientRect();
+        const rect = layer.getBoundingClientRect();
         box = { top: rect.top + window.scrollY, height: rect.height || 1 };
       };
       const fromPage = (y: number) =>
@@ -360,9 +384,20 @@ export function ScrollStoryPath({
         });
       };
 
-      // Where the front should be for the current scroll.
+      // Where the front should be for the current scroll. Over the last
+      // screen of scroll the line slides down to the bottom of the screen,
+      // so the brush reaches the end of the page (behind the footer).
       const target = () => {
-        const line = window.scrollY + window.innerHeight * FRONT_LINE - box.top;
+        const view = window.innerHeight;
+        const max = document.documentElement.scrollHeight - view;
+        const tail = Math.min(
+          1,
+          Math.max(0, 1 - (max - window.scrollY) / view),
+        );
+        const line =
+          window.scrollY +
+          view * (FRONT_LINE + (1 - FRONT_LINE) * tail) -
+          box.top;
         return interpolate(toTime, fromPage(line));
       };
       const follow = gsap.quickTo(state, "time", {
@@ -387,9 +422,9 @@ export function ScrollStoryPath({
       render();
 
       ScrollTrigger.create({
-        trigger: root,
+        trigger: layer,
         start: "top bottom",
-        end: "bottom top",
+        end: "bottom bottom",
         onRefresh: () => {
           measure();
           if (!intro) follow(target(), state.time);
@@ -474,24 +509,39 @@ export function StorySplash({ side, tone, at, className }: StorySplashProps) {
       gsap.registerPlugin(ScrollTrigger);
       const paint = root.querySelector<HTMLElement>(".ks-story-splash__paint");
       if (!paint) return;
-      const matte = createScrollMatte(root, splash.time, { sharpness: 14 });
+      const matte = createScrollMatte(root, splash.time, { sharpness: 18 });
       paint.style.setProperty("--ks-tile-mask", matte.url);
       root.dataset.splash = "live";
+      // Spilled paint: it lands and runs out fast, then slows as it soaks
+      // into the paper (the time map: blooms from where it landed). Once,
+      // as its place comes into view.
       const state = { front: 0 };
-      // The wash flows in while its place scrolls from the bottom of the
-      // screen to a little above the middle; the side washes move slower
-      // than the page (the far background).
-      gsap.to(state, {
-        front: 1,
-        ease: "none",
-        onUpdate: () => matte.set(state.front),
-        scrollTrigger: {
-          trigger: root,
-          start: "top 95%",
-          end: "top 30%",
-          scrub: 1.2,
+      const spill = gsap
+        .timeline({ paused: true })
+        .to(state, {
+          front: 1,
+          duration: 1.8,
+          ease: "power3.out",
+          onUpdate: () => matte.set(state.front),
+        })
+        .fromTo(
+          root,
+          {
+            scale: 0.94,
+            transformOrigin: side === "right" ? "30% 45%" : "70% 45%",
+          },
+          { scale: 1, duration: 1.2, ease: "power2.out" },
+          0,
+        );
+      ScrollTrigger.create({
+        trigger: root,
+        start: "top 85%",
+        once: true,
+        onEnter: () => {
+          spill.play();
         },
       });
+      // The side washes move slower than the page (the far background).
       gsap.fromTo(
         root,
         { y: 30 },

@@ -568,32 +568,31 @@ islands hydrate: the desktop dropdown, the phone menu and the cookie notice.
 
 Public site/Living homepage in Storybook is a proposal for a livelier
 homepage, also wired into apps/web's homepage (`app/page.tsx`) on its
-branch so it can be judged live. It keeps every section of the current homepage where it is and
+branch so it can be judged live. It keeps every section of the current
+homepage where it is and
 adds a separate narrative layer behind them, so scroll changes the state
 of the composition instead of fading sections in one by one.
 
-- **The watercolor path** (`ScrollStoryPath`, `scroll-story.tsx`): one
-  organic painted ribbon behind the first screens (hero, first steps,
-  offer, guided choice, team). It is not a wave: it swells and narrows,
-  turns locally, has short branches and stretches where it thins to
-  dry-brush streaks or stops altogether. Pink starts the story and turns
-  into green through the backdrop's own wet-on-wet mixing zone; pink
-  branches meet the green again further down. It runs behind the
-  pictures, down the gap beside the steps, across the gaps between
-  sections and along the margins, never under body copy. The phone has its
-  own, more vertical path that hugs the edges (mostly off the screen
-  beside text) and dives behind the pictures.
-- **Laid over the real sections:** the artwork was drawn around sections
-  measured in Storybook. Each section after the hero sits in a
-  `StoryAnchor` (steps, offer, guided, specialists); the page stretches the
-  artwork between anchors to the sections' real heights (a missing section
-  merges its stretch into its neighbour's). Across, the desktop artwork
-  scales with the page's 78 rem column and stays centred on it; wider than
-  90 rem it fades out in the margins.
+- **The brush stroke** (`ScrollStoryPath`, `scroll-story.tsx`): one wide
+  stroke behind the whole page, header to footer. Its picture is supplied
+  (`docs/design/references/public/scroll-band.png`, 2026-09-30) and used
+  as it is: the generator only keys out its paper (colour to alpha) and
+  derives from the picture itself when each pixel gets paint. The layer is
+  positioned in SiteLayout's root (relative, its own stacking context), so
+  it spans the header and the footer; the footer has no background of its
+  own. Across, the desktop artwork scales with the page's 78 rem column
+  and stays centred on it (wider than 90 rem it fades out in the margins);
+  on the phone it takes the full width.
+- **Anchors:** every section sits in a `StoryAnchor` (the footer carries
+  `data-story-anchor`). Artwork drawn around the sections can list where
+  each started; the page then stretches it between anchors to the
+  sections' real heights. The supplied picture lists none, so it is
+  stretched evenly over the page (on the phone far taller than drawn).
 - **Painted in by the scroll:** its paint front follows a line at 62 % of
   the viewport's height (`FRONT_LINE`), eased by GSAP (`quickTo`), through
-  a paint matte like §11's: a time map per tile (along the brush path, the
-  belly of the brush ahead of its edges, frayed along the bristles) and an
+  a paint matte like §11's: a time map per tile (along the stroke's spine,
+  traced from the picture row by row; the middle of the brush ahead of its
+  edges; the picture's fuller bristle tracks ahead of the thin ones) and an
   SVG threshold filter. On load the brush first paints down to the fold.
   Only the tile the front is in is filtered; painted tiles have no mask,
   unreached ones are hidden.
@@ -602,11 +601,11 @@ of the composition instead of fading sections in one by one.
   ink, a 10 px settle); the text stays readable before that (muted, never
   faded). WatercolorImages inside the path wait for the front before they
   paint themselves in (`WatercolorRevealGateContext`).
-- **Side washes** (`StorySplash`): the supplied splash patches flowing in
-  from the edge of the screen in blooms, scrubbed by scroll; brushwork in
-  the middle, splashes only at the sides.
+- **Side splashes** (`StorySplash`, spilled paint landing and running out
+  once): built, but not on the page for now (2026-09-30: the stroke alone
+  first).
 - **Parallax, very subtle:** a picture's watercolor backdrop moves 2 px,
-  its photo 9 px, the side washes 30 px, the caption as before.
+  its photo 9 px, the caption as before.
 - **Microinteractions:** arrows move a few px, icons turn a little, cards
   and pills lift 2–3 px, "read more" links draw their underline in.
 - **Progressive disclosure:** the guided choice ("Nie wiesz, od czego
@@ -616,10 +615,8 @@ of the composition instead of fading sections in one by one.
 - **Bento, once:** "Kolor Sensu w skrócie" is the page's only modular
   section, painted patches rather than boxes.
 - **Artwork:** `pnpm --filter @repo/design-system generate:story`
-  (`generate-scroll-story.mjs`): the ribbon's pigment is sampled from the
-  approved backdrop picture laid along the spine; its waypoints were placed
-  around the sections as measured in Storybook at 1440 and 390 px. When
-  sections change size a lot, move the waypoints and regenerate.
+  (`generate-scroll-story.mjs`): replace `scroll-band.png` and regenerate
+  to change the stroke.
 - **Fallbacks:** without a script, with reduced motion or in WebKit
   everything is shown painted and nothing moves.
 

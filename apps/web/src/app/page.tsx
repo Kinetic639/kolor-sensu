@@ -9,7 +9,6 @@ import {
   ScrollStoryPath,
   SpecialistsSection,
   StoryAnchor,
-  StorySplash,
   StoryStepsSection,
 } from "@repo/ui/public-site";
 import type { Metadata } from "next";
@@ -34,9 +33,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-// The "living" homepage: a scroll story (docs/design, §13). The first
-// screens share one watercolor path that paints itself in as the page
-// scrolls; further down, washes flow in from the sides.
+// The "living" homepage: a scroll story (docs/design, §13). One wide brush
+// stroke runs behind the whole page, from its top to behind the footer,
+// and paints itself in as the page scrolls. Each section sits in a
+// StoryAnchor, so artwork drawn around the sections can be laid beside
+// them whatever their real height.
 export default async function Home() {
   const [homeContent, services, specialists] = await Promise.all([
     getHomeContent(),
@@ -47,10 +48,12 @@ export default async function Home() {
   return (
     <ScrollStory>
       <ScrollStoryPath>
-        <HeroSection
-          {...withHomeContent(hero, homeContent)}
-          animationPreset="watercolor-reveal"
-        />
+        <StoryAnchor name="hero">
+          <HeroSection
+            {...withHomeContent(hero, homeContent)}
+            animationPreset="watercolor-reveal"
+          />
+        </StoryAnchor>
         <StoryAnchor name="steps">
           <StoryStepsSection
             id="jak-zaczynamy"
@@ -88,36 +91,39 @@ export default async function Home() {
             />
           </StoryAnchor>
         ) : null}
+        <StoryAnchor name="bento">
+          <BentoSection items={bento} />
+        </StoryAnchor>
+        <StoryAnchor name="rooms">
+          <FeatureSection
+            {...rooms}
+            cta={{ href: "/gabinety", label: "Zobacz nasze gabinety" }}
+            imagePosition="left"
+            animationPreset="watercolor-reveal"
+          />
+        </StoryAnchor>
+        <StoryAnchor name="workshops">
+          <FeatureSection
+            {...workshops}
+            cta={{ href: "/warsztaty", label: "Zobacz nadchodzące wydarzenia" }}
+            imagePosition="right"
+            animationPreset="watercolor-reveal"
+          />
+        </StoryAnchor>
+        <StoryAnchor name="faq">
+          <FaqSection
+            items={faq}
+            description="Najczęstsze pytania osób, które zastanawiają się nad pierwszą wizytą."
+            cta={{
+              href: "/kontakt",
+              label: "Masz inne pytanie? Napisz do nas",
+            }}
+          />
+        </StoryAnchor>
+        <StoryAnchor name="cta">
+          <ClosingCta />
+        </StoryAnchor>
       </ScrollStoryPath>
-
-      <div className="relative">
-        <StorySplash side="right" tone="sage" at="25%" />
-        <BentoSection items={bento} />
-      </div>
-      <FeatureSection
-        {...rooms}
-        cta={{ href: "/gabinety", label: "Zobacz nasze gabinety" }}
-        imagePosition="left"
-        animationPreset="watercolor-reveal"
-      />
-      <div className="relative">
-        <StorySplash side="right" tone="blush" at="55%" />
-        <FeatureSection
-          {...workshops}
-          cta={{ href: "/warsztaty", label: "Zobacz nadchodzące wydarzenia" }}
-          imagePosition="right"
-          animationPreset="watercolor-reveal"
-        />
-      </div>
-      <div className="relative">
-        <StorySplash side="left" tone="sage" at="40%" />
-        <FaqSection
-          items={faq}
-          description="Najczęstsze pytania osób, które zastanawiają się nad pierwszą wizytą."
-          cta={{ href: "/kontakt", label: "Masz inne pytanie? Napisz do nas" }}
-        />
-      </div>
-      <ClosingCta />
     </ScrollStory>
   );
 }

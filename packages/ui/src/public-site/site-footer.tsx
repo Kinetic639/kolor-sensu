@@ -51,7 +51,10 @@ export function SiteFooter({
   const pages = navigation.filter((item) => item !== offer);
 
   return (
-    <footer className={cn("border-border/70 bg-bg border-t", className)}>
+    <footer
+      data-story-anchor="footer"
+      className={cn("border-border/70 border-t", className)}
+    >
       <div className="max-w-page px-gutter mx-auto grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr] lg:gap-12 lg:py-16">
         <div className="grid content-start gap-5 sm:col-span-2 lg:col-span-1">
           <SiteLogo size="lg" tagline={brandTagline} />

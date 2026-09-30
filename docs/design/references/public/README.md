@@ -9,6 +9,9 @@ specification for `docs/design/kolor-sensu-public-design-system.md`.
 | `painted-hero.png`        | B         | The painted image language in detail: brushed mask, sage and dusty-pink washes, paper grain, handwritten overlay with brush underline                       |
 | `specialists-concept.png` | C         | "Nasi specjaliści": cut-out portraits on watercolor splashes, lower edge dissolving into the paint, small rounded info plates; desktop row and mobile stack |
 
+`scroll-band.png` (2026-09-30) is the homepage's scroll-story brush stroke,
+used as delivered (`generate-scroll-story.mjs` keys out its paper).
+
 The supplied splash backgrounds (`apps/web/public/watercolor/splash-{pink,sage}-{1,2}.png`),
 the offer tiles' patches (`apps/web/public/watercolor/offer-{pink,sage}-{1,2}.png`)
 and the cut-out portraits (`apps/storybook/public/kolor-sensu/*-*.png`) are

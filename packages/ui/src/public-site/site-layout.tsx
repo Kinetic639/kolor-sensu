@@ -49,7 +49,7 @@ export function SiteLayout({
   children,
 }: SiteLayoutProps) {
   return (
-    <div className="bg-bg font-body text-ink flex min-h-screen flex-col">
+    <div className="bg-bg font-body text-ink relative isolate flex min-h-screen flex-col">
       {intro ? <SiteIntro /> : null}
       <SkipLink />
       <SiteHeader

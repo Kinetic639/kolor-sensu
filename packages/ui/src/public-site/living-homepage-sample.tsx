@@ -14,12 +14,7 @@ import {
 } from "./living-samples";
 import { sampleOfferCopy, sampleServices } from "./offer-samples";
 import { OfferSection } from "./offer-section";
-import {
-  ScrollStory,
-  ScrollStoryPath,
-  StoryAnchor,
-  StorySplash,
-} from "./scroll-story";
+import { ScrollStory, ScrollStoryPath, StoryAnchor } from "./scroll-story";
 import { sampleFaq } from "./site-samples";
 import { sampleSpecialists, sampleSpecialistsCopy } from "./specialist-samples";
 import { SpecialistsSection } from "./specialists-section";
@@ -28,10 +23,9 @@ import { WatercolorSectionBackground } from "./surfaces";
 import { EditorialHeading } from "./typography";
 
 // The "living" homepage, for Storybook: the same sections as the current
-// homepage, in the same places, over a scroll story. The first four
-// screens share one watercolor path that paints itself in as the page
-// scrolls (ScrollStoryPath); further down, washes flow in from the sides
-// (StorySplash). New sections: the steps of a first visit, the guided
+// homepage, in the same places, over a scroll story: one brush stroke runs
+// behind the whole page and paints itself in as the page scrolls
+// (ScrollStoryPath). New sections: the steps of a first visit, the guided
 // choice and one modular (bento) section. Not a page of the app.
 
 export function LivingHomepageSections() {
@@ -63,43 +57,33 @@ export function LivingHomepageSections() {
             animationPreset="splash-reveal"
           />
         </StoryAnchor>
-      </ScrollStoryPath>
-
-      <div className="relative">
-        <StorySplash side="right" tone="sage" at="25%" />
         <BentoSection items={sampleBento} />
-      </div>
-      <FeatureSection {...sampleRooms} animationPreset="watercolor-reveal" />
-      <div className="relative">
-        <StorySplash side="right" tone="blush" at="55%" />
+        <FeatureSection {...sampleRooms} animationPreset="watercolor-reveal" />
         <FeatureSection
           {...sampleWorkshops}
           animationPreset="watercolor-reveal"
         />
-      </div>
-      <div className="relative">
-        <StorySplash side="left" tone="sage" at="40%" />
         <FaqSection
           items={sampleFaq}
           description="Najczęstsze pytania osób, które zastanawiają się nad pierwszą wizytą."
           cta={{ href: "/kontakt", label: "Masz inne pytanie? Napisz do nas" }}
         />
-      </div>
-      <WatercolorSectionBackground accent className="my-section-sm py-16">
-        <div className="max-w-page px-gutter mx-auto flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between md:pr-56">
-          <EditorialHeading size="h3" className="lg:text-h2 max-w-xl">
-            Zrób pierwszy krok do lepszego samopoczucia
-          </EditorialHeading>
-          <div className="flex flex-wrap gap-3">
-            <PrimaryButton asChild arrow>
-              <Link href="/umow-wizyte">Umów wizytę</Link>
-            </PrimaryButton>
-            <SecondaryButton asChild>
-              <Link href="/kontakt">Skontaktuj się</Link>
-            </SecondaryButton>
+        <WatercolorSectionBackground accent className="my-section-sm py-16">
+          <div className="max-w-page px-gutter mx-auto flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between md:pr-56">
+            <EditorialHeading size="h3" className="lg:text-h2 max-w-xl">
+              Zrób pierwszy krok do lepszego samopoczucia
+            </EditorialHeading>
+            <div className="flex flex-wrap gap-3">
+              <PrimaryButton asChild arrow>
+                <Link href="/umow-wizyte">Umów wizytę</Link>
+              </PrimaryButton>
+              <SecondaryButton asChild>
+                <Link href="/kontakt">Skontaktuj się</Link>
+              </SecondaryButton>
+            </div>
           </div>
-        </div>
-      </WatercolorSectionBackground>
+        </WatercolorSectionBackground>
+      </ScrollStoryPath>
     </ScrollStory>
   );
 }
