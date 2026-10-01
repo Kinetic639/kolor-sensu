@@ -168,7 +168,7 @@ export function WatercolorSectionBackground({
         className={cn("ks-paint ks-paint--band inset-0", bandTones[tone])}
       />
       {accent ? (
-        <BotanicalAccent className="text-ink/80 pointer-events-none absolute right-[3%] bottom-[8%] hidden w-32 md:block lg:w-40" />
+        <BotanicalAccent className="ks-sprig text-ink/80 pointer-events-none absolute right-[3%] bottom-[8%] hidden w-32 md:block lg:w-40" />
       ) : null}
       {children}
     </Tag>

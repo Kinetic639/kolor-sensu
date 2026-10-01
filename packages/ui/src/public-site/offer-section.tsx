@@ -48,7 +48,7 @@ export function OfferSection({
         className,
       )}
     >
-      <div className="grid content-start gap-4">
+      <div className="grid content-start gap-4" data-motion="text">
         <SectionEyebrow>{eyebrow}</SectionEyebrow>
         <EditorialHeading>{heading}</EditorialHeading>
         {description ? (

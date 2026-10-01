@@ -61,7 +61,7 @@ export function FeatureSection({
         className,
       )}
     >
-      <div className="grid gap-4">
+      <div className="grid gap-4" data-motion="text">
         {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
         <EditorialHeading as={headingLevel} size="h2">
           {heading}

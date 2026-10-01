@@ -686,3 +686,200 @@
     --ks-paint-mask: url("/watercolor/band.svg");
   }
 }
+
+@layer components {
+  /* ----------------------------------------------------------- Page motion */
+
+  /* PageMotion (page-motion.tsx) wraps a page in .ks-motion. Until it plays
+     an element, the element waits in its starting state: a text column's
+     children unseen, a band's paint not yet dragged in. Only where scripting
+     is on and motion is welcome; the script marks each element at once
+     (data-motion-state), and if it never runs, the safety net below shows
+     everything after 3 s. Once done, none of this applies. */
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    .ks-motion [data-motion="text"]:not([data-motion-state="done"]) > * {
+      opacity: var(--ks-motion-hidden, 0);
+    }
+
+    .ks-motion [data-motion="band"]:not([data-motion-state="done"]) .ks-paint {
+      mask-image: var(--ks-paint-mask), var(--ks-paint-mask);
+      mask-size: 100% 100%;
+      mask-repeat: no-repeat;
+      mask-position:
+        0 0,
+        var(--ks-band-x, -101%) 0;
+      mask-composite: intersect;
+    }
+
+    .ks-motion [data-motion="band"]:not([data-motion-state="done"]) .ks-sprig {
+      opacity: var(--ks-motion-hidden, 0);
+    }
+
+    .ks-motion [data-motion]:not([data-motion-state]) {
+      animation: ks-motion-fallback 1ms 3s forwards;
+    }
+  }
+
+  @keyframes ks-motion-fallback {
+    to {
+      --ks-motion-hidden: 1;
+      --ks-band-x: 0%;
+    }
+  }
+
+  /* Parallax inside the painted frame: as a WatercolorImage crosses the
+     viewport, its photo drifts a few percent slower than the frame and the
+     watercolor behind it a little the other way. Decorative, so browsers
+     without scroll-driven animations simply keep the still picture. The
+     photo is scaled up just enough that its edges never show. */
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    @media (prefers-reduced-motion: no-preference) {
+      .ks-motion .ks-wc {
+        view-timeline: --ks-wc;
+        --ks-drift: 3%;
+      }
+
+      .ks-motion .ks-wc__img {
+        scale: 1.07;
+        animation: ks-wc-drift linear both;
+        animation-timeline: --ks-wc;
+      }
+
+      .ks-motion .ks-wc__backdrop {
+        animation: ks-wc-drift-back linear both;
+        animation-timeline: --ks-wc;
+      }
+
+      @media (max-width: 47.99rem) {
+        .ks-motion .ks-wc {
+          --ks-drift: 1.75%;
+        }
+      }
+    }
+  }
+
+  @keyframes ks-wc-drift {
+    from {
+      translate: 0 calc(var(--ks-drift) * -1);
+    }
+    to {
+      translate: 0 var(--ks-drift);
+    }
+  }
+
+  @keyframes ks-wc-drift-back {
+    from {
+      translate: 0 calc(var(--ks-drift) * 0.5);
+    }
+    to {
+      translate: 0 calc(var(--ks-drift) * -0.5);
+    }
+  }
+
+  /* ------------------------------------------------------ Microinteractions */
+
+  /* ArrowLink: a hairline under the words at rest; on hover or focus a
+     green stroke is pulled across it from the left. */
+  .ks-link__text {
+    padding-bottom: 0.3em;
+    background-image:
+      linear-gradient(var(--color-primary), var(--color-primary)),
+      linear-gradient(
+        color-mix(in oklab, var(--color-border-strong) 60%, transparent),
+        color-mix(in oklab, var(--color-border-strong) 60%, transparent)
+      );
+    background-size:
+      0% 2px,
+      100% 1px;
+    background-position:
+      0 100%,
+      0 calc(100% - 0.5px);
+    background-repeat: no-repeat;
+    transition: background-size 450ms var(--ease-soft);
+  }
+
+  .ks-link:is(:hover, :focus-visible) .ks-link__text {
+    background-size:
+      100% 2px,
+      100% 1px;
+  }
+
+  /* Offer tile: the watercolor patch swells and deepens a touch. */
+  .ks-of__paint {
+    transition:
+      scale 600ms var(--ease-soft),
+      filter 600ms var(--ease-soft);
+  }
+
+  .ks-of:hover .ks-of__paint {
+    scale: 1.035;
+    filter: saturate(1.12);
+  }
+
+  /* Specialist card: the portrait leans in a little. */
+  .ks-sp__portrait-img {
+    transition: scale 600ms var(--ease-soft);
+    transform-origin: 50% 85%;
+  }
+
+  .ks-sp:hover .ks-sp__portrait-img {
+    scale: 1.035;
+  }
+
+  /* FAQ: answers open and close smoothly where the browser can animate to
+     an intrinsic height; elsewhere they simply appear, as before. */
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-faq [role="region"] {
+      interpolate-size: allow-keywords;
+      overflow: clip;
+      block-size: auto;
+      transition:
+        block-size 420ms var(--ease-soft),
+        opacity 320ms ease,
+        display 420ms allow-discrete;
+    }
+
+    .ks-faq [role="region"][data-state="closed"] {
+      block-size: 0;
+      opacity: 0;
+    }
+
+    @starting-style {
+      .ks-faq [role="region"][data-state="open"] {
+        block-size: 0;
+        opacity: 0;
+      }
+    }
+  }
+
+  /* Site header (HeaderScroll, header-scroll.tsx): its hairline appears once
+     the page has moved; it steps out of the way while reading downwards and
+     comes back on the first scroll up, or whenever focus is inside it. */
+  .ks-site-header {
+    transition:
+      translate 350ms var(--ease-soft),
+      border-color 300ms ease;
+  }
+
+  .ks-site-header[data-scrolled="false"] {
+    border-bottom-color: transparent;
+  }
+
+  .ks-site-header[data-hidden="true"]:not(:focus-within) {
+    translate: 0 -100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ks-link__text,
+    .ks-of__paint,
+    .ks-sp__portrait-img,
+    .ks-site-header {
+      transition: none;
+    }
+
+    .ks-of:hover .ks-of__paint,
+    .ks-sp:hover .ks-sp__portrait-img {
+      scale: none;
+    }
+  }
+}

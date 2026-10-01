@@ -490,6 +490,37 @@ band after another.
   Brush Matte Debug, Slow Motion Debug, Frame Strip, All Paints Animated)
   and OfferSection (Desktop, Tablet, Mobile).
 
+### Page motion around the pictures (`PageMotion`)
+
+The homepage is wrapped in `<PageMotion>` (page-motion.tsx), which moves what
+the pictures' own reveals leave still. Other pages don't use it, so the
+`data-motion` marks on shared components do nothing there.
+
+- **Text columns** (`data-motion="text"`): as the column comes into view its
+  children rise 14 px into place, 0.09 s apart; a heading comes in line by
+  line from behind its own baseline (GSAP SplitText line masks), 0.9 s.
+  Afterwards the split is reverted and no inline styles remain.
+- **Painted band** (`data-motion="band"`, ClosingCta): the band's paint is
+  dragged in from the left by its own brushed edge (its mask intersected with
+  a copy of itself sliding into place, 1.5 s), then the ink sprig settles
+  with one sway; the band's text follows after `data-motion-delay`.
+- **Parallax in the frame** (CSS only, scroll-driven, Chromium and Safari
+  26+): a WatercolorImage's photo drifts ±3 % (±1.75 % on phones) against its
+  frame, scaled 1.07 so no edge shows; the backdrop drifts half as far the
+  other way. Browsers without scroll-driven animations keep the still
+  picture.
+- **Microinteractions:** ArrowLink draws a green stroke over its hairline
+  underline; offer tiles swell their paint a touch and fill the arrow
+  circle; specialist portraits lean in 3.5 % and the arrow fills; button
+  arrows move 4 px.
+- **FAQ:** answers open and close to their intrinsic height
+  (`interpolate-size`, Chromium); other browsers open instantly.
+- **Site header** (HeaderScroll): hairline only once the page has moved;
+  slides away while reading down past four header heights, back on the first
+  scroll up or when focus enters it; never hides under reduced motion.
+- **Fallbacks:** reduced motion or no scripting gives the static page; the
+  starting state lifts itself after 3 s if the script never runs.
+
 ## 12. Primitives
 
 Only what the references repeat:

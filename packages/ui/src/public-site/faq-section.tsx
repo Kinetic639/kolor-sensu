@@ -48,7 +48,7 @@ export function FaqSection({
         className,
       )}
     >
-      <div className="grid content-start gap-4">
+      <div className="grid content-start gap-4" data-motion="text">
         <SectionEyebrow>{eyebrow}</SectionEyebrow>
         <EditorialHeading>{heading}</EditorialHeading>
         {description ? (
@@ -63,7 +63,7 @@ export function FaqSection({
       <Accordion
         type="single"
         collapsible
-        className="border-border/70 border-t"
+        className="ks-faq border-border/70 border-t"
       >
         {items.map((item, index) => (
           <AccordionItem

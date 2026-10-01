@@ -3,6 +3,7 @@ import {
   FeatureSection,
   HeroSection,
   OfferSection,
+  PageMotion,
   SpecialistsSection,
 } from "@repo/ui/public-site";
 import type { Metadata } from "next";
@@ -31,7 +32,7 @@ export default async function Home() {
   ]);
 
   return (
-    <>
+    <PageMotion>
       <HeroSection
         {...withHomeContent(hero, homeContent)}
         animationPreset="watercolor-reveal"
@@ -73,6 +74,6 @@ export default async function Home() {
         cta={{ href: "/kontakt", label: "Masz inne pytanie? Napisz do nas" }}
       />
       <ClosingCta />
-    </>
+    </PageMotion>
   );
 }

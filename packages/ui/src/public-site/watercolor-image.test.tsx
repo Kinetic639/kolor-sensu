@@ -234,13 +234,14 @@ describe("WatercolorImage", () => {
     expect(
       container.querySelector("[data-animation], [data-reveal]"),
     ).toBeNull();
-    // Whatever animates only targets components marked for the reveal; the
-    // base rules of the static composition never read a reveal value.
+    // Whatever animates only targets components marked for the reveal, or
+    // pictures inside a PageMotion (.ks-motion); the base rules of the static
+    // composition never read a reveal value.
     for (const { selector, body, context } of cssRules()) {
       if (!/--ks-reveal|animation\b/.test(body)) continue;
       if (context.some((at) => at.startsWith("@keyframes"))) continue;
       expect(selector).toMatch(
-        /\[data-(animation|reduced-motion|reveal|intro)[=\]]/,
+        /\[data-(animation|reduced-motion|reveal|intro)[=\]]|\.ks-motion\b/,
       );
     }
   });
