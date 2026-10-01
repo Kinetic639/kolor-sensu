@@ -364,10 +364,16 @@ export const AddingTheForm: Story = {
     const panel = canvas.getByRole("complementary", { name: "Nowa wizyta" });
     await expect(within(panel).getByLabelText("Godzina")).toHaveValue("14:15");
     await userEvent.click(
-      within(panel).getByRole("button", { name: "Zapisz wizytę" }),
+      within(panel).getByRole("button", { name: "Zarezerwuj wizytę" }),
     );
     await expect(
       await within(panel).findByText("Podaj imię i nazwisko."),
+    ).toBeInTheDocument();
+    // The link to pay goes by e-mail, so the e-mail is required.
+    await expect(
+      within(panel).getByText(
+        "Podaj e-mail klienta: wyślemy na niego link do płatności.",
+      ),
     ).toBeInTheDocument();
   },
 };
