@@ -1,15 +1,29 @@
 "use client";
 
 import { BookingField, ConsentCheckbox } from "@repo/ui/booking";
-import { PrimaryButton } from "@repo/ui/public-site";
+import { PrimaryButton, SecondaryButton } from "@repo/ui/public-site";
 import { useActionState } from "react";
 import { saveDetailsAction, type DetailsFormState } from "./actions";
-import { HONEYPOT_FIELD, type DetailsFormValues } from "./details-form-data";
+import {
+  HONEYPOT_FIELD,
+  INTENT_FIELD,
+  PAY_LATER,
+  type DetailsFormValues,
+} from "./details-form-data";
 
 // Step 5: the client's details and consents. A plain form posted to the
 // server (it works before JavaScript loads); errors come back per field.
+// Then "Zapłać teraz", or, when the visit is far enough ahead, "Zarezerwuj,
+// zapłacę później" (R11): paid from the e-mailed link by `payLater`.
 
-export function DetailsForm({ saved }: { saved: DetailsFormValues | null }) {
+export function DetailsForm({
+  saved,
+  payLater,
+}: {
+  saved: DetailsFormValues | null;
+  /** "8 października 2030, godz. 11:00", or null: pay now only. */
+  payLater: string | null;
+}) {
   const [state, action, pending] = useActionState<DetailsFormState, FormData>(
     saveDetailsAction,
     saved ? { status: "saved" } : { status: "idle" },
@@ -25,7 +39,7 @@ export function DetailsForm({ saved }: { saved: DetailsFormValues | null }) {
           className="rounded-card-sm bg-primary-soft text-small text-ink p-4"
           role="status"
         >
-          Twoje dane są zapisane. Możesz je poprawić albo przejść do płatności.
+          Twoje dane są zapisane. Możesz je poprawić albo przejść dalej.
         </p>
       ) : null}
       {state.status === "invalid" && state.message ? (
@@ -105,14 +119,28 @@ export function DetailsForm({ saved }: { saved: DetailsFormValues | null }) {
         />
       </fieldset>
 
-      <PrimaryButton
-        arrow
-        className="justify-self-start"
-        disabled={pending}
-        type="submit"
-      >
-        Zapisz i przejdź do płatności
-      </PrimaryButton>
+      <div className="grid gap-3">
+        <div className="flex flex-wrap gap-3">
+          <PrimaryButton arrow disabled={pending} type="submit">
+            Zapłać teraz
+          </PrimaryButton>
+          {payLater ? (
+            <SecondaryButton
+              disabled={pending}
+              name={INTENT_FIELD}
+              type="submit"
+              value={PAY_LATER}
+            >
+              Zarezerwuj, zapłacę później
+            </SecondaryButton>
+          ) : null}
+        </div>
+        <p className="text-small text-text-muted">
+          {payLater
+            ? `Płacisz online. Jeśli wybierzesz płatność później, wyślemy Ci link e-mailem; opłać wizytę do ${payLater}, inaczej rezerwacja zostanie anulowana.`
+            : "Do wizyty zostało niewiele czasu, więc płatność jest potrzebna od razu."}
+        </p>
+      </div>
     </form>
   );
 }

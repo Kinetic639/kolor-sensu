@@ -141,7 +141,7 @@ describe("visitEventRows", () => {
 });
 
 describe("a visit the centre booked", () => {
-  it("says the centre booked it, paid on site", () => {
+  it("says the centre reserved it, paid online by its time", () => {
     const [row] = visitEventRows(
       [
         {
@@ -153,17 +153,65 @@ describe("a visit the centre booked", () => {
           details: {
             starts_at: "2026-10-14T08:15:00+00:00",
             ends_at: "2026-10-14T09:05:00+00:00",
-            status: "confirmed",
+            status: "awaiting_payment",
+            payment_due_at: "2026-10-12T08:15:00+00:00",
           },
         },
       ],
       options,
     );
     expect(row).toMatchObject({
-      title: "Centrum zapisało wizytę",
+      title: "Centrum zarezerwowało wizytę",
       actor: "Centrum · Michał Stępień",
-      tone: "success",
+      tone: "info",
     });
-    expect(row!.detail).toMatch(/10:15–11:05 · płatność na miejscu$/);
+    expect(row!.detail).toMatch(
+      /10:15–11:05 · płatność online do pon\.? 12\.10\.2026, 10:15$/,
+    );
+  });
+
+  it("pay later: reserved, then cancelled by the system when unpaid", () => {
+    const rows = visitEventRows(
+      [
+        {
+          id: 1,
+          occurredAt: "2026-10-01T08:00:00+00:00",
+          kind: "reserved",
+          actor: "client",
+          actorName: null,
+          details: { payment_due_at: "2026-10-12T08:15:00+00:00" },
+        },
+        {
+          id: 2,
+          occurredAt: "2026-10-12T08:15:00+00:00",
+          kind: "cancelled",
+          actor: "system",
+          actorName: null,
+          details: {
+            from: "awaiting_payment",
+            refund_due_minor: 0,
+            reason: "unpaid",
+          },
+        },
+        {
+          id: 3,
+          occurredAt: "2026-10-12T08:16:00+00:00",
+          kind: "email_sent",
+          actor: "system",
+          actorName: null,
+          details: { email: "payment_last_call" },
+        },
+      ],
+      options,
+    );
+    expect(rows.map((row) => [row.title, row.detail, row.tone])).toEqual([
+      [
+        "Zarezerwowano, płatność później",
+        expect.stringMatching(/^Opłata do pon\.? 12\.10\.2026, 10:15$/),
+        "info",
+      ],
+      ["Anulowano – brak płatności", null, "danger"],
+      ["Wysłano e-mail: Ostatnie przypomnienie o płatności", null, "neutral"],
+    ]);
   });
 });

@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  cancelUnpaidVisits,
   claimBookingEmail,
+  listDueBookingEmails,
   markBookingEmailSent,
   releaseBookingEmail,
 } from "./booking-emails";
@@ -31,10 +33,11 @@ describe("claimBookingEmail", () => {
         cancelled_by: null,
         booked_by: "centre",
         paid: false,
+        payment_due_at: "2030-09-30T09:00:00+00:00",
       },
     ]);
     expect(
-      await claimBookingEmail(client, "KS-20301002-1534", "confirmation"),
+      await claimBookingEmail(client, "KS-20301002-1534", "reserved"),
     ).toEqual({
       reference: "KS-20301002-1534",
       mode: "in_person",
@@ -53,10 +56,11 @@ describe("claimBookingEmail", () => {
       cancelledBy: null,
       bookedBy: "centre",
       paid: false,
+      paymentDueAt: "2030-09-30T09:00:00+00:00",
     });
     expect(rpc).toHaveBeenCalledWith("claim_booking_email", {
       p_reference: "KS-20301002-1534",
-      p_kind: "confirmation",
+      p_kind: "reserved",
     });
   });
 
@@ -82,5 +86,24 @@ describe("after sending", () => {
       p_reference: "KS-1",
       p_kind: "confirmation",
     });
+  });
+});
+
+describe("the scheduled job", () => {
+  it("cancels the reservations not paid in time", async () => {
+    const { client, rpc } = rpcClient([{ reference: "2609-002" }]);
+    expect(await cancelUnpaidVisits(client)).toEqual(["2609-002"]);
+    expect(rpc).toHaveBeenCalledWith("cancel_unpaid_visits");
+  });
+
+  it("lists the e-mails due", async () => {
+    const { client } = rpcClient([
+      { reference: "2609-002", kind: "cancelled" },
+      { reference: "2609-003", kind: "payment_last_call" },
+    ]);
+    expect(await listDueBookingEmails(client)).toEqual([
+      { reference: "2609-002", kind: "cancelled" },
+      { reference: "2609-003", kind: "payment_last_call" },
+    ]);
   });
 });

@@ -10,7 +10,9 @@ import { NewVisitPanel, type NewVisitPanelProps } from "./new-visit-panel";
 import { SlotPickLayer } from "./slot-picker";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), warning: vi.fn(), error: vi.fn() },
+}));
 
 const ANNA = "11111111-1111-4111-8111-111111111111";
 const JAN = "22222222-2222-4222-8222-222222222222";
@@ -77,8 +79,11 @@ describe("NewVisitPanel", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Specjalista")).toHaveValue(ANNA);
     expect(screen.getByLabelText("Usługa")).toHaveValue(OFFER);
+    expect(screen.getByText(/^50 min · 220\s?zł$/)).toBeInTheDocument();
+    // Nothing is paid on site: the client pays online from the e-mail.
+    expect(screen.queryByText(/na miejscu/)).not.toBeInTheDocument();
     expect(
-      screen.getByText(/50 min · 220\s?zł · płatność na miejscu/),
+      screen.getByText(/Klient dostanie e-mail z linkiem do płatności online/),
     ).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Stacjonarnie" })).toBeChecked();
     expect(screen.getByLabelText("Gabinet")).toHaveValue(ROOM);
@@ -94,18 +99,21 @@ describe("NewVisitPanel", () => {
     expect(screen.queryByLabelText("Gabinet")).not.toBeInTheDocument();
   });
 
-  it("asks for a way to reach the client before sending anything", async () => {
+  it("asks for the client's e-mail (the link to pay goes there) before sending anything", async () => {
     const action = vi.fn();
     renderPanel({ action });
     await userEvent.type(
       screen.getByLabelText("Imię i nazwisko"),
       "Ewa Klientka",
     );
+    await userEvent.type(screen.getByLabelText("Telefon"), "600 100 200");
     await userEvent.click(
-      screen.getByRole("button", { name: "Zapisz wizytę" }),
+      screen.getByRole("button", { name: "Zarezerwuj wizytę" }),
     );
     expect(
-      await screen.findByText("Podaj e-mail albo telefon klienta."),
+      await screen.findByText(
+        "Podaj e-mail klienta: wyślemy na niego link do płatności.",
+      ),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("E-mail")).toHaveAttribute(
       "aria-invalid",
@@ -114,12 +122,13 @@ describe("NewVisitPanel", () => {
     expect(action).not.toHaveBeenCalled();
   });
 
-  it("books it, then opens the visit", async () => {
+  it("reserves it, then opens the visit", async () => {
     const action = vi.fn().mockResolvedValue({
       ok: true,
       id: "66666666-6666-4666-8666-666666666666",
       reference: "3010-001",
-      emailed: "skipped",
+      paymentDueAt: "2030-09-30T10:15:00.000Z",
+      emailed: "sent",
     });
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
     renderPanel({ action }, onUrlUpdate);
@@ -127,15 +136,10 @@ describe("NewVisitPanel", () => {
       screen.getByLabelText("Imię i nazwisko"),
       "Jan Telefon",
     );
-    await userEvent.type(screen.getByLabelText("Telefon"), "600 100 200");
-    // Without an e-mail there is nothing to confirm by e-mail.
-    expect(
-      screen.getByRole("checkbox", {
-        name: "Wyślij klientowi potwierdzenie e-mailem",
-      }),
-    ).toBeDisabled();
+    await userEvent.type(screen.getByLabelText("E-mail"), "jan@example.com");
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     await userEvent.click(
-      screen.getByRole("button", { name: "Zapisz wizytę" }),
+      screen.getByRole("button", { name: "Zarezerwuj wizytę" }),
     );
 
     expect(action).toHaveBeenCalledWith({
@@ -145,10 +149,9 @@ describe("NewVisitPanel", () => {
       time: "12:15",
       roomId: ROOM,
       name: "Jan Telefon",
-      email: "",
-      phone: "600 100 200",
+      email: "jan@example.com",
+      phone: "",
       notes: "",
-      sendEmail: false,
     });
     await vi.waitFor(() =>
       expect(onUrlUpdate).toHaveBeenLastCalledWith(
@@ -172,13 +175,13 @@ describe("NewVisitPanel", () => {
     );
     await userEvent.type(screen.getByLabelText("E-mail"), "ewa@example.com");
     await userEvent.click(
-      screen.getByRole("button", { name: "Zapisz wizytę" }),
+      screen.getByRole("button", { name: "Zarezerwuj wizytę" }),
     );
     expect(
       await screen.findByText("Wybierz inną godzinę."),
     ).toBeInTheDocument();
     expect(action).toHaveBeenCalledWith(
-      expect.objectContaining({ email: "ewa@example.com", sendEmail: true }),
+      expect.objectContaining({ email: "ewa@example.com" }),
     );
   });
 

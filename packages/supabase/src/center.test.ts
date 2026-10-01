@@ -105,6 +105,8 @@ describe("center domain mapping", () => {
         min_booking_lead_minutes: 60,
         max_booking_horizon_days: 60,
         cancellation_window_hours: 48,
+        payment_due_hours: 48,
+        centre_payment_link_hours: 2,
         phone: null,
         email: null,
         created_at: "2026-09-19T00:00:00Z",

@@ -8,6 +8,7 @@ import {
   listBookableCatalog,
   listFreeSlots,
   releaseHold,
+  reserveHold,
 } from "./booking";
 
 function rpcClient(data: unknown, error: unknown = null) {
@@ -269,6 +270,31 @@ describe("saveBookingDetails", () => {
       saveBookingDetails(client, "token", details),
     ).rejects.toMatchObject({
       code: "hold_expired",
+    });
+  });
+});
+
+describe("reserveHold", () => {
+  it("reserves the held visit until its payment is due", async () => {
+    const { client, rpc } = rpcClient([
+      { reference: "2610-004", payment_due_at: "2030-10-01T09:00:00+00:00" },
+    ]);
+    expect(await reserveHold(client, "token")).toEqual({
+      reference: "2610-004",
+      paymentDueAt: "2030-10-01T09:00:00+00:00",
+    });
+    expect(rpc).toHaveBeenCalledWith("reserve_hold", {
+      p_access_token: "token",
+    });
+  });
+
+  it("refuses a visit too close to pay later", async () => {
+    const { client } = rpcClient(null, {
+      message: "This visit is paid at once",
+      hint: "pay_now_required",
+    });
+    await expect(reserveHold(client, "token")).rejects.toMatchObject({
+      code: "pay_now_required",
     });
   });
 });

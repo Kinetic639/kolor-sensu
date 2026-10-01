@@ -147,6 +147,7 @@ export {
   listBookableCatalog,
   listFreeSlots,
   releaseHold,
+  reserveHold,
   saveBookingDetails,
 } from "./booking";
 export type {
@@ -162,11 +163,14 @@ export type {
   VisitMode,
 } from "./booking";
 export {
+  acceptBookingTerms,
   attachCheckoutSession,
+  attachReservationPayment,
   claimStripeEvent,
   failCheckoutSession,
   fulfillCheckoutSession,
   pendingCheckoutSession,
+  pendingReservationPayment,
   recordRefund,
   releaseStripeEvent,
 } from "./booking-payments";
@@ -175,11 +179,17 @@ export type {
   FulfillmentOutcome,
 } from "./booking-payments";
 export {
+  cancelUnpaidVisits,
   claimBookingEmail,
+  listDueBookingEmails,
   markBookingEmailSent,
   releaseBookingEmail,
 } from "./booking-emails";
-export type { BookingEmailKind, ClaimedBookingEmail } from "./booking-emails";
+export type {
+  BookingEmailKind,
+  ClaimedBookingEmail,
+  DueBookingEmail,
+} from "./booking-emails";
 export {
   cancelBooking,
   listRescheduleSlots,

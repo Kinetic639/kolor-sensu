@@ -15,7 +15,6 @@ const body = {
   email: "ewa@example.com",
   phone: "",
   notes: "",
-  sendEmail: true,
 };
 
 function deps() {
@@ -26,18 +25,20 @@ function deps() {
       reference: "3010-001",
       startsAt: "2030-10-02T10:15:00+00:00",
       endsAt: "2030-10-02T11:05:00+00:00",
+      paymentDueAt: "2030-09-30T10:15:00+00:00",
     }),
-    confirm: vi.fn().mockResolvedValue("sent" as const),
+    sendPaymentLink: vi.fn().mockResolvedValue("sent" as const),
   };
 }
 
 describe("bookVisitAsCentre", () => {
-  it("books at the centre's local time and sends the confirmation", async () => {
+  it("reserves at the centre's local time and e-mails the link to pay", async () => {
     const d = deps();
     expect(await bookVisitAsCentre(body, d)).toEqual({
       ok: true,
       id: "visit-1",
       reference: "3010-001",
+      paymentDueAt: "2030-09-30T10:15:00+00:00",
       emailed: "sent",
     });
     expect(d.book).toHaveBeenCalledWith({
@@ -53,27 +54,19 @@ describe("bookVisitAsCentre", () => {
         notes: null,
       },
     });
-    expect(d.confirm).toHaveBeenCalledWith("3010-001");
-  });
-
-  it("sends nothing when asked not to", async () => {
-    const d = deps();
-    const result = await bookVisitAsCentre(
-      { ...body, email: "", phone: "600 100 200", sendEmail: false },
-      d,
-    );
-    expect(result).toMatchObject({ ok: true, emailed: "skipped" });
-    expect(d.confirm).not.toHaveBeenCalled();
+    expect(d.sendPaymentLink).toHaveBeenCalledWith("3010-001");
   });
 
   it("an invalid form says what is wrong, before the database", async () => {
     const d = deps();
     expect(
-      await bookVisitAsCentre({ ...body, email: "", phone: "" }, d),
+      await bookVisitAsCentre({ ...body, email: "", phone: "600 100 200" }, d),
     ).toEqual({
       ok: false,
       code: "invalid",
-      fields: { email: "Podaj e-mail albo telefon klienta." },
+      fields: {
+        email: "Podaj e-mail klienta: wyślemy na niego link do płatności.",
+      },
     });
     expect(await bookVisitAsCentre("nonsense", d)).toMatchObject({
       ok: false,
@@ -84,11 +77,11 @@ describe("bookVisitAsCentre", () => {
 
   it("passes on why the database refused", async () => {
     const d = deps();
-    d.book.mockRejectedValue(new BookingError("room_busy", "Taken"));
+    d.book.mockRejectedValue(new BookingError("too_soon", "No time to pay"));
     expect(await bookVisitAsCentre(body, d)).toEqual({
       ok: false,
-      code: "room_busy",
+      code: "too_soon",
     });
-    expect(d.confirm).not.toHaveBeenCalled();
+    expect(d.sendPaymentLink).not.toHaveBeenCalled();
   });
 });

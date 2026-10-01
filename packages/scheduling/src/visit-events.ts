@@ -33,7 +33,10 @@ const EMAILS: Record<string, string> = {
   confirmation: "Potwierdzenie rezerwacji",
   rescheduled: "Nowy termin",
   cancelled: "Odwołanie",
-  reminder: "Przypomnienie",
+  reminder: "Przypomnienie o wizycie",
+  reserved: "Rezerwacja z linkiem do płatności",
+  payment_reminder: "Przypomnienie o płatności",
+  payment_last_call: "Ostatnie przypomnienie o płatności",
 };
 
 const ACTORS = {
@@ -61,6 +64,7 @@ const KINDS: Record<string, { title: string; tone: VisitTone }> = {
   payment_expired: { title: "Sesja płatności wygasła", tone: "neutral" },
   refund_recorded: { title: "Zwrot zlecony w Stripe", tone: "info" },
   email_sent: { title: "Wysłano e-mail", tone: "neutral" },
+  reserved: { title: "Zarezerwowano, płatność później", tone: "info" },
 };
 
 export function visitEventRows(
@@ -102,11 +106,18 @@ export function visitEventRows(
         const start = day(d.starts_at);
         const end = at(d.ends_at, "HH:mm");
         detail = start ? `${start}${end ? `–${end}` : ""}` : null;
-        // Booked in a portal: confirmed at once, paid on site.
+        // Booked in a portal: reserved, paid online from the e-mailed link.
         if (event.actor === "centre") {
-          title = "Centrum zapisało wizytę";
-          detail = detail ? `${detail} · płatność na miejscu` : detail;
+          title = "Centrum zarezerwowało wizytę";
+          const due = day(d.payment_due_at);
+          detail =
+            detail && due ? `${detail} · płatność online do ${due}` : detail;
         }
+        break;
+      }
+      case "reserved": {
+        const due = day(d.payment_due_at);
+        detail = due ? `Opłata do ${due}` : null;
         break;
       }
       case "rescheduled": {
@@ -116,6 +127,10 @@ export function visitEventRows(
         break;
       }
       case "cancelled":
+        if (event.actor === "system") {
+          title = "Anulowano – brak płatności";
+          break;
+        }
         detail =
           typeof d.refund_due_minor === "number"
             ? d.refund_due_minor > 0
@@ -146,7 +161,7 @@ export function visitEventRows(
         : ACTORS[event.actor],
       tone:
         event.kind === "created" && event.actor === "centre"
-          ? "success"
+          ? "info"
           : (known?.tone ?? "neutral"),
       restored: d.restored === true,
     };

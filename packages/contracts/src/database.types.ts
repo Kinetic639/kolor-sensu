@@ -74,6 +74,7 @@ export type Database = {
           id: string;
           manage_token_hash: string | null;
           mode: Database["public"]["Enums"]["visit_mode"];
+          payment_due_at: string | null;
           price_minor: number;
           privacy_accepted_at: string | null;
           reference: string;
@@ -108,6 +109,7 @@ export type Database = {
           id?: string;
           manage_token_hash?: string | null;
           mode: Database["public"]["Enums"]["visit_mode"];
+          payment_due_at?: string | null;
           price_minor: number;
           privacy_accepted_at?: string | null;
           reference: string;
@@ -142,6 +144,7 @@ export type Database = {
           id?: string;
           manage_token_hash?: string | null;
           mode?: Database["public"]["Enums"]["visit_mode"];
+          payment_due_at?: string | null;
           price_minor?: number;
           privacy_accepted_at?: string | null;
           reference?: string;
@@ -275,6 +278,7 @@ export type Database = {
           booking_enabled: boolean;
           business_name: string;
           cancellation_window_hours: number;
+          centre_payment_link_hours: number;
           created_at: string;
           default_currency: string;
           default_locale: string;
@@ -285,6 +289,7 @@ export type Database = {
           max_booking_horizon_days: number;
           max_self_reschedules: number;
           min_booking_lead_minutes: number;
+          payment_due_hours: number;
           phone: string | null;
           reschedule_window_hours: number;
           slot_step_minutes: number;
@@ -295,6 +300,7 @@ export type Database = {
           booking_enabled?: boolean;
           business_name: string;
           cancellation_window_hours?: number;
+          centre_payment_link_hours?: number;
           created_at?: string;
           default_currency?: string;
           default_locale?: string;
@@ -305,6 +311,7 @@ export type Database = {
           max_booking_horizon_days?: number;
           max_self_reschedules?: number;
           min_booking_lead_minutes?: number;
+          payment_due_hours?: number;
           phone?: string | null;
           reschedule_window_hours?: number;
           slot_step_minutes?: number;
@@ -315,6 +322,7 @@ export type Database = {
           booking_enabled?: boolean;
           business_name?: string;
           cancellation_window_hours?: number;
+          centre_payment_link_hours?: number;
           created_at?: string;
           default_currency?: string;
           default_locale?: string;
@@ -325,6 +333,7 @@ export type Database = {
           max_booking_horizon_days?: number;
           max_self_reschedules?: number;
           min_booking_lead_minutes?: number;
+          payment_due_hours?: number;
           phone?: string | null;
           reschedule_window_hours?: number;
           slot_step_minutes?: number;
@@ -1352,6 +1361,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_booking_terms: { Args: { p_token: string }; Returns: undefined };
       add_room_image: {
         Args: { p_room_id: string; p_storage_path: string };
         Returns: string;
@@ -1379,6 +1389,15 @@ export type Database = {
         };
         Returns: undefined;
       };
+      attach_reservation_payment: {
+        Args: {
+          p_amount_minor: number;
+          p_currency_code: string;
+          p_session_id: string;
+          p_token: string;
+        };
+        Returns: undefined;
+      };
       booking_window: {
         Args: never;
         Returns: {
@@ -1398,6 +1417,12 @@ export type Database = {
           refund_minor: number;
         }[];
       };
+      cancel_unpaid_visits: {
+        Args: never;
+        Returns: {
+          reference: string;
+        }[];
+      };
       centre_book_visit: {
         Args: {
           p_client_email: string | null;
@@ -1412,6 +1437,7 @@ export type Database = {
         Returns: {
           appointment_id: string;
           ends_at: string;
+          payment_due_at: string;
           reference: string;
           starts_at: string;
         }[];
@@ -1439,6 +1465,7 @@ export type Database = {
           manage_token: string | null;
           mode: Database["public"]["Enums"]["visit_mode"];
           paid: boolean;
+          payment_due_at: string | null;
           price_minor: number;
           reference: string;
           room_name: string;
@@ -1500,6 +1527,7 @@ export type Database = {
           location_name: string;
           mode: Database["public"]["Enums"]["visit_mode"];
           paid: boolean;
+          payment_due_at: string | null;
           price_minor: number;
           reference: string;
           refund_due_minor: number | null;
@@ -1586,6 +1614,13 @@ export type Database = {
           specialist_title: string | null;
           supports_in_person: boolean;
           supports_online: boolean;
+        }[];
+      };
+      list_due_emails: {
+        Args: never;
+        Returns: {
+          kind: string;
+          reference: string;
         }[];
       };
       list_free_slots: {
@@ -1699,6 +1734,12 @@ export type Database = {
           checkout_session_id: string;
         }[];
       };
+      pending_reservation_payment: {
+        Args: { p_token: string };
+        Returns: {
+          checkout_session_id: string;
+        }[];
+      };
       publish_site_content: { Args: { p_key: string }; Returns: undefined };
       record_refund: {
         Args: { p_payment_intent_id: string; p_refunded_minor: number };
@@ -1744,6 +1785,13 @@ export type Database = {
           reference: string;
           reschedule_count: number;
           starts_at: string;
+        }[];
+      };
+      reserve_hold: {
+        Args: { p_access_token: string };
+        Returns: {
+          payment_due_at: string;
+          reference: string;
         }[];
       };
       save_availability_rule: {

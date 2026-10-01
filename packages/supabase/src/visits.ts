@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   BookingError,
   bookingError,
+  cancelledByOf,
   type AppointmentStatus,
   type VisitMode,
 } from "./booking";
@@ -39,7 +40,8 @@ export interface Visit {
     refundDueMinor: number | null;
     refundedMinor: number;
   } | null;
-  cancelledBy: "client" | "centre" | null;
+  /** "system": not paid in time. */
+  cancelledBy: "client" | "centre" | "system" | null;
   cancelledAt: string | null;
   rescheduleCount: number;
 }
@@ -204,10 +206,7 @@ function toVisit(row: VisitRow): Visit {
             refundDueMinor: row.refund_due_minor ?? null,
             refundedMinor: row.refunded_minor ?? 0,
           },
-    cancelledBy:
-      row.cancelled_by === "client" || row.cancelled_by === "centre"
-        ? row.cancelled_by
-        : null,
+    cancelledBy: cancelledByOf(row.cancelled_by),
     cancelledAt: row.cancelled_at ?? null,
     rescheduleCount: row.reschedule_count,
   };

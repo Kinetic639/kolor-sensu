@@ -20,6 +20,7 @@ const visit = {
   cancelledBy: null,
   bookedBy: "client",
   paid: true,
+  paymentDueAt: null,
 } satisfies ClaimedBookingEmail;
 
 const options = {
@@ -49,19 +50,16 @@ describe("confirmationContent", () => {
     ]);
   });
 
-  it("a visit the centre booked is paid on site", () => {
+  it("is sent once paid, also for a visit the centre booked", () => {
     const booked = confirmationContent(
-      { ...visit, bookedBy: "centre", paid: false },
+      { ...visit, bookedBy: "centre" },
       options,
     );
-    expect(booked.intro).toBe("Zapisaliśmy Cię na wizytę w Kolor Sensu.");
-    const price = content.rows.find(([label]) => label === "Zapłacono")?.[1];
-    expect(booked.rows).toContainEqual(["Do zapłaty na miejscu", price]);
-    expect(booked.rows.map(([label]) => label)).not.toContain("Zapłacono");
+    expect(booked.rows).toContainEqual(["Zapłacono", content.rows[4]![1]]);
     expect(booked.text).toContain(
-      "Twoja wizyta w Kolor Sensu jest potwierdzona.",
+      "Twoja wizyta w Kolor Sensu jest potwierdzona i opłacona.",
     );
-    expect(booked.text).not.toContain("opłacona");
+    expect(booked.text).not.toContain("na miejscu");
   });
 
   it("links to the visit by its own token", () => {

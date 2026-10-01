@@ -4,8 +4,9 @@ import type { BookingWindow, GuestBooking } from "@repo/supabase";
 // R8), by the centre's settings: cancelling is always possible before the
 // visit, with the money back only until cancellationWindowHours before it;
 // moving until rescheduleWindowHours before, at most maxSelfReschedules
-// times. A visit the centre booked is paid on site, so there is nothing to
-// give back. The database checks the same rules again when they act.
+// times. A reservation not paid yet (R11) is paid from here by its time,
+// or cancelled with nothing to give back; it moves only once paid. The
+// database checks the same rules again when they act.
 
 export type ChangePolicy = Pick<
   BookingWindow,
@@ -13,6 +14,8 @@ export type ChangePolicy = Pick<
 >;
 
 export interface VisitChanges {
+  /** A reservation to pay online, until its time. */
+  pay: { allowed: boolean; until: string | null };
   cancel: {
     allowed: boolean;
     /** Cancelling now gives the money back. */
@@ -33,7 +36,12 @@ const HOUR = 3_600_000;
 export function visitChanges(
   visit: Pick<
     GuestBooking,
-    "status" | "startsAt" | "rescheduleCount" | "priceMinor" | "paid"
+    | "status"
+    | "startsAt"
+    | "rescheduleCount"
+    | "priceMinor"
+    | "paid"
+    | "paymentDueAt"
   >,
   policy: ChangePolicy,
   now = new Date(),
@@ -42,6 +50,10 @@ export function visitChanges(
   const refundUntil = start - policy.cancellationWindowHours * HOUR;
   const rescheduleUntil = start - policy.rescheduleWindowHours * HOUR;
   const upcoming = visit.status === "confirmed" && now.getTime() < start;
+  const reserved =
+    visit.status === "awaiting_payment" &&
+    visit.paymentDueAt !== null &&
+    now.getTime() < Date.parse(visit.paymentDueAt);
   const remaining = Math.max(
     0,
     policy.maxSelfReschedules - visit.rescheduleCount,
@@ -55,8 +67,9 @@ export function visitChanges(
         : null;
 
   return {
+    pay: { allowed: reserved, until: visit.paymentDueAt },
     cancel: {
-      allowed: upcoming,
+      allowed: upcoming || reserved,
       refund:
         upcoming &&
         visit.paid &&

@@ -23,6 +23,7 @@ const claimed: ClaimedBookingEmail = {
   cancelledBy: null,
   bookedBy: "client",
   paid: true,
+  paymentDueAt: null,
 };
 
 function deps(overrides: Partial<ConfirmationEmailDeps> = {}) {

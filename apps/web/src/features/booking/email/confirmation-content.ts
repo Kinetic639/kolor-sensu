@@ -62,9 +62,9 @@ export function confirmationContent(
       : []),
     ["Termin", `${when}–${localTime(visit.endsAt, timeZone)}`],
     ["Miejsce", place(visit)],
-    visit.paid
-      ? ["Zapłacono", formatPrice(visit)]
-      : ["Do zapłaty na miejscu", formatPrice(visit)],
+    ...(visit.paid
+      ? [["Zapłacono", formatPrice(visit)] as [string, string]]
+      : []),
     ["Numer rezerwacji", visit.reference],
   ];
   const contactLine = contactLineOf(contact);
@@ -97,7 +97,7 @@ export function confirmationContent(
     greeting,
     intro: visit.paid
       ? "Dziękujemy za rezerwację i płatność."
-      : "Zapisaliśmy Cię na wizytę w Kolor Sensu.",
+      : "Dziękujemy za rezerwację.",
     rows,
     manageUrl,
     buttonLabel: "Zobacz swoją wizytę",

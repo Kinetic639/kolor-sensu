@@ -1,10 +1,16 @@
 import { BookingSummary } from "@repo/ui/booking";
-import { SecondaryButton } from "@repo/ui/public-site";
+import { PrimaryButton, SecondaryButton } from "@repo/ui/public-site";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { after } from "next/server";
 import { ContactDetails } from "@/components/contact-details";
+import { sendVisitConfirmation } from "@/features/booking/email/confirmation-server";
 import { visitByLinkToken } from "@/features/booking/guest-visit";
+import { settleSession } from "@/features/booking/payment";
+import { paymentDeps } from "@/features/booking/payment-server";
+import { RefreshWhileWaiting } from "@/features/booking/refresh-while-waiting";
+import { stripeServer } from "@/lib/stripe";
 import {
   visitPageCopy,
   type VisitChangeDone,
@@ -13,7 +19,9 @@ import { visitSummaryItems } from "@/features/booking/visit-summary";
 
 // The page behind the visit e-mails' link: the visit, a calendar file, and
 // what the client may still change themselves (R8): move it or cancel it,
-// by the centre's rules; anything else through the centre. The address is
+// by the centre's rules; a reservation not paid yet is paid from here, by
+// its time (R11), and Stripe returns here (?sesja=), where the payment is
+// settled as the webhook does; anything else through the centre. The address is
 // a secret (the token), so it is never indexed and never sent on as a
 // referrer.
 
@@ -32,24 +40,56 @@ const STATUS: Record<string, { title: string; lead: string }> = {
     title: "Czekamy na potwierdzenie płatności",
     lead: "Gdy bank potwierdzi płatność, wizyta zostanie potwierdzona.",
   },
+  reserved: {
+    title: "Twoja wizyta czeka na płatność",
+    lead: "Termin jest zarezerwowany dla Ciebie. Opłać wizytę online, a od razu ją potwierdzimy.",
+  },
   cancelled: {
     title: "Wizyta została odwołana",
     lead: "Jeśli chcesz umówić nowy termin, zapraszamy ponownie.",
   },
 };
 
-const CHANGES: VisitChangeDone[] = ["przelozona", "odwolana"];
+const CHANGES: VisitChangeDone[] = ["przelozona", "odwolana", "zarezerwowana"];
 
 export default async function VisitPage({
   params,
   searchParams,
 }: PageProps<"/wizyta/[token]">) {
   const { token } = await params;
-  const { zmiana } = await searchParams;
-  const visit = await visitByLinkToken(token);
+  const { zmiana, sesja } = await searchParams;
+  let visit = await visitByLinkToken(token);
   if (!visit) notFound();
+
+  // Back from Stripe: settle this visit's payment (idempotently).
+  let pendingBank = false;
+  if (typeof sesja === "string" && /^cs_/.test(sesja)) {
+    const session = await stripeServer()
+      .checkout.sessions.retrieve(sesja)
+      .catch(() => null);
+    if (session?.metadata?.appointment_reference === visit.booking.reference) {
+      if (session.status === "open") {
+        redirect(`/wizyta/${token}/platnosc` as Route);
+      }
+      if (session.status === "complete") {
+        const outcome = await settleSession(session, {
+          ...paymentDeps(),
+          onConfirmed: async (reference) => {
+            after(() => sendVisitConfirmation(reference));
+          },
+        });
+        pendingBank = outcome === "awaiting_payment";
+        visit = (await visitByLinkToken(token)) ?? visit;
+      }
+    }
+  }
+
   const { booking, timeZone, policy } = visit;
-  const status = STATUS[booking.status] ?? {
+  const reserved =
+    booking.status === "awaiting_payment" &&
+    booking.paymentDueAt !== null &&
+    !pendingBank;
+  const status = STATUS[reserved ? "reserved" : booking.status] ?? {
     title: "Ta rezerwacja nie jest aktywna",
     lead: "Jeśli masz pytania, skontaktuj się z nami.",
   };
@@ -69,6 +109,7 @@ export default async function VisitPage({
           {copy.cancelledLead ?? status.lead}
         </p>
       </div>
+      {pendingBank ? <RefreshWhileWaiting /> : null}
       {copy.notice ? (
         <p
           className="rounded-card-sm bg-primary-soft text-small text-ink max-w-2xl p-4"
@@ -91,6 +132,17 @@ export default async function VisitPage({
           ) : null}
         </BookingSummary>
         <div className="grid gap-5">
+          {copy.pay ? (
+            <section aria-labelledby="platnosc" className="grid gap-3">
+              <h2 className="text-title text-ink font-semibold" id="platnosc">
+                Płatność
+              </h2>
+              <p className="text-small text-text-muted">{copy.pay.text}</p>
+              <PrimaryButton arrow asChild className="justify-self-start">
+                <Link href={copy.pay.href}>Zapłać za wizytę</Link>
+              </PrimaryButton>
+            </section>
+          ) : null}
           {copy.reschedule || copy.cancel ? (
             <section aria-labelledby="zmiany" className="grid gap-4">
               <h2 className="text-title text-ink font-semibold" id="zmiany">

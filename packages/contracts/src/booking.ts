@@ -52,7 +52,8 @@ const isPhone = (value: string) => {
 
 // A visit the centre books from the calendar (K5): the offer (who gives
 // which service), how, when (the centre's local date and time) and where;
-// the client reachable by e-mail or phone. The database checks it again.
+// the client's e-mail, where the link to pay goes (nothing is paid on
+// site, R11). The database checks it again.
 export const centreBookingSchema = z
   .object({
     offerId: z.uuid("Wybierz usługę."),
@@ -71,11 +72,11 @@ export const centreBookingSchema = z
       .string()
       .trim()
       .toLowerCase()
+      .min(1, "Podaj e-mail klienta: wyślemy na niego link do płatności.")
       .max(320, "Podaj poprawny adres e-mail.")
       .refine((value) => !value || z.email().safeParse(value).success, {
         message: "Podaj poprawny adres e-mail.",
-      })
-      .transform(optional),
+      }),
     phone: z
       .string()
       .trim()
@@ -88,22 +89,8 @@ export const centreBookingSchema = z
       .trim()
       .max(1000, "Uwagi mogą mieć najwyżej 1000 znaków.")
       .transform(optional),
-    sendEmail: z.boolean(),
   })
   .superRefine((booking, context) => {
-    if (!booking.email && !booking.phone) {
-      context.addIssue({
-        code: "custom",
-        path: ["email"],
-        message: "Podaj e-mail albo telefon klienta.",
-      });
-    } else if (booking.sendEmail && !booking.email) {
-      context.addIssue({
-        code: "custom",
-        path: ["sendEmail"],
-        message: "Potwierdzenie wyślemy tylko na adres e-mail.",
-      });
-    }
     if (booking.mode === "in_person" && !booking.roomId) {
       context.addIssue({
         code: "custom",
@@ -122,6 +109,9 @@ export type CentreBookingActionResult =
       ok: true;
       id: string;
       reference: string;
+      /** To be paid by then (an instant), or it is cancelled. */
+      paymentDueAt: string;
+      /** The e-mail with the link to pay. */
       emailed: "sent" | "skipped" | "failed";
     }
   | { ok: false; message: string; fields?: Record<string, string> };
@@ -137,6 +127,8 @@ const CENTRE_BOOKING_MESSAGES: Record<string, string> = {
   invalid_details: "Sprawdź dane klienta.",
   invalid: "Sprawdź pola formularza.",
   forbidden: "Nie możesz zapisać tej wizyty.",
+  too_soon:
+    "Do wizyty zostało za mało czasu na płatność online. Wybierz późniejszy termin.",
 };
 
 /** Why a visit could not be booked, in Polish. */

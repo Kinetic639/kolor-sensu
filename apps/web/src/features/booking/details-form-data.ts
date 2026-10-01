@@ -27,6 +27,10 @@ export type DetailsFormResult =
 /** The hidden field's name; people never see it. */
 export const HONEYPOT_FIELD = "website";
 
+/** Which button saved the details: pay now (none), or reserve to pay later. */
+export const INTENT_FIELD = "zamiar";
+export const PAY_LATER = "pozniej";
+
 export function readDetailsForm(form: FormData): DetailsFormResult {
   if (String(form.get(HONEYPOT_FIELD) ?? "").trim()) {
     return { ok: false, bot: true };

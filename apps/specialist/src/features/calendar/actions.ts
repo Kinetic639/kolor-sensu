@@ -43,6 +43,7 @@ export async function bookVisitAction(
           ok: true;
           id: string;
           reference: string;
+          paymentDueAt: string;
           emailed: "sent" | "skipped" | "failed";
         }
       | { ok: false; code?: string; fields?: Record<string, string> }
@@ -61,6 +62,7 @@ export async function bookVisitAction(
       ok: true,
       id: body.id,
       reference: body.reference,
+      paymentDueAt: body.paymentDueAt,
       emailed: body.emailed,
     };
   } catch (error) {

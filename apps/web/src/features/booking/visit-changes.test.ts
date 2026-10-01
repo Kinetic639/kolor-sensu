@@ -12,6 +12,7 @@ const visit = {
   rescheduleCount: 0,
   priceMinor: 20000,
   paid: true,
+  paymentDueAt: null,
 };
 const hoursBefore = (hours: number) =>
   new Date(Date.parse(visit.startsAt) - hours * 3_600_000);
@@ -61,14 +62,34 @@ describe("visitChanges", () => {
     expect(changes.cancel.refund).toBe(true);
   });
 
-  it("booked by the centre, paid on site: cancelling gives nothing back", () => {
-    const changes = visitChanges(
-      { ...visit, paid: false },
-      policy,
-      hoursBefore(100),
-    );
+  it("a reservation not paid yet: pay by its time, or cancel it (nothing to give back)", () => {
+    const reserved = {
+      ...visit,
+      status: "awaiting_payment" as const,
+      paid: false,
+      paymentDueAt: "2030-10-08T09:00:00.000Z",
+    };
+    const changes = visitChanges(reserved, policy, hoursBefore(100));
+    expect(changes.pay).toEqual({
+      allowed: true,
+      until: "2030-10-08T09:00:00.000Z",
+    });
     expect(changes.cancel).toMatchObject({ allowed: true, refund: false });
-    expect(changes.reschedule.allowed).toBe(true);
+    // Moved only once paid.
+    expect(changes.reschedule).toMatchObject({
+      allowed: false,
+      blockedBy: "status",
+    });
+    // Past its time: nothing left (the database cancels it).
+    const late = visitChanges(reserved, policy, hoursBefore(47));
+    expect(late.pay.allowed).toBe(false);
+    expect(late.cancel.allowed).toBe(false);
+  });
+
+  it("a paid visit has nothing to pay", () => {
+    expect(visitChanges(visit, policy, hoursBefore(100)).pay.allowed).toBe(
+      false,
+    );
   });
 
   it("the centre turned self-moving off", () => {
@@ -83,7 +104,7 @@ describe("visitChanges", () => {
     });
   });
 
-  it("a visit that is past, cancelled or unpaid changes nothing", () => {
+  it("a visit that is past, cancelled or waiting for the bank changes nothing", () => {
     for (const [changed, now] of [
       [visit, hoursBefore(-1)],
       [{ ...visit, status: "cancelled" as const }, hoursBefore(100)],

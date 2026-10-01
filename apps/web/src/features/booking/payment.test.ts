@@ -32,6 +32,7 @@ const booking: GuestBooking = {
   refundedMinor: 0,
   bookedBy: "client",
   paid: true,
+  paymentDueAt: null,
 };
 
 describe("checkoutSessionParams", () => {

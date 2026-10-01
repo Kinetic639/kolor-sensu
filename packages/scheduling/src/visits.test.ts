@@ -99,6 +99,13 @@ describe("visitDays", () => {
           cancelledBy: "client",
           payment: { paid: true, refundDueMinor: 20000, refundedMinor: 20000 },
         },
+        {
+          ...visit,
+          id: "v4",
+          status: "cancelled",
+          cancelledBy: "system",
+          payment: { paid: false, refundDueMinor: 0, refundedMinor: 0 },
+        },
       ],
       options,
     );
@@ -112,6 +119,7 @@ describe("visitDays", () => {
       ["Odwołana przez klienta", "Bez zwrotu", false],
       ["Odwołana przez centrum", "Zwrot do zlecenia", false],
       ["Odwołana przez klienta", "Zwrócono", false],
+      ["Anulowana – brak płatności", "Nieopłacona", false],
     ]);
   });
 

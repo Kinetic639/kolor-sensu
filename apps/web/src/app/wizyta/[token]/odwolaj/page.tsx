@@ -57,7 +57,7 @@ export default async function CancelVisitPage({
                 {cancel.refund
                   ? `Otrzymasz pełny zwrot: ${formatPrice(booking)}, tą samą metodą, którą zapłacono.`
                   : !booking.paid && booking.priceMinor > 0
-                    ? "Wizyta miała być opłacona na miejscu, więc nie ma nic do zwrotu."
+                    ? "Rezerwacja nie jest opłacona, więc nie ma nic do zwrotu."
                     : booking.priceMinor > 0
                       ? `Do wizyty zostało mniej niż ${policy.cancellationWindowHours} godz., więc opłata nie zostanie zwrócona. Jeśli wolisz zmienić termin, skontaktuj się z nami.`
                       : "Wizyta była bezpłatna, więc nie ma nic do zwrotu."}

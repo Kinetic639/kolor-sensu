@@ -9,15 +9,18 @@ import {
 
 // The centre books a visit from a portal's calendar (K5, "+ Nowa wizyta").
 // The form is checked again here, the local date and time become an
-// instant in the centre's time zone, the database books it as whoever
-// signed in (and checks they may), and the confirmation goes by e-mail
-// when asked for. Stripe is not involved: the visit is paid on site.
+// instant in the centre's time zone, the database reserves it as whoever
+// signed in (and checks they may), and the client gets the link to pay by
+// e-mail (R11): nothing is paid on site. Unpaid by the time the database
+// set, the reservation is cancelled.
 
 export interface CentreBookingDeps {
   timeZone: string;
   book: (input: CentreBookingInput) => Promise<CentreBookedVisit>;
-  /** Sends the confirmation; never throws. */
-  confirm: (reference: string) => Promise<"sent" | "skipped" | "failed">;
+  /** Sends the reservation with the link to pay; never throws. */
+  sendPaymentLink: (
+    reference: string,
+  ) => Promise<"sent" | "skipped" | "failed">;
 }
 
 export type CentreBookingResult =
@@ -25,6 +28,7 @@ export type CentreBookingResult =
       ok: true;
       id: string;
       reference: string;
+      paymentDueAt: string;
       emailed: "sent" | "skipped" | "failed";
     }
   | { ok: false; code: "invalid"; fields: Record<string, string> }
@@ -72,9 +76,11 @@ export async function bookVisitAsCentre(
     throw error;
   }
 
-  const emailed =
-    booking.sendEmail && booking.email
-      ? await deps.confirm(visit.reference)
-      : "skipped";
-  return { ok: true, id: visit.id, reference: visit.reference, emailed };
+  return {
+    ok: true,
+    id: visit.id,
+    reference: visit.reference,
+    paymentDueAt: visit.paymentDueAt,
+    emailed: await deps.sendPaymentLink(visit.reference),
+  };
 }

@@ -14,7 +14,6 @@ import { useId, useMemo, useState, useTransition } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "../button";
-import { Checkbox } from "../checkbox";
 import { Input } from "../input";
 import { Label } from "../label";
 import { cn } from "../lib/utils";
@@ -25,10 +24,11 @@ import { calendarParsers } from "./params";
 
 // "+ Nowa wizyta" (K5), after the reference's form: who (an admin chooses
 // the specialist), which service, how and where, when (the time picked in
-// the grid, or typed), and the client, reachable by e-mail or phone. The
-// visit is confirmed at once and paid on site; the confirmation goes by
-// e-mail when asked. The site's server books it (the portal's action) and
-// the database checks everything again; then its details open.
+// the grid, or typed), and the client, with the e-mail the link to pay
+// goes to. Nothing is paid on site (R11): the visit is reserved until the
+// client pays online, by 48 hours before (2 hours' link when it is close).
+// The site's server books it (the portal's action) and the database checks
+// everything again; then its details open.
 
 export interface NewVisitOffer {
   id: string;
@@ -131,13 +131,9 @@ export function NewVisitPanel({
       email: "",
       phone: "",
       notes: "",
-      sendEmail: true,
     },
   });
-  const [offerId, mode, email] = useWatch({
-    control,
-    name: ["offerId", "mode", "email"],
-  });
+  const [offerId, mode] = useWatch({ control, name: ["offerId", "mode"] });
   const offer = offers.find((one) => one.id === offerId);
 
   const chooseSpecialist = (next: string) => {
@@ -167,13 +163,18 @@ export function NewVisitPanel({
         toast.error(result.message);
         return;
       }
-      toast.success(
-        result.emailed === "sent"
-          ? `Wizyta ${result.reference} zapisana. Klient dostał potwierdzenie e-mailem.`
-          : result.emailed === "failed"
-            ? `Wizyta ${result.reference} zapisana, ale e-mail się nie wysłał.`
-            : `Wizyta ${result.reference} zapisana.`,
-      );
+      const reserved = `Wizyta ${result.reference} zarezerwowana`;
+      if (result.emailed === "failed") {
+        toast.warning(
+          `${reserved}, ale e-mail z linkiem do płatności się nie wysłał. Skontaktuj się z klientem.`,
+        );
+      } else {
+        toast.success(
+          result.emailed === "sent"
+            ? `${reserved}. Klient dostał e-mail z linkiem do płatności.`
+            : `${reserved}.`,
+        );
+      }
       await setParams({
         wizyta: result.id,
         nowa: false,
@@ -210,7 +211,7 @@ export function NewVisitPanel({
               Nowa wizyta
             </h2>
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-              Potwierdzona od razu, płatność na miejscu.
+              Rezerwacja opłacana online z linku w e-mailu.
             </p>
           </div>
         </div>
@@ -227,11 +228,7 @@ export function NewVisitPanel({
       <form
         className="flex min-h-0 flex-1 flex-col"
         noValidate
-        onSubmit={(event) => {
-          // No e-mail, no confirmation to send.
-          if (!getValues("email")) setValue("sendEmail", false);
-          void submit(event);
-        }}
+        onSubmit={(event) => void submit(event)}
       >
         <div className="grid flex-1 content-start gap-4 overflow-y-auto p-4">
           <fieldset className="grid gap-3">
@@ -285,8 +282,7 @@ export function NewVisitPanel({
               {offer ? (
                 <p className="text-xs text-[var(--text-muted)] tabular-nums">
                   {offer.durationMinutes} min ·{" "}
-                  {money(offer.priceMinor, offer.currencyCode)} · płatność na
-                  miejscu
+                  {money(offer.priceMinor, offer.currencyCode)}
                 </p>
               ) : null}
               <FieldError
@@ -450,36 +446,12 @@ export function NewVisitPanel({
                 message={errors.notes?.message}
               />
             </div>
-            <div className="grid gap-1">
-              <div className="flex items-center gap-2">
-                <Controller
-                  control={control}
-                  name="sendEmail"
-                  render={({ field: send }) => (
-                    <Checkbox
-                      aria-describedby={
-                        errors.sendEmail ? field("sendEmail-error") : undefined
-                      }
-                      checked={send.value && Boolean(email)}
-                      disabled={!email}
-                      id={field("sendEmail")}
-                      onBlur={send.onBlur}
-                      onCheckedChange={(checked) =>
-                        send.onChange(checked === true)
-                      }
-                    />
-                  )}
-                />
-                <Label className="font-normal" htmlFor={field("sendEmail")}>
-                  Wyślij klientowi potwierdzenie e-mailem
-                </Label>
-              </div>
-              <FieldError
-                id={field("sendEmail-error")}
-                message={errors.sendEmail?.message}
-              />
-            </div>
           </fieldset>
+          <p className="rounded-[var(--radius-control)] bg-[var(--surface-muted)] p-3 text-xs leading-relaxed text-[var(--text)]">
+            Klient dostanie e-mail z linkiem do płatności online. Termin
+            płatności to 48 godz. przed wizytą (przy bliższym terminie link jest
+            ważny 2 godz.); nieopłacona rezerwacja zostanie anulowana.
+          </p>
         </div>
         <footer className="flex items-center justify-end gap-2 border-t border-[var(--border)] p-3">
           <Button asChild size="sm" variant="outline">
@@ -488,7 +460,7 @@ export function NewVisitPanel({
             </Link>
           </Button>
           <Button loading={pending} size="sm" type="submit">
-            Zapisz wizytę
+            Zarezerwuj wizytę
           </Button>
         </footer>
       </form>

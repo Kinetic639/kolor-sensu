@@ -7,6 +7,7 @@ import {
   holdSlot,
   pendingCheckoutSession,
   releaseHold,
+  reserveHold,
   saveBookingDetails,
 } from "@repo/supabase";
 import type { Route } from "next";
@@ -16,10 +17,13 @@ import { getBookingWindow } from "@/lib/public-data";
 import { stripeServer } from "@/lib/stripe";
 import { createSecretClient } from "@/lib/supabase/secret";
 import {
+  INTENT_FIELD,
+  PAY_LATER,
   readDetailsForm,
   type DetailsFormErrors,
   type DetailsFormValues,
 } from "./details-form-data";
+import { claimReservationEmail } from "./email/confirmation-server";
 import { clientIp, turnstileKeys, verifyTurnstile, visitorKey } from "./guards";
 import { clearHoldToken, readHoldToken, saveHoldToken } from "./hold-cookie";
 import { loadWizard } from "./load-wizard";
@@ -234,6 +238,32 @@ export async function saveDetailsAction(
     }
     throw error;
   }
-  // Saved: straight on to the payment.
+  // Saved: reserved to pay later, or straight on to the payment.
+  if (formData.get(INTENT_FIELD) === PAY_LATER) return reserveForLater(token);
   return goToPayment(token);
+}
+
+/**
+ * "Zarezerwuj, zapłacę później" (R11): the visit is reserved until its
+ * payment is due, the link to pay goes by e-mail, and the visit's page
+ * opens by that same link. Too close to the visit, it is paid now.
+ */
+async function reserveForLater(token: string): Promise<never> {
+  const db = createSecretClient();
+  let reference: string;
+  try {
+    ({ reference } = await reserveHold(db, token));
+  } catch (error) {
+    if (error instanceof BookingError && error.code === "pay_now_required") {
+      return goToPayment(token);
+    }
+    if (error instanceof BookingError) redirect(EXPIRED);
+    throw error;
+  }
+  const link = await claimReservationEmail(reference).catch((error) => {
+    console.error(`[booking] reserved e-mail ${reference}:`, error);
+    return null;
+  });
+  await clearHoldToken();
+  redirect(`/wizyta/${link ?? token}?zmiana=zarezerwowana` as Route);
 }

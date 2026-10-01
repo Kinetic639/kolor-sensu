@@ -33,7 +33,8 @@ export interface VisitLike {
     refundDueMinor: number | null;
     refundedMinor: number;
   } | null;
-  cancelledBy: "client" | "centre" | null;
+  /** "system": not paid in time (R11). */
+  cancelledBy: "client" | "centre" | "system" | null;
   rescheduleCount: number;
 }
 
@@ -96,7 +97,9 @@ function statusOf(visit: VisitLike): VisitRow["status"] {
       label:
         visit.cancelledBy === "centre"
           ? "Odwołana przez centrum"
-          : "Odwołana przez klienta",
+          : visit.cancelledBy === "system"
+            ? "Anulowana – brak płatności"
+            : "Odwołana przez klienta",
       tone: "neutral",
     };
   }

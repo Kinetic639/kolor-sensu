@@ -1439,17 +1439,20 @@ RESET ROLE;
 -- X: the centre books a visit (K5, "+ Nowa wizyta"). An admin for anyone, a
 -- specialist for themselves; any time the specialist and the room are free
 -- (inside availability or not), never in the past, in a closed room or
--- during time off. Confirmed at once, paid on site, no consents recorded;
--- the history says the centre did it, the e-mail knows it is unpaid.
+-- during time off. Nothing is paid on site: the visit is reserved until
+-- paid online, by 48 hours before it (R11), and the client gets the link by
+-- e-mail, so an e-mail is required; the consents come when they pay. The
+-- history says the centre did it.
 CREATE TEMP TABLE x_day AS
 SELECT monday + 14 AS day,
   (SELECT id FROM public.specialist_services WHERE specialist_id = anna_id) AS anna_offer,
   (SELECT id FROM public.specialist_services WHERE specialist_id = jan_id) AS jan_offer,
   room_id
 FROM booking_test;
-GRANT SELECT ON x_day TO authenticated, anon;
+GRANT SELECT ON x_day TO authenticated, anon, service_role;
 GRANT EXECUTE ON FUNCTION pg_temp.at(date, time) TO authenticated;
-CREATE TEMP TABLE x_visits (name text PRIMARY KEY, id uuid, reference text);
+GRANT EXECUTE ON FUNCTION pg_temp.hint_of(text) TO authenticated, service_role;
+CREATE TEMP TABLE x_visits (name text PRIMARY KEY, id uuid, reference text, token text);
 GRANT ALL ON x_visits TO authenticated, service_role;
 
 -- Anna is away that day from 18:00; the room is closed the day after.
@@ -1507,15 +1510,16 @@ BEGIN
 
   -- Outside Anna's hours (her room window ends at 12:00) and off the grid.
   v_id := pg_temp.book(x.anna_offer, 'in_person', pg_temp.at(x.day, '12:15'), x.room_id);
-  INSERT INTO x_visits VALUES ('x1', v_id, NULL);
-  -- A client reachable by phone only.
+  INSERT INTO x_visits VALUES ('x1', v_id);
   v_id := pg_temp.book(x.anna_offer, 'online', pg_temp.at(x.day, '16:00'), NULL,
-    'Jan Telefon', NULL, '600 100 200');
-  INSERT INTO x_visits VALUES ('x2', v_id, NULL);
+    'Jan Telefon', 'jan.telefon@example.invalid', '600 100 200');
+  INSERT INTO x_visits VALUES ('x2', v_id);
+  v_id := pg_temp.book(x.anna_offer, 'online', pg_temp.at(x.day, '10:00'), NULL);
+  INSERT INTO x_visits VALUES ('x3', v_id);
 
   IF (SELECT count(*) FROM public.list_visits(x.day, x.day)
-      WHERE id IN (SELECT id FROM x_visits) AND status = 'confirmed' AND NOT paid) <> 2 THEN
-    RAISE EXCEPTION 'X: the admin does not see the booked visits, confirmed and unpaid';
+      WHERE id IN (SELECT id FROM x_visits) AND status = 'awaiting_payment' AND NOT paid) <> 3 THEN
+    RAISE EXCEPTION 'X: the admin does not see the booked visits, awaiting payment';
   END IF;
 
   -- The same time for Anna, and the room for Jan: taken.
@@ -1545,11 +1549,20 @@ BEGIN
   IF pg_temp.refusal(x.anna_offer, 'online', pg_temp.at(x.day, '18:30'), NULL) <> 'time_off' THEN
     RAISE EXCEPTION 'X: booked during time off';
   END IF;
-  IF pg_temp.refusal(x.anna_offer, 'online', pg_temp.at(x.day, '09:00'), NULL, NULL, NULL) <> 'invalid_details' THEN
-    RAISE EXCEPTION 'X: booked a client nobody can reach';
+  -- The payment link goes by e-mail: a phone alone is not enough.
+  IF pg_temp.refusal(x.anna_offer, 'online', pg_temp.at(x.day, '09:00'), NULL, NULL, '600 100 200') <> 'invalid_details' THEN
+    RAISE EXCEPTION 'X: booked a client without an e-mail';
   END IF;
   IF pg_temp.refusal(x.anna_offer, 'online', pg_temp.at(x.day, '09:00'), NULL, 'not an e-mail') <> 'invalid_details' THEN
     RAISE EXCEPTION 'X: booked with a wrong e-mail';
+  END IF;
+
+  -- Close to the visit the link is short: two hours, or until an hour
+  -- before it; too close, and there is no time to pay.
+  v_id := pg_temp.book(x.anna_offer, 'online', date_trunc('hour', now()) + interval '5 hours', NULL);
+  INSERT INTO x_visits VALUES ('soon', v_id);
+  IF pg_temp.refusal(x.anna_offer, 'online', now() + interval '70 minutes', NULL) <> 'too_soon' THEN
+    RAISE EXCEPTION 'X: booked with no time to pay';
   END IF;
 END;
 $body$;
@@ -1557,21 +1570,29 @@ RESET ROLE;
 
 DO $body$
 DECLARE
+  x x_day%ROWTYPE;
   v public.appointments%ROWTYPE;
 BEGIN
+  SELECT * INTO x FROM x_day;
   SELECT * INTO v FROM public.appointments WHERE id = (SELECT id FROM x_visits WHERE name = 'x1');
-  IF v.status <> 'confirmed' OR v.booked_by <> 'centre' OR v.confirmed_at IS NULL
+  IF v.status <> 'awaiting_payment' OR v.booked_by <> 'centre' OR v.confirmed_at IS NOT NULL
+     OR v.payment_due_at <> pg_temp.at(x.day, '12:15') - interval '48 hours'
      OR v.terms_accepted_at IS NOT NULL OR v.privacy_accepted_at IS NOT NULL
      OR v.duration_minutes <> 50 OR v.buffer_minutes <> 10 OR v.price_minor <> 25000
      OR v.client_email <> 'ewa@example.invalid' OR v.client_notes <> 'Pierwsza wizyta' THEN
     RAISE EXCEPTION 'X: the booked visit: %', row_to_json(v);
   END IF;
-  -- The history: created by the centre, by that admin, already confirmed.
+  IF (SELECT payment_due_at FROM public.appointments WHERE id = (SELECT id FROM x_visits WHERE name = 'soon'))
+     <> now() + interval '2 hours' THEN
+    RAISE EXCEPTION 'X: the short link is not two hours';
+  END IF;
+  -- The history: created by the centre, by that admin, awaiting payment.
   IF NOT EXISTS (
     SELECT 1 FROM public.appointment_events
     WHERE appointment_id = v.id AND kind = 'created' AND actor = 'centre'
       AND actor_user_id = '71000000-0000-4000-8000-000000000001'
-      AND details ->> 'status' = 'confirmed'
+      AND details ->> 'status' = 'awaiting_payment'
+      AND details ? 'payment_due_at'
   ) THEN
     RAISE EXCEPTION 'X: the history does not say the centre booked it';
   END IF;
@@ -1579,24 +1600,63 @@ BEGIN
 END;
 $body$;
 
--- The e-mails: the confirmation knows the visit is the centre's, unpaid,
--- and gives a link that opens it; no e-mail for a client without one.
+-- The e-mail: the reservation, with the link and the time to pay by; not a
+-- confirmation. The link opens the visit; paying takes the consents first,
+-- then the full price, and confirms it.
 SET LOCAL ROLE service_role;
 DO $body$
 DECLARE
   c record;
   b record;
+  v_token text;
 BEGIN
-  SELECT * INTO c FROM public.claim_booking_email((SELECT reference FROM x_visits WHERE name = 'x1'), 'confirmation');
-  IF c.reference IS NULL OR c.booked_by <> 'centre' OR c.paid OR c.manage_token IS NULL THEN
-    RAISE EXCEPTION 'X: the confirmation claim: %', row_to_json(c);
+  IF EXISTS (SELECT 1 FROM public.claim_booking_email((SELECT reference FROM x_visits WHERE name = 'x1'), 'confirmation')) THEN
+    RAISE EXCEPTION 'X: confirmed a visit not paid';
   END IF;
-  SELECT * INTO b FROM public.get_booking(c.manage_token);
-  IF b.reference <> c.reference OR b.booked_by <> 'centre' OR b.paid OR b.status <> 'confirmed' THEN
+  SELECT * INTO c FROM public.claim_booking_email((SELECT reference FROM x_visits WHERE name = 'x1'), 'reserved');
+  IF c.reference IS NULL OR c.booked_by <> 'centre' OR c.paid OR c.manage_token IS NULL
+     OR c.payment_due_at IS NULL THEN
+    RAISE EXCEPTION 'X: the reservation claim: %', row_to_json(c);
+  END IF;
+  v_token := c.manage_token;
+  UPDATE x_visits SET token = v_token WHERE name = 'x1';
+  SELECT * INTO b FROM public.get_booking(v_token);
+  IF b.reference <> c.reference OR b.paid OR b.status <> 'awaiting_payment'
+     OR b.payment_due_at <> c.payment_due_at OR b.details_saved THEN
     RAISE EXCEPTION 'X: the visit page: %', row_to_json(b);
   END IF;
-  IF EXISTS (SELECT 1 FROM public.claim_booking_email((SELECT reference FROM x_visits WHERE name = 'x2'), 'confirmation')) THEN
-    RAISE EXCEPTION 'X: claimed an e-mail for a client without one';
+
+  IF pg_temp.hint_of(format('SELECT public.attach_reservation_payment(%L, %L, 25000, %L)', v_token, 'cs_x1', 'PLN')) <> 'consent_required' THEN
+    RAISE EXCEPTION 'X: paid without the consents';
+  END IF;
+  PERFORM public.accept_booking_terms(v_token);
+  IF pg_temp.hint_of(format('SELECT public.attach_reservation_payment(%L, %L, 100, %L)', v_token, 'cs_x1', 'PLN')) <> 'amount_mismatch' THEN
+    RAISE EXCEPTION 'X: paid another amount';
+  END IF;
+  PERFORM public.attach_reservation_payment(v_token, 'cs_x1', 25000, 'PLN');
+  IF (SELECT checkout_session_id FROM public.pending_reservation_payment(v_token)) <> 'cs_x1' THEN
+    RAISE EXCEPTION 'X: the open payment is not found';
+  END IF;
+  IF public.fulfill_checkout_session('cs_x1', true, 'pi_x1') <> 'confirmed' THEN
+    RAISE EXCEPTION 'X: paying did not confirm it';
+  END IF;
+  SELECT * INTO c FROM public.claim_booking_email((SELECT reference FROM x_visits WHERE name = 'x1'), 'confirmation');
+  IF c.reference IS NULL OR NOT c.paid THEN
+    RAISE EXCEPTION 'X: no confirmation after paying: %', row_to_json(c);
+  END IF;
+  IF pg_temp.hint_of(format('SELECT public.accept_booking_terms(%L)', v_token)) <> 'not_payable' THEN
+    RAISE EXCEPTION 'X: a paid visit asked to be paid';
+  END IF;
+
+  -- A payment that lapses leaves the reservation until it is due.
+  UPDATE x_visits SET token = (
+    SELECT manage_token FROM public.claim_booking_email(x_visits.reference, 'reserved')
+  ) WHERE name = 'x3';
+  PERFORM public.accept_booking_terms((SELECT token FROM x_visits WHERE name = 'x3'));
+  PERFORM public.attach_reservation_payment((SELECT token FROM x_visits WHERE name = 'x3'), 'cs_x3', 25000, 'PLN');
+  PERFORM public.fail_checkout_session('cs_x3', 'expired');
+  IF (SELECT status FROM public.appointments WHERE id = (SELECT id FROM x_visits WHERE name = 'x3')) <> 'awaiting_payment' THEN
+    RAISE EXCEPTION 'X: a lapsed payment ended the reservation';
   END IF;
 END;
 $body$;
@@ -1631,9 +1691,16 @@ BEGIN
 EXCEPTION WHEN insufficient_privilege THEN NULL;
 END;
 $body$;
+DO $body$
+BEGIN
+  PERFORM public.reserve_hold('x');
+  RAISE EXCEPTION 'X: a visitor reserved without the site';
+EXCEPTION WHEN insufficient_privilege THEN NULL;
+END;
+$body$;
 RESET ROLE;
 
--- Online bookings still need the consents.
+-- Online bookings still need the consents; so does any paid visit.
 DO $body$
 BEGIN
   UPDATE public.appointments SET terms_accepted_at = NULL
@@ -1642,5 +1709,264 @@ BEGIN
 EXCEPTION WHEN check_violation THEN NULL;
 END;
 $body$;
+DO $body$
+BEGIN
+  UPDATE public.appointments SET status = 'confirmed', confirmed_at = now()
+  WHERE id = (SELECT id FROM x_visits WHERE name = 'x2');
+  RAISE EXCEPTION 'X: confirmed a centre booking without consents';
+EXCEPTION WHEN check_violation THEN NULL;
+END;
+$body$;
+
+-- Y: pay now or later (R11). In the wizard, with the details saved, the
+-- client may reserve and pay later, by 48 hours before; a visit closer
+-- than that is paid at once. An unpaid reservation past its time stops
+-- holding the time at once and is cancelled (by the system) by the next
+-- booking or the scheduled job, unless a payment is going on; the job
+-- lists the e-mails due: a day and six hours before the payment is due,
+-- the cancellation, and a day before a paid visit. Each goes once.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  x x_day%ROWTYPE;
+  held record;
+  near record;
+  r record;
+  v public.appointments%ROWTYPE;
+  v_token text;
+BEGIN
+  SELECT * INTO x FROM x_day;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'online',
+    pg_temp.at(x.day + 7, '13:00'), p_client_key => 'visitor-y'
+  );
+  IF pg_temp.hint_of(format('SELECT public.reserve_hold(%L)', held.access_token)) <> 'details_required' THEN
+    RAISE EXCEPTION 'Y: reserved without the details';
+  END IF;
+  PERFORM public.save_booking_details(held.access_token, 'Ola Później',
+    'ola@example.invalid', '600100200', NULL, true, true);
+  SELECT * INTO r FROM public.reserve_hold(held.access_token);
+  SELECT * INTO v FROM public.appointments WHERE id = held.appointment_id;
+  IF v.status <> 'awaiting_payment' OR v.hold_expires_at IS NOT NULL
+     OR v.payment_due_at <> pg_temp.at(x.day + 7, '13:00') - interval '48 hours'
+     OR r.payment_due_at <> v.payment_due_at OR r.reference <> v.reference THEN
+    RAISE EXCEPTION 'Y: the reservation: %', row_to_json(v);
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.appointment_events
+    WHERE appointment_id = v.id AND kind = 'reserved' AND actor = 'client'
+  ) THEN
+    RAISE EXCEPTION 'Y: the history does not say it was reserved';
+  END IF;
+  IF pg_temp.hint_of(format('SELECT public.reserve_hold(%L)', held.access_token)) <> 'hold_expired' THEN
+    RAISE EXCEPTION 'Y: reserved twice';
+  END IF;
+  -- The reserved time is not free to others.
+  IF EXISTS (
+    SELECT 1 FROM public.list_free_slots('booking-test-consultation', 'booking-test-anna', 'online', x.day + 7, x.day + 7)
+    WHERE starts_at = pg_temp.at(x.day + 7, '13:00')
+  ) THEN
+    RAISE EXCEPTION 'Y: a reserved time was free';
+  END IF;
+
+  -- The client can cancel a reservation from its link; nothing to refund.
+  v_token := (SELECT manage_token FROM public.claim_booking_email(v.reference, 'reserved'));
+  SELECT * INTO r FROM public.cancel_booking(v_token);
+  IF r.refund_minor <> 0 OR r.payment_intent_id IS NOT NULL
+     OR (SELECT (status, cancelled_by) FROM public.appointments WHERE id = v.id)
+        IS DISTINCT FROM ('cancelled'::public.appointment_status, 'client'::text) THEN
+    RAISE EXCEPTION 'Y: cancelling a reservation: %', row_to_json(r);
+  END IF;
+
+  -- Within 48 hours: pay now.
+  SELECT * INTO near FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'online',
+    pg_temp.at(x.day + 7, '14:00'), p_client_key => 'visitor-y'
+  );
+  PERFORM public.save_booking_details(near.access_token, 'Ola Później',
+    'ola@example.invalid', '600100200', NULL, true, true);
+  INSERT INTO x_visits VALUES ('near', near.appointment_id, near.reference, near.access_token);
+END;
+$body$;
+RESET ROLE;
+-- (Moved by hand to ten hours from now.)
+UPDATE public.appointments
+SET during = tstzrange(date_trunc('hour', now()) + interval '10 hours', date_trunc('hour', now()) + interval '10 hours 50 minutes')
+WHERE id = (SELECT id FROM x_visits WHERE name = 'near');
+
+SET LOCAL ROLE service_role;
+DO $body$
+BEGIN
+  IF pg_temp.hint_of(format('SELECT public.reserve_hold(%L)', (SELECT token FROM x_visits WHERE name = 'near')))
+     <> 'pay_now_required' THEN
+    RAISE EXCEPTION 'Y: reserved a visit due within 48 hours';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Past its time: x2 (nothing paid) and x3 (a payment going on).
+UPDATE public.appointments SET payment_due_at = now() - interval '1 minute'
+WHERE id IN (SELECT id FROM x_visits WHERE name IN ('x2', 'x3'));
+DO $body$
+BEGIN
+  IF (SELECT private.appointment_is_live(status, hold_expires_at, payment_due_at)
+      FROM public.appointments WHERE id = (SELECT id FROM x_visits WHERE name = 'x2')) THEN
+    RAISE EXCEPTION 'Y: an overdue reservation still holds the time';
+  END IF;
+END;
+$body$;
+INSERT INTO public.payments (appointment_id, checkout_session_id, amount_minor, currency_code)
+SELECT id, 'cs_x3_again', 25000, 'PLN' FROM x_visits WHERE name = 'x3';
+
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  c record;
+BEGIN
+  IF (SELECT array_agg(reference) FROM public.cancel_unpaid_visits())
+     IS DISTINCT FROM ARRAY[(SELECT reference FROM x_visits WHERE name = 'x2')] THEN
+    RAISE EXCEPTION 'Y: cancelled the wrong reservations';
+  END IF;
+  IF (SELECT (status, cancelled_by, refund_due_minor) FROM public.appointments WHERE id = (SELECT id FROM x_visits WHERE name = 'x2'))
+     IS DISTINCT FROM ('cancelled'::public.appointment_status, 'system'::text, 0) THEN
+    RAISE EXCEPTION 'Y: the unpaid reservation was not cancelled by the system';
+  END IF;
+  IF (SELECT status FROM public.appointments WHERE id = (SELECT id FROM x_visits WHERE name = 'x3')) <> 'awaiting_payment' THEN
+    RAISE EXCEPTION 'Y: cancelled while the client was paying';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.appointment_events
+    WHERE appointment_id = (SELECT id FROM x_visits WHERE name = 'x2')
+      AND kind = 'cancelled' AND actor = 'system' AND details ->> 'reason' = 'unpaid'
+  ) THEN
+    RAISE EXCEPTION 'Y: the history does not say why it was cancelled';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.list_due_emails()
+    WHERE reference = (SELECT reference FROM x_visits WHERE name = 'x2') AND kind = 'cancelled'
+  ) THEN
+    RAISE EXCEPTION 'Y: no e-mail about the cancellation';
+  END IF;
+  SELECT * INTO c FROM public.claim_booking_email((SELECT reference FROM x_visits WHERE name = 'x2'), 'cancelled');
+  IF c.reference IS NULL OR c.cancelled_by <> 'system' OR c.manage_token IS NOT NULL THEN
+    RAISE EXCEPTION 'Y: the cancellation claim: %', row_to_json(c);
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.list_due_emails()
+    WHERE reference = (SELECT reference FROM x_visits WHERE name = 'x2')
+  ) THEN
+    RAISE EXCEPTION 'Y: the cancellation e-mail is due twice';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- The admin still sees it, cancelled by the system; a payment arriving
+-- late does not bring it back (the money goes back).
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.list_visits((SELECT day FROM x_day), (SELECT day FROM x_day))
+    WHERE id = (SELECT id FROM x_visits WHERE name = 'x2')
+      AND status = 'cancelled' AND cancelled_by = 'system'
+  ) THEN
+    RAISE EXCEPTION 'Y: the admin does not see the unpaid reservation cancelled';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '', true);
+INSERT INTO public.payments (appointment_id, checkout_session_id, amount_minor, currency_code)
+SELECT id, 'cs_x2_late', 25000, 'PLN' FROM x_visits WHERE name = 'x2';
+SET LOCAL ROLE service_role;
+DO $body$
+BEGIN
+  IF public.fulfill_checkout_session('cs_x2_late', true, 'pi_x2_late') <> 'slot_lost'
+     OR (SELECT status FROM public.appointments WHERE id = (SELECT id FROM x_visits WHERE name = 'x2')) <> 'cancelled' THEN
+    RAISE EXCEPTION 'Y: a late payment brought a cancelled visit back';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- The reminders: x3 due in 12 hours (reserved days ago); "soon" due in two
+-- hours but booked just now, so no last call until it was booked earlier.
+DELETE FROM public.payments WHERE checkout_session_id = 'cs_x3_again';
+UPDATE public.appointments
+SET payment_due_at = now() + interval '12 hours', created_at = now() - interval '3 days'
+WHERE id = (SELECT id FROM x_visits WHERE name = 'x3');
+
+SET LOCAL ROLE service_role;
+DO $body$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.list_due_emails()
+    WHERE reference = (SELECT reference FROM x_visits WHERE name = 'x3') AND kind = 'payment_reminder'
+  ) THEN
+    RAISE EXCEPTION 'Y: no reminder a day before the payment is due';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.list_due_emails()
+    WHERE reference = (SELECT reference FROM x_visits WHERE name = 'soon')
+  ) THEN
+    RAISE EXCEPTION 'Y: reminded of a reservation made just now';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+UPDATE public.appointments SET created_at = now() - interval '1 day'
+WHERE id = (SELECT id FROM x_visits WHERE name = 'soon');
+SET LOCAL ROLE service_role;
+DO $body$
+BEGIN
+  IF (SELECT kind FROM public.list_due_emails()
+      WHERE reference = (SELECT reference FROM x_visits WHERE name = 'soon')) IS DISTINCT FROM 'payment_last_call' THEN
+    RAISE EXCEPTION 'Y: no last call six hours before the payment is due';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Paid, it is reminded of a day before the visit (in five hours), once.
+UPDATE public.appointments
+SET status = 'confirmed', confirmed_at = now(),
+    terms_accepted_at = now(), privacy_accepted_at = now()
+WHERE id = (SELECT id FROM x_visits WHERE name = 'soon');
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  c record;
+BEGIN
+  IF (SELECT kind FROM public.list_due_emails()
+      WHERE reference = (SELECT reference FROM x_visits WHERE name = 'soon')) IS DISTINCT FROM 'reminder' THEN
+    RAISE EXCEPTION 'Y: no reminder a day before the visit';
+  END IF;
+  SELECT * INTO c FROM public.claim_booking_email((SELECT reference FROM x_visits WHERE name = 'soon'), 'reminder');
+  IF c.manage_token IS NULL THEN
+    RAISE EXCEPTION 'Y: the visit reminder has no link';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.list_due_emails()
+    WHERE reference = (SELECT reference FROM x_visits WHERE name = 'soon')
+  ) THEN
+    RAISE EXCEPTION 'Y: the visit reminder is due twice';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  PERFORM public.list_due_emails();
+  RAISE EXCEPTION 'Y: a signed-in user listed the e-mails';
+EXCEPTION WHEN insufficient_privilege THEN NULL;
+END;
+$body$;
+RESET ROLE;
 
 ROLLBACK;

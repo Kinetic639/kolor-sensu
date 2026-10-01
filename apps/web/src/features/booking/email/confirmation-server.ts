@@ -2,12 +2,19 @@ import {
   claimBookingEmail,
   markBookingEmailSent,
   releaseBookingEmail,
+  type BookingEmailKind,
 } from "@repo/supabase";
+import { after } from "next/server";
 import { emailSender, sendEmail } from "@/lib/email";
 import { getBookingWindow } from "@/lib/public-data";
 import { getSiteFrame } from "@/lib/site-frame";
 import { createSecretClient } from "@/lib/supabase/secret";
 import { sendChangeEmail, type VisitChange } from "./send-change";
+import {
+  deliverVisitEmail,
+  sendVisitEmail,
+  type VisitEmailKind,
+} from "./send-visit-email";
 import {
   sendConfirmationEmail,
   type ConfirmationEmailDeps,
@@ -59,16 +66,62 @@ export async function sendVisitConfirmation(reference: string) {
   }
 }
 
+/** What every claimed e-mail needs from the database. */
+function claims() {
+  const db = createSecretClient();
+  return {
+    claim: (reference: string, kind: BookingEmailKind) =>
+      claimBookingEmail(db, reference, kind),
+    markSent: (reference: string, kind: BookingEmailKind, id: string) =>
+      markBookingEmailSent(db, reference, kind, id),
+    release: (reference: string, kind: BookingEmailKind) =>
+      releaseBookingEmail(db, reference, kind),
+  };
+}
+
+/**
+ * Sends one of the visit's own e-mails (a reservation with the link to pay,
+ * a reminder, a cancellation for want of payment) if nobody has; never
+ * throws.
+ */
+export async function sendVisitEmailOnce(
+  reference: string,
+  kind: VisitEmailKind,
+) {
+  try {
+    return await sendVisitEmail(reference, kind, {
+      ...(await emailBasics()),
+      ...claims(),
+    });
+  } catch (error) {
+    console.error(`[booking] ${kind} e-mail ${reference}:`, error);
+    return "failed" as const;
+  }
+}
+
+/**
+ * Claims the reservation's e-mail now and sends it after the response:
+ * the claim brings the link's token, so the client goes straight to the
+ * visit's page by the same link the e-mail carries. Null when there is
+ * nothing to send.
+ */
+export async function claimReservationEmail(
+  reference: string,
+): Promise<string | null> {
+  const basics = await emailBasics();
+  const db = claims();
+  const visit = await db.claim(reference, "reserved");
+  if (!visit?.manageToken) return null;
+  after(() => deliverVisitEmail(visit, "reserved", { ...basics, ...db }));
+  return visit.manageToken;
+}
+
 /** Sends the e-mail about a change (a new time, a cancellation); never throws. */
 export async function sendVisitChangeEmail(change: VisitChange) {
   try {
-    const db = createSecretClient();
     return await sendChangeEmail(change, {
       ...(await emailBasics()),
-      claim: (reference, kind) => claimBookingEmail(db, reference, kind),
-      markSent: (reference, kind, id) =>
-        markBookingEmailSent(db, reference, kind, id),
-      release: (reference, kind) => releaseBookingEmail(db, reference, kind),
+      ...claims(),
     });
   } catch (error) {
     console.error(

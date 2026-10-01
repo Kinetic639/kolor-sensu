@@ -20,6 +20,7 @@ const visit: ClaimedBookingEmail = {
   cancelledBy: null,
   bookedBy: "client",
   paid: true,
+  paymentDueAt: null,
 };
 
 const options = {
@@ -87,5 +88,16 @@ describe("cancelledContent", () => {
     expect(content.rows).toContainEqual(["Zwrot", "Bez zwrotu"]);
     expect(content.intro).toContain("opłata nie podlega zwrotowi");
     expect(content.text).toContain("opłata nie podlega zwrotowi");
+  });
+
+  it("a reservation cancelled before paying: nothing to give back", () => {
+    const content = cancelledContent(
+      { ...visit, paid: false },
+      { ...options, sequence: 0, refundMinor: 0 },
+    );
+    expect(content.rows).toContainEqual(["Zwrot", "Nie dotyczy"]);
+    expect(content.intro).toBe(
+      "Odwołaliśmy Twoją rezerwację. Nie była opłacona, więc nie ma nic do zwrotu.",
+    );
   });
 });

@@ -1,10 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  acceptBookingTerms,
   attachCheckoutSession,
+  attachReservationPayment,
   claimStripeEvent,
   failCheckoutSession,
   fulfillCheckoutSession,
   pendingCheckoutSession,
+  pendingReservationPayment,
   recordRefund,
   releaseStripeEvent,
 } from "./booking-payments";
@@ -130,5 +133,43 @@ describe("Stripe events", () => {
     await releaseStripeEvent(client, "evt_1");
     expect(chain.delete).toHaveBeenCalled();
     expect(chain.eq).toHaveBeenCalledWith("id", "evt_1");
+  });
+});
+
+describe("paying a reservation later, from its link", () => {
+  it("takes the consents, then ties the session to it", async () => {
+    const terms = rpcClient(null);
+    await acceptBookingTerms(terms.client, "link");
+    expect(terms.rpc).toHaveBeenCalledWith("accept_booking_terms", {
+      p_token: "link",
+    });
+    const { client, rpc } = rpcClient(null);
+    await attachReservationPayment(client, "link", {
+      sessionId: "cs_2",
+      amountMinor: 25000,
+      currencyCode: "PLN",
+    });
+    expect(rpc).toHaveBeenCalledWith("attach_reservation_payment", {
+      p_token: "link",
+      p_session_id: "cs_2",
+      p_amount_minor: 25000,
+      p_currency_code: "PLN",
+    });
+    expect(
+      await pendingReservationPayment(
+        rpcClient([{ checkout_session_id: "cs_2" }]).client,
+        "link",
+      ),
+    ).toBe("cs_2");
+  });
+
+  it("says when there is nothing to pay any more", async () => {
+    const { client } = rpcClient(null, {
+      message: "Nothing to pay",
+      hint: "not_payable",
+    });
+    await expect(acceptBookingTerms(client, "link")).rejects.toMatchObject({
+      code: "not_payable",
+    });
   });
 });

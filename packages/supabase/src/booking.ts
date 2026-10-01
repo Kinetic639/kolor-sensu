@@ -49,6 +49,9 @@ export type BookingErrorCode =
   | "time_off"
   | "in_the_past"
   | "forbidden"
+  | "too_soon"
+  | "pay_now_required"
+  | "not_payable"
   | "unknown";
 
 const BOOKING_ERROR_CODES = new Set<string>([
@@ -67,6 +70,11 @@ const BOOKING_ERROR_CODES = new Set<string>([
   "room_required",
   "time_off",
   "in_the_past",
+  "details_required",
+  "amount_mismatch",
+  "too_soon",
+  "pay_now_required",
+  "not_payable",
 ]);
 
 export class BookingError extends Error {
@@ -250,15 +258,18 @@ export interface GuestBooking {
   } | null;
   /** Times the client has moved it themselves. */
   rescheduleCount: number;
-  cancelledBy: "client" | "centre" | null;
+  /** "system": not paid in time. */
+  cancelledBy: "client" | "centre" | "system" | null;
   /** What the client was owed on cancelling (null: not cancelled by them). */
   refundDueMinor: number | null;
   /** What Stripe has given back so far. */
   refundedMinor: number;
-  /** The client online, or the centre (then paid on site). */
+  /** The client online, or the centre (then paid from the e-mail link). */
   bookedBy: "client" | "centre";
   /** Paid online. */
   paid: boolean;
+  /** A reservation: to be paid by then, or it is cancelled. */
+  paymentDueAt: string | null;
 }
 
 /** A guest's visit by its token, or null. */
@@ -294,14 +305,12 @@ export async function getBooking(
             }
           : null,
         rescheduleCount: row.reschedule_count,
-        cancelledBy:
-          row.cancelled_by === "client" || row.cancelled_by === "centre"
-            ? row.cancelled_by
-            : null,
+        cancelledBy: cancelledByOf(row.cancelled_by),
         refundDueMinor: row.refund_due_minor ?? null,
         refundedMinor: row.refunded_minor,
         bookedBy: row.booked_by === "centre" ? "centre" : "client",
         paid: row.paid,
+        paymentDueAt: row.payment_due_at ?? null,
       }
     : null;
 }
@@ -322,4 +331,25 @@ export async function saveBookingDetails(
     p_accept_privacy: details.acceptPrivacy,
   });
   if (error) throw bookingError(error);
+}
+
+export function cancelledByOf(value: string | null | undefined) {
+  return value === "client" || value === "centre" || value === "system"
+    ? value
+    : null;
+}
+
+/**
+ * "Zarezerwuj, zapłacę później": the held visit, with the details saved, is
+ * reserved until its payment is due. Throws a BookingError (pay_now_required
+ * when the visit is too close to pay later).
+ */
+export async function reserveHold(client: Client, accessToken: string) {
+  const { data, error } = await client.rpc("reserve_hold", {
+    p_access_token: accessToken,
+  });
+  if (error) throw bookingError(error);
+  const row = data?.[0];
+  if (!row) throw new BookingError("unknown", "Nothing was reserved");
+  return { reference: row.reference, paymentDueAt: row.payment_due_at };
 }

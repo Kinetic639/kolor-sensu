@@ -74,7 +74,6 @@ describe("centreBookingSchema", () => {
     email: " Ewa@Example.com ",
     phone: "",
     notes: "",
-    sendEmail: true,
   };
   const problems = (input: object) => {
     const result = centreBookingSchema.safeParse({ ...booking, ...input });
@@ -95,15 +94,12 @@ describe("centreBookingSchema", () => {
     });
   });
 
-  it("needs a way to reach the client, a room in person and a real time", () => {
-    expect(problems({ email: "", phone: "" })).toEqual({
-      email: "Podaj e-mail albo telefon klienta.",
-    });
-    expect(
-      problems({ email: "", phone: "600 100 200", sendEmail: false }),
-    ).toEqual({});
+  it("needs the client's e-mail (the link to pay), a room in person and a real time", () => {
     expect(problems({ email: "", phone: "600 100 200" })).toEqual({
-      sendEmail: "Potwierdzenie wyślemy tylko na adres e-mail.",
+      email: "Podaj e-mail klienta: wyślemy na niego link do płatności.",
+    });
+    expect(problems({ email: "ewa@" })).toEqual({
+      email: "Podaj poprawny adres e-mail.",
     });
     expect(problems({ roomId: null })).toEqual({ roomId: "Wybierz gabinet." });
     expect(problems({ mode: "online", roomId: null })).toEqual({});
@@ -123,6 +119,7 @@ describe("centreBookingMessage", () => {
     expect(centreBookingMessage("room_busy")).toBe(
       "Gabinet jest wtedy zajęty.",
     );
+    expect(centreBookingMessage("too_soon")).toMatch(/za mało czasu/);
     expect(centreBookingMessage("whatever")).toBe(
       "Nie udało się zapisać wizyty.",
     );

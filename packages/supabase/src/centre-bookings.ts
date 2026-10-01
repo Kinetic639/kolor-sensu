@@ -4,7 +4,8 @@ import { BookingError, bookingError, type VisitMode } from "./booking";
 
 // Visits the centre books from the calendar (docs/product/scheduling-ui-plan.md,
 // K5: "+ Nowa wizyta"): an admin for anyone, a specialist for themselves
-// (the database checks who asks). Confirmed at once, paid on site.
+// (the database checks who asks). Reserved until the client pays online
+// from the e-mail link (R11), by 48 hours before, or soon when it is close.
 
 type Client = SupabaseClient<Database>;
 
@@ -80,7 +81,7 @@ export interface CentreBookingInput {
   roomId: string | null;
   client: {
     name: string;
-    email: string | null;
+    email: string;
     phone: string | null;
     notes: string | null;
   };
@@ -91,6 +92,8 @@ export interface CentreBookedVisit {
   reference: string;
   startsAt: string;
   endsAt: string;
+  /** To be paid by then, or it is cancelled. */
+  paymentDueAt: string;
 }
 
 /** Books the visit; throws a BookingError saying why not. */
@@ -121,5 +124,6 @@ export async function centreBookVisit(
     reference: row.reference,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
+    paymentDueAt: row.payment_due_at,
   };
 }

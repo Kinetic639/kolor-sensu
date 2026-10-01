@@ -2,12 +2,12 @@ import { centreBookVisit } from "@repo/supabase";
 import { createSupabasePublicClient } from "@repo/supabase/public";
 import { NextResponse } from "next/server";
 import { bookVisitAsCentre } from "@/features/booking/centre-booking";
-import { sendVisitConfirmation } from "@/features/booking/email/confirmation-server";
+import { sendVisitEmailOnce } from "@/features/booking/email/confirmation-server";
 import { getBookingWindow } from "@/lib/public-data";
 import { getPublicSupabaseEnvironment } from "@/lib/supabase/environment";
 
-// A portal books a visit (K5, "+ Nowa wizyta"). The e-mails live here, with
-// the site; the signed-in user's access token comes with the request and
+// A portal books a visit (K5, "+ Nowa wizyta"): reserved until the client
+// pays from the e-mailed link (R11). The e-mails live here, with the site; the signed-in user's access token comes with the request and
 // the database books as them, checking they are an admin or the specialist
 // themselves.
 
@@ -18,6 +18,7 @@ const STATUS: Record<string, number> = {
   room_required: 422,
   invalid_details: 422,
   in_the_past: 422,
+  too_soon: 422,
   specialist_busy: 409,
   room_busy: 409,
   room_closed: 409,
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
   const result = await bookVisitAsCentre(body, {
     timeZone: window?.timeZone ?? "Europe/Warsaw",
     book: (input) => centreBookVisit(asUser, input),
-    confirm: sendVisitConfirmation,
+    sendPaymentLink: (reference) => sendVisitEmailOnce(reference, "reserved"),
   });
   if (!result.ok) {
     return NextResponse.json(result, { status: STATUS[result.code] ?? 500 });

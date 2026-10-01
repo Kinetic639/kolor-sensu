@@ -8,14 +8,16 @@ import { visitChanges, type ChangePolicy } from "./visit-changes";
 // R8): what the client may still do themselves, until when, and what
 // happens with the money. Pure, so every case is tested.
 
-export type VisitChangeDone = "przelozona" | "odwolana";
+export type VisitChangeDone = "przelozona" | "odwolana" | "zarezerwowana";
 
 export interface VisitPageCopy {
   /** What just changed (after a move or a cancellation). */
   notice: string | null;
   /** A cancelled visit: what happens with the money. */
   cancelledLead: string | null;
-  /** Null: nothing to change (past, cancelled, unpaid). */
+  /** A reservation not paid yet: pay it by its time. */
+  pay: { text: string; href: Route } | null;
+  /** Null: nothing to change (past, cancelled, not paid yet). */
   reschedule: { text: string; href: Route | null } | null;
   cancel: { text: string; href: Route } | null;
 }
@@ -23,6 +25,8 @@ export interface VisitPageCopy {
 const NOTICES: Record<VisitChangeDone, string> = {
   przelozona: "Wizyta została przełożona. Wysłaliśmy e-mail z nowym terminem.",
   odwolana: "Wizyta została odwołana. Wysłaliśmy potwierdzenie e-mailem.",
+  zarezerwowana:
+    "Zarezerwowaliśmy wizytę. Link do płatności wysłaliśmy też e-mailem.",
 };
 
 export function visitPageCopy({
@@ -45,6 +49,7 @@ export function visitPageCopy({
     | "refundDueMinor"
     | "refundedMinor"
     | "paid"
+    | "paymentDueAt"
   >;
   policy: ChangePolicy;
   timeZone: string;
@@ -56,7 +61,19 @@ export function visitPageCopy({
     formatPrice({ priceMinor: minor, currencyCode: booking.currencyCode });
 
   let cancelledLead: string | null = null;
-  if (booking.status === "cancelled" && booking.refundDueMinor !== null) {
+  if (booking.status === "cancelled" && booking.cancelledBy === "system") {
+    cancelledLead =
+      "Rezerwacja została anulowana, bo nie została opłacona w wyznaczonym czasie. Jeśli chcesz przyjść, umów nowy termin.";
+  } else if (
+    booking.status === "cancelled" &&
+    booking.paymentDueAt !== null &&
+    !booking.paid
+  ) {
+    cancelledLead = "Rezerwacja została odwołana.";
+  } else if (
+    booking.status === "cancelled" &&
+    booking.refundDueMinor !== null
+  ) {
     const due = booking.refundDueMinor;
     cancelledLead =
       due === 0
@@ -68,7 +85,14 @@ export function visitPageCopy({
           : `Zwrot ${money(due)} zleci centrum. Pieniądze zwykle wracają w ciągu kilku dni roboczych.`;
   }
 
-  const { reschedule, cancel } = changes;
+  const { pay, reschedule, cancel } = changes;
+  const payCopy =
+    pay.allowed && pay.until
+      ? {
+          text: `Opłać wizytę online do ${deadlineLabel(pay.until, timeZone)}. Jeśli nie zapłacisz do tego czasu, rezerwacja zostanie anulowana.`,
+          href: `/wizyta/${token}/platnosc` as Route,
+        }
+      : null;
   const rescheduleCopy =
     reschedule.blockedBy === "status"
       ? null
@@ -93,11 +117,13 @@ export function visitPageCopy({
 
   const cancelCopy = cancel.allowed
     ? {
-        text: cancel.refund
-          ? `Odwołując wizytę do ${deadlineLabel(cancel.refundUntil, timeZone)}, otrzymasz pełny zwrot (${money(booking.priceMinor)}). Później odwołanie jest możliwe już bez zwrotu.`
-          : booking.paid && booking.priceMinor > 0
-            ? `Do wizyty zostało mniej niż ${policy.cancellationWindowHours} godz., więc odwołanie jest możliwe już bez zwrotu opłaty.`
-            : "Możesz odwołać wizytę, jeśli nie możesz przyjść.",
+        text: pay.allowed
+          ? "Jeśli nie możesz przyjść, odwołaj rezerwację. Nie jest opłacona, więc nie ma nic do zwrotu."
+          : cancel.refund
+            ? `Odwołując wizytę do ${deadlineLabel(cancel.refundUntil, timeZone)}, otrzymasz pełny zwrot (${money(booking.priceMinor)}). Później odwołanie jest możliwe już bez zwrotu.`
+            : booking.paid && booking.priceMinor > 0
+              ? `Do wizyty zostało mniej niż ${policy.cancellationWindowHours} godz., więc odwołanie jest możliwe już bez zwrotu opłaty.`
+              : "Możesz odwołać wizytę, jeśli nie możesz przyjść.",
         href: `/wizyta/${token}/odwolaj` as Route,
       }
     : null;
@@ -105,6 +131,7 @@ export function visitPageCopy({
   return {
     notice: change ? NOTICES[change] : null,
     cancelledLead,
+    pay: payCopy,
     reschedule: rescheduleCopy,
     cancel: cancelCopy,
   };

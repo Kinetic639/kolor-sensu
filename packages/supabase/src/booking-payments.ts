@@ -2,8 +2,9 @@ import type { Database } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { BookingError, type BookingErrorCode } from "./booking";
 
-// Paying for a visit (docs/product/booking-plan.md, R6): tying a Stripe
-// Checkout Session to the hold, and its outcome. Secret client only.
+// Paying for a visit (docs/product/booking-plan.md, R6, R11): tying a Stripe
+// Checkout Session to the hold, or to a reservation paid later from its
+// link, and its outcome. Secret client only.
 
 type Client = SupabaseClient<Database>;
 
@@ -12,6 +13,8 @@ function bookingError(error: { message: string; hint?: string | null }) {
     "hold_expired",
     "details_required",
     "amount_mismatch",
+    "consent_required",
+    "not_payable",
   ];
   return new BookingError(
     known.includes(error.hint as BookingErrorCode)
@@ -52,6 +55,41 @@ export async function pendingCheckoutSession(
 ) {
   const { data, error } = await client.rpc("pending_checkout_session", {
     p_access_token: accessToken,
+  });
+  if (error) throw error;
+  return data?.[0]?.checkout_session_id ?? null;
+}
+
+/**
+ * Paying a reservation from its link: the consents first (a visit the
+ * centre booked has none yet). Throws a BookingError (not_payable).
+ */
+export async function acceptBookingTerms(client: Client, token: string) {
+  const { error } = await client.rpc("accept_booking_terms", {
+    p_token: token,
+  });
+  if (error) throw bookingError(error);
+}
+
+/** Ties the session to a reservation, by its link. Throws a BookingError. */
+export async function attachReservationPayment(
+  client: Client,
+  token: string,
+  session: Omit<CheckoutSessionLink, "expiresAt">,
+) {
+  const { error } = await client.rpc("attach_reservation_payment", {
+    p_token: token,
+    p_session_id: session.sessionId,
+    p_amount_minor: session.amountMinor,
+    p_currency_code: session.currencyCode,
+  });
+  if (error) throw bookingError(error);
+}
+
+/** The session a reservation is being paid in, if any. */
+export async function pendingReservationPayment(client: Client, token: string) {
+  const { data, error } = await client.rpc("pending_reservation_payment", {
+    p_token: token,
   });
   if (error) throw error;
   return data?.[0]?.checkout_session_id ?? null;

@@ -17,6 +17,7 @@ const booking = {
   refundDueMinor: null,
   refundedMinor: 0,
   paid: true,
+  paymentDueAt: null,
 };
 const input = { token, booking, policy, timeZone: "Europe/Warsaw" };
 const at = (iso: string) => new Date(iso);
@@ -92,27 +93,54 @@ describe("visitPageCopy", () => {
     ).toBe("Wizyta została odwołana bez zwrotu opłaty.");
   });
 
-  it("paid on site (booked by the centre): nothing to give back", () => {
+  it("a reservation: pay by its time from here, or cancel it", () => {
     const now = at("2030-10-01T09:00:00Z");
-    const unpaid = { ...booking, paid: false };
-    expect(
-      visitPageCopy({ ...input, booking: unpaid, now }).cancel?.text,
-    ).toBe("Możesz odwołać wizytę, jeśli nie możesz przyjść.");
+    const reserved = {
+      ...booking,
+      status: "awaiting_payment" as const,
+      paid: false,
+      paymentDueAt: "2030-10-08T09:00:00.000Z",
+    };
+    const copy = visitPageCopy({ ...input, booking: reserved, now });
+    expect(copy.pay).toEqual({
+      text: "Opłać wizytę online do 8 października 2030, godz. 11:00. Jeśli nie zapłacisz do tego czasu, rezerwacja zostanie anulowana.",
+      href: `/wizyta/${token}/platnosc`,
+    });
+    expect(copy.cancel?.text).toBe(
+      "Jeśli nie możesz przyjść, odwołaj rezerwację. Nie jest opłacona, więc nie ma nic do zwrotu.",
+    );
+    expect(copy.reschedule).toBeNull();
+    expect(visitPageCopy({ ...input, now }).pay).toBeNull();
+  });
+
+  it("cancelled for want of payment, or by the client before paying", () => {
+    const now = at("2030-10-09T09:00:00Z");
+    const cancelled = {
+      ...booking,
+      status: "cancelled" as const,
+      paid: false,
+      refundDueMinor: 0,
+      paymentDueAt: "2030-10-08T09:00:00.000Z",
+    };
     expect(
       visitPageCopy({
         ...input,
-        booking: {
-          ...unpaid,
-          status: "cancelled" as const,
-          cancelledBy: "client" as const,
-          refundDueMinor: 0,
-        },
+        booking: { ...cancelled, cancelledBy: "system" as const },
         now,
       }).cancelledLead,
-    ).toBe("Wizyta została odwołana.");
+    ).toBe(
+      "Rezerwacja została anulowana, bo nie została opłacona w wyznaczonym czasie. Jeśli chcesz przyjść, umów nowy termin.",
+    );
+    expect(
+      visitPageCopy({
+        ...input,
+        booking: { ...cancelled, cancelledBy: "client" as const },
+        now,
+      }).cancelledLead,
+    ).toBe("Rezerwacja została odwołana.");
   });
 
-    it("says what just changed", () => {
+  it("says what just changed", () => {
     const now = at("2030-10-01T09:00:00Z");
     expect(visitPageCopy({ ...input, now, change: "przelozona" }).notice).toBe(
       "Wizyta została przełożona. Wysłaliśmy e-mail z nowym terminem.",

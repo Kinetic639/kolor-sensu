@@ -30,6 +30,7 @@ describe("centreBookVisit", () => {
         reference: "3010-001",
         starts_at: "2030-10-02T10:15:00+00:00",
         ends_at: "2030-10-02T11:05:00+00:00",
+        payment_due_at: "2030-09-30T10:15:00+00:00",
       },
     ]);
     expect(await centreBookVisit(client, input)).toEqual({
@@ -37,6 +38,7 @@ describe("centreBookVisit", () => {
       reference: "3010-001",
       startsAt: "2030-10-02T10:15:00+00:00",
       endsAt: "2030-10-02T11:05:00+00:00",
+      paymentDueAt: "2030-09-30T10:15:00+00:00",
     });
     expect(rpc).toHaveBeenCalledWith("centre_book_visit", {
       p_offer_id: OFFER,

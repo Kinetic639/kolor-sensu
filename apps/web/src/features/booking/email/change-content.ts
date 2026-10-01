@@ -128,7 +128,10 @@ export function cancelledContent(
       : []),
     ["Odwołany termin", span],
     ["Numer rezerwacji", visit.reference],
-    ["Zwrot", refund ?? (byCentre ? "Nie dotyczy" : "Bez zwrotu")],
+    [
+      "Zwrot",
+      refund ?? (byCentre || !visit.paid ? "Nie dotyczy" : "Bez zwrotu"),
+    ],
   ];
   const money = refund
     ? `Zwrócimy ${refund} tą samą metodą, którą zapłacono. Pieniądze zwykle wracają w ciągu kilku dni roboczych.`
@@ -136,7 +139,9 @@ export function cancelledContent(
   const intro = byCentre
     ? `Przepraszamy, musieliśmy odwołać Twoją wizytę. ${money ?? "Skontaktuj się z nami, a pomożemy umówić nowy termin."}`
     : (money ??
-      "Wizyta została odwołana po terminie bezpłatnego odwołania, dlatego opłata nie podlega zwrotowi.");
+      (visit.paid
+        ? "Wizyta została odwołana po terminie bezpłatnego odwołania, dlatego opłata nie podlega zwrotowi."
+        : "Odwołaliśmy Twoją rezerwację. Nie była opłacona, więc nie ma nic do zwrotu."));
   return {
     subject: `Wizyta ${visit.reference} została odwołana`,
     preview: refund ? `Zwrot ${refund}` : "Wizyta odwołana",
