@@ -14,7 +14,7 @@ import {
 } from "./living-samples";
 import { sampleOfferCopy, sampleServices } from "./offer-samples";
 import { OfferSection } from "./offer-section";
-import { ScrollStory, ScrollStoryPath, StoryAnchor } from "./scroll-story";
+import { ScrollStory, ScrollStoryPath } from "./scroll-story";
 import { sampleFaq } from "./site-samples";
 import { sampleSpecialists, sampleSpecialistsCopy } from "./specialist-samples";
 import { SpecialistsSection } from "./specialists-section";
@@ -33,30 +33,22 @@ export function LivingHomepageSections() {
     <ScrollStory>
       <ScrollStoryPath>
         <HeroSection {...sampleHero} animationPreset="watercolor-reveal" />
-        <StoryAnchor name="steps">
-          <StoryStepsSection
-            id="jak-zaczynamy"
-            steps={sampleStorySteps}
-            cta={{ href: "#kontakt", label: "Napisz do nas" }}
-          />
-        </StoryAnchor>
-        <StoryAnchor name="offer">
-          <OfferSection
-            services={sampleServices}
-            {...sampleOfferCopy}
-            animationPreset="brush-reveal"
-          />
-        </StoryAnchor>
-        <StoryAnchor name="guided">
-          <GuidedChoiceSection id="dopasowanie" {...sampleGuidedChoice} />
-        </StoryAnchor>
-        <StoryAnchor name="specialists">
-          <SpecialistsSection
-            specialists={sampleSpecialists}
-            {...sampleSpecialistsCopy}
-            animationPreset="splash-reveal"
-          />
-        </StoryAnchor>
+        <StoryStepsSection
+          id="jak-zaczynamy"
+          steps={sampleStorySteps}
+          cta={{ href: "#kontakt", label: "Napisz do nas" }}
+        />
+        <OfferSection
+          services={sampleServices}
+          {...sampleOfferCopy}
+          animationPreset="brush-reveal"
+        />
+        <GuidedChoiceSection id="dopasowanie" {...sampleGuidedChoice} />
+        <SpecialistsSection
+          specialists={sampleSpecialists}
+          {...sampleSpecialistsCopy}
+          animationPreset="splash-reveal"
+        />
         <BentoSection items={sampleBento} />
         <FeatureSection {...sampleRooms} animationPreset="watercolor-reveal" />
         <FeatureSection

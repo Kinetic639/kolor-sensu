@@ -19,6 +19,8 @@ let matteCount = 0;
 export interface ScrollMatte {
   /** mask-image value for the layer. */
   url: string;
+  /** Whether its time map has loaded (before that it would show all). */
+  readonly ready: boolean;
   /** Moves the paint front: 0 nothing painted, 1 everything. */
   set(front: number): void;
   remove(): void;
@@ -40,7 +42,10 @@ function frontValues(sharpness: number, front: number) {
 export function createScrollMatte(
   host: Element,
   timeSrc: string,
-  { sharpness = 32 }: { sharpness?: number } = {},
+  {
+    sharpness = 32,
+    onReady,
+  }: { sharpness?: number; onReady?: () => void } = {},
 ): ScrollMatte {
   const document = host.ownerDocument;
   const id = `ks-story-matte-${++matteCount}`;
@@ -93,14 +98,22 @@ export function createScrollMatte(
     transform: `scale(${1 / size})`,
     filter: `url(#${filter.id})`,
   });
-  group.append(
-    element("image", {
-      href: timeSrc,
-      width: size,
-      height: size,
-      preserveAspectRatio: "none",
-    }),
+  const map = element("image", {
+    width: size,
+    height: size,
+    preserveAspectRatio: "none",
+  });
+  let ready = false;
+  map.addEventListener(
+    "load",
+    () => {
+      ready = true;
+      onReady?.();
+    },
+    { once: true },
   );
+  map.setAttribute("href", timeSrc);
+  group.append(map);
   mask.append(group);
   const defs = element("defs", {});
   defs.append(filter, mask);
@@ -110,6 +123,9 @@ export function createScrollMatte(
   let last = -1;
   return {
     url: `url(#${id})`,
+    get ready() {
+      return ready;
+    },
     set(value) {
       // A thousandth is below what the 8-bit map can show.
       const rounded = Math.round(value * 1000) / 1000;

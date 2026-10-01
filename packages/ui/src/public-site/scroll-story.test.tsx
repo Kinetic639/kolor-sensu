@@ -12,35 +12,37 @@ import { sampleStorySteps } from "./living-samples";
 const publicDir = resolve(__dirname, "../../../../apps/web/public");
 
 describe("scroll story data", () => {
-  for (const [name, path] of Object.entries(scrollStory.paths)) {
-    it(`${name}: tiles cover the path's box, top to bottom, in order`, () => {
-      let top = 0;
-      for (const tile of path.tiles) {
-        expect(tile.top).toBeCloseTo(top, 0);
-        expect(tile.t1).toBeGreaterThan(tile.t0);
-        top = tile.top + tile.height;
-      }
-      expect(top).toBeLessThanOrEqual(path.height + 1);
-      expect(top).toBeGreaterThan(path.height * 0.75);
-    });
+  const { band } = scrollStory;
 
-    it(`${name}: the front only moves down the page as it paints`, () => {
-      const rows = path.front as unknown as [number, number][];
-      expect(rows[0]![0]).toBe(0);
-      expect(rows.at(-1)![0]).toBe(1);
-      for (let i = 1; i < rows.length; i++) {
-        expect(rows[i]![0]).toBeGreaterThan(rows[i - 1]![0]);
-        expect(rows[i]![1]).toBeGreaterThan(rows[i - 1]![1]);
-      }
-    });
+  it("tiles cover the picture, top to bottom, in order", () => {
+    let top = 0;
+    for (const tile of band.tiles) {
+      expect(tile.top).toBe(top);
+      expect(tile.t1).toBeGreaterThan(tile.t0);
+      expect(tile.sharpness).toBeGreaterThan(0);
+      top = tile.top + tile.height;
+    }
+    expect(top).toBe(band.height);
+    expect(band.pitch).toBeLessThan(band.height);
+  });
 
-    it(`${name}: every file is there`, () => {
-      for (const tile of path.tiles) {
-        expect(existsSync(publicDir + tile.src)).toBe(true);
-        expect(existsSync(publicDir + tile.time)).toBe(true);
+  it("the front only moves down the picture as it paints", () => {
+    const rows = band.front as unknown as [number, number][];
+    expect(rows[0]![0]).toBe(0);
+    expect(rows.at(-1)).toEqual([1, 1]);
+    for (let i = 1; i < rows.length; i++) {
+      expect(rows[i]![0]).toBeGreaterThan(rows[i - 1]![0]);
+      expect(rows[i]![1]).toBeGreaterThan(rows[i - 1]![1]);
+    }
+  });
+
+  it("every file is there", () => {
+    for (const tile of band.tiles) {
+      for (const file of [tile.src, tile.src2x, tile.time]) {
+        expect(existsSync(publicDir + file)).toBe(true);
       }
-    });
-  }
+    }
+  });
 
   it("interpolates a table and clamps at its ends", () => {
     const table = [
@@ -64,7 +66,7 @@ describe("ScrollStory", () => {
       </ScrollStory>,
     );
     expect(html).toContain("Pierwszy kontakt");
-    for (const tile of scrollStory.paths.desktop.tiles) {
+    for (const tile of scrollStory.band.tiles) {
       expect(html).toContain(tile.src);
     }
     // Nothing hidden by markup: stations are only dimmed once a script runs.

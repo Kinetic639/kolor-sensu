@@ -917,47 +917,28 @@
     z-index: -1;
     overflow: clip;
     pointer-events: none;
+    container-type: inline-size;
+    /* A background, not a picture to look at: light enough that the page
+       over it reads as on plain paper. */
+    opacity: 0.5;
   }
 
-  .ks-story-path__art {
+  /* One copy of the picture, at its own proportions, the screen's width;
+     copy under copy, each starting over the lifting end of the one above.
+     The first starts in the screen's top left corner (the picture's paint
+     starts a little in from its edge); every other one is mirrored, so the
+     stroke swings back the way it came. */
+  .ks-story-path__copy {
     position: absolute;
-    inset: 0;
+    top: calc(var(--ks-copy) * var(--ks-band-pitch) * 100cqw);
+    left: -12cqw;
+    width: 100cqw;
+    height: calc(var(--ks-band-ratio) * 100cqw);
   }
 
-  .ks-story-path__art[data-layout="desktop"] {
-    display: none;
-  }
-
-  @media (width >= 64rem) {
-    /* The desktop artwork was drawn at 1440 wide around a 78 rem page:
-       scaled with the page's column and centred on it, so the path keeps
-       to the same gaps on a wider or narrower screen. On a wide screen it
-       ends in the margins, fading out. */
-    .ks-story-path__art[data-layout="desktop"] {
-      display: block;
-      right: auto;
-      left: 50%;
-      width: calc(min(100%, 78rem) * 1.1538);
-      translate: -50% 0;
-    }
-  }
-
-  @media (width > 90rem) {
-    .ks-story-path__art[data-layout="desktop"] {
-      mask-image: linear-gradient(
-        to right,
-        transparent,
-        #000 10%,
-        #000 90%,
-        transparent
-      );
-    }
-  }
-
-  @media (width >= 64rem) {
-    .ks-story-path__art[data-layout="mobile"] {
-      display: none;
-    }
+  .ks-story-path__copy[data-mirrored] {
+    left: 0;
+    scale: -1 1;
   }
 
   .ks-story-path__tile {
@@ -967,7 +948,9 @@
   }
 
   .ks-story-path__tile img {
-    object-fit: fill;
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 
   /* -------------------------------------------------------- StorySplash */

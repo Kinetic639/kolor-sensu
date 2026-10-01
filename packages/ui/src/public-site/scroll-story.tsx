@@ -9,22 +9,20 @@
 //                     still, its photo a little more, the side washes
 //                     slower than the page) and marks the stations that no
 //                     path runs to when they come into view.
-//   ScrollStoryPath   one long, wide watercolor band behind the whole page,
-//                     from its top left corner down behind the footer,
-//                     painted in by the scroll: its paint front follows a
-//                     line a little below the middle of the screen, so the
-//                     brush seems to lead the reader down the page. Its
-//                     layer is positioned in SiteLayout's root (relative,
-//                     its own stacking context), so it spans the header and
-//                     the footer too. The artwork is laid between anchors
-//                     (StoryAnchor, the footer's data-story-anchor) to the
-//                     sections' real heights. Stations ([data-story-station])
-//                     get their local reaction when the front reaches them,
-//                     and the WatercolorImages inside wait for it before
-//                     painting themselves in. Artwork, time maps and the
-//                     front's table: scroll-story.data.ts
-//                     (generate-scroll-story.mjs). Desktop and phone have
-//                     their own path.
+//   ScrollStoryPath   the supplied brush stroke behind the whole page, at
+//                     its own proportions across the screen's width, copy
+//                     under copy from the top left corner down behind the
+//                     footer, painted in by the scroll: its paint front
+//                     follows a line a little below the middle of the
+//                     screen, so the brush seems to lead the reader down
+//                     the page. Its layer is positioned in SiteLayout's
+//                     root (relative, its own stacking context), so it
+//                     spans the header and the footer too. Stations
+//                     ([data-story-station]) get their local reaction when
+//                     the front reaches them, and the WatercolorImages
+//                     inside wait for it before painting themselves in.
+//                     Artwork, time maps and the front's table:
+//                     scroll-story.data.ts (generate-scroll-story.mjs).
 //   StorySplash       paint spilled at the side of the screen: it lands and
 //                     spreads out in blooms, once, as its section comes in.
 //
@@ -49,9 +47,6 @@ import {
 import { WatercolorRevealGateContext } from "./watercolor-reveal";
 
 gsap.registerPlugin(useGSAP);
-
-type PathLayout = keyof typeof scrollStory.paths;
-const pathLayouts = Object.keys(scrollStory.paths) as PathLayout[];
 
 /** Where the paint front sits, as a share of the viewport's height. */
 export const FRONT_LINE = 0.62;
@@ -144,81 +139,24 @@ export function ScrollStory({
 
 // --------------------------------------------------------- ScrollStoryPath
 
-// Design px of a path ↔ px from the top of the ScrollStoryPath element.
-interface Scale {
-  toPage: [number, number][];
-  fromPage: [number, number][];
-}
-const plainScale: Scale = {
-  toPage: [
-    [0, 0],
-    [1, 1],
-  ],
-  fromPage: [
-    [0, 0],
-    [1, 1],
-  ],
-};
-
-function measureScale(
-  rect: DOMRect,
-  path: (typeof scrollStory.paths)[PathLayout],
-): Scale {
-  const rows: [number, number][] = [[0, 0]];
-  const anchors = (
-    Object.entries(path.anchors) as [StoryAnchorName, number][]
-  ).sort((a, b) => a[1] - b[1]);
-  for (const [name, designTop] of anchors) {
-    const element = document.querySelector(`[data-story-anchor="${name}"]`);
-    if (!element) continue;
-    const top = element.getBoundingClientRect().top - rect.top;
-    if (top > rows[rows.length - 1]![1] && top < rect.height) {
-      rows.push([designTop, top]);
-    }
-  }
-  rows.push([
-    path.height,
-    Math.max(rect.height, rows[rows.length - 1]![1] + 1),
-  ]);
-  return { toPage: rows, fromPage: rows.map(([a, b]) => [b, a]) };
-}
-
-export type StoryAnchorName =
-  | "hero"
-  | "steps"
-  | "offer"
-  | "guided"
-  | "specialists"
-  | "bento"
-  | "rooms"
-  | "workshops"
-  | "faq"
-  | "cta"
-  | "footer";
-
-/**
- * Marks where a section of a ScrollStoryPath starts, so the path's artwork
- * is laid beside it (the names are the sections the artwork was drawn for).
- */
-export function StoryAnchor({
-  name,
-  className,
-  children,
-}: {
-  name: StoryAnchorName;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div data-story-anchor={name} className={className}>
-      {children}
-    </div>
-  );
-}
+const band = scrollStory.band;
+/** Copies of the picture laid down the page (the page uses what it needs). */
+const COPIES = 16;
+// Time → height in a copy (a share of its height), and back.
+const frontRows = band.front as unknown as [number, number][];
+const backRows = frontRows.map(([t, y]) => [y, t] as [number, number]);
 
 interface Waiting {
   element: HTMLElement;
   resolve: () => void;
+}
+
+interface Tile {
+  element: HTMLElement;
+  data: (typeof band.tiles)[number];
+  copy: number;
+  matte?: ScrollMatte;
+  state: "hidden" | "active" | "painted";
 }
 
 export function ScrollStoryPath({
@@ -242,49 +180,6 @@ export function ScrollStoryPath({
     [],
   );
 
-  // Lay the artwork over the real sections: between two anchors
-  // (StoryAnchor) the path is stretched to the section's real height, so it
-  // stays beside the same sections whatever their content. Without anchors,
-  // over the whole box.
-  const scales = useRef<Record<PathLayout, Scale>>({
-    desktop: plainScale,
-    mobile: plainScale,
-  });
-
-  useGSAP(
-    () => {
-      const root = ref.current;
-      if (!root) return;
-      const layer = root.querySelector<HTMLElement>(".ks-story-path__layer");
-      if (!layer) return;
-      const lay = () => {
-        const rect = layer.getBoundingClientRect();
-        for (const name of pathLayouts) {
-          const path = scrollStory.paths[name];
-          const scale = measureScale(rect, path);
-          scales.current[name] = scale;
-          const tiles = root.querySelectorAll<HTMLElement>(
-            `.ks-story-path__art[data-layout="${name}"] .ks-story-path__tile`,
-          );
-          path.tiles.forEach((tile, index) => {
-            const element = tiles[index];
-            if (!element) return;
-            const top = interpolate(scale.toPage, tile.top);
-            const bottom = interpolate(scale.toPage, tile.top + tile.height);
-            element.style.top = `${top}px`;
-            element.style.height = `${bottom - top}px`;
-          });
-        }
-      };
-      lay();
-      const observer =
-        typeof ResizeObserver === "function" ? new ResizeObserver(lay) : null;
-      observer?.observe(layer);
-      return () => observer?.disconnect();
-    },
-    { scope: ref },
-  );
-
   useGSAP(
     () => {
       const root = ref.current;
@@ -299,26 +194,16 @@ export function ScrollStoryPath({
         return;
       }
       gsap.registerPlugin(ScrollTrigger);
+      const layer = root.querySelector<HTMLElement>(".ks-story-path__layer");
+      if (!layer) return;
 
-      const layout: PathLayout = matches("(width >= 64rem)")
-        ? "desktop"
-        : "mobile";
-      const path = scrollStory.paths[layout];
-      // Front table, both ways: time → height on the page, and back.
-      const toY = path.front as unknown as [number, number][];
-      const toTime = toY.map(([t, y]) => [y, t] as [number, number]);
-
-      const art = root.querySelector<HTMLElement>(
-        `.ks-story-path__art[data-layout="${layout}"]`,
-      );
-      if (!art) return;
-      const tiles = Array.from(
-        art.querySelectorAll<HTMLElement>(".ks-story-path__tile"),
+      const tiles: Tile[] = Array.from(
+        layer.querySelectorAll<HTMLElement>(".ks-story-path__tile"),
       ).map((element, index) => ({
         element,
-        data: path.tiles[index]!,
-        matte: undefined as ScrollMatte | undefined,
-        state: "hidden" as "hidden" | "active" | "painted",
+        data: band.tiles[index % band.tiles.length]!,
+        copy: Math.floor(index / band.tiles.length),
+        state: "hidden",
       }));
       root.dataset.path = "live";
 
@@ -326,59 +211,85 @@ export function ScrollStoryPath({
         root.querySelectorAll<HTMLElement>("[data-story-station]"),
       );
 
-      // Heights on the page, in the path's design px.
-      let box = { top: 0, height: 1 };
-      const layer = root.querySelector<HTMLElement>(".ks-story-path__layer")!;
+      // The layer on the page: where it starts, how tall a copy is, how far
+      // apart the copies are, how many it takes.
+      let box = { top: 0, copy: 1, pitch: 1, copies: 1 };
       const measure = () => {
         const rect = layer.getBoundingClientRect();
-        box = { top: rect.top + window.scrollY, height: rect.height || 1 };
+        const copy = (rect.width * band.height) / band.width || 1;
+        const pitch = (rect.width * band.pitch) / band.width || 1;
+        box = {
+          top: rect.top + window.scrollY,
+          copy,
+          pitch,
+          copies: Math.min(COPIES, Math.max(1, Math.ceil(rect.height / pitch))),
+        };
       };
-      const fromPage = (y: number) =>
-        interpolate(scales.current[layout].fromPage, y);
-      const designY = (element: HTMLElement, share: number) => {
+      // Time (copy n paints from n to n + 1) ↔ px from the top of the layer.
+      const yAt = (time: number) => {
+        const copy = Math.min(Math.floor(time), box.copies - 1);
+        return (
+          copy * box.pitch + interpolate(frontRows, time - copy) * box.copy
+        );
+      };
+      const timeAt = (y: number) => {
+        const copy = Math.min(
+          box.copies - 1,
+          Math.max(0, Math.floor(y / box.pitch)),
+        );
+        return copy + interpolate(backRows, (y - copy * box.pitch) / box.copy);
+      };
+      const pageY = (element: HTMLElement, share: number) => {
         const rect = element.getBoundingClientRect();
-        const top = rect.top + window.scrollY - box.top;
-        return fromPage(top + rect.height * share);
+        return rect.top + window.scrollY - box.top + rect.height * share;
       };
+
       const state = { time: 0 };
       const render = () => {
         const time = state.time;
         for (const tile of tiles) {
+          if (tile.copy >= box.copies) continue;
+          const local = time - tile.copy;
           const { t0, t1 } = tile.data;
-          const next =
-            time >= t1 ? "painted" : time <= t0 ? "hidden" : "active";
-          if (next === "active") {
-            tile.matte ??= createScrollMatte(art, tile.data.time);
-            tile.matte.set((time - t0) / (t1 - t0));
+          // A matte is made a little ahead of the front, so its map has
+          // loaded by the time the brush gets there.
+          if (!tile.matte && local > t0 - 0.06) {
+            tile.matte = createScrollMatte(layer, tile.data.time, {
+              sharpness: tile.data.sharpness,
+              onReady: render,
+            });
           }
+          let next: Tile["state"] =
+            local >= t1 ? "painted" : local <= t0 ? "hidden" : "active";
+          // Until its map is there, a tile the front is in stays unpainted
+          // (an empty matte would show all of it).
+          if (next === "active" && !tile.matte?.ready) next = "hidden";
+          if (next === "active") tile.matte!.set((local - t0) / (t1 - t0));
           if (next !== tile.state) {
             tile.state = next;
-            tile.element.style.setProperty(
-              "--ks-tile-mask",
-              next === "painted"
-                ? "none"
-                : next === "active"
-                  ? tile.matte!.url
-                  : "",
-            );
             if (next === "hidden") {
               tile.element.style.removeProperty("--ks-tile-mask");
+            } else {
+              tile.element.style.setProperty(
+                "--ks-tile-mask",
+                next === "painted" ? "none" : tile.matte!.url,
+              );
             }
           }
         }
         // Stations the front has reached, once: they keep their reaction.
-        const frontY = interpolate(toY, time);
+        const frontY = yAt(time);
         for (const station of stations) {
           if (station.dataset.reached === undefined) {
-            if (designY(station, 0.35) <= frontY) station.dataset.reached = "";
+            if (pageY(station, 0.35) <= frontY) station.dataset.reached = "";
           }
         }
         check.current();
       };
       check.current = () => {
-        const frontY = interpolate(toY, state.time);
+        const frontY = yAt(state.time);
         waiting.current = waiting.current.filter((entry) => {
-          if (designY(entry.element, 0.3) > frontY) return true;
+          if (pageY(entry.element, 0.3) > frontY) return true;
           entry.resolve();
           return false;
         });
@@ -398,7 +309,7 @@ export function ScrollStoryPath({
           window.scrollY +
           view * (FRONT_LINE + (1 - FRONT_LINE) * tail) -
           box.top;
-        return interpolate(toTime, fromPage(line));
+        return timeAt(line);
       };
       const follow = gsap.quickTo(state, "time", {
         duration: 0.9,
@@ -450,33 +361,47 @@ export function ScrollStoryPath({
   return (
     <WatercolorRevealGateContext.Provider value={gate}>
       <div ref={ref} data-story-path className={cn("ks-story-path", className)}>
-        <div className="ks-story-path__layer" aria-hidden="true">
-          {pathLayouts.map((name) => {
-            const path = scrollStory.paths[name];
-            return (
-              <div key={name} className="ks-story-path__art" data-layout={name}>
-                {path.tiles.map((tile) => (
-                  <div
-                    key={tile.src}
-                    className="ks-story-path__tile"
-                    style={{
-                      top: percent(tile.top / path.height),
-                      height: percent(tile.height / path.height),
-                    }}
-                  >
-                    <Image
-                      src={tile.src}
-                      alt=""
-                      fill
-                      unoptimized
-                      sizes="100vw"
-                      loading="lazy"
-                    />
-                  </div>
-                ))}
-              </div>
-            );
-          })}
+        <div
+          className="ks-story-path__layer"
+          aria-hidden="true"
+          style={
+            {
+              "--ks-band-ratio": band.height / band.width,
+              "--ks-band-pitch": band.pitch / band.width,
+            } as CSSProperties
+          }
+        >
+          {Array.from({ length: COPIES }, (_, copy) => (
+            <div
+              key={copy}
+              className="ks-story-path__copy"
+              data-mirrored={copy % 2 === 1 ? "" : undefined}
+              style={{ "--ks-copy": copy } as CSSProperties}
+            >
+              {band.tiles.map((tile) => (
+                <div
+                  key={tile.src}
+                  className="ks-story-path__tile"
+                  style={{
+                    top: percent(tile.top / band.height),
+                    height: percent(tile.height / band.height),
+                  }}
+                >
+                  {/* Plain srcset: the picture at its size or twice it. */}
+                  <img
+                    src={tile.src}
+                    srcSet={`${tile.src} ${band.width}w, ${tile.src2x} ${band.width * 2}w`}
+                    sizes="100vw"
+                    alt=""
+                    width={band.width}
+                    height={tile.height}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
         {children}
       </div>

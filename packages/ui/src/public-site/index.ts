@@ -83,12 +83,7 @@ export type {
   GuidedSpecialist,
   GuidedSuggestion,
 } from "./guided-choice-match";
-export {
-  ScrollStory,
-  ScrollStoryPath,
-  StoryAnchor,
-  StorySplash,
-} from "./scroll-story";
-export type { StoryAnchorName, StorySplashProps } from "./scroll-story";
+export { ScrollStory, ScrollStoryPath, StorySplash } from "./scroll-story";
+export type { StorySplashProps } from "./scroll-story";
 export { StoryStepsSection } from "./story-steps-section";
 export type { StoryStep, StoryStepsSectionProps } from "./story-steps-section";

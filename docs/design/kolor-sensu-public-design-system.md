@@ -580,22 +580,22 @@ of the composition instead of fading sections in one by one.
   derives from the picture itself when each pixel gets paint. The layer is
   positioned in SiteLayout's root (relative, its own stacking context), so
   it spans the header and the footer; the footer has no background of its
-  own. Across, the desktop artwork scales with the page's 78 rem column
-  and stays centred on it (wider than 90 rem it fades out in the margins);
-  on the phone it takes the full width.
-- **Anchors:** every section sits in a `StoryAnchor` (the footer carries
-  `data-story-anchor`). Artwork drawn around the sections can list where
-  each started; the page then stretches it between anchors to the
-  sections' real heights. The supplied picture lists none, so it is
-  stretched evenly over the page (on the phone far taller than drawn).
+  own. The picture is never stretched: it is laid at its own proportions
+  across the screen's width (from the top left corner), copy under copy
+  down the page, every other copy mirrored so the stroke swings back; each
+  copy's paint lifts off raggedly at its bottom and the next starts over
+  it. Twice-size tiles serve wide screens. The layer is at 50 % opacity,
+  so it stays a background.
 - **Painted in by the scroll:** its paint front follows a line at 62 % of
   the viewport's height (`FRONT_LINE`), eased by GSAP (`quickTo`), through
-  a paint matte like §11's: a time map per tile (along the stroke's spine,
-  traced from the picture row by row; the middle of the brush ahead of its
-  edges; the picture's fuller bristle tracks ahead of the thin ones) and an
-  SVG threshold filter. On load the brush first paints down to the fold.
-  Only the tile the front is in is filtered; painted tiles have no mask,
-  unreached ones are hidden.
+  a paint matte like §11's: a full-size time map per tile (along the
+  stroke's spine, traced from the picture row by row; bristles running
+  ahead and lagging in long thin fingers along the stroke; the picture's
+  dry tracks last) and an SVG threshold filter with a ramp of about 4 px.
+  On load the brush first paints down to the fold. Only the tile the front
+  is in is filtered; painted tiles have no mask, unreached ones are hidden,
+  and a tile stays hidden until its map has loaded (an empty matte would
+  show all of it).
 - **Stations:** `[data-story-station]` elements get a local reaction when
   the front reaches them (the steps: number circled with a brush, title in
   ink, a 10 px settle); the text stays readable before that (muted, never

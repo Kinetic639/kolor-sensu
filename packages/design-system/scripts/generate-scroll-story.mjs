@@ -2,36 +2,22 @@
 // Generates the scroll story of the public homepage (ScrollStoryPath and
 // StorySplash in packages/ui/src/public-site/scroll-story.tsx):
 //
-// 1. The watercolor band. One wide wash (about a third of the screen)
-//    behind the whole homepage: it starts off the top left corner, runs
-//    over to the right and down the page in a few wide, gentle bends, and
-//    ends behind the footer. Two layouts: desktop (from 64 rem, 1440
-//    design px wide) and phone (390 wide). Per layout:
+// 1. The band: the supplied brush stroke (docs/design/references/public/
+//    scroll-band.png), as it is, only its paper keyed out. The page lays it
+//    at its own proportions across the screen's width, copy under copy
+//    down the whole page (every other one mirrored, so the stroke carries
+//    on), its paint lifting off at the bottom of each copy. Per tile:
 //
-//    colour   the band itself (RGBA): a smooth, transparent watercolor
-//             wash, light enough that copy over it stays easy to read.
-//             Pink (the brand's dusty pink, a little livelier) starts the
-//             story and turns to the brand green; further down they meet
-//             again, wet in wet. The wash has what watercolor has: soft
-//             blooms of more and less pigment, a faint granulation (the
-//             backdrop picture's grain), pigment pooling a little darker
-//             along the wandering edges, and a few short breaks where the
-//             brush runs dry. No bristle streaks on the band itself.
-//    marks    sporadic dry-brush flicks beside the band, in the background:
-//             short, thin, streaky, faint.
-//    time     when each pixel gets paint: along the band (0 = start, 1 =
-//             end), the middle of the brush ahead of its edges, a little
-//             ragged. A flick appears as the band passes it.
-//
-//    Both are cut into horizontal tiles (so the page only ever animates
-//    the one or two tiles the paint front is in); each tile's time map is
-//    normalised to its own time range for 8-bit precision.
+//    colour   the picture (RGBA), at its size and twice its size (wide
+//             screens).
+//    time     when each pixel gets paint: along the stroke, with the
+//             bristles running ahead and lagging in long, thin fingers and
+//             the picture's own dry tracks last. Normalised to the tile's
+//             own time range for 8-bit precision, at full size.
 //
 //    The data file also gets a table from the paint front's time to its
-//    height on the page (monotonic), which the runtime inverts: the front
-//    follows a line a little below the middle of the viewport. And the
-//    anchors: where each section started when the band was drawn, so the
-//    page can lay it over the sections' real heights.
+//    height in the picture (monotonic), which the runtime inverts: the
+//    front follows a line a little below the middle of the viewport.
 //
 // 2. Side splashes: spilled paint (a puddle and its spray) in the same
 //    pink and green, with a time map of where the paint landed and how it
@@ -69,16 +55,6 @@ const PAPER = [253, 252, 248];
 const PINK = [236, 126, 138];
 const GREEN = [104, 170, 110];
 const pigment = (mix) => PINK.map((pink, c) => pink + (GREEN[c] - pink) * mix);
-
-// ----------------------------------------------------------------- layouts
-
-// Design px of each layout's artwork: the picture's own proportions at the
-// layout's width. The page stretches it over its whole height (no anchors
-// yet: the picture was not drawn around the sections).
-const layouts = {
-  desktop: { width: 1440, tiles: 10 },
-  mobile: { width: 390, tiles: 10 },
-};
 
 // Even steps along a polyline, with arc length and tangents.
 function resample(raw, step) {
@@ -178,6 +154,15 @@ async function loadTexture() {
 
 // ---------------------------------------------------------------- the band
 
+// The picture is laid at its own proportions (never stretched) across the
+// page's width, copy under copy down the whole page. Each copy is cut into
+// tiles (the page only animates the one or two the front is in); the
+// picture's paint lifts off over its last rows, raggedly along the
+// bristles, and the next copy starts over them.
+const TILES = 6;
+const TAIL = 150;
+const HEAD = 28;
+
 // The picture on paper → paint with an alpha: "colour to alpha" against the
 // paper, so the band laid over the page's paper looks as in the picture.
 async function loadBand() {
@@ -188,26 +173,37 @@ async function loadBand() {
   const { width, height } = info;
   const rgba = Buffer.alloc(width * height * 4);
   const alpha = new Float32Array(width * height);
-  for (let k = 0; k < width * height; k++) {
-    let a = 0;
-    for (let c = 0; c < 3; c++) {
-      a = Math.max(a, (PAPER[c] - data[k * 3 + c]) / PAPER[c]);
+  const lift = noise2d(57);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const k = y * width + x;
+      let a = 0;
+      for (let c = 0; c < 3; c++) {
+        a = Math.max(a, (PAPER[c] - data[k * 3 + c]) / PAPER[c]);
+      }
+      // Paper noise is not paint.
+      a = clamp01((a - 0.015) / 0.985);
+      // The brush lifts off at the bottom (and set down at the top): each
+      // bristle track ends at its own length.
+      const reach = 0.55 + 0.4 * lift(x * 0.21, 0.5, 3);
+      a *= smoothstep(reach - 0.3, reach, (height - 1 - y) / TAIL);
+      a *= smoothstep(0, 1, y / HEAD);
+      alpha[k] = a;
+      for (let c = 0; c < 3; c++) {
+        // Under no paint, the paint's own colour (so resizing never pulls
+        // in a dark fringe).
+        rgba[k * 4 + c] =
+          a > 0.02
+            ? Math.round(
+                Math.min(
+                  255,
+                  Math.max(0, PAPER[c] - (PAPER[c] - data[k * 3 + c]) / a),
+                ),
+              )
+            : PINK[c];
+      }
+      rgba[k * 4 + 3] = Math.round(a * 255);
     }
-    // Paper noise is not paint.
-    a = clamp01((a - 0.015) / 0.985);
-    alpha[k] = a;
-    for (let c = 0; c < 3; c++) {
-      rgba[k * 4 + c] =
-        a > 0
-          ? Math.round(
-              Math.min(
-                255,
-                Math.max(0, PAPER[c] - (PAPER[c] - data[k * 3 + c]) / a),
-              ),
-            )
-          : 0;
-    }
-    rgba[k * 4 + 3] = Math.round(a * 255);
   }
   return { width, height, rgba, alpha };
 }
@@ -251,20 +247,31 @@ function traceSpine(band) {
   return resample(smooth, 2);
 }
 
-// When each pixel gets paint: along the stroke, the middle of the brush a
-// little ahead of its edges, and the fuller bristle tracks of the picture
-// itself ahead of the thin ones (a ragged, brushed front, not a line).
+// When each pixel gets paint, in px along the stroke: a brush front, not a
+// mist. Its bristles run ahead and lag in long, thin fingers along the
+// stroke (noise across it, stretched along it), the picture's own dry,
+// thin tracks come last and its full ones first, and the belly of the
+// brush is a little ahead of its edges.
 function timeMap(band, spine) {
   const { width, height, alpha } = band;
-  const { index, along, across } = locateAll(spine, width, height, 1, 1.4);
-  const L = spine.length;
-  const time = new Float32Array(width * height).fill(1);
+  const { index, along, across } = locateAll(spine, width, height, 1, 1.6);
+  const bristles = noise2d(23);
+  const clumps = noise2d(41);
+  const time = new Float32Array(width * height).fill(NaN);
   for (let k = 0; k < width * height; k++) {
     const i = index[k];
-    if (i < 0 || alpha[k] <= 0) continue;
-    const p = spine.points[i];
-    const v = Math.abs(across[k]) / Math.max(p.w, 1);
-    time[k] = clamp01(along[k] / L) + (40 * v * v + 60 * (0.6 - alpha[k])) / L;
+    if (alpha[k] <= 0) continue;
+    if (i < 0) {
+      time[k] = Infinity;
+      continue;
+    }
+    const v = across[k] / Math.max(spine.points[i].w, 1);
+    time[k] =
+      along[k] +
+      45 * v * v +
+      150 * (0.7 - alpha[k]) +
+      110 * bristles(across[k] * 0.24, along[k] * 0.004, 3) +
+      70 * clumps(across[k] * 0.035, along[k] * 0.003, 2);
   }
   return time;
 }
@@ -272,13 +279,31 @@ function timeMap(band, spine) {
 async function generateBand() {
   const band = await loadBand();
   const spine = traceSpine(band);
-  const time = timeMap(band, spine);
+  const raw = timeMap(band, spine);
   const { width, height, rgba, alpha } = band;
 
+  // 0 = the first paint, 1 = the last.
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const t of raw) {
+    if (Number.isFinite(t)) {
+      lo = Math.min(lo, t);
+      hi = Math.max(hi, t);
+    }
+  }
+  const time = raw.map((t) =>
+    Number.isNaN(t) ? 1 : t === Infinity ? 1 : (t - lo) / (hi - lo),
+  );
+
+  // Twice the picture's size for wide screens, resampled once, well.
+  const large = await sharp(rgba, { raw: { width, height, channels: 4 } })
+    .resize(width * 2, height * 2, { kernel: "lanczos3" })
+    .raw()
+    .toBuffer();
+
   const tiles = [];
-  const count = layouts.desktop.tiles;
-  const tileHeight = Math.ceil(height / count);
-  for (let n = 0; n < count; n++) {
+  const tileHeight = Math.ceil(height / TILES);
+  for (let n = 0; n < TILES; n++) {
     const y0 = n * tileHeight;
     const h = Math.min(tileHeight, height - y0);
     let t0 = Infinity;
@@ -289,9 +314,8 @@ async function generateBand() {
         t1 = Math.max(t1, time[k]);
       }
     }
-    if (t0 === Infinity) continue;
-    t0 = Math.max(0, t0 - 0.002);
-    t1 = t1 + 0.002;
+    t0 = Math.max(0, t0 - 0.001);
+    t1 = Math.min(1, t1 + 0.001);
     const grey = Buffer.alloc(width * h);
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < width; x++) {
@@ -303,22 +327,60 @@ async function generateBand() {
     const base = `band-${n + 1}`;
     await sharp(rgba, { raw: { width, height, channels: 4 } })
       .extract({ left: 0, top: y0, width, height: h })
-      .webp({ quality: 88, alphaQuality: 90, effort: 6 })
+      .webp({ quality: 92, alphaQuality: 95, effort: 6 })
       .toFile(resolve(outDir, `${base}.webp`));
+    await sharp(large, {
+      raw: { width: width * 2, height: height * 2, channels: 4 },
+    })
+      .extract({ left: 0, top: y0 * 2, width: width * 2, height: h * 2 })
+      .webp({ quality: 92, alphaQuality: 95, effort: 6 })
+      .toFile(resolve(outDir, `${base}@2x.webp`));
+    // Full size: a smaller map would blur the bristles' fingers.
     await sharp(grey, { raw: { width, height: h, channels: 1 } })
-      .resize(Math.round(width / 2), Math.round(h / 2), { kernel: "lanczos3" })
       .png({ compressionLevel: 9 })
       .toFile(resolve(outDir, `${base}-time.png`));
-    tiles.push({ y0, h, t0, t1, base });
+    // The threshold's soft ramp, about 4 px of the picture whatever the
+    // tile's time range.
+    const sharpness = Math.round(((t1 - t0) * (hi - lo)) / 4);
+    tiles.push({
+      src: `/watercolor/story/${base}.webp`,
+      src2x: `/watercolor/story/${base}@2x.webp`,
+      time: `/watercolor/story/${base}-time.png`,
+      top: y0,
+      height: h,
+      t0: round(t0, 5),
+      t1: round(t1, 5),
+      sharpness: Math.min(160, Math.max(24, sharpness)),
+    });
   }
 
-  // Front table: the stroke's height at each time (the spine runs down
-  // row by row, so it is monotonic already).
+  // Front table: time → the height where the brush (its typical bristle)
+  // is, from the spine; strictly downwards.
+  const medianLead = (() => {
+    const { along, index } = locateAll(spine, width, height, 1, 1.6);
+    const diffs = [];
+    for (let k = 0; k < width * height; k += 7) {
+      if (alpha[k] > 0.2 && index[k] >= 0 && Number.isFinite(raw[k])) {
+        diffs.push(raw[k] - along[k]);
+      }
+    }
+    diffs.sort((a, b) => a - b);
+    return diffs[diffs.length >> 1] ?? 0;
+  })();
   const samples = 160;
-  const frontRows = [];
+  const front = [];
+  let lastY = -1;
   for (let i = 0; i <= samples; i++) {
     const t = i / samples;
-    frontRows.push([t, atFraction(spine, t).y / height]);
+    const s = Math.min(
+      spine.length,
+      Math.max(0, t * (hi - lo) + lo - medianLead),
+    );
+    let y = atFraction(spine, s / spine.length).y / height;
+    if (i === samples) y = 1;
+    y = Math.max(y, lastY + 0.0005);
+    lastY = y;
+    front.push([round(t, 4), round(y, 4)]);
   }
 
   if (preview) {
@@ -330,28 +392,7 @@ async function generateBand() {
       .toFile("/tmp/story-band.png");
   }
 
-  // The same artwork for each layout, in its design px.
-  const paths = {};
-  for (const [name, layout] of Object.entries(layouts)) {
-    const scale = layout.width / width;
-    const designHeight = round(height * scale);
-    paths[name] = {
-      width: layout.width,
-      height: designHeight,
-      anchors: {},
-      length: round(spine.length * scale),
-      tiles: tiles.map((tile) => ({
-        src: `/watercolor/story/${tile.base}.webp`,
-        time: `/watercolor/story/${tile.base}-time.png`,
-        top: round(tile.y0 * scale),
-        height: round(tile.h * scale),
-        t0: round(tile.t0, 5),
-        t1: round(tile.t1, 5),
-      })),
-      front: frontRows.map(([t, y]) => [round(t, 4), round(y * designHeight)]),
-    };
-  }
-  return paths;
+  return { width, height, pitch: height - TAIL, tiles, front };
 }
 
 // ------------------------------------------------------------ side splashes
@@ -514,8 +555,8 @@ rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
 const texture = await loadTexture();
 stdout.write("band… ");
-const paths = await generateBand();
-stdout.write(`${paths.desktop.tiles.length} tiles\n`);
+const band = await generateBand();
+stdout.write(`${band.tiles.length} tiles\n`);
 const splashes = {
   blush: await generateSplash("blush", 0, 5, texture),
   sage: await generateSplash("sage", 1, 9, texture),
@@ -527,7 +568,7 @@ writeFileSync(
   `// Generated by packages/design-system/scripts/generate-scroll-story.mjs.
 // Do not edit by hand: rerun \`pnpm --filter @repo/design-system generate:story\`.
 
-export const scrollStory = ${JSON.stringify({ paths, splashes }, null, 2)} as const;
+export const scrollStory = ${JSON.stringify({ band, splashes }, null, 2)} as const;
 `,
 );
 stdout.write("done\n");
