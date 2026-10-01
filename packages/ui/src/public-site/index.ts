@@ -17,7 +17,6 @@ export type {
   SoftCardProps,
   WatercolorSectionBackgroundProps,
 } from "./surfaces";
-export { CircleStatement } from "./circle-statement";
 export { CookieConsent } from "./cookie-consent";
 export type { CookieChoice, CookieConsentProps } from "./cookie-consent";
 export { DriftingPhotos } from "./drifting-photos";
@@ -32,6 +31,8 @@ export { HeroSection } from "./hero-section";
 export type { HeroAction, HeroSectionProps } from "./hero-section";
 export { OfferSection } from "./offer-section";
 export { PageMotion } from "./page-motion";
+export { PaintedStory } from "./painted-story";
+export type { PaintedStoryProps, PaintedStoryStep } from "./painted-story";
 export type { OfferSectionProps } from "./offer-section";
 export { OfferTile } from "./offer-tile";
 export type { OfferPaint, OfferService, OfferTileProps } from "./offer-tile";

@@ -522,11 +522,17 @@ the pictures' own reveals leave still. Other pages don't use it, so the
   Whyte Experience and Talking Walls): Lenis inertia scroll (wheel and
   trackpad only); a pink hairline cursor ring that grows over links and
   becomes a "Zobacz" disc over pictures and cards (fine pointers only);
-  `CircleStatement` (a sentence in a hairline double ring that draws and
-  turns with scroll); `DriftingWords` (two huge outlined lines sliding apart,
+  `DriftingWords` (two huge outlined lines sliding apart,
   decorative, aria-hidden); `DriftingPhotos` (tilted room photos travelling
   sideways, from the rooms' published photos, shown from 3 photos); the hero
   picture rising a little faster than its text.
+- **Painted story** (`PaintedStory`, after David Whyte Experience): "Jak
+  zacząć" in three steps (first conversation, rooms, workshops). From 64 rem
+  with motion it pins one screen while the steps change; each step's
+  picture is painted over the previous one with the WatercolorImage brush
+  strokes, a pink line fills with progress, scrolling back lifts the later
+  pictures. Phones: steps in flow, each picture painted in on view. Safari
+  cross-fades. Reduced motion or no script: the plain stacked steps.
 - **Fallbacks:** reduced motion or no scripting gives the static page; the
   starting state lifts itself after 3 s if the script never runs.
 

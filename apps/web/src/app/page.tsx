@@ -1,24 +1,16 @@
 import {
-  CircleStatement,
   DriftingPhotos,
   DriftingWords,
   FaqSection,
-  FeatureSection,
   HeroSection,
   OfferSection,
   PageMotion,
+  PaintedStory,
   SpecialistsSection,
 } from "@repo/ui/public-site";
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
-import {
-  faq,
-  hero,
-  offerCopy,
-  rooms,
-  specialistsCopy,
-  workshops,
-} from "@/content/site";
+import { faq, hero, offerCopy, specialistsCopy, story } from "@/content/site";
 import { withHomeContent } from "@/lib/home-content";
 import { toOfferTile, toSpecialistCard } from "@/lib/presentation";
 import { roomStripPhotos } from "@/lib/rooms-by-location";
@@ -48,11 +40,6 @@ export default async function Home() {
         {...withHomeContent(hero, homeContent)}
         animationPreset="watercolor-reveal"
       />
-      <CircleStatement
-        eyebrow="O nas"
-        statement="Kolor Sensu to miejsce, w którym można zatrzymać się, poukładać myśli i znaleźć wsparcie."
-        cta={{ href: "/o-nas", label: "Poznaj nas" }}
-      />
       {services.length > 0 ? (
         <OfferSection
           {...offerCopy}
@@ -73,21 +60,18 @@ export default async function Home() {
         />
       ) : null}
       <DriftingWords lines={["Spokojnie, uważnie,", "z sensem."]} />
-      <FeatureSection
-        {...rooms}
-        cta={{ href: "/gabinety", label: "Zobacz nasze gabinety" }}
-        imagePosition="left"
-        animationPreset="watercolor-reveal"
+      <PaintedStory
+        eyebrow={story.eyebrow}
+        heading={story.heading}
+        steps={story.steps.map((step, index) =>
+          index === 1 && roomPhotos[0]
+            ? { ...step, image: roomPhotos[0] }
+            : step,
+        )}
       />
       {roomPhotos.length >= 3 ? (
         <DriftingPhotos photos={roomPhotos} cursorLabel="Gabinety" />
       ) : null}
-      <FeatureSection
-        {...workshops}
-        cta={{ href: "/warsztaty", label: "Zobacz nadchodzące wydarzenia" }}
-        imagePosition="right"
-        animationPreset="watercolor-reveal"
-      />
       <FaqSection
         items={faq}
         description="Najczęstsze pytania osób, które zastanawiają się nad pierwszą wizytą."
