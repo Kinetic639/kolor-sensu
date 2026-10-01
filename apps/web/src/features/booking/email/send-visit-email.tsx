@@ -17,7 +17,11 @@ import type { ChangeEmailDeps } from "./send-change";
 // it (the payment, the portal, the scheduled job); Resend's idempotency
 // key guards a retry of the same send. A failure gives the claim back.
 
-export type VisitEmailKind = Exclude<BookingEmailKind, "rescheduled">;
+// A move and a later refund go with the change that made them (./send-change).
+export type VisitEmailKind = Exclude<
+  BookingEmailKind,
+  "rescheduled" | "refunded"
+>;
 
 export type VisitEmailDeps = ChangeEmailDeps;
 

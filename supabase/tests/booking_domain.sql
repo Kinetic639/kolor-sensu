@@ -2253,4 +2253,73 @@ END;
 $body$;
 RESET ROLE;
 
+-- AB. The e-mail about money the centre gave back later (R12): one per
+-- refund, with a new link; none before a refund; a specialist's history
+-- does not show it.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  c record;
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.claim_booking_email((SELECT reference FROM s_visits WHERE name = 'aa3'), 'refunded')) THEN
+    RAISE EXCEPTION 'AB: an e-mail about a refund never given';
+  END IF;
+  SELECT * INTO c FROM public.claim_booking_email((SELECT reference FROM s_visits WHERE name = 'aa1'), 'refunded');
+  IF c.reference IS NULL OR c.manage_token IS NULL THEN
+    RAISE EXCEPTION 'AB: the e-mail about the refund: %', row_to_json(c);
+  END IF;
+  PERFORM public.mark_booking_email_sent(c.reference, 'refunded', 'msg_ab1');
+  PERFORM public.mark_booking_email_sent(c.reference, 'confirmation', 'msg_ab0');
+  IF EXISTS (SELECT 1 FROM public.claim_booking_email(c.reference, 'refunded')) THEN
+    RAISE EXCEPTION 'AB: the same refund told twice';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+SELECT public.centre_refund_visit(
+  (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1')),
+  1000, NULL);
+DO $body$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.list_visit_events(
+      (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1')))
+    WHERE kind = 'email_sent' AND details ->> 'email' = 'refunded'
+  ) THEN
+    RAISE EXCEPTION 'AB: the admin does not see the e-mail was sent';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE service_role;
+DO $body$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.claim_booking_email((SELECT reference FROM s_visits WHERE name = 'aa1'), 'refunded')) THEN
+    RAISE EXCEPTION 'AB: the next refund gets no e-mail';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  aa1 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1'));
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.list_visit_events(aa1)
+             WHERE kind = 'email_sent' AND details ->> 'email' = 'refunded') THEN
+    RAISE EXCEPTION 'AB: a specialist saw the e-mail about a refund';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.list_visit_events(aa1) WHERE kind = 'email_sent') THEN
+    RAISE EXCEPTION 'AB: a specialist lost the other e-mails';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

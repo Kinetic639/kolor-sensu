@@ -137,11 +137,14 @@ async function settleCancellation(
   return { ok: true, refundMinor, refundFailed };
 }
 
-/** The centre gives money back later (admins), up to what is left. */
+/**
+ * The centre gives money back later (admins), up to what is left; once
+ * Stripe has it, the client gets an e-mail with the amount and why.
+ */
 export async function refundVisitAsCentre(
   appointmentId: string,
   { refundMinor, reason }: { refundMinor: number; reason: string | null },
-  deps: Pick<ChangeVisitDeps, "refund" | "recordRefund"> & {
+  deps: Pick<ChangeVisitDeps, "refund" | "recordRefund" | "notify"> & {
     centreRefund: (
       appointmentId: string,
       refundMinor: number,
@@ -166,11 +169,18 @@ export async function refundVisitAsCentre(
       },
     );
     await deps.recordRefund(refund.paymentIntentId, refunded);
-    return { ok: true, refundMinor: refund.refundMinor, refundFailed: false };
   } catch (error) {
     console.error(`[booking] refund for ${refund.reference} failed:`, error);
     return { ok: true, refundMinor: refund.refundMinor, refundFailed: true };
   }
+  await deps.notify({
+    kind: "refunded",
+    reference: refund.reference,
+    refundMinor: refund.refundMinor,
+    refundedBeforeMinor: refund.refundedBeforeMinor,
+    reason,
+  });
+  return { ok: true, refundMinor: refund.refundMinor, refundFailed: false };
 }
 
 export async function rescheduleVisit(

@@ -222,6 +222,13 @@ describe("the centre's own way (R12)", () => {
       idempotencyKey: "refund:KS-1:15000:5000",
     });
     expect(d.recordRefund).toHaveBeenCalledWith("pi_1", 20000);
+    expect(d.notify).toHaveBeenCalledWith({
+      kind: "refunded",
+      reference: "KS-1",
+      refundMinor: 5000,
+      refundedBeforeMinor: 15000,
+      reason: "Gest",
+    });
   });
 
   it("a refund Stripe refuses stays owed, for the centre to settle", async () => {
@@ -241,6 +248,8 @@ describe("the centre's own way (R12)", () => {
         d,
       ),
     ).toEqual({ ok: true, refundMinor: 5000, refundFailed: true });
+    // The client hears of it only once the money is on its way.
+    expect(d.notify).not.toHaveBeenCalled();
   });
 
   it("moves at the centre's local time; the e-mail brings a new link", async () => {

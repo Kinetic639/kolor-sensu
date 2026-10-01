@@ -17,7 +17,9 @@ export type BookingEmailKind =
   /** A day before the payment is due. */
   | "payment_reminder"
   /** Six hours before the payment is due. */
-  | "payment_last_call";
+  | "payment_last_call"
+  /** Money the centre gave back later (R12); one per refund. */
+  | "refunded";
 
 export interface ClaimedBookingEmail {
   reference: string;

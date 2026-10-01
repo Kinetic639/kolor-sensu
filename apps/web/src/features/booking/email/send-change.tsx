@@ -1,11 +1,16 @@
 import { render } from "@react-email/components";
 import type { BookingEmailKind, ClaimedBookingEmail } from "@repo/supabase";
-import { cancelledContent, rescheduledContent } from "./change-content";
+import {
+  cancelledContent,
+  refundedContent,
+  rescheduledContent,
+} from "./change-content";
 import type { ConfirmationOptions } from "./confirmation-content";
 import { ConfirmationEmail } from "./confirmation-email";
 import type { OutgoingEmail } from "./send-confirmation";
 
-// Sending the e-mail about a change (docs/product/booking-plan.md, R8), as
+// Sending the e-mail about a change (docs/product/booking-plan.md, R8, R12):
+// a move, a cancellation, money the centre gave back later. As
 // the confirmation is sent: claimed first, so it goes once; given back when
 // sending fails. It never fails the change itself.
 
@@ -29,6 +34,15 @@ export type VisitChange =
       refundMinor: number;
       /** Why the centre cancelled it (and kept what it kept). */
       reason?: string | null;
+    }
+  | {
+      kind: "refunded";
+      reference: string;
+      /** This refund. */
+      refundMinor: number;
+      /** Given back on the payment before it: tells refunds apart. */
+      refundedBeforeMinor: number;
+      reason: string | null;
     };
 
 export interface ChangeEmailDeps extends ConfirmationOptions {
@@ -57,21 +71,27 @@ export async function sendChangeEmail(
   const visit = await deps.claim(reference, kind);
   if (!visit) return "skipped";
   try {
-    const manageToken = change.manageToken ?? visit.manageToken;
+    const manageToken =
+      (change.kind === "refunded" ? null : change.manageToken) ??
+      visit.manageToken;
     if (!manageToken) throw new Error("No link token for the e-mail");
-    const options = {
-      ...deps,
-      ...change,
-      manageToken,
-      reason: change.reason ?? null,
-    };
+    const options = { ...deps, manageToken, reason: change.reason ?? null };
     const content =
-      change.kind === "cancelled"
-        ? cancelledContent(visit, {
+      change.kind === "refunded"
+        ? refundedContent(visit, {
             ...options,
             refundMinor: change.refundMinor,
           })
-        : rescheduledContent(visit, options);
+        : change.kind === "cancelled"
+          ? cancelledContent(visit, {
+              ...options,
+              sequence: change.sequence,
+              refundMinor: change.refundMinor,
+            })
+          : rescheduledContent(visit, {
+              ...options,
+              sequence: change.sequence,
+            });
     const { id } = await deps.send(
       {
         from: deps.from,
@@ -79,17 +99,21 @@ export async function sendChangeEmail(
         subject: content.subject,
         html: await render(<ConfirmationEmail content={content} />),
         text: content.text,
-        attachments: [
-          {
-            filename: `wizyta-${visit.reference}.ics`,
-            contentType: `text/calendar; charset=utf-8; method=${kind === "cancelled" ? "CANCEL" : "PUBLISH"}`,
-            content: content.ics,
-          },
-        ],
+        attachments: content.ics
+          ? [
+              {
+                filename: `wizyta-${visit.reference}.ics`,
+                contentType: `text/calendar; charset=utf-8; method=${kind === "cancelled" ? "CANCEL" : "PUBLISH"}`,
+                content: content.ics,
+              },
+            ]
+          : [],
       },
-      kind === "cancelled"
-        ? `cancelled:${reference}`
-        : `rescheduled:${reference}:${change.sequence}`,
+      change.kind === "refunded"
+        ? `refunded:${reference}:${change.refundedBeforeMinor}:${change.refundMinor}`
+        : change.kind === "cancelled"
+          ? `cancelled:${reference}`
+          : `rescheduled:${reference}:${change.sequence}`,
     );
     await deps.markSent(reference, kind, id);
     return "sent";

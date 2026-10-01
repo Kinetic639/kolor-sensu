@@ -37,6 +37,7 @@ const EMAILS: Record<string, string> = {
   reserved: "Rezerwacja z linkiem do płatności",
   payment_reminder: "Przypomnienie o płatności",
   payment_last_call: "Ostatnie przypomnienie o płatności",
+  refunded: "Zwrot pieniędzy",
 };
 
 const ACTORS = {

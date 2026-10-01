@@ -181,3 +181,56 @@ export function cancelledContent(
     ics,
   };
 }
+
+/**
+ * Money the centre gave back later (R12): how much, why, and that it goes
+ * back the way it was paid. The visit itself does not change, so no
+ * calendar file.
+ */
+export function refundedContent(
+  visit: ClaimedBookingEmail,
+  {
+    siteUrl,
+    timeZone,
+    contact,
+    manageToken,
+    refundMinor,
+    reason,
+  }: Omit<ChangeOptions, "sequence"> & { refundMinor: number },
+): VisitEmailContent {
+  const manageUrl = `${siteUrl}/wizyta/${manageToken}`;
+  const greeting = `Dzień dobry, ${visit.clientName}!`;
+  const contactLine = contactLineOf(contact);
+  const refund = formatPrice({
+    priceMinor: refundMinor,
+    currencyCode: visit.currencyCode,
+  });
+  const rows: [string, string][] = [
+    ["Usługa", visit.serviceName],
+    ...(visit.specialistName
+      ? [["Specjalista", visit.specialistName] as [string, string]]
+      : []),
+    [
+      "Termin wizyty",
+      `${visitLabel(visit.startsAt, timeZone)}–${localTime(visit.endsAt, timeZone)}`,
+    ],
+    ["Numer rezerwacji", visit.reference],
+    ["Zwrot", refund],
+    ...(reason ? [["Powód", reason] as [string, string]] : []),
+  ];
+  const intro = `Zwróciliśmy ${refund} za Twoją wizytę tą samą metodą, którą zapłacono. Pieniądze zwykle wracają w ciągu kilku dni roboczych.`;
+  return {
+    subject: `Zwrot ${refund} za wizytę ${visit.reference}`,
+    preview: `Zwrot ${refund}`,
+    heading: "Zwróciliśmy pieniądze",
+    greeting,
+    intro,
+    rows,
+    manageUrl,
+    buttonLabel: "Zobacz szczegóły",
+    note: null,
+    contactLine,
+    text: plainText({ greeting, intro, rows, manageUrl, contactLine }),
+    ics: "",
+  };
+}

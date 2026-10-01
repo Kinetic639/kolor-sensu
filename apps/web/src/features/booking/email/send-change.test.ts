@@ -90,6 +90,38 @@ describe("sendChangeEmail", () => {
     expect(key).toBe("cancelled:KS-20301002-1534");
   });
 
+  it("sends a later refund once per refund, with the claim's new link, no calendar file", async () => {
+    const d = deps({
+      claim: vi
+        .fn()
+        .mockResolvedValue({ ...claimed, manageToken: "new-token" }),
+    });
+    expect(
+      await sendChangeEmail(
+        {
+          kind: "refunded",
+          reference: "KS-20301002-1534",
+          refundMinor: 5000,
+          refundedBeforeMinor: 15000,
+          reason: "Gest dobrej woli",
+        },
+        d,
+      ),
+    ).toBe("sent");
+    expect(d.claim).toHaveBeenCalledWith("KS-20301002-1534", "refunded");
+    const [message, key] = vi.mocked(d.send).mock.calls[0]!;
+    expect(message.subject).toContain("Zwrot");
+    expect(message.text).toContain("Gest dobrej woli");
+    expect(message.text).toContain("https://kolorsensu.pl/wizyta/new-token");
+    expect(message.attachments).toEqual([]);
+    expect(key).toBe("refunded:KS-20301002-1534:15000:5000");
+    expect(d.markSent).toHaveBeenCalledWith(
+      "KS-20301002-1534",
+      "refunded",
+      "msg_1",
+    );
+  });
+
   it("gives the claim back when sending fails; skips what is not its to send", async () => {
     const failing = deps({
       send: vi.fn().mockRejectedValue(new Error("down")),

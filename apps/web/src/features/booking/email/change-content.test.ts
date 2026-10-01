@@ -1,7 +1,11 @@
 import type { ClaimedBookingEmail } from "@repo/supabase";
 import { describe, expect, it } from "vitest";
 import { formatPrice } from "@/lib/format";
-import { cancelledContent, rescheduledContent } from "./change-content";
+import {
+  cancelledContent,
+  refundedContent,
+  rescheduledContent,
+} from "./change-content";
 
 const visit: ClaimedBookingEmail = {
   reference: "KS-20301002-1534",
@@ -138,5 +142,40 @@ describe("the centre's own way (R12)", () => {
       "1 października 2030, godz. 11:00",
     ]);
     expect(content.ics).toContain("SEQUENCE:2");
+  });
+});
+
+describe("refundedContent", () => {
+  it("says what was given back, how and why", () => {
+    const content = refundedContent(
+      { ...visit, cancelledBy: "centre" },
+      { ...options, refundMinor: 5000, reason: "Gest dobrej woli" },
+    );
+    const refund = formatPrice({ priceMinor: 5000, currencyCode: "PLN" });
+    expect(content.subject).toBe(`Zwrot ${refund} za wizytę KS-20301002-1534`);
+    expect(content.heading).toBe("Zwróciliśmy pieniądze");
+    expect(content.intro).toBe(
+      `Zwróciliśmy ${refund} za Twoją wizytę tą samą metodą, którą zapłacono. Pieniądze zwykle wracają w ciągu kilku dni roboczych.`,
+    );
+    expect(content.rows).toContainEqual([
+      "Termin wizyty",
+      "czwartek, 3 października 2030, godz. 11:00–11:50",
+    ]);
+    expect(content.rows).toContainEqual(["Zwrot", refund]);
+    expect(content.rows).toContainEqual(["Powód", "Gest dobrej woli"]);
+    expect(content.manageUrl).toBe("https://kolorsensu.pl/wizyta/link-token");
+    expect(content.text).toContain(refund);
+    // Nothing changes in the client's calendar.
+    expect(content.note).toBeNull();
+    expect(content.ics).toBe("");
+  });
+
+  it("no reason given: no reason row", () => {
+    const content = refundedContent(visit, {
+      ...options,
+      refundMinor: 20000,
+      reason: null,
+    });
+    expect(content.rows.map(([label]) => label)).not.toContain("Powód");
   });
 });

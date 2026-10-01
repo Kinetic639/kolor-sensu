@@ -25,7 +25,7 @@ export async function runPaymentJobs(deps: PaymentJobDeps) {
   const due = await deps.listDue();
   const tally = { sent: 0, skipped: 0, failed: 0 };
   for (const { reference, kind } of due) {
-    if (kind === "rescheduled") continue;
+    if (kind === "rescheduled" || kind === "refunded") continue;
     tally[await deps.send(reference, kind)] += 1;
   }
   return { cancelled, ...tally };

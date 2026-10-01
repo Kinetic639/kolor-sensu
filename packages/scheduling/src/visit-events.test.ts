@@ -265,4 +265,21 @@ describe("the centre's own way (R12)", () => {
       ["Zmieniono termin", expect.stringMatching(/ · Prośba klienta$/)],
     ]);
   });
+
+  it("the e-mail about a refund", () => {
+    const rows = visitEventRows(
+      [
+        {
+          id: 1,
+          occurredAt: "2026-10-13T08:01:00+00:00",
+          kind: "email_sent",
+          actor: "system",
+          actorName: null,
+          details: { email: "refunded" },
+        },
+      ],
+      options,
+    );
+    expect(rows[0]!.title).toBe("Wysłano e-mail: Zwrot pieniędzy");
+  });
 });
