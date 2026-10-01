@@ -1,4 +1,6 @@
 import { logout } from "@/app/actions/auth";
+import { NotificationBell } from "@/features/notifications/bell";
+import { LiveUpdates } from "@/features/notifications/live-updates";
 import { requirePortalRole } from "@/lib/auth";
 import {
   adminMobileNavigation,
@@ -42,6 +44,7 @@ export default async function ProtectedLayout({
       }
       logoutAction={logout}
       mobileNavigation={adminMobileNavigation}
+      notifications={<NotificationBell />}
       navigation={adminNavigation}
       portalSwitch={
         authorization.roles.includes("specialist")
@@ -62,6 +65,7 @@ export default async function ProtectedLayout({
       }}
     >
       {children}
+      <LiveUpdates userId={authorization.user.id} />
     </PortalShell>
   );
 }

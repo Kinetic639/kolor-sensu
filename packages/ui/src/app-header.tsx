@@ -46,6 +46,8 @@ export interface AppHeaderProps {
   portalSwitch?: PortalSwitchLink;
   logoutAction?: (formData: FormData) => void | Promise<void>;
   onNotificationsClick?: () => void;
+  /** The bell with its inbox (e.g. `PortalNotifications`); wins over the plain bell. */
+  notifications?: ReactNode;
   className?: string;
 }
 
@@ -59,6 +61,7 @@ export function AppHeader({
   portalSwitch,
   logoutAction,
   onNotificationsClick,
+  notifications,
   className,
 }: AppHeaderProps) {
   const initials = user.name
@@ -119,18 +122,20 @@ export function AppHeader({
       </div>
 
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2.5">
-        <Button
-          className="relative"
-          size="icon"
-          variant="ghost"
-          aria-label={`Powiadomienia${notificationCount ? ` (${notificationCount})` : ""}`}
-          onClick={onNotificationsClick}
-        >
-          <Bell className="size-5" aria-hidden="true" />
-          {notificationCount ? (
-            <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-[var(--danger)] ring-2 ring-white" />
-          ) : null}
-        </Button>
+        {notifications ?? (
+          <Button
+            className="relative"
+            size="icon"
+            variant="ghost"
+            aria-label={`Powiadomienia${notificationCount ? ` (${notificationCount})` : ""}`}
+            onClick={onNotificationsClick}
+          >
+            <Bell className="size-5" aria-hidden="true" />
+            {notificationCount ? (
+              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-[var(--danger)] ring-2 ring-white" />
+            ) : null}
+          </Button>
+        )}
         <div
           className="hidden h-8 w-px bg-[var(--border)] sm:block"
           aria-hidden="true"

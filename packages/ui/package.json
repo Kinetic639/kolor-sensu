@@ -36,6 +36,8 @@
     "./public-site.css": "./src/public-site/public-site.css",
     "./navigation-menu": "./src/navigation-menu.tsx",
     "./notification": "./src/notification.tsx",
+    "./portal-notifications": "./src/portal-notifications.tsx",
+    "./live-updates": "./src/live-updates.ts",
     "./rich-text-editor": "./src/rich-text-editor.tsx",
     "./rich-text-renderer": "./src/rich-text-renderer.tsx",
     "./room-schedule": "./src/room-schedule.tsx",

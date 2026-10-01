@@ -3,7 +3,6 @@
 import { Bell, ChevronRight, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { Badge } from "./badge";
-import { Button } from "./button";
 import { cn } from "./lib/utils";
 import {
   Sheet,
@@ -141,21 +140,14 @@ export function NotificationDrawer({
             <div>
               <SheetTitle>Powiadomienia</SheetTitle>
               <SheetDescription>
-                Bądź na bieżąco z wizytami i ważnymi informacjami.
+                {count
+                  ? `Nowe: ${count}`
+                  : "Bądź na bieżąco z wizytami i ważnymi informacjami."}
               </SheetDescription>
             </div>
           </div>
         </SheetHeader>
-        <div className="flex gap-2 overflow-x-auto border-b border-[var(--border)] p-4">
-          <Button size="sm">Wszystkie ({count})</Button>
-          <Button size="sm" variant="secondary">
-            Nieprzeczytane
-          </Button>
-          <Button size="sm" variant="secondary">
-            Wizyty
-          </Button>
-        </div>
-        <div className="space-y-2 p-4">{children}</div>
+        <div className="space-y-2 overflow-y-auto p-4">{children}</div>
       </SheetContent>
     </Sheet>
   );

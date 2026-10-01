@@ -2322,4 +2322,144 @@ END;
 $body$;
 RESET ROLE;
 
+-- AC. Notifications (R13): from a visit's history, for every admin (with
+-- the money) and the visit's specialist (without it), never for whoever
+-- did it; each reads only their own inbox; opening it reads it.
+-- (A visit paid as Stripe pays: no signed-in person.)
+SELECT set_config('request.jwt.claims', '', true);
+SET LOCAL ROLE service_role;
+SELECT pg_temp.paid_visit('ac1', '12:00');
+RESET ROLE;
+DO $body$
+DECLARE
+  admin_id uuid := '71000000-0000-4000-8000-000000000001';
+  anna_id uuid := '71000000-0000-4000-8000-000000000002';
+  aa1 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1'));
+  ac1 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'ac1'));
+  x1 uuid := (SELECT id FROM x_visits WHERE name = 'x1');
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.notifications
+                 WHERE user_id = admin_id AND portal = 'admin' AND appointment_id = ac1
+                   AND kind = 'booked' AND actor = 'payment' AND details ? 'price_minor'
+                   AND details ->> 'client_name' = 'Ola Test') THEN
+    RAISE EXCEPTION 'AC: the admin was not told of a new paid visit';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.notifications
+                 WHERE user_id = anna_id AND portal = 'specialist' AND appointment_id = ac1
+                   AND kind = 'booked') THEN
+    RAISE EXCEPTION 'AC: the specialist was not told of her new visit';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.notifications
+             WHERE portal = 'specialist'
+               AND (details ?| ARRAY['price_minor', 'refund_minor', 'refund_due_minor', 'currency_code']
+                    OR kind = 'refunded')) THEN
+    RAISE EXCEPTION 'AC: a specialist was told of money';
+  END IF;
+  -- The admin cancelled aa1 and gave money back: not told of it themselves.
+  IF EXISTS (SELECT 1 FROM public.notifications
+             WHERE user_id = admin_id AND appointment_id = aa1
+               AND kind IN ('cancelled', 'refunded')) THEN
+    RAISE EXCEPTION 'AC: the admin was told of what they did';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.notifications
+                 WHERE user_id = anna_id AND appointment_id = aa1 AND kind = 'cancelled'
+                   AND actor = 'centre' AND details ->> 'reason' = 'Późne odwołanie') THEN
+    RAISE EXCEPTION 'AC: the specialist was not told the centre cancelled, and why';
+  END IF;
+  -- Booked by the admin, then paid: the specialist hears both, the admin the payment.
+  IF (SELECT string_agg(kind, ' ' ORDER BY id) FROM public.notifications
+      WHERE user_id = anna_id AND appointment_id = x1) IS DISTINCT FROM 'centre_booked paid' THEN
+    RAISE EXCEPTION 'AC: the specialist''s news of a centre booking';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.notifications
+             WHERE user_id = admin_id AND appointment_id = x1 AND kind = 'centre_booked') THEN
+    RAISE EXCEPTION 'AC: the admin was told of their own booking';
+  END IF;
+  -- Holds and their lapsing are nobody's news.
+  IF EXISTS (SELECT 1 FROM public.notifications AS n
+             WHERE NOT EXISTS (
+               SELECT 1 FROM public.appointment_events AS e
+               WHERE e.appointment_id = n.appointment_id
+                 AND (e.kind NOT IN ('created', 'details_saved', 'hold_released', 'hold_expired')
+                      OR e.actor = 'centre')
+             )) THEN
+    RAISE EXCEPTION 'AC: a hold made a notification';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies
+                 WHERE schemaname = 'realtime' AND tablename = 'messages'
+                   AND cmd = 'SELECT' AND qual LIKE '%user:%auth.uid()%') THEN
+    RAISE EXCEPTION 'AC: the live channel is not limited to its owner';
+  END IF;
+END;
+$body$;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  unread integer;
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.notifications
+             WHERE user_id <> '71000000-0000-4000-8000-000000000002') THEN
+    RAISE EXCEPTION 'AC: Anna read someone else''s notifications';
+  END IF;
+  SELECT count(*) INTO unread FROM public.notifications WHERE portal = 'specialist' AND read_at IS NULL;
+  IF unread = 0 OR public.mark_notifications_read('specialist') <> unread THEN
+    RAISE EXCEPTION 'AC: opening the inbox did not read it';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.notifications WHERE portal = 'specialist' AND read_at IS NULL) THEN
+    RAISE EXCEPTION 'AC: notifications left unread';
+  END IF;
+  BEGIN
+    INSERT INTO public.notifications (user_id, portal, kind, actor)
+    VALUES ('71000000-0000-4000-8000-000000000002', 'specialist', 'booked', 'client');
+    RAISE EXCEPTION 'AC: a user wrote a notification';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    UPDATE public.notifications SET read_at = NULL;
+    RAISE EXCEPTION 'AC: a user changed a notification';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
+DO $body$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.notifications
+                 WHERE user_id = '71000000-0000-4000-8000-000000000001' AND read_at IS NULL) THEN
+    RAISE EXCEPTION 'AC: Anna read the admin''s inbox';
+  END IF;
+END;
+$body$;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.notifications) THEN
+    RAISE EXCEPTION 'AC: Jan read others'' notifications';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM 1 FROM public.notifications LIMIT 1;
+    RAISE EXCEPTION 'AC: a visitor read notifications';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.mark_notifications_read('admin');
+    RAISE EXCEPTION 'AC: a visitor marked notifications read';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

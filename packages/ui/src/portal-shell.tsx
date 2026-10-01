@@ -20,6 +20,8 @@ export interface PortalShellProps {
   brandSubtitle: string;
   defaultSidebarOpen?: boolean;
   notificationCount?: number;
+  /** The bell with its inbox; see `AppHeader`. */
+  notifications?: ReactNode;
   profileHref?: string;
   portalSwitch?: AppHeaderProps["portalSwitch"];
   logoutAction?: AppHeaderProps["logoutAction"];
@@ -38,6 +40,7 @@ export function PortalShell({
   brandSubtitle,
   defaultSidebarOpen = true,
   notificationCount = 0,
+  notifications,
   profileHref,
   portalSwitch,
   logoutAction,
@@ -61,6 +64,7 @@ export function PortalShell({
               <SidebarTrigger className="hidden md:inline-flex" />
             }
             notificationCount={notificationCount}
+            notifications={notifications}
             portalSwitch={portalSwitch}
             profileHref={profileHref}
             user={user}

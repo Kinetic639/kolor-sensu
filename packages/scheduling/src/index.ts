@@ -5,6 +5,7 @@ export * from "./calendar-view";
 export { DEFAULT_TIME_ZONE, formatZonedDateTime } from "./date";
 export * from "./grid";
 export * from "./labels";
+export * from "./notification-view";
 export * from "./room-hours";
 export * from "./slots";
 export * from "./visit-events";

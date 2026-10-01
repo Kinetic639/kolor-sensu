@@ -399,6 +399,50 @@ export type Database = {
         };
         Relationships: [];
       };
+      notifications: {
+        Row: {
+          actor: string;
+          appointment_id: string | null;
+          created_at: string;
+          details: Json;
+          id: number;
+          kind: string;
+          portal: string;
+          read_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          actor: string;
+          appointment_id?: string | null;
+          created_at?: string;
+          details?: Json;
+          id?: never;
+          kind: string;
+          portal: string;
+          read_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          actor?: string;
+          appointment_id?: string | null;
+          created_at?: string;
+          details?: Json;
+          id?: never;
+          kind?: string;
+          portal?: string;
+          read_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_appointment_id_fkey";
+            columns: ["appointment_id"];
+            isOneToOne: false;
+            referencedRelation: "appointments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       payments: {
         Row: {
           amount_minor: number;
@@ -1769,6 +1813,10 @@ export type Database = {
       mark_booking_email_sent: {
         Args: { p_kind: string; p_message_id: string; p_reference: string };
         Returns: undefined;
+      };
+      mark_notifications_read: {
+        Args: { p_portal: string };
+        Returns: number;
       };
       pending_checkout_session: {
         Args: { p_access_token: string };

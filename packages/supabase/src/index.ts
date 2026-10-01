@@ -225,3 +225,16 @@ export type {
   CentreBookingInput,
   CentreOffer,
 } from "./centre-bookings";
+export {
+  listNotifications,
+  markNotificationsRead,
+  subscribeToPortalUpdates,
+  toPortalNotification,
+} from "./notifications";
+export type {
+  NotificationDetails,
+  NotificationKind,
+  NotificationPortal,
+  PortalLiveHandlers,
+  PortalNotification,
+} from "./notifications";
