@@ -1,4 +1,9 @@
-import type { FaqItem, HeroSectionProps } from "@repo/ui/public-site";
+import type {
+  CrisisLine,
+  FaqItem,
+  HeroSectionProps,
+  Topic,
+} from "@repo/ui/public-site";
 import {
   Brain,
   Heart,
@@ -139,6 +144,115 @@ export const story = {
     },
   ],
 };
+
+/**
+ * "Z czym przychodzisz?" (TopicGuide): the common reasons people come,
+ * each with a few words and the same way to start: a first consultation.
+ */
+export const topicsCopy = {
+  eyebrow: "Z czym przychodzisz?",
+  heading: "Nie musisz wiedzieć, od czego zacząć",
+  description:
+    "Wybierz to, co jest Ci teraz najbliższe. Na pierwszej rozmowie wspólnie ułożymy resztę.",
+  action: { label: "Umów pierwszą rozmowę", href: "/umow-wizyte" },
+  more: { label: "Zobacz ofertę", href: "/oferta" },
+};
+
+export const topics = [
+  {
+    label: "Lęk",
+    title: "Gdy niepokój nie odpuszcza",
+    text: "Napięcie, natłok myśli, ataki paniki, trudność z zaśnięciem. Razem szukamy źródeł lęku i sposobów, by znów poczuć grunt pod nogami.",
+    paint: "pink-1",
+  },
+  {
+    label: "Nastrój",
+    title: "Gdy wszystko jest szare",
+    text: "Smutek, brak energii, poczucie, że nic nie cieszy. Psychoterapia pomaga zrozumieć, co się dzieje, i odzyskać siły krok po kroku.",
+    paint: "sage-1",
+  },
+  {
+    label: "Relacje",
+    title: "Gdy trudno się porozumieć",
+    text: "Kłótnie, oddalenie, powracające konflikty w związku lub rodzinie. Pracujemy indywidualnie i z parami.",
+    paint: "pink-2",
+  },
+  {
+    label: "Dziecko",
+    title: "Gdy martwisz się o dziecko",
+    text: "Zmiany w zachowaniu, trudne emocje, problemy w szkole. Wspieramy dzieci, młodzież i ich rodziców.",
+    paint: "sage-2",
+  },
+  {
+    label: "Wypalenie",
+    title: "Gdy brakuje sił na codzienność",
+    text: "Przeciążenie pracą i obowiązkami, ciągłe zmęczenie, poczucie, że działasz na rezerwie. Uczymy się zatrzymać i zadbać o siebie.",
+    paint: "pink-1",
+  },
+  {
+    label: "Strata",
+    title: "Gdy przeżywasz żałobę",
+    text: "Śmierć bliskiej osoby, rozstanie, utrata zdrowia lub pracy. Dajemy przestrzeń, w której można przejść przez to we własnym tempie.",
+    paint: "sage-1",
+  },
+  {
+    label: "Samoocena",
+    title: "Gdy krytykujesz się bez końca",
+    text: "Poczucie, że nie jesteś wystarczająco dobra lub dobry, porównywanie się z innymi. Budujemy łagodniejsze spojrzenie na siebie.",
+    paint: "pink-2",
+  },
+  {
+    label: "Zmiana",
+    title: "Gdy życie skręca",
+    text: "Przeprowadzka, nowa praca, rodzicielstwo, koniec ważnego etapu. Pomagamy odnaleźć się w tym, co nowe.",
+    paint: "sage-2",
+  },
+] satisfies Topic[];
+
+export const roomsStripCopy = {
+  eyebrow: "Nasze gabinety",
+  heading: "Zajrzyj do środka",
+  cta: { label: "Zobacz gabinety", href: "/gabinety" },
+};
+
+export const slotsCopy = {
+  eyebrow: "Najbliższe wolne terminy",
+  heading: "Możemy spotkać się już wkrótce",
+  description:
+    "Wybierz termin, a przeprowadzimy Cię przez rezerwację. Inne godziny znajdziesz w kalendarzu.",
+  cta: { label: "Zobacz wszystkie terminy", href: "/umow-wizyte" },
+};
+
+export const pricesCopy = {
+  eyebrow: "Cennik",
+  heading: "Jasno i bez niespodzianek",
+  description:
+    "Cena zależy od formy wsparcia i specjalisty. Tu najniższe ceny każdej usługi, a w pełnym cenniku ceny u poszczególnych specjalistów.",
+  forms: [
+    {
+      title: "W gabinecie",
+      text: "Spotkanie w jednym z naszych spokojnych, jasnych gabinetów.",
+    },
+    {
+      title: "Online",
+      text: "Rozmowa wideo z domu lub z dowolnego miejsca, w którym czujesz się swobodnie.",
+    },
+  ],
+  cta: { label: "Pełny cennik", href: "/cennik" },
+};
+
+/** Crisis numbers (Poland), always shown on the homepage. */
+export const crisis = {
+  heading: "Potrzebujesz pomocy teraz?",
+  description:
+    "Nie jesteśmy placówką interwencji kryzysowej. Jeśli Twoje życie lub zdrowie jest zagrożone, zadzwoń:",
+  lines: [
+    { number: "112", label: "numer alarmowy" },
+    { number: "116 123", label: "wsparcie dla dorosłych w kryzysie" },
+    { number: "116 111", label: "telefon zaufania dla dzieci i młodzieży" },
+    { number: "800 70 2222", label: "Centrum Wsparcia, całodobowo" },
+  ],
+} satisfies { heading: string; description: string; lines: CrisisLine[] };
 
 export const closingCta = "Zrób pierwszy krok do lepszego samopoczucia";
 

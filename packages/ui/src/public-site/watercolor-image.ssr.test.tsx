@@ -56,6 +56,8 @@ describe("WatercolorImage on the server", () => {
 
     expect(clientFiles).toEqual([
       "cookie-consent.tsx",
+      "drifting-photos.tsx",
+      "drifting-words.tsx",
       "header-scroll.tsx",
       "offer-reveal.tsx",
       "page-motion.tsx",
@@ -64,6 +66,7 @@ describe("WatercolorImage on the server", () => {
       "site-mobile-nav.tsx",
       "site-navigation.tsx",
       "specialist-reveal.tsx",
+      "topic-guide.tsx",
       "watercolor-caption-motion.tsx",
       "watercolor-reveal.tsx",
     ]);

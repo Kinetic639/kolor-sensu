@@ -17,9 +17,12 @@ export type {
   SoftCardProps,
   WatercolorSectionBackgroundProps,
 } from "./surfaces";
+export { CrisisBand } from "./crisis-band";
+export type { CrisisBandProps, CrisisLine } from "./crisis-band";
 export { CookieConsent } from "./cookie-consent";
 export type { CookieChoice, CookieConsentProps } from "./cookie-consent";
 export { DriftingPhotos } from "./drifting-photos";
+export type { DriftingPhoto, DriftingPhotosProps } from "./drifting-photos";
 export { DriftingWords } from "./drifting-words";
 export { FaqSection } from "./faq-section";
 export type { FaqItem, FaqSectionProps } from "./faq-section";
@@ -32,6 +35,8 @@ export type { HeroAction, HeroSectionProps } from "./hero-section";
 export { OfferSection } from "./offer-section";
 export { PageMotion } from "./page-motion";
 export { PaintedStory } from "./painted-story";
+export { PriceNotes } from "./price-notes";
+export type { PriceNote, PriceNotesProps } from "./price-notes";
 export type { PaintedStoryProps, PaintedStoryStep } from "./painted-story";
 export type { OfferSectionProps } from "./offer-section";
 export { OfferTile } from "./offer-tile";
@@ -57,6 +62,10 @@ export type {
   SocialNetwork,
 } from "./site-types";
 export { SkipLink } from "./skip-link";
+export { SlotPicks } from "./slot-picks";
+export type { SlotPick, SlotPicksProps } from "./slot-picks";
+export { TopicGuide } from "./topic-guide";
+export type { Topic, TopicGuideProps, TopicPaint } from "./topic-guide";
 export { EditorialHeading, SectionEyebrow } from "./typography";
 export type { EditorialHeadingProps, SectionEyebrowProps } from "./typography";
 export { SpecialistArtwork, specialistSplashes } from "./specialist-artwork";
