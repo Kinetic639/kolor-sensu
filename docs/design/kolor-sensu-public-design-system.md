@@ -490,6 +490,24 @@ band after another.
   Brush Matte Debug, Slow Motion Debug, Frame Strip, All Paints Animated)
   and OfferSection (Desktop, Tablet, Mobile).
 
+### Homepage additions (2026-10-01)
+
+Chosen by michal from the Talking Walls experiments; homepage only.
+
+- **Cursor ring** (`CursorRing`): a pink hairline ring trailing the mouse,
+  larger over links, a "Zobacz" disc over pictures and cards. Mouse only;
+  hidden for touch and under reduced motion.
+- **Drifting words** (`DriftingWords`): "Spokojnie, uważnie, / z sensem." in
+  outlined display type, the two lines sliding apart with the scroll
+  (scroll-driven CSS). Over them the same words in pink-to-sage colour,
+  seen through a brushed patch of paint that sweeps across once and then
+  follows the pointer. Decorative, aria-hidden; outline only under reduced
+  motion.
+- **Painted story** (`PaintedStory`): "Jak zacząć" in three steps. From
+  64 rem with motion it pins one screen while the steps change, each step's
+  picture painted over the previous one with the WatercolorImage brush.
+  Phones, reduced motion or no script: the plain stacked steps.
+
 ## 12. Primitives
 
 Only what the references repeat:
@@ -583,7 +601,8 @@ islands hydrate: the desktop dropdown, the phone menu and the cookie notice.
   and let `WatercolorImage` crop and paint it.
 - No wipes, fades, blurs or growing shapes to reveal painted layers: paint
   them in through the matte (§11).
-- No looping, bouncing or cursor-following animation. Nothing may stay hidden
+- No looping, bouncing or cursor-following animation, except the homepage
+  additions above. Nothing may stay hidden
   without a script: pre-hide only under `(scripting: enabled)`, with a CSS
   fallback that shows the content anyway.
 - No new mask shapes drawn by hand; extend the generators.

@@ -17,8 +17,11 @@ export type {
   SoftCardProps,
   WatercolorSectionBackgroundProps,
 } from "./surfaces";
+export { CursorRing } from "./cursor-ring";
 export { CookieConsent } from "./cookie-consent";
 export type { CookieChoice, CookieConsentProps } from "./cookie-consent";
+export { DriftingWords } from "./drifting-words";
+export type { DriftingWordsProps } from "./drifting-words";
 export { FaqSection } from "./faq-section";
 export type { FaqItem, FaqSectionProps } from "./faq-section";
 export { FeatureSection } from "./feature-section";
@@ -32,6 +35,8 @@ export type { OfferSectionProps } from "./offer-section";
 export { OfferTile } from "./offer-tile";
 export type { OfferPaint, OfferService, OfferTileProps } from "./offer-tile";
 export { JsonLd } from "./json-ld";
+export { PaintedStory } from "./painted-story";
+export type { PaintedStoryProps, PaintedStoryStep } from "./painted-story";
 export { RoomGallery } from "./room-gallery";
 export type { RoomGalleryPhoto, RoomGalleryProps } from "./room-gallery";
 export { SiteBreadcrumbs } from "./site-breadcrumbs";

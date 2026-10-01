@@ -1,8 +1,11 @@
 import {
+  CursorRing,
+  DriftingWords,
   FaqSection,
   FeatureSection,
   HeroSection,
   OfferSection,
+  PaintedStory,
   SpecialistsSection,
 } from "@repo/ui/public-site";
 import type { Metadata } from "next";
@@ -13,6 +16,7 @@ import {
   offerCopy,
   rooms,
   specialistsCopy,
+  story,
   workshops,
 } from "@/content/site";
 import { withHomeContent } from "@/lib/home-content";
@@ -55,6 +59,8 @@ export default async function Home() {
           animationPreset="splash-reveal"
         />
       ) : null}
+      <DriftingWords lines={["Spokojnie, uważnie,", "z sensem."]} />
+      <PaintedStory {...story} />
       <FeatureSection
         {...rooms}
         cta={{ href: "/gabinety", label: "Zobacz nasze gabinety" }}
@@ -73,6 +79,7 @@ export default async function Home() {
         cta={{ href: "/kontakt", label: "Masz inne pytanie? Napisz do nas" }}
       />
       <ClosingCta />
+      <CursorRing />
     </>
   );
 }
