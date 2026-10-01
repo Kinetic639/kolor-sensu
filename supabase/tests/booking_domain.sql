@@ -2089,6 +2089,10 @@ RESET ROLE;
 -- time with the refund they choose (all by default, at most what is left),
 -- gives money back later, and moves a visit to any free time, room or
 -- form; each with a reason in the history. A specialist does none of it.
+-- (Wednesday's 9:00 and 11:00, U's visits, are freed for these.)
+UPDATE public.appointments
+SET status = 'cancelled', cancelled_at = now(), cancelled_by = 'centre'
+WHERE reference IN (SELECT reference FROM s_visits WHERE name IN ('u1', 'u2'));
 SET LOCAL ROLE service_role;
 SELECT pg_temp.paid_visit('aa1', '09:00');
 SELECT pg_temp.paid_visit('aa2', '11:00');
