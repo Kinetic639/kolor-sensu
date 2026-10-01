@@ -17,8 +17,11 @@ export type {
   SoftCardProps,
   WatercolorSectionBackgroundProps,
 } from "./surfaces";
+export { CircleStatement } from "./circle-statement";
 export { CookieConsent } from "./cookie-consent";
 export type { CookieChoice, CookieConsentProps } from "./cookie-consent";
+export { DriftingPhotos } from "./drifting-photos";
+export { DriftingWords } from "./drifting-words";
 export { FaqSection } from "./faq-section";
 export type { FaqItem, FaqSectionProps } from "./faq-section";
 export { FeatureSection } from "./feature-section";

@@ -518,6 +518,15 @@ the pictures' own reveals leave still. Other pages don't use it, so the
 - **Site header** (HeaderScroll): hairline only once the page has moved;
   slides away while reading down past four header heights, back on the first
   scroll up or when focus enters it; never hides under reduced motion.
+- **Talking Walls layer** (2026-10-01, michal's chosen references: David
+  Whyte Experience and Talking Walls): Lenis inertia scroll (wheel and
+  trackpad only); a pink hairline cursor ring that grows over links and
+  becomes a "Zobacz" disc over pictures and cards (fine pointers only);
+  `CircleStatement` (a sentence in a hairline double ring that draws and
+  turns with scroll); `DriftingWords` (two huge outlined lines sliding apart,
+  decorative, aria-hidden); `DriftingPhotos` (tilted room photos travelling
+  sideways, from the rooms' published photos, shown from 3 photos); the hero
+  picture rising a little faster than its text.
 - **Fallbacks:** reduced motion or no scripting gives the static page; the
   starting state lifts itself after 3 s if the script never runs.
 

@@ -61,3 +61,24 @@ export function groupRoomsByLocation({
     }))
     .filter((group) => group.rooms.length > 0);
 }
+
+/**
+ * Photos for the homepage's drifting row: every room's main photo first,
+ * then the rooms' further photos in turn, so neighbouring prints show
+ * different rooms. At most `limit`.
+ */
+export function roomStripPhotos(
+  groups: readonly RoomsPageLocation[],
+  limit = 6,
+): Array<{ src: string; alt: string }> {
+  const rooms = groups.flatMap((group) => group.rooms);
+  const longest = Math.max(0, ...rooms.map((room) => room.photos.length));
+  const photos: Array<{ src: string; alt: string }> = [];
+  for (let index = 0; index < longest; index++) {
+    for (const room of rooms) {
+      const photo = room.photos[index];
+      if (photo) photos.push({ src: photo.url, alt: photo.alt });
+    }
+  }
+  return photos.slice(0, limit);
+}

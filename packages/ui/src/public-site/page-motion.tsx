@@ -16,6 +16,12 @@
 //                          settles with one small sway.
 //   data-motion-delay      extra wait (s) before an element starts.
 //
+// The page also scrolls with a little inertia (Lenis, on a mouse wheel or
+// trackpad only; touch keeps the native scroll), and on a fine pointer a
+// small ring follows the cursor: it grows over links and turns into a
+// "Zobacz" disc over pictures and cards (data-cursor-label overrides the
+// word). Both stay off under prefers-reduced-motion.
+//
 // Pictures inside a PageMotion also get a few percent of scroll parallax
 // inside their painted frame; that part is pure CSS (public-site.css,
 // "Page motion"), as is the hidden starting state, which applies only where
@@ -25,12 +31,14 @@
 
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
+import Lenis from "lenis";
 import { type ReactNode, useRef } from "react";
 import { cn } from "../lib/utils";
 import { matches, shownByFallback, watchReveal } from "./reveal-support";
 
-gsap.registerPlugin(useGSAP, SplitText);
+gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 
 const EASE = "power3.out";
 
@@ -95,6 +103,45 @@ function playBand(root: HTMLElement) {
   return timeline;
 }
 
+function smoothScroll() {
+  const lenis = new Lenis({ lerp: 0.1, anchors: true });
+  const tick = (time: number) => lenis.raf(time * 1000);
+  lenis.on("scroll", ScrollTrigger.update);
+  gsap.ticker.add(tick);
+  return () => {
+    gsap.ticker.remove(tick);
+    lenis.destroy();
+  };
+}
+
+const VIEW_TARGETS =
+  ".ks-wc, .ks-of, .ks-sp, .ks-drift-photos figure, [data-cursor-label]";
+
+function followCursor(cursor: HTMLElement) {
+  const label = cursor.querySelector<HTMLElement>(".ks-cursor__label");
+  const x = gsap.quickTo(cursor, "x", { duration: 0.45, ease: "power3.out" });
+  const y = gsap.quickTo(cursor, "y", { duration: 0.45, ease: "power3.out" });
+  const move = (event: PointerEvent) => {
+    if (event.pointerType !== "mouse") return;
+    x(event.clientX);
+    y(event.clientY);
+    const target = event.target instanceof Element ? event.target : null;
+    const view = target?.closest<HTMLElement>(VIEW_TARGETS);
+    const link = target?.closest("a, button, summary, [role='button']");
+    cursor.dataset.state = view ? "view" : link ? "link" : "rest";
+    if (label) label.textContent = view?.dataset.cursorLabel ?? "Zobacz";
+  };
+  const leave = () => {
+    cursor.dataset.state = "away";
+  };
+  window.addEventListener("pointermove", move, { passive: true });
+  document.documentElement.addEventListener("pointerleave", leave);
+  return () => {
+    window.removeEventListener("pointermove", move);
+    document.documentElement.removeEventListener("pointerleave", leave);
+  };
+}
+
 export function PageMotion({
   children,
   className,
@@ -103,6 +150,24 @@ export function PageMotion({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (
+      !matches("(scripting: enabled)") ||
+      matches("(prefers-reduced-motion: reduce)")
+    ) {
+      return;
+    }
+    const stopScroll = smoothScroll();
+    const cursor = cursorRef.current;
+    const stopCursor =
+      cursor && matches("(pointer: fine)") ? followCursor(cursor) : undefined;
+    return () => {
+      stopScroll();
+      stopCursor?.();
+    };
+  });
 
   useGSAP(
     () => {
@@ -150,6 +215,14 @@ export function PageMotion({
   return (
     <div ref={ref} className={cn("ks-motion", className)}>
       {children}
+      <div
+        ref={cursorRef}
+        className="ks-cursor"
+        data-state="away"
+        aria-hidden="true"
+      >
+        <span className="ks-cursor__label">Zobacz</span>
+      </div>
     </div>
   );
 }

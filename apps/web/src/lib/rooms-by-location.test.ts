@@ -1,6 +1,6 @@
 import { emptyRichTextDocument } from "@repo/contracts";
 import { describe, expect, it } from "vitest";
-import { groupRoomsByLocation } from "./rooms-by-location";
+import { groupRoomsByLocation, roomStripPhotos } from "./rooms-by-location";
 
 const location = (id: string, sortOrder: number) => ({
   id,
@@ -91,5 +91,36 @@ describe("groupRoomsByLocation", () => {
 
     expect(groups).toHaveLength(1);
     expect(groups[0]!.rooms.map((room) => room.roomId)).toEqual(["r1"]);
+  });
+});
+
+describe("roomStripPhotos", () => {
+  const room = (roomId: string, count: number) => ({
+    ...profile(roomId),
+    photos: Array.from({ length: count }, (_, index) => ({
+      url: `https://cdn/${roomId}-${index}.webp`,
+      alt: `Gabinet ${roomId}, zdjęcie ${index + 1} z ${count}`,
+    })),
+  });
+
+  it("takes every room's main photo first, then the others in turn", () => {
+    const groups = [
+      { location: location("a", 1), rooms: [room("1", 3), room("2", 1)] },
+      { location: location("b", 2), rooms: [room("3", 2)] },
+    ];
+    expect(roomStripPhotos(groups).map((photo) => photo.src)).toEqual([
+      "https://cdn/1-0.webp",
+      "https://cdn/2-0.webp",
+      "https://cdn/3-0.webp",
+      "https://cdn/1-1.webp",
+      "https://cdn/3-1.webp",
+      "https://cdn/1-2.webp",
+    ]);
+  });
+
+  it("stops at the limit and copes with no rooms", () => {
+    const groups = [{ location: location("a", 1), rooms: [room("1", 9)] }];
+    expect(roomStripPhotos(groups, 4)).toHaveLength(4);
+    expect(roomStripPhotos([])).toEqual([]);
   });
 });
