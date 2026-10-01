@@ -198,6 +198,8 @@ export {
 export type { CancelledBooking, RescheduledBooking } from "./booking-changes";
 export {
   centreCancelVisit,
+  centreRefundVisit,
+  centreRescheduleVisit,
   centreResendPaymentLink,
   getVisit,
   listVisitEvents,
@@ -206,6 +208,9 @@ export {
 } from "./visits";
 export type {
   CentreCancelledVisit,
+  CentreMove,
+  CentreMovedVisit,
+  CentreRefund,
   Visit,
   VisitDetail,
   VisitEvent,

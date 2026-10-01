@@ -1039,3 +1039,22 @@ export function newVisitDefaults(
     ? { ...none, specialistId, mode: "online" }
     : { ...none, specialistId, mode: "in_person", roomId: window.place.id };
 }
+
+/**
+ * Where a visit the centre moves (R12) goes by default: the place picked in
+ * the grid (a room's column, online, or the specialist's window then), else
+ * where it was.
+ */
+export function moveVisitDefaults(
+  columns: CalendarColumn[],
+  key: string | null,
+  slot: string,
+  visit: { mode: "in_person" | "online"; roomId: string | null },
+): Omit<NewVisitDefaults, "specialistId" | "mode"> & {
+  mode: "in_person" | "online";
+} {
+  const { date, time, mode, roomId } = newVisitDefaults(columns, key, slot);
+  return mode
+    ? { date, time, mode, roomId }
+    : { date, time, mode: visit.mode, roomId: visit.roomId };
+}

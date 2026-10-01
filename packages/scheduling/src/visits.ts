@@ -80,6 +80,13 @@ export interface VisitRow {
   paymentDue: string | null;
   /** Its link to pay can be e-mailed again (still payable, has an e-mail). */
   resendable: boolean;
+  /** Admins: what is left of the payment to give back (0: nothing). */
+  refundableMinor: number;
+  currencyCode: string;
+  mode: "in_person" | "online";
+  roomId: string | null;
+  /** Still ahead and booked: the centre may move it. */
+  movable: boolean;
 }
 
 export interface VisitDay {
@@ -200,6 +207,16 @@ function rowOf(visit: VisitLike, timeZone: string, now: Date): VisitRow {
       reservation !== null &&
       new Date(reservation) > now &&
       Boolean(visit.client.email),
+    refundableMinor: visit.payment?.paid
+      ? Math.max(0, visit.priceMinor - visit.payment.refundedMinor)
+      : 0,
+    currencyCode: visit.currencyCode,
+    mode: visit.mode,
+    roomId: visit.mode === "in_person" ? (visit.room?.id ?? null) : null,
+    movable:
+      !cancelled &&
+      (visit.status === "confirmed" || visit.status === "awaiting_payment") &&
+      new Date(visit.startsAt) > now,
   };
 }
 

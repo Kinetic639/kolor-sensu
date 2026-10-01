@@ -8,6 +8,7 @@
     "./availability": "./src/availability.ts",
     "./booking": "./src/booking.ts",
     "./center": "./src/center.ts",
+    "./centre-changes": "./src/centre-changes.ts",
     "./cms": "./src/cms.ts",
     "./colors": "./src/colors.ts",
     "./database": "./src/database.types.ts",

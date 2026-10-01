@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   centreCancelVisit,
+  centreRefundVisit,
+  centreRescheduleVisit,
   centreResendPaymentLink,
   getVisit,
   listVisitEvents,
@@ -132,6 +134,8 @@ describe("centreCancelVisit", () => {
     });
     expect(rpc).toHaveBeenCalledWith("centre_cancel_visit", {
       p_appointment_id: "visit-1",
+      p_refund_minor: null,
+      p_reason: null,
     });
   });
 
@@ -298,5 +302,99 @@ describe("centreResendPaymentLink", () => {
         centreResendPaymentLink(rpcClient(null, error).client, "v"),
       ).rejects.toMatchObject({ code });
     }
+  });
+});
+
+describe("the centre's own way (R12)", () => {
+  it("cancels with the refund the admin chose, and why", async () => {
+    const { client, rpc } = rpcClient([
+      {
+        reference: "KS-1",
+        refund_minor: 10000,
+        payment_intent_id: "pi_1",
+        reschedule_count: 0,
+      },
+    ]);
+    await centreCancelVisit(client, "visit-1", {
+      refundMinor: 10000,
+      reason: "Późne odwołanie",
+    });
+    expect(rpc).toHaveBeenCalledWith("centre_cancel_visit", {
+      p_appointment_id: "visit-1",
+      p_refund_minor: 10000,
+      p_reason: "Późne odwołanie",
+    });
+  });
+
+  it("gives money back later, up to what is left", async () => {
+    const { client, rpc } = rpcClient([
+      {
+        reference: "KS-1",
+        refund_minor: 5000,
+        payment_intent_id: "pi_1",
+        refunded_before_minor: 15000,
+      },
+    ]);
+    expect(
+      await centreRefundVisit(client, "visit-1", 5000, "Gest dobrej woli"),
+    ).toEqual({
+      reference: "KS-1",
+      refundMinor: 5000,
+      paymentIntentId: "pi_1",
+      refundedBeforeMinor: 15000,
+    });
+    expect(rpc).toHaveBeenCalledWith("centre_refund_visit", {
+      p_appointment_id: "visit-1",
+      p_refund_minor: 5000,
+      p_reason: "Gest dobrej woli",
+    });
+    await expect(
+      centreRefundVisit(
+        rpcClient(null, { message: "x", hint: "refund_too_high" }).client,
+        "v",
+        1,
+        null,
+      ),
+    ).rejects.toMatchObject({ code: "refund_too_high" });
+  });
+
+  it("moves a visit anywhere free", async () => {
+    const { client, rpc } = rpcClient([
+      {
+        reference: "KS-1",
+        starts_at: "2030-10-02T13:00:00+00:00",
+        ends_at: "2030-10-02T13:50:00+00:00",
+        sequence: 1,
+        payment_due_at: null,
+      },
+    ]);
+    expect(
+      await centreRescheduleVisit(client, "visit-1", {
+        startsAt: "2030-10-02T13:00:00.000Z",
+        mode: "online",
+        roomId: null,
+        reason: null,
+      }),
+    ).toEqual({
+      reference: "KS-1",
+      startsAt: "2030-10-02T13:00:00+00:00",
+      endsAt: "2030-10-02T13:50:00+00:00",
+      sequence: 1,
+      paymentDueAt: null,
+    });
+    expect(rpc).toHaveBeenCalledWith("centre_reschedule_visit", {
+      p_appointment_id: "visit-1",
+      p_starts_at: "2030-10-02T13:00:00.000Z",
+      p_mode: "online",
+      p_room_id: null,
+      p_reason: null,
+    });
+    await expect(
+      centreRescheduleVisit(
+        rpcClient(null, { message: "x", code: "42501" }).client,
+        "v",
+        { startsAt: "x", mode: "online", roomId: null, reason: null },
+      ),
+    ).rejects.toMatchObject({ code: "forbidden" });
   });
 });

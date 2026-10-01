@@ -1,15 +1,14 @@
-import {
-  bookVisitAction,
-  resendPaymentLinkAction,
-} from "@/features/calendar/actions";
+import { bookVisitAction } from "@/features/calendar/actions";
+import { moveVisitAsCentreAction } from "@/features/visits/actions";
 import { loadAdminCalendar } from "@/features/calendar/loaders";
-import { CancelVisitButton } from "@/features/visits/cancel-visit";
+import { CentreVisitToolbar } from "@/features/visits/cancel-visit";
 import {
   findAvailability,
   formatDate,
   formatDateRangeShort,
   formatWeekday,
   mondayOf,
+  moveVisitDefaults,
   newVisitDefaults,
 } from "@repo/scheduling";
 import {
@@ -30,6 +29,7 @@ import {
   ComparisonSummaryPanel,
   DaySchedule,
   loadCalendarParams,
+  MoveVisitPanel,
   NewVisitPanel,
   ScheduleAgenda,
   ScheduleCanvas,
@@ -39,15 +39,16 @@ import {
   WeekComparison,
 } from "@repo/ui/calendar-view";
 import { PageTitle } from "@repo/ui/portal-content";
-import { ResendPaymentLinkButton, VisitPanel } from "@repo/ui/visit-table";
+import { VisitPanel } from "@repo/ui/visit-table";
 
 // Kalendarz (stage K5), after the AI Studio reference: the centre's day, a
 // column per specialist or room (collapsible), or the week compared in
 // narrow lanes with its summary. The address holds the state: the view,
 // the date, the switches, the location, the search and the visit open in
-// the side panel (?wizyta=…), where the centre may cancel it, and adding a
-// visit ("+ Nowa wizyta": pick a place in the grid, the form opens). The
-// bookings table is /rezerwacje.
+// the side panel (?wizyta=…), where the centre may cancel it or give money
+// back, adding a visit ("+ Nowa wizyta": pick a place in the grid, the form
+// opens) and moving one (?przesun=…, R12: the same picking, then the move's
+// form). The bookings table is /rezerwacje.
 
 const PATH = "/kalendarz";
 
@@ -55,7 +56,7 @@ export default async function CalendarPage({
   searchParams,
 }: PageProps<"/kalendarz">) {
   const params = loadCalendarParams(await searchParams);
-  const { today, period, locations, day, week, open, booking } =
+  const { today, period, locations, day, week, open, booking, move } =
     await loadAdminCalendar(params);
   const context = { today, defaultView: "dzien" as const };
   const byRoom = params.perspektywa === "gabinety";
@@ -63,8 +64,8 @@ export default async function CalendarPage({
   const columns = day
     ? day.columns
     : (week?.days.flatMap((one) => one.lanes) ?? []);
-  // Adding: the grid picks a time until the form is open.
-  const picking = params.nowa && !params.termin;
+  // Adding or moving: the grid picks a time until the form is open.
+  const picking = (params.nowa || Boolean(move)) && !params.termin;
   const availabilityHref = picking
     ? undefined
     : (key: string) => calendarAvailabilityHref(PATH, params, key);
@@ -91,8 +92,12 @@ export default async function CalendarPage({
           }
           actions={
             <AddVisitButton
-              active={params.nowa}
-              href={calendarAddHref(PATH, params, !params.nowa)}
+              active={params.nowa || Boolean(move)}
+              href={calendarAddHref(
+                PATH,
+                params,
+                !(params.nowa || Boolean(move)),
+              )}
             />
           }
           views={calendarViewTabs(PATH, params, context.defaultView)}
@@ -103,9 +108,19 @@ export default async function CalendarPage({
             manualHref={calendarPickHref(
               PATH,
               params,
-              `${period.date}T09:00`,
+              move
+                ? `${move.row.date}T${move.row.time.slice(0, 5)}`
+                : `${period.date}T09:00`,
               null,
             )}
+            moving={
+              move
+                ? {
+                    reference: move.row.reference,
+                    label: `${move.row.clientName}, ${move.row.weekday}, ${move.row.dateLabel}, ${move.row.time}`,
+                  }
+                : undefined
+            }
           />
         ) : null}
         <ScheduleFrame
@@ -175,7 +190,27 @@ export default async function CalendarPage({
             ) : null
           }
           panel={
-            booking && params.termin ? (
+            move && params.termin ? (
+              <MoveVisitPanel
+                action={moveVisitAsCentreAction}
+                closeHref={calendarAddHref(PATH, params, false)}
+                defaults={moveVisitDefaults(
+                  columns,
+                  params.kolumna,
+                  params.termin,
+                  move.row,
+                )}
+                rooms={move.rooms}
+                visit={{
+                  id: move.row.id,
+                  reference: move.row.reference,
+                  clientName: move.row.clientName,
+                  serviceName: move.row.serviceName,
+                  specialistName: move.row.specialistName,
+                  current: `${move.row.weekday}, ${move.row.dateLabel}, ${move.row.time} · ${move.row.room}`,
+                }}
+              />
+            ) : booking && params.termin ? (
               <NewVisitPanel
                 action={bookVisitAction}
                 closeHref={calendarAddHref(PATH, params, false)}
@@ -196,25 +231,10 @@ export default async function CalendarPage({
                 tab={params.karta}
                 tabs={calendarPanelTabs(PATH, params)}
                 toolbar={
-                  <>
-                    {open.row.resendable ? (
-                      <ResendPaymentLinkButton
-                        action={resendPaymentLinkAction}
-                        visitId={open.row.id}
-                      />
-                    ) : null}
-                    {open.row.cancellable ? (
-                      <CancelVisitButton
-                        visit={{
-                          id: open.row.id,
-                          reference: open.row.reference,
-                          label: `${open.row.clientName}, ${open.row.weekday}, ${open.row.dateLabel}, ${open.row.time}`,
-                          paid: open.row.paid,
-                          email: open.row.email,
-                        }}
-                      />
-                    ) : null}
-                  </>
+                  <CentreVisitToolbar
+                    label={`${open.row.clientName}, ${open.row.weekday}, ${open.row.dateLabel}, ${open.row.time}`}
+                    row={open.row}
+                  />
                 }
               />
             ) : shown ? (

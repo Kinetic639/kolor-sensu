@@ -215,3 +215,54 @@ describe("a visit the centre booked", () => {
     ]);
   });
 });
+
+describe("the centre's own way (R12)", () => {
+  const options = { timeZone: "Europe/Warsaw", currencyCode: "PLN" };
+
+  it("a cancellation, a refund later and a move, each with why", () => {
+    const rows = visitEventRows(
+      [
+        {
+          id: 1,
+          occurredAt: "2026-10-12T08:00:00+00:00",
+          kind: "cancelled",
+          actor: "centre",
+          actorName: "Michał Stępień",
+          details: { refund_due_minor: 10000, reason: "Późne odwołanie" },
+        },
+        {
+          id: 2,
+          occurredAt: "2026-10-13T08:00:00+00:00",
+          kind: "refund_issued",
+          actor: "centre",
+          actorName: "Michał Stępień",
+          details: { refund_minor: 5000, reason: "Gest" },
+        },
+        {
+          id: 3,
+          occurredAt: "2026-10-01T08:00:00+00:00",
+          kind: "rescheduled",
+          actor: "centre",
+          actorName: null,
+          details: {
+            from_starts_at: "2026-10-14T08:00:00+00:00",
+            to_starts_at: "2026-10-15T08:00:00+00:00",
+            reason: "Prośba klienta",
+          },
+        },
+      ],
+      options,
+    );
+    expect(rows.map((row) => [row.title, row.detail])).toEqual([
+      [
+        "Wizyta odwołana",
+        expect.stringMatching(/^Do zwrotu: 100\s?zł · Późne odwołanie$/),
+      ],
+      [
+        "Zwrot zlecony przez centrum",
+        expect.stringMatching(/^50\s?zł · Gest$/),
+      ],
+      ["Zmieniono termin", expect.stringMatching(/ · Prośba klienta$/)],
+    ]);
+  });
+});

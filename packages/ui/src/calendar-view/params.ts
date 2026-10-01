@@ -82,6 +82,8 @@ export const calendarParsers = {
   termin: parseAsSlot,
   /** The column it was picked in (a specialist, room or online). */
   kolumna: parseAsColumn,
+  /** Moving this visit (the centre, R12): pick its new place in the grid. */
+  przesun: parseAsId,
   /** The availability window open in the side panel. */
   okno: parseAsWindow,
   karta: parseAsStringLiteral(["szczegoly", "historia"] as const).withDefault(
@@ -225,6 +227,7 @@ export function calendarAddHref(
     nowa: on,
     termin: null,
     kolumna: null,
+    przesun: null,
     wizyta: null,
     okno: null,
     karta: "szczegoly",

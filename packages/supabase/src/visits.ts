@@ -222,15 +222,24 @@ export interface CentreCancelledVisit {
   rescheduleCount: number;
 }
 
-/** Cancels as the centre (admins). Throws a BookingError. */
+/**
+ * Cancels as the centre (admins), at any time, giving back what the admin
+ * chose (null: all that is left of the payment). Throws a BookingError.
+ */
 export async function centreCancelVisit(
   client: Client,
   appointmentId: string,
+  {
+    refundMinor = null,
+    reason = null,
+  }: { refundMinor?: number | null; reason?: string | null } = {},
 ): Promise<CentreCancelledVisit> {
   const { data, error } = await client.rpc("centre_cancel_visit", {
     p_appointment_id: appointmentId,
+    p_refund_minor: refundMinor,
+    p_reason: reason,
   });
-  if (error) throw bookingError(error);
+  if (error) throw centreError(error);
   const row = data?.[0];
   if (!row) throw new BookingError("unknown", "Cancelling returned nothing");
   return {
@@ -303,4 +312,88 @@ export async function centreResendPaymentLink(
   const row = data?.[0];
   if (!row) throw new BookingError("unknown", "Nothing to send");
   return row.reference;
+}
+
+function centreError(error: {
+  message: string;
+  hint?: string | null;
+  code?: string;
+}) {
+  return error.code === "42501"
+    ? new BookingError("forbidden", error.message)
+    : bookingError(error);
+}
+
+export interface CentreRefund {
+  reference: string;
+  refundMinor: number;
+  paymentIntentId: string;
+  /** Given back before this refund (to tell one refund from the next). */
+  refundedBeforeMinor: number;
+}
+
+/** Gives money back later (admins), up to what is left. Throws a BookingError. */
+export async function centreRefundVisit(
+  client: Client,
+  appointmentId: string,
+  refundMinor: number,
+  reason: string | null,
+): Promise<CentreRefund> {
+  const { data, error } = await client.rpc("centre_refund_visit", {
+    p_appointment_id: appointmentId,
+    p_refund_minor: refundMinor,
+    p_reason: reason,
+  });
+  if (error) throw centreError(error);
+  const row = data?.[0];
+  if (!row) throw new BookingError("unknown", "The refund returned nothing");
+  return {
+    reference: row.reference,
+    refundMinor: row.refund_minor,
+    paymentIntentId: row.payment_intent_id,
+    refundedBeforeMinor: row.refunded_before_minor,
+  };
+}
+
+export interface CentreMove {
+  /** An instant (ISO). */
+  startsAt: string;
+  mode: VisitMode;
+  /** In person only. */
+  roomId: string | null;
+  reason: string | null;
+}
+
+export interface CentreMovedVisit {
+  reference: string;
+  startsAt: string;
+  endsAt: string;
+  /** The calendar event's version: how many times it has moved. */
+  sequence: number;
+  paymentDueAt: string | null;
+}
+
+/** Moves a visit anywhere free (admins). Throws a BookingError. */
+export async function centreRescheduleVisit(
+  client: Client,
+  appointmentId: string,
+  move: CentreMove,
+): Promise<CentreMovedVisit> {
+  const { data, error } = await client.rpc("centre_reschedule_visit", {
+    p_appointment_id: appointmentId,
+    p_starts_at: move.startsAt,
+    p_mode: move.mode,
+    p_room_id: move.mode === "in_person" ? move.roomId : null,
+    p_reason: move.reason,
+  });
+  if (error) throw centreError(error);
+  const row = data?.[0];
+  if (!row) throw new BookingError("unknown", "The move returned nothing");
+  return {
+    reference: row.reference,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    sequence: row.sequence,
+    paymentDueAt: row.payment_due_at ?? null,
+  };
 }

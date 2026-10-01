@@ -1,5 +1,6 @@
 import type { ClaimedBookingEmail } from "@repo/supabase";
 import { describe, expect, it } from "vitest";
+import { formatPrice } from "@/lib/format";
 import { cancelledContent, rescheduledContent } from "./change-content";
 
 const visit: ClaimedBookingEmail = {
@@ -99,5 +100,43 @@ describe("cancelledContent", () => {
     expect(content.intro).toBe(
       "Odwołaliśmy Twoją rezerwację. Nie była opłacona, więc nie ma nic do zwrotu.",
     );
+  });
+});
+
+describe("the centre's own way (R12)", () => {
+  it("a late cancellation: what goes back, what is kept and why", () => {
+    const content = cancelledContent(
+      { ...visit, cancelledBy: "centre" },
+      {
+        ...options,
+        sequence: 0,
+        refundMinor: 10000,
+        reason: "Późne odwołanie",
+      },
+    );
+    expect(content.rows).toContainEqual([
+      "Zwrot",
+      formatPrice({ priceMinor: 10000, currencyCode: "PLN" }),
+    ]);
+    expect(content.rows).toContainEqual([
+      "Zatrzymano",
+      formatPrice({ priceMinor: 10000, currencyCode: "PLN" }),
+    ]);
+    expect(content.rows).toContainEqual(["Powód", "Późne odwołanie"]);
+    expect(content.intro).not.toContain("Przepraszamy");
+    expect(content.intro).toContain("Odwołaliśmy Twoją wizytę.");
+  });
+
+  it("a move by the centre says why, and an unpaid one when to pay by", () => {
+    const content = rescheduledContent(
+      { ...visit, paid: false, paymentDueAt: "2030-10-01T09:00:00+00:00" },
+      { ...options, sequence: 2, reason: "Prośba klienta" },
+    );
+    expect(content.rows).toContainEqual(["Powód", "Prośba klienta"]);
+    expect(content.rows).toContainEqual([
+      "Zapłać do",
+      "1 października 2030, godz. 11:00",
+    ]);
+    expect(content.ics).toContain("SEQUENCE:2");
   });
 });

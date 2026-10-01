@@ -53,6 +53,9 @@ export type BookingErrorCode =
   | "pay_now_required"
   | "not_payable"
   | "recently_sent"
+  | "refund_too_high"
+  | "not_paid"
+  | "nothing_changed"
   | "unknown";
 
 const BOOKING_ERROR_CODES = new Set<string>([
@@ -77,6 +80,9 @@ const BOOKING_ERROR_CODES = new Set<string>([
   "pay_now_required",
   "not_payable",
   "recently_sent",
+  "refund_too_high",
+  "not_paid",
+  "nothing_changed",
 ]);
 
 export class BookingError extends Error {

@@ -2084,4 +2084,169 @@ END;
 $body$;
 RESET ROLE;
 
+
+-- AA: the centre settles visits its own way (R12). An admin cancels at any
+-- time with the refund they choose (all by default, at most what is left),
+-- gives money back later, and moves a visit to any free time, room or
+-- form; each with a reason in the history. A specialist does none of it.
+SET LOCAL ROLE service_role;
+SELECT pg_temp.paid_visit('aa1', '09:00');
+SELECT pg_temp.paid_visit('aa2', '11:00');
+SELECT pg_temp.paid_visit('aa3', '10:00');
+RESET ROLE;
+GRANT SELECT ON s_visits TO authenticated;
+GRANT EXECUTE ON FUNCTION pg_temp.hint_of(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION pg_temp.at(date, time) TO authenticated;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  aa1 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1'));
+  c record;
+BEGIN
+  IF pg_temp.hint_of(format('SELECT public.centre_cancel_visit(%L, 30000)', aa1)) <> 'refund_too_high' THEN
+    RAISE EXCEPTION 'AA: gave back more than was paid';
+  END IF;
+  -- Cancelled the same day: 100 zł kept for the late cancellation.
+  SELECT * INTO c FROM public.centre_cancel_visit(aa1, 15000, 'Późne odwołanie');
+  IF (c.refund_minor, c.payment_intent_id) IS DISTINCT FROM (15000, 'pi_test_aa1'::text) THEN
+    RAISE EXCEPTION 'AA: the cancellation: %', row_to_json(c);
+  END IF;
+  IF (SELECT (status, cancelled_by, refund_due_minor) FROM public.appointments WHERE id = aa1)
+     IS DISTINCT FROM ('cancelled'::public.appointment_status, 'centre'::text, 15000) THEN
+    RAISE EXCEPTION 'AA: the cancelled visit';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.list_visit_events(aa1)
+    WHERE kind = 'cancelled' AND actor = 'centre'
+      AND details ->> 'reason' = 'Późne odwołanie' AND details ->> 'refund_due_minor' = '15000'
+  ) THEN
+    RAISE EXCEPTION 'AA: the history does not say why';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Stripe gave back 150 zł; later the centre gives back 50 zł more, and no
+-- more than what is left.
+SELECT public.record_refund('pi_test_aa1', 15000);
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  aa1 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1'));
+  r record;
+BEGIN
+  IF pg_temp.hint_of(format('SELECT public.centre_refund_visit(%L, 11000)', aa1)) <> 'refund_too_high'
+     OR pg_temp.hint_of(format('SELECT public.centre_refund_visit(%L, 0)', aa1)) <> 'refund_too_high' THEN
+    RAISE EXCEPTION 'AA: a refund beyond what is left';
+  END IF;
+  SELECT * INTO r FROM public.centre_refund_visit(aa1, 5000, 'Gest dobrej woli');
+  IF (r.refund_minor, r.payment_intent_id, r.refunded_before_minor)
+     IS DISTINCT FROM (5000, 'pi_test_aa1'::text, 15000) THEN
+    RAISE EXCEPTION 'AA: the later refund: %', row_to_json(r);
+  END IF;
+  IF (SELECT refund_due_minor FROM public.appointments WHERE id = aa1) <> 20000 THEN
+    RAISE EXCEPTION 'AA: what the centre owes back';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.list_visit_events(aa1)
+    WHERE kind = 'refund_issued' AND actor = 'centre'
+      AND details ->> 'refund_minor' = '5000' AND details ->> 'reason' = 'Gest dobrej woli'
+  ) THEN
+    RAISE EXCEPTION 'AA: the refund is not in the history';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Anna: none of it, and no money in her visit's history.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  aa1 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1'));
+  aa2 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa2'));
+BEGIN
+  BEGIN
+    PERFORM public.centre_refund_visit(aa1, 100);
+    RAISE EXCEPTION 'AA: a specialist gave money back';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.centre_reschedule_visit(aa2, now() + interval '30 days', 'online', NULL);
+    RAISE EXCEPTION 'AA: a specialist moved a visit as the centre';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  IF EXISTS (SELECT 1 FROM public.list_visit_events(aa1)
+             WHERE kind = 'refund_issued' OR details ? 'refund_minor') THEN
+    RAISE EXCEPTION 'AA: a specialist saw the refunds';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Moving: outside the hours (15:00 on Wednesday), in another form, with
+-- the break kept and a new link in the e-mail.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  wed date := (SELECT monday + 2 FROM booking_test);
+  room uuid := (SELECT room_id FROM booking_test);
+  aa2 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa2'));
+  m record;
+BEGIN
+  IF pg_temp.hint_of(format('SELECT public.centre_reschedule_visit(%L, %L, %L, %L)',
+       aa2, now() - interval '1 hour', 'in_person', room)) <> 'in_the_past'
+     OR pg_temp.hint_of(format('SELECT public.centre_reschedule_visit(%L, %L, %L, NULL)',
+       aa2, pg_temp.at(wed, '15:00'), 'in_person')) <> 'room_required' THEN
+    RAISE EXCEPTION 'AA: moved to the past, or in person without a room';
+  END IF;
+  SELECT * INTO m FROM public.centre_reschedule_visit(aa2, pg_temp.at(wed, '15:00'), 'in_person', room, 'Prośba klienta');
+  IF (m.starts_at, m.ends_at, m.sequence)
+     IS DISTINCT FROM (pg_temp.at(wed, '15:00'), pg_temp.at(wed, '15:50'), 1) THEN
+    RAISE EXCEPTION 'AA: the move: %', row_to_json(m);
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.list_visit_events(aa2)
+    WHERE kind = 'rescheduled' AND actor = 'centre' AND details ->> 'reason' = 'Prośba klienta'
+  ) THEN
+    RAISE EXCEPTION 'AA: the history of the move';
+  END IF;
+  -- Online the same time: no room; a second move.
+  SELECT * INTO m FROM public.centre_reschedule_visit(aa2, pg_temp.at(wed, '15:00'), 'online', NULL);
+  IF m.sequence <> 2
+     OR (SELECT (mode, room_id) FROM public.appointments WHERE id = aa2)
+        IS DISTINCT FROM ('online'::public.visit_mode, NULL::uuid) THEN
+    RAISE EXCEPTION 'AA: moving online';
+  END IF;
+  -- Where it is already: nothing to move.
+  IF pg_temp.hint_of(format('SELECT public.centre_reschedule_visit(%L, %L, %L, NULL)',
+       aa2, pg_temp.at(wed, '15:00'), 'online')) <> 'nothing_changed' THEN
+    RAISE EXCEPTION 'AA: a move that changes nothing';
+  END IF;
+  -- Not onto another visit (aa3, 10:00–10:50, and its break).
+  IF pg_temp.hint_of(format('SELECT public.centre_reschedule_visit(%L, %L, %L, NULL)',
+       aa2, pg_temp.at((SELECT monday + 2 FROM booking_test), '10:30'), 'online')) <> 'specialist_busy' THEN
+    RAISE EXCEPTION 'AA: moved onto another visit';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  c record;
+BEGIN
+  SELECT * INTO c FROM public.claim_booking_email((SELECT reference FROM s_visits WHERE name = 'aa2'), 'rescheduled');
+  IF c.reference IS NULL OR c.manage_token IS NULL OR c.mode <> 'online' THEN
+    RAISE EXCEPTION 'AA: the e-mail about the move: %', row_to_json(c);
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

@@ -1,6 +1,6 @@
 import type { ClaimedBookingEmail } from "@repo/supabase";
 import { formatPrice } from "@/lib/format";
-import { localTime, visitLabel } from "../visit-label";
+import { deadlineLabel, localTime, visitLabel } from "../visit-label";
 import {
   contactLineOf,
   place,
@@ -19,6 +19,8 @@ export interface ChangeOptions extends ConfirmationOptions {
   manageToken: string;
   /** The calendar event's version: how many times the visit has changed. */
   sequence: number;
+  /** Why the centre changed it, told to the client (R12). */
+  reason?: string | null;
 }
 
 function frame(
@@ -85,7 +87,16 @@ export function rescheduledContent(
       : []),
     ["Nowy termin", span],
     ["Miejsce", place(visit)],
+    ...(!visit.paid && visit.paymentDueAt
+      ? [
+          [
+            "Zapłać do",
+            deadlineLabel(visit.paymentDueAt, options.timeZone),
+          ] as [string, string],
+        ]
+      : []),
     ["Numer rezerwacji", visit.reference],
+    ...(options.reason ? [["Powód", options.reason] as [string, string]] : []),
   ];
   const intro = "Twoja wizyta została przełożona na nowy termin.";
   return {
@@ -121,6 +132,15 @@ export function cancelledContent(
           currencyCode: visit.currencyCode,
         })
       : null;
+  // The centre kept part of the payment (a late cancellation, R12).
+  const keptMinor =
+    byCentre && visit.paid
+      ? Math.max(0, visit.priceMinor - options.refundMinor)
+      : 0;
+  const kept =
+    keptMinor > 0
+      ? formatPrice({ priceMinor: keptMinor, currencyCode: visit.currencyCode })
+      : null;
   const rows: [string, string][] = [
     ["Usługa", visit.serviceName],
     ...(visit.specialistName
@@ -132,16 +152,20 @@ export function cancelledContent(
       "Zwrot",
       refund ?? (byCentre || !visit.paid ? "Nie dotyczy" : "Bez zwrotu"),
     ],
+    ...(kept ? [["Zatrzymano", kept] as [string, string]] : []),
+    ...(options.reason ? [["Powód", options.reason] as [string, string]] : []),
   ];
   const money = refund
     ? `Zwrócimy ${refund} tą samą metodą, którą zapłacono. Pieniądze zwykle wracają w ciągu kilku dni roboczych.`
     : null;
-  const intro = byCentre
-    ? `Przepraszamy, musieliśmy odwołać Twoją wizytę. ${money ?? "Skontaktuj się z nami, a pomożemy umówić nowy termin."}`
-    : (money ??
-      (visit.paid
-        ? "Wizyta została odwołana po terminie bezpłatnego odwołania, dlatego opłata nie podlega zwrotowi."
-        : "Odwołaliśmy Twoją rezerwację. Nie była opłacona, więc nie ma nic do zwrotu."));
+  const intro = kept
+    ? `Odwołaliśmy Twoją wizytę. ${money ? `${money} ` : ""}Zgodnie z zasadami odwołań zatrzymaliśmy ${kept}.`
+    : byCentre
+      ? `Przepraszamy, musieliśmy odwołać Twoją wizytę. ${money ?? "Skontaktuj się z nami, a pomożemy umówić nowy termin."}`
+      : (money ??
+        (visit.paid
+          ? "Wizyta została odwołana po terminie bezpłatnego odwołania, dlatego opłata nie podlega zwrotowi."
+          : "Odwołaliśmy Twoją rezerwację. Nie była opłacona, więc nie ma nic do zwrotu."));
   return {
     subject: `Wizyta ${visit.reference} została odwołana`,
     preview: refund ? `Zwrot ${refund}` : "Wizyta odwołana",

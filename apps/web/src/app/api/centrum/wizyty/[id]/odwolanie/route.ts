@@ -1,38 +1,26 @@
+import { centreCancelRequestSchema } from "@repo/contracts/centre-changes";
 import { NextResponse } from "next/server";
 import { cancelVisitAsCentre } from "@/features/booking/change-visit";
-import { centreCancelDeps } from "@/features/booking/change-visit-server";
+import { centreChangeDeps } from "@/features/booking/change-visit-server";
+import { centreRequest, refusal } from "@/features/booking/centre-route";
 
-// The admin portal cancels a visit (docs/product/booking-plan.md, R9). The
-// money and the e-mails live here, with the site; the admin's access token
-// comes with the request and the database checks it is an admin's. Always
-// the full refund.
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// The admin portal cancels a visit (docs/product/booking-plan.md, R9, R12):
+// at any time, giving back what the admin chose (all of it by default),
+// with a reason the client is told. The money and the e-mails live here,
+// with the site; the database checks the admin's role.
 
 export async function POST(
   request: Request,
   { params }: RouteContext<"/api/centrum/wizyty/[id]/odwolanie">,
 ) {
   const { id } = await params;
-  const token = /^Bearer (\S+)$/.exec(
-    request.headers.get("authorization") ?? "",
-  )?.[1];
-  if (!token) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (!UUID.test(id)) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
-  const result = await cancelVisitAsCentre(id, centreCancelDeps(token));
-  if (!result.ok) {
-    const status =
-      result.code === "not_found"
-        ? 404
-        : result.code === "not_cancellable"
-          ? 409
-          : 403;
-    return NextResponse.json({ error: result.code }, { status });
-  }
+  const checked = await centreRequest(request, id, centreCancelRequestSchema);
+  if (!checked.ok) return checked.response;
+  const result = await cancelVisitAsCentre(
+    id,
+    checked.body,
+    await centreChangeDeps(checked.token),
+  );
+  if (!result.ok) return refusal(result.code);
   return NextResponse.json(result);
 }

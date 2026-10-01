@@ -65,6 +65,7 @@ const KINDS: Record<string, { title: string; tone: VisitTone }> = {
   refund_recorded: { title: "Zwrot zlecony w Stripe", tone: "info" },
   email_sent: { title: "Wysłano e-mail", tone: "neutral" },
   reserved: { title: "Zarezerwowano, płatność później", tone: "info" },
+  refund_issued: { title: "Zwrot zlecony przez centrum", tone: "info" },
 };
 
 export function visitEventRows(
@@ -126,6 +127,9 @@ export function visitEventRows(
         detail = from && to ? `z ${from} na ${to}` : null;
         break;
       }
+      case "refund_issued":
+        detail = money(d.refund_minor);
+        break;
       case "cancelled":
         if (event.actor === "system") {
           title = "Anulowano – brak płatności";
@@ -150,6 +154,14 @@ export function visitEventRows(
       case "email_sent":
         title = `Wysłano e-mail: ${EMAILS[String(d.email)] ?? String(d.email)}`;
         break;
+    }
+    // The centre's reason (R12), after what happened.
+    if (
+      typeof d.reason === "string" &&
+      d.reason !== "unpaid" &&
+      ["cancelled", "rescheduled", "refund_issued"].includes(event.kind)
+    ) {
+      detail = detail ? `${detail} · ${d.reason}` : d.reason;
     }
     return {
       id: event.id,

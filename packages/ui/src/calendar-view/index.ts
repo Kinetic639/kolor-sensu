@@ -29,6 +29,8 @@ export type {
 } from "./params";
 export { AddVisitBanner, AddVisitButton } from "./add-visit";
 export { AvailabilityPanel } from "./availability-panel";
+export { MoveVisitPanel } from "./move-visit-panel";
+export type { MoveVisitPanelProps } from "./move-visit-panel";
 export { NewVisitPanel } from "./new-visit-panel";
 export type { NewVisitOffer, NewVisitPanelProps } from "./new-visit-panel";
 export { ScheduleCanvas } from "./schedule-controls";

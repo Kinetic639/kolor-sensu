@@ -13,9 +13,12 @@ export type VisitChange =
   | {
       kind: "rescheduled";
       reference: string;
-      manageToken: string;
+      /** Null when the centre moves it: the claim brings a new link. */
+      manageToken: string | null;
       /** How many times the visit has moved (the calendar event's version). */
       sequence: number;
+      /** Why the centre moved it. */
+      reason?: string | null;
     }
   | {
       kind: "cancelled";
@@ -24,6 +27,8 @@ export type VisitChange =
       manageToken: string | null;
       sequence: number;
       refundMinor: number;
+      /** Why the centre cancelled it (and kept what it kept). */
+      reason?: string | null;
     };
 
 export interface ChangeEmailDeps extends ConfirmationOptions {
@@ -54,7 +59,12 @@ export async function sendChangeEmail(
   try {
     const manageToken = change.manageToken ?? visit.manageToken;
     if (!manageToken) throw new Error("No link token for the e-mail");
-    const options = { ...deps, ...change, manageToken };
+    const options = {
+      ...deps,
+      ...change,
+      manageToken,
+      reason: change.reason ?? null,
+    };
     const content =
       change.kind === "cancelled"
         ? cancelledContent(visit, {

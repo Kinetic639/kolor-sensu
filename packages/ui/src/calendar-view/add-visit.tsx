@@ -45,10 +45,13 @@ export function AddVisitButton({
 export function AddVisitBanner({
   manualHref,
   cancelHref,
+  moving,
 }: {
   /** The form without a picked place. */
   manualHref: string;
   cancelHref: string;
+  /** Moving this visit (the centre, R12) instead of adding one. */
+  moving?: { reference: string; label: string };
 }) {
   return (
     <div
@@ -64,14 +67,17 @@ export function AddVisitBanner({
         </span>
         <div>
           <p className="flex flex-wrap items-center gap-2 text-xs font-bold text-[var(--text)] sm:text-sm">
-            Tryb dodawania nowej wizyty
+            {moving
+              ? `Przesuwanie wizyty ${moving.reference}`
+              : "Tryb dodawania nowej wizyty"}
             <span className="rounded-full bg-[var(--surface)] px-2 py-0.5 text-[0.625rem] font-semibold text-[var(--primary)]">
-              Wybierz miejsce w siatce
+              {moving ? "Wybierz nowe miejsce" : "Wybierz miejsce w siatce"}
             </span>
           </p>
           <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-            Kliknij wolne miejsce w kalendarzu, aby wybrać godzinę i osobę lub
-            gabinet. Kliknięcie istniejącej wizyty wciąż otwiera jej szczegóły.
+            {moving
+              ? `${moving.label}. Kliknij wolne miejsce w kalendarzu, aby wybrać nową godzinę, a w widoku gabinetów także gabinet.`
+              : "Kliknij wolne miejsce w kalendarzu, aby wybrać godzinę i osobę lub gabinet. Kliknięcie istniejącej wizyty wciąż otwiera jej szczegóły."}
           </p>
         </div>
       </div>

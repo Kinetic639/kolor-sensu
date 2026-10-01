@@ -1,11 +1,9 @@
-import { resendPaymentLinkAction } from "@/features/calendar/actions";
-import { CancelVisitButton } from "@/features/visits/cancel-visit";
+import { CentreVisitToolbar } from "@/features/visits/cancel-visit";
 import { loadAdminVisits } from "@/features/visits/loaders";
 import { VisitActions } from "@/features/visits/visit-actions";
 import { PageTitle } from "@repo/ui/portal-content";
 import {
   loadVisitTableParams,
-  ResendPaymentLinkButton,
   VisitPanel,
   VisitTable,
   VisitTableToolbar,
@@ -77,8 +75,11 @@ export default async function BookingsPage({
                     label: visitLabel(row),
                     phone: row.phone,
                     email: row.email,
-                    paid: row.paid,
+                    refundableMinor: row.refundableMinor,
+                    currencyCode: row.currencyCode,
                     cancellable: row.cancellable,
+                    movable: row.movable,
+                    date: row.date,
                   }}
                 />,
               ]),
@@ -109,25 +110,7 @@ export default async function BookingsPage({
             tab={params.karta}
             tabs={visitPanelTabs(PATH, params)}
             toolbar={
-              <>
-                {open.row.resendable ? (
-                  <ResendPaymentLinkButton
-                    action={resendPaymentLinkAction}
-                    visitId={open.row.id}
-                  />
-                ) : null}
-                {open.row.cancellable ? (
-                  <CancelVisitButton
-                    visit={{
-                      id: open.row.id,
-                      reference: open.row.reference,
-                      label: visitLabel(open.row),
-                      paid: open.row.paid,
-                      email: open.row.email,
-                    }}
-                  />
-                ) : null}
-              </>
+              <CentreVisitToolbar label={visitLabel(open.row)} row={open.row} />
             }
           />
         ) : null}

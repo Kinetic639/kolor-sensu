@@ -24,6 +24,14 @@ export type {
   VisitStatusFilter,
   VisitTableParams,
 } from "./params";
+export {
+  CancelVisitButton,
+  CancelVisitDialog,
+  MoveVisitLink,
+  RefundVisitButton,
+  RefundVisitDialog,
+} from "./centre-changes";
+export type { CancelAction, CentreVisit, RefundAction } from "./centre-changes";
 export { ResendPaymentLinkButton } from "./resend-payment-link";
 export type { ResendPaymentLinkResult } from "./resend-payment-link";
 export { VisitPanel } from "./visit-panel";

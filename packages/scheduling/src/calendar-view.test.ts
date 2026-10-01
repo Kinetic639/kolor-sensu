@@ -3,6 +3,7 @@ import {
   calendarWindows,
   dayView,
   findAvailability,
+  moveVisitDefaults,
   newVisitDefaults,
   occupancyOf,
   personalWeek,
@@ -587,6 +588,31 @@ describe("newVisitDefaults", () => {
       date: "2030-10-02",
       time: "09:00",
       mode: null,
+      roomId: null,
+    });
+  });
+});
+
+describe("moveVisitDefaults (R12)", () => {
+  const rooms = dayView({ ...base, date: "2030-10-02", perspective: "rooms" });
+  const visit = { mode: "online" as const, roomId: null };
+
+  it("a room picked: that room, in person", () => {
+    expect(
+      moveVisitDefaults(rooms.columns, "green", "2030-10-02T15:00", visit),
+    ).toEqual({
+      date: "2030-10-02",
+      time: "15:00",
+      mode: "in_person",
+      roomId: "green",
+    });
+  });
+
+  it("nothing said about where: where the visit was", () => {
+    expect(moveVisitDefaults([], null, "2030-10-03T09:00", visit)).toEqual({
+      date: "2030-10-03",
+      time: "09:00",
+      mode: "online",
       roomId: null,
     });
   });

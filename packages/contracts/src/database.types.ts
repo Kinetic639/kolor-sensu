@@ -1444,12 +1444,45 @@ export type Database = {
         }[];
       };
       centre_cancel_visit: {
-        Args: { p_appointment_id: string };
+        Args: {
+          p_appointment_id: string;
+          p_reason?: string | null;
+          p_refund_minor?: number | null;
+        };
         Returns: {
           payment_intent_id: string | null;
           reference: string;
           refund_minor: number;
           reschedule_count: number;
+        }[];
+      };
+      centre_refund_visit: {
+        Args: {
+          p_appointment_id: string;
+          p_reason?: string | null;
+          p_refund_minor: number;
+        };
+        Returns: {
+          payment_intent_id: string;
+          reference: string;
+          refund_minor: number;
+          refunded_before_minor: number;
+        }[];
+      };
+      centre_reschedule_visit: {
+        Args: {
+          p_appointment_id: string;
+          p_mode: Database["public"]["Enums"]["visit_mode"];
+          p_reason?: string | null;
+          p_room_id: string | null;
+          p_starts_at: string;
+        };
+        Returns: {
+          ends_at: string;
+          payment_due_at: string | null;
+          reference: string;
+          sequence: number;
+          starts_at: string;
         }[];
       };
       centre_resend_payment_link: {

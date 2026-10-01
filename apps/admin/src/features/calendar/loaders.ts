@@ -31,7 +31,7 @@ import { formatInTimeZone } from "date-fns-tz";
 // everyone's availability rules in force then (expanded here, time off
 // cut out and kept as blocked time), the rooms' hours and exceptions, the
 // booked visits, and the visit open in the side panel (or the offers, for
-// the new visit's form).
+// the new visit's form, or the visit being moved).
 
 export async function loadAdminCalendar(params: CalendarParams) {
   const client = await createClient();
@@ -70,29 +70,39 @@ export async function loadAdminCalendar(params: CalendarParams) {
   const history = params.wizyta && params.karta === "historia";
   // The new visit's form needs the offers (only when it is open).
   const booking = params.nowa && params.termin;
-  const [rules, timeOff, schedules, visits, photos, open, events, offers] =
-    await Promise.all([
-      listAvailabilityRulesForSpecialists(client, {
-        specialistIds: ids,
-        from: period.from,
-        to: period.to,
-      }),
-      listTimeOffForSpecialists(client, ids),
-      listRoomSchedules(client, {
-        roomIds: shownRooms.map((room) => room.id),
-        from: period.from,
-        to: period.to,
-      }),
-      listVisits(client, { from: period.from, to: period.to }),
-      // Pictures: the account's, else the published profile photo.
-      signSpecialistPhotos(
-        client,
-        active.map((one) => (one.avatarUrl ? null : one.publicProfilePhotoUrl)),
-      ),
-      params.wizyta ? getVisit(client, params.wizyta).catch(() => null) : null,
-      history ? listVisitEvents(client, params.wizyta!).catch(() => []) : null,
-      booking ? listCentreOffers(client) : null,
-    ]);
+  const [
+    rules,
+    timeOff,
+    schedules,
+    visits,
+    photos,
+    open,
+    events,
+    offers,
+    moving,
+  ] = await Promise.all([
+    listAvailabilityRulesForSpecialists(client, {
+      specialistIds: ids,
+      from: period.from,
+      to: period.to,
+    }),
+    listTimeOffForSpecialists(client, ids),
+    listRoomSchedules(client, {
+      roomIds: shownRooms.map((room) => room.id),
+      from: period.from,
+      to: period.to,
+    }),
+    listVisits(client, { from: period.from, to: period.to }),
+    // Pictures: the account's, else the published profile photo.
+    signSpecialistPhotos(
+      client,
+      active.map((one) => (one.avatarUrl ? null : one.publicProfilePhotoUrl)),
+    ),
+    params.wizyta ? getVisit(client, params.wizyta).catch(() => null) : null,
+    history ? listVisitEvents(client, params.wizyta!).catch(() => []) : null,
+    booking ? listCentreOffers(client) : null,
+    params.przesun ? getVisit(client, params.przesun).catch(() => null) : null,
+  ]);
 
   const people: CalendarPerson[] = active.map((one) => ({
     id: one.id,
@@ -173,6 +183,16 @@ export async function loadAdminCalendar(params: CalendarParams) {
             hideEmpty: params.puste,
           })
         : null,
+    move: moving
+      ? {
+          row: visitRows([moving], { timeZone })[0]!,
+          rooms: activeRooms.map((room) => ({
+            id: room.id,
+            name: room.name,
+            locationName: room.locationName,
+          })),
+        }
+      : null,
     open: open
       ? {
           row: visitRows([open], { timeZone })[0]!,

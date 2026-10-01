@@ -34,6 +34,51 @@ const options = {
   now: new Date("2030-10-01T08:00:00Z"),
 };
 
+describe("the centre's own way (R12)", () => {
+  it("knows what is left to give back, and where the visit is", () => {
+    const [row] = visitRows(
+      [
+        {
+          ...visit,
+          status: "cancelled",
+          cancelledBy: "client",
+          payment: { paid: true, refundDueMinor: 0, refundedMinor: 5000 },
+        },
+      ],
+      options,
+    );
+    expect(row).toMatchObject({
+      refundableMinor: 15000,
+      currencyCode: "PLN",
+      mode: "in_person",
+      roomId: "r1",
+      movable: false,
+    });
+    expect(visitRows([visit], options)[0]).toMatchObject({
+      refundableMinor: 20000,
+      movable: true,
+    });
+  });
+
+  it("a specialist, or a visit not paid, has nothing to give back", () => {
+    expect(
+      visitRows([{ ...visit, payment: null }], options)[0]!.refundableMinor,
+    ).toBe(0);
+    expect(
+      visitRows(
+        [
+          {
+            ...visit,
+            status: "awaiting_payment",
+            payment: { paid: false, refundDueMinor: null, refundedMinor: 0 },
+          },
+        ],
+        options,
+      )[0]!.refundableMinor,
+    ).toBe(0);
+  });
+});
+
 describe("a reservation not paid yet (R11)", () => {
   const reserved: VisitLike = {
     ...visit,

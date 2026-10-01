@@ -42,6 +42,7 @@ describe("the calendar's address", () => {
       nowa: false,
       termin: null,
       kolumna: null,
+      przesun: null,
       wizyta: null,
       okno: null,
       karta: "szczegoly",
