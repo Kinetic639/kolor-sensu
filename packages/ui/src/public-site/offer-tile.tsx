@@ -121,10 +121,10 @@ export function OfferTile({
       </div>
       <span
         aria-hidden="true"
-        className="ks-of__arrow rounded-button bg-surface text-ink shadow-card ease-soft group-hover/of:shadow-card-hover group-hover/of:bg-primary group-hover/of:text-on-primary grid place-items-center transition-[box-shadow,background-color,color] duration-300"
+        className="ks-of__arrow rounded-button bg-surface text-ink shadow-card ease-soft group-hover/of:shadow-card-hover grid place-items-center transition-shadow duration-300"
       >
         <ArrowRight
-          className="ease-soft size-4 transition-transform duration-200 group-hover/of:translate-x-1"
+          className="ease-soft size-4 transition-transform duration-200 group-hover/of:translate-x-0.5"
           strokeWidth={1.75}
         />
       </span>

@@ -44,7 +44,7 @@ describe("WatercolorImage on the server", () => {
     }
   });
 
-  it("keeps client-only code to small islands: reveals, caption and page motion, header scroll state, navigation, cookie notice, room gallery", () => {
+  it("keeps client-only code to small islands: reveals, caption motion, navigation, cookie notice, room gallery", () => {
     const clientFiles = readdirSync(here)
       .filter(
         (file) => /\.tsx?$/.test(file) && !/\.(test|stories)\./.test(file),
@@ -56,17 +56,11 @@ describe("WatercolorImage on the server", () => {
 
     expect(clientFiles).toEqual([
       "cookie-consent.tsx",
-      "drifting-photos.tsx",
-      "drifting-words.tsx",
-      "header-scroll.tsx",
       "offer-reveal.tsx",
-      "page-motion.tsx",
-      "painted-story.tsx",
       "room-gallery.tsx",
       "site-mobile-nav.tsx",
       "site-navigation.tsx",
       "specialist-reveal.tsx",
-      "topic-guide.tsx",
       "watercolor-caption-motion.tsx",
       "watercolor-reveal.tsx",
     ]);

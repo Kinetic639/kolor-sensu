@@ -490,74 +490,6 @@ band after another.
   Brush Matte Debug, Slow Motion Debug, Frame Strip, All Paints Animated)
   and OfferSection (Desktop, Tablet, Mobile).
 
-### Page motion around the pictures (`PageMotion`)
-
-The homepage is wrapped in `<PageMotion>` (page-motion.tsx), which moves what
-the pictures' own reveals leave still. Other pages don't use it, so the
-`data-motion` marks on shared components do nothing there.
-
-- **Text columns** (`data-motion="text"`): as the column comes into view its
-  headings rise word by word (GSAP SplitText words, from 60 % below with a
-  2.5° tilt, `back.out(1.4)`, 0.045 s apart, after Talking Walls) and the
-  other children fade up 16 px, 0.08 s apart. Afterwards the split is
-  reverted and no inline styles remain.
-- **Painted band** (`data-motion="band"`, ClosingCta): the band's paint is
-  uncovered by a circle swept in from the lower left corner (1.6 s,
-  `expo.inOut`, like one long stroke), then the ink sprig settles with one
-  sway; the band's text follows after `data-motion-delay`.
-- **Pictures faster than text** (scrubbed ScrollTrigger): section pictures
-  drift 9 % of their height against the scroll, offer tiles and portraits
-  5 % and 12 % alternately, the hero picture rises 12 % as the page leaves
-  the top.
-- **Parallax in the frame** (CSS only, scroll-driven, Chromium and Safari
-  26+): a WatercolorImage's photo drifts ±3 % (±1.75 % on phones) against its
-  frame, scaled 1.07 so no edge shows; the backdrop drifts half as far the
-  other way. Browsers without scroll-driven animations keep the still
-  picture.
-- **Microinteractions:** ArrowLink draws a green stroke over its hairline
-  underline; offer tiles swell their paint a touch and fill the arrow
-  circle; specialist portraits lean in 3.5 % and the arrow fills; button
-  arrows move 4 px.
-- **FAQ:** answers open and close to their intrinsic height
-  (`interpolate-size`, Chromium); other browsers open instantly.
-- **Site header** (HeaderScroll): hairline only once the page has moved;
-  slides away while reading down past four header heights, back on the first
-  scroll up or when focus enters it; never hides under reduced motion.
-- **Talking Walls layer** (2026-10-01, michal's chosen references: David
-  Whyte Experience and Talking Walls), homepage only:
-  - Lenis inertia scroll (wheel and trackpad only). No custom cursor.
-  - `DriftingWords`: two large outlined lines sliding apart as the band
-    crosses the screen; over them the same words in pink-to-sage colour,
-    seen only through a brushed patch of paint (offer-pink-1 mask). The
-    patch sweeps across once on entry, then follows the pointer lazily
-    (lerp 0.075). Decorative, aria-hidden; outline only under reduced
-    motion.
-  - `TopicGuide` ("Z czym przychodzisz?", after the Guidance section): a
-    large paint patch with the chosen topic, eight small patches around it
-    drifting at two speeds; choosing one paints its colour over the middle
-    from the patch's side (circle clip, 1.25 s) and its title rises word by
-    word. Real buttons with aria-pressed, the middle a polite live region.
-    Phones: middle first, patches as a wrapping row below.
-  - `DriftingPhotos`: an endless row of tilted prints that the page scroll
-    carries sideways and that can be dragged; prints lean further with
-    speed. Room photos first, the site's own photos fill it to five.
-    Without script or under reduced motion: a scroll-snap row.
-- **Painted story** (`PaintedStory`, after David Whyte Experience): "Jak
-  zacząć" in three steps (first conversation, rooms, workshops). From 64 rem
-  with motion it pins one screen while the steps change; each step's
-  picture is painted over the previous one with the WatercolorImage brush
-  strokes, a pink line fills with progress, scrolling back lifts the later
-  pictures. Phones: steps in flow, each picture painted in on view. Safari
-  cross-fades. Reduced motion or no script: the plain stacked steps.
-- **Booking sections** (no motion of their own beyond the text reveal):
-  `SlotPicks` (nearest free times from `list_free_slots`, each on an offer
-  paint patch, linking straight to that time in the wizard; hidden when
-  nothing is free), `PriceNotes` (lowest price per service with dotted
-  leaders, the two forms of meeting), `CrisisBand` (crisis numbers as tel:
-  links).
-- **Fallbacks:** reduced motion or no scripting gives the static page; the
-  starting state lifts itself after 3 s if the script never runs.
-
 ## 12. Primitives
 
 Only what the references repeat:
@@ -644,16 +576,14 @@ islands hydrate: the desktop dropdown, the phone menu and the cookie notice.
 - No hyper-feminine floral styling: no roses, no swirls, no glitter.
 - No childish wellness illustrations, cartoon people or emoji decoration.
 - No random colour usage: every colour is a token with a role.
-- No paint behind or through body text (except the short copy on the
-  homepage's TopicGuide and SlotPicks patches), no textured buttons, no handwriting
+- No paint behind or through body text, no textured buttons, no handwriting
   font in headings, buttons, navigation or long sentences.
 - No text baked into photos.
 - No pre-cut, pre-painted or hand-cropped photos: upload the ordinary photo
   and let `WatercolorImage` crop and paint it.
 - No wipes, fades, blurs or growing shapes to reveal painted layers: paint
   them in through the matte (§11).
-- No looping, bouncing or cursor-following animation, except the homepage's
-  DriftingWords fill (decorative, off under reduced motion). Nothing may stay hidden
+- No looping, bouncing or cursor-following animation. Nothing may stay hidden
   without a script: pre-hide only under `(scripting: enabled)`, with a CSS
   fallback that shows the content anyway.
 - No new mask shapes drawn by hand; extend the generators.

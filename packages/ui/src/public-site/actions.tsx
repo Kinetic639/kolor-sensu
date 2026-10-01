@@ -50,7 +50,7 @@ function PublicButton({
   const icon = arrow ? (
     <ArrowRight
       aria-hidden="true"
-      className="ease-soft size-4 transition-transform duration-200 group-hover/button:translate-x-1"
+      className="ease-soft size-4 transition-transform duration-200 group-hover/button:translate-x-0.5"
       strokeWidth={1.75}
     />
   ) : null;
@@ -87,17 +87,15 @@ export function ArrowLink({ className, children, ...props }: ArrowLinkProps) {
   return (
     <Link
       className={cn(
-        "ks-link group/link font-body text-small text-ink focus-visible:outline-ring inline-flex items-center gap-1.5 rounded-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-4",
+        "group/link font-body text-small text-ink decoration-border-strong/60 hover:decoration-primary focus-visible:outline-ring inline-flex items-center gap-1.5 rounded-sm font-semibold underline decoration-1 underline-offset-[6px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4",
         className,
       )}
       {...props}
     >
-      {/* The underline is drawn by .ks-link__text (public-site.css): a
-          hairline at rest, a green stroke pulled across it on hover. */}
-      <span className="ks-link__text">{children}</span>
+      {children}
       <ArrowRight
         aria-hidden="true"
-        className="ease-soft size-3.5 transition-transform duration-200 group-hover/link:translate-x-1"
+        className="ease-soft size-3.5 transition-transform duration-200 group-hover/link:translate-x-0.5"
         strokeWidth={1.75}
       />
     </Link>

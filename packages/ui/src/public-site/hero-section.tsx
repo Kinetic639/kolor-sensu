@@ -69,7 +69,7 @@ export function HeroSection({
         className,
       )}
     >
-      <div className="grid gap-6" data-motion="text">
+      <div className="grid gap-6">
         {eyebrow ? (
           // Pink text this small needs the strong step for contrast.
           <SectionEyebrow className="text-pink-strong">

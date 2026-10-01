@@ -4,8 +4,8 @@ import { cn } from "../lib/utils";
 import type { SpecialistAccent } from "./specialist-artwork";
 
 const arrowTones = {
-  pink: "bg-pink-soft text-pink-strong group-hover/sp:bg-pink-strong group-hover/sp:text-on-primary",
-  sage: "bg-primary-soft text-primary-strong group-hover/sp:bg-primary group-hover/sp:text-on-primary",
+  pink: "bg-pink-soft text-pink-strong",
+  sage: "bg-primary-soft text-primary-strong",
 } as const;
 
 export interface SpecialistInfoPlateProps {
@@ -51,12 +51,12 @@ export function SpecialistInfoPlate({
       <span
         aria-hidden="true"
         className={cn(
-          "ks-sp__arrow rounded-button ease-soft grid shrink-0 place-items-center transition-colors duration-300",
+          "ks-sp__arrow rounded-button grid shrink-0 place-items-center",
           arrowTones[accent],
         )}
       >
         <ArrowRight
-          className="ease-soft size-4 transition-transform duration-200 group-hover/sp:translate-x-1"
+          className="ease-soft size-4 transition-transform duration-200 group-hover/sp:translate-x-0.5"
           strokeWidth={1.75}
         />
       </span>

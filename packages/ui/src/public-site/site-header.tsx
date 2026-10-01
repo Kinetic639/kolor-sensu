@@ -1,7 +1,6 @@
 import { PageLink as Link } from "./page-link";
 import { cn } from "../lib/utils";
 import { PrimaryButton } from "./actions";
-import { HeaderScroll } from "./header-scroll";
 import { brandTagline, SiteLogo } from "./site-logo";
 import { SiteMobileNav } from "./site-mobile-nav";
 import { SiteNavigation } from "./site-navigation";
@@ -13,9 +12,8 @@ import type { SiteContact, SiteLink, SiteNavItem } from "./site-types";
 //   logo · navigation (from 64 rem) · "Umów wizytę" (from 40 rem) · menu
 //   button (below 64 rem)
 //
-// Sticky on paper with a hairline under it, no blur, no shadow. HeaderScroll
-// only marks the scroll state: the hairline shows once the page has moved,
-// and the header steps aside while reading down, back on scrolling up.
+// Sticky on paper with a hairline under it: no blur, no shadow, no script
+// watching the scroll.
 
 export interface SiteHeaderProps {
   navigation: readonly SiteNavItem[];
@@ -65,7 +63,6 @@ export function SiteHeader({
           className="ml-auto sm:ml-0 lg:hidden"
         />
       </div>
-      <HeaderScroll />
     </header>
   );
 }
