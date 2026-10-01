@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   bookingDetailsSchema,
   centreBookingMessage,
+  resendLinkMessage,
   centreBookingSchema,
 } from "./booking";
 
@@ -125,6 +126,15 @@ describe("centreBookingMessage", () => {
     );
     expect(centreBookingMessage(undefined)).toBe(
       "Nie udało się zapisać wizyty.",
+    );
+  });
+});
+
+describe("resendLinkMessage", () => {
+  it("says why in Polish, with a fallback", () => {
+    expect(resendLinkMessage("recently_sent")).toMatch(/przed chwilą/);
+    expect(resendLinkMessage(undefined)).toBe(
+      "Nie udało się wysłać linku do płatności.",
     );
   });
 });

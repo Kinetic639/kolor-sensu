@@ -1969,4 +1969,119 @@ END;
 $body$;
 RESET ROLE;
 
+
+-- Z: pay-later in the portals. The visits carry the time a reservation
+-- must be paid by; the booking window says how long before a visit; the
+-- centre sends the link again (an admin for any, a specialist for their
+-- own), not more often than every five minutes, and only while it can
+-- still be paid.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  x x_day%ROWTYPE;
+  v_id uuid;
+BEGIN
+  SELECT * INTO x FROM x_day;
+  v_id := pg_temp.book(x.anna_offer, 'online', pg_temp.at(x.day, '11:00'), NULL);
+  INSERT INTO x_visits VALUES ('z1', v_id);
+  IF (SELECT payment_due_at FROM public.list_visits(x.day, x.day) WHERE id = v_id)
+     IS DISTINCT FROM pg_temp.at(x.day, '11:00') - interval '48 hours'
+     OR (SELECT payment_due_at FROM public.get_visit(v_id))
+     IS DISTINCT FROM pg_temp.at(x.day, '11:00') - interval '48 hours'
+     OR (SELECT payment_due_at FROM public.search_visits(p_query => 'Ewa Klientka') WHERE id = v_id)
+     IS DISTINCT FROM pg_temp.at(x.day, '11:00') - interval '48 hours' THEN
+    RAISE EXCEPTION 'Z: the portals do not see when it must be paid by';
+  END IF;
+  IF (SELECT payment_due_hours FROM public.booking_window()) <> 48 THEN
+    RAISE EXCEPTION 'Z: the booking window has no time to pay by';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+UPDATE x_visits SET reference = (SELECT reference FROM public.appointments WHERE id = x_visits.id)
+WHERE name = 'z1';
+
+-- The link went out a moment ago.
+SET LOCAL ROLE service_role;
+SELECT 1 FROM public.claim_booking_email((SELECT reference FROM x_visits WHERE name = 'z1'), 'reserved');
+SELECT public.mark_booking_email_sent((SELECT reference FROM x_visits WHERE name = 'z1'), 'reserved', 'msg_z1');
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF pg_temp.hint_of(format('SELECT public.centre_resend_payment_link(%L)',
+       (SELECT id FROM x_visits WHERE name = 'z1'))) <> 'recently_sent' THEN
+    RAISE EXCEPTION 'Z: the link was sent again at once';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+UPDATE public.booking_emails SET claimed_at = now() - interval '10 minutes'
+WHERE appointment_id = (SELECT id FROM x_visits WHERE name = 'z1');
+
+-- Jan (another specialist) cannot; Anna can, for her own.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  PERFORM public.centre_resend_payment_link((SELECT id FROM x_visits WHERE name = 'z1'));
+  RAISE EXCEPTION 'Z: Jan sent Anna''s client a link';
+EXCEPTION WHEN insufficient_privilege THEN NULL;
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF (SELECT reference FROM public.centre_resend_payment_link((SELECT id FROM x_visits WHERE name = 'z1')))
+     IS DISTINCT FROM (SELECT reference FROM x_visits WHERE name = 'z1') THEN
+    RAISE EXCEPTION 'Z: Anna could not send her client the link';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- The reservation's e-mail can be claimed (and sent) once more, with a new
+-- link; once paid, there is nothing to send.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  c record;
+BEGIN
+  SELECT * INTO c FROM public.claim_booking_email((SELECT reference FROM x_visits WHERE name = 'z1'), 'reserved');
+  IF c.manage_token IS NULL THEN
+    RAISE EXCEPTION 'Z: the e-mail could not go again';
+  END IF;
+  PERFORM public.accept_booking_terms(c.manage_token);
+  PERFORM public.attach_reservation_payment(c.manage_token, 'cs_z1', 25000, 'PLN');
+  PERFORM public.fulfill_checkout_session('cs_z1', true, 'pi_z1');
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF pg_temp.hint_of(format('SELECT public.centre_resend_payment_link(%L)',
+       (SELECT id FROM x_visits WHERE name = 'z1'))) <> 'not_payable' THEN
+    RAISE EXCEPTION 'Z: a link to pay for a paid visit';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  PERFORM public.centre_resend_payment_link(gen_random_uuid());
+  RAISE EXCEPTION 'Z: a visitor sent a link';
+EXCEPTION WHEN insufficient_privilege THEN NULL;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

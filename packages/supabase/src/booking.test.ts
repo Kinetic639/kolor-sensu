@@ -84,6 +84,7 @@ describe("getBookingWindow", () => {
         cancellation_window_hours: 48,
         reschedule_window_hours: 48,
         max_self_reschedules: 1,
+        payment_due_hours: 48,
       },
     ]);
     expect(await getBookingWindow(client)).toEqual({
@@ -93,6 +94,7 @@ describe("getBookingWindow", () => {
       cancellationWindowHours: 48,
       rescheduleWindowHours: 48,
       maxSelfReschedules: 1,
+      paymentDueHours: 48,
     });
   });
 });

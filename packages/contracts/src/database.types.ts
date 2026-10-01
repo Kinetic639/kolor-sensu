@@ -1405,6 +1405,7 @@ export type Database = {
           hold_minutes: number;
           horizon_days: number;
           max_self_reschedules: number;
+          payment_due_hours: number;
           reschedule_window_hours: number;
           time_zone: string;
         }[];
@@ -1449,6 +1450,12 @@ export type Database = {
           reference: string;
           refund_minor: number;
           reschedule_count: number;
+        }[];
+      };
+      centre_resend_payment_link: {
+        Args: { p_appointment_id: string };
+        Returns: {
+          reference: string;
         }[];
       };
       claim_booking_email: {
@@ -1558,6 +1565,7 @@ export type Database = {
           location_name: string | null;
           mode: Database["public"]["Enums"]["visit_mode"];
           paid: boolean | null;
+          payment_due_at: string | null;
           price_minor: number;
           reference: string;
           refund_due_minor: number | null;
@@ -1708,6 +1716,7 @@ export type Database = {
           location_name: string | null;
           mode: Database["public"]["Enums"]["visit_mode"];
           paid: boolean | null;
+          payment_due_at: string | null;
           price_minor: number;
           reference: string;
           refund_due_minor: number | null;
@@ -1875,6 +1884,7 @@ export type Database = {
           location_name: string | null;
           mode: Database["public"]["Enums"]["visit_mode"];
           paid: boolean | null;
+          payment_due_at: string | null;
           price_minor: number;
           reference: string;
           refund_due_minor: number | null;

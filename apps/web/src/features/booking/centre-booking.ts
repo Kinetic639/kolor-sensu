@@ -84,3 +84,30 @@ export async function bookVisitAsCentre(
     emailed: await deps.sendPaymentLink(visit.reference),
   };
 }
+
+export type ResendPaymentLinkResult =
+  | { ok: true; reference: string; emailed: "sent" | "skipped" | "failed" }
+  | { ok: false; code: BookingErrorCode };
+
+/**
+ * The centre sends the link to pay again (R11): the database lets the
+ * reservation's e-mail go once more (checking who asks, and not more often
+ * than every five minutes), then it is sent as the first one was.
+ */
+export async function resendPaymentLink(
+  appointmentId: string,
+  deps: {
+    allow: (appointmentId: string) => Promise<string>;
+    /** Never throws. */
+    send: (reference: string) => Promise<"sent" | "skipped" | "failed">;
+  },
+): Promise<ResendPaymentLinkResult> {
+  let reference: string;
+  try {
+    reference = await deps.allow(appointmentId);
+  } catch (error) {
+    if (error instanceof BookingError) return { ok: false, code: error.code };
+    throw error;
+  }
+  return { ok: true, reference, emailed: await deps.send(reference) };
+}

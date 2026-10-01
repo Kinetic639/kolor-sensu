@@ -52,6 +52,7 @@ export type BookingErrorCode =
   | "too_soon"
   | "pay_now_required"
   | "not_payable"
+  | "recently_sent"
   | "unknown";
 
 const BOOKING_ERROR_CODES = new Set<string>([
@@ -75,6 +76,7 @@ const BOOKING_ERROR_CODES = new Set<string>([
   "too_soon",
   "pay_now_required",
   "not_payable",
+  "recently_sent",
 ]);
 
 export class BookingError extends Error {
@@ -144,6 +146,8 @@ export interface BookingWindow {
   rescheduleWindowHours: number;
   /** …and at most this many times. */
   maxSelfReschedules: number;
+  /** A reservation is paid by this long before the visit (R11). */
+  paymentDueHours: number;
 }
 
 export async function getBookingWindow(
@@ -160,6 +164,7 @@ export async function getBookingWindow(
         cancellationWindowHours: row.cancellation_window_hours,
         rescheduleWindowHours: row.reschedule_window_hours,
         maxSelfReschedules: row.max_self_reschedules,
+        paymentDueHours: row.payment_due_hours,
       }
     : null;
 }

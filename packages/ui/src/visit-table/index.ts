@@ -24,6 +24,8 @@ export type {
   VisitStatusFilter,
   VisitTableParams,
 } from "./params";
+export { ResendPaymentLinkButton } from "./resend-payment-link";
+export type { ResendPaymentLinkResult } from "./resend-payment-link";
 export { VisitPanel } from "./visit-panel";
 export type { VisitPanelTab } from "./visit-panel";
 export {

@@ -145,6 +145,8 @@ export const bookingSettingsFormSchema = z.object({
   cancellationWindowHours: whole(0, 720, "Podaj od 0 do 720 godzin."),
   rescheduleWindowHours: whole(0, 720, "Podaj od 0 do 720 godzin."),
   maxSelfReschedules: whole(0, 5, "Podaj od 0 do 5."),
+  paymentDueHours: whole(1, 720, "Podaj od 1 do 720 godzin."),
+  centrePaymentLinkHours: whole(1, 72, "Podaj od 1 do 72 godzin."),
 });
 
 export type BookingSettingsFormValues = z.infer<
@@ -167,6 +169,8 @@ export function toBookingSettingsFormValues(
     cancellationWindowHours: settings.cancellationWindowHours,
     rescheduleWindowHours: settings.rescheduleWindowHours,
     maxSelfReschedules: settings.maxSelfReschedules,
+    paymentDueHours: settings.paymentDueHours,
+    centrePaymentLinkHours: settings.centrePaymentLinkHours,
   };
 }
 
@@ -183,5 +187,7 @@ export function toBookingSettingsUpdate(
     cancellationWindowHours: values.cancellationWindowHours,
     rescheduleWindowHours: values.rescheduleWindowHours,
     maxSelfReschedules: values.maxSelfReschedules,
+    paymentDueHours: values.paymentDueHours,
+    centrePaymentLinkHours: values.centrePaymentLinkHours,
   };
 }

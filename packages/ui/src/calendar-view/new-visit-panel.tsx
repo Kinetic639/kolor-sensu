@@ -26,7 +26,7 @@ import { calendarParsers } from "./params";
 // the specialist), which service, how and where, when (the time picked in
 // the grid, or typed), and the client, with the e-mail the link to pay
 // goes to. Nothing is paid on site (R11): the visit is reserved until the
-// client pays online, by 48 hours before (2 hours' link when it is close).
+// client pays online, by the time the centre's settings give (Ustawienia).
 // The site's server books it (the portal's action) and the database checks
 // everything again; then its details open.
 
@@ -449,8 +449,8 @@ export function NewVisitPanel({
           </fieldset>
           <p className="rounded-[var(--radius-control)] bg-[var(--surface-muted)] p-3 text-xs leading-relaxed text-[var(--text)]">
             Klient dostanie e-mail z linkiem do płatności online. Termin
-            płatności to 48 godz. przed wizytą (przy bliższym terminie link jest
-            ważny 2 godz.); nieopłacona rezerwacja zostanie anulowana.
+            płatności wynika z ustawień centrum; nieopłacona w terminie
+            rezerwacja zostanie anulowana.
           </p>
         </div>
         <footer className="flex items-center justify-end gap-2 border-t border-[var(--border)] p-3">

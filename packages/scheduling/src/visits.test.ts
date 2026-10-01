@@ -34,6 +34,52 @@ const options = {
   now: new Date("2030-10-01T08:00:00Z"),
 };
 
+describe("a reservation not paid yet (R11)", () => {
+  const reserved: VisitLike = {
+    ...visit,
+    status: "awaiting_payment",
+    payment: { paid: false, refundDueMinor: null, refundedMinor: 0 },
+    paymentDueAt: "2030-09-30T09:00:00Z",
+  };
+
+  it("says when it must be paid by, and that the link can go again", () => {
+    const [row] = visitRows([reserved], {
+      ...options,
+      now: new Date("2030-09-29T08:00:00Z"),
+    });
+    expect(row).toMatchObject({
+      status: { label: "Czeka na płatność", tone: "warning" },
+      paymentDue: "pon. 30.09, 11:00",
+      resendable: true,
+    });
+  });
+
+  it("past its time, or with no e-mail, there is nothing to send", () => {
+    expect(
+      visitRows([reserved], {
+        ...options,
+        now: new Date("2030-09-30T10:00:00Z"),
+      })[0]!.resendable,
+    ).toBe(false);
+    expect(
+      visitRows(
+        [{ ...reserved, client: { ...reserved.client, email: null } }],
+        {
+          ...options,
+          now: new Date("2030-09-29T08:00:00Z"),
+        },
+      )[0]!.resendable,
+    ).toBe(false);
+  });
+
+  it("a paid visit has neither", () => {
+    expect(visitRows([visit], options)[0]).toMatchObject({
+      paymentDue: null,
+      resendable: false,
+    });
+  });
+});
+
 describe("visitDays", () => {
   it("groups visits by the centre's day, with local times", () => {
     const days = visitDays(

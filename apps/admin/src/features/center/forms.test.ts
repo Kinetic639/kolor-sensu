@@ -139,6 +139,8 @@ describe("booking settings", () => {
     cancellationWindowHours: 48,
     rescheduleWindowHours: 48,
     maxSelfReschedules: 1,
+    paymentDueHours: 48,
+    centrePaymentLinkHours: 2,
     phone: null,
     email: null,
     createdAt: "2026-09-19T00:00:00Z",
@@ -157,6 +159,8 @@ describe("booking settings", () => {
       cancellationWindowHours: 48,
       rescheduleWindowHours: 48,
       maxSelfReschedules: 1,
+      paymentDueHours: 48,
+      centrePaymentLinkHours: 2,
     });
     expect(toBookingSettingsUpdate(values)).toEqual({
       bookingEnabled: true,
@@ -168,6 +172,8 @@ describe("booking settings", () => {
       cancellationWindowHours: 48,
       rescheduleWindowHours: 48,
       maxSelfReschedules: 1,
+      paymentDueHours: 48,
+      centrePaymentLinkHours: 2,
     });
   });
 
@@ -184,6 +190,10 @@ describe("booking settings", () => {
     expect(error({ maxSelfReschedules: 6 })).toBe("Podaj od 0 do 5.");
     expect(error({ cancellationWindowHours: -1 })).toBe(
       "Podaj od 0 do 720 godzin.",
+    );
+    expect(error({ paymentDueHours: 0 })).toBe("Podaj od 1 do 720 godzin.");
+    expect(error({ centrePaymentLinkHours: 100 })).toBe(
+      "Podaj od 1 do 72 godzin.",
     );
   });
 });

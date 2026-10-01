@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   centreCancelVisit,
+  centreResendPaymentLink,
   getVisit,
   listVisitEvents,
   listVisits,
@@ -39,6 +40,7 @@ const row = {
   cancelled_by: null,
   cancelled_at: null,
   reschedule_count: 0,
+  payment_due_at: null,
 };
 
 describe("listVisits", () => {
@@ -78,7 +80,21 @@ describe("listVisits", () => {
       cancelledBy: null,
       cancelledAt: null,
       rescheduleCount: 0,
+      paymentDueAt: null,
     });
+  });
+
+  it("a reservation says when it must be paid by", async () => {
+    const { client } = rpcClient([
+      {
+        ...row,
+        status: "awaiting_payment",
+        paid: false,
+        payment_due_at: "2030-09-30T09:00:00+00:00",
+      },
+    ]);
+    const [visit] = await listVisits(client, { from: "a", to: "b" });
+    expect(visit!.paymentDueAt).toBe("2030-09-30T09:00:00+00:00");
   });
 
   it("gives a specialist no payment details and an online visit no room", async () => {
@@ -260,5 +276,27 @@ describe("listVisitEvents", () => {
       p_id: "visit-1",
       p_own: true,
     });
+  });
+});
+
+describe("centreResendPaymentLink", () => {
+  it("lets the reservation's e-mail go once more", async () => {
+    const { client, rpc } = rpcClient([{ reference: "2610-004" }]);
+    expect(await centreResendPaymentLink(client, "visit-1")).toBe("2610-004");
+    expect(rpc).toHaveBeenCalledWith("centre_resend_payment_link", {
+      p_appointment_id: "visit-1",
+    });
+  });
+
+  it("says why not: sent a moment ago, nothing to pay, not theirs", async () => {
+    for (const [error, code] of [
+      [{ message: "x", hint: "recently_sent" }, "recently_sent"],
+      [{ message: "x", hint: "not_payable" }, "not_payable"],
+      [{ message: "x", code: "42501" }, "forbidden"],
+    ] as const) {
+      await expect(
+        centreResendPaymentLink(rpcClient(null, error).client, "v"),
+      ).rejects.toMatchObject({ code });
+    }
   });
 });

@@ -36,6 +36,8 @@ export interface VisitLike {
   /** "system": not paid in time (R11). */
   cancelledBy: "client" | "centre" | "system" | null;
   rescheduleCount: number;
+  /** A reservation: to be paid by then, or it is cancelled (R11). */
+  paymentDueAt?: string | null;
 }
 
 export interface VisitRow {
@@ -74,6 +76,10 @@ export interface VisitRow {
   cancelled: boolean;
   /** Still ahead and booked: the centre may cancel it. */
   cancellable: boolean;
+  /** A reservation not paid yet: `pon. 30.09, 11:00`, where the centre is. */
+  paymentDue: string | null;
+  /** Its link to pay can be e-mailed again (still payable, has an e-mail). */
+  resendable: boolean;
 }
 
 export interface VisitDay {
@@ -143,6 +149,8 @@ function rowOf(visit: VisitLike, timeZone: string, now: Date): VisitRow {
     Boolean(item.value),
   );
   const cancelled = visit.status === "cancelled";
+  const reservation =
+    visit.status === "awaiting_payment" ? (visit.paymentDueAt ?? null) : null;
   const date = formatInTimeZone(
     new Date(visit.startsAt),
     timeZone,
@@ -187,7 +195,21 @@ function rowOf(visit: VisitLike, timeZone: string, now: Date): VisitRow {
       !cancelled &&
       (visit.status === "confirmed" || visit.status === "awaiting_payment") &&
       new Date(visit.startsAt) > now,
+    paymentDue: reservation ? dueLabel(reservation, timeZone) : null,
+    resendable:
+      reservation !== null &&
+      new Date(reservation) > now &&
+      Boolean(visit.client.email),
   };
+}
+
+/** `pon. 30.09, 11:00`, where the centre is. */
+function dueLabel(instant: string, timeZone: string) {
+  const weekday = new Intl.DateTimeFormat("pl-PL", {
+    weekday: "short",
+    timeZone,
+  }).format(new Date(instant));
+  return `${weekday} ${formatInTimeZone(new Date(instant), timeZone, "dd.MM, HH:mm")}`;
 }
 
 /** The days that have visits, in order, each with its visits. */

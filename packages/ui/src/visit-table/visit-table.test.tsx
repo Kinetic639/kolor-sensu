@@ -196,6 +196,24 @@ describe("VisitPanel", () => {
     ).toHaveAttribute("href", "/kalendarz");
   });
 
+  it("a reservation not paid yet says when it must be paid by", () => {
+    const reserved = adminRows.find((row) => row.reference === "3010-020")!;
+    render(
+      <VisitPanel
+        closeHref="/kalendarz"
+        events={null}
+        row={reserved}
+        tab="szczegoly"
+        tabs={panelTabs}
+      />,
+    );
+    const panel = screen.getByRole("complementary", {
+      name: "Piotr Zieliński",
+    });
+    expect(panel).toHaveTextContent("Czeka na płatność");
+    expect(panel).toHaveTextContent(/Zapłata do\s*wt\.? 01\.10, 16:00/);
+  });
+
   it("history: every event, oldest first, with who did it", () => {
     render(
       <VisitPanel

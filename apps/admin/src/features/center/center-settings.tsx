@@ -676,6 +676,36 @@ function BookingSettingsCard({ settings }: { settings: CenterSettingsData }) {
           </div>
         </fieldset>
 
+        <fieldset className="space-y-4">
+          <legend className="text-sm font-semibold text-[var(--text)]">
+            Płatność
+          </legend>
+          <p className="text-xs text-[var(--text-muted)]">
+            Wizyty opłaca się tylko online. Klient może zarezerwować i zapłacić
+            później; nieopłacona rezerwacja jest anulowana.
+          </p>
+          <div className="grid gap-4 md:grid-cols-2">
+            <TextField
+              error={errors.paymentDueHours?.message}
+              hint="Bliżej wizyty klient płaci od razu przy rezerwacji."
+              id="booking-payment-due"
+              inputMode="numeric"
+              label="Zapłata najpóźniej (godz. przed wizytą)"
+              registration={number("paymentDueHours")}
+              type="number"
+            />
+            <TextField
+              error={errors.centrePaymentLinkHours?.message}
+              hint="Dla wizyt zapisanych przez centrum bliżej niż powyżej; najpóźniej godzinę przed wizytą."
+              id="booking-payment-link"
+              inputMode="numeric"
+              label="Ważność linku do płatności (godz.)"
+              registration={number("centrePaymentLinkHours")}
+              type="number"
+            />
+          </div>
+        </fieldset>
+
         <Button disabled={!isDirty} loading={isPending} type="submit">
           Zapisz ustawienia rezerwacji
         </Button>

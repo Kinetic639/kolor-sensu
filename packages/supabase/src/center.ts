@@ -64,6 +64,8 @@ function mapCenterSettings(row: CenterSettingsRow): CenterSettings {
     cancellationWindowHours: row.cancellation_window_hours,
     rescheduleWindowHours: row.reschedule_window_hours,
     maxSelfReschedules: row.max_self_reschedules,
+    paymentDueHours: row.payment_due_hours,
+    centrePaymentLinkHours: row.centre_payment_link_hours,
     phone: row.phone,
     email: row.email,
     createdAt: row.created_at,
@@ -176,6 +178,8 @@ export async function updateCenterSettings(
       hold_minutes: patch.holdMinutes,
       reschedule_window_hours: patch.rescheduleWindowHours,
       max_self_reschedules: patch.maxSelfReschedules,
+      payment_due_hours: patch.paymentDueHours,
+      centre_payment_link_hours: patch.centrePaymentLinkHours,
       phone: patch.phone,
       email: patch.email,
     })

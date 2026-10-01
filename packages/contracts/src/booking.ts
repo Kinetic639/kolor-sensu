@@ -135,3 +135,18 @@ const CENTRE_BOOKING_MESSAGES: Record<string, string> = {
 export function centreBookingMessage(code: string | undefined) {
   return CENTRE_BOOKING_MESSAGES[code ?? ""] ?? "Nie udało się zapisać wizyty.";
 }
+
+const RESEND_LINK_MESSAGES: Record<string, string> = {
+  recently_sent: "Link wysłano przed chwilą. Spróbuj ponownie za kilka minut.",
+  not_payable: "Tej rezerwacji nie można już opłacić.",
+  forbidden: "Nie możesz wysłać linku do tej wizyty.",
+  not_found: "Nie znaleziono wizyty.",
+};
+
+/** Why the link to pay could not go again, in Polish. */
+export function resendLinkMessage(code: string | undefined) {
+  return (
+    RESEND_LINK_MESSAGES[code ?? ""] ??
+    "Nie udało się wysłać linku do płatności."
+  );
+}

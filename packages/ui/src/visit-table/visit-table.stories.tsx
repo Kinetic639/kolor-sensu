@@ -9,6 +9,7 @@ import {
   RowActionSeparator,
 } from "../row-actions";
 import { IconButton } from "../icon-action";
+import { ResendPaymentLinkButton } from "./resend-payment-link";
 import { VisitPanel } from "./visit-panel";
 import { VisitTable, VisitTableToolbar } from "./visit-table";
 import {
@@ -27,6 +28,10 @@ import {
 // menu stuck to the edges, the pages below.
 
 const cancel = fn();
+const resend = fn(async () => ({
+  ok: true as const,
+  emailed: "sent" as const,
+}));
 
 function BookingsTable({
   query,
@@ -34,6 +39,7 @@ function BookingsTable({
   empty = false,
   open = false,
   history = false,
+  reservation = false,
 }: {
   query: string;
   admin: boolean;
@@ -42,9 +48,15 @@ function BookingsTable({
   open?: boolean;
   /** The panel on its history tab. */
   history?: boolean;
+  /** A reservation not paid yet open in the panel. */
+  reservation?: boolean;
 }) {
   const rows = empty ? [] : admin ? adminRows : specialistRows;
-  const params = { ...tableParams(query), wizyta: open ? rows[0]!.id : null };
+  const opened = reservation ? rows.find((row) => row.resendable)! : rows[0]!;
+  const params = {
+    ...tableParams(query),
+    wizyta: open || reservation ? opened.id : null,
+  };
   return (
     <NuqsTestingAdapter searchParams={query}>
       <div className="flex max-w-7xl items-start gap-4">
@@ -103,21 +115,29 @@ function BookingsTable({
             total={empty ? 0 : admin ? 42 : rows.length}
           />
         </div>
-        {open ? (
+        {open || reservation ? (
           <VisitPanel
             closeHref="/kalendarz"
             events={sampleEvents}
-            row={rows[0]!}
+            row={opened}
             tab={history ? "historia" : "szczegoly"}
             tabs={panelTabs}
             toolbar={
               admin ? (
-                <IconButton
-                  destructive
-                  icon={<XCircle aria-hidden="true" />}
-                  label="Odwołaj wizytę"
-                  onClick={cancel}
-                />
+                <>
+                  {opened.resendable ? (
+                    <ResendPaymentLinkButton
+                      action={resend}
+                      visitId={opened.id}
+                    />
+                  ) : null}
+                  <IconButton
+                    destructive
+                    icon={<XCircle aria-hidden="true" />}
+                    label="Odwołaj wizytę"
+                    onClick={cancel}
+                  />
+                </>
               ) : null
             }
           />
@@ -210,4 +230,18 @@ export const MoreFilters: Story = {
 /** The open visit's history: every event, who did it and when. */
 export const VisitHistory: Story = {
   args: { query: "", admin: true, open: true, history: true },
+};
+
+/** A reservation not paid yet: when it must be paid by, and its link again. */
+export const ReservationOpen: Story = {
+  args: { query: "", admin: true, reservation: true },
+  play: async ({ canvas }) => {
+    const panel = canvas.getByRole("complementary", {
+      name: "Piotr Zieliński",
+    });
+    await expect(panel).toHaveTextContent("Zapłata do");
+    await expect(
+      within(panel).getByRole("button", { name: "Wyślij link do płatności" }),
+    ).toBeVisible();
+  },
 };

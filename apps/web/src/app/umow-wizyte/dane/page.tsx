@@ -6,6 +6,7 @@ import { BookingStep, requireLiveHold } from "@/features/booking/booking-step";
 import { DetailsForm } from "@/features/booking/details-form";
 import { payLaterUntil } from "@/features/booking/pay-later";
 import { deadlineLabel, localTime } from "@/features/booking/visit-label";
+import { getBookingWindow } from "@/lib/public-data";
 
 export const metadata: Metadata = {
   title: "Twoje dane · Umów wizytę",
@@ -17,7 +18,8 @@ export const metadata: Metadata = {
 export default async function BookingDetailsPage() {
   const visit = await requireLiveHold();
   const { booking, timeZone } = visit;
-  const until = payLaterUntil(booking.startsAt);
+  const window = await getBookingWindow();
+  const until = payLaterUntil(booking.startsAt, window?.paymentDueHours);
 
   return (
     <BookingStep

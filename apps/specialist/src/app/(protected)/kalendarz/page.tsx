@@ -1,4 +1,7 @@
-import { bookVisitAction } from "@/features/calendar/actions";
+import {
+  bookVisitAction,
+  resendPaymentLinkAction,
+} from "@/features/calendar/actions";
 import { loadMyCalendar } from "@/features/calendar/loaders";
 import {
   findAvailability,
@@ -29,7 +32,7 @@ import {
   ScheduleToolbar,
 } from "@repo/ui/calendar-view";
 import { EmptyState, PageTitle } from "@repo/ui/portal-content";
-import { VisitPanel } from "@repo/ui/visit-table";
+import { ResendPaymentLinkButton, VisitPanel } from "@repo/ui/visit-table";
 
 // Mój kalendarz (stage K5), after the AI Studio reference: the
 // specialist's week (or day), their visits over their availability in its
@@ -158,6 +161,14 @@ export default async function CalendarPage({
                 row={open.row}
                 tab={params.karta}
                 tabs={calendarPanelTabs(PATH, params)}
+                toolbar={
+                  open.row.resendable ? (
+                    <ResendPaymentLinkButton
+                      action={resendPaymentLinkAction}
+                      visitId={open.row.id}
+                    />
+                  ) : null
+                }
               />
             ) : shown ? (
               <AvailabilityPanel

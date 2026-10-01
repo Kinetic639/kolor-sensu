@@ -1,6 +1,6 @@
 import { BookingError } from "@repo/supabase";
 import { describe, expect, it, vi } from "vitest";
-import { bookVisitAsCentre } from "./centre-booking";
+import { bookVisitAsCentre, resendPaymentLink } from "./centre-booking";
 
 const OFFER = "10000000-0000-4000-8000-000000000001";
 const ROOM = "20000000-0000-4000-8000-000000000001";
@@ -83,5 +83,33 @@ describe("bookVisitAsCentre", () => {
       code: "too_soon",
     });
     expect(d.sendPaymentLink).not.toHaveBeenCalled();
+  });
+});
+
+describe("resendPaymentLink", () => {
+  it("lets the reservation's e-mail go again, then sends it", async () => {
+    const deps = {
+      allow: vi.fn().mockResolvedValue("3010-001"),
+      send: vi.fn().mockResolvedValue("sent" as const),
+    };
+    expect(await resendPaymentLink("visit-1", deps)).toEqual({
+      ok: true,
+      reference: "3010-001",
+      emailed: "sent",
+    });
+    expect(deps.allow).toHaveBeenCalledWith("visit-1");
+    expect(deps.send).toHaveBeenCalledWith("3010-001");
+  });
+
+  it("passes on why not, and sends nothing", async () => {
+    const deps = {
+      allow: vi.fn().mockRejectedValue(new BookingError("recently_sent", "x")),
+      send: vi.fn(),
+    };
+    expect(await resendPaymentLink("visit-1", deps)).toEqual({
+      ok: false,
+      code: "recently_sent",
+    });
+    expect(deps.send).not.toHaveBeenCalled();
   });
 });

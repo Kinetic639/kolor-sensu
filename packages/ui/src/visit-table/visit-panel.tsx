@@ -93,6 +93,16 @@ function Details({ row }: { row: VisitRow }) {
               </span>,
             ],
             ["Miejsce", row.place],
+            ...(row.paymentDue
+              ? [
+                  [
+                    "Zapłata do",
+                    <span className="tabular-nums" key="due">
+                      {row.paymentDue}
+                    </span>,
+                  ] as [string, ReactNode],
+                ]
+              : []),
           ]}
         />
       </Section>

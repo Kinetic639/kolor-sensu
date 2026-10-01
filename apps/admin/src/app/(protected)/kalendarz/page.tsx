@@ -1,4 +1,7 @@
-import { bookVisitAction } from "@/features/calendar/actions";
+import {
+  bookVisitAction,
+  resendPaymentLinkAction,
+} from "@/features/calendar/actions";
 import { loadAdminCalendar } from "@/features/calendar/loaders";
 import { CancelVisitButton } from "@/features/visits/cancel-visit";
 import {
@@ -36,7 +39,7 @@ import {
   WeekComparison,
 } from "@repo/ui/calendar-view";
 import { PageTitle } from "@repo/ui/portal-content";
-import { VisitPanel } from "@repo/ui/visit-table";
+import { ResendPaymentLinkButton, VisitPanel } from "@repo/ui/visit-table";
 
 // Kalendarz (stage K5), after the AI Studio reference: the centre's day, a
 // column per specialist or room (collapsible), or the week compared in
@@ -193,17 +196,25 @@ export default async function CalendarPage({
                 tab={params.karta}
                 tabs={calendarPanelTabs(PATH, params)}
                 toolbar={
-                  open.row.cancellable ? (
-                    <CancelVisitButton
-                      visit={{
-                        id: open.row.id,
-                        reference: open.row.reference,
-                        label: `${open.row.clientName}, ${open.row.weekday}, ${open.row.dateLabel}, ${open.row.time}`,
-                        paid: open.row.paid,
-                        email: open.row.email,
-                      }}
-                    />
-                  ) : null
+                  <>
+                    {open.row.resendable ? (
+                      <ResendPaymentLinkButton
+                        action={resendPaymentLinkAction}
+                        visitId={open.row.id}
+                      />
+                    ) : null}
+                    {open.row.cancellable ? (
+                      <CancelVisitButton
+                        visit={{
+                          id: open.row.id,
+                          reference: open.row.reference,
+                          label: `${open.row.clientName}, ${open.row.weekday}, ${open.row.dateLabel}, ${open.row.time}`,
+                          paid: open.row.paid,
+                          email: open.row.email,
+                        }}
+                      />
+                    ) : null}
+                  </>
                 }
               />
             ) : shown ? (

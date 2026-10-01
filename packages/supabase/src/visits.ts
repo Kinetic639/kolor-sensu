@@ -44,6 +44,8 @@ export interface Visit {
   cancelledBy: "client" | "centre" | "system" | null;
   cancelledAt: string | null;
   rescheduleCount: number;
+  /** A reservation: to be paid by then, or it is cancelled (R11). */
+  paymentDueAt: string | null;
 }
 
 export interface VisitsQuery {
@@ -209,6 +211,7 @@ function toVisit(row: VisitRow): Visit {
     cancelledBy: cancelledByOf(row.cancelled_by),
     cancelledAt: row.cancelled_at ?? null,
     rescheduleCount: row.reschedule_count,
+    paymentDueAt: row.payment_due_at ?? null,
   };
 }
 
@@ -277,4 +280,27 @@ export async function listVisitEvents(
         ? (row.details as Record<string, unknown>)
         : {},
   }));
+}
+
+/**
+ * Sends the link to pay again (R11): lets the reservation's e-mail be
+ * claimed once more; the site sends it. Throws a BookingError
+ * (recently_sent, not_payable, forbidden).
+ */
+export async function centreResendPaymentLink(
+  client: Client,
+  appointmentId: string,
+): Promise<string> {
+  const { data, error } = await client.rpc("centre_resend_payment_link", {
+    p_appointment_id: appointmentId,
+  });
+  if (error) {
+    if (error.code === "42501") {
+      throw new BookingError("forbidden", error.message);
+    }
+    throw bookingError(error);
+  }
+  const row = data?.[0];
+  if (!row) throw new BookingError("unknown", "Nothing to send");
+  return row.reference;
 }

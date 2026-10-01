@@ -64,6 +64,7 @@ export const sampleVisits: VisitLike[] = [
     endsAt: "2030-10-03T14:50:00Z",
     status: "awaiting_payment",
     payment: { paid: false, refundDueMinor: null, refundedMinor: 0 },
+    paymentDueAt: "2030-10-01T14:00:00Z",
     client: { ...base.client, name: "Piotr Zieliński", notes: null },
   },
 ];

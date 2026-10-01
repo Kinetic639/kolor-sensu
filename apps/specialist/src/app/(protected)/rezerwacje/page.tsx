@@ -1,3 +1,4 @@
+import { resendPaymentLinkAction } from "@/features/calendar/actions";
 import { createClient } from "@/lib/supabase/server";
 import { visitEventRows, visitRows } from "@repo/scheduling";
 import {
@@ -12,6 +13,7 @@ import { EmptyState, PageTitle } from "@repo/ui/portal-content";
 import { RowActionLink, RowActions } from "@repo/ui/row-actions";
 import {
   loadVisitTableParams,
+  ResendPaymentLinkButton,
   toVisitSearch,
   VisitPanel,
   VisitTable,
@@ -125,6 +127,14 @@ export default async function BookingsPage({
             row={openRow}
             tab={params.karta}
             tabs={visitPanelTabs(PATH, params)}
+            toolbar={
+              openRow.resendable ? (
+                <ResendPaymentLinkButton
+                  action={resendPaymentLinkAction}
+                  visitId={openRow.id}
+                />
+              ) : null
+            }
           />
         ) : null}
       </div>

@@ -45,6 +45,8 @@ export const centerSettingsUpdateSchema = z
     holdMinutes: z.number().int().min(5).max(30),
     rescheduleWindowHours: z.number().int().min(0).max(720),
     maxSelfReschedules: z.number().int().min(0).max(5),
+    paymentDueHours: z.number().int().min(1).max(720),
+    centrePaymentLinkHours: z.number().int().min(1).max(72),
     phone: z.string().trim().max(40).nullable(),
     email: z.email().max(320).nullable(),
   })
@@ -109,6 +111,10 @@ export interface CenterSettings {
   rescheduleWindowHours: number;
   /** …this many times (0: only through the centre). */
   maxSelfReschedules: number;
+  /** A reservation is paid online by this long before the visit (R11)… */
+  paymentDueHours: number;
+  /** …or, booked by the centre closer than that, within this long. */
+  centrePaymentLinkHours: number;
   phone: string | null;
   email: string | null;
   createdAt: string;
