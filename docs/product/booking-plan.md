@@ -389,7 +389,7 @@ Każdy commit realizujący zadanie aktualizuje status i wpisuje hash commitu.
 | R8  | Zarządzanie z linku: szczegóły, przełożenie, anulowanie ze zwrotem                                                                               | F4-04    | `DONE`        | 0b9c898     | Okna i limit w Ustawieniach (48 h, 1 raz)                                                                     |
 | R9  | Portale: lista wizyt specjalisty i admina, anulowanie przez centrum                                                                              | F4-04    | `DONE`        | 25a64eb     | Widoki kalendarza: etap K (K5)                                                                                |
 | R10 | Przypomnienia e-mail 24 h przed wizytą, włączenie `booking_enabled` na produkcji                                                                 | F4-04    | `IN PROGRESS` |             | Przypomnienie 24 h gotowe w R11 (cron)                                                                        |
-| R11 | Płać teraz albo później: rezerwacja do 48 h przed, link do płatności, przypomnienia (24 h i 6 h przed terminem), anulowanie, harmonogram w bazie | F4-04    | `IN PROGRESS` |             | `pg_cron`: anulowanie co 5 min, `pg_net` → `/api/cron/platnosci` co 15 min (Vault: `site_url`, `cron_secret`) |
+| R11 | Płać teraz albo później: rezerwacja do 48 h przed, link do płatności, przypomnienia (24 h i 6 h przed terminem), anulowanie, harmonogram w bazie | F4-04    | `DONE`        | 44ce6ec     | `pg_cron`: anulowanie co 5 min, `pg_net` → `/api/cron/platnosci` co 15 min (Vault: `site_url`, `cron_secret`) |
 
 ### Potrzebne od centrum przed R5–R7
 
