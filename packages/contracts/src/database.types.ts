@@ -52,6 +52,39 @@ export type Database = {
           },
         ];
       };
+      clients: {
+        Row: {
+          created_at: string;
+          email: string;
+          email_key: string;
+          id: string;
+          name: string;
+          notes: string | null;
+          phone: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          email: string;
+          email_key?: never;
+          id?: string;
+          name: string;
+          notes?: string | null;
+          phone?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          email?: string;
+          email_key?: never;
+          id?: string;
+          name?: string;
+          notes?: string | null;
+          phone?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       appointments: {
         Row: {
           access_token_hash: string;
@@ -61,6 +94,7 @@ export type Database = {
           buffer_minutes: number;
           cancelled_at: string | null;
           cancelled_by: string | null;
+          client_id: string | null;
           client_email: string | null;
           client_name: string | null;
           client_notes: string | null;
@@ -96,6 +130,7 @@ export type Database = {
           buffer_minutes: number;
           cancelled_at?: string | null;
           cancelled_by?: string | null;
+          client_id?: string | null;
           client_email?: string | null;
           client_name?: string | null;
           client_notes?: string | null;
@@ -131,6 +166,7 @@ export type Database = {
           buffer_minutes?: number;
           cancelled_at?: string | null;
           cancelled_by?: string | null;
+          client_id?: string | null;
           client_email?: string | null;
           client_name?: string | null;
           client_notes?: string | null;
@@ -1529,6 +1565,16 @@ export type Database = {
           starts_at: string;
         }[];
       };
+      admin_update_client: {
+        Args: {
+          p_email: string;
+          p_id: string;
+          p_name: string;
+          p_notes: string | null;
+          p_phone: string | null;
+        };
+        Returns: { id: string; upcoming_updated: number }[];
+      };
       centre_resend_payment_link: {
         Args: { p_appointment_id: string };
         Returns: {
@@ -1772,6 +1818,24 @@ export type Database = {
           starts_at: string;
         }[];
       };
+      get_client: {
+        Args: { p_id: string };
+        Returns: {
+          id: string;
+          name: string;
+          email: string;
+          phone: string | null;
+          notes: string | null;
+          visits: number;
+          upcoming: number;
+          cancelled: number;
+          last_visit_at: string | null;
+          next_visit_at: string | null;
+          paid_minor: number;
+          created_at: string;
+          updated_at: string;
+        }[];
+      };
       list_settlements: {
         Args: never;
         Returns: {
@@ -1838,6 +1902,34 @@ export type Database = {
           specialist_name: string;
           starts_at: string;
           status: Database["public"]["Enums"]["appointment_status"];
+        }[];
+      };
+      list_client_visits: {
+        Args: { p_client_id: string };
+        Returns: Database["public"]["Functions"]["list_visits"]["Returns"];
+      };
+      search_clients: {
+        Args: {
+          p_desc?: boolean;
+          p_limit?: number;
+          p_offset?: number;
+          p_query?: string | null;
+          p_sort?: string;
+        };
+        Returns: {
+          id: string;
+          name: string;
+          email: string;
+          phone: string | null;
+          notes: string | null;
+          visits: number;
+          upcoming: number;
+          cancelled: number;
+          last_visit_at: string | null;
+          next_visit_at: string | null;
+          paid_minor: number;
+          created_at: string;
+          total_count: number;
         }[];
       };
       mark_booking_email_sent: {

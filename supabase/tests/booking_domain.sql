@@ -2605,4 +2605,108 @@ END;
 $body$;
 RESET ROLE;
 
+-- AE. Clients (R15): one per e-mail address, made by a real booking (never
+-- by a hold given up on); the admin's list and card; correcting a client's
+-- details, which their visits still to come follow.
+DO $body$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.clients WHERE email_key = 'ola@example.com' AND name = 'Ola Test') THEN
+    RAISE EXCEPTION 'AE: no client for the visits booked';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.appointments AS visit
+             WHERE visit.client_email = 'ola@example.com' AND private.shown_as_visit(visit)
+               AND visit.client_id IS DISTINCT FROM (SELECT id FROM public.clients WHERE email_key = 'ola@example.com')) THEN
+    RAISE EXCEPTION 'AE: a visit not linked to its client';
+  END IF;
+  -- Jan (section P) gave his details for a hold that lapsed: no client.
+  IF EXISTS (SELECT 1 FROM public.clients WHERE email_key = 'jan@example.com') THEN
+    RAISE EXCEPTION 'AE: a hold given up on made a client';
+  END IF;
+END;
+$body$;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  ola uuid := (SELECT id FROM public.search_clients(p_query => 'ola@example.com') LIMIT 1);
+  c record;
+  u record;
+  future integer;
+BEGIN
+  SELECT * INTO c FROM public.get_client(ola);
+  IF c.id IS NULL OR c.visits < 1 OR c.upcoming < 1 OR c.cancelled < 1 OR c.paid_minor <= 0 THEN
+    RAISE EXCEPTION 'AE: the client''s card: %', row_to_json(c);
+  END IF;
+  IF (SELECT count(*) FROM public.list_client_visits(ola)) < c.visits + c.cancelled THEN
+    RAISE EXCEPTION 'AE: the client''s visits';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.search_clients(p_query => '_la@')) THEN
+    RAISE EXCEPTION 'AE: "_" matched as a wildcard';
+  END IF;
+  IF pg_temp.hint_of(format('SELECT public.admin_update_client(%L, %L, %L, NULL, NULL)',
+       ola, 'Ola Test', 'ewa@example.com')) <> 'email_taken' THEN
+    RAISE EXCEPTION 'AE: took another client''s address';
+  END IF;
+  IF pg_temp.hint_of(format('SELECT public.admin_update_client(%L, %L, %L, NULL, NULL)',
+       ola, 'Ola Test', 'not an e-mail')) <> 'invalid_details' THEN
+    RAISE EXCEPTION 'AE: saved a wrong address';
+  END IF;
+  SELECT count(*) INTO future FROM public.appointments
+  WHERE client_id = ola AND status IN ('confirmed', 'awaiting_payment') AND lower(during) > now();
+  SELECT * INTO u FROM public.admin_update_client(ola, 'Ola Nowak', ' Ola.Nowak@Example.invalid ', '600 200 300', 'Woli popołudnia');
+  IF u.upcoming_updated <> future THEN
+    RAISE EXCEPTION 'AE: % visits to come followed, not %', u.upcoming_updated, future;
+  END IF;
+  SELECT * INTO c FROM public.get_client(ola);
+  IF (c.name, c.email, c.phone, c.notes)
+     IS DISTINCT FROM ('Ola Nowak'::text, 'ola.nowak@example.invalid'::text, '600 200 300'::text, 'Woli popołudnia'::text) THEN
+    RAISE EXCEPTION 'AE: the saved details: %', row_to_json(c);
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.appointments
+             WHERE client_id = ola AND status IN ('confirmed', 'awaiting_payment') AND lower(during) > now()
+               AND client_email <> 'ola.nowak@example.invalid') THEN
+    RAISE EXCEPTION 'AE: a visit to come kept the old address';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.appointments
+                 WHERE client_id = ola AND status = 'cancelled' AND client_email = 'ola@example.com') THEN
+    RAISE EXCEPTION 'AE: a cancelled visit lost what the client gave then';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.search_clients();
+    RAISE EXCEPTION 'AE: a specialist listed the clients';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.admin_update_client(gen_random_uuid(), 'A', 'a@example.invalid', NULL, NULL);
+    RAISE EXCEPTION 'AE: a specialist changed a client';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM 1 FROM public.clients LIMIT 1;
+    RAISE EXCEPTION 'AE: a specialist read the clients table';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '', true);
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  PERFORM public.get_client(gen_random_uuid());
+  RAISE EXCEPTION 'AE: a visitor read a client';
+EXCEPTION WHEN insufficient_privilege THEN NULL;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

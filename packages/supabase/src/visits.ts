@@ -169,7 +169,7 @@ export async function getVisit(
 type VisitRow =
   Database["public"]["Functions"]["list_visits"]["Returns"][number];
 
-function toVisit(row: VisitRow): Visit {
+export function toVisit(row: VisitRow): Visit {
   return {
     id: row.id,
     reference: row.reference,

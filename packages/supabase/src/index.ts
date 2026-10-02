@@ -242,3 +242,17 @@ export type {
   PortalLiveHandlers,
   PortalNotification,
 } from "./notifications";
+export {
+  ClientError,
+  getClient,
+  listClientVisits,
+  searchClients,
+  updateClient,
+} from "./clients";
+export type {
+  CentreClient,
+  ClientDetails,
+  ClientErrorCode,
+  ClientSearch,
+  ClientSort,
+} from "./clients";

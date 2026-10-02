@@ -11,8 +11,11 @@ import { parseAsSearch, visitTableParsers } from "./params";
 
 export function VisitTableSearch({
   placeholder = "Szukaj: klient, numer, usługa…",
+  label = "Szukaj rezerwacji",
 }: {
   placeholder?: string;
+  /** For screen readers (the clients list reuses the box). */
+  label?: string;
 }) {
   const [pending, startTransition] = useTransition();
   const [{ q }, setParams] = useQueryStates(
@@ -21,7 +24,7 @@ export function VisitTableSearch({
   );
   return (
     <label className="relative block w-full sm:w-64">
-      <span className="sr-only">Szukaj rezerwacji</span>
+      <span className="sr-only">{label}</span>
       {pending ? (
         <LoaderCircle
           aria-hidden="true"
