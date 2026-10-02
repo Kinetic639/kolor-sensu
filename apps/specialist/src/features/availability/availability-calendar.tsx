@@ -187,7 +187,7 @@ export function AvailabilityCalendar({
                 start={drag.preview.start}
                 variant="preview"
               >
-                <span className="inline-flex rounded bg-[var(--primary)] px-2 py-1 font-bold text-white tabular-nums shadow-sm">
+                <span className="inline-flex rounded bg-[var(--primary)] px-2 py-1 font-bold text-[var(--primary-foreground)] tabular-nums shadow-sm">
                   {minutesToTime(drag.preview.start)} –{" "}
                   {minutesToTime(drag.preview.end)}
                 </span>

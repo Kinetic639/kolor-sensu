@@ -125,8 +125,8 @@ describe("calendar week", () => {
       {
         ruleId: "online",
         placeLabel: "Online",
-        accent: "var(--info)",
-        tint: "var(--info-soft)",
+        accent: "var(--online)",
+        tint: "var(--online-soft)",
       },
     ]);
     expect(tuesday!.windows[0]).toMatchObject({

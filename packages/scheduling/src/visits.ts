@@ -60,6 +60,8 @@ export interface VisitRow {
   place: string;
   /** `Gabinet Zielony`, or `Online`. */
   room: string;
+  /** The room's own colour (null: online, none set, or no room). */
+  roomColor: string | null;
   locationName: string | null;
   phone: string | null;
   email: string | null;
@@ -184,6 +186,7 @@ function rowOf(visit: VisitLike, timeZone: string, now: Date): VisitRow {
     paid: visit.payment?.paid ?? false,
     room:
       visit.mode === "online" ? "Online" : (visit.room?.name ?? "Stacjonarnie"),
+    roomColor: visit.mode === "online" ? null : (visit.room?.color ?? null),
     locationName: visit.mode === "online" ? null : visit.locationName,
     phone: visit.client.phone,
     email: visit.client.email,

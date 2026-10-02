@@ -1,3 +1,17 @@
+/* Themes: every colour is light-dark(light, dark), picked by the root's
+   color-scheme. The public site stays light; the portals put the person's
+   choice (the ks_theme cookie) on <html data-theme>: light, dark, or
+   system (the device's setting). */
+:root {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+:root[data-theme="system"] {
+  color-scheme: light dark;
+}
+
 :root {
   --ks-font-sans: "Inter", "Avenir Next", "Segoe UI", sans-serif;
   --ks-font-heading: Georgia, "Times New Roman", serif;
@@ -33,54 +47,60 @@
   --ks-radius-full: 9999px;
 
   --ks-shadow-surface:
-    0 1px 2px rgb(15 39 71 / 0.04), 0 8px 24px rgb(15 39 71 / 0.04);
-  --ks-shadow-raised: 0 12px 32px rgb(15 39 71 / 0.1);
-  --ks-shadow-overlay: 0 24px 64px rgb(15 39 71 / 0.18);
+    0 1px 2px light-dark(rgb(15 39 71 / 0.04), rgb(0 0 0 / 0.3)),
+    0 8px 24px light-dark(rgb(15 39 71 / 0.04), rgb(0 0 0 / 0.2));
+  --ks-shadow-raised: 0 12px 32px
+    light-dark(rgb(15 39 71 / 0.1), rgb(0 0 0 / 0.45));
+  --ks-shadow-overlay: 0 24px 64px
+    light-dark(rgb(15 39 71 / 0.18), rgb(0 0 0 / 0.6));
 
   --ks-container-sm: 40rem;
   --ks-container-md: 56rem;
   --ks-container-lg: 72rem;
   --ks-container-xl: 90rem;
-  --ks-sidebar-width: 16rem;
-  --ks-header-height: 4rem;
+  --ks-sidebar-width: 13rem;
+  --ks-header-height: 2.75rem;
 
-  --background: #fbfaf6;
-  --surface: #ffffff;
-  --surface-muted: #f4f7f7;
-  --surface-subtle: #f8faf9;
+  --background: light-dark(#fbfaf6, #0d1714);
+  --surface: light-dark(#ffffff, #13201c);
+  --surface-muted: light-dark(#f4f7f7, #1a2b26);
+  --surface-subtle: light-dark(#f8faf9, #172621);
 
-  --primary: #0f7a59;
-  --primary-hover: #0a674a;
-  --primary-foreground: #ffffff;
-  --primary-soft: #e6f5ee;
+  --primary: light-dark(#0f7a59, #3cc795);
+  --primary-hover: light-dark(#0a674a, #5dd8aa);
+  --primary-foreground: light-dark(#ffffff, #052a1d);
+  --primary-soft: light-dark(#e6f5ee, #163a2e);
 
-  --text: #102a56;
-  --text-muted: #566f94;
-  --text-subtle: #627490; /* 4.5:1 on white and surface-subtle (placeholders) */
-  --border: #dce5e8;
-  --border-strong: #c7d4da;
-  --ring: #2a8d70;
+  --text: light-dark(#102a56, #e4ece9);
+  --text-muted: light-dark(#566f94, #a3b7b0);
+  --text-subtle: light-dark(
+    #627490,
+    #93aaa2
+  ); /* 4.5:1 on white and surface-subtle (placeholders) */
+  --border: light-dark(#dce5e8, #263a33);
+  --border-strong: light-dark(#c7d4da, #334c43);
+  --ring: light-dark(#2a8d70, #3cc795);
 
-  --success: #0d7554;
-  --success-foreground: #ffffff;
-  --success-soft: #e6f6ef;
-  --warning: #d97706;
-  --warning-foreground: #713f12;
-  --warning-soft: #fff5df;
-  --danger: #d32a42; /* 4.5:1 as text on danger-soft */
-  --danger-foreground: #ffffff;
-  --danger-soft: #fff0f2;
-  --info: #2868d8;
-  --info-foreground: #ffffff;
-  --info-soft: #edf3ff;
+  --success: light-dark(#0d7554, #45cf93);
+  --success-foreground: light-dark(#ffffff, #052a1d);
+  --success-soft: light-dark(#e6f6ef, #15372b);
+  --warning: light-dark(#d97706, #f2a640);
+  --warning-foreground: light-dark(#713f12, #fcd9a0);
+  --warning-soft: light-dark(#fff5df, #3a2a12);
+  --danger: light-dark(#d32a42, #ff7385); /* 4.5:1 as text on danger-soft */
+  --danger-foreground: light-dark(#ffffff, #2c0a11);
+  --danger-soft: light-dark(#fff0f2, #3e1a22);
+  --info: light-dark(#2868d8, #7aa8ff);
+  --info-foreground: light-dark(#ffffff, #0b1b3d);
+  --info-soft: light-dark(#edf3ff, #18284a);
 
-  --accent-mint: #e4f5ed;
-  --accent-blue: #eaf1ff;
-  --accent-lilac: #f0ecff;
-  --accent-lilac-foreground: #6848d7;
-  --accent-peach: #fff0e5;
-  --accent-peach-foreground: #b85b17;
-  --accent-rose: #ffedf0;
+  --accent-mint: light-dark(#e4f5ed, #15372b);
+  --accent-blue: light-dark(#eaf1ff, #18284a);
+  --accent-lilac: light-dark(#f0ecff, #272046);
+  --accent-lilac-foreground: light-dark(#6848d7, #bba9ff);
+  --accent-peach: light-dark(#fff0e5, #3b2616);
+  --accent-peach-foreground: light-dark(#b85b17, #f3a872);
+  --accent-rose: light-dark(#ffedf0, #3e1a22);
 
   --ks-color-canvas: var(--background);
   --ks-color-surface: var(--surface);
@@ -114,20 +134,39 @@
   /* Automatic colours of rooms and specialists (from their id) when none
      is set: the first six of the palette (packages/contracts/src/colors.ts),
      each at least 3:1 on white; -soft is 8% of it on white
-     (muted text on it keeps 4.5:1). Online uses
-     --info. */
+     (muted text on it keeps 4.5:1). Online has its own sky blue. */
+  --online: light-dark(#0284c7, #38bdf8);
+  --online-soft: light-dark(#e8f5fc, color-mix(in oklab, #38bdf8 20%, #13201c));
   --resource-1: #16a34a;
-  --resource-1-soft: #ecf8f1;
+  --resource-1-soft: light-dark(
+    #ecf8f1,
+    color-mix(in oklab, var(--resource-1) 22%, #13201c)
+  );
   --resource-2: #ea580c;
-  --resource-2-soft: #fdf2ec;
+  --resource-2-soft: light-dark(
+    #fdf2ec,
+    color-mix(in oklab, var(--resource-2) 22%, #13201c)
+  );
   --resource-3: #7c3aed;
-  --resource-3-soft: #f5effe;
+  --resource-3-soft: light-dark(
+    #f5effe,
+    color-mix(in oklab, var(--resource-3) 22%, #13201c)
+  );
   --resource-4: #d97706;
-  --resource-4-soft: #fcf4eb;
+  --resource-4-soft: light-dark(
+    #fcf4eb,
+    color-mix(in oklab, var(--resource-4) 22%, #13201c)
+  );
   --resource-5: #0891b2;
-  --resource-5-soft: #ebf6f9;
+  --resource-5-soft: light-dark(
+    #ebf6f9,
+    color-mix(in oklab, var(--resource-5) 22%, #13201c)
+  );
   --resource-6: #db2777;
-  --resource-6-soft: #fceef4;
+  --resource-6-soft: light-dark(
+    #fceef4,
+    color-mix(in oklab, var(--resource-6) 22%, #13201c)
+  );
 }
 
 /* Inside the sidebar (desktop panel and mobile sheet alike) the general

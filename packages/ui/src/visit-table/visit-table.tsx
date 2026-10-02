@@ -1,74 +1,44 @@
-import type { VisitRow, VisitTone } from "@repo/scheduling";
+import type { VisitRow } from "@repo/scheduling";
 import {
   ArrowDown,
   ArrowUp,
   ChevronLeft,
   ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   ChevronsUpDown,
-  RotateCcw,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/utils";
 import { PageLink as Link } from "../public-site/page-link";
-import { resourceColors } from "../resource-colors";
 import {
-  isFiltered,
+  defaultColumnLayout,
+  VISIT_COLUMN_LABELS,
+  VISIT_COLUMN_SORT,
+  VISIT_COLUMNS,
+  type ColumnLayout,
+  type VisitColumnId,
+} from "./columns";
+import {
   PAGE_SIZES,
   sortDirection,
   sortHref,
   visitTableHref,
-  type VisitSortColumn,
   type VisitTableParams,
 } from "./params";
-import {
-  VisitTableFilter,
-  type VisitTableFilterOption,
-} from "./visit-table-filter";
-import { VisitTablePeriodFilter } from "./visit-table-period";
+import { PlaceLabel, SpecialistChip, Tag } from "./visit-chips";
+import { VisitColumnsMenu } from "./visit-columns-menu";
 import { VisitTableRow } from "./visit-table-row";
-import { VisitTableSearch } from "./visit-table-search";
 
 // The bookings table (docs/product/booking-plan.md, R9), rendered on the
 // server: one page of visits the database searched, filtered and sorted,
-// dense as in data-management software (one line a visit, a column a
-// fact). The reference number and the actions stay in view when the table
-// scrolls sideways. Sort headers, pages and filters are links (the state
-// is the address); only the search box runs in the browser.
+// dense as a spreadsheet (a line a visit, thin grid lines). The reference
+// number stays pinned left and the row's menu right when it scrolls
+// sideways; the other columns are the person's own choice and order
+// ("Kolumny", in the menu column's header). Headers sort, the footer pages;
+// the state is the address.
 
-const TONE_DOT: Record<VisitTone, string> = {
-  success: "bg-[var(--success)]",
-  warning: "bg-[var(--warning)]",
-  danger: "bg-[var(--danger)]",
-  info: "bg-[var(--info)]",
-  neutral: "bg-[var(--text-subtle)]",
-};
-
-const TONE_TEXT: Record<VisitTone, string> = {
-  success: "text-[var(--text)]",
-  warning: "text-[var(--text)]",
-  danger: "font-semibold text-[var(--danger)]",
-  info: "text-[var(--text)]",
-  neutral: "text-[var(--text-muted)]",
-};
-
-function Dot({ tone, children }: { tone: VisitTone; children: ReactNode }) {
-  return (
-    <span className={cn("inline-flex items-center gap-1.5", TONE_TEXT[tone])}>
-      <span
-        aria-hidden="true"
-        className={cn("size-2 shrink-0 rounded-full", TONE_DOT[tone])}
-      />
-      {children}
-    </span>
-  );
-}
-
-const shortDate = new Intl.DateTimeFormat("pl-PL", {
+const shortDay = new Intl.DateTimeFormat("pl-PL", {
   day: "2-digit",
   month: "2-digit",
-  year: "numeric",
   timeZone: "UTC",
 });
 const shortWeekday = new Intl.DateTimeFormat("pl-PL", {
@@ -76,38 +46,45 @@ const shortWeekday = new Intl.DateTimeFormat("pl-PL", {
   timeZone: "UTC",
 });
 
-/** `czw.` and `01.10.2026` */
-function dateCell(date: string) {
+/** `czw. 01.10` */
+function dayLabel(date: string) {
   const day = new Date(`${date}T12:00:00Z`);
-  return { weekday: shortWeekday.format(day), date: shortDate.format(day) };
+  return `${shortWeekday.format(day)} ${shortDay.format(day)}`;
 }
 
-// Cells stuck to the left or right edge: their own background (following
-// the row's hover) and a line where the rest scrolls under them.
-const STICKY_LEFT = "sticky left-0 z-10 shadow-[inset_-1px_0_0_var(--border)]";
-const STICKY_RIGHT = "sticky right-0 z-10 shadow-[inset_1px_0_0_var(--border)]";
-const STICKY_BG =
+// Pinned cells keep their own background (following the row's state) and
+// a line where the rest scrolls under them.
+const PIN_LEFT = "sticky left-0 z-10 shadow-[inset_-1px_0_0_var(--border)]";
+const PIN_RIGHT = "sticky right-0 z-10 shadow-[inset_1px_0_0_var(--border)]";
+const PIN_BG =
   "bg-[var(--surface)] group-hover:bg-[var(--surface-subtle)] group-data-[selected]:bg-[var(--primary-soft)]";
 
 const TH =
-  "h-9 border-b border-[var(--border)] bg-[var(--surface-muted)] px-3 text-left text-xs font-semibold whitespace-nowrap text-[var(--text-muted)]";
+  "sticky top-0 z-20 h-8 border-r border-b border-[var(--border)] bg-[var(--surface)] px-2 text-left text-[0.75rem] font-medium whitespace-nowrap text-[var(--text-muted)] last:border-r-0";
 const TD =
-  "h-10 border-b border-[var(--border)] px-3 py-1.5 align-middle whitespace-nowrap group-last:border-b-0";
+  "h-[30px] border-r border-b border-[var(--border)] px-2 align-middle whitespace-nowrap last:border-r-0";
 
 function SortHead({
   path,
   params,
   column,
-  children,
   className,
 }: {
   path: string;
   params: VisitTableParams;
-  column: VisitSortColumn;
-  children: ReactNode;
+  column: VisitColumnId;
   className?: string;
 }) {
-  const sorted = params.sort === column ? sortDirection(params) : null;
+  const label = VISIT_COLUMN_LABELS[column];
+  const by = VISIT_COLUMN_SORT[column];
+  if (!by) {
+    return (
+      <th className={cn(TH, className)} scope="col">
+        {label}
+      </th>
+    );
+  }
+  const sorted = params.sort === by ? sortDirection(params) : null;
   const Icon =
     sorted === "asc" ? ArrowUp : sorted === "desc" ? ArrowDown : ChevronsUpDown;
   return (
@@ -127,228 +104,130 @@ function SortHead({
           "inline-flex items-center gap-1 rounded hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
           sorted && "text-[var(--text)]",
         )}
-        href={sortHref(path, params, column)}
+        href={sortHref(path, params, by)}
         scroll={false}
       >
-        {children}
+        {label}
         <Icon
           aria-hidden="true"
-          className={cn("size-3.5", !sorted && "opacity-40")}
+          className={cn("size-3", !sorted && "opacity-40")}
         />
       </Link>
     </th>
   );
 }
 
-function Head({
-  children,
-  className,
+function Cell({
+  column,
+  row,
+  avatars,
 }: {
-  children: ReactNode;
-  className?: string;
+  column: VisitColumnId;
+  row: VisitRow;
+  avatars: Record<string, string | null>;
 }) {
-  return (
-    <th className={cn(TH, className)} scope="col">
-      {children}
-    </th>
-  );
-}
-
-export interface VisitTableToolbarProps {
-  path: string;
-  params: VisitTableParams;
-  /** The specialist filter (admins). */
-  specialists?: { id: string; name: string }[];
-  services?: { id: string; name: string }[];
-  rooms?: { id: string; name: string }[];
-  /** The payment filter (admins). */
-  showPayments?: boolean;
-}
-
-const PERIODS: { label: string; zakres: VisitTableParams["zakres"] }[] = [
-  { label: "Nadchodzące", zakres: "nadchodzace" },
-  { label: "Dziś", zakres: "dzis" },
-  { label: "Jutro", zakres: "jutro" },
-  { label: "Ten tydzień", zakres: "ten-tydzien" },
-  { label: "Przyszły tydzień", zakres: "nastepny-tydzien" },
-  { label: "Ten miesiąc", zakres: "ten-miesiac" },
-  { label: "Minione", zakres: "minione" },
-  { label: "Wszystkie", zakres: "wszystkie" },
-];
-
-/** The search box and a filter per column with a few values, in a row. */
-export function VisitTableToolbar({
-  path,
-  params,
-  specialists,
-  services,
-  rooms,
-  showPayments = false,
-}: VisitTableToolbarProps) {
-  const option = (
-    label: string,
-    patch: Partial<VisitTableParams>,
-    active: boolean,
-  ): VisitTableFilterOption => ({
-    label,
-    // A new filter starts at page 1 and closes the side panel.
-    href: visitTableHref(path, params, { ...patch, strona: 1, wizyta: null }),
-    active,
-  });
-  const choices = <Key extends "specjalista" | "usluga" | "miejsce">(
-    key: Key,
-    all: string,
-    items: { id: string; name: string }[],
-  ) => [
-    option(all, { [key]: null }, !params[key]),
-    ...items.map((item) =>
-      option(item.name, { [key]: item.id }, params[key] === item.id),
-    ),
-  ];
-
-  const statuses = [
-    option("Wszystkie", { status: null }, !params.status),
-    option(
-      "Potwierdzone",
-      { status: "potwierdzone" },
-      params.status === "potwierdzone",
-    ),
-    option(
-      "Czeka na płatność",
-      { status: "oczekujace" },
-      params.status === "oczekujace",
-    ),
-    option("Odwołane", { status: "odwolane" }, params.status === "odwolane"),
-  ];
-  const payments = [
-    option("Wszystkie", { platnosc: null }, !params.platnosc),
-    option(
-      "Opłacone",
-      { platnosc: "oplacone" },
-      params.platnosc === "oplacone",
-    ),
-    option(
-      "Nieopłacone",
-      { platnosc: "nieoplacone" },
-      params.platnosc === "nieoplacone",
-    ),
-    option(
-      "Zwrot do zlecenia",
-      { platnosc: "do-zwrotu" },
-      params.platnosc === "do-zwrotu",
-    ),
-    option(
-      "Zwrócone",
-      { platnosc: "zwrocone" },
-      params.platnosc === "zwrocone",
-    ),
-  ];
-  const periods = PERIODS.map((period) =>
-    option(
-      period.label,
-      { zakres: period.zakres, od: null, do: null, kierunek: null },
-      params.zakres === period.zakres,
-    ),
-  );
-
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <VisitTableSearch />
-      <span className="ml-1 text-xs font-semibold text-[var(--text-muted)]">
-        Filtruj:
-      </span>
-      <VisitTablePeriodFilter
-        from={params.od}
-        highlighted={
-          params.zakres !== "nadchodzace" || Boolean(params.od || params.do)
-        }
-        options={periods}
-        to={params.do}
-      />
-      <VisitTableFilter
-        highlighted={Boolean(params.status)}
-        label="Status"
-        options={statuses}
-      />
-      {showPayments ? (
-        <VisitTableFilter
-          highlighted={Boolean(params.platnosc)}
-          label="Płatność"
-          options={payments}
-        />
-      ) : null}
-      {specialists?.length ? (
-        <VisitTableFilter
-          highlighted={Boolean(params.specjalista)}
-          label="Specjalista"
-          options={choices("specjalista", "Wszyscy", specialists)}
-        />
-      ) : null}
-      {services?.length ? (
-        <VisitTableFilter
-          highlighted={Boolean(params.usluga)}
-          label="Usługa"
-          options={choices("usluga", "Wszystkie", services)}
-        />
-      ) : null}
-      {rooms ? (
-        <VisitTableFilter
-          highlighted={Boolean(params.miejsce)}
-          label="Miejsce"
-          options={choices("miejsce", "Wszystkie", [
-            { id: "online", name: "Online" },
-            ...rooms,
-          ])}
-        />
-      ) : null}
-      {isFiltered(params) ? (
-        <Link
-          className="inline-flex h-8 items-center gap-1 rounded px-1.5 text-xs font-semibold text-[var(--primary)] hover:underline focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-          href={path}
+  const muted = row.cancelled && "text-[var(--text-muted)]";
+  switch (column) {
+    case "termin":
+      return (
+        <td
+          className={cn(TD, "tabular-nums", muted)}
+          title={`${row.weekday}, ${row.dateLabel}, ${row.time}`}
         >
-          <RotateCcw aria-hidden="true" className="size-3.5" />
-          Wyczyść filtry
-        </Link>
-      ) : null}
-    </div>
-  );
+          {dayLabel(row.date)}
+          <span className="text-[var(--text-muted)]"> · </span>
+          <span className={cn(row.cancelled && "line-through")}>
+            {row.time.split("–")[0]}
+          </span>
+        </td>
+      );
+    case "klient":
+      return <td className={cn(TD, "font-medium", muted)}>{row.clientName}</td>;
+    case "telefon":
+      return (
+        <td className={cn(TD, "text-[var(--text-muted)] tabular-nums")}>
+          {row.phone ?? "—"}
+        </td>
+      );
+    case "email":
+      return (
+        <td
+          className={cn(TD, "max-w-56 truncate text-[var(--text-muted)]")}
+          title={row.email ?? undefined}
+        >
+          {row.email ?? "—"}
+        </td>
+      );
+    case "usluga":
+      return (
+        <td
+          className={cn(TD, "max-w-56 truncate", muted)}
+          title={row.serviceName}
+        >
+          {row.serviceName}
+        </td>
+      );
+    case "miejsce":
+      return (
+        <td className={TD} title={row.locationName ?? undefined}>
+          <PlaceLabel row={row} />
+        </td>
+      );
+    case "specjalista":
+      return (
+        <td className={TD}>
+          <SpecialistChip avatar={avatars[row.specialistId]} row={row} />
+        </td>
+      );
+    case "status":
+      return (
+        <td className={TD}>
+          <Tag tone={row.status.tone}>{row.status.label}</Tag>
+          {row.note ? (
+            <span className="ml-1.5 text-[0.75rem] text-[var(--info)]">
+              przełożona
+            </span>
+          ) : null}
+        </td>
+      );
+    case "platnosc":
+      return (
+        <td className={TD}>
+          {row.payment ? (
+            <Tag tone={row.payment.tone}>
+              {row.payment.label} · {row.amount}
+            </Tag>
+          ) : (
+            <span className="text-[var(--text-muted)] tabular-nums">
+              {row.amount}
+            </span>
+          )}
+        </td>
+      );
+    case "uwagi":
+      return (
+        <td
+          className={cn(TD, "max-w-64 truncate text-[var(--text-muted)]")}
+          title={row.notes ?? undefined}
+        >
+          {row.notes ?? ""}
+        </td>
+      );
+  }
 }
 
-function PageButton({
-  href,
-  label,
-  children,
+/** The columns a table has: payments and the specialist only where shown. */
+export function visitColumnsAvailable({
+  showSpecialist = false,
+  showPayment = false,
 }: {
-  href: string | null;
-  label: string;
-  children: ReactNode;
-}) {
-  const className =
-    "inline-flex size-8 items-center justify-center rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface)]";
-  if (!href) {
-    return (
-      <span
-        aria-disabled="true"
-        aria-label={label}
-        className={cn(className, "text-[var(--text-subtle)] opacity-50")}
-        role="link"
-      >
-        {children}
-      </span>
-    );
-  }
-  return (
-    <Link
-      aria-label={label}
-      className={cn(
-        className,
-        "text-[var(--text)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
-      )}
-      href={href}
-      scroll={false}
-    >
-      {children}
-    </Link>
+  showSpecialist?: boolean;
+  showPayment?: boolean;
+}): VisitColumnId[] {
+  return VISIT_COLUMNS.filter(
+    (id) =>
+      (id !== "specjalista" || showSpecialist) &&
+      (id !== "platnosc" || showPayment),
   );
 }
 
@@ -366,7 +245,7 @@ function pageState(params: VisitTableParams, total: number, shown: number) {
   };
 }
 
-/** Rows per page, the page count, and every way through the pages. */
+/** Rows per page, where in the list this is, and the way to the others. */
 export function VisitTablePagination({
   path,
   params,
@@ -380,24 +259,43 @@ export function VisitTablePagination({
   shown: number;
 }) {
   const { page, pages, range } = pageState(params, total, shown);
-  const to = (n: number) => visitTableHref(path, params, { strona: n });
+  const step = (to: number, label: string, icon: ReactNode) =>
+    to < 1 || to > pages ? (
+      <span
+        aria-disabled="true"
+        aria-label={label}
+        className="inline-grid size-6 place-items-center opacity-35"
+        role="link"
+      >
+        {icon}
+      </span>
+    ) : (
+      <Link
+        aria-label={label}
+        className="inline-grid size-6 place-items-center rounded-[4px] hover:bg-[var(--surface-subtle)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+        href={visitTableHref(path, params, { strona: to })}
+        scroll={false}
+      >
+        {icon}
+      </Link>
+    );
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--text-muted)]">
-      <nav aria-label="Wierszy na stronie" className="flex items-center gap-1">
-        <span className="mr-1">Wierszy na stronie:</span>
+    <div className="flex h-8 shrink-0 items-center gap-1 border-t border-[var(--border)] px-2 text-[0.75rem] text-[var(--text-muted)] tabular-nums">
+      <nav
+        aria-label="Wierszy na stronie"
+        className="flex items-center gap-0.5"
+      >
+        <span className="mr-1">Wierszy:</span>
         {PAGE_SIZES.map((option) => (
           <Link
             aria-current={option === params.wierszy ? "true" : undefined}
             className={cn(
-              "inline-flex h-7 min-w-7 items-center justify-center rounded px-1.5 font-semibold tabular-nums focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
+              "inline-flex h-6 min-w-6 items-center justify-center rounded-[4px] px-1 font-medium focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
               option === params.wierszy
                 ? "bg-[var(--primary-soft)] text-[var(--primary)]"
-                : "hover:bg-[var(--surface-muted)] hover:text-[var(--text)]",
+                : "hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]",
             )}
-            href={visitTableHref(path, params, {
-              wierszy: option,
-              strona: 1,
-            })}
+            href={visitTableHref(path, params, { wierszy: option, strona: 1 })}
             key={option}
             scroll={false}
           >
@@ -405,31 +303,20 @@ export function VisitTablePagination({
           </Link>
         ))}
       </nav>
-      <nav aria-label="Strony" className="flex items-center gap-1.5">
-        <span aria-live="polite" className="mr-2 tabular-nums">
-          {range} · strona {page} z {pages}
+      <nav aria-label="Strony" className="ml-auto flex items-center gap-0.5">
+        <span aria-live="polite" className="mr-1.5">
+          {range}
         </span>
-        <PageButton href={page > 1 ? to(1) : null} label="Pierwsza strona">
-          <ChevronsLeft aria-hidden="true" className="size-4" />
-        </PageButton>
-        <PageButton
-          href={page > 1 ? to(page - 1) : null}
-          label="Poprzednia strona"
-        >
-          <ChevronLeft aria-hidden="true" className="size-4" />
-        </PageButton>
-        <PageButton
-          href={page < pages ? to(page + 1) : null}
-          label="Następna strona"
-        >
-          <ChevronRight aria-hidden="true" className="size-4" />
-        </PageButton>
-        <PageButton
-          href={page < pages ? to(pages) : null}
-          label="Ostatnia strona"
-        >
-          <ChevronsRight aria-hidden="true" className="size-4" />
-        </PageButton>
+        {step(
+          page - 1,
+          "Poprzednia strona",
+          <ChevronLeft aria-hidden="true" className="size-3.5" />,
+        )}
+        {step(
+          page + 1,
+          "Następna strona",
+          <ChevronRight aria-hidden="true" className="size-3.5" />,
+        )}
       </nav>
     </div>
   );
@@ -441,12 +328,18 @@ export interface VisitTableProps {
   rows: VisitRow[];
   /** All visits matching (not only this page). */
   total: number;
-  /** Search and filters, above the table. */
+  /** The bar above: the view, the search and the filters. */
   toolbar?: ReactNode;
   showSpecialist?: boolean;
   showPayment?: boolean;
+  /** The person's columns (default: the usual ones). */
+  columns?: ColumnLayout;
+  /** Where the layout is kept; without it, no "Kolumny" menu. */
+  columnsCookie?: string;
   /** The "⋮" menu of each visit, by its id. */
   actions?: Record<string, ReactNode>;
+  /** Specialists' pictures, by their id (initials where none). */
+  specialistAvatars?: Record<string, string | null>;
   caption?: string;
 }
 
@@ -458,202 +351,112 @@ export function VisitTable({
   toolbar,
   showSpecialist = false,
   showPayment = false,
+  columns,
+  columnsCookie,
   actions = {},
+  specialistAvatars = {},
   caption = "Rezerwacje",
 }: VisitTableProps) {
-  const columns = 11 + Number(showSpecialist) + 2 * Number(showPayment);
-  const sort = (column: VisitSortColumn, label: string, className?: string) => (
-    <SortHead className={className} column={column} params={params} path={path}>
-      {label}
-    </SortHead>
-  );
+  const layout =
+    columns ??
+    defaultColumnLayout(visitColumnsAvailable({ showSpecialist, showPayment }));
+  const shown = layout.filter((column) => column.shown).map((c) => c.id);
 
   return (
-    <div className="space-y-3">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--surface)]">
       {toolbar}
-
-      <div className="overflow-hidden rounded-[var(--radius-surface)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-surface)]">
-        <div className="overflow-x-auto">
-          <table className="w-full border-separate border-spacing-0 text-[0.8125rem] leading-5 text-[var(--text)]">
-            <caption className="sr-only">{caption}</caption>
-            <thead>
-              <tr>
-                <Head className={cn(STICKY_LEFT, "z-20")}>Numer</Head>
-                {sort("termin", "Data")}
-                <Head>Godzina</Head>
-                {sort("klient", "Klient")}
-                <Head>Telefon</Head>
-                <Head>E-mail</Head>
-                {sort("usluga", "Usługa")}
-                {sort("miejsce", "Miejsce")}
-                {showSpecialist ? sort("specjalista", "Specjalista") : null}
-                {sort("status", "Status")}
-                {showPayment ? <Head>Płatność</Head> : null}
-                {showPayment ? sort("kwota", "Kwota", "text-right") : null}
-                <Head>Uwagi</Head>
-                <Head className={cn(STICKY_RIGHT, "z-20 w-12 text-center")}>
+      <div className="min-h-0 flex-1 overflow-auto">
+        <table className="w-full border-separate border-spacing-0 text-[0.8125rem] leading-5 text-[var(--text)]">
+          <caption className="sr-only">{caption}</caption>
+          <thead>
+            <tr>
+              <th className={cn(TH, PIN_LEFT, "z-30 pl-3")} scope="col">
+                Numer
+              </th>
+              {shown.map((column) => (
+                <SortHead
+                  column={column}
+                  key={column}
+                  params={params}
+                  path={path}
+                />
+              ))}
+              <th
+                className={cn(TH, PIN_RIGHT, "z-30 w-10 px-1 text-center")}
+                scope="col"
+              >
+                {columnsCookie ? (
+                  <VisitColumnsMenu cookie={columnsCookie} layout={layout} />
+                ) : (
                   <span className="sr-only">Akcje</span>
-                </Head>
+                )}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td
+                  className="px-3 py-10 text-center text-sm text-[var(--text-muted)]"
+                  colSpan={shown.length + 2}
+                >
+                  {params.strona > 1 && !params.q
+                    ? "Na tej stronie nie ma już rezerwacji."
+                    : "Żadna wizyta nie pasuje do wyszukiwania i filtrów. Usuń któryś filtr albo wybierz inny widok."}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {rows.length === 0 ? (
-                <tr>
-                  <td
-                    className="px-3 py-10 text-center text-sm text-[var(--text-muted)]"
-                    colSpan={columns}
-                  >
-                    {params.strona > 1 && !params.q
-                      ? "Na tej stronie nie ma już rezerwacji."
-                      : "Brak rezerwacji pasujących do wyszukiwania i filtrów."}
-                  </td>
-                </tr>
-              ) : (
-                rows.map((row) => {
-                  const day = dateCell(row.date);
-                  const muted = row.cancelled && "text-[var(--text-muted)]";
-                  const selected = params.wizyta === row.id;
-                  // A click opens the visit in the side panel (again: closes it).
-                  const href = visitTableHref(path, params, {
-                    wizyta: selected ? null : row.id,
-                  });
-                  return (
-                    <VisitTableRow href={href} key={row.id} selected={selected}>
-                      <th
-                        className={cn(
-                          TD,
-                          STICKY_LEFT,
-                          STICKY_BG,
-                          "text-left font-semibold tabular-nums",
-                        )}
-                        scope="row"
+            ) : (
+              rows.map((row) => {
+                const selected = params.wizyta === row.id;
+                // A click opens the visit in the side panel (again: closes it).
+                const href = visitTableHref(path, params, {
+                  wizyta: selected ? null : row.id,
+                });
+                return (
+                  <VisitTableRow href={href} key={row.id} selected={selected}>
+                    <th
+                      className={cn(
+                        TD,
+                        PIN_LEFT,
+                        PIN_BG,
+                        "pl-3 text-left font-medium tabular-nums",
+                      )}
+                      scope="row"
+                    >
+                      <Link
+                        aria-current={selected ? "true" : undefined}
+                        className="rounded hover:text-[var(--primary)] hover:underline focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+                        href={href}
+                        scroll={false}
                       >
-                        <Link
-                          aria-current={selected ? "true" : undefined}
-                          className="rounded hover:text-[var(--primary)] hover:underline focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-                          href={href}
-                          scroll={false}
-                        >
-                          {row.reference}
-                        </Link>
-                      </th>
-                      <td className={cn(TD, muted, "tabular-nums")}>
-                        <span className="text-[var(--text-muted)]">
-                          {day.weekday}
-                        </span>{" "}
-                        {day.date}
-                      </td>
-                      <td
-                        className={cn(
-                          TD,
-                          muted,
-                          "tabular-nums",
-                          row.cancelled && "line-through",
-                        )}
-                      >
-                        {row.time}
-                      </td>
-                      <td className={cn(TD, "font-semibold", muted)}>
-                        {row.clientName}
-                      </td>
-                      <td
-                        className={cn(
-                          TD,
-                          "text-[var(--text-muted)] tabular-nums",
-                        )}
-                      >
-                        {row.phone ?? "—"}
-                      </td>
-                      <td
-                        className={cn(
-                          TD,
-                          "max-w-56 truncate text-[var(--text-muted)]",
-                        )}
-                        title={row.email ?? undefined}
-                      >
-                        {row.email ?? "—"}
-                      </td>
-                      <td
-                        className={cn(TD, "max-w-56 truncate", muted)}
-                        title={row.serviceName}
-                      >
-                        {row.serviceName}
-                      </td>
-                      <td
-                        className={cn(TD, muted)}
-                        title={row.locationName ?? undefined}
-                      >
-                        {row.room}
-                      </td>
-                      {showSpecialist ? (
-                        <td className={cn(TD, muted)}>
-                          <span className="inline-flex items-center gap-1.5">
-                            <span
-                              aria-hidden="true"
-                              className="size-2 shrink-0 rounded-full"
-                              style={{
-                                background: resourceColors(
-                                  row.specialistColor,
-                                  row.specialistId,
-                                ).accent,
-                              }}
-                            />
-                            {row.specialistName}
-                          </span>
-                        </td>
-                      ) : null}
-                      <td className={TD}>
-                        <Dot tone={row.status.tone}>{row.status.label}</Dot>
-                        {row.note ? (
-                          <span className="ml-1.5 text-xs text-[var(--info)]">
-                            · przełożona
-                          </span>
-                        ) : null}
-                      </td>
-                      {showPayment ? (
-                        <td className={TD}>
-                          {row.payment ? (
-                            <Dot tone={row.payment.tone}>
-                              {row.payment.label}
-                            </Dot>
-                          ) : null}
-                        </td>
-                      ) : null}
-                      {showPayment ? (
-                        <td
-                          className={cn(TD, "text-right tabular-nums", muted)}
-                        >
-                          {row.amount}
-                        </td>
-                      ) : null}
-                      <td
-                        className={cn(
-                          TD,
-                          "max-w-64 truncate text-[var(--text-muted)]",
-                        )}
-                        title={row.notes ?? undefined}
-                      >
-                        {row.notes ?? ""}
-                      </td>
-                      <td
-                        className={cn(
-                          TD,
-                          STICKY_RIGHT,
-                          STICKY_BG,
-                          "w-12 px-1.5 text-center",
-                        )}
-                      >
-                        {actions[row.id]}
-                      </td>
-                    </VisitTableRow>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                        {row.reference}
+                      </Link>
+                    </th>
+                    {shown.map((column) => (
+                      <Cell
+                        avatars={specialistAvatars}
+                        column={column}
+                        key={column}
+                        row={row}
+                      />
+                    ))}
+                    <td
+                      className={cn(
+                        TD,
+                        PIN_RIGHT,
+                        PIN_BG,
+                        "w-10 px-1 text-center",
+                      )}
+                    >
+                      {actions[row.id]}
+                    </td>
+                  </VisitTableRow>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
-
       <VisitTablePagination
         params={params}
         path={path}

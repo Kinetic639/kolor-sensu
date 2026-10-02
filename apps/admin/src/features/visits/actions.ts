@@ -7,6 +7,8 @@ import {
 } from "@repo/contracts/centre-changes";
 import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { getCenterSettings, searchVisits } from "@repo/supabase";
+import { toVisitSearch, viewParams, visitViews } from "@repo/ui/visit-table";
 import { revalidatePath } from "next/cache";
 
 // The centre settles visits its own way (R9, R12): cancels at any time with
@@ -92,4 +94,22 @@ export async function settleVisitAsCentreAction(
   appointmentId: string,
 ): Promise<CentreChangeResult> {
   return askTheSite(appointmentId, "rozliczenie", {});
+}
+
+/** How many visits each ready view has (the view picker asks on opening). */
+export async function countVisitViewsAction(): Promise<Record<string, number>> {
+  await requirePortalRole();
+  const client = await createClient();
+  const { timezone } = await getCenterSettings(client);
+  const views = visitViews(true);
+  const pages = await Promise.all(
+    views.map((view) =>
+      searchVisits(client, {
+        ...toVisitSearch(viewParams(view), { timeZone: timezone }),
+        limit: 1,
+        offset: 0,
+      }),
+    ),
+  );
+  return Object.fromEntries(views.map((view, i) => [view.id, pages[i]!.total]));
 }

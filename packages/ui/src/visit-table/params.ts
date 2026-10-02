@@ -2,6 +2,7 @@ import { addDays, mondayOf, zonedInstant } from "@repo/scheduling";
 import {
   createLoader,
   createParser,
+  parseAsArrayOf,
   createSerializer,
   parseAsInteger,
   parseAsNumberLiteral,
@@ -85,9 +86,22 @@ export const parseAsDay = createParser({
   serialize: (value: string) => value,
 });
 
+const statusList = parseAsArrayOf(parseAsStringLiteral(VISIT_STATUS_FILTERS));
+
+/** Statuses, several at once; none valid is no filter. */
+export const parseAsStatuses = createParser({
+  parse: (value) => {
+    const list = statusList.parse(value);
+    return list?.length ? [...new Set(list)] : null;
+  },
+  serialize: (value: VisitStatusFilter[]) => statusList.serialize(value),
+  eq: (a, b) => a.length === b.length && a.every((v, i) => v === b[i]),
+});
+
 export const visitTableParsers = {
   q: parseAsSearch,
-  status: parseAsStringLiteral(VISIT_STATUS_FILTERS),
+  /** Several at once: `status=potwierdzone,oczekujace`. */
+  status: parseAsStatuses,
   platnosc: parseAsStringLiteral(VISIT_PAYMENT_FILTERS),
   specjalista: parseAsId,
   usluga: parseAsId,
@@ -102,9 +116,11 @@ export const visitTableParsers = {
   wierszy: parseAsNumberLiteral(PAGE_SIZES).withDefault(20),
   /** The visit open in the side panel, and its tab. */
   wizyta: parseAsId,
-  karta: parseAsStringLiteral(["szczegoly", "historia"] as const).withDefault(
+  karta: parseAsStringLiteral([
     "szczegoly",
-  ),
+    "historia",
+    "klient",
+  ] as const).withDefault("szczegoly"),
 };
 
 export type VisitTableParams = inferParserType<typeof visitTableParsers>;
@@ -126,7 +142,7 @@ export function visitTableHref(
 export function isFiltered(params: VisitTableParams) {
   return Boolean(
     params.q ||
-    params.status ||
+    params.status?.length ||
     params.platnosc ||
     params.specjalista ||
     params.usluga ||
@@ -266,7 +282,9 @@ export function toVisitSearch(
   const place = params.miejsce;
   return {
     query: params.q,
-    statuses: params.status ? STATUSES[params.status] : null,
+    statuses: params.status?.length
+      ? params.status.flatMap((status) => STATUSES[status])
+      : null,
     payment: !own && params.platnosc ? PAYMENTS[params.platnosc] : null,
     specialistId: own ? null : params.specjalista,
     serviceId: params.usluga,
@@ -281,11 +299,19 @@ export function toVisitSearch(
   };
 }
 
-/** The side panel's tabs, as links (the table stays as it is). */
-export function visitPanelTabs(path: string, params: VisitTableParams) {
+/**
+ * The side panel's tabs, as links (the table stays as it is); "Klient" (the
+ * centre's record of them) where the clients are seen (the admin's table).
+ */
+export function visitPanelTabs(
+  path: string,
+  params: VisitTableParams,
+  { client = false }: { client?: boolean } = {},
+) {
   return [
     { key: "szczegoly" as const, label: "Szczegóły" },
     { key: "historia" as const, label: "Historia" },
+    ...(client ? [{ key: "klient" as const, label: "Klient" }] : []),
   ].map((tab) => ({
     ...tab,
     href: visitTableHref(path, params, { karta: tab.key }),

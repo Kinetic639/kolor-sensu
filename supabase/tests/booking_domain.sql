@@ -2641,6 +2641,10 @@ BEGIN
   IF (SELECT count(*) FROM public.list_client_visits(ola)) < c.visits + c.cancelled THEN
     RAISE EXCEPTION 'AE: the client''s visits';
   END IF;
+  IF (SELECT id FROM public.get_visit_client(
+        (SELECT id FROM public.list_client_visits(ola) LIMIT 1))) IS DISTINCT FROM ola THEN
+    RAISE EXCEPTION 'AE: a visit''s client';
+  END IF;
   IF EXISTS (SELECT 1 FROM public.search_clients(p_query => '_la@')) THEN
     RAISE EXCEPTION 'AE: "_" matched as a wildcard';
   END IF;
@@ -2683,6 +2687,11 @@ BEGIN
   BEGIN
     PERFORM public.search_clients();
     RAISE EXCEPTION 'AE: a specialist listed the clients';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.get_visit_client(gen_random_uuid());
+    RAISE EXCEPTION 'AE: a specialist read a visit''s client';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
   BEGIN

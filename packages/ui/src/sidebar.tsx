@@ -316,7 +316,7 @@ export function SidebarGroup({
   return (
     <div
       className={cn(
-        "relative flex w-full min-w-0 flex-col px-3 py-2",
+        "relative flex w-full min-w-0 flex-col px-2 py-1",
         className,
       )}
       {...props}
@@ -336,7 +336,7 @@ export function SidebarGroupLabel({
   return (
     <div
       className={cn(
-        "mb-1 flex h-7 items-center px-2 text-[0.6875rem] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase",
+        "mb-0.5 flex h-6 items-center px-2 text-[0.6875rem] font-semibold tracking-[0.04em] text-[var(--text-muted)]",
         "group-data-[collapsible=icon]/sidebar:mb-2 group-data-[collapsible=icon]/sidebar:h-3 group-data-[collapsible=icon]/sidebar:px-3",
         className,
       )}
@@ -398,9 +398,9 @@ export function SidebarMenuButton({
   const button = (
     <Comp
       className={cn(
-        "flex min-h-10 w-full items-center gap-3 overflow-hidden rounded-[var(--radius-control)] px-3 text-left text-[0.8125rem] font-semibold text-[var(--text)] transition-[width,padding,background-color,color] outline-none hover:bg-[var(--surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--ring)]",
-        "group-data-[collapsible=icon]/sidebar:mx-auto group-data-[collapsible=icon]/sidebar:size-10 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:px-0",
-        "[&>svg]:size-[1.125rem] [&>svg]:shrink-0",
+        "flex min-h-[30px] w-full items-center gap-2.5 overflow-hidden rounded-[6px] px-2 text-left text-[0.8125rem] font-medium text-[var(--text)] transition-[width,padding,background-color,color] outline-none hover:bg-[var(--surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--ring)]",
+        "group-data-[collapsible=icon]/sidebar:mx-auto group-data-[collapsible=icon]/sidebar:size-8 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:px-0",
+        "[&>svg]:size-4 [&>svg]:shrink-0",
         isActive &&
           "bg-[var(--primary)] text-white shadow-sm hover:bg-[var(--primary-hover)]",
         className,

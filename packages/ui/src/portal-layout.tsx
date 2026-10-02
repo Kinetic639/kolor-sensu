@@ -174,21 +174,21 @@ export function AppSidebar({
         data-portal-sidebar-header
       >
         <div className="flex items-center gap-3 overflow-hidden px-1 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:px-0">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--sidebar-border)] bg-[var(--sidebar-active)] text-sm font-bold text-white">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-[6px] border border-[var(--sidebar-border)] bg-[var(--sidebar-active)] text-xs font-bold text-white">
             KS
           </span>
           <span className="min-w-0 group-data-[collapsible=icon]/sidebar:hidden">
-            <span className="block truncate text-base leading-tight font-bold text-white">
+            <span className="block truncate text-[0.875rem] leading-tight font-semibold text-white">
               {brandName}
             </span>
-            <span className="block truncate text-[0.6875rem] font-semibold tracking-[0.06em] text-[var(--sidebar-accent)] uppercase">
+            <span className="block truncate text-[0.625rem] font-semibold tracking-[0.06em] text-[var(--sidebar-accent)] uppercase">
               {brandSubtitle}
             </span>
           </span>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="py-3">
+      <SidebarContent className="py-1.5">
         <nav aria-label="Nawigacja portalu">
           {sections.map((section, sectionIndex) => (
             <SidebarGroup key={section.label ?? sectionIndex}>
@@ -227,7 +227,7 @@ export function AppSidebar({
                         ) : (
                           <SidebarMenuButton
                             asChild
-                            className="data-[active=true]:ring-1 data-[active=true]:ring-[rgb(52_211_153/0.4)]"
+                            className="data-[active=true]:shadow-none"
                             isActive={isActive}
                             tooltip={item.label}
                           >

@@ -11,7 +11,10 @@ import {
 import { IconButton } from "../icon-action";
 import { ResendPaymentLinkButton } from "./resend-payment-link";
 import { VisitPanel } from "./visit-panel";
-import { VisitTable, VisitTableToolbar } from "./visit-table";
+import { VisitFilterBar } from "./visit-filter-bar";
+import { VisitTable } from "./visit-table";
+import { VisitViewMenu } from "./visit-view-menu";
+import { currentView, viewHref, visitViews } from "./views";
 import {
   adminRows,
   panelTabs,
@@ -23,9 +26,10 @@ import {
   tableParams,
 } from "./visit-table.samples";
 
-// The bookings table as the portals show it: search and filters with the
-// page count above, one dense line a visit, the reference and the "⋮"
-// menu stuck to the edges, the pages below.
+// The bookings table as the portals show it, edge to edge: the view, the
+// search and the filters in one bar above, one 30 px line a visit with grid
+// lines, the reference and the "⋮" menu stuck to the edges, the columns
+// chosen in the last header, the pages below.
 
 const cancel = fn();
 const resend = fn(async () => ({
@@ -57,10 +61,12 @@ function BookingsTable({
     ...tableParams(query),
     wizyta: open || reservation ? opened.id : null,
   };
+  const view = currentView(params, admin);
+  const total = empty ? 0 : admin ? 42 : rows.length;
   return (
     <NuqsTestingAdapter searchParams={query}>
-      <div className="flex max-w-7xl items-start gap-4">
-        <div className="min-w-0 flex-1">
+      <div className="flex h-[36rem] border border-[var(--border)]">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <VisitTable
             actions={Object.fromEntries(
               rows.map((row) => [
@@ -97,22 +103,33 @@ function BookingsTable({
                 </RowActions>,
               ]),
             )}
+            columnsCookie="ks_cols_storybook"
             params={params}
             path="/kalendarz"
             rows={rows}
             showPayment={admin}
             showSpecialist={admin}
             toolbar={
-              <VisitTableToolbar
-                params={params}
-                path="/kalendarz"
+              <VisitFilterBar
                 rooms={sampleRooms}
                 services={sampleServices}
                 showPayments={admin}
                 specialists={admin ? sampleSpecialists : undefined}
+                view={
+                  <VisitViewMenu
+                    label={view?.label ?? "Własny widok"}
+                    total={total}
+                    views={visitViews(admin).map((option) => ({
+                      id: option.id,
+                      label: option.label,
+                      href: viewHref("/kalendarz", params, option),
+                      active: option.id === view?.id,
+                    }))}
+                  />
+                }
               />
             }
-            total={empty ? 0 : admin ? 42 : rows.length}
+            total={total}
           />
         </div>
         {open || reservation ? (
@@ -171,9 +188,9 @@ type Story = StoryObj<typeof meta>;
 export const Admin: Story = {
   args: { query: "strona=2&wierszy=10", admin: true },
   play: async ({ canvas, canvasElement, userEvent }) => {
-    await expect(canvas.getByText("11–14 z 42 · strona 2 z 5")).toBeVisible();
+    await expect(canvas.getByText("11–14 z 42")).toBeVisible();
     await expect(
-      canvas.getByRole("columnheader", { name: /Data/ }),
+      canvas.getByRole("columnheader", { name: /Termin/ }),
     ).toHaveAttribute("aria-sort", "ascending");
     await userEvent.click(
       canvas.getByRole("button", { name: "Akcje: 3010-017" }),

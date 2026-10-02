@@ -35,11 +35,36 @@ export type { CancelAction, CentreVisit, RefundAction } from "./centre-changes";
 export { ResendPaymentLinkButton } from "./resend-payment-link";
 export type { ResendPaymentLinkResult } from "./resend-payment-link";
 export { VisitPanel } from "./visit-panel";
+export { RememberView } from "./remember-view";
+export { rememberedView, viewCookieName, viewQuery } from "./view-cookie";
 export { VisitTableSearch } from "./visit-table-search";
-export type { VisitPanelTab } from "./visit-panel";
+export type { VisitPanelClient, VisitPanelTab } from "./visit-panel";
 export {
   VisitTable,
   VisitTablePagination,
-  VisitTableToolbar,
+  visitColumnsAvailable,
 } from "./visit-table";
-export type { VisitTableProps, VisitTableToolbarProps } from "./visit-table";
+export type { VisitTableProps } from "./visit-table";
+export { VisitFilterBar } from "./visit-filter-bar";
+export type { FilterChoice, VisitFilterBarProps } from "./visit-filter-bar";
+export { VisitViewMenu } from "./visit-view-menu";
+export type { VisitViewLink } from "./visit-view-menu";
+export { VisitColumnsMenu } from "./visit-columns-menu";
+export {
+  columnsCookieName,
+  defaultColumnLayout,
+  parseColumnLayout,
+  serializeColumnLayout,
+  VISIT_COLUMN_LABELS,
+  VISIT_COLUMNS,
+} from "./columns";
+export type { ColumnLayout, VisitColumnId } from "./columns";
+export {
+  currentView,
+  viewFilters,
+  viewHref,
+  viewParams,
+  VISIT_VIEWS,
+  visitViews,
+} from "./views";
+export type { VisitView } from "./views";

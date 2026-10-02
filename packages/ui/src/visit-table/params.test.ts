@@ -177,4 +177,15 @@ describe("the side panel's links", () => {
     ]);
     expect(visitPanelCloseHref(path, params)).toBe("/kalendarz?strona=2");
   });
+
+  it("the client's tab where clients are seen", () => {
+    const params = load(`wizyta=${anna}&karta=klient`);
+    expect(params.karta).toBe("klient");
+    expect(visitPanelTabs(path, params, { client: true }).at(-1)).toEqual({
+      key: "klient",
+      label: "Klient",
+      href: `/kalendarz?wizyta=${anna}&karta=klient`,
+    });
+    expect(visitPanelTabs(path, params)).toHaveLength(2);
+  });
 });

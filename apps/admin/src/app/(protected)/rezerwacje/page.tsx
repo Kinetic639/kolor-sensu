@@ -1,26 +1,40 @@
 import { CentreVisitToolbar } from "@/features/visits/cancel-visit";
 import { loadAdminVisits } from "@/features/visits/loaders";
+import { countVisitViewsAction } from "@/features/visits/actions";
 import { VisitActions } from "@/features/visits/visit-actions";
+import { FullBleed } from "@repo/ui/full-bleed";
 import { PageTitle } from "@repo/ui/portal-content";
 import {
+  columnsCookieName,
+  currentView,
   loadVisitTableParams,
+  parseColumnLayout,
+  RememberView,
+  rememberedView,
+  viewCookieName,
+  viewHref,
+  visitColumnsAvailable,
+  VisitFilterBar,
   VisitPanel,
-  VisitTable,
-  VisitTableToolbar,
   visitPanelCloseHref,
   visitPanelTabs,
-  visitTableHref,
+  VisitTable,
+  VisitViewMenu,
+  visitViews,
 } from "@repo/ui/visit-table";
 import type { Route } from "next";
-import Link from "next/link";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-// Rezerwacje (R9): the bookings table. The database searches,
-// filters, sorts and pages; the address holds the state, including the
-// visit open in the side panel (?wizyta=…). The centre cancels from the
-// row's menu or the panel, with the money back. The calendar views come in
-// stage K.
+// Rezerwacje (R9): the bookings table, edge to edge. The database
+// searches, filters, sorts and pages; the address holds the state (the
+// visit open in the side panel too). The person's columns and their last
+// view are remembered in cookies: opening the page again (from the menu, a
+// refresh) brings their view back. The centre cancels, moves and refunds
+// from the row's menu or the panel.
 
 const PATH = "/rezerwacje";
+const TABLE = "rezerwacje";
 
 const visitLabel = (row: {
   clientName: string;
@@ -32,89 +46,103 @@ const visitLabel = (row: {
 export default async function BookingsPage({
   searchParams,
 }: PageProps<"/rezerwacje">) {
-  const params = loadVisitTableParams(await searchParams);
-  const { rows, total, refundsToSettle, open, filters } =
-    await loadAdminVisits(params);
+  const [query, cookieStore, requestHeaders] = await Promise.all([
+    searchParams,
+    cookies(),
+    headers(),
+  ]);
+  // Opened afresh without a view: the one they left. Not on a move within
+  // the table (clearing every filter is a view of its own).
+  const navigating = requestHeaders.get("rsc") === "1";
+  if (!navigating && Object.keys(query).length === 0) {
+    const back = rememberedView(
+      PATH,
+      cookieStore.get(viewCookieName(TABLE))?.value,
+    );
+    if (back) redirect(back as Route);
+  }
+
+  const params = loadVisitTableParams(query);
+  const { rows, total, open, filters, avatars } = await loadAdminVisits(params);
+  const columnsCookie = columnsCookieName(TABLE);
+  const columns = parseColumnLayout(
+    cookieStore.get(columnsCookie)?.value,
+    visitColumnsAvailable({ showPayment: true, showSpecialist: true }),
+  );
+  const view = currentView(params, true);
 
   return (
-    <div className="space-y-4">
+    <FullBleed>
       <PageTitle>Rezerwacje</PageTitle>
-      {refundsToSettle > 0 && params.platnosc !== "do-zwrotu" ? (
-        <p
-          className="rounded-[var(--radius-control)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--text)]"
-          role="status"
-        >
-          {refundsToSettle === 1
-            ? "1 odwołana wizyta czeka na zwrot, którego Stripe nie zlecił."
-            : `${refundsToSettle} odwołane wizyty czekają na zwrot, którego Stripe nie zlecił.`}{" "}
-          <Link
-            className="font-semibold text-[var(--primary)] underline underline-offset-4"
-            href={
-              visitTableHref(PATH, params, {
-                platnosc: "do-zwrotu",
-                zakres: "wszystkie",
-                strona: 1,
-              }) as Route
-            }
-          >
-            Pokaż
-          </Link>
-        </p>
-      ) : null}
-      <div className="flex items-start gap-4">
-        <div className="min-w-0 flex-1">
-          <VisitTable
-            actions={Object.fromEntries(
-              rows.map((row) => [
-                row.id,
-                <VisitActions
-                  key={row.id}
-                  visit={{
-                    id: row.id,
-                    reference: row.reference,
-                    label: visitLabel(row),
-                    phone: row.phone,
-                    email: row.email,
-                    refundableMinor: row.refundableMinor,
-                    currencyCode: row.currencyCode,
-                    cancellable: row.cancellable,
-                    movable: row.movable,
-                    date: row.date,
-                  }}
-                />,
-              ]),
-            )}
-            params={params}
-            path={PATH}
-            rows={rows}
-            showPayment
-            showSpecialist
-            toolbar={
-              <VisitTableToolbar
-                params={params}
-                path={PATH}
-                rooms={filters.rooms}
-                services={filters.services}
-                showPayments
-                specialists={filters.specialists}
-              />
-            }
-            total={total}
-          />
-        </div>
+      <div className="flex min-h-0 flex-1">
+        <VisitTable
+          actions={Object.fromEntries(
+            rows.map((row) => [
+              row.id,
+              <VisitActions
+                key={row.id}
+                visit={{
+                  id: row.id,
+                  reference: row.reference,
+                  label: visitLabel(row),
+                  phone: row.phone,
+                  email: row.email,
+                  refundableMinor: row.refundableMinor,
+                  currencyCode: row.currencyCode,
+                  cancellable: row.cancellable,
+                  movable: row.movable,
+                  date: row.date,
+                }}
+              />,
+            ]),
+          )}
+          columns={columns}
+          columnsCookie={columnsCookie}
+          params={params}
+          path={PATH}
+          rows={rows}
+          showPayment
+          showSpecialist
+          specialistAvatars={avatars}
+          toolbar={
+            <VisitFilterBar
+              rooms={filters.rooms}
+              services={filters.services}
+              showPayments
+              specialists={filters.specialists}
+              view={
+                <VisitViewMenu
+                  countViews={countVisitViewsAction}
+                  label={view?.label ?? "Własny widok"}
+                  total={total}
+                  views={visitViews(true).map((option) => ({
+                    id: option.id,
+                    label: option.label,
+                    href: viewHref(PATH, params, option),
+                    active: option.id === view?.id,
+                  }))}
+                />
+              }
+            />
+          }
+          total={total}
+        />
         {open ? (
           <VisitPanel
             closeHref={visitPanelCloseHref(PATH, params)}
             events={open.events}
             row={open.row}
+            client={open.client}
+            specialistAvatar={avatars[open.row.specialistId]}
             tab={params.karta}
-            tabs={visitPanelTabs(PATH, params)}
+            tabs={visitPanelTabs(PATH, params, { client: true })}
             toolbar={
               <CentreVisitToolbar label={visitLabel(open.row)} row={open.row} />
             }
           />
         ) : null}
       </div>
-    </div>
+      <RememberView table={TABLE} />
+    </FullBleed>
   );
 }

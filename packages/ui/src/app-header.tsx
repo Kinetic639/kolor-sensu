@@ -5,10 +5,13 @@ import {
   Bell,
   ChevronDown,
   LogOut,
+  Monitor,
+  Moon,
   Sprout,
+  Sun,
   UserRound,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 import { Button } from "./button";
 import { PortalBreadcrumbTrail } from "./portal-layout";
@@ -17,10 +20,15 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./dropdown-menu";
 import { cn } from "./lib/utils";
+import { applyTheme, THEME_LABELS, THEMES, type Theme } from "./theme";
+
+const THEME_ICONS = { light: Sun, dark: Moon, system: Monitor };
 
 export interface AppHeaderUser {
   name: string;
@@ -48,6 +56,8 @@ export interface AppHeaderProps {
   onNotificationsClick?: () => void;
   /** The bell with its inbox (e.g. `PortalNotifications`); wins over the plain bell. */
   notifications?: ReactNode;
+  /** The colour theme (from the cookie); given, the menu can switch it. */
+  theme?: Theme;
   className?: string;
 }
 
@@ -62,18 +72,22 @@ export function AppHeader({
   logoutAction,
   onNotificationsClick,
   notifications,
+  theme,
   className,
 }: AppHeaderProps) {
+  const [currentTheme, setCurrentTheme] = useState(theme);
   const initials = user.name
     .split(" ")
     .map((part) => part[0])
     .join("")
     .slice(0, 2);
-  const hasUserMenu = Boolean(profileHref || portalSwitch || logoutAction);
+  const hasUserMenu = Boolean(
+    profileHref || portalSwitch || logoutAction || theme,
+  );
 
   const userIdentity = (
     <>
-      <Avatar className="size-9">
+      <Avatar className="size-7">
         {user.imageUrl ? <AvatarImage alt="" src={user.imageUrl} /> : null}
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
@@ -104,7 +118,7 @@ export function AppHeader({
       {navigationTrigger}
 
       <div className="flex min-w-0 items-center gap-2.5 md:hidden">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-white">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)]">
           <Sprout className="size-4" aria-hidden="true" />
         </span>
         <span className="min-w-0 leading-none">
@@ -132,7 +146,7 @@ export function AppHeader({
           >
             <Bell className="size-5" aria-hidden="true" />
             {notificationCount ? (
-              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-[var(--danger)] ring-2 ring-white" />
+              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-[var(--danger)] ring-2 ring-[var(--surface)]" />
             ) : null}
           </Button>
         )}
@@ -176,6 +190,32 @@ export function AppHeader({
                     {portalSwitch.label}
                   </a>
                 </DropdownMenuItem>
+              ) : null}
+              {currentTheme ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs font-medium text-[var(--text-muted)]">
+                    Motyw
+                  </DropdownMenuLabel>
+                  <DropdownMenuRadioGroup
+                    value={currentTheme}
+                    onValueChange={(value) => {
+                      const next = value as Theme;
+                      applyTheme(next);
+                      setCurrentTheme(next);
+                    }}
+                  >
+                    {THEMES.map((option) => {
+                      const Icon = THEME_ICONS[option];
+                      return (
+                        <DropdownMenuRadioItem key={option} value={option}>
+                          <Icon className="size-4" aria-hidden="true" />
+                          {THEME_LABELS[option]}
+                        </DropdownMenuRadioItem>
+                      );
+                    })}
+                  </DropdownMenuRadioGroup>
+                </>
               ) : null}
               {logoutAction ? (
                 <>

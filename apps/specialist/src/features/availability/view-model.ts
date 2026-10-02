@@ -93,7 +93,7 @@ function colours(
   roomColors: Map<string, string | null>,
 ) {
   if (rule.mode === "online" || !rule.roomId) {
-    return { accent: "var(--info)", tint: "var(--info-soft)" };
+    return { accent: "var(--online)", tint: "var(--online-soft)" };
   }
   return resourceColors(roomColors.get(rule.roomId) ?? null, rule.roomId);
 }

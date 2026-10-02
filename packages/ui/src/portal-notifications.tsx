@@ -93,7 +93,7 @@ export function PortalNotifications({
           {unreadCount ? (
             <span
               aria-hidden="true"
-              className="absolute top-0.5 right-0.5 flex min-w-4 items-center justify-center rounded-full bg-[var(--danger)] px-1 text-[0.625rem] leading-4 font-semibold text-white ring-2 ring-white"
+              className="absolute top-0.5 right-0.5 flex min-w-4 items-center justify-center rounded-full bg-[var(--danger)] px-1 text-[0.625rem] leading-4 font-semibold text-[var(--danger-foreground)] ring-2 ring-[var(--surface)]"
             >
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>

@@ -4,6 +4,7 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import type { MouseEvent, ReactNode } from "react";
 import { cn } from "../lib/utils";
+import { requestVisitPanelClose } from "./visit-panel-motion";
 
 // A row of the bookings table that opens the visit in the side panel when
 // clicked anywhere (the reference in its first cell is the same link, for
@@ -26,6 +27,8 @@ export function VisitTableRow({
       return;
     }
     if (window.getSelection()?.toString()) return;
+    // Its own visit's row closes the panel (sliding it out).
+    if (selected && requestVisitPanelClose(href)) return;
     router.push(href as Route, { scroll: false });
   };
   return (

@@ -52,7 +52,7 @@ export function scheduleTheme(
   seed: string,
   online = false,
 ): ScheduleTheme {
-  const accent = online ? "var(--info)" : resourceColors(color, seed).accent;
+  const accent = online ? "var(--online)" : resourceColors(color, seed).accent;
   return {
     accent,
     solid: `color-mix(in srgb, ${accent} 72%, black)`,

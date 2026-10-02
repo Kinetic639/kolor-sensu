@@ -132,6 +132,19 @@ export async function getClient(
   return row ? toClient(row) : null;
 }
 
+/** The client a visit was booked by, or null (none linked, e.g. a hold). */
+export async function getVisitClient(
+  client: Client,
+  visitId: string,
+): Promise<CentreClient | null> {
+  const { data, error } = await client.rpc("get_visit_client", {
+    p_visit_id: visitId,
+  });
+  if (error) throw clientError(error);
+  const row = data?.[0];
+  return row ? toClient(row) : null;
+}
+
 /** Every visit of a client, latest first. */
 export async function listClientVisits(
   client: Client,

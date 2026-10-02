@@ -9,6 +9,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { getPortalAvatarUrl } from "@repo/supabase";
 import { PortalShell } from "@repo/ui/portal-shell";
+import { parseTheme, THEME_COOKIE } from "@repo/ui/theme";
 import { cookies } from "next/headers";
 
 export default async function ProtectedLayout({
@@ -53,6 +54,7 @@ export default async function ProtectedLayout({
           : undefined
       }
       profileHref="/profil"
+      theme={parseTheme(cookieStore.get(THEME_COOKIE)?.value)}
       user={{
         name: displayName || authorization.user.email || "Specjalista",
         email: authorization.user.email,

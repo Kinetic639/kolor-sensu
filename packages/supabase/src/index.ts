@@ -245,6 +245,7 @@ export type {
 export {
   ClientError,
   getClient,
+  getVisitClient,
   listClientVisits,
   searchClients,
   updateClient,

@@ -1836,6 +1836,24 @@ export type Database = {
           updated_at: string;
         }[];
       };
+      get_visit_client: {
+        Args: { p_visit_id: string };
+        Returns: {
+          id: string;
+          name: string;
+          email: string;
+          phone: string | null;
+          notes: string | null;
+          visits: number;
+          upcoming: number;
+          cancelled: number;
+          last_visit_at: string | null;
+          next_visit_at: string | null;
+          paid_minor: number;
+          created_at: string;
+          updated_at: string;
+        }[];
+      };
       list_settlements: {
         Args: never;
         Returns: {

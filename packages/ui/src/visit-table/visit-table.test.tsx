@@ -1,25 +1,33 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { parseColumnLayout } from "./columns";
+import { VisitFilterBar } from "./visit-filter-bar";
 import { VisitPanel } from "./visit-panel";
-import { VisitTable, VisitTableToolbar } from "./visit-table";
+import { VisitTable, visitColumnsAvailable } from "./visit-table";
 import {
   adminRows,
   panelTabs,
   sampleEvents,
+  sampleRooms,
   sampleSpecialists,
   specialistRows,
   tableParams,
 } from "./visit-table.samples";
 
 const push = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
-beforeEach(() => push.mockClear());
+const refresh = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh }) }));
+beforeEach(() => {
+  push.mockClear();
+  refresh.mockClear();
+});
 
 const path = "/kalendarz";
 
 describe("VisitTable", () => {
-  it("shows a page of visits with sortable columns", () => {
+  it("shows a page of visits; the headers sort", () => {
     render(
       <VisitTable
         params={tableParams("sort=klient")}
@@ -34,8 +42,7 @@ describe("VisitTable", () => {
     const rows = within(table).getAllByRole("row");
     expect(rows).toHaveLength(adminRows.length + 1);
     expect(rows[1]).toHaveTextContent("Jan Kowalski");
-    expect(rows[1]).toHaveTextContent("Opłacona");
-    expect(rows[1]).toHaveTextContent(/200\s*zł/);
+    expect(rows[1]).toHaveTextContent(/Opłacona · 200\s*zł/);
     // The reference heads the row, for screen readers too.
     expect(within(rows[1]!).getByRole("rowheader")).toHaveTextContent(
       "3010-017",
@@ -47,10 +54,41 @@ describe("VisitTable", () => {
       "href",
       "/kalendarz?sort=klient&kierunek=malejaco",
     );
-    expect(screen.getByRole("link", { name: /Data/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Termin/ })).toHaveAttribute(
       "href",
       "/kalendarz",
     );
+    // Contact details and notes are hidden until asked for.
+    expect(screen.queryByRole("columnheader", { name: "Telefon" })).toBeNull();
+  });
+
+  it("shows the person's own columns, in their order, with the menu to change them", () => {
+    render(
+      <VisitTable
+        columns={parseColumnLayout(
+          "status,klient,telefon,-termin",
+          visitColumnsAvailable({ showPayment: true, showSpecialist: true }),
+        )}
+        columnsCookie="ks_cols_test"
+        params={tableParams()}
+        path={path}
+        rows={adminRows}
+        showPayment
+        showSpecialist
+        total={4}
+      />,
+    );
+    const headers = screen
+      .getAllByRole("columnheader")
+      .map((header) => header.textContent?.trim());
+    expect(headers.slice(0, 4)).toEqual([
+      "Numer",
+      "Status",
+      "Klient",
+      "Telefon",
+    ]);
+    expect(headers).not.toContain("Termin");
+    expect(screen.getByRole("button", { name: "Kolumny" })).toBeInTheDocument();
   });
 
   it("a click on a row opens the visit in the side panel; again, closes it", () => {
@@ -93,11 +131,12 @@ describe("VisitTable", () => {
         total={42}
       />,
     );
-    expect(screen.getByText("11–14 z 42 · strona 2 z 5")).toBeInTheDocument();
-    const [next] = screen.getAllByRole("link", { name: "Następna strona" });
-    expect(next).toHaveAttribute("href", "/kalendarz?strona=3&wierszy=10");
+    expect(screen.getByText("11–14 z 42")).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Pierwsza strona" }),
+      screen.getByRole("link", { name: "Następna strona" }),
+    ).toHaveAttribute("href", "/kalendarz?strona=3&wierszy=10");
+    expect(
+      screen.getByRole("link", { name: "Poprzednia strona" }),
     ).toHaveAttribute("href", "/kalendarz?wierszy=10");
   });
 
@@ -114,11 +153,9 @@ describe("VisitTable", () => {
     expect(
       screen.queryByRole("columnheader", { name: /Specjalista/ }),
     ).toBeNull();
-    for (const next of screen.getAllByRole("link", {
-      name: "Następna strona",
-    })) {
-      expect(next).toHaveAttribute("aria-disabled", "true");
-    }
+    expect(
+      screen.getByRole("link", { name: "Następna strona" }),
+    ).toHaveAttribute("aria-disabled", "true");
   });
 
   it("says when nothing matches", () => {
@@ -131,35 +168,70 @@ describe("VisitTable", () => {
       />,
     );
     expect(
-      screen.getByText("Brak rezerwacji pasujących do wyszukiwania i filtrów."),
+      screen.getByText(/Żadna wizyta nie pasuje do wyszukiwania i filtrów/),
     ).toBeInTheDocument();
-    expect(screen.getByText("0 z 0 · strona 1 z 1")).toBeInTheDocument();
+    expect(screen.getByText("0 z 0")).toBeInTheDocument();
   });
 });
 
-describe("VisitTableToolbar", () => {
-  it("searches and offers a way back to everything when filtered", () => {
+describe("VisitFilterBar", () => {
+  const renderBar = (search: string) =>
     render(
-      <VisitTableToolbar
-        params={tableParams("q=jan&status=odwolane")}
-        path={path}
+      <VisitFilterBar
+        rooms={sampleRooms}
         showPayments
         specialists={sampleSpecialists}
       />,
-      { wrapper: withNuqsTestingAdapter({ searchParams: "?q=jan" }) },
+      { wrapper: withNuqsTestingAdapter({ searchParams: search }) },
     );
+
+  it("a chip per filter, the search folded to a magnifier", () => {
+    renderBar("?status=oczekujace,potwierdzone");
+    expect(
+      screen.getByRole("button", { name: /Termin:\s*Nadchodzące/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: /Status jest\s*Czeka na płatność, Potwierdzona/,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Usuń filtr Termin" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Filtry, ustawione: 2" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("searchbox", { name: "Szukaj rezerwacji" }),
-    ).toHaveValue("jan");
+    ).toHaveClass("w-0");
+  });
+
+  it("the filter list marks what is in the bar, removes it, clears all", async () => {
+    renderBar("?status=odwolane");
+    await userEvent.click(screen.getByRole("button", { name: /^Filtry/ }));
+    const list = screen.getByRole("dialog");
+    // In the bar already: marked, with how many values and an "×".
     expect(
-      screen.getByRole("button", { name: /Status:\s*Odwołane/ }),
+      within(list).getByRole("button", { name: /^Status, w pasku/ }),
+    ).toHaveTextContent("1");
+    expect(
+      within(list).getByRole("button", { name: "Usuń filtr Status" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Specjalista:\s*Wszyscy/ }),
+      within(list).queryByRole("button", { name: "Usuń filtr Płatność" }),
+    ).toBeNull();
+    expect(
+      within(list).getByRole("button", { name: "Wyczyść wszystkie" }),
+    ).toBeInTheDocument();
+    await userEvent.click(
+      within(list).getByRole("button", { name: "Płatność" }),
+    );
+    expect(
+      screen.getByRole("group", { name: "Wartości: Płatność" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Wyczyść filtry" }),
-    ).toHaveAttribute("href", "/kalendarz");
+      screen.getByRole("menuitemradio", { name: "Zwrot do zlecenia" }),
+    ).toHaveAttribute("aria-checked", "false");
   });
 });
 
@@ -194,6 +266,37 @@ describe("VisitPanel", () => {
     expect(
       within(panel).getByRole("link", { name: "Zamknij szczegóły wizyty" }),
     ).toHaveAttribute("href", "/kalendarz");
+  });
+
+  it("closes through the panel: its link and Escape leave the address", async () => {
+    render(
+      <VisitPanel
+        closeHref="/kalendarz"
+        events={null}
+        row={adminRows[0]!}
+        tab="szczegoly"
+        tabs={panelTabs}
+      />,
+    );
+    await userEvent.click(
+      screen.getByRole("link", { name: "Zamknij szczegóły wizyty" }),
+    );
+    expect(push).toHaveBeenCalledWith("/kalendarz", { scroll: false });
+  });
+
+  it("Escape closes it too, but not while a menu is open", () => {
+    render(
+      <VisitPanel
+        closeHref="/kalendarz"
+        events={null}
+        row={adminRows[0]!}
+        tab="szczegoly"
+        tabs={panelTabs}
+      />,
+    );
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(push).toHaveBeenCalledWith("/kalendarz", { scroll: false });
   });
 
   it("a reservation not paid yet says when it must be paid by", () => {

@@ -20,7 +20,7 @@ export function AddVisitButton({
       className={cn(
         "flex h-8 items-center gap-1.5 rounded-lg px-3.5 text-xs font-semibold shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:outline-none",
         active
-          ? "bg-[var(--warning-foreground)] text-white ring-2 ring-[color-mix(in_srgb,var(--warning)_45%,transparent)] ring-offset-2"
+          ? "bg-[var(--warning-foreground)] text-[var(--warning-soft)] ring-2 ring-[color-mix(in_srgb,var(--warning)_45%,transparent)] ring-offset-2"
           : "bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary-hover)]",
       )}
       href={href}
