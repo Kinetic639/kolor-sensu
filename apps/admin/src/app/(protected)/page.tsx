@@ -1,49 +1,71 @@
-import { createClient } from "@/lib/supabase/server";
+import { loadAdminDashboard } from "@/features/dashboard/loaders";
+import { settleVisitAsCentreAction } from "@/features/visits/actions";
 import {
-  listLocations,
-  listPendingSpecialistDrafts,
-  listServicesAdmin,
-  listSpecialistOffersAdmin,
-  listSpecialistsForAdmin,
-} from "@repo/supabase";
+  awaitingPaymentSummary,
+  owedInAll,
+  roomsToday,
+  settlementView,
+  teamToday,
+  todayCounts,
+  todayVisitItems,
+} from "@repo/scheduling";
 import { AdminDashboard } from "@repo/ui/portal-dashboards";
 import {
   AlertTriangle,
-  Armchair,
+  Banknote,
   CalendarDays,
-  Tags,
+  Hourglass,
   Users,
 } from "@repo/ui/portal-icons";
+import { SettlementList } from "@repo/ui/settlement-list";
 
 export default async function Home() {
-  const client = await createClient();
-  const [specialists, pendingDrafts, locations, services, specialistOffers] =
-    await Promise.all([
-      listSpecialistsForAdmin(client),
-      listPendingSpecialistDrafts(client),
-      listLocations(client),
-      listServicesAdmin(client),
-      listSpecialistOffersAdmin(client),
-    ]);
-  const activeSpecialists = specialists.filter(
-    (specialist) => specialist.active,
-  );
+  const {
+    timeZone,
+    now,
+    todayVisits,
+    waiting,
+    settlements,
+    specialists,
+    pendingDrafts,
+  } = await loadAdminDashboard();
+
+  const counts = todayCounts(todayVisits);
+  const reservations = awaitingPaymentSummary(waiting, { timeZone, now });
+  const activeSpecialists = specialists.filter((s) => s.active);
   const acceptingSpecialists = activeSpecialists.filter(
-    (specialist) => specialist.acceptingNewClients,
+    (s) => s.acceptingNewClients,
   );
-  const activeServices = services.filter((service) => service.active);
-  const attention = pendingDrafts.length
-    ? [
-        {
-          id: "pending-specialist-drafts",
-          title: `${pendingDrafts.length} ${pendingDrafts.length === 1 ? "profil oczekuje" : "profile oczekują"} na weryfikację`,
-          description:
-            "Szkice profili specjalistów wymagają decyzji administratora.",
-          icon: AlertTriangle,
-          tone: "warning" as const,
-        },
-      ]
-    : [];
+
+  const attention = [
+    ...(reservations.dueSoon.length
+      ? [
+          {
+            id: "reservations-due-soon",
+            title:
+              reservations.dueSoon.length === 1
+                ? "1 rezerwacja do opłacenia w ciągu doby"
+                : `${reservations.dueSoon.length} rezerwacje do opłacenia w ciągu doby`,
+            description:
+              "Bez płatności zostaną anulowane. Możesz wysłać klientowi link do płatności jeszcze raz.",
+            icon: Hourglass,
+            tone: "warning" as const,
+          },
+        ]
+      : []),
+    ...(pendingDrafts.length
+      ? [
+          {
+            id: "pending-specialist-drafts",
+            title: `${pendingDrafts.length} ${pendingDrafts.length === 1 ? "profil oczekuje" : "profile oczekują"} na weryfikację`,
+            description:
+              "Szkice profili specjalistów wymagają decyzji administratora.",
+            icon: AlertTriangle,
+            tone: "warning" as const,
+          },
+        ]
+      : []),
+  ];
 
   return (
     <AdminDashboard
@@ -52,10 +74,32 @@ export default async function Home() {
         {
           id: "appointments",
           label: "Dzisiejsze wizyty",
-          value: 0,
+          value: counts.total,
           icon: CalendarDays,
           tone: "blue",
-          detail: "Dane pojawią się po wdrożeniu kalendarza",
+          detail: counts.total
+            ? `Opłacone: ${counts.paid} · czeka na płatność: ${counts.awaitingPayment}`
+            : "Dziś bez wizyt",
+        },
+        {
+          id: "awaiting-payment",
+          label: "Czeka na płatność",
+          value: reservations.count,
+          icon: Hourglass,
+          tone: "peach",
+          detail: reservations.nextDue
+            ? `Najbliższy termin: ${reservations.nextDue}`
+            : "Wszystkie rezerwacje opłacone",
+        },
+        {
+          id: "settlements",
+          label: "Do rozliczenia",
+          value: settlements.length,
+          icon: Banknote,
+          tone: settlements.length ? "rose" : "mint",
+          detail: settlements.length
+            ? `Do zwrotu łącznie: ${owedInAll(settlements)}`
+            : "Wszystko rozliczone",
         },
         {
           id: "specialists",
@@ -65,44 +109,19 @@ export default async function Home() {
           tone: "mint",
           detail: `${acceptingSpecialists.length} przyjmuje nowych klientów`,
         },
-        {
-          id: "services",
-          label: "Aktywne usługi",
-          value: activeServices.length,
-          icon: Tags,
-          tone: "lilac",
-          detail: `${specialistOffers.length} ofert specjalistów`,
-        },
-        {
-          id: "locations",
-          label: "Lokalizacje",
-          value: locations.length,
-          icon: Armchair,
-          tone: "peach",
-          detail: "Obłożenie po wdrożeniu grafików gabinetów",
-        },
       ]}
-      appointments={[]}
+      appointments={todayVisitItems(todayVisits, { timeZone })}
       attention={attention}
-      rooms={[]}
-      team={[
-        {
-          id: "active-specialists",
-          title: "Aktywni specjaliści",
-          description: `${specialists.length} wszystkich kont specjalistów`,
-          value: String(activeSpecialists.length),
-          icon: Users,
-          tone: "success",
-        },
-        {
-          id: "accepting-specialists",
-          title: "Przyjmują nowych klientów",
-          description: "Na podstawie aktualnego statusu profilu",
-          value: String(acceptingSpecialists.length),
-          icon: Users,
-          tone: "info",
-        },
-      ]}
+      settlements={
+        settlements.length ? (
+          <SettlementList
+            action={settleVisitAsCentreAction}
+            items={settlements.map((s) => settlementView(s, { timeZone }))}
+          />
+        ) : null
+      }
+      rooms={roomsToday(todayVisits, { timeZone })}
+      team={teamToday(todayVisits, { timeZone })}
       events={[]}
     />
   );

@@ -38,6 +38,9 @@ export const centreRefundRequestSchema = z.object({
   reason: reasonSchema,
 });
 
+/** Settling what is owed (R14): nothing to choose, the database knows how much. */
+export const centreSettleRequestSchema = z.object({}).strict();
+
 export const centreMoveSchema = z
   .object({
     date: localDateSchema,
@@ -88,6 +91,9 @@ const MESSAGES: Record<string, string> = {
   too_soon:
     "Rezerwacja nie jest opłacona, a do tego terminu zostało za mało czasu na płatność.",
   invalid: "Sprawdź pola formularza.",
+  nothing_owed: "Ta wizyta jest już rozliczona.",
+  recently_settled:
+    "Zwrot dla tej wizyty został zlecony przed chwilą. Odśwież stronę za minutę.",
 };
 
 /** Why a change could not be made, in Polish. */

@@ -6,6 +6,7 @@ import {
   refundVisitAsCentre,
   rescheduleVisit,
   rescheduleVisitAsCentre,
+  settleVisitAsCentre,
   type ChangeVisitDeps,
 } from "./change-visit";
 
@@ -228,6 +229,66 @@ describe("the centre's own way (R12)", () => {
       refundMinor: 5000,
       refundedBeforeMinor: 15000,
       reason: "Gest",
+    });
+  });
+
+  it("settles what is owed: a refund of its own, the client told", async () => {
+    const d = {
+      ...deps({ refund: vi.fn().mockResolvedValue(20000) }),
+      centreSettle: vi.fn().mockResolvedValue({
+        reference: "KS-1",
+        refundMinor: 5000,
+        paymentIntentId: "pi_1",
+        refundedBeforeMinor: 15000,
+        settlementId: 42,
+      }),
+    };
+    expect(await settleVisitAsCentre("visit-1", d)).toEqual({
+      ok: true,
+      refundMinor: 5000,
+      refundFailed: false,
+    });
+    // Its own key: a retry after Stripe refused is not Stripe's old answer.
+    expect(d.refund).toHaveBeenCalledWith("pi_1", 5000, {
+      reference: "KS-1",
+      idempotencyKey: "settle:KS-1:42",
+    });
+    expect(d.recordRefund).toHaveBeenCalledWith("pi_1", 20000);
+    expect(d.notify).toHaveBeenCalledWith({
+      kind: "refunded",
+      reference: "KS-1",
+      refundMinor: 5000,
+      refundedBeforeMinor: 15000,
+      reason: null,
+    });
+  });
+
+  it("settling: Stripe refuses again, or nothing is owed", async () => {
+    const failing = {
+      ...deps({ refund: vi.fn().mockRejectedValue(new Error("down")) }),
+      centreSettle: vi.fn().mockResolvedValue({
+        reference: "KS-1",
+        refundMinor: 5000,
+        paymentIntentId: "pi_1",
+        refundedBeforeMinor: 0,
+        settlementId: 43,
+      }),
+    };
+    expect(await settleVisitAsCentre("visit-1", failing)).toEqual({
+      ok: true,
+      refundMinor: 5000,
+      refundFailed: true,
+    });
+    expect(failing.notify).not.toHaveBeenCalled();
+    const settled = {
+      ...deps(),
+      centreSettle: vi
+        .fn()
+        .mockRejectedValue(new BookingError("nothing_owed", "no")),
+    };
+    expect(await settleVisitAsCentre("visit-1", settled)).toEqual({
+      ok: false,
+      code: "nothing_owed",
     });
   });
 

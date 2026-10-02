@@ -2462,4 +2462,147 @@ END;
 $body$;
 RESET ROLE;
 
+-- AD. What the centre still has to settle (R14): a refund owed that Stripe
+-- has not made (aa1: 21 000 owed, 15 000 given back), a payment for a visit
+-- that never was (x2: paid after it was cancelled for want of payment).
+-- Listed once two minutes have passed; settled once, refunded once.
+DO $body$
+DECLARE
+  aa1 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1'));
+  x2 uuid := (SELECT id FROM x_visits WHERE name = 'x2');
+  s5 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 's2'));
+BEGIN
+  IF (SELECT (kind, owed_minor) FROM private.open_settlements() WHERE appointment_id = aa1)
+     IS DISTINCT FROM ('refund_owed'::text, 6000) THEN
+    RAISE EXCEPTION 'AD: the refund owed on aa1';
+  END IF;
+  IF (SELECT (kind, owed_minor) FROM private.open_settlements() WHERE appointment_id = x2)
+     IS DISTINCT FROM ('paid_without_visit'::text, 25000) THEN
+    RAISE EXCEPTION 'AD: the payment without a visit';
+  END IF;
+  -- A late cancellation keeps the money on purpose: nothing owed.
+  IF EXISTS (SELECT 1 FROM private.open_settlements() WHERE appointment_id = s5) THEN
+    RAISE EXCEPTION 'AD: a late cancellation listed as owed';
+  END IF;
+END;
+$body$;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.list_settlements()
+             WHERE reference IN (SELECT reference FROM s_visits WHERE name = 'aa1')) THEN
+    RAISE EXCEPTION 'AD: listed a refund still on its way';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Two minutes and more later (without the triggers that would date the
+-- rows now).
+SET LOCAL session_replication_role = replica;
+UPDATE public.appointment_events SET occurred_at = occurred_at - interval '10 minutes'
+WHERE appointment_id IN (
+  (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1')),
+  (SELECT id FROM x_visits WHERE name = 'x2'));
+UPDATE public.appointments SET cancelled_at = cancelled_at - interval '10 minutes'
+WHERE id IN (
+  (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1')),
+  (SELECT id FROM x_visits WHERE name = 'x2'));
+UPDATE public.payments SET updated_at = updated_at - interval '10 minutes'
+WHERE appointment_id IN (
+  (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1')),
+  (SELECT id FROM x_visits WHERE name = 'x2'));
+SET LOCAL session_replication_role = origin;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  aa1 uuid := (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1'));
+  x2 uuid := (SELECT id FROM x_visits WHERE name = 'x2');
+  s record;
+BEGIN
+  SELECT * INTO s FROM public.list_settlements() WHERE appointment_id = aa1;
+  IF s.appointment_id IS NULL OR (s.kind, s.owed_minor, s.paid_minor, s.refunded_minor, s.client_name)
+     IS DISTINCT FROM ('refund_owed'::text, 6000, 25000, 15000, 'Ola Test'::text) THEN
+    RAISE EXCEPTION 'AD: the admin''s list: %', row_to_json(s);
+  END IF;
+  SELECT * INTO s FROM public.centre_settle_visit(aa1);
+  IF (s.refund_minor, s.payment_intent_id, s.refunded_before_minor)
+     IS DISTINCT FROM (6000, 'pi_test_aa1'::text, 15000) OR s.settlement_id IS NULL THEN
+    RAISE EXCEPTION 'AD: settling aa1: %', row_to_json(s);
+  END IF;
+  IF pg_temp.hint_of(format('SELECT public.centre_settle_visit(%L)', aa1)) <> 'recently_settled' THEN
+    RAISE EXCEPTION 'AD: settled twice in a moment';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.list_visit_events(aa1)
+                 WHERE kind = 'refund_issued' AND details ->> 'settlement' = 'refund_owed'
+                   AND details ->> 'refund_minor' = '6000') THEN
+    RAISE EXCEPTION 'AD: the settling is not in the history';
+  END IF;
+  SELECT * INTO s FROM public.centre_settle_visit(x2);
+  IF s.refund_minor <> 25000
+     OR (SELECT refund_due_minor FROM public.appointments WHERE id = x2) <> 25000 THEN
+    RAISE EXCEPTION 'AD: settling a payment without a visit';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Stripe gave it back; a minute later, nothing is owed.
+SELECT public.record_refund('pi_test_aa1', 21000);
+UPDATE public.appointment_events SET occurred_at = occurred_at - interval '2 minutes'
+WHERE appointment_id = (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1'))
+  AND kind = 'refund_issued' AND details ? 'settlement';
+SET LOCAL ROLE service_role;
+DO $body$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.claim_booking_email((SELECT reference FROM s_visits WHERE name = 'aa1'), 'refunded')) THEN
+    RAISE EXCEPTION 'AD: no e-mail about the settled refund';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF pg_temp.hint_of(format('SELECT public.centre_settle_visit(%L)',
+       (SELECT id FROM public.appointments WHERE reference = (SELECT reference FROM s_visits WHERE name = 'aa1')))) <> 'nothing_owed' THEN
+    RAISE EXCEPTION 'AD: settled what was not owed';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.list_settlements();
+    RAISE EXCEPTION 'AD: a specialist listed what is owed';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.centre_settle_visit((SELECT id FROM x_visits WHERE name = 'x2'));
+    RAISE EXCEPTION 'AD: a specialist settled';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '', true);
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  PERFORM public.list_settlements();
+  RAISE EXCEPTION 'AD: a visitor listed what is owed';
+EXCEPTION WHEN insufficient_privilege THEN NULL;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

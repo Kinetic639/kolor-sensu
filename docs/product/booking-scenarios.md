@@ -127,18 +127,18 @@ Wpis „DB: X” wskazuje sekcję w `booking_domain.sql`.
 
 ## G. Klient zmienia lub odwołuje (link z e-maila)
 
-| ID  | Scenariusz                                | Oczekiwane                                    | Jedn. | DB   | E2E | Ręcznie  | Status |
-| --- | ----------------------------------------- | --------------------------------------------- | ----- | ---- | --- | -------- | ------ |
-| G1  | Przełożenie w oknie, w limicie            | Nowy termin, e-mail, `.ics` z nową sekwencją  | ✅    | ✅ S | ❌  |          | 🟡     |
-| G2  | Przełożenie poza oknem / ponad limit      | `not_reschedulable`                           | ✅    | ✅ S | ❌  |          | ✅     |
-| G3  | Przełożenie na zajęty termin              | `slot_unavailable`                            | —     | ✅ S | ❌  |          | ✅     |
-| G4  | Odwołanie przed oknem                     | Pełny zwrot przez Stripe, e-mail              | ✅    | ✅ S | ❌  | ✅ 10-01 | ✅     |
-| G5  | Odwołanie po oknie                        | Bez zwrotu, e-mail mówi dlaczego              | ✅    | ✅ S | ❌  | ✅ 10-01 | ✅     |
-| G6  | Odwołanie nieopłaconej rezerwacji         | Bez zwrotu, termin wolny                      | ✅    | ✅ Y | ❌  |          | ✅     |
-| G7  | Dwukrotne odwołanie / zmiana po odwołaniu | `not_cancellable` / `not_reschedulable`       | —     | ✅ S | ❌  |          | ✅     |
-| G8  | Token holdu zamiast tokenu z e-maila      | `not_found`                                   | —     | ✅ S | —   |          | ✅     |
-| G9  | Stripe odrzuca zwrot przy odwołaniu       | Odwołanie zostaje, kwota „do zwrotu” widoczna | ✅    | —    | —   |          | ⚠️ U1  |
-| G10 | Podwójne kliknięcie „Odwołaj”             | Jeden zwrot (klucz `cancel:<ref>`)            | ✅    | ✅ S | ❌  |          | ✅     |
+| ID  | Scenariusz                                | Oczekiwane                                                                    | Jedn. | DB    | E2E | Ręcznie  | Status |
+| --- | ----------------------------------------- | ----------------------------------------------------------------------------- | ----- | ----- | --- | -------- | ------ |
+| G1  | Przełożenie w oknie, w limicie            | Nowy termin, e-mail, `.ics` z nową sekwencją                                  | ✅    | ✅ S  | ❌  |          | 🟡     |
+| G2  | Przełożenie poza oknem / ponad limit      | `not_reschedulable`                                                           | ✅    | ✅ S  | ❌  |          | ✅     |
+| G3  | Przełożenie na zajęty termin              | `slot_unavailable`                                                            | —     | ✅ S  | ❌  |          | ✅     |
+| G4  | Odwołanie przed oknem                     | Pełny zwrot przez Stripe, e-mail                                              | ✅    | ✅ S  | ❌  | ✅ 10-01 | ✅     |
+| G5  | Odwołanie po oknie                        | Bez zwrotu, e-mail mówi dlaczego                                              | ✅    | ✅ S  | ❌  | ✅ 10-01 | ✅     |
+| G6  | Odwołanie nieopłaconej rezerwacji         | Bez zwrotu, termin wolny                                                      | ✅    | ✅ Y  | ❌  |          | ✅     |
+| G7  | Dwukrotne odwołanie / zmiana po odwołaniu | `not_cancellable` / `not_reschedulable`                                       | —     | ✅ S  | ❌  |          | ✅     |
+| G8  | Token holdu zamiast tokenu z e-maila      | `not_found`                                                                   | —     | ✅ S  | —   |          | ✅     |
+| G9  | Stripe odrzuca zwrot przy odwołaniu       | Odwołanie zostaje; po 2 min „do rozliczenia” na dashboardzie, „Zwróć” ponawia | ✅    | ✅ AD | ❌  |          | 🟡 T2  |
+| G10 | Podwójne kliknięcie „Odwołaj”             | Jeden zwrot (klucz `cancel:<ref>`)                                            | ✅    | ✅ S  | ❌  |          | ✅     |
 
 ## H. Centrum po swojemu (admin)
 
@@ -213,9 +213,9 @@ Wpis „DB: X” wskazuje sekcję w `booking_domain.sql`.
 
 ## Luki w działaniu (do decyzji i zrobienia)
 
-| ID  | Luka                                                                         | Propozycja                                                                       |
-| --- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| U1  | Nieudany zwrot (Stripe odmówił) widać tylko w toaście i w kwocie „do zwrotu” | Lista „do rozliczenia” na dashboardzie admina z przyciskiem ponowienia           |
-| U2  | Spory o płatność (chargeback) nieobsługiwane                                 | Webhook `charge.dispute.*`, oznaczenie wizyty, powiadomienie admina              |
-| U3  | Zmiany w grafiku i ofercie nie ostrzegają o istniejących wizytach            | Sprawdzenie kolizji przy zapisie nieobecności, zamknięcia gabinetu, dezaktywacji |
-| U4  | Regulamin rezerwacji i płatności                                             | Wymagany przed produkcją (X-04 w roadmapie)                                      |
+| ID  | Luka                                                                             | Propozycja                                                                               |
+| --- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| U1  | ~~Nieudany zwrot (Stripe odmówił) widać tylko w toaście i w kwocie „do zwrotu”~~ | Zrobione w R14: „do rozliczenia” na dashboardzie, „Zwróć” z własnym kluczem idempotencji |
+| U2  | Spory o płatność (chargeback) nieobsługiwane                                     | Webhook `charge.dispute.*`, oznaczenie wizyty, powiadomienie admina                      |
+| U3  | Zmiany w grafiku i ofercie nie ostrzegają o istniejących wizytach                | Sprawdzenie kolizji przy zapisie nieobecności, zamknięcia gabinetu, dezaktywacji         |
+| U4  | Regulamin rezerwacji i płatności                                                 | Wymagany przed produkcją (X-04 w roadmapie)                                              |

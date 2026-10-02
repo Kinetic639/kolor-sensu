@@ -16,6 +16,8 @@ const STATUS: Record<string, number> = {
   not_reschedulable: 409,
   nothing_changed: 409,
   not_paid: 409,
+  nothing_owed: 409,
+  recently_settled: 409,
   refund_too_high: 422,
   room_required: 422,
   in_the_past: 422,

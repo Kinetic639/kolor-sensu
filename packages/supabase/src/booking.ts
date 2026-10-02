@@ -56,6 +56,10 @@ export type BookingErrorCode =
   | "refund_too_high"
   | "not_paid"
   | "nothing_changed"
+  /** Nothing owed to settle (R14). */
+  | "nothing_owed"
+  /** Settled a moment ago: a double click refunds once. */
+  | "recently_settled"
   | "unknown";
 
 const BOOKING_ERROR_CODES = new Set<string>([
@@ -83,6 +87,8 @@ const BOOKING_ERROR_CODES = new Set<string>([
   "refund_too_high",
   "not_paid",
   "nothing_changed",
+  "nothing_owed",
+  "recently_settled",
 ]);
 
 export class BookingError extends Error {

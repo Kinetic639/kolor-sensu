@@ -3,6 +3,7 @@ import {
   centreCancelVisit,
   centreRefundVisit,
   centreRescheduleVisit,
+  centreSettleVisit,
   recordRefund,
   rescheduleBooking,
 } from "@repo/supabase";
@@ -73,6 +74,8 @@ export async function centreChangeDeps(accessToken: string) {
       refundMinor: number,
       reason: string | null,
     ) => centreRefundVisit(asAdmin, appointmentId, refundMinor, reason),
+    centreSettle: (appointmentId: string) =>
+      centreSettleVisit(asAdmin, appointmentId),
     centreReschedule: (
       appointmentId: string,
       move: Parameters<typeof centreRescheduleVisit>[2],

@@ -1,4 +1,6 @@
 import { ChevronRight, Inbox, type LucideIcon } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { Avatar, AvatarFallback } from "./avatar";
 import { Button } from "./button";
@@ -11,6 +13,8 @@ export interface DashboardSectionProps {
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
+  /** The action as a link (e.g. the full calendar). */
+  actionHref?: string;
   children: ReactNode;
   className?: string;
   contentClassName?: string;
@@ -21,6 +25,7 @@ export function DashboardSection({
   description,
   actionLabel,
   onAction,
+  actionHref,
   children,
   className,
   contentClassName,
@@ -31,7 +36,18 @@ export function DashboardSection({
         title={title}
         description={description}
         action={
-          actionLabel ? (
+          actionLabel && actionHref ? (
+            <Button
+              asChild
+              className="h-auto shrink-0 px-2 py-1 text-xs"
+              variant="ghost"
+            >
+              <Link href={actionHref as Route}>
+                {actionLabel}
+                <ChevronRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            </Button>
+          ) : actionLabel ? (
             <Button
               className="h-auto shrink-0 px-2 py-1 text-xs"
               variant="ghost"
@@ -75,6 +91,8 @@ export interface AppointmentItemData {
   location: string;
   status?: string;
   statusTone?: StatusTone;
+  /** The visit (e.g. in the calendar): the whole row opens it. */
+  href?: string;
 }
 
 export interface AppointmentListItemProps {
@@ -95,7 +113,9 @@ export function AppointmentListItem({
   return (
     <li
       className={cn(
-        "grid grid-cols-[3.5rem_2.25rem_minmax(0,1fr)] items-center gap-3 border-b border-[var(--border)] py-3 last:border-b-0",
+        "relative grid grid-cols-[3.5rem_2.25rem_minmax(0,1fr)] items-center gap-3 border-b border-[var(--border)] py-3 last:border-b-0",
+        appointment.href &&
+          "rounded-[var(--radius-control)] hover:bg-[var(--surface-subtle)]",
         className,
       )}
     >
@@ -113,7 +133,16 @@ export function AppointmentListItem({
       <div className="min-w-0">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <p className="truncate text-sm font-semibold text-[var(--text)]">
-            {appointment.clientName}
+            {appointment.href ? (
+              <Link
+                className="outline-none after:absolute after:inset-0 after:rounded-[var(--radius-control)] focus-visible:after:ring-2 focus-visible:after:ring-[var(--ring)]"
+                href={appointment.href as Route}
+              >
+                {appointment.clientName}
+              </Link>
+            ) : (
+              appointment.clientName
+            )}
           </p>
           {appointment.status ? (
             <StatusBadge

@@ -17,7 +17,7 @@ import { revalidatePath } from "next/cache";
 
 async function askTheSite(
   appointmentId: string,
-  path: "odwolanie" | "zwrot" | "przesuniecie",
+  path: "odwolanie" | "zwrot" | "przesuniecie" | "rozliczenie",
   body: unknown,
 ): Promise<CentreChangeResult> {
   await requirePortalRole();
@@ -55,6 +55,7 @@ async function askTheSite(
     }
     revalidatePath("/rezerwacje");
     revalidatePath("/kalendarz");
+    revalidatePath("/");
     return { ok: true, refundFailed: Boolean(answer?.refundFailed) };
   } catch (error) {
     console.error(`[visits] ${path} as the centre failed:`, error);
@@ -84,4 +85,11 @@ export async function moveVisitAsCentreAction(
   move: CentreMoveValues,
 ): Promise<CentreChangeResult> {
   return askTheSite(appointmentId, "przesuniecie", move);
+}
+
+/** Gives back what is still owed (R14): the database says how much. */
+export async function settleVisitAsCentreAction(
+  appointmentId: string,
+): Promise<CentreChangeResult> {
+  return askTheSite(appointmentId, "rozliczenie", {});
 }

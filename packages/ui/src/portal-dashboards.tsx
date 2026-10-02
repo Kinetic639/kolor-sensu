@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { MetricCardProps } from "./portal-content";
 import { MetricCard, PageTitle } from "./portal-content";
 import {
@@ -28,6 +29,8 @@ export interface AdminDashboardProps extends DashboardBaseProps {
   rooms: SummaryItemData[];
   team: SummaryItemData[];
   events: EventItemData[];
+  /** Money still owed to clients, with a way to settle it (first to see). */
+  settlements?: ReactNode;
 }
 
 function DashboardMetrics({ metrics }: { metrics: DashboardMetric[] }) {
@@ -52,6 +55,7 @@ export function AdminDashboard({
   rooms,
   team,
   events,
+  settlements,
 }: AdminDashboardProps) {
   return (
     <div className="space-y-5">
@@ -62,13 +66,14 @@ export function AdminDashboard({
           className="order-2 xl:order-1 xl:col-span-6"
           title="Dzisiejsze wizyty"
           actionLabel="Pełny kalendarz"
+          actionHref="/kalendarz"
         >
           {appointments.length > 0 ? (
             <AppointmentList items={appointments} />
           ) : (
             <DashboardEmptyState
               title="Brak wizyt na dziś"
-              description="Wizyty pojawią się tutaj po uruchomieniu kalendarza."
+              description="Nowe rezerwacje na dziś pojawią się tu same."
             />
           )}
         </DashboardSection>
@@ -76,8 +81,13 @@ export function AdminDashboard({
           className="order-1 xl:order-2 xl:col-span-3"
           title="Wymaga uwagi"
         >
-          {attention.length > 0 ? (
-            <AttentionList items={attention} />
+          {settlements || attention.length > 0 ? (
+            <div className="space-y-4">
+              {settlements}
+              {attention.length > 0 ? (
+                <AttentionList items={attention} />
+              ) : null}
+            </div>
           ) : (
             <DashboardEmptyState
               title="Nic nie wymaga uwagi"
@@ -89,13 +99,14 @@ export function AdminDashboard({
           className="order-3 xl:col-span-3"
           title="Gabinety dzisiaj"
           actionLabel="Zobacz gabinety"
+          actionHref="/gabinety"
         >
           {rooms.length > 0 ? (
-            <SummaryList ariaLabel="Status gabinetów" items={rooms} />
+            <SummaryList ariaLabel="Gabinety dzisiaj" items={rooms} />
           ) : (
             <DashboardEmptyState
-              title="Brak danych o gabinetach"
-              description="Statusy pojawią się po wdrożeniu zarządzania gabinetami."
+              title="Gabinety dziś wolne"
+              description="Nikt nie ma dziś wizyt stacjonarnych."
             />
           )}
         </DashboardSection>
@@ -104,13 +115,14 @@ export function AdminDashboard({
         <DashboardSection
           title="Nasz zespół dziś"
           actionLabel="Zobacz specjalistów"
+          actionHref="/specjalisci"
         >
           {team.length > 0 ? (
-            <SummaryList ariaLabel="Dostępność zespołu" items={team} />
+            <SummaryList ariaLabel="Zespół dziś" items={team} />
           ) : (
             <DashboardEmptyState
-              title="Brak danych zespołu"
-              description="Podsumowanie pojawi się, gdy będą dostępne dane grafików."
+              title="Dziś bez wizyt"
+              description="Nikt z zespołu nie ma dziś wizyt."
             />
           )}
         </DashboardSection>

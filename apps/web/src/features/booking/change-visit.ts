@@ -7,6 +7,7 @@ import {
   type CentreMove,
   type CentreMovedVisit,
   type CentreRefund,
+  type CentreSettlement,
   type RescheduledBooking,
   type VisitMode,
 } from "@repo/supabase";
@@ -181,6 +182,52 @@ export async function refundVisitAsCentre(
     reason,
   });
   return { ok: true, refundMinor: refund.refundMinor, refundFailed: false };
+}
+
+/**
+ * The centre settles what is still owed (admins, R14): a refund Stripe
+ * refused, or a payment for a visit that never was. Each settling is its own
+ * refund in Stripe (a retry is not Stripe's remembered refusal); the
+ * client is told once the money is on its way.
+ */
+export async function settleVisitAsCentre(
+  appointmentId: string,
+  deps: Pick<ChangeVisitDeps, "refund" | "recordRefund" | "notify"> & {
+    centreSettle: (appointmentId: string) => Promise<CentreSettlement>;
+  },
+): Promise<Refunded | Refused> {
+  let settlement: CentreSettlement;
+  try {
+    settlement = await deps.centreSettle(appointmentId);
+  } catch (error) {
+    return refused(error);
+  }
+  try {
+    const refunded = await deps.refund(
+      settlement.paymentIntentId,
+      settlement.refundMinor,
+      {
+        reference: settlement.reference,
+        idempotencyKey: `settle:${settlement.reference}:${settlement.settlementId}`,
+      },
+    );
+    await deps.recordRefund(settlement.paymentIntentId, refunded);
+  } catch (error) {
+    console.error(`[booking] settling ${settlement.reference} failed:`, error);
+    return {
+      ok: true,
+      refundMinor: settlement.refundMinor,
+      refundFailed: true,
+    };
+  }
+  await deps.notify({
+    kind: "refunded",
+    reference: settlement.reference,
+    refundMinor: settlement.refundMinor,
+    refundedBeforeMinor: settlement.refundedBeforeMinor,
+    reason: null,
+  });
+  return { ok: true, refundMinor: settlement.refundMinor, refundFailed: false };
 }
 
 export async function rescheduleVisit(

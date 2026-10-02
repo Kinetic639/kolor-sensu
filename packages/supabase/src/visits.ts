@@ -397,3 +397,73 @@ export async function centreRescheduleVisit(
     paymentDueAt: row.payment_due_at ?? null,
   };
 }
+
+/** Money owed to a client that Stripe has not given back (R14). */
+export interface Settlement {
+  appointmentId: string;
+  reference: string;
+  /** Owed on a cancellation or a later refund; or paid for a visit that never was. */
+  kind: "refund_owed" | "paid_without_visit";
+  status: AppointmentStatus;
+  startsAt: string;
+  client: { name: string | null; email: string | null; phone: string | null };
+  serviceName: string;
+  specialistName: string | null;
+  paidMinor: number;
+  refundedMinor: number;
+  owedMinor: number;
+  currencyCode: string;
+  /** Owed since (the last change to it). */
+  since: string;
+}
+
+/** What the centre still has to settle (admins). */
+export async function listSettlements(client: Client): Promise<Settlement[]> {
+  const { data, error } = await client.rpc("list_settlements");
+  if (error) throw centreError(error);
+  return (data ?? []).map((row) => ({
+    appointmentId: row.appointment_id,
+    reference: row.reference,
+    kind:
+      row.kind === "paid_without_visit" ? "paid_without_visit" : "refund_owed",
+    status: row.status,
+    startsAt: row.starts_at,
+    client: {
+      name: row.client_name,
+      email: row.client_email,
+      phone: row.client_phone,
+    },
+    serviceName: row.service_name,
+    specialistName: row.specialist_name,
+    paidMinor: row.paid_minor,
+    refundedMinor: row.refunded_minor,
+    owedMinor: row.owed_minor,
+    currencyCode: row.currency_code,
+    since: row.since,
+  }));
+}
+
+export interface CentreSettlement extends CentreRefund {
+  /** This settling's own entry in the history: keeps Stripe's refunds apart. */
+  settlementId: number;
+}
+
+/** Settles one (admins): what is owed, to refund now. Throws a BookingError. */
+export async function centreSettleVisit(
+  client: Client,
+  appointmentId: string,
+): Promise<CentreSettlement> {
+  const { data, error } = await client.rpc("centre_settle_visit", {
+    p_appointment_id: appointmentId,
+  });
+  if (error) throw centreError(error);
+  const row = data?.[0];
+  if (!row) throw new BookingError("unknown", "Settling returned nothing");
+  return {
+    reference: row.reference,
+    refundMinor: row.refund_minor,
+    paymentIntentId: row.payment_intent_id,
+    refundedBeforeMinor: row.refunded_before_minor,
+    settlementId: row.settlement_id,
+  };
+}

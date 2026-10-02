@@ -1535,6 +1535,16 @@ export type Database = {
           reference: string;
         }[];
       };
+      centre_settle_visit: {
+        Args: { p_appointment_id: string };
+        Returns: {
+          payment_intent_id: string;
+          reference: string;
+          refund_minor: number;
+          refunded_before_minor: number;
+          settlement_id: number;
+        }[];
+      };
       claim_booking_email: {
         Args: { p_kind: string; p_reference: string };
         Returns: {
@@ -1760,6 +1770,26 @@ export type Database = {
           specialist_name: string;
           specialist_photo_path: string | null;
           starts_at: string;
+        }[];
+      };
+      list_settlements: {
+        Args: never;
+        Returns: {
+          appointment_id: string;
+          client_email: string | null;
+          client_name: string | null;
+          client_phone: string | null;
+          currency_code: string;
+          kind: string;
+          owed_minor: number;
+          paid_minor: number;
+          reference: string;
+          refunded_minor: number;
+          service_name: string;
+          since: string;
+          specialist_name: string | null;
+          starts_at: string;
+          status: Database["public"]["Enums"]["appointment_status"];
         }[];
       };
       list_visit_events: {
