@@ -3,7 +3,8 @@ import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createService, updateService } from "@repo/supabase";
 import type { ServiceCreate, ServiceUpdate } from "@repo/contracts";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cached";
 import { loadAdminServiceDetail } from "./loaders";
 
 function safeMessage(error: unknown) {
@@ -32,6 +33,7 @@ export async function createServiceAction(input: ServiceCreate) {
   try {
     const service = await createService(await createClient(), input);
     revalidatePath("/oferta");
+    updateTag(CACHE_TAGS.services);
     return { ok: true as const, serviceId: service.id };
   } catch (error) {
     return { ok: false as const, message: safeMessage(error) };
@@ -42,6 +44,7 @@ export async function updateServiceAction(id: string, input: ServiceUpdate) {
   try {
     await updateService(await createClient(), id, input);
     revalidatePath("/oferta");
+    updateTag(CACHE_TAGS.services);
     revalidatePath(`/oferta/${id}`);
     return { ok: true as const };
   } catch (error) {

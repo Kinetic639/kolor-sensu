@@ -35,8 +35,6 @@ export type { CancelAction, CentreVisit, RefundAction } from "./centre-changes";
 export { ResendPaymentLinkButton } from "./resend-payment-link";
 export type { ResendPaymentLinkResult } from "./resend-payment-link";
 export { VisitPanel } from "./visit-panel";
-export { RememberView } from "./remember-view";
-export { rememberedView, viewCookieName, viewQuery } from "./view-cookie";
 export { VisitTableSearch } from "./visit-table-search";
 export type { VisitPanelClient, VisitPanelTab } from "./visit-panel";
 export {
@@ -54,11 +52,13 @@ export {
   columnsCookieName,
   defaultColumnLayout,
   parseColumnLayout,
+  parseColumnWidths,
   serializeColumnLayout,
   VISIT_COLUMN_LABELS,
   VISIT_COLUMNS,
+  widthsCookieName,
 } from "./columns";
-export type { ColumnLayout, VisitColumnId } from "./columns";
+export type { ColumnLayout, ColumnWidths, VisitColumnId } from "./columns";
 export {
   currentView,
   viewFilters,

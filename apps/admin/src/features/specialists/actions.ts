@@ -10,7 +10,8 @@ import {
   updateSpecialistOfferStateAdmin,
 } from "@repo/supabase";
 import { hexColorSchema } from "@repo/contracts";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cached";
 import { loadAdminSpecialistDetail } from "./loaders";
 import { reviewErrorMessage } from "./review-errors";
 import { publicSlugFormSchema } from "./slug-form";
@@ -40,6 +41,7 @@ export async function reviewSpecialistDraftAction(input: {
   }
   revalidatePath("/specjalisci");
   revalidatePath(`/specjalisci/${input.specialistId}`);
+  updateTag(CACHE_TAGS.specialists);
   // An approved profile shows on the site's home, team, profile and offer
   // pages; a rejection changes nothing public.
   if (input.action === "approve") {
@@ -60,6 +62,7 @@ export async function updateSpecialistOfferStateAction(input: {
     acceptingNewClients: input.acceptingNewClients,
   });
   revalidatePath(`/specjalisci/${input.specialistId}`);
+  updateTag(CACHE_TAGS.specialists);
   // Offers feed the price list, the offer pages and the specialist pages.
   await revalidateWeb([{ path: "/", type: "layout" }]);
 }
@@ -84,6 +87,7 @@ export async function setSpecialistSlugAction(input: {
     );
     revalidatePath("/specjalisci");
     revalidatePath(`/specjalisci/${input.specialistId}`);
+    updateTag(CACHE_TAGS.specialists);
     // Links to the profile appear on the home, team and offer pages.
     await revalidateWeb([{ path: "/", type: "layout" }]);
     return { ok: true, slug };
@@ -121,6 +125,7 @@ export async function setSpecialistColorAction(input: {
     );
     revalidatePath("/specjalisci");
     revalidatePath(`/specjalisci/${input.specialistId}`);
+    updateTag(CACHE_TAGS.specialists);
     // The room schedules show it too.
     revalidatePath("/gabinety", "layout");
     return { ok: true };

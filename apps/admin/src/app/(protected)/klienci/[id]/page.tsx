@@ -1,8 +1,7 @@
 import { updateClientAction } from "@/features/clients/actions";
 import { loadClientCard } from "@/features/clients/loaders";
 import { CentreVisitToolbar } from "@/features/visits/cancel-visit";
-import { specialistAvatars } from "@/features/visits/loaders";
-import { createClient } from "@/lib/supabase/server";
+import { specialistAvatars } from "@/lib/reference-data";
 import { VisitActions } from "@/features/visits/visit-actions";
 import { ClientCard, EditClientButton } from "@repo/ui/client-table";
 import { PageTitle } from "@repo/ui/portal-content";
@@ -42,7 +41,7 @@ export default async function ClientPage({
       : loaded;
   const [card, avatars] = await Promise.all([
     loadClientCard(id, tableParams),
-    createClient().then((client) => specialistAvatars(client)),
+    specialistAvatars(),
   ]);
   if (!card) notFound();
   const path = `/klienci/${id}`;

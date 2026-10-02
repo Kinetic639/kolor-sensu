@@ -9,7 +9,8 @@ import {
   updateCenterSettings,
   updateLocation,
 } from "@repo/supabase";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cached";
 import {
   bookingSettingsFormSchema,
   centerProfileFormSchema,
@@ -37,6 +38,7 @@ function safeMessage(error: unknown, fallback: string) {
 // structured data, so every change refreshes the whole layout.
 async function refresh() {
   revalidatePath("/ustawienia");
+  updateTag(CACHE_TAGS.centre);
   await revalidateWeb([{ path: "/", type: "layout" }]);
 }
 
@@ -107,6 +109,7 @@ export async function updateBookingSettingsAction(
       toBookingSettingsUpdate(parsed.data),
     );
     revalidatePath("/ustawienia");
+    updateTag(CACHE_TAGS.centre);
     await revalidateWeb([{ path: "/umow-wizyte", type: "page" }]);
     return { ok: true };
   } catch (error) {

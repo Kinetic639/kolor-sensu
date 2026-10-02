@@ -30,15 +30,18 @@ import { cn } from "../lib/utils";
 import { PageLink as Link } from "../public-site/page-link";
 import { PlaceLabel, SpecialistChip, Tag } from "./visit-chips";
 import { VisitPanelCloseLink, VisitPanelMotion } from "./visit-panel-motion";
+import { VisitPanelTabs } from "./visit-panel-tabs";
 
 // The visit open from the bookings table (?wizyta=…): a 384 px column
 // beside the table on a wide screen (edge to edge, like the table), over
 // it on a narrow one. A list of properties, a line each with its icon, as
 // in a spreadsheet's record; tabs (in the address, ?karta=…) for the
 // details, the history (every event from the hold on) and, for the
-// centre, the client (their record: contact, visits in numbers, note). Icon actions at
-// the bottom. Rendered on the server; only its coming and going (and
-// Escape) run in the browser (./visit-panel-motion).
+// centre, the client (their record: contact, visits in numbers, note).
+// Icon actions at the bottom. Rendered on the server; only its coming and
+// going (and Escape) run in the browser (./visit-panel-motion), and the
+// switching of its tabs, whose contents all come at once
+// (./visit-panel-tabs).
 
 export type VisitPanelTab = "szczegoly" | "historia" | "klient";
 
@@ -387,42 +390,16 @@ export function VisitPanel({
         </h2>
       </header>
 
-      <nav
-        aria-label="Sekcje rezerwacji"
-        className="flex h-8 shrink-0 items-stretch gap-3.5 border-b border-[var(--border)] px-3.5"
-      >
-        {tabs.map((one) => {
-          const active = one.key === shown;
-          return (
-            <Link
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "flex items-center text-[0.8125rem] outline-none focus-visible:text-[var(--text)] focus-visible:underline",
-                active
-                  ? "font-medium text-[var(--text)] shadow-[inset_0_-2px_0_var(--primary)]"
-                  : "text-[var(--text-muted)] hover:text-[var(--text)]",
-              )}
-              href={one.href}
-              key={one.key}
-              scroll={false}
-            >
-              {one.label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Only the tab scrolls, inside the panel (never the page under it);
-          the header and the toolbar stay in view. */}
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        {shown === "historia" ? (
-          <History events={events ?? []} />
-        ) : shown === "klient" ? (
-          <ClientDetails client={client} />
-        ) : (
-          <Details row={row} specialistAvatar={specialistAvatar} />
-        )}
-      </div>
+      <VisitPanelTabs
+        initial={shown}
+        key={row.id}
+        panes={{
+          szczegoly: <Details row={row} specialistAvatar={specialistAvatar} />,
+          historia: <History events={events ?? []} />,
+          klient: <ClientDetails client={client} />,
+        }}
+        tabs={tabs}
+      />
 
       <div
         aria-label="Akcje rezerwacji"

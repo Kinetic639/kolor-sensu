@@ -1,5 +1,10 @@
 import "server-only";
 
+import {
+  centreSettings,
+  rooms as loadRooms,
+  specialistSummaries,
+} from "@/lib/reference-data";
 import { createClient } from "@/lib/supabase/server";
 import {
   calendarWindows,
@@ -11,13 +16,10 @@ import {
   type CalendarRoom,
 } from "@repo/scheduling";
 import {
-  getCenterSettings,
   getVisit,
   listAvailabilityRulesForSpecialists,
   listCentreOffers,
   listRoomSchedules,
-  listRoomsAdmin,
-  listSpecialistSummariesForAdmin,
   listTimeOffForSpecialists,
   listVisitEvents,
   listVisits,
@@ -35,10 +37,11 @@ import { formatInTimeZone } from "date-fns-tz";
 
 export async function loadAdminCalendar(params: CalendarParams) {
   const client = await createClient();
+  // Kept between requests (@/lib/reference-data).
   const [settings, summaries, allRooms] = await Promise.all([
-    getCenterSettings(client),
-    listSpecialistSummariesForAdmin(client),
-    listRoomsAdmin(client),
+    centreSettings(),
+    specialistSummaries(),
+    loadRooms(),
   ]);
   const timeZone = settings.timezone;
   const now = new Date();
@@ -67,7 +70,8 @@ export async function loadAdminCalendar(params: CalendarParams) {
       : shownRooms.some((room) => room.id === placeId));
 
   const ids = active.map((one) => one.id);
-  const history = params.wizyta && params.karta === "historia";
+  // Every tab of the open visit at once: switching tabs asks for nothing.
+  const history = Boolean(params.wizyta);
   // The new visit's form needs the offers (only when it is open).
   const booking = params.nowa && params.termin;
   const [

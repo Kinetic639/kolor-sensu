@@ -5,7 +5,7 @@ import {
   specialistProfileSubmissionSchema,
   specialistSlugSchema,
 } from "@repo/contracts";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildSpecialistMediaPath,
   pickPortalAvatarPath,
@@ -13,6 +13,7 @@ import {
   saveMySpecialistProfileDraft,
   setSpecialistColorAdmin,
   setSpecialistPublicSlugAdmin,
+  forgetSignedSpecialistPhotos,
   signSpecialistPhotos,
   specialistMappers,
   uploadSpecialistProfileImage,
@@ -454,6 +455,8 @@ describe("saveMySpecialistProfileDraft", () => {
 });
 
 describe("signSpecialistPhotos", () => {
+  beforeEach(() => forgetSignedSpecialistPhotos());
+
   it("signs every distinct photo at once", async () => {
     const createSignedUrls = vi.fn().mockResolvedValue({
       data: [
@@ -474,10 +477,25 @@ describe("signSpecialistPhotos", () => {
     expect(from).toHaveBeenCalledWith("specialist-profile-media");
     expect(createSignedUrls).toHaveBeenCalledWith(
       ["a/1.webp", "b/2.webp"],
-      1800,
+      3600,
     );
     expect(urls.get("a/1.webp")).toBe("https://signed/1");
     expect(urls.has("b/2.webp")).toBe(false);
+  });
+
+  it("gives the same URL again while it is good (no reload, no flash)", async () => {
+    const createSignedUrls = vi.fn().mockResolvedValue({
+      data: [{ path: "a/1.webp", signedUrl: "https://signed/1", error: null }],
+      error: null,
+    });
+    const from = vi.fn(() => ({ createSignedUrls }));
+    const client = { storage: { from } } as never;
+
+    await signSpecialistPhotos(client, ["a/1.webp"]);
+    const again = await signSpecialistPhotos(client, ["a/1.webp"]);
+
+    expect(again.get("a/1.webp")).toBe("https://signed/1");
+    expect(createSignedUrls).toHaveBeenCalledTimes(1);
   });
 
   it("gives no photos rather than failing the page", async () => {

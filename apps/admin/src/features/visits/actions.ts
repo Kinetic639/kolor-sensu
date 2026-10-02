@@ -7,7 +7,8 @@ import {
 } from "@repo/contracts/centre-changes";
 import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getCenterSettings, searchVisits } from "@repo/supabase";
+import { countVisitViews } from "@repo/supabase";
+import { centreSettings } from "@/lib/reference-data";
 import { toVisitSearch, viewParams, visitViews } from "@repo/ui/visit-table";
 import { revalidatePath } from "next/cache";
 
@@ -100,16 +101,13 @@ export async function settleVisitAsCentreAction(
 export async function countVisitViewsAction(): Promise<Record<string, number>> {
   await requirePortalRole();
   const client = await createClient();
-  const { timezone } = await getCenterSettings(client);
-  const views = visitViews(true);
-  const pages = await Promise.all(
-    views.map((view) =>
-      searchVisits(client, {
-        ...toVisitSearch(viewParams(view), { timeZone: timezone }),
-        limit: 1,
-        offset: 0,
-      }),
-    ),
+  const { timezone } = await centreSettings();
+  // One call for every view (the database runs each view's search).
+  return countVisitViews(
+    client,
+    visitViews(true).map((view) => ({
+      id: view.id,
+      search: toVisitSearch(viewParams(view), { timeZone: timezone }),
+    })),
   );
-  return Object.fromEntries(views.map((view, i) => [view.id, pages[i]!.total]));
 }

@@ -1,14 +1,8 @@
 import { resendPaymentLinkAction } from "@/features/calendar/actions";
+import { bookingWindow, myRooms, myServices } from "@/lib/reference-data";
 import { createClient } from "@/lib/supabase/server";
 import { visitEventRows, visitRows } from "@repo/scheduling";
-import {
-  getBookingWindow,
-  getVisit,
-  listActiveRoomsForSpecialist,
-  listAvailableServicesForSpecialist,
-  listVisitEvents,
-  searchVisits,
-} from "@repo/supabase";
+import { getVisit, listVisitEvents, searchVisits } from "@repo/supabase";
 import { FullBleed } from "@repo/ui/full-bleed";
 import { EmptyState, PageTitle } from "@repo/ui/portal-content";
 import { RowActionLink, RowActions } from "@repo/ui/row-actions";
@@ -17,11 +11,9 @@ import {
   currentView,
   loadVisitTableParams,
   parseColumnLayout,
-  RememberView,
-  rememberedView,
+  parseColumnWidths,
   ResendPaymentLinkButton,
   toVisitSearch,
-  viewCookieName,
   viewHref,
   visitColumnsAvailable,
   VisitFilterBar,
@@ -31,17 +23,16 @@ import {
   VisitTable,
   VisitViewMenu,
   visitViews,
+  widthsCookieName,
 } from "@repo/ui/visit-table";
-import type { Route } from "next";
-import { cookies, headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 // Moje rezerwacje (R9): the specialist's own visits (even when they are also
 // the centre's admin), with the client's contact and notes; no payments.
 // The database searches, filters, sorts and pages; the visit open in the
 // side panel is in the address. Changes go through the centre. The
-// calendar views come in stage K. Their columns and last view are kept in
-// cookies, as in the centre's table.
+// calendar views come in stage K. Their columns (which, their order, their
+// widths) are kept in cookies, as in the centre's table.
 
 const PATH = "/rezerwacje";
 const TABLE = "moje_rezerwacje";
@@ -49,22 +40,10 @@ const TABLE = "moje_rezerwacje";
 export default async function BookingsPage({
   searchParams,
 }: PageProps<"/rezerwacje">) {
-  const [query, cookieStore, requestHeaders] = await Promise.all([
-    searchParams,
-    cookies(),
-    headers(),
-  ]);
-  // Opened afresh without a view: the one they left.
-  if (requestHeaders.get("rsc") !== "1" && Object.keys(query).length === 0) {
-    const back = rememberedView(
-      PATH,
-      cookieStore.get(viewCookieName(TABLE))?.value,
-    );
-    if (back) redirect(back as Route);
-  }
+  const [query, cookieStore] = await Promise.all([searchParams, cookies()]);
   const params = loadVisitTableParams(query);
   const client = await createClient();
-  const window = await getBookingWindow(client);
+  const window = await bookingWindow().catch(() => null);
   const timeZone = window?.timeZone ?? "Europe/Warsaw";
   const [page, services, rooms, open, events] = await Promise.all([
     searchVisits(client, toVisitSearch(params, { own: true, timeZone })).catch(
@@ -73,12 +52,13 @@ export default async function BookingsPage({
         return null;
       },
     ),
-    listAvailableServicesForSpecialist(client).catch(() => []),
-    listActiveRoomsForSpecialist(client).catch(() => []),
+    myServices().catch(() => []),
+    myRooms().catch(() => []),
     params.wizyta
       ? getVisit(client, params.wizyta, { own: true }).catch(() => null)
       : null,
-    params.wizyta && params.karta === "historia"
+    // Every tab of the open visit at once: switching asks for nothing.
+    params.wizyta
       ? listVisitEvents(client, params.wizyta, { own: true }).catch(() => [])
       : null,
   ]);
@@ -98,6 +78,7 @@ export default async function BookingsPage({
   const rows = visitRows(page.visits, { timeZone });
   const openRow = open ? visitRows([open], { timeZone })[0]! : null;
   const columnsCookie = columnsCookieName(TABLE);
+  const widthsCookie = widthsCookieName(TABLE);
   const columns = parseColumnLayout(
     cookieStore.get(columnsCookie)?.value,
     visitColumnsAvailable({ showPayment: false, showSpecialist: false }),
@@ -130,6 +111,8 @@ export default async function BookingsPage({
             caption="Moje wizyty"
             columns={columns}
             columnsCookie={columnsCookie}
+            widths={parseColumnWidths(cookieStore.get(widthsCookie)?.value)}
+            widthsCookie={widthsCookie}
             params={params}
             path={PATH}
             rows={rows}
@@ -187,7 +170,6 @@ export default async function BookingsPage({
           />
         ) : null}
       </div>
-      <RememberView table={TABLE} />
     </FullBleed>
   );
 }

@@ -10,54 +10,59 @@ const items: NotificationView[] = [
   {
     id: 6,
     title: "Nowa wizyta",
+    reference: "2610-010",
     description:
       "Jan Kowalski · konsultacja psychologiczna · sob. 03.10, 11:00 · Michał Stępień",
     tone: "success",
     icon: "new",
-    href: "/kalendarz?data=2026-10-03&wizyta=visit-1",
+    href: "/rezerwacje?zakres=wszystkie&q=2610-001&wizyta=visit-1",
     when: "dziś, 10:05",
     unread: true,
   },
   {
     id: 5,
     title: "Klient odwołał wizytę",
+    reference: "2610-011",
     description:
       "Ewa Nowak · konsultacja psychologiczna · pt. 09.10, 10:00 · Anna Kłobuchowska · Do zwrotu: 200 zł",
     tone: "danger",
     icon: "cancelled",
-    href: "/kalendarz?data=2026-10-09&wizyta=visit-2",
+    href: "/rezerwacje?zakres=wszystkie&q=2610-002&wizyta=visit-2",
     when: "dziś, 09:40",
     unread: true,
   },
   {
     id: 4,
     title: "Nowa rezerwacja, płatność później",
+    reference: "2610-012",
     description:
       "Piotr Zieliński · terapia par · pon. 12.10, 17:00 · Michał Stępień",
     tone: "info",
     icon: "reserved",
-    href: "/kalendarz?data=2026-10-12&wizyta=visit-3",
+    href: "/rezerwacje?zakres=wszystkie&q=2610-003&wizyta=visit-3",
     when: "wczoraj, 21:30",
     unread: false,
   },
   {
     id: 3,
     title: "Centrum przesunęło wizytę",
+    reference: "2610-013",
     description:
       "Anna Wiśniewska · konsultacja psychologiczna · wt. 06.10, 12:00 · wcześniej pon. 05.10, 10:00 · Prośba klienta",
     tone: "info",
     icon: "moved",
-    href: "/kalendarz?data=2026-10-06&wizyta=visit-4",
+    href: "/rezerwacje?zakres=wszystkie&q=2610-004&wizyta=visit-4",
     when: "28.09, 09:00",
     unread: false,
   },
   {
     id: 2,
     title: "Zwrot pieniędzy: 50 zł",
+    reference: "2610-014",
     description: "Ewa Nowak · konsultacja psychologiczna · pt. 09.10, 10:00",
     tone: "info",
     icon: "refund",
-    href: "/kalendarz?data=2026-10-09&wizyta=visit-2",
+    href: "/rezerwacje?zakres=wszystkie&q=2610-002&wizyta=visit-2",
     when: "27.09, 15:12",
     unread: false,
   },
@@ -67,13 +72,18 @@ const meta = {
   title: "Portal/Notifications inbox",
   component: PortalNotifications,
   parameters: { layout: "centered", nextjs: { appDirectory: true } },
-  args: { items, unreadCount: 2, markRead: fn(async () => 2) },
+  args: {
+    items,
+    unreadCount: 2,
+    markRead: fn(async () => true),
+    markAllRead: fn(async () => 2),
+  },
 } satisfies Meta<typeof PortalNotifications>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Two new: opening the inbox reads them (the dots stay while it is open). */
+/** Two new: each marked read by its button (or by opening it). */
 export const WithNew: Story = {
   play: async ({ args, canvasElement }) => {
     await userEvent.click(
@@ -83,7 +93,14 @@ export const WithNew: Story = {
     );
     const inbox = within(document.body).getByRole("dialog");
     await expect(inbox).toHaveTextContent("Klient odwołał wizytę");
+    await expect(args.markRead).not.toHaveBeenCalled();
+    await userEvent.click(
+      within(inbox).getAllByRole("button", {
+        name: "Oznacz jako przeczytane",
+      })[0]!,
+    );
     await expect(args.markRead).toHaveBeenCalled();
+    await expect(inbox).toHaveTextContent("Nowe: 1");
   },
 };
 

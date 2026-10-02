@@ -17,6 +17,10 @@ type Client = SupabaseClient<Database>;
 export interface Visit {
   id: string;
   reference: string;
+  /** When it was booked (null where the list does not give it). */
+  createdAt: string | null;
+  /** When it last changed (made, moved, cancelled, paid, …); null as above. */
+  changedAt: string | null;
   status: AppointmentStatus;
   mode: VisitMode;
   startsAt: string;
@@ -78,7 +82,9 @@ export type VisitSort =
   | "service"
   | "price"
   | "status"
-  | "place";
+  | "place"
+  | "created"
+  | "changed";
 
 export interface VisitSearch {
   /** Words to find in the client, reference, service or specialist. */
@@ -107,7 +113,7 @@ export async function searchVisits(
   client: Client,
   search: VisitSearch,
 ): Promise<{ visits: Visit[]; total: number }> {
-  const { data, error } = await client.rpc("search_visits", {
+  const { data, error } = await client.rpc("search_bookings", {
     p_query: search.query ?? undefined,
     p_statuses: search.statuses ?? undefined,
     p_payment: search.payment ?? undefined,
@@ -129,6 +135,34 @@ export async function searchVisits(
     visits: rows.map(toVisit),
     total: Number(rows[0]?.total_count ?? 0),
   };
+}
+
+const NOT_FILTERS = new Set(["sort", "descending", "limit", "offset"]);
+
+/**
+ * How many visits each of several searches finds (the table's views), in
+ * one call; by the search's id.
+ */
+export async function countVisitViews(
+  client: Client,
+  views: { id: string; search: Partial<VisitSearch> }[],
+): Promise<Record<string, number>> {
+  // Only the filters set (an absent one is no filter); no order or page.
+  const payload = views.map(({ id, search }) => ({
+    id,
+    ...Object.fromEntries(
+      Object.entries(search).filter(
+        ([key, value]) => value != null && !NOT_FILTERS.has(key),
+      ),
+    ),
+  }));
+  const { data, error } = await client.rpc("count_visit_views", {
+    p_views: payload,
+  });
+  if (error) throw error;
+  return Object.fromEntries(
+    (data ?? []).map((row) => [row.view_id, Number(row.total)]),
+  );
 }
 
 /** A visit with what the side panel adds: its history and e-mails. */
@@ -172,6 +206,10 @@ type VisitRow =
 export function toVisit(row: VisitRow): Visit {
   return {
     id: row.id,
+    // When it was booked (the table's search gives it; the calendar's list
+    // does not).
+    createdAt: (row as { created_at?: string }).created_at ?? null,
+    changedAt: (row as { changed_at?: string }).changed_at ?? null,
     reference: row.reference,
     status: row.status,
     mode: row.mode,

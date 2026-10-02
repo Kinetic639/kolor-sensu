@@ -15,7 +15,8 @@ import {
   updateRoom,
   upsertRoomPublicProfile,
 } from "@repo/supabase";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cached";
 import {
   exceptionFormSchema,
   toRoomExceptionInput,
@@ -64,6 +65,7 @@ function failure(
 // The admin list and detail, and the site's rooms page.
 async function refresh(roomId: string) {
   revalidatePath("/gabinety");
+  updateTag(CACHE_TAGS.rooms);
   revalidatePath(`/gabinety/${roomId}`);
   await revalidateWeb([{ path: "/gabinety" }]);
 }
@@ -176,6 +178,7 @@ export async function createRoomAction(
       toRoomCreate(parsed.data),
     );
     revalidatePath("/gabinety");
+    updateTag(CACHE_TAGS.rooms);
     return { ok: true, roomId: room.id };
   } catch (error) {
     return failure(error, "Nie udało się dodać gabinetu.");

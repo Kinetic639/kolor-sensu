@@ -9,9 +9,7 @@ import {
   currentView,
   loadVisitTableParams,
   parseColumnLayout,
-  RememberView,
-  rememberedView,
-  viewCookieName,
+  parseColumnWidths,
   viewHref,
   visitColumnsAvailable,
   VisitFilterBar,
@@ -21,17 +19,16 @@ import {
   VisitTable,
   VisitViewMenu,
   visitViews,
+  widthsCookieName,
 } from "@repo/ui/visit-table";
-import type { Route } from "next";
-import { cookies, headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 // Rezerwacje (R9): the bookings table, edge to edge. The database
 // searches, filters, sorts and pages; the address holds the state (the
-// visit open in the side panel too). The person's columns and their last
-// view are remembered in cookies: opening the page again (from the menu, a
-// refresh) brings their view back. The centre cancels, moves and refunds
-// from the row's menu or the panel.
+// visit open in the side panel too); the filters last as long as it does.
+// The person's columns (which, their order, their widths) are kept in
+// cookies. The centre cancels, moves and refunds from the row's menu or
+// the panel.
 
 const PATH = "/rezerwacje";
 const TABLE = "rezerwacje";
@@ -46,25 +43,11 @@ const visitLabel = (row: {
 export default async function BookingsPage({
   searchParams,
 }: PageProps<"/rezerwacje">) {
-  const [query, cookieStore, requestHeaders] = await Promise.all([
-    searchParams,
-    cookies(),
-    headers(),
-  ]);
-  // Opened afresh without a view: the one they left. Not on a move within
-  // the table (clearing every filter is a view of its own).
-  const navigating = requestHeaders.get("rsc") === "1";
-  if (!navigating && Object.keys(query).length === 0) {
-    const back = rememberedView(
-      PATH,
-      cookieStore.get(viewCookieName(TABLE))?.value,
-    );
-    if (back) redirect(back as Route);
-  }
-
+  const [query, cookieStore] = await Promise.all([searchParams, cookies()]);
   const params = loadVisitTableParams(query);
   const { rows, total, open, filters, avatars } = await loadAdminVisits(params);
   const columnsCookie = columnsCookieName(TABLE);
+  const widthsCookie = widthsCookieName(TABLE);
   const columns = parseColumnLayout(
     cookieStore.get(columnsCookie)?.value,
     visitColumnsAvailable({ showPayment: true, showSpecialist: true }),
@@ -98,6 +81,8 @@ export default async function BookingsPage({
           )}
           columns={columns}
           columnsCookie={columnsCookie}
+          widths={parseColumnWidths(cookieStore.get(widthsCookie)?.value)}
+          widthsCookie={widthsCookie}
           params={params}
           path={PATH}
           rows={rows}
@@ -142,7 +127,6 @@ export default async function BookingsPage({
           />
         ) : null}
       </div>
-      <RememberView table={TABLE} />
     </FullBleed>
   );
 }

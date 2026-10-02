@@ -10,11 +10,15 @@ import type { ReactNode } from "react";
 import { cn } from "../lib/utils";
 import { PageLink as Link } from "../public-site/page-link";
 import {
+  columnWidth,
   defaultColumnLayout,
+  NUMBER_COLUMN_WIDTH,
   VISIT_COLUMN_LABELS,
   VISIT_COLUMN_SORT,
+  VISIT_COLUMN_WIDTHS,
   VISIT_COLUMNS,
   type ColumnLayout,
+  type ColumnWidths,
   type VisitColumnId,
 } from "./columns";
 import {
@@ -25,6 +29,7 @@ import {
   type VisitTableParams,
 } from "./params";
 import { PlaceLabel, SpecialistChip, Tag } from "./visit-chips";
+import { VisitColumnResizer } from "./visit-column-resizer";
 import { VisitColumnsMenu } from "./visit-columns-menu";
 import { VisitTableRow } from "./visit-table-row";
 
@@ -41,38 +46,30 @@ const shortDay = new Intl.DateTimeFormat("pl-PL", {
   month: "2-digit",
   timeZone: "UTC",
 });
-const shortWeekday = new Intl.DateTimeFormat("pl-PL", {
-  weekday: "short",
-  timeZone: "UTC",
-});
+const ACTIONS_WIDTH = 40;
 
-/** `czw. 01.10` */
-function dayLabel(date: string) {
-  const day = new Date(`${date}T12:00:00Z`);
-  return `${shortWeekday.format(day)} ${shortDay.format(day)}`;
-}
-
-// Pinned cells keep their own background (following the row's state) and
-// a line where the rest scrolls under them.
 const PIN_LEFT = "sticky left-0 z-10 shadow-[inset_-1px_0_0_var(--border)]";
 const PIN_RIGHT = "sticky right-0 z-10 shadow-[inset_1px_0_0_var(--border)]";
 const PIN_BG =
   "bg-[var(--surface)] group-hover:bg-[var(--surface-subtle)] group-data-[selected]:bg-[var(--primary-soft)]";
 
 const TH =
-  "sticky top-0 z-20 h-8 border-r border-b border-[var(--border)] bg-[var(--surface)] px-2 text-left text-[0.75rem] font-medium whitespace-nowrap text-[var(--text-muted)] last:border-r-0";
+  "sticky top-0 z-20 h-8 overflow-hidden border-r border-b border-[var(--border)] bg-[var(--surface)] px-2 text-left text-[0.75rem] font-medium text-ellipsis whitespace-nowrap text-[var(--text-muted)] last:border-r-0";
 const TD =
-  "h-[30px] border-r border-b border-[var(--border)] px-2 align-middle whitespace-nowrap last:border-r-0";
+  "h-[30px] overflow-hidden border-r border-b border-[var(--border)] px-2 align-middle text-ellipsis whitespace-nowrap last:border-r-0";
 
 function SortHead({
   path,
   params,
   column,
+  resizer,
   className,
 }: {
   path: string;
   params: VisitTableParams;
   column: VisitColumnId;
+  /** The edge that sets the column's width, if widths are kept. */
+  resizer?: ReactNode;
   className?: string;
 }) {
   const label = VISIT_COLUMN_LABELS[column];
@@ -81,6 +78,7 @@ function SortHead({
     return (
       <th className={cn(TH, className)} scope="col">
         {label}
+        {resizer}
       </th>
     );
   }
@@ -113,6 +111,7 @@ function SortHead({
           className={cn("size-3", !sorted && "opacity-40")}
         />
       </Link>
+      {resizer}
     </th>
   );
 }
@@ -134,13 +133,34 @@ function Cell({
           className={cn(TD, "tabular-nums", muted)}
           title={`${row.weekday}, ${row.dateLabel}, ${row.time}`}
         >
-          {dayLabel(row.date)}
+          {shortDay.format(new Date(`${row.date}T12:00:00Z`))}
           <span className="text-[var(--text-muted)]"> · </span>
           <span className={cn(row.cancelled && "line-through")}>
             {row.time.split("–")[0]}
           </span>
         </td>
       );
+    case "utworzono":
+    case "zmiana": {
+      // `01.10 · 14:32` (the year and all in its tooltip).
+      const at = column === "utworzono" ? row.created : row.changed;
+      return (
+        <td
+          className={cn(TD, "text-[var(--text-muted)] tabular-nums")}
+          title={at ?? undefined}
+        >
+          {at ? (
+            <>
+              {at.slice(0, 5)}
+              <span> · </span>
+              {at.slice(-5)}
+            </>
+          ) : (
+            "—"
+          )}
+        </td>
+      );
+    }
     case "klient":
       return <td className={cn(TD, "font-medium", muted)}>{row.clientName}</td>;
     case "telefon":
@@ -336,6 +356,10 @@ export interface VisitTableProps {
   columns?: ColumnLayout;
   /** Where the layout is kept; without it, no "Kolumny" menu. */
   columnsCookie?: string;
+  /** The person's column widths (default: the usual ones). */
+  widths?: ColumnWidths;
+  /** Where the widths are kept; without it, the widths can't be changed. */
+  widthsCookie?: string;
   /** The "⋮" menu of each visit, by its id. */
   actions?: Record<string, ReactNode>;
   /** Specialists' pictures, by their id (initials where none). */
@@ -353,6 +377,8 @@ export function VisitTable({
   showPayment = false,
   columns,
   columnsCookie,
+  widths = {},
+  widthsCookie,
   actions = {},
   specialistAvatars = {},
   caption = "Rezerwacje",
@@ -361,17 +387,52 @@ export function VisitTable({
     columns ??
     defaultColumnLayout(visitColumnsAvailable({ showSpecialist, showPayment }));
   const shown = layout.filter((column) => column.shown).map((c) => c.id);
+  // Fixed widths, the columns' own; a last empty column takes what is
+  // left of a wide screen, so each column stays as wide as it was set.
+  const minWidth =
+    columnWidth("numer", widths) +
+    ACTIONS_WIDTH +
+    shown.reduce((sum, column) => sum + columnWidth(column, widths), 0);
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--surface)]">
       {toolbar}
       <div className="min-h-0 flex-1 overflow-auto">
-        <table className="w-full border-separate border-spacing-0 text-[0.8125rem] leading-5 text-[var(--text)]">
+        <table
+          className="w-full table-fixed border-separate border-spacing-0 text-[0.8125rem] leading-5 text-[var(--text)]"
+          style={{ minWidth }}
+        >
           <caption className="sr-only">{caption}</caption>
+          <colgroup>
+            <col
+              data-column="numer"
+              data-width=""
+              style={{ width: columnWidth("numer", widths) }}
+            />
+            {shown.map((column) => (
+              <col
+                data-column={column}
+                data-width=""
+                key={column}
+                style={{ width: columnWidth(column, widths) }}
+              />
+            ))}
+            <col />
+            <col data-width="" style={{ width: ACTIONS_WIDTH }} />
+          </colgroup>
           <thead>
             <tr>
               <th className={cn(TH, PIN_LEFT, "z-30 pl-3")} scope="col">
                 Numer
+                {widthsCookie ? (
+                  <VisitColumnResizer
+                    column="numer"
+                    cookie={widthsCookie}
+                    label="Numer"
+                    usualWidth={NUMBER_COLUMN_WIDTH}
+                    width={columnWidth("numer", widths)}
+                  />
+                ) : null}
               </th>
               {shown.map((column) => (
                 <SortHead
@@ -379,8 +440,20 @@ export function VisitTable({
                   key={column}
                   params={params}
                   path={path}
+                  resizer={
+                    widthsCookie ? (
+                      <VisitColumnResizer
+                        column={column}
+                        cookie={widthsCookie}
+                        label={VISIT_COLUMN_LABELS[column]}
+                        usualWidth={VISIT_COLUMN_WIDTHS[column]}
+                        width={columnWidth(column, widths)}
+                      />
+                    ) : null
+                  }
                 />
               ))}
+              <th aria-hidden="true" className={cn(TH, "px-0")} />
               <th
                 className={cn(TH, PIN_RIGHT, "z-30 w-10 px-1 text-center")}
                 scope="col"
@@ -398,7 +471,7 @@ export function VisitTable({
               <tr>
                 <td
                   className="px-3 py-10 text-center text-sm text-[var(--text-muted)]"
-                  colSpan={shown.length + 2}
+                  colSpan={shown.length + 3}
                 >
                   {params.strona > 1 && !params.q
                     ? "Na tej stronie nie ma już rezerwacji."
@@ -440,6 +513,7 @@ export function VisitTable({
                         row={row}
                       />
                     ))}
+                    <td aria-hidden="true" className={cn(TD, "px-0")} />
                     <td
                       className={cn(
                         TD,

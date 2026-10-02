@@ -1,3 +1,4 @@
+import { centreSettings } from "@/lib/reference-data";
 import { createClient } from "@/lib/supabase/server";
 import {
   clientRows,
@@ -6,7 +7,6 @@ import {
   visitRows,
 } from "@repo/scheduling";
 import {
-  getCenterSettings,
   getClient,
   getVisit,
   listClientVisits,
@@ -22,7 +22,7 @@ import { sortDirection, type VisitTableParams } from "@repo/ui/visit-table";
 
 export async function loadClients(params: ClientTableParams) {
   const client = await createClient();
-  const settings = await getCenterSettings(client);
+  const settings = await centreSettings();
   const page = await searchClients(client, toClientSearch(params));
   return {
     rows: clientRows(page.clients, { timeZone: settings.timezone }),
@@ -38,9 +38,10 @@ export async function loadClientName(id: string) {
 
 export async function loadClientCard(id: string, params: VisitTableParams) {
   const client = await createClient();
-  const settings = await getCenterSettings(client);
+  const settings = await centreSettings();
   const timeZone = settings.timezone;
-  const history = params.wizyta && params.karta === "historia";
+  // Every tab of the open visit at once: switching tabs asks for nothing.
+  const history = Boolean(params.wizyta);
   const [found, visits, open, events] = await Promise.all([
     getClient(client, id),
     listClientVisits(client, id),

@@ -37,15 +37,17 @@ const options = {
 };
 
 describe("notificationView", () => {
-  it("a new paid visit: who, what, when; a link to it in the calendar", () => {
+  it("a new paid visit: its number, who, what, when; a link to the booking", () => {
     expect(notificationView(base, options)).toEqual({
       id: 1,
       title: "Nowa wizyta",
+      reference: "2610-004",
       description:
         "Jan Kowalski · Konsultacja · sob. 03.10, 11:00 · Michał Stępień",
       tone: "success",
       icon: "new",
-      href: "/kalendarz?data=2026-10-03&wizyta=visit-1",
+      // The bookings table, found by its number, the booking open.
+      href: "/rezerwacje?zakres=wszystkie&q=2610-004&wizyta=visit-1",
       when: "dziś, 10:05",
       unread: true,
     });

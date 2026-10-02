@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import type { SpecialistServiceUpsert } from "@repo/contracts";
 import { upsertMySpecialistService } from "@repo/supabase";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cached";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
 
@@ -31,6 +32,7 @@ export async function saveMyServiceAction(
   try {
     await upsertMySpecialistService(await createClient(), input);
     revalidatePath("/uslugi");
+    updateTag(CACHE_TAGS.services);
     revalidatePath("/");
     // Offers feed the price list, the offer pages and the specialist pages.
     await revalidateWeb([{ path: "/", type: "layout" }]);

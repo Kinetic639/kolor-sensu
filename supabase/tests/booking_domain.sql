@@ -2403,6 +2403,17 @@ BEGIN
              WHERE user_id <> '71000000-0000-4000-8000-000000000002') THEN
     RAISE EXCEPTION 'AC: Anna read someone else''s notifications';
   END IF;
+  -- One marked read by its button: that one only, and only once.
+  SELECT count(*) INTO unread FROM public.notifications WHERE portal = 'specialist' AND read_at IS NULL;
+  IF unread > 1 THEN
+    IF NOT public.mark_notification_read((SELECT max(id) FROM public.notifications WHERE portal = 'specialist' AND read_at IS NULL))
+       OR (SELECT count(*) FROM public.notifications WHERE portal = 'specialist' AND read_at IS NULL) <> unread - 1 THEN
+      RAISE EXCEPTION 'AC: marking one notification read';
+    END IF;
+  END IF;
+  IF public.mark_notification_read(-1) THEN
+    RAISE EXCEPTION 'AC: marked a notification that is not hers';
+  END IF;
   SELECT count(*) INTO unread FROM public.notifications WHERE portal = 'specialist' AND read_at IS NULL;
   IF unread = 0 OR public.mark_notifications_read('specialist') <> unread THEN
     RAISE EXCEPTION 'AC: opening the inbox did not read it';
@@ -2456,6 +2467,11 @@ BEGIN
   BEGIN
     PERFORM public.mark_notifications_read('admin');
     RAISE EXCEPTION 'AC: a visitor marked notifications read';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.mark_notification_read(1);
+    RAISE EXCEPTION 'AC: a visitor marked a notification read';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
 END;
@@ -2640,6 +2656,10 @@ BEGIN
   END IF;
   IF (SELECT count(*) FROM public.list_client_visits(ola)) < c.visits + c.cancelled THEN
     RAISE EXCEPTION 'AE: the client''s visits';
+  END IF;
+  IF (SELECT total FROM public.count_visit_views('[{"id": "all"}]'::jsonb))
+     IS DISTINCT FROM (SELECT max(total_count) FROM public.search_visits(p_limit => 1)) THEN
+    RAISE EXCEPTION 'AE: a view''s count';
   END IF;
   IF (SELECT id FROM public.get_visit_client(
         (SELECT id FROM public.list_client_visits(ola) LIMIT 1))) IS DISTINCT FROM ola THEN

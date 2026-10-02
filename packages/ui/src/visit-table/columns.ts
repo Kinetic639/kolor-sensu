@@ -8,6 +8,8 @@ import type { VisitSortColumn } from "./params";
 
 export const VISIT_COLUMNS = [
   "termin",
+  "utworzono",
+  "zmiana",
   "klient",
   "telefon",
   "email",
@@ -32,6 +34,8 @@ export const VISIT_COLUMN_LABELS: Record<VisitColumnId, string> = {
   status: "Status",
   platnosc: "Płatność",
   uwagi: "Uwagi",
+  utworzono: "Utworzono",
+  zmiana: "Zmiana",
 };
 
 /** The column a header sorts by (none: not sortable). */
@@ -45,10 +49,14 @@ export const VISIT_COLUMN_SORT: Partial<
   specjalista: "specjalista",
   status: "status",
   platnosc: "kwota",
+  utworzono: "utworzono",
+  zmiana: "zmiana",
 };
 
 const SHOWN_BY_DEFAULT = new Set<VisitColumnId>([
   "termin",
+  "utworzono",
+  "zmiana",
   "klient",
   "usluga",
   "specjalista",
@@ -104,4 +112,78 @@ export function serializeColumnLayout(layout: ColumnLayout) {
 /** The cookie a table's layout is kept in, e.g. `ks_cols_rezerwacje`. */
 export function columnsCookieName(table: string) {
   return `ks_cols_${table}`;
+}
+
+// Widths (px): each column's usual one, and the person's own, dragged at
+// a header's edge and kept in a cookie of their own (the layout above keeps
+// its own), so the server renders the table as wide as they left it.
+
+export const NUMBER_COLUMN_WIDTH = 160;
+export const MIN_COLUMN_WIDTH = 60;
+export const MAX_COLUMN_WIDTH = 640;
+
+export const VISIT_COLUMN_WIDTHS: Record<VisitColumnId, number> = {
+  termin: 140,
+  klient: 190,
+  telefon: 130,
+  email: 220,
+  usluga: 210,
+  miejsce: 160,
+  specjalista: 200,
+  status: 190,
+  platnosc: 170,
+  uwagi: 220,
+  utworzono: 150,
+  zmiana: 150,
+};
+
+/** A column whose width can be set: the pinned number too. */
+export type WidthColumn = VisitColumnId | "numer";
+
+export type ColumnWidths = Partial<Record<WidthColumn, number>>;
+
+const WIDTH_COLUMNS: readonly WidthColumn[] = ["numer", ...VISIT_COLUMNS];
+
+/** A column's usual width. */
+export function usualColumnWidth(id: WidthColumn) {
+  return id === "numer" ? NUMBER_COLUMN_WIDTH : VISIT_COLUMN_WIDTHS[id];
+}
+
+export function clampColumnWidth(width: number) {
+  return Math.round(
+    Math.min(MAX_COLUMN_WIDTH, Math.max(MIN_COLUMN_WIDTH, width)),
+  );
+}
+
+/** Saved widths (`termin:150,klient:220`); unknown or broken parts are left out. */
+export function parseColumnWidths(saved: string | undefined | null) {
+  const widths: ColumnWidths = {};
+  for (const part of (saved ?? "").split(",")) {
+    const [id, value] = part.split(":");
+    const width = Number(value);
+    if (
+      WIDTH_COLUMNS.includes(id as WidthColumn) &&
+      Number.isFinite(width) &&
+      width > 0
+    ) {
+      widths[id as WidthColumn] = clampColumnWidth(width);
+    }
+  }
+  return widths;
+}
+
+export function serializeColumnWidths(widths: ColumnWidths) {
+  return Object.entries(widths)
+    .map(([id, width]) => `${id}:${width}`)
+    .join(",");
+}
+
+/** A column's width: the person's own, or the usual one. */
+export function columnWidth(id: WidthColumn, widths: ColumnWidths) {
+  return widths[id] ?? usualColumnWidth(id);
+}
+
+/** The cookie a table's widths are kept in, e.g. `ks_widths_rezerwacje`. */
+export function widthsCookieName(table: string) {
+  return `ks_widths_${table}`;
 }

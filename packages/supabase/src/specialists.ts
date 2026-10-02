@@ -496,10 +496,23 @@ export async function createSpecialistMediaSignedUrl(
   return data.signedUrl;
 }
 
+// Signed photo URLs, kept on the server while they are good: every new
+// signature is a new address, which the browser loads again (a page that
+// re-renders, e.g. a tab of the visit panel, would flash initials).
+const PHOTO_URL_SECONDS = 60 * 60;
+const PHOTO_URL_REUSE_MS = 15 * 60 * 1000;
+const signedPhotos = new Map<string, { url: string; until: number }>();
+
+/** Forgets the kept signatures (for tests). */
+export function forgetSignedSpecialistPhotos() {
+  signedPhotos.clear();
+}
+
 /**
  * Signed URLs for many specialists' photos at once (e.g. a week of a room),
- * by storage path. Missing or failing photos are left out: the page then
- * shows initials instead of failing.
+ * by storage path; the same URL again while it has a quarter of an hour
+ * left. Missing or failing photos are left out: the page then shows
+ * initials instead of failing.
  */
 export async function signSpecialistPhotos(
   client: SupabaseClient<Database>,
@@ -507,18 +520,30 @@ export async function signSpecialistPhotos(
 ): Promise<Map<string, string>> {
   const unique = [...new Set(paths.filter((path): path is string => !!path))];
   const urls = new Map<string, string>();
-  if (!unique.length) return urls;
+  const now = Date.now();
+  const toSign: string[] = [];
+  for (const path of unique) {
+    const kept = signedPhotos.get(path);
+    if (kept && kept.until - now > PHOTO_URL_REUSE_MS) urls.set(path, kept.url);
+    else toSign.push(path);
+  }
+  if (!toSign.length) return urls;
 
   const { data, error } = await client.storage
     .from(specialistMediaBucket)
-    .createSignedUrls(unique, 60 * 30);
+    .createSignedUrls(toSign, PHOTO_URL_SECONDS);
   if (error) {
     console.error("[specialists] photos not signed:", error);
     return urls;
   }
   for (const one of data) {
-    if (one.path && one.signedUrl && !one.error)
+    if (one.path && one.signedUrl && !one.error) {
       urls.set(one.path, one.signedUrl);
+      signedPhotos.set(one.path, {
+        url: one.signedUrl,
+        until: now + PHOTO_URL_SECONDS * 1000,
+      });
+    }
   }
   return urls;
 }

@@ -13,8 +13,9 @@ import { toast } from "sonner";
 // A portal kept up to date as it happens (docs/product/booking-plan.md,
 // R13): the database says on the person's own channel that visits changed
 // or that there is a notification, and the page reloads its data from the
-// server (once for a burst of changes). A notification for this portal also
-// shows as a toast. The portal passes how to listen (its Supabase client).
+// server (once for a burst of changes; in a tab in the background, once
+// when it is shown again, not for each change). A notification for this
+// portal also shows as a toast. The portal passes how to listen (its Supabase client).
 
 export interface LiveSignals {
   onVisits: () => void;
@@ -50,10 +51,21 @@ export function useLivePortal({
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let missed = false;
     const refresh = () => {
       clearTimeout(timer);
+      if (document.visibilityState === "hidden") {
+        missed = true;
+        return;
+      }
       timer = setTimeout(() => router.refresh(), delayMs);
     };
+    const onVisible = () => {
+      if (document.visibilityState !== "visible" || !missed) return;
+      missed = false;
+      refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     const stop = subscribeRef.current({
       onVisits: refresh,
       onReconnect: refresh,
@@ -62,7 +74,9 @@ export function useLivePortal({
         const view = notificationView(notification, { timeZone, portal });
         const href = view.href;
         toast(view.title, {
-          description: view.description,
+          description: [view.reference, view.description]
+            .filter(Boolean)
+            .join(" · "),
           action: href
             ? { label: "Zobacz", onClick: () => router.push(href as Route) }
             : undefined,
@@ -72,6 +86,7 @@ export function useLivePortal({
     });
     return () => {
       clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
       stop();
     };
   }, [channelKey, portal, timeZone, delayMs, router]);

@@ -3,7 +3,8 @@ import type { VisitTone } from "./visits";
 
 // A portal notification (docs/product/booking-plan.md, R13) as the bell's
 // list and the live toast show it: what happened, to whose visit and when,
-// in Polish, with a link to the visit in the calendar. Admins see the money
+// in Polish, with the booking's number beside it and a link to it in the
+// bookings table (found by its number, open in the side panel). Admins see the money
 // and the specialist; a specialist's own notifications carry neither.
 
 /** A notification as `listNotifications` (@repo/supabase) gives it. */
@@ -36,11 +37,13 @@ export type NotificationIcon =
 export interface NotificationView {
   id: number;
   title: string;
+  /** The booking's number, `2610-016` (shown under the title). */
+  reference: string | null;
   /** `Jan Kowalski · Konsultacja · sob. 03.10, 11:00 · …` */
   description: string;
   tone: VisitTone;
   icon: NotificationIcon;
-  /** The visit in the calendar, on its day. */
+  /** The booking in the bookings table: found by its number, opened. */
   href: string | null;
   /** `dziś, 10:05`, `wczoraj, 21:30`, `28.09, 09:00` */
   when: string;
@@ -160,13 +163,17 @@ export function notificationView(
   return {
     id: notification.id,
     title,
+    reference: d.reference,
     description,
     tone,
     icon,
-    href:
-      notification.appointmentId && d.startsAt
-        ? `/kalendarz?data=${day(d.startsAt)}&wizyta=${notification.appointmentId}`
-        : null,
+    href: notification.appointmentId
+      ? `/rezerwacje?${new URLSearchParams({
+          zakres: "wszystkie",
+          ...(d.reference ? { q: d.reference } : {}),
+          wizyta: notification.appointmentId,
+        })}`
+      : null,
     when,
     unread: notification.readAt === null,
   };

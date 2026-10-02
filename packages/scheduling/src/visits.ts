@@ -38,6 +38,10 @@ export interface VisitLike {
   rescheduleCount: number;
   /** A reservation: to be paid by then, or it is cancelled (R11). */
   paymentDueAt?: string | null;
+  /** When it was booked (where known). */
+  createdAt?: string | null;
+  /** When it last changed (where known). */
+  changedAt?: string | null;
 }
 
 export interface VisitRow {
@@ -51,6 +55,10 @@ export interface VisitRow {
   weekday: string;
   /** `11:00–11:50`, where the centre is. */
   time: string;
+  /** When it was booked, `01.10.2026, 14:32` where the centre is; null unknown. */
+  created: string | null;
+  /** When it last changed, as `created`. */
+  changed: string | null;
   clientName: string;
   serviceName: string;
   specialistId: string;
@@ -157,6 +165,8 @@ function rowOf(visit: VisitLike, timeZone: string, now: Date): VisitRow {
   ].filter((item): item is { label: string; value: string } =>
     Boolean(item.value),
   );
+  const stamp = (instant: string) =>
+    formatInTimeZone(new Date(instant), timeZone, "dd.MM.yyyy, HH:mm");
   const cancelled = visit.status === "cancelled";
   const reservation =
     visit.status === "awaiting_payment" ? (visit.paymentDueAt ?? null) : null;
@@ -172,6 +182,8 @@ function rowOf(visit: VisitLike, timeZone: string, now: Date): VisitRow {
     dateLabel: formatDate(date),
     weekday: formatWeekday(date),
     time: `${time(visit.startsAt)}–${time(visit.endsAt)}`,
+    created: visit.createdAt ? stamp(visit.createdAt) : null,
+    changed: visit.changedAt ? stamp(visit.changedAt) : null,
     clientName: visit.client.name ?? "Klient",
     serviceName: visit.serviceName,
     specialistId: visit.specialist.id,

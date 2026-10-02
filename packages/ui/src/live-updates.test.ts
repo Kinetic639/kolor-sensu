@@ -64,11 +64,28 @@ describe("useLivePortal", () => {
     expect(router.refresh).toHaveBeenCalledTimes(1);
   });
 
+  it("in a tab in the background, reloads once when it is shown again", () => {
+    const visibility = vi
+      .spyOn(document, "visibilityState", "get")
+      .mockReturnValue("hidden");
+    const { signals } = listen();
+    signals().onVisits();
+    signals().onVisits();
+    vi.advanceTimersByTime(5000);
+    expect(router.refresh).not.toHaveBeenCalled();
+
+    visibility.mockReturnValue("visible");
+    document.dispatchEvent(new Event("visibilitychange"));
+    vi.advanceTimersByTime(400);
+    expect(router.refresh).toHaveBeenCalledTimes(1);
+    visibility.mockRestore();
+  });
+
   it("shows this portal's notification, with a way to its visit", () => {
     const { signals } = listen();
     signals().onNotification(notification);
     expect(toast).toHaveBeenCalledWith("Nowa wizyta", {
-      description: expect.stringContaining("Jan Kowalski"),
+      description: expect.stringMatching(/^2610-004 · Jan Kowalski/),
       action: { label: "Zobacz", onClick: expect.any(Function) },
     });
     const { action } = vi.mocked(toast).mock.calls[0]![1] as unknown as {
@@ -76,7 +93,7 @@ describe("useLivePortal", () => {
     };
     action.onClick();
     expect(router.push).toHaveBeenCalledWith(
-      "/kalendarz?data=2026-10-03&wizyta=visit-1",
+      "/rezerwacje?zakres=wszystkie&q=2610-004&wizyta=visit-1",
     );
     vi.advanceTimersByTime(400);
     expect(router.refresh).toHaveBeenCalledTimes(1);

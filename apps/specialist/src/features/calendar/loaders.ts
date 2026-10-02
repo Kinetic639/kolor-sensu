@@ -1,6 +1,7 @@
 import "server-only";
 
 import { requirePortalRole } from "@/lib/auth";
+import { bookingWindow, myRooms } from "@/lib/reference-data";
 import { createClient } from "@/lib/supabase/server";
 import {
   calendarWindows,
@@ -11,11 +12,9 @@ import {
   type CalendarPerson,
 } from "@repo/scheduling";
 import {
-  getBookingWindow,
   getMySpecialist,
   getPortalAvatarUrl,
   getVisit,
-  listActiveRoomsForSpecialist,
   listAvailabilityRulesForSpecialists,
   listCentreOffers,
   listTimeOff,
@@ -37,7 +36,7 @@ export async function loadMyCalendar(params: CalendarParams) {
   ]);
   const [specialist, booking, avatarUrl] = await Promise.all([
     getMySpecialist(client, authorization.user.id),
-    getBookingWindow(client),
+    bookingWindow(),
     getPortalAvatarUrl(client, {
       userId: authorization.user.id,
       accountAvatarUrl: authorization.profile.avatar_url,
@@ -49,7 +48,8 @@ export async function loadMyCalendar(params: CalendarParams) {
   const now = new Date();
   const today = formatInTimeZone(now, timeZone, "yyyy-MM-dd");
   const period = calendarPeriod(params, { today, defaultView: "tydzien" });
-  const history = params.wizyta && params.karta === "historia";
+  // Every tab of the open visit at once: switching tabs asks for nothing.
+  const history = Boolean(params.wizyta);
 
   const withForm = params.nowa && params.termin;
   const [rules, timeOff, rooms, visits, open, events, offers] =
@@ -60,7 +60,7 @@ export async function loadMyCalendar(params: CalendarParams) {
         to: period.to,
       }),
       listTimeOff(client, specialist.id),
-      listActiveRoomsForSpecialist(client),
+      myRooms(),
       listVisits(client, { from: period.from, to: period.to, own: true }),
       params.wizyta
         ? getVisit(client, params.wizyta, { own: true }).catch(() => null)

@@ -128,7 +128,19 @@ export async function listNotifications(
   };
 }
 
-/** Opening the inbox reads it; how many were unread. */
+/** One of the person's notifications read; true when it was unread. */
+export async function markNotificationRead(
+  client: Client,
+  id: number,
+): Promise<boolean> {
+  const { data, error } = await client.rpc("mark_notification_read", {
+    p_id: id,
+  });
+  if (error) throw error;
+  return data ?? false;
+}
+
+/** Every notification of the portal read; how many were unread. */
 export async function markNotificationsRead(
   client: Client,
   portal: NotificationPortal,

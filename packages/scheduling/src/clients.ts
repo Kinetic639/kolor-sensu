@@ -94,7 +94,9 @@ export type VisitSortKey =
   | "usluga"
   | "miejsce"
   | "kwota"
-  | "status";
+  | "status"
+  | "utworzono"
+  | "zmiana";
 
 const STATUS_ORDER: Record<VisitLike["status"], number> = {
   confirmed: 0,
@@ -122,6 +124,11 @@ export function sortVisits<T extends VisitLike>(
     miejsce: (a, b) => text(placeOf(a), placeOf(b)),
     kwota: (a, b) => a.priceMinor - b.priceMinor,
     status: (a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status],
+    utworzono: (a, b) => (a.createdAt ?? "").localeCompare(b.createdAt ?? ""),
+    zmiana: (a, b) =>
+      (a.changedAt ?? a.createdAt ?? "").localeCompare(
+        b.changedAt ?? b.createdAt ?? "",
+      ),
   };
   const sign = direction === "asc" ? 1 : -1;
   return [...visits].sort(

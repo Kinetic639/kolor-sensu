@@ -104,6 +104,7 @@ function BookingsTable({
               ]),
             )}
             columnsCookie="ks_cols_storybook"
+            widthsCookie="ks_widths_storybook"
             params={params}
             path="/kalendarz"
             rows={rows}

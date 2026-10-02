@@ -60,12 +60,22 @@ describe("the bookings table's address", () => {
     );
   });
 
-  it("sorts by a column, then turns the direction round, from page 1", () => {
+  it("sorts by a column, turns it round, then stops sorting, from page 1", () => {
     expect(sortHref(path, load("strona=3"), "miejsce")).toBe(
       "/kalendarz?sort=miejsce",
     );
     expect(sortHref(path, load("sort=klient&strona=3"), "klient")).toBe(
       "/kalendarz?sort=klient&kierunek=malejaco",
+    );
+    expect(
+      sortHref(path, load("sort=klient&kierunek=malejaco&strona=3"), "klient"),
+    ).toBe("/kalendarz");
+    // By date (the usual order): the other way, then back.
+    expect(sortHref(path, load(""), "termin")).toBe(
+      "/kalendarz?kierunek=malejaco",
+    );
+    expect(sortHref(path, load("kierunek=malejaco"), "termin")).toBe(
+      "/kalendarz",
     );
   });
 

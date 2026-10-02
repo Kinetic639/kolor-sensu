@@ -1,13 +1,16 @@
 "use client";
 
 import { Check, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { cn } from "../lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover";
 import { PageLink as Link } from "../public-site/page-link";
 
 // The bookings table's view picker ("Nadchodzące 42 ▾"): the ready views,
-// each a link; how many visits each has is asked for when it opens.
+// each a link; how many visits each has is asked for when it opens (once,
+// then kept for half a minute: opening it again asks nothing).
+
+const COUNTS_KEPT_MS = 30_000;
 
 export interface VisitViewLink {
   id: string;
@@ -31,15 +34,24 @@ export function VisitViewMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [counts, setCounts] = useState<Record<string, number> | null>(null);
+  const askedAt = useRef(0);
 
   return (
     <Popover
       onOpenChange={(next) => {
         setOpen(next);
-        if (next && countViews) {
+        if (
+          next &&
+          countViews &&
+          Date.now() - askedAt.current > COUNTS_KEPT_MS
+        ) {
+          askedAt.current = Date.now();
           countViews()
             .then(setCounts)
-            .catch(() => setCounts(null));
+            .catch(() => {
+              askedAt.current = 0;
+              setCounts(null);
+            });
         }
       }}
       open={open}

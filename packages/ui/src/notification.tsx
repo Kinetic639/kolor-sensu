@@ -24,6 +24,8 @@ const notificationToneClasses = {
 
 export interface NotificationItemProps {
   title: string;
+  /** Secondary text under the title (e.g. the booking's number). */
+  subtitle?: string | null;
   description: string;
   time: string;
   icon: LucideIcon;
@@ -33,11 +35,14 @@ export interface NotificationItemProps {
   expanded?: boolean;
   details?: ReactNode;
   onClick?: () => void;
+  /** A control beside it (e.g. "mark as read"), outside its own button. */
+  action?: ReactNode;
   className?: string;
 }
 
 export function NotificationItem({
   title,
+  subtitle,
   description,
   time,
   icon: Icon,
@@ -47,6 +52,7 @@ export function NotificationItem({
   expanded = false,
   details,
   onClick,
+  action,
   className,
 }: NotificationItemProps) {
   return (
@@ -57,44 +63,54 @@ export function NotificationItem({
         className,
       )}
     >
-      <button
-        className="flex w-full items-start gap-3 p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
-        onClick={onClick}
-        type="button"
-      >
-        {unread ? (
-          <span className="mt-3 size-2 shrink-0 rounded-full bg-[var(--info)]" />
-        ) : (
-          <span className="w-2 shrink-0" />
-        )}
-        <span
-          className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-control)]",
-            notificationToneClasses[tone],
-          )}
+      <div className="flex items-stretch">
+        <button
+          className="flex min-w-0 flex-1 items-start gap-3 p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+          onClick={onClick}
+          type="button"
         >
-          <Icon className="size-5" aria-hidden="true" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="flex items-start justify-between gap-3">
-            <span className="font-heading text-sm leading-snug font-semibold text-[var(--text)]">
-              {title}
-            </span>
-            <span className="shrink-0 text-xs text-[var(--text-muted)]">
-              {time}
-            </span>
+          {unread ? (
+            <span className="mt-3 size-2 shrink-0 rounded-full bg-[var(--info)]" />
+          ) : (
+            <span className="w-2 shrink-0" />
+          )}
+          <span
+            className={cn(
+              "flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-control)]",
+              notificationToneClasses[tone],
+            )}
+          >
+            <Icon className="size-5" aria-hidden="true" />
           </span>
-          <span className="mt-0.5 line-clamp-2 block text-xs leading-relaxed text-[var(--text-muted)]">
-            {description}
+          <span className="min-w-0 flex-1">
+            <span className="flex items-start justify-between gap-3">
+              <span className="font-heading text-sm leading-snug font-semibold text-[var(--text)]">
+                {title}
+              </span>
+              <span className="shrink-0 text-xs text-[var(--text-muted)]">
+                {time}
+              </span>
+            </span>
+            {subtitle ? (
+              <span className="block text-[0.6875rem] font-medium text-[var(--text-subtle)] tabular-nums">
+                {subtitle}
+              </span>
+            ) : null}
+            <span className="mt-0.5 line-clamp-2 block text-xs leading-relaxed text-[var(--text-muted)]">
+              {description}
+            </span>
+            {category ? (
+              <Badge className="mt-2" variant="success">
+                {category}
+              </Badge>
+            ) : null}
           </span>
-          {category ? (
-            <Badge className="mt-2" variant="success">
-              {category}
-            </Badge>
-          ) : null}
-        </span>
-        <ChevronRight className="mt-3 size-4 shrink-0 text-[var(--text-muted)]" />
-      </button>
+          <ChevronRight className="mt-3 size-4 shrink-0 text-[var(--text-muted)]" />
+        </button>
+        {action ? (
+          <div className="flex shrink-0 items-start pt-2 pr-2">{action}</div>
+        ) : null}
+      </div>
       {expanded && details ? (
         <div className="border-t border-[var(--border)] p-4">{details}</div>
       ) : null}
@@ -110,6 +126,8 @@ export interface NotificationDrawerProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   side?: SheetContentProps["side"];
+  /** A control in the header (e.g. "mark all as read"). */
+  headerAction?: ReactNode;
 }
 
 export function NotificationDrawer({
@@ -120,6 +138,7 @@ export function NotificationDrawer({
   open,
   onOpenChange,
   side = "right",
+  headerAction,
 }: NotificationDrawerProps) {
   return (
     <Sheet defaultOpen={defaultOpen} open={open} onOpenChange={onOpenChange}>
@@ -145,6 +164,9 @@ export function NotificationDrawer({
                   : "Bądź na bieżąco z wizytami i ważnymi informacjami."}
               </SheetDescription>
             </div>
+            {headerAction ? (
+              <div className="ml-auto">{headerAction}</div>
+            ) : null}
           </div>
         </SheetHeader>
         <div className="space-y-2 overflow-y-auto p-4">{children}</div>

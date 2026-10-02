@@ -206,6 +206,7 @@ export {
   getVisit,
   listVisitEvents,
   listVisits,
+  countVisitViews,
   searchVisits,
 } from "./visits";
 export type {
@@ -231,6 +232,7 @@ export type {
 } from "./centre-bookings";
 export {
   listNotifications,
+  markNotificationRead,
   markNotificationsRead,
   subscribeToPortalUpdates,
   toPortalNotification,

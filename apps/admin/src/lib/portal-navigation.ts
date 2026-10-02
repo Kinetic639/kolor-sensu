@@ -8,12 +8,6 @@ export const adminNavigation: PortalNavigationSection[] = [
     label: "PRACA / OPERACJE",
     items: [
       { label: "Dashboard", href: "/", icon: "dashboard" },
-      { label: "Kalendarz", href: "/kalendarz", icon: "calendar" },
-    ],
-  },
-  {
-    label: "KLIENCI I REZERWACJE",
-    items: [
       { label: "Rezerwacje", href: "/rezerwacje", icon: "bookings" },
       { label: "Klienci", href: "/klienci", icon: "clients" },
     ],
@@ -21,6 +15,7 @@ export const adminNavigation: PortalNavigationSection[] = [
   {
     label: "ZESPÓŁ I ZASOBY",
     items: [
+      { label: "Kalendarz", href: "/kalendarz", icon: "calendar" },
       { label: "Specjaliści", href: "/specjalisci", icon: "specialists" },
       { label: "Gabinety", href: "/gabinety", icon: "rooms" },
       { label: "Oferta", href: "/oferta", icon: "services" },

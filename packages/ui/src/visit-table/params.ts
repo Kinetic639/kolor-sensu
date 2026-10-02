@@ -45,6 +45,8 @@ export const VISIT_SORTS = [
   "miejsce",
   "kwota",
   "status",
+  "utworzono",
+  "zmiana",
 ] as const;
 export const PAGE_SIZES = [10, 20, 50] as const;
 
@@ -161,7 +163,10 @@ export function sortDirection(params: VisitTableParams): "asc" | "desc" {
     : "asc";
 }
 
-/** A column header's link: sort by it, or turn the direction round. */
+/**
+ * A column header's link, three clicks round: sort by it (its usual way),
+ * then the other way, then no more (the table's usual order, by date).
+ */
 export function sortHref(
   path: string,
   params: VisitTableParams,
@@ -170,6 +175,13 @@ export function sortHref(
   if (params.sort !== column) {
     return visitTableHref(path, params, {
       sort: column,
+      kierunek: null,
+      strona: 1,
+    });
+  }
+  if (params.kierunek) {
+    return visitTableHref(path, params, {
+      sort: "termin",
       kierunek: null,
       strona: 1,
     });
@@ -189,6 +201,8 @@ const SORT_COLUMNS: Record<
   | "place"
   | "price"
   | "status"
+  | "created"
+  | "changed"
 > = {
   termin: "starts_at",
   klient: "client",
@@ -197,6 +211,8 @@ const SORT_COLUMNS: Record<
   miejsce: "place",
   kwota: "price",
   status: "status",
+  utworzono: "created",
+  zmiana: "changed",
 };
 
 const STATUSES: Record<

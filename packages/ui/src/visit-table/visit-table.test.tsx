@@ -62,6 +62,48 @@ describe("VisitTable", () => {
     expect(screen.queryByRole("columnheader", { name: "Telefon" })).toBeNull();
   });
 
+  it("sets a column's width at its edge, kept in a cookie", async () => {
+    document.cookie = "ks_widths_test=; max-age=0; path=/";
+    const { container } = render(
+      <VisitTable
+        params={tableParams()}
+        path={path}
+        rows={adminRows}
+        total={4}
+        widths={{ klient: 200 }}
+        widthsCookie="ks_widths_test"
+      />,
+    );
+    const column = () =>
+      container.querySelector<HTMLElement>('col[data-column="klient"]')!;
+    expect(column().style.width).toBe("200px");
+
+    const edge = screen.getByRole("separator", {
+      name: "Szerokość kolumny Klient",
+    });
+    fireEvent.keyDown(edge, { key: "ArrowRight" });
+    expect(edge).toHaveAttribute("aria-valuenow", "216");
+    expect(column().style.width).toBe("216px");
+    expect(decodeURIComponent(document.cookie)).toContain(
+      "ks_widths_test=klient:216",
+    );
+
+    // The pinned number too.
+    const number = screen.getByRole("separator", {
+      name: "Szerokość kolumny Numer",
+    });
+    fireEvent.keyDown(number, { key: "ArrowLeft" });
+    expect(
+      container.querySelector<HTMLElement>('col[data-column="numer"]')!.style
+        .width,
+    ).toBe("144px");
+
+    // Double-click: the usual width again, and none saved.
+    fireEvent.doubleClick(edge);
+    expect(column().style.width).toBe("190px");
+    expect(decodeURIComponent(document.cookie)).not.toContain("klient:");
+  });
+
   it("shows the person's own columns, in their order, with the menu to change them", () => {
     render(
       <VisitTable
@@ -297,6 +339,29 @@ describe("VisitPanel", () => {
     fireEvent.keyDown(window, { key: "Escape" });
     expect(push).toHaveBeenCalledTimes(1);
     expect(push).toHaveBeenCalledWith("/kalendarz", { scroll: false });
+  });
+
+  it("switches tabs in place: no request, the tab in the address", async () => {
+    render(
+      <VisitPanel
+        closeHref="/kalendarz"
+        events={sampleEvents}
+        row={adminRows[0]!}
+        tab="szczegoly"
+        tabs={panelTabs}
+      />,
+    );
+    expect(
+      screen.queryByRole("list", { name: "Historia rezerwacji" }),
+    ).toBeNull();
+    const history = screen.getByRole("link", { name: "Historia" });
+    await userEvent.click(history);
+    expect(
+      screen.getByRole("list", { name: "Historia rezerwacji" }),
+    ).toBeVisible();
+    expect(history).toHaveAttribute("aria-current", "page");
+    expect(window.location.href).toContain(history.getAttribute("href")!);
+    expect(push).not.toHaveBeenCalled();
   });
 
   it("a reservation not paid yet says when it must be paid by", () => {
