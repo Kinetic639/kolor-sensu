@@ -232,6 +232,7 @@ export type {
 export {
   listNotifications,
   markNotificationRead,
+  markNotificationUnread,
   markNotificationsRead,
   subscribeToPortalUpdates,
   toPortalNotification,

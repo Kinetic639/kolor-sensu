@@ -1,11 +1,13 @@
 import { formatInTimeZone } from "date-fns-tz";
 import { bookingHref, type VisitTone } from "./visits";
 
-// A portal notification (docs/product/booking-plan.md, R13) as the bell's
-// list and the live toast show it: what happened, to whose visit and when,
-// in Polish, with the booking's number beside it and a link to it in the
-// bookings table (found by its number, open in the side panel). Admins see the money
-// and the specialist; a specialist's own notifications carry neither.
+// A portal notification (docs/product/booking-plan.md, R13) as the panel
+// and the live toast show it: what happened in two or three words, whose
+// visit and when, the facts that matter as small icons with their words
+// for a tooltip, and the rest for when it is opened. A link leads to the
+// booking in the bookings table (found by its number, open in the side
+// panel). Admins see the money and the specialist; a specialist's own
+// notifications carry neither.
 
 /** A notification as `listNotifications` (@repo/supabase) gives it. */
 export interface NotificationLike {
@@ -34,21 +36,56 @@ export interface NotificationLike {
 export type NotificationIcon =
   "new" | "reserved" | "paid" | "cancelled" | "moved" | "refund";
 
+/** A fact shown as a small icon; `label` is what its tooltip says. */
+export interface NotificationBadge {
+  id:
+    | "paid-now"
+    | "pay-later"
+    | "client"
+    | "centre"
+    | "system"
+    | "refund-due"
+    | "no-refund"
+    | "refunded"
+    | "online"
+    | "soon";
+  label: string;
+  tone: VisitTone;
+}
+
+export interface NotificationDetail {
+  label: string;
+  value: string;
+  tone?: VisitTone;
+}
+
 export interface NotificationView {
   id: number;
+  /** `Nowa rezerwacja`, `Rezerwacja anulowana`, … */
   title: string;
-  /** The booking's number, `2610-016` (shown under the title). */
+  /** The booking's number, `2610-016`. */
   reference: string | null;
-  /** `Jan Kowalski · Konsultacja · sob. 03.10, 11:00 · …` */
-  description: string;
+  /** Whose visit and when: `Jan Kowalski · czw. 08.10, 11:00`. */
+  summary: string;
+  /** At most three, in order: who, the money, online, soon. */
+  badges: NotificationBadge[];
+  /** Shown when it is opened. */
+  details: NotificationDetail[];
   tone: VisitTone;
   icon: NotificationIcon;
+  /** The booking, to load as it is now when opened. */
+  visitId: string | null;
   /** The booking in the bookings table: found by its number, opened. */
   href: string | null;
-  /** `dziś, 10:05`, `wczoraj, 21:30`, `28.09, 09:00` */
-  when: string;
+  /** `Dziś`, `Wczoraj`, `Poniedziałek 28.09`: the group it is in. */
+  day: string;
+  /** `10:05`, when it came. */
+  time: string;
   unread: boolean;
 }
+
+const NEW_KINDS = new Set(["booked", "reserved", "centre_booked"]);
+const SOON_MS = 48 * 60 * 60 * 1000;
 
 export function notificationView(
   notification: NotificationLike,
@@ -59,118 +96,200 @@ export function notificationView(
   }: { timeZone: string; portal: "admin" | "specialist"; now?: Date },
 ): NotificationView {
   const d = notification.details;
+  const { kind, actor } = notification;
+  const admin = portal === "admin";
   const local = (instant: string, pattern: string) =>
     formatInTimeZone(new Date(instant), timeZone, pattern);
-  const visitTime = (instant: string | null) => {
-    if (!instant) return null;
-    const weekday = new Intl.DateTimeFormat("pl-PL", {
-      weekday: "short",
-      timeZone,
-    }).format(new Date(instant));
-    return `${weekday} ${local(instant, "dd.MM, HH:mm")}`;
-  };
-  const money = (minor: number | null) =>
-    minor === null
-      ? null
-      : new Intl.NumberFormat("pl-PL", {
-          style: "currency",
-          currency: d.currencyCode ?? "PLN",
-          maximumFractionDigits: minor % 100 === 0 ? 0 : 2,
-        }).format(minor / 100);
-  const admin = portal === "admin";
+  const weekday = (instant: string) =>
+    new Intl.DateTimeFormat("pl-PL", { weekday: "short", timeZone }).format(
+      new Date(instant),
+    );
+  const visitTime = (instant: string, pattern: string) =>
+    `${weekday(instant)} ${local(instant, pattern)}`;
+  const money = (minor: number) =>
+    new Intl.NumberFormat("pl-PL", {
+      style: "currency",
+      currency: d.currencyCode ?? "PLN",
+      maximumFractionDigits: minor % 100 === 0 ? 0 : 2,
+    }).format(minor / 100);
 
   let title: string;
   let tone: VisitTone;
   let icon: NotificationIcon;
-  const extra: (string | null)[] = [];
-  switch (notification.kind) {
-    case "booked":
-      [title, tone, icon] = ["Nowa wizyta", "success", "new"];
-      break;
-    case "reserved":
-      [title, tone, icon] = [
-        "Nowa rezerwacja, płatność później",
-        "info",
-        "reserved",
-      ];
-      break;
-    case "centre_booked":
-      [title, tone, icon] = ["Centrum umówiło wizytę", "info", "new"];
-      break;
-    case "paid":
-      [title, tone, icon] = ["Rezerwacja opłacona", "success", "paid"];
-      break;
-    case "cancelled":
-      title =
-        notification.actor === "system"
-          ? "Anulowano – brak płatności"
-          : notification.actor === "centre"
-            ? "Centrum odwołało wizytę"
-            : "Klient odwołał wizytę";
-      [tone, icon] = ["danger", "cancelled"];
-      if (
-        admin &&
-        notification.actor !== "system" &&
-        d.refundDueMinor !== null
-      ) {
-        extra.push(
-          d.refundDueMinor > 0
-            ? `Do zwrotu: ${money(d.refundDueMinor)}`
-            : "Bez zwrotu",
-        );
-      }
-      break;
-    case "rescheduled":
-      title =
-        notification.actor === "centre"
-          ? "Centrum przesunęło wizytę"
-          : "Klient przełożył wizytę";
-      [tone, icon] = ["info", "moved"];
-      if (d.fromStartsAt) extra.push(`wcześniej ${visitTime(d.fromStartsAt)}`);
-      break;
-    case "refunded":
-      title = `Zwrot pieniędzy: ${money(d.refundMinor) ?? ""}`.trim();
-      [tone, icon] = ["info", "refund"];
-      break;
-    default:
-      [title, tone, icon] = ["Zmiana w wizycie", "neutral", "new"];
+  if (NEW_KINDS.has(kind)) {
+    [title, tone, icon] = ["Nowa rezerwacja", "success", "new"];
+  } else if (kind === "paid") {
+    [title, tone, icon] = ["Rezerwacja opłacona", "success", "paid"];
+  } else if (kind === "rescheduled") {
+    [title, tone, icon] = ["Rezerwacja przełożona", "info", "moved"];
+  } else if (kind === "cancelled") {
+    [title, tone, icon] = ["Rezerwacja anulowana", "danger", "cancelled"];
+  } else if (kind === "refunded") {
+    [title, tone, icon] = ["Zwrot pieniędzy", "info", "refund"];
+  } else {
+    [title, tone, icon] = ["Zmiana w rezerwacji", "neutral", "new"];
   }
-  if (d.reason && d.reason !== "unpaid") extra.push(d.reason);
 
-  const description = [
-    d.clientName,
-    d.serviceName,
-    visitTime(d.startsAt),
-    admin ? d.specialistName : null,
-    ...extra,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  // Who did it, the money, online, soon: at most three.
+  const badges: NotificationBadge[] = [];
+  const changed =
+    kind === "cancelled"
+      ? "Odwołana"
+      : kind === "rescheduled"
+        ? "Przełożona"
+        : null;
+  if (kind === "booked") {
+    badges.push({
+      id: "paid-now",
+      label: "Opłacona online przy rezerwacji",
+      tone: "success",
+    });
+  } else if (kind === "reserved") {
+    badges.push({
+      id: "pay-later",
+      label: "Płatność później",
+      tone: "warning",
+    });
+  } else if (kind === "centre_booked") {
+    badges.push({
+      id: "centre",
+      label: "Umówiona przez centrum",
+      tone: "neutral",
+    });
+  } else if (changed && actor === "system") {
+    badges.push({
+      id: "system",
+      label: "Anulowana automatycznie: brak płatności",
+      tone: "danger",
+    });
+  } else if (changed && (actor === "client" || actor === "centre")) {
+    badges.push({
+      id: actor,
+      label: `${changed} przez ${actor === "client" ? "klienta" : "centrum"}`,
+      tone: "neutral",
+    });
+  }
+  if (admin && kind === "cancelled" && actor !== "system") {
+    if (d.refundDueMinor !== null && d.refundDueMinor > 0) {
+      badges.push({
+        id: "refund-due",
+        label: `Do zwrotu: ${money(d.refundDueMinor)}`,
+        tone: "warning",
+      });
+    } else if (d.refundDueMinor === 0) {
+      badges.push({ id: "no-refund", label: "Bez zwrotu", tone: "neutral" });
+    }
+  }
+  if (admin && kind === "refunded" && d.refundMinor !== null) {
+    badges.push({
+      id: "refunded",
+      label: `Zwrócono ${money(d.refundMinor)}`,
+      tone: "success",
+    });
+  }
+  if (d.mode === "online") {
+    badges.push({ id: "online", label: "Wizyta online", tone: "info" });
+  }
+  if (d.startsAt && kind !== "refunded") {
+    const ahead =
+      new Date(d.startsAt).getTime() -
+      new Date(notification.createdAt).getTime();
+    if (ahead > 0 && ahead < SOON_MS) {
+      badges.push({
+        id: "soon",
+        label: "Wizyta za mniej niż 48 h",
+        tone: "warning",
+      });
+    }
+  }
 
-  const day = (instant: Date | string) =>
+  // Opened: the rest.
+  const details: NotificationDetail[] = [];
+  if (d.startsAt) {
+    details.push({
+      label: "Termin",
+      value: visitTime(d.startsAt, "dd.MM.yyyy, HH:mm"),
+    });
+  }
+  if (d.fromStartsAt) {
+    details.push({
+      label: "Wcześniej",
+      value: visitTime(d.fromStartsAt, "dd.MM.yyyy, HH:mm"),
+    });
+  }
+  // The specialist, the place and the payment come from the booking as it
+  // is now, when it is opened (the panel asks for it).
+  if (d.serviceName) details.push({ label: "Usługa", value: d.serviceName });
+  if (
+    admin &&
+    (NEW_KINDS.has(kind) || kind === "paid") &&
+    d.priceMinor !== null
+  ) {
+    details.push({ label: "Cena", value: money(d.priceMinor) });
+  }
+  if (admin && kind === "cancelled" && actor !== "system") {
+    if (d.refundDueMinor !== null && d.refundDueMinor > 0) {
+      details.push({
+        label: "Zwrot",
+        value: `${money(d.refundDueMinor)} do zwrotu`,
+        tone: "warning",
+      });
+    } else if (d.refundDueMinor === 0) {
+      details.push({ label: "Zwrot", value: "Bez zwrotu" });
+    }
+  }
+  if (admin && kind === "refunded" && d.refundMinor !== null) {
+    details.push({ label: "Zwrócono", value: money(d.refundMinor) });
+  }
+  if (d.reason && d.reason !== "unpaid") {
+    details.push({ label: "Powód", value: d.reason });
+  }
+
+  const dayOf = (instant: Date | string) =>
     formatInTimeZone(new Date(instant), timeZone, "yyyy-MM-dd");
-  const today = day(now);
-  const yesterday = day(new Date(now.getTime() - 24 * 60 * 60 * 1000));
-  const created = day(notification.createdAt);
-  const clock = local(notification.createdAt, "HH:mm");
-  const when =
-    created === today
-      ? `dziś, ${clock}`
-      : created === yesterday
-        ? `wczoraj, ${clock}`
-        : local(notification.createdAt, "dd.MM, HH:mm");
+  const created = dayOf(notification.createdAt);
+  const longWeekday = new Intl.DateTimeFormat("pl-PL", {
+    weekday: "long",
+    timeZone,
+  }).format(new Date(notification.createdAt));
+  const day =
+    created === dayOf(now)
+      ? "Dziś"
+      : created === dayOf(new Date(now.getTime() - 24 * 60 * 60 * 1000))
+        ? "Wczoraj"
+        : `${longWeekday[0]!.toUpperCase()}${longWeekday.slice(1)} ${local(notification.createdAt, "dd.MM")}`;
 
   return {
     id: notification.id,
     title,
     reference: d.reference,
-    description,
+    summary: [
+      d.clientName,
+      d.startsAt ? visitTime(d.startsAt, "dd.MM, HH:mm") : null,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    badges: badges.slice(0, 3),
+    details,
     tone,
     icon,
+    visitId: notification.appointmentId,
     href: notification.appointmentId
       ? bookingHref({ id: notification.appointmentId, reference: d.reference })
       : null,
-    when,
+    day,
+    time: local(notification.createdAt, "HH:mm"),
     unread: notification.readAt === null,
   };
+}
+
+/** The notifications by the day they came, newest first as given. */
+export function notificationDays(views: NotificationView[]) {
+  const days: { day: string; items: NotificationView[] }[] = [];
+  for (const view of views) {
+    const last = days.at(-1);
+    if (last?.day === view.day) last.items.push(view);
+    else days.push({ day: view.day, items: [view] });
+  }
+  return days;
 }

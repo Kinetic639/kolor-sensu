@@ -1,12 +1,12 @@
 import type { NotificationLike } from "@repo/scheduling";
 import { renderHook } from "@testing-library/react";
-import { toast } from "./toast";
+import { showNotificationToast as toast } from "./notifications/toast";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useLivePortal, type LiveSignals } from "./live-updates";
 
 const router = { push: vi.fn(), refresh: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
-vi.mock("./toast", () => ({ toast: vi.fn() }));
+vi.mock("./notifications/toast", () => ({ showNotificationToast: vi.fn() }));
 
 const notification: NotificationLike & { portal: "admin" } = {
   portal: "admin",
@@ -84,14 +84,16 @@ describe("useLivePortal", () => {
   it("shows this portal's notification, with a way to its visit", () => {
     const { signals } = listen();
     signals().onNotification(notification);
-    expect(toast).toHaveBeenCalledWith("Nowa wizyta", {
-      description: expect.stringMatching(/^2610-004 · Jan Kowalski/),
-      action: { label: "Zobacz", onClick: expect.any(Function) },
-    });
-    const { action } = vi.mocked(toast).mock.calls[0]![1] as unknown as {
-      action: { onClick: () => void };
-    };
-    action.onClick();
+    expect(toast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Nowa rezerwacja",
+        reference: "2610-004",
+        summary: expect.stringMatching(/^Jan Kowalski · /),
+      }),
+      expect.any(Function),
+    );
+    const open = vi.mocked(toast).mock.calls[0]![1]!;
+    open();
     expect(router.push).toHaveBeenCalledWith(
       "/rezerwacje?zakres=wszystkie&q=2610-004&wizyta=visit-1",
     );

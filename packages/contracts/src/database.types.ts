@@ -1840,6 +1840,10 @@ export type Database = {
         Args: { p_id: number };
         Returns: boolean;
       };
+      mark_notification_unread: {
+        Args: { p_id: number };
+        Returns: boolean;
+      };
       count_visit_views: {
         Args: { p_views: Json };
         Returns: { view_id: string; total: number }[];

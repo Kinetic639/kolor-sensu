@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   listNotifications,
+  markNotificationUnread,
   markNotificationsRead,
   subscribeToPortalUpdates,
   toPortalNotification,
@@ -97,6 +98,14 @@ describe("listNotifications", () => {
     expect(calls).toContain('order("created_at",{"ascending":false})');
     expect(calls).toContain("limit(20)");
     expect(calls).toContain('is("read_at",null)');
+  });
+});
+
+describe("markNotificationUnread", () => {
+  it("puts one back to unread", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: true, error: null });
+    expect(await markNotificationUnread({ rpc } as never, 7)).toBe(true);
+    expect(rpc).toHaveBeenCalledWith("mark_notification_unread", { p_id: 7 });
   });
 });
 

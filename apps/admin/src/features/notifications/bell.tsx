@@ -1,30 +1,46 @@
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_TIME_ZONE, notificationView } from "@repo/scheduling";
 import { listNotifications } from "@repo/supabase";
-import { PortalNotifications } from "@repo/ui/portal-notifications";
+import { NotificationsBell, NotificationsPanel } from "@repo/ui/notifications";
+import { cache } from "react";
 import {
   markNotificationReadAction,
   markNotificationsReadAction,
+  markNotificationUnreadAction,
+  loadNotificationVisitAction,
 } from "./actions";
 
-// The bell in the header with this person's latest notifications (R13),
-// rendered on the server; the live updates refresh it.
+// This person's latest notifications (R13), read once per request for the
+// bell in the header and the drawer it opens; rendered on the
+// server, the live updates refresh them.
 
-export async function NotificationBell() {
+const loadInbox = cache(async () => {
   const { items, unreadCount } = await listNotifications(
     await createClient(),
     "admin",
   );
+  return {
+    items: items.map((item) =>
+      notificationView(item, { timeZone: DEFAULT_TIME_ZONE, portal: "admin" }),
+    ),
+    unreadCount,
+  };
+});
+
+export async function NotificationBell() {
+  const { items, unreadCount } = await loadInbox();
+  return <NotificationsBell items={items} unreadCount={unreadCount} />;
+}
+
+export async function NotificationPanel() {
+  const { items, unreadCount } = await loadInbox();
   return (
-    <PortalNotifications
-      items={items.map((item) =>
-        notificationView(item, {
-          timeZone: DEFAULT_TIME_ZONE,
-          portal: "admin",
-        }),
-      )}
+    <NotificationsPanel
+      items={items}
       markAllRead={markNotificationsReadAction}
       markRead={markNotificationReadAction}
+      loadVisit={loadNotificationVisitAction}
+      markUnread={markNotificationUnreadAction}
       unreadCount={unreadCount}
     />
   );

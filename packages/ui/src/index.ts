@@ -61,11 +61,11 @@ export { Input, type InputProps } from "./input";
 export { Label, type LabelProps } from "./label";
 export { cn } from "./lib/utils";
 export {
-  NotificationDrawer,
-  NotificationItem,
-  type NotificationDrawerProps,
-  type NotificationItemProps,
-} from "./notification";
+  NotificationsBell,
+  NotificationsPanel,
+  NotificationsProvider,
+  type NotificationsPanelProps,
+} from "./notifications";
 export {
   Popover,
   PopoverAnchor,

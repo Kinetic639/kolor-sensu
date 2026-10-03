@@ -140,6 +140,18 @@ export async function markNotificationRead(
   return data ?? false;
 }
 
+/** One of the person's notifications back to unread; true when it was read. */
+export async function markNotificationUnread(
+  client: Client,
+  id: number,
+): Promise<boolean> {
+  const { data, error } = await client.rpc("mark_notification_unread", {
+    p_id: id,
+  });
+  if (error) throw error;
+  return data ?? false;
+}
+
 /** Every notification of the portal read; how many were unread. */
 export async function markNotificationsRead(
   client: Client,

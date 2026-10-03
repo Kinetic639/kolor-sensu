@@ -8,7 +8,8 @@ import {
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { toast } from "./toast";
+import { useOptionalNotifications } from "./notifications/context";
+import { showNotificationToast } from "./notifications/toast";
 
 // A portal kept up to date as it happens (docs/product/booking-plan.md,
 // R13): the database says on the person's own channel that visits changed
@@ -44,6 +45,9 @@ export function useLivePortal({
   delayMs = 400,
 }: LivePortalOptions) {
   const router = useRouter();
+  const panel = useOptionalNotifications();
+  const panelOpen = useRef(false);
+  panelOpen.current = panel?.open ?? false;
   const subscribeRef = useRef(subscribe);
   useEffect(() => {
     subscribeRef.current = subscribe;
@@ -71,16 +75,15 @@ export function useLivePortal({
       onReconnect: refresh,
       onNotification: (notification) => {
         if (notification.portal !== portal) return;
-        const view = notificationView(notification, { timeZone, portal });
-        const href = view.href;
-        toast(view.title, {
-          description: [view.reference, view.description]
-            .filter(Boolean)
-            .join(" · "),
-          action: href
-            ? { label: "Zobacz", onClick: () => router.push(href as Route) }
-            : undefined,
-        });
+        // With the panel open, it shows there (after the reload) instead.
+        if (!panelOpen.current) {
+          const view = notificationView(notification, { timeZone, portal });
+          const href = view.href;
+          showNotificationToast(
+            view,
+            href ? () => router.push(href as Route) : undefined,
+          );
+        }
         refresh();
       },
     });
