@@ -102,7 +102,7 @@ export const parseAsDay = createParser({
  * Several values at once (`a,b`), each checked by `one`; the invalid are
  * left out, none left is no filter.
  */
-function listOf<T extends string>(one: {
+export function listOf<T extends string>(one: {
   parse: (v: string) => T | null;
   serialize: (v: T) => string;
 }) {

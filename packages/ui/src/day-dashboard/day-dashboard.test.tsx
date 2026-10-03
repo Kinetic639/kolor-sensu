@@ -92,7 +92,7 @@ describe("DayTimelineView", () => {
     });
     expect(card).toHaveAttribute(
       "href",
-      "/rezerwacje?od=2026-10-09&do=2026-10-09&wizyta=v-11:00",
+      "/rezerwacje?zakres=wszystkie&q=2610-1100&wizyta=v-11%3A00",
     );
     // The card shows the specialist and the hour, not the client.
     expect(card).toHaveTextContent("11:00");

@@ -2,13 +2,23 @@ import type { ClientRow } from "@repo/scheduling";
 import type { Meta, StoryObj } from "@storybook/react";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { expect, fn, userEvent, within } from "storybook/test";
+import { adminRows } from "../visit-table/visit-table.samples";
 import { ClientCard } from "./client-card";
+import { ClientFilterBar } from "./client-filter-bar";
+import { ClientPanel } from "./client-panel";
 import { ClientTable } from "./client-table";
+import { defaultClientLayout } from "./columns";
 import { EditClientButton } from "./edit-client";
-import { loadClientTableParams } from "./params";
+import {
+  clientPanelCloseHref,
+  clientPanelTabs,
+  loadClientTableParams,
+} from "./params";
 
-// The centre's clients (R15): the list, and a client's card with the form
-// that corrects their details.
+// The centre's clients (R15) on the portals' table, as the bookings: the
+// filters and the search in one bar, a 30 px line a client with
+// the name pinned, the columns chosen in the last header, a client open in
+// the side panel; and a client's card with the form that corrects them.
 
 const rows: ClientRow[] = [
   {
@@ -23,6 +33,7 @@ const rows: ClientRow[] = [
     paid: "1 200 zł",
     since: "Klient od 01.06.2026",
     href: "/klienci/c1",
+    notes: "Woli popołudnia.",
   },
   {
     id: "c2",
@@ -36,6 +47,7 @@ const rows: ClientRow[] = [
     paid: "200 zł",
     since: "Klient od 10.09.2026",
     href: "/klienci/c2",
+    notes: null,
   },
   {
     id: "c3",
@@ -49,59 +61,153 @@ const rows: ClientRow[] = [
     paid: "0 zł",
     since: "Klient od 30.09.2026",
     href: "/klienci/c3",
+    notes: null,
   },
 ];
 
+const save = fn(async () => ({ ok: true as const, upcomingUpdated: 1 }));
+
+function Clients({
+  query,
+  empty = false,
+  open = false,
+  visits = false,
+}: {
+  query: string;
+  empty?: boolean;
+  /** The first client open in the side panel. */
+  open?: boolean;
+  /** The panel on its visits tab. */
+  visits?: boolean;
+}) {
+  const shown = empty ? [] : rows;
+  const opened = rows[0]!;
+  const params = {
+    ...loadClientTableParams(new URLSearchParams(query)),
+    klient: open ? opened.id : null,
+  };
+  const total = shown.length;
+  const layout = defaultClientLayout();
+  return (
+    <NuqsTestingAdapter searchParams={query}>
+      <div className="flex h-[36rem] border border-[var(--border)]">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <ClientTable
+            columns={layout}
+            columnsCookie="ks_cols_storybook_klienci"
+            params={params}
+            path="/klienci"
+            rows={shown}
+            toolbar={
+              <ClientFilterBar
+                order={layout.filter((c) => c.shown).map((c) => c.id)}
+              />
+            }
+            total={total}
+            widthsCookie="ks_widths_storybook_klienci"
+          />
+        </div>
+        {open ? (
+          <ClientPanel
+            cancelled={1}
+            closeHref={clientPanelCloseHref("/klienci", params)}
+            edit={
+              <EditClientButton
+                action={save}
+                clientId={opened.id}
+                details={{
+                  name: opened.name,
+                  email: opened.email,
+                  phone: opened.phone,
+                  notes: opened.notes,
+                }}
+              />
+            }
+            notes={opened.notes}
+            row={opened}
+            tab={visits ? "wizyty" : "szczegoly"}
+            tabs={clientPanelTabs("/klienci", params)}
+            visits={adminRows.slice(0, 3)}
+          />
+        ) : null}
+      </div>
+    </NuqsTestingAdapter>
+  );
+}
+
 const meta = {
   title: "Portal/Clients",
-  component: ClientTable,
-  parameters: { layout: "padded", nextjs: { appDirectory: true } },
+  component: Clients,
+  parameters: {
+    controls: { disable: true },
+    layout: "fullscreen",
+    nextjs: { appDirectory: true },
+  },
   decorators: [
     (Story) => (
-      <NuqsTestingAdapter>
+      <div className="p-4">
         <Story />
-      </NuqsTestingAdapter>
+      </div>
     ),
   ],
-  args: {
-    path: "/klienci",
-    params: loadClientTableParams({}),
-    rows,
-    total: rows.length,
-  },
-} satisfies Meta<typeof ClientTable>;
+} satisfies Meta<typeof Clients>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Latest visit first; a name opens the client's card. */
+/** Latest visit first; a name opens the client beside the list. */
 export const List: Story = {
-  play: async ({ canvasElement }) => {
-    const table = within(canvasElement).getByRole("table", { name: "Klienci" });
+  args: { query: "" },
+  play: async ({ canvas }) => {
+    const table = canvas.getByRole("table", { name: "Klienci" });
     await expect(
       within(table).getByRole("link", { name: "Jan Kowalski" }),
-    ).toHaveAttribute("href", "/klienci/c1");
+    ).toHaveAttribute("href", "/klienci?klient=c1");
+    await expect(
+      canvas.getByRole("columnheader", { name: /Ostatnia wizyta/ }),
+    ).toHaveAttribute("aria-sort", "descending");
   },
 };
 
-/** Nobody matches the search. */
-export const NoneFound: Story = {
-  args: { rows: [], total: 0, params: loadClientTableParams({ q: "xyz" }) },
+/** Filtered to those with a visit to come, the soonest first. */
+export const WithUpcomingVisit: Story = {
+  args: { query: "nadchodzaca=jest&sort=najblizsza" },
 };
 
-/** On a phone: the table scrolls sideways. */
+/** Nobody matches the search and filters. */
+export const NothingFound: Story = {
+  args: { query: "q=xyz&dodany=ten-miesiac", empty: true },
+};
+
 export const Mobile: Story = {
+  args: { query: "" },
   globals: { viewport: { value: "mobile", isRotated: false } },
 };
 
-/** A client's card, with the form that corrects their details. */
+/** A client open in the side panel: contact, numbers, the note. */
+export const ClientOpen: Story = {
+  args: { query: "", open: true },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole("complementary", { name: "Jan Kowalski" }),
+    ).toBeVisible();
+  },
+};
+
+/** The open client's visits, each leading to its booking. */
+export const ClientVisits: Story = {
+  args: { query: "", open: true, visits: true },
+};
+
+/** A client's own page (/klienci/[id]), with the form that corrects them. */
 export const Card: Story = {
+  args: { query: "" },
   render: () => (
     <ClientCard
       cancelled={1}
       edit={
         <EditClientButton
-          action={fn(async () => ({ ok: true as const, upcomingUpdated: 1 }))}
+          action={save}
           clientId="c1"
           details={{
             name: "Jan Kowalski",

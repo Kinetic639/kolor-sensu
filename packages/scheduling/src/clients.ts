@@ -26,6 +26,8 @@ export interface ClientRow {
   name: string;
   email: string;
   phone: string | null;
+  /** The centre's note about them. */
+  notes: string | null;
   /** `3` */
   visits: string;
   /** `1 nadchodząca`, or null. */
@@ -77,6 +79,7 @@ export function clientRows(
     name: client.name,
     email: client.email,
     phone: client.phone,
+    notes: client.notes,
     visits: String(client.visits),
     upcoming: upcomingLabel(client.upcoming),
     lastVisit: client.lastVisitAt ? date(client.lastVisitAt) : "—",

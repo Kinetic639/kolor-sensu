@@ -63,7 +63,7 @@ const TONE_DOT: Record<VisitTone, string> = {
 const TITLE_ID = "wizyta-panel-tytul";
 
 /** A group of properties; its name small above, a thin line between. */
-function Group({ title, children }: { title: string; children: ReactNode }) {
+export function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="border-t border-[var(--border)] px-1.5 py-1.5 first:border-t-0">
       <h3 className="flex h-6 items-center px-2 text-[0.6875rem] font-semibold tracking-[0.04em] text-[var(--text-muted)]">
@@ -75,7 +75,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
 }
 
 /** One property: its icon and name, then the value (30 px, as a table row). */
-function Prop({
+export function Prop({
   icon,
   label,
   children,
@@ -117,7 +117,7 @@ function WithActions({
   );
 }
 
-function Contact({
+export function Contact({
   phone,
   email,
 }: {

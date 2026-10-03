@@ -1936,11 +1936,16 @@ export type Database = {
       };
       search_clients: {
         Args: {
+          p_created_from?: string;
+          p_created_to?: string;
           p_desc?: boolean;
+          p_last_from?: string;
+          p_last_to?: string;
           p_limit?: number;
           p_offset?: number;
           p_query?: string | null;
           p_sort?: string;
+          p_upcoming?: boolean;
         };
         Returns: {
           id: string;

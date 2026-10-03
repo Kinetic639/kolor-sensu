@@ -147,34 +147,6 @@ export async function searchVisits(
   };
 }
 
-const NOT_FILTERS = new Set(["sort", "descending", "limit", "offset"]);
-
-/**
- * How many visits each of several searches finds (the table's views), in
- * one call; by the search's id.
- */
-export async function countVisitViews(
-  client: Client,
-  views: { id: string; search: Partial<VisitSearch> }[],
-): Promise<Record<string, number>> {
-  // Only the filters set (an absent one is no filter); no order or page.
-  const payload = views.map(({ id, search }) => ({
-    id,
-    ...Object.fromEntries(
-      Object.entries(search).filter(
-        ([key, value]) => value != null && !NOT_FILTERS.has(key),
-      ),
-    ),
-  }));
-  const { data, error } = await client.rpc("count_visit_views", {
-    p_views: payload,
-  });
-  if (error) throw error;
-  return Object.fromEntries(
-    (data ?? []).map((row) => [row.view_id, Number(row.total)]),
-  );
-}
-
 /** A visit with what the side panel adds: its history and e-mails. */
 export interface VisitDetail extends Visit {
   createdAt: string;

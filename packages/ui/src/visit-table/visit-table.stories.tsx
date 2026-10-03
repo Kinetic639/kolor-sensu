@@ -13,8 +13,6 @@ import { ResendPaymentLinkButton } from "./resend-payment-link";
 import { VisitPanel } from "./visit-panel";
 import { VisitFilterBar } from "./visit-filter-bar";
 import { VisitTable } from "./visit-table";
-import { VisitViewMenu } from "./visit-view-menu";
-import { currentView, viewHref, visitViews } from "./views";
 import {
   adminRows,
   panelTabs,
@@ -26,10 +24,10 @@ import {
   tableParams,
 } from "./visit-table.samples";
 
-// The bookings table as the portals show it, edge to edge: the view, the
-// search and the filters in one bar above, one 30 px line a visit with grid
-// lines, the reference and the "⋮" menu stuck to the edges, the columns
-// chosen in the last header, the pages below.
+// The bookings table as the portals show it, edge to edge: the filters and
+// the search in one bar above, one 30 px line a visit with grid lines, the
+// reference and the "⋮" menu stuck to the edges, the columns chosen in the
+// last header, the pages below.
 
 const cancel = fn();
 const resend = fn(async () => ({
@@ -61,7 +59,6 @@ function BookingsTable({
     ...tableParams(query),
     wizyta: open || reservation ? opened.id : null,
   };
-  const view = currentView(params, admin);
   const total = empty ? 0 : admin ? 42 : rows.length;
   return (
     <NuqsTestingAdapter searchParams={query}>
@@ -116,18 +113,6 @@ function BookingsTable({
                 services={sampleServices}
                 showPayments={admin}
                 specialists={admin ? sampleSpecialists : undefined}
-                view={
-                  <VisitViewMenu
-                    label={view?.label ?? "Własny widok"}
-                    total={total}
-                    views={visitViews(admin).map((option) => ({
-                      id: option.id,
-                      label: option.label,
-                      href: viewHref("/kalendarz", params, option),
-                      active: option.id === view?.id,
-                    }))}
-                  />
-                }
               />
             }
             total={total}

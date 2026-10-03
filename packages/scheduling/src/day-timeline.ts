@@ -1,5 +1,5 @@
 import { formatInTimeZone } from "date-fns-tz";
-import type { VisitLike, VisitTone } from "./visits";
+import { bookingHref, type VisitLike, type VisitTone } from "./visits";
 
 // The admin's day on a line of hours (docs/product/booking-plan.md, R14):
 // today's visits as cards placed by their time, a lane per room (online
@@ -172,7 +172,8 @@ export function dayTimeline(
       past,
       current,
       awaitingPayment,
-      href: `/rezerwacje?od=${date}&do=${date}&wizyta=${visit.id}`,
+      // Just this booking, as everywhere a booking is clicked.
+      href: bookingHref(visit),
     };
   };
   const cards = taking.map(cardOf);

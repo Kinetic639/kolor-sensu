@@ -206,7 +206,6 @@ export {
   getVisit,
   listVisitEvents,
   listVisits,
-  countVisitViews,
   searchVisits,
 } from "./visits";
 export type {

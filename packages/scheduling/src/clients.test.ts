@@ -25,6 +25,7 @@ describe("clientRows", () => {
         name: "Jan Kowalski",
         email: "jan@example.invalid",
         phone: "600 100 200",
+        notes: null,
         visits: "3",
         upcoming: "2 nadchodzące",
         lastVisit: "20.09.2026",

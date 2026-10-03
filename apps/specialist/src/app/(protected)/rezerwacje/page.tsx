@@ -8,21 +8,17 @@ import { EmptyState, PageTitle } from "@repo/ui/portal-content";
 import { RowActionLink, RowActions } from "@repo/ui/row-actions";
 import {
   columnsCookieName,
-  currentView,
   loadVisitTableParams,
   parseColumnLayout,
   parseColumnWidths,
   ResendPaymentLinkButton,
   toVisitSearch,
-  viewHref,
   visitColumnsAvailable,
   VisitFilterBar,
   VisitPanel,
   visitPanelCloseHref,
   visitPanelTabs,
   VisitTable,
-  VisitViewMenu,
-  visitViews,
   widthsCookieName,
 } from "@repo/ui/visit-table";
 import { cookies } from "next/headers";
@@ -83,7 +79,6 @@ export default async function BookingsPage({
     cookieStore.get(columnsCookie)?.value,
     visitColumnsAvailable({ showPayment: false, showSpecialist: false }),
   );
-  const view = currentView(params, false);
 
   return (
     <FullBleed>
@@ -126,18 +121,6 @@ export default async function BookingsPage({
                 }))}
                 showPayments={false}
                 specialists={[]}
-                view={
-                  <VisitViewMenu
-                    label={view?.label ?? "Własny widok"}
-                    total={page.total}
-                    views={visitViews(false).map((option) => ({
-                      id: option.id,
-                      label: option.label,
-                      href: viewHref(PATH, params, option),
-                      active: option.id === view?.id,
-                    }))}
-                  />
-                }
               />
             }
             total={page.total}

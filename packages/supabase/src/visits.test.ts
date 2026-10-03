@@ -4,7 +4,6 @@ import {
   centreRefundVisit,
   centreRescheduleVisit,
   centreResendPaymentLink,
-  countVisitViews,
   getVisit,
   listVisitEvents,
   listVisits,
@@ -406,39 +405,5 @@ describe("the centre's own way (R12)", () => {
         { startsAt: "x", mode: "online", roomId: null, reason: null },
       ),
     ).rejects.toMatchObject({ code: "forbidden" });
-  });
-});
-
-describe("countVisitViews", () => {
-  it("asks once for every view, with only the filters set", async () => {
-    const rpc = vi.fn().mockResolvedValue({
-      data: [
-        { view_id: "dzis", total: 3 },
-        { view_id: "odwolane", total: 1 },
-      ],
-      error: null,
-    });
-    const counts = await countVisitViews({ rpc } as never, [
-      {
-        id: "dzis",
-        search: {
-          from: "2030-10-01T22:00:00Z",
-          to: null,
-          sort: "starts_at",
-          descending: false,
-          limit: 20,
-          offset: 0,
-        },
-      },
-      { id: "odwolane", search: { statuses: ["cancelled"] } },
-    ]);
-    expect(rpc).toHaveBeenCalledTimes(1);
-    expect(rpc).toHaveBeenCalledWith("count_visit_views", {
-      p_views: [
-        { id: "dzis", from: "2030-10-01T22:00:00Z" },
-        { id: "odwolane", statuses: ["cancelled"] },
-      ],
-    });
-    expect(counts).toEqual({ dzis: 3, odwolane: 1 });
   });
 });

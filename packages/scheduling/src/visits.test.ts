@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  bookingHref,
   refundsToSettle,
   visitDays,
   visitRows,
@@ -122,6 +123,18 @@ describe("a reservation not paid yet (R11)", () => {
       paymentDue: null,
       resendable: false,
     });
+  });
+});
+
+describe("bookingHref", () => {
+  it("finds just that booking, by its number over all time, open", () => {
+    expect(bookingHref({ id: "v1", reference: "TEST-1012-02" })).toBe(
+      "/rezerwacje?zakres=wszystkie&q=TEST-1012-02&wizyta=v1",
+    );
+    // No number: open by its id alone.
+    expect(bookingHref({ id: "v1", reference: null })).toBe(
+      "/rezerwacje?zakres=wszystkie&wizyta=v1",
+    );
   });
 });
 

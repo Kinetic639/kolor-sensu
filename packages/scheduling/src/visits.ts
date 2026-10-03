@@ -244,6 +244,25 @@ function dueLabel(instant: string, timeZone: string) {
   return `${weekday} ${formatInTimeZone(new Date(instant), timeZone, "dd.MM, HH:mm")}`;
 }
 
+/**
+ * One booking in the bookings table, wherever it is clicked (the
+ * dashboard, a notification, a client): searched by its number over all
+ * time, open in the side panel. Nothing else filtered.
+ */
+export function bookingHref({
+  id,
+  reference,
+}: {
+  id: string;
+  reference?: string | null;
+}) {
+  return `/rezerwacje?${new URLSearchParams({
+    zakres: "wszystkie",
+    ...(reference ? { q: reference } : {}),
+    wizyta: id,
+  })}`;
+}
+
 /** The days that have visits, in order, each with its visits. */
 export function visitDays(
   visits: VisitLike[],

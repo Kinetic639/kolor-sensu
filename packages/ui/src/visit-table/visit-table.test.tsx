@@ -182,6 +182,22 @@ describe("VisitTable", () => {
     ).toHaveAttribute("href", "/kalendarz?wierszy=10");
   });
 
+  it("the footer: rows per page on the right, by the pages", () => {
+    render(
+      <VisitTable
+        params={tableParams()}
+        path={path}
+        rows={adminRows}
+        total={4}
+      />,
+    );
+    const pages = screen.getByRole("navigation", { name: "Strony" });
+    expect(pages.parentElement).toContainElement(
+      screen.getByRole("navigation", { name: "Wierszy na stronie" }),
+    );
+    expect(pages.parentElement).toHaveClass("ml-auto");
+  });
+
   it("a specialist's table has no payments or specialist column", () => {
     render(
       <VisitTable
@@ -250,9 +266,44 @@ describe("VisitFilterBar", () => {
     expect(
       screen.getByRole("button", { name: "Filtry, ustawione: 2" }),
     ).toBeInTheDocument();
+    const searchbox = screen.getByRole("searchbox", {
+      name: "Szukaj rezerwacji",
+    });
+    expect(searchbox).toHaveClass("w-0");
+    // The chips on the bar's right.
+    const chips = screen.getByRole("group", { name: "Ustawione filtry" });
+    expect(chips).toHaveClass("ml-auto");
+    expect(chips).toContainElement(
+      screen.getByRole("button", { name: "Usuń filtr Termin" }),
+    );
+    // The filters first, at the bar's left, then the search.
     expect(
-      screen.getByRole("searchbox", { name: "Szukaj rezerwacji" }),
-    ).toHaveClass("w-0");
+      screen
+        .getByRole("button", { name: "Filtry, ustawione: 2" })
+        .compareDocumentPosition(searchbox) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    // Nothing searched: nothing to clear.
+    expect(
+      screen.queryByRole("button", { name: "Wyczyść wyszukiwanie" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("clears the whole search with the button at its end, from page 1", async () => {
+    const onUrlUpdate = vi.fn();
+    renderBar("?q=kowal&strona=3", undefined, onUrlUpdate);
+    const search = screen.getByRole("searchbox", { name: "Szukaj rezerwacji" });
+    expect(search).toHaveValue("kowal");
+    await userEvent.click(
+      screen.getByRole("button", { name: "Wyczyść wyszukiwanie" }),
+    );
+    expect(search).toHaveValue("");
+    expect(search).toHaveFocus();
+    expect(onUrlUpdate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ queryString: "" }),
+    );
+    expect(
+      screen.queryByRole("button", { name: "Wyczyść wyszukiwanie" }),
+    ).not.toBeInTheDocument();
   });
 
   it("the filter list marks what is in the bar, removes it, clears all", async () => {

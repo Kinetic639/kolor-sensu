@@ -23,10 +23,26 @@ import { sortDirection, type VisitTableParams } from "@repo/ui/visit-table";
 export async function loadClients(params: ClientTableParams) {
   const client = await createClient();
   const settings = await centreSettings();
-  const page = await searchClients(client, toClientSearch(params));
+  const timeZone = settings.timezone;
+  // The client open in the side panel comes with the page: every tab at
+  // once, so switching tabs asks for nothing.
+  const [page, found, visits] = await Promise.all([
+    searchClients(client, toClientSearch(params, { timeZone })),
+    params.klient ? getClient(client, params.klient).catch(() => null) : null,
+    params.klient ? listClientVisits(client, params.klient) : null,
+  ]);
   return {
-    rows: clientRows(page.clients, { timeZone: settings.timezone }),
+    rows: clientRows(page.clients, { timeZone }),
     total: page.total,
+    open: found
+      ? {
+          client: found,
+          row: clientRows([found], { timeZone })[0]!,
+          visits: visitRows(sortVisits(visits ?? [], "termin", "desc"), {
+            timeZone,
+          }),
+        }
+      : null,
   };
 }
 

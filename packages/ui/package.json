@@ -20,6 +20,7 @@
     "./resource-colors": "./src/resource-colors.ts",
     "./container": "./src/container.tsx",
     "./dialog": "./src/dialog.tsx",
+    "./data-table": "./src/data-table/index.ts",
     "./day-dashboard": "./src/day-dashboard/index.ts",
     "./dropdown-menu": "./src/dropdown-menu.tsx",
     "./image-crop-dialog": "./src/image-crop-dialog.tsx",

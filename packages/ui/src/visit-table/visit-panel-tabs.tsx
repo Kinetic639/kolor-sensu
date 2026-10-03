@@ -14,12 +14,15 @@ export function VisitPanelTabs<Key extends string>({
   tabs,
   initial,
   panes,
+  label = "Sekcje rezerwacji",
 }: {
   tabs: { key: Key; label: string; href: string }[];
   /** The tab in the address when the page was rendered. */
   initial: Key;
   /** Each tab's content, by its key. */
   panes: Partial<Record<Key, ReactNode>>;
+  /** The tabs' name. */
+  label?: string;
 }) {
   const [active, setActive] = useState(initial);
   const show = (key: Key, href: string) => (event: MouseEvent) => {
@@ -33,7 +36,7 @@ export function VisitPanelTabs<Key extends string>({
   return (
     <>
       <nav
-        aria-label="Sekcje rezerwacji"
+        aria-label={label}
         className="flex h-8 shrink-0 items-stretch gap-3.5 border-b border-[var(--border)] px-3.5"
       >
         {tabs.map((one) => {

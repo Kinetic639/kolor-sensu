@@ -1,5 +1,5 @@
 import { formatInTimeZone } from "date-fns-tz";
-import type { VisitTone } from "./visits";
+import { bookingHref, type VisitTone } from "./visits";
 
 // A portal notification (docs/product/booking-plan.md, R13) as the bell's
 // list and the live toast show it: what happened, to whose visit and when,
@@ -168,11 +168,7 @@ export function notificationView(
     tone,
     icon,
     href: notification.appointmentId
-      ? `/rezerwacje?${new URLSearchParams({
-          zakres: "wszystkie",
-          ...(d.reference ? { q: d.reference } : {}),
-          wizyta: notification.appointmentId,
-        })}`
+      ? bookingHref({ id: notification.appointmentId, reference: d.reference })
       : null,
     when,
     unread: notification.readAt === null,

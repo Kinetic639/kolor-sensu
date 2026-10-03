@@ -33,6 +33,14 @@ export type ClientSort =
 export interface ClientSearch {
   /** Words to find in the name, e-mail or phone. */
   query?: string | null;
+  /** With a visit to come (true), without (false), either (null). */
+  upcoming?: boolean | null;
+  /** Their last visit from, and before (instants). */
+  lastFrom?: string | null;
+  lastTo?: string | null;
+  /** A client from, and before. */
+  createdFrom?: string | null;
+  createdTo?: string | null;
   sort: ClientSort;
   descending: boolean;
   /** 1–100. */
@@ -108,6 +116,11 @@ export async function searchClients(
 ): Promise<{ clients: CentreClient[]; total: number }> {
   const { data, error } = await client.rpc("search_clients", {
     p_query: search.query ?? undefined,
+    p_upcoming: search.upcoming ?? undefined,
+    p_last_from: search.lastFrom ?? undefined,
+    p_last_to: search.lastTo ?? undefined,
+    p_created_from: search.createdFrom ?? undefined,
+    p_created_to: search.createdTo ?? undefined,
     p_sort: search.sort,
     p_desc: search.descending,
     p_limit: search.limit,

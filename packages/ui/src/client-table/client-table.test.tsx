@@ -1,13 +1,21 @@
 import type { ClientRow } from "@repo/scheduling";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { adminRows } from "../visit-table/visit-table.samples";
 import { ClientCard } from "./client-card";
+import { ClientFilterBar } from "./client-filter-bar";
+import { ClientPanel } from "./client-panel";
 import { ClientTable } from "./client-table";
+import { parseClientLayout } from "./columns";
 import { EditClientButton } from "./edit-client";
-import { loadClientTableParams } from "./params";
+import {
+  clientPanelCloseHref,
+  clientPanelTabs,
+  loadClientTableParams,
+} from "./params";
 
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
@@ -25,15 +33,17 @@ const row: ClientRow = {
   paid: "600 zł",
   since: "Klient od 01.09.2026",
   href: "/klienci/client-1",
+  notes: "Woli popołudnia",
 };
 
 beforeEach(() => {
   router.refresh.mockReset();
+  router.push.mockReset();
   vi.mocked(toast.success).mockReset();
 });
 
 describe("ClientTable", () => {
-  it("each client with their visits, the name opening their card", () => {
+  it("each client a row, the name pinned; the headers sort", () => {
     render(
       <ClientTable
         params={loadClientTableParams({})}
@@ -41,38 +51,94 @@ describe("ClientTable", () => {
         rows={[row]}
         total={1}
       />,
-      { wrapper: withNuqsTestingAdapter() },
     );
     const table = screen.getByRole("table", { name: "Klienci" });
+    // The name opens the client in the side panel.
     expect(
       within(table).getByRole("link", { name: "Jan Kowalski" }),
-    ).toHaveAttribute("href", "/klienci/client-1");
-    expect(table).toHaveTextContent("1 nadchodząca");
+    ).toHaveAttribute("href", "/klienci?klient=client-1");
     expect(table).toHaveTextContent("600 zł");
     // Sorted by the latest visit, latest first, by default.
     expect(
       within(table).getByRole("columnheader", { name: /Ostatnia wizyta/ }),
     ).toHaveAttribute("aria-sort", "descending");
-    expect(within(table).getByRole("link", { name: /Klient/ })).toHaveAttribute(
-      "href",
-      "/klienci?sort=nazwisko",
-    );
-    expect(screen.getByLabelText("Szukaj klientów")).toBeInTheDocument();
+    expect(
+      within(table).getByRole("link", { name: /^Klient/ }),
+    ).toHaveAttribute("href", "/klienci?sort=nazwisko");
     expect(screen.getByText("1–1 z 1")).toBeInTheDocument();
   });
 
-  it("says why it is empty", () => {
+  it("the row's menu: their card, a call, an e-mail", async () => {
+    render(
+      <ClientTable
+        params={loadClientTableParams({})}
+        path="/klienci"
+        rows={[row]}
+        total={1}
+      />,
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Akcje: Jan Kowalski" }),
+    );
+    expect(
+      await screen.findByRole("menuitem", { name: "Karta klienta" }),
+    ).toHaveAttribute("href", "/klienci/client-1");
+    expect(screen.getByRole("menuitem", { name: "Zadzwoń" })).toHaveAttribute(
+      "href",
+      "tel:600100200",
+    );
+    expect(
+      screen.getByRole("menuitem", { name: "Napisz e-mail" }),
+    ).toHaveAttribute("href", "mailto:jan@example.invalid");
+  });
+
+  it("a click on a row opens the client; again, closes them", () => {
     const { rerender } = render(
       <ClientTable
         params={loadClientTableParams({})}
         path="/klienci"
-        rows={[]}
-        total={0}
+        rows={[row]}
+        total={1}
       />,
-      { wrapper: withNuqsTestingAdapter() },
     );
-    expect(screen.getByText(/Nie ma jeszcze klientów/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText("jan@example.invalid"));
+    expect(router.push).toHaveBeenCalledWith("/klienci?klient=client-1", {
+      scroll: false,
+    });
     rerender(
+      <ClientTable
+        params={{ ...loadClientTableParams({}), klient: "client-1" }}
+        path="/klienci"
+        rows={[row]}
+        total={1}
+      />,
+    );
+    const name = screen.getByRole("link", { name: "Jan Kowalski" });
+    expect(name).toHaveAttribute("aria-current", "true");
+    expect(name).toHaveAttribute("href", "/klienci");
+  });
+
+  it("shows the person's own columns, with the menu to change them", () => {
+    render(
+      <ClientTable
+        columns={parseClientLayout("notatka,wizyty")}
+        columnsCookie="ks_cols_klienci"
+        params={loadClientTableParams({})}
+        path="/klienci"
+        rows={[row]}
+        total={1}
+      />,
+    );
+    const headers = screen
+      .getAllByRole("columnheader")
+      .map((header) => header.textContent);
+    expect(headers.slice(1, 3)).toEqual(["Notatka", "Wizyty"]);
+    expect(screen.getByText("Woli popołudnia")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Kolumny/ })).toBeInTheDocument();
+  });
+
+  it("says why it is empty", () => {
+    render(
       <ClientTable
         params={loadClientTableParams({ q: "xyz" })}
         path="/klienci"
@@ -81,8 +147,80 @@ describe("ClientTable", () => {
       />,
     );
     expect(
-      screen.getByText("Nikt nie pasuje do wyszukiwania."),
+      screen.getByText(/Żaden klient nie pasuje do wyszukiwania i filtrów/),
     ).toBeInTheDocument();
+  });
+});
+
+describe("ClientFilterBar", () => {
+  it("a chip per filter, the search folded to a magnifier", () => {
+    render(<ClientFilterBar />, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: "?nadchodzaca=brak&dodany=ten-miesiac",
+      }),
+    });
+    expect(
+      screen.getByRole("button", { name: /Nadchodząca wizyta jest\s*Brak/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Klient od:\s*Ten miesiąc/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Filtry, ustawione: 2" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("searchbox", { name: "Szukaj klienta" }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("ClientPanel", () => {
+  const params = { ...loadClientTableParams({}), klient: "client-1" };
+
+  it("details: how to reach them, their visits in numbers, the note", () => {
+    render(
+      <ClientPanel
+        cancelled={1}
+        closeHref={clientPanelCloseHref("/klienci", params)}
+        notes="Woli popołudnia"
+        row={row}
+        tab="szczegoly"
+        tabs={clientPanelTabs("/klienci", params)}
+        visits={[]}
+      />,
+    );
+    const panel = screen.getByRole("complementary", { name: "Jan Kowalski" });
+    expect(panel).toHaveTextContent("Woli popołudnia");
+    expect(
+      within(panel).getByRole("link", { name: "Zamknij kartę klienta" }),
+    ).toHaveAttribute("href", "/klienci");
+    expect(
+      within(panel).getByRole("link", { name: /Karta klienta/ }),
+    ).toHaveAttribute("href", "/klienci/client-1");
+    expect(
+      within(panel).getByRole("navigation", { name: "Sekcje klienta" }),
+    ).toBeInTheDocument();
+  });
+
+  it("their visits, each leading to its booking", () => {
+    const visit = adminRows[0]!;
+    render(
+      <ClientPanel
+        cancelled={0}
+        closeHref="/klienci"
+        notes={null}
+        row={row}
+        tab="wizyty"
+        tabs={clientPanelTabs("/klienci", params)}
+        visits={[visit]}
+      />,
+    );
+    expect(
+      screen.getByRole("link", { name: new RegExp(visit.serviceName) }),
+    ).toHaveAttribute(
+      "href",
+      `/rezerwacje?zakres=wszystkie&q=${visit.reference}&wizyta=${visit.id}`,
+    );
   });
 });
 

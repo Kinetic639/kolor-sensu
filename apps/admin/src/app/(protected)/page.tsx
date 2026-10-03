@@ -4,6 +4,7 @@ import { settleVisitAsCentreAction } from "@/features/visits/actions";
 import {
   addDays,
   awaitingPaymentSummary,
+  bookingHref,
   dayNav,
   dayTimeline,
   owedInAll,
@@ -136,7 +137,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       title: `Płatność do ${at(visit.paymentDueAt!, "HH:mm")}`,
       detail: `${visit.reference} · ${visit.client.name ?? "Klient"} · ${at(visit.startsAt, "dd.MM, HH:mm")}`,
       tone: "warning" as const,
-      href: `/rezerwacje?zakres=wszystkie&q=${visit.reference}&wizyta=${visit.id}`,
+      href: bookingHref(visit),
       action: (
         <ResendPaymentLinkButton
           action={resendPaymentLinkAction}

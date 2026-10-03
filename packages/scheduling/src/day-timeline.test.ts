@@ -107,9 +107,9 @@ describe("dayTimeline", () => {
       awaitingPayment: true,
       status: { label: "Czeka na płatność · do 13:00", tone: "warning" },
     });
-    // The booking among that day's.
+    // Just that booking, found by its number.
     expect(waiting!.href).toBe(
-      `/rezerwacje?od=2026-10-09&do=2026-10-09&wizyta=${waiting!.id}`,
+      `/rezerwacje?zakres=wszystkie&q=${waiting!.reference}&wizyta=${waiting!.id}`,
     );
   });
 

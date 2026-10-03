@@ -1,24 +1,19 @@
 import { CentreVisitToolbar } from "@/features/visits/cancel-visit";
 import { loadAdminVisits } from "@/features/visits/loaders";
-import { countVisitViewsAction } from "@/features/visits/actions";
 import { VisitActions } from "@/features/visits/visit-actions";
 import { FullBleed } from "@repo/ui/full-bleed";
 import { PageTitle } from "@repo/ui/portal-content";
 import {
   columnsCookieName,
-  currentView,
   loadVisitTableParams,
   parseColumnLayout,
   parseColumnWidths,
-  viewHref,
   visitColumnsAvailable,
   VisitFilterBar,
   VisitPanel,
   visitPanelCloseHref,
   visitPanelTabs,
   VisitTable,
-  VisitViewMenu,
-  visitViews,
   widthsCookieName,
 } from "@repo/ui/visit-table";
 import { cookies } from "next/headers";
@@ -52,7 +47,6 @@ export default async function BookingsPage({
     cookieStore.get(columnsCookie)?.value,
     visitColumnsAvailable({ showPayment: true, showSpecialist: true }),
   );
-  const view = currentView(params, true);
 
   return (
     <FullBleed>
@@ -96,19 +90,6 @@ export default async function BookingsPage({
               services={filters.services}
               showPayments
               specialists={filters.specialists}
-              view={
-                <VisitViewMenu
-                  countViews={countVisitViewsAction}
-                  label={view?.label ?? "Własny widok"}
-                  total={total}
-                  views={visitViews(true).map((option) => ({
-                    id: option.id,
-                    label: option.label,
-                    href: viewHref(PATH, params, option),
-                    active: option.id === view?.id,
-                  }))}
-                />
-              }
             />
           }
           total={total}

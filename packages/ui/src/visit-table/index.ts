@@ -45,8 +45,6 @@ export {
 export type { VisitTableProps } from "./visit-table";
 export { VisitFilterBar } from "./visit-filter-bar";
 export type { FilterChoice, VisitFilterBarProps } from "./visit-filter-bar";
-export { VisitViewMenu } from "./visit-view-menu";
-export type { VisitViewLink } from "./visit-view-menu";
 export { VisitColumnsMenu } from "./visit-columns-menu";
 export {
   columnsCookieName,
@@ -59,12 +57,3 @@ export {
   widthsCookieName,
 } from "./columns";
 export type { ColumnLayout, ColumnWidths, VisitColumnId } from "./columns";
-export {
-  currentView,
-  viewFilters,
-  viewHref,
-  viewParams,
-  VISIT_VIEWS,
-  visitViews,
-} from "./views";
-export type { VisitView } from "./views";
