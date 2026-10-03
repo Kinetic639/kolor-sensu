@@ -25,14 +25,6 @@ interface DashboardBaseProps {
   attention: AttentionItemData[];
 }
 
-export interface AdminDashboardProps extends DashboardBaseProps {
-  rooms: SummaryItemData[];
-  team: SummaryItemData[];
-  events: EventItemData[];
-  /** Money still owed to clients, with a way to settle it (first to see). */
-  settlements?: ReactNode;
-}
-
 function DashboardMetrics({ metrics }: { metrics: DashboardMetric[] }) {
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -43,100 +35,6 @@ function DashboardMetrics({ metrics }: { metrics: DashboardMetric[] }) {
           {...metric}
         />
       ))}
-    </div>
-  );
-}
-
-export function AdminDashboard({
-  title,
-  metrics,
-  appointments,
-  attention,
-  rooms,
-  team,
-  events,
-  settlements,
-}: AdminDashboardProps) {
-  return (
-    <div className="space-y-5">
-      <PageTitle>{title}</PageTitle>
-      <DashboardMetrics metrics={metrics} />
-      <div className="grid gap-4 xl:grid-cols-12">
-        <DashboardSection
-          className="order-2 xl:order-1 xl:col-span-6"
-          title="Dzisiejsze wizyty"
-          actionLabel="Pełny kalendarz"
-          actionHref="/kalendarz"
-        >
-          {appointments.length > 0 ? (
-            <AppointmentList items={appointments} />
-          ) : (
-            <DashboardEmptyState
-              title="Brak wizyt na dziś"
-              description="Nowe rezerwacje na dziś pojawią się tu same."
-            />
-          )}
-        </DashboardSection>
-        <DashboardSection
-          className="order-1 xl:order-2 xl:col-span-3"
-          title="Wymaga uwagi"
-        >
-          {settlements || attention.length > 0 ? (
-            <div className="space-y-4">
-              {settlements}
-              {attention.length > 0 ? (
-                <AttentionList items={attention} />
-              ) : null}
-            </div>
-          ) : (
-            <DashboardEmptyState
-              title="Nic nie wymaga uwagi"
-              description="Wszystkie dostępne dane są aktualne."
-            />
-          )}
-        </DashboardSection>
-        <DashboardSection
-          className="order-3 xl:col-span-3"
-          title="Gabinety dzisiaj"
-          actionLabel="Zobacz gabinety"
-          actionHref="/gabinety"
-        >
-          {rooms.length > 0 ? (
-            <SummaryList ariaLabel="Gabinety dzisiaj" items={rooms} />
-          ) : (
-            <DashboardEmptyState
-              title="Gabinety dziś wolne"
-              description="Nikt nie ma dziś wizyt stacjonarnych."
-            />
-          )}
-        </DashboardSection>
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <DashboardSection
-          title="Nasz zespół dziś"
-          actionLabel="Zobacz specjalistów"
-          actionHref="/specjalisci"
-        >
-          {team.length > 0 ? (
-            <SummaryList ariaLabel="Zespół dziś" items={team} />
-          ) : (
-            <DashboardEmptyState
-              title="Dziś bez wizyt"
-              description="Nikt z zespołu nie ma dziś wizyt."
-            />
-          )}
-        </DashboardSection>
-        <DashboardSection title="Nadchodzące warsztaty i wydarzenia">
-          {events.length > 0 ? (
-            <EventList items={events} />
-          ) : (
-            <DashboardEmptyState
-              title="Brak nadchodzących wydarzeń"
-              description="Nowe wydarzenia pojawią się w tym miejscu."
-            />
-          )}
-        </DashboardSection>
-      </div>
     </div>
   );
 }

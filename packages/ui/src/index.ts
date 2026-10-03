@@ -108,9 +108,7 @@ export {
   type SummaryListProps,
 } from "./portal-dashboard";
 export {
-  AdminDashboard,
   SpecialistDashboard,
-  type AdminDashboardProps,
   type SpecialistDashboardProps,
 } from "./portal-dashboards";
 export {

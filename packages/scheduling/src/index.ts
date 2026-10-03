@@ -4,6 +4,7 @@ export * from "./availability";
 export * from "./calendar-view";
 export * from "./clients";
 export * from "./dashboard";
+export * from "./day-timeline";
 export { DEFAULT_TIME_ZONE, formatZonedDateTime } from "./date";
 export * from "./grid";
 export * from "./labels";

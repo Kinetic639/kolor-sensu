@@ -12,9 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import {
-  AdminDashboard,
   SpecialistDashboard,
-  type AdminDashboardProps,
   type SpecialistDashboardProps,
 } from "./portal-dashboards";
 import type {
@@ -22,37 +20,6 @@ import type {
   PortalNavigationSection,
 } from "./portal-layout";
 import { PortalShell } from "./portal-shell";
-
-const adminNavigation: PortalNavigationSection[] = [
-  {
-    label: "OPERACJE",
-    items: [
-      { label: "Dashboard", href: "/", icon: "dashboard" },
-      {
-        label: "Kalendarz i rezerwacje",
-        href: "/kalendarz",
-        icon: "calendar",
-      },
-    ],
-  },
-  {
-    label: "ZESPÓŁ I ZASOBY",
-    items: [
-      { label: "Specjaliści", href: "/specjalisci", icon: "specialists" },
-      { label: "Gabinety", href: "/gabinety", icon: "rooms" },
-      { label: "Oferta", href: "/oferta", icon: "services" },
-      { label: "Klienci", href: "/klienci", icon: "clients" },
-    ],
-  },
-  {
-    label: "STRONA",
-    items: [{ label: "CMS", href: "/cms", icon: "cms" }],
-  },
-  {
-    label: "SYSTEM",
-    items: [{ label: "Ustawienia", href: "/ustawienia", icon: "settings" }],
-  },
-];
 
 const specialistNavigation: PortalNavigationSection[] = [
   {
@@ -77,14 +44,6 @@ const specialistNavigation: PortalNavigationSection[] = [
     label: "KONTO",
     items: [{ label: "Ustawienia", href: "/ustawienia", icon: "settings" }],
   },
-];
-
-const adminMobileNavigation: PortalNavigationItem[] = [
-  { label: "Dashboard", href: "/", icon: "dashboard" },
-  { label: "Kalendarz", href: "/kalendarz", icon: "calendar" },
-  { label: "Zespół", href: "/specjalisci", icon: "specialists" },
-  { label: "Gabinety", href: "/gabinety", icon: "rooms" },
-  { label: "Więcej", href: "/ustawienia", icon: "settings" },
 ];
 
 const specialistMobileNavigation: PortalNavigationItem[] = [
@@ -140,114 +99,6 @@ const attention = [
     tone: "danger" as const,
   },
 ];
-
-const adminDashboardProps: AdminDashboardProps = {
-  title: "Dzień dobry, Michale",
-  metrics: [
-    {
-      id: "today",
-      label: "Wizyty dzisiaj",
-      value: 8,
-      detail: "2 zakończone",
-      icon: CalendarCheck,
-      tone: "mint",
-    },
-    {
-      id: "pending",
-      label: "Oczekujące rezerwacje",
-      value: 3,
-      detail: "Wymagają decyzji",
-      icon: CalendarClock,
-      tone: "peach",
-    },
-    {
-      id: "team",
-      label: "Specjaliści dziś",
-      value: "7 / 9",
-      detail: "2 osoby nieobecne",
-      icon: Users,
-      tone: "lilac",
-    },
-    {
-      id: "rooms",
-      label: "Obłożenie gabinetów",
-      value: "78%",
-      detail: "4 z 5 w użyciu",
-      icon: Building2,
-      tone: "blue",
-    },
-  ],
-  appointments,
-  attention,
-  rooms: [
-    {
-      id: "green",
-      title: "Gabinet Zielony",
-      description: "4 wizyty",
-      value: "09:00–17:30",
-      icon: Armchair,
-      tone: "success",
-    },
-    {
-      id: "blue",
-      title: "Gabinet Błękitny",
-      description: "3 wizyty",
-      value: "10:00–18:00",
-      icon: Armchair,
-      tone: "info",
-    },
-    {
-      id: "sand",
-      title: "Gabinet Piaskowy",
-      description: "2 wizyty",
-      value: "12:00–19:00",
-      icon: Armchair,
-      tone: "warning",
-    },
-  ],
-  team: [
-    {
-      id: "anna",
-      title: "Anna Kowalska",
-      description: "Psychoterapeutka",
-      value: "4 wizyty",
-      icon: UserRound,
-      tone: "success",
-    },
-    {
-      id: "marek",
-      title: "Marek Wiśniewski",
-      description: "Psycholog",
-      value: "3 wizyty",
-      icon: UserRound,
-      tone: "info",
-    },
-    {
-      id: "ewa",
-      title: "Ewa Kamińska",
-      description: "Psychoterapeutka par",
-      value: "2 wizyty",
-      icon: UserRound,
-      tone: "warning",
-    },
-  ],
-  events: [
-    {
-      id: "event-1",
-      day: "24",
-      month: "WRZ",
-      title: "Warsztat: Spokojniej w relacjach",
-      meta: "18:00 · Sala warsztatowa · 8 zapisów",
-    },
-    {
-      id: "event-2",
-      day: "02",
-      month: "PAŹ",
-      title: "Grupa wsparcia dla rodziców",
-      meta: "17:30 · Sala warsztatowa · 5 zapisów",
-    },
-  ],
-};
 
 const specialistDashboardProps: SpecialistDashboardProps = {
   title: "Panel główny",
@@ -368,20 +219,6 @@ const specialistDashboardProps: SpecialistDashboardProps = {
   ],
 };
 
-function AdminDashboardStory() {
-  return (
-    <PortalShell
-      brandSubtitle="Panel administracyjny"
-      mobileNavigation={adminMobileNavigation}
-      navigation={adminNavigation}
-      notificationCount={3}
-      user={{ name: "Michał Stępień", role: "Administrator centrum" }}
-    >
-      <AdminDashboard {...adminDashboardProps} />
-    </PortalShell>
-  );
-}
-
 function SpecialistDashboardStory() {
   return (
     <PortalShell
@@ -411,16 +248,6 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-export const AdminDesktop: Story = {
-  globals: { viewport: { value: "desktop", isRotated: false } },
-  render: () => <AdminDashboardStory />,
-};
-
-export const AdminMobile: Story = {
-  globals: { viewport: { value: "mobile", isRotated: false } },
-  render: () => <AdminDashboardStory />,
-};
 
 export const SpecialistDesktop: Story = {
   globals: { viewport: { value: "desktop", isRotated: false } },

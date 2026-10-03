@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { AlertCircle, CalendarDays } from "lucide-react";
 import { describe, expect, it } from "vitest";
-import { AdminDashboard, SpecialistDashboard } from "./portal-dashboards";
+import { SpecialistDashboard } from "./portal-dashboards";
 
 const baseProps = {
   title: "Panel główny",
@@ -36,21 +36,6 @@ const baseProps = {
 };
 
 describe("portal dashboard compositions", () => {
-  it("renders the admin hierarchy from presentation data", () => {
-    render(<AdminDashboard {...baseProps} rooms={[]} team={[]} events={[]} />);
-
-    expect(
-      screen.getByRole("heading", { level: 1, name: "Panel główny" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Dzisiejsze wizyty" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("list", { name: "Lista wizyt" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Julia Nowak")).toBeInTheDocument();
-  });
-
   it("renders the specialist availability and services regions", () => {
     render(
       <SpecialistDashboard

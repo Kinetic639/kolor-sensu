@@ -26,7 +26,7 @@ import { Button } from "./button";
 
 export type SettleAction = (visitId: string) => Promise<CentreChangeResult>;
 
-function SettleButton({
+export function SettleButton({
   item,
   action,
 }: {
