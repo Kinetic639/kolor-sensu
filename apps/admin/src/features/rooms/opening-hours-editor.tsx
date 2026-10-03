@@ -14,7 +14,7 @@ import { WeeklyHoursEditor } from "@repo/ui/weekly-hours";
 import { Copy, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@repo/ui/toast";
 import { saveOpeningHoursAction } from "./actions";
 import {
   copyDayTo,

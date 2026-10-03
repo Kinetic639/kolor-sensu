@@ -28,7 +28,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "@repo/ui/toast";
 import type { z } from "zod";
 
 type HomePageContentInput = z.input<typeof homePageContentSchema>;

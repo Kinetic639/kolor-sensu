@@ -15,7 +15,7 @@ import { SectionHeader } from "@repo/ui/portal-content";
 import { Switch } from "@repo/ui/switch";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@repo/ui/toast";
 
 const sections: Array<{
   name: keyof RoomsPageContent;

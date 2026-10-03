@@ -10,7 +10,7 @@ import { NewVisitPanel, type NewVisitPanelProps } from "./new-visit-panel";
 import { SlotPickLayer } from "./slot-picker";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-vi.mock("sonner", () => ({
+vi.mock("../toast", () => ({
   toast: { success: vi.fn(), warning: vi.fn(), error: vi.fn() },
 }));
 

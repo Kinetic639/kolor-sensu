@@ -8,7 +8,7 @@ import {
 import { CalendarClock, X } from "lucide-react";
 import { useQueryStates } from "nuqs";
 import { useId, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "../toast";
 import { Button } from "../button";
 import { cn } from "../lib/utils";
 import { Input } from "../input";

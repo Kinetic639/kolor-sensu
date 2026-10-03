@@ -12,7 +12,7 @@ import { CalendarPlus, X } from "lucide-react";
 import { useQueryStates } from "nuqs";
 import { useId, useMemo, useState, useTransition } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "../toast";
 import { Button } from "../button";
 import { Input } from "../input";
 import { Label } from "../label";

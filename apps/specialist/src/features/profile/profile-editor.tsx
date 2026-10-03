@@ -34,7 +34,7 @@ import { ExternalLink, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Controller, useForm, type Path, type Resolver } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "@repo/ui/toast";
 import { saveProfileDraftAction, submitProfileAction } from "./actions";
 import type { ProfileEditorViewModel, ProfileFormValues } from "./types";
 

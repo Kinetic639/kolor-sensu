@@ -18,7 +18,7 @@ import { Textarea } from "@repo/ui/textarea";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "@repo/ui/toast";
 import {
   removeRoomImageAction,
   reorderRoomImagesAction,

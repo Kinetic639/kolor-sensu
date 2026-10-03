@@ -8,7 +8,7 @@ import {
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { toast } from "sonner";
+import { toast } from "./toast";
 
 // A portal kept up to date as it happens (docs/product/booking-plan.md,
 // R13): the database says on the person's own channel that visits changed

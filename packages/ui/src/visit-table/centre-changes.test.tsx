@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { toast } from "sonner";
+import { toast } from "../toast";
 import { describe, expect, it, vi } from "vitest";
 import {
   CancelVisitDialog,
@@ -9,7 +9,7 @@ import {
 } from "./centre-changes";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-vi.mock("sonner", () => ({
+vi.mock("../toast", () => ({
   toast: { success: vi.fn(), warning: vi.fn(), error: vi.fn() },
 }));
 

@@ -2,7 +2,7 @@
 
 import { Send } from "lucide-react";
 import { useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "../toast";
 import { IconButton } from "../icon-action";
 
 // "Wyślij link do płatności" in a visit's side panel (R11): a reservation

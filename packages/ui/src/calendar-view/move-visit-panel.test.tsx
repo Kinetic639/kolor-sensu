@@ -9,7 +9,7 @@ import { AddVisitBanner } from "./add-visit";
 import { MoveVisitPanel, type MoveVisitPanelProps } from "./move-visit-panel";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("../toast", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 const VISIT = "66666666-6666-4666-8666-666666666666";
 const ROOM = "33333333-3333-4333-8333-333333333333";

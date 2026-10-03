@@ -34,7 +34,7 @@ import { CalendarOff, CalendarPlus, Clock, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "@repo/ui/toast";
 import { addRoomExceptionAction, deleteRoomExceptionAction } from "./actions";
 import {
   EXCEPTION_TYPE_LABELS,

@@ -39,7 +39,7 @@ import {
   useForm,
   type UseFormRegisterReturn,
 } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "@repo/ui/toast";
 import {
   saveLocationAction,
   updateBookingSettingsAction,

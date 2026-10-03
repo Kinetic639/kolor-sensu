@@ -1,10 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { toast } from "sonner";
+import { toast } from "../toast";
 import { describe, expect, it, vi } from "vitest";
 import { ResendPaymentLinkButton } from "./resend-payment-link";
 
-vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("../toast", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 describe("ResendPaymentLinkButton", () => {
   it("sends the link again and says so", async () => {

@@ -58,7 +58,7 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, type CSSProperties, type FormEvent } from "react";
-import { toast } from "sonner";
+import { toast } from "@repo/ui/toast";
 
 function formatDate(value: string | null) {
   if (!value) return "Brak danych";

@@ -1,1 +1,12 @@
 @import "@repo/design-system/tokens.css";
+
+/* A toast's time bar (./toast.tsx): full, then empty; the toast closes
+   when it ends. */
+@keyframes ks-toast-time {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}

@@ -14,7 +14,7 @@ import { Plus } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@repo/ui/toast";
 import { createServiceAction } from "./actions";
 import { ServiceForm } from "./service-form";
 

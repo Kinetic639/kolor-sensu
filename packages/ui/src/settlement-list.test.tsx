@@ -1,13 +1,13 @@
 import type { SettlementView } from "@repo/scheduling";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { toast } from "sonner";
+import { toast } from "./toast";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SettlementList } from "./settlement-list";
 
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
-vi.mock("sonner", () => ({
+vi.mock("./toast", () => ({
   toast: { success: vi.fn(), warning: vi.fn(), error: vi.fn() },
 }));
 

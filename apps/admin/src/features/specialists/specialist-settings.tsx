@@ -6,7 +6,7 @@ import { Card } from "@repo/ui/card";
 import { ColorField } from "@repo/ui/color-field";
 import { SectionHeader } from "@repo/ui/portal-content";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@repo/ui/toast";
 import { setSpecialistColorAction } from "./actions";
 import { specialistsKeys } from "./query-keys";
 import type { SpecialistDetailViewModel } from "./types";

@@ -1,12 +1,12 @@
 import type { NotificationLike } from "@repo/scheduling";
 import { renderHook } from "@testing-library/react";
-import { toast } from "sonner";
+import { toast } from "./toast";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useLivePortal, type LiveSignals } from "./live-updates";
 
 const router = { push: vi.fn(), refresh: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
-vi.mock("sonner", () => ({ toast: vi.fn() }));
+vi.mock("./toast", () => ({ toast: vi.fn() }));
 
 const notification: NotificationLike & { portal: "admin" } = {
   portal: "admin",

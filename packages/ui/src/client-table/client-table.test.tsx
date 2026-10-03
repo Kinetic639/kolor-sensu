@@ -2,7 +2,7 @@ import type { ClientRow } from "@repo/scheduling";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
-import { toast } from "sonner";
+import { toast } from "../toast";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { adminRows } from "../visit-table/visit-table.samples";
 import { ClientCard } from "./client-card";
@@ -19,7 +19,7 @@ import {
 
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
-vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("../toast", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 const row: ClientRow = {
   id: "client-1",

@@ -197,6 +197,7 @@ export {
   type TestContentBlockProps,
 } from "./test-content-block";
 export { Textarea, type TextareaProps } from "./textarea";
+export { toast, type ToastOptions, type ToastTone } from "./toast";
 export { AppToaster, type AppToasterProps } from "./toaster";
 export {
   Tooltip,

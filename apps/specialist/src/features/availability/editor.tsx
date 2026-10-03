@@ -45,7 +45,7 @@ import {
   useTransition,
   type ReactNode,
 } from "react";
-import { toast } from "sonner";
+import { toast } from "@repo/ui/toast";
 import {
   addTimeOffAction,
   deleteAvailabilityOccurrenceAction,

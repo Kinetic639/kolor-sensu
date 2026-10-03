@@ -10,7 +10,7 @@ import { Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "../toast";
 import { Button } from "../button";
 import {
   Dialog,

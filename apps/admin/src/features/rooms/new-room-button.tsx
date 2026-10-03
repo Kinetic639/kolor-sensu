@@ -17,7 +17,7 @@ import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "@repo/ui/toast";
 import { createRoomAction } from "./actions";
 import { newRoomFormSchema, type NewRoomFormValues } from "./forms";
 import type { LocationOption } from "./loaders";

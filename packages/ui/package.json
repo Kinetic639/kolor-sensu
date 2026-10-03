@@ -75,6 +75,7 @@
     "./tabs": "./src/tabs.tsx",
     "./test-content-block": "./src/test-content-block.tsx",
     "./textarea": "./src/textarea.tsx",
+    "./toast": "./src/toast.tsx",
     "./toaster": "./src/toaster.tsx",
     "./tooltip": "./src/tooltip.tsx"
   },
@@ -117,7 +118,7 @@
     "lucide-react": "^1.46.0",
     "nuqs": "^2.10.1",
     "react-hook-form": "^7.88.0",
-    "sonner": "^2.0.8",
+    "react-toastify": "^11.1.0",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.5"
   },
