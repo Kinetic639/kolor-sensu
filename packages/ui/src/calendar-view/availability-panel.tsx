@@ -61,17 +61,17 @@ export function AvailabilityPanel({
   return (
     <aside
       aria-labelledby="okno-panel-tytul"
-      className="fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col overflow-hidden border-l border-[var(--border)] bg-[var(--surface)] shadow-xl xl:sticky xl:top-4 xl:z-auto xl:max-h-[calc(100dvh-7rem)] xl:w-[24rem] xl:shrink-0 xl:rounded-[var(--radius-surface)] xl:border xl:shadow-[var(--shadow-surface)]"
+      className="fixed inset-y-0 right-0 z-40 flex w-full max-w-sm flex-col overflow-hidden border-l border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-overlay)] xl:static xl:z-auto xl:w-96 xl:max-w-none xl:shrink-0 xl:shadow-none"
     >
       <ClosePanelOnEscape href={closeHref} />
       <header
-        className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-4"
+        className="flex shrink-0 items-start justify-between gap-2 border-b border-[var(--border)] px-3.5 pt-2.5 pb-2"
         style={{ backgroundColor: theme.availBg }}
       >
         <div className="flex min-w-0 items-start gap-3">
           <span
             aria-hidden="true"
-            className="flex size-9 shrink-0 items-center justify-center rounded-xl text-white shadow-sm"
+            className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-[5px] text-white [&_svg]:size-3"
             style={{ backgroundColor: theme.solid }}
           >
             {slot.place.online ? (
@@ -81,13 +81,13 @@ export function AvailabilityPanel({
             )}
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-[var(--text-muted)]">
+            <p className="text-[0.75rem] text-[var(--text-muted)]">
               {person
                 ? `Dostępność: ${column.kind === "day" ? `${column.title}, ${column.subtitle}` : column.title}`
                 : `Godziny otwarcia: ${column.title}`}
             </p>
             <h2
-              className="text-lg leading-tight font-semibold text-[var(--text)]"
+              className="text-[0.9375rem] leading-tight font-semibold text-[var(--text)]"
               id="okno-panel-tytul"
             >
               {slot.place.online ? "Dostępność online" : slot.place.name}
@@ -99,15 +99,15 @@ export function AvailabilityPanel({
         </div>
         <Link
           aria-label="Zamknij szczegóły dostępności"
-          className="inline-flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+          className="-mr-1.5 inline-flex size-7 shrink-0 items-center justify-center rounded-[5px] text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
           href={closeHref}
           scroll={false}
         >
           <X aria-hidden="true" className="size-4" />
         </Link>
       </header>
-      <div className="flex-1 space-y-4 overflow-y-auto p-4 text-[0.8125rem]">
-        <dl className="grid grid-cols-[7rem_minmax(0,1fr)] gap-x-3 gap-y-2">
+      <div className="flex-1 space-y-3.5 overflow-y-auto px-3.5 py-3 text-[0.8125rem]">
+        <dl className="grid grid-cols-[84px_minmax(0,1fr)] gap-x-2 gap-y-1.5">
           <Row label="Dzień">{dateLabel}</Row>
           <Row label="Godziny">
             <span className="tabular-nums">
@@ -134,7 +134,7 @@ export function AvailabilityPanel({
         </dl>
 
         {column.kind === "specialist" ? (
-          <section className="flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
+          <section className="flex items-center gap-2.5 border-y border-[var(--border)] py-2">
             <PersonAvatar
               avatarUrl={column.avatarUrl}
               color={column.color}
@@ -156,28 +156,27 @@ export function AvailabilityPanel({
         ) : null}
 
         <section className="space-y-2">
-          <h3 className="text-xs font-semibold tracking-[0.04em] text-[var(--text-muted)] uppercase">
+          <h3 className="text-[0.6875rem] font-semibold tracking-[0.03em] text-[var(--text-muted)]">
             Wizyty w tym oknie
           </h3>
           {inside.length ? (
-            <ul className="space-y-1.5">
+            <ul className="space-y-1">
               {inside.map((visit) => {
                 const visitTheme = themeOf(visit.place);
                 return (
                   <li key={visit.key}>
                     <Link
-                      className="flex items-center justify-between gap-2 rounded-lg border border-l-4 px-2.5 py-2 transition-[filter] hover:brightness-95 focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+                      className="flex items-center justify-between gap-2 rounded-[5px] px-2.5 py-1.5 transition-[filter] hover:brightness-95 focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
                       href={visitHref(visit.visitId)}
                       scroll={false}
                       style={{
                         backgroundColor: visitTheme.cardBg,
-                        borderColor: visitTheme.cardBorder,
-                        borderLeftColor: visitTheme.accent,
+                        boxShadow: `inset 3px 0 0 ${visitTheme.accent}`,
                         color: visitTheme.text,
                       }}
                     >
                       <span className="min-w-0">
-                        <span className="block text-xs font-bold tabular-nums">
+                        <span className="block font-mono text-[0.65625rem] tabular-nums opacity-80">
                           {visit.time}
                         </span>
                         <span className="block truncate font-semibold">

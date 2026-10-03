@@ -38,6 +38,7 @@ import {
   WeekAgenda,
   WeekComparison,
 } from "@repo/ui/calendar-view";
+import { FullBleed } from "@repo/ui/full-bleed";
 import { PageTitle } from "@repo/ui/portal-content";
 import { VisitPanel } from "@repo/ui/visit-table";
 
@@ -75,9 +76,9 @@ export default async function CalendarPage({
     : "Brak aktywnych specjalistów.";
 
   return (
-    <div className="space-y-4">
+    <FullBleed>
       <PageTitle>Kalendarz</PageTitle>
-      <ScheduleCanvas className="space-y-4">
+      <ScheduleCanvas className="flex min-h-0 flex-1 flex-col">
         <ScheduleToolbar
           locations={[
             ...locations,
@@ -125,7 +126,7 @@ export default async function CalendarPage({
         ) : null}
         <ScheduleFrame
           aside={
-            week && !open && !shown && !booking ? (
+            week ? (
               <ComparisonSummaryPanel
                 byRoom={byRoom}
                 period={`Tydzień ${formatDateRangeShort(period.from, period.to)}`}
@@ -262,6 +263,6 @@ export default async function CalendarPage({
           }
         />
       </ScheduleCanvas>
-    </div>
+    </FullBleed>
   );
 }

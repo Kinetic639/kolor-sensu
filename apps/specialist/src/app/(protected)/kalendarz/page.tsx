@@ -31,6 +31,7 @@ import {
   ScheduleFrame,
   ScheduleToolbar,
 } from "@repo/ui/calendar-view";
+import { FullBleed } from "@repo/ui/full-bleed";
 import { EmptyState, PageTitle } from "@repo/ui/portal-content";
 import { ResendPaymentLinkButton, VisitPanel } from "@repo/ui/visit-table";
 
@@ -77,9 +78,9 @@ export default async function CalendarPage({
     : "Tego dnia nie masz dostępności ani wizyt.";
 
   return (
-    <div className="space-y-4">
+    <FullBleed>
       <PageTitle>Mój kalendarz</PageTitle>
-      <ScheduleCanvas className="space-y-4">
+      <ScheduleCanvas className="flex min-h-0 flex-1 flex-col">
         <ScheduleToolbar
           nav={calendarNav(PATH, params, context)}
           switches={
@@ -108,7 +109,7 @@ export default async function CalendarPage({
         ) : null}
         <ScheduleFrame
           aside={
-            week && !open && !shown && !booking ? (
+            week ? (
               <PersonalSummaryPanel
                 availabilityHref="/dostepnosc"
                 name={me.name}
@@ -186,6 +187,6 @@ export default async function CalendarPage({
           }
         />
       </ScheduleCanvas>
-    </div>
+    </FullBleed>
   );
 }

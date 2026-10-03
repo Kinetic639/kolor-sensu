@@ -35,7 +35,7 @@ describe("the calendar's address", () => {
       wyszarz: true,
       wizyty: true,
       dostepnosc: true,
-      podsumowanie: true,
+      podsumowanie: false,
       lokalizacja: null,
       q: null,
       zwiniete: [],

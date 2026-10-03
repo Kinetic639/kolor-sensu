@@ -1,22 +1,27 @@
-import {
-  Calendar as CalendarIcon,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/utils";
 import { PageLink as Link } from "../public-site/page-link";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../tooltip";
+import {
   ScheduleLocationSelect,
   ScheduleSearch,
-  ScheduleSwitches,
+  ScheduleSummaryToggle,
+  ScheduleViewMenu,
   type ScheduleSwitch,
 } from "./schedule-controls";
 
-// Above the calendar, after the reference: what the colours mean and the
-// view's switches; the date and its neighbours, Dzień / Tydzień,
-// Specjaliści / Gabinety, the location and the patient search. The
-// navigation is links (rendered on the server, working without
+// Above the calendar, one 40 px bar, as the tables' and the dashboard's:
+// the day (or week) and its neighbours on the left, the calendar icon
+// back to today; Dzień / Tydzień and Specjaliści / Gabinety in the
+// middle; the location, the patient search, the "Widok" menu with the
+// display switches, the week's summary and the actions on the right.
+// The navigation is links (rendered on the server, working without
 // JavaScript); the switches, location and search run in the browser.
 
 export interface ScheduleNav {
@@ -36,17 +41,18 @@ export interface SegmentLink {
 }
 
 function Segmented({ label, items }: { label: string; items: SegmentLink[] }) {
+  if (!items.length) return null;
   return (
     <nav aria-label={label}>
-      <ul className="flex items-center rounded-lg bg-[var(--surface-muted)] p-0.5 text-xs font-medium">
+      <ul className="flex items-center gap-0.5 rounded-md border border-[var(--border)] bg-[var(--surface-subtle)] p-0.5 text-[0.75rem]">
         {items.map((item) => (
           <li key={item.key}>
             <Link
               aria-current={item.active ? "page" : undefined}
               className={cn(
-                "block rounded-md px-3 py-1 transition-colors focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
+                "flex h-[22px] items-center rounded-[4px] px-2.5 transition-colors focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
                 item.active
-                  ? "bg-[var(--primary)] font-semibold text-[var(--primary-foreground)] shadow-sm"
+                  ? "bg-[var(--surface)] font-semibold text-[var(--text)] shadow-[0_1px_2px_rgb(16_32_28/0.12)]"
                   : "text-[var(--text-muted)] hover:text-[var(--text)]",
               )}
               href={item.href}
@@ -60,18 +66,19 @@ function Segmented({ label, items }: { label: string; items: SegmentLink[] }) {
   );
 }
 
-const iconButton =
-  "flex size-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-sm transition-colors hover:bg-[var(--surface-subtle)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none";
+const ICON =
+  "inline-grid size-7 shrink-0 place-items-center rounded-[5px] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none";
 
 export interface ScheduleToolbarProps {
   nav: ScheduleNav;
   views: SegmentLink[];
   perspectives?: SegmentLink[];
+  /** The display switches; "podsumowanie" becomes a button of its own. */
   switches: ScheduleSwitch[];
   /** Locations to choose from (none: no choice). */
   locations?: { value: string; label: string }[];
   search?: boolean;
-  /** At the right of the first row (e.g. an action). */
+  /** At the right end (e.g. "Nowa wizyta"). */
   actions?: ReactNode;
 }
 
@@ -85,68 +92,74 @@ export function ScheduleToolbar({
   actions,
 }: ScheduleToolbarProps) {
   const week = nav.unit === "tydzień";
+  const summary = switches.includes("podsumowanie");
+  const menu = switches.filter((key) => key !== "podsumowanie");
   return (
-    <div className="space-y-2.5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3.5 shadow-sm sm:p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-[var(--text-muted)]">
-          <span className="font-semibold text-[var(--text)]">
-            Model wizualny:
-          </span>{" "}
-          Dostępność to spokojne tło, wizyty pacjentów to karty pierwszego
-          planu.
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
-          <ScheduleSwitches shown={switches} />
-          {actions}
-        </div>
-      </div>
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-2">
-        <nav
-          aria-label={week ? "Tydzień" : "Dzień"}
-          className="flex flex-wrap items-center gap-1.5"
+    <div className="flex min-h-10 shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-b border-[var(--border)] bg-[var(--surface)] px-2 py-1.5">
+      <nav
+        aria-label={week ? "Tydzień" : "Dzień"}
+        className="flex items-center gap-0.5"
+      >
+        <Link
+          aria-label={week ? "Poprzedni tydzień" : "Poprzedni dzień"}
+          className={ICON}
+          href={nav.previousHref}
         >
-          <Link
-            aria-label={week ? "Poprzedni tydzień" : "Poprzedni dzień"}
-            className={iconButton}
-            href={nav.previousHref}
-          >
-            <ChevronLeft aria-hidden="true" className="size-4" />
-          </Link>
-          <p
-            aria-live="polite"
-            className="flex h-8 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-semibold whitespace-nowrap text-[var(--text)] shadow-sm"
-          >
-            <CalendarIcon
+          <ChevronLeft aria-hidden="true" className="size-4" />
+        </Link>
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                aria-current={nav.isCurrent ? "date" : undefined}
+                aria-label="Dziś"
+                className={cn(
+                  ICON,
+                  nav.isCurrent &&
+                    "bg-[var(--primary-soft)] text-[var(--primary)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]",
+                )}
+                href={nav.todayHref}
+              >
+                <CalendarDays aria-hidden="true" className="size-4" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>Dziś</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <Link
+          aria-label={week ? "Następny tydzień" : "Następny dzień"}
+          className={ICON}
+          href={nav.nextHref}
+        >
+          <ChevronRight aria-hidden="true" className="size-4" />
+        </Link>
+        <p
+          aria-live="polite"
+          className="ml-1.5 text-[0.8125rem] font-semibold whitespace-nowrap text-[var(--text)] tabular-nums"
+        >
+          {nav.label}
+        </p>
+      </nav>
+      <div className="flex items-center gap-2 lg:mx-auto">
+        <Segmented items={views} label="Zakres" />
+        {perspectives ? (
+          <Segmented items={perspectives} label="Kolumny" />
+        ) : null}
+      </div>
+      <div className="ml-auto flex items-center gap-1 lg:ml-0">
+        {locations ? <ScheduleLocationSelect options={locations} /> : null}
+        {search ? <ScheduleSearch /> : null}
+        {menu.length ? <ScheduleViewMenu shown={menu} /> : null}
+        {summary ? <ScheduleSummaryToggle /> : null}
+        {actions ? (
+          <>
+            <span
               aria-hidden="true"
-              className="size-3.5 text-[var(--text-muted)]"
+              className="mx-1 h-4 w-px bg-[var(--border)]"
             />
-            <span className="tabular-nums">{nav.label}</span>
-          </p>
-          <Link
-            aria-label={week ? "Następny tydzień" : "Następny dzień"}
-            className={iconButton}
-            href={nav.nextHref}
-          >
-            <ChevronRight aria-hidden="true" className="size-4" />
-          </Link>
-          <Link
-            aria-current={nav.isCurrent ? "date" : undefined}
-            className="ml-1 flex h-8 items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-medium text-[var(--text)] shadow-sm transition-colors hover:bg-[var(--surface-subtle)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-            href={nav.todayHref}
-          >
-            Dziś
-          </Link>
-        </nav>
-        <div className="flex flex-wrap items-center gap-2">
-          <Segmented items={views} label="Zakres" />
-          {perspectives ? (
-            <Segmented items={perspectives} label="Kolumny" />
-          ) : null}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {locations ? <ScheduleLocationSelect options={locations} /> : null}
-          {search ? <ScheduleSearch /> : null}
-        </div>
+            {actions}
+          </>
+        ) : null}
       </div>
     </div>
   );

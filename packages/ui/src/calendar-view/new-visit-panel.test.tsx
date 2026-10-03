@@ -227,7 +227,7 @@ describe("adding mode", () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
     const { container } = render(
       <NuqsTestingAdapter onUrlUpdate={onUrlUpdate} searchParams="?nowa=true">
-        <div style={{ position: "relative", height: 680 }}>
+        <div style={{ position: "relative", height: 600 }}>
           <SlotPickLayer
             column={ANNA}
             date="2030-10-02"
@@ -238,12 +238,12 @@ describe("adding mode", () => {
     );
     const layer = container.querySelector("[data-slot-picker]")!;
     layer.getBoundingClientRect = () =>
-      ({ top: 0, left: 0, height: 680, width: 100 }) as DOMRect;
-    // 3.5 hours down (238px at 68px an hour) from 8:00 is 11:30.
+      ({ top: 0, left: 0, height: 600, width: 100 }) as DOMRect;
+    // 3.5 hours down (210px at 60px an hour) from 8:00 is 11:30.
     await userEvent.pointer({
       keys: "[MouseLeft]",
       target: layer,
-      coords: { clientX: 10, clientY: 238 },
+      coords: { clientX: 10, clientY: 210 },
     });
     expect(onUrlUpdate).toHaveBeenLastCalledWith(
       expect.objectContaining({

@@ -16,6 +16,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Clock,
+  Hourglass,
   Lock,
   Video,
 } from "lucide-react";
@@ -23,7 +24,12 @@ import type { CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/utils";
 import { PageLink as Link } from "../public-site/page-link";
 import { resourceColors, scheduleTheme } from "../resource-colors";
-import { HOUR_HEIGHT, minutesToPx, rangeHeight } from "./schedule-geometry";
+import {
+  AXIS_WIDTH,
+  HOUR_HEIGHT,
+  minutesToPx,
+  rangeHeight,
+} from "./schedule-geometry";
 
 // The pieces of the calendar views, after the AI Studio reference: the
 // time axis, the grid lines, the column headers with their occupancy ring,
@@ -32,7 +38,7 @@ import { HOUR_HEIGHT, minutesToPx, rangeHeight } from "./schedule-geometry";
 // narrow lanes). Server components: positions in pixels from minutes,
 // visits are links (the details open beside the calendar).
 
-export { HOUR_HEIGHT, minutesToPx, rangeHeight };
+export { AXIS_WIDTH, HOUR_HEIGHT, minutesToPx, rangeHeight };
 
 function place(range: MinuteRange, slot: MinuteRange): CSSProperties {
   return {
@@ -101,15 +107,15 @@ export function TimeAxis({
     <div
       aria-hidden="true"
       className={cn(
-        "relative w-14 shrink-0 border-r border-[var(--border)] bg-[var(--surface-subtle)] select-none",
+        "relative shrink-0 border-r border-[var(--border)] bg-[var(--surface)] select-none",
         className,
       )}
-      style={{ height }}
+      style={{ height, width: AXIS_WIDTH }}
     >
       {marks.map((mark) => (
         <span
           className={cn(
-            "absolute right-2 text-[0.6875rem] font-medium tracking-tight text-[var(--text-muted)] tabular-nums",
+            "absolute right-1.5 font-mono text-[0.65625rem] text-[var(--text-subtle)] tabular-nums",
             mark.edge === "top"
               ? "translate-y-0.5"
               : mark.edge === "bottom"
@@ -134,10 +140,10 @@ export function TimeAxis({
           className="absolute right-0 z-40 flex -translate-y-1/2 items-center"
           style={{ top: minutesToPx(now.minute - range.start) }}
         >
-          <span className="mr-1 text-[0.625rem] leading-none font-semibold tracking-tight text-[var(--primary)] tabular-nums">
+          <span className="mr-1 rounded-[3px] bg-[var(--danger)] px-1 font-mono text-[0.625rem] leading-[14px] font-medium text-[var(--danger-foreground)] tabular-nums">
             {now.label}
           </span>
-          <span className="size-1.5 rounded-full bg-[var(--primary)]" />
+          <span className="size-2 rounded-full bg-[var(--danger)]" />
         </span>
       ) : null}
     </div>
@@ -157,8 +163,8 @@ export function GridLines({ range }: { range: MinuteRange }) {
           className={cn(
             "absolute inset-x-0 border-t",
             minute % 60 === 0 || minute === range.start
-              ? "border-[var(--border)] opacity-70"
-              : "border-dashed border-[var(--surface-muted)]",
+              ? "border-[var(--border)] opacity-60"
+              : "border-dashed border-[var(--border)] opacity-30",
           )}
           key={minute}
           style={{ top: minutesToPx(minute - range.start) }}
@@ -180,7 +186,7 @@ export function NowLine({
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-x-0 z-30 h-px bg-[var(--primary)] opacity-75"
+      className="pointer-events-none absolute inset-x-0 z-30 h-0.5 bg-[var(--danger)]"
       data-now-line=""
       style={{ top: minutesToPx(now.minute - range.start) }}
     />
@@ -285,7 +291,7 @@ export function OccupancyChip({
 }) {
   if (unavailable && !occupancy.visitCount) {
     return (
-      <span className="text-[0.5rem] leading-none font-medium text-[var(--text-subtle)]">
+      <span className="text-[0.6875rem] leading-none text-[var(--text-subtle)]">
         —
       </span>
     );
@@ -294,12 +300,12 @@ export function OccupancyChip({
   return (
     <span
       className={cn(
-        "rounded-sm border px-1 text-[0.5625rem] leading-tight font-bold tabular-nums",
+        "rounded-[4px] px-1.5 text-[0.6875rem] leading-[18px] font-semibold tabular-nums",
         tone === "warning"
-          ? "border-[color-mix(in_srgb,var(--danger)_30%,transparent)] bg-[var(--danger-soft)] text-[var(--danger)]"
+          ? "bg-[var(--warning-soft)] text-[var(--warning-foreground)]"
           : tone === "high"
-            ? "border-[color-mix(in_srgb,var(--primary)_30%,transparent)] bg-[var(--primary-soft)] text-[var(--primary)]"
-            : "border-[var(--border)] bg-[var(--surface-muted)] text-[var(--text-muted)]",
+            ? "bg-[var(--primary-soft)] text-[var(--primary)]"
+            : "bg-[var(--surface-muted)] text-[var(--text-muted)]",
       )}
       title={title}
     >
@@ -421,12 +427,12 @@ export function PlaceMarker({
 function CountsLine({ column }: { column: CalendarColumn }) {
   const { occupancy } = column;
   return (
-    <span className="mt-0.5 flex min-w-0 items-center gap-1 text-[0.625rem] whitespace-nowrap tabular-nums">
+    <span className="flex min-w-0 items-center gap-1 whitespace-nowrap tabular-nums">
       <span
         className={
           occupancy.overbooked
             ? "font-semibold text-[var(--warning-foreground)]"
-            : "text-[var(--text-muted)]"
+            : ""
         }
       >
         {visitsLabel(occupancy.visitCount)}
@@ -458,7 +464,7 @@ function CollapseLink({
   return (
     <Link
       aria-label={`${collapsed ? "Rozwiń" : "Zwiń"} kolumnę: ${label}`}
-      className="-m-1 shrink-0 rounded-md p-1 text-[var(--text-subtle)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+      className="inline-grid size-5 shrink-0 place-items-center rounded-[4px] text-[var(--text-subtle)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
       href={href}
       scroll={false}
       title={collapsed ? "Rozwiń kolumnę" : "Zwiń kolumnę (widok kompaktowy)"}
@@ -523,75 +529,88 @@ export function ColumnHeader({
   collapseHref?: string;
 }) {
   const muted = column.unavailable;
+  // A day of one's own week: its name (today marked), the date, the share.
   if (column.kind === "day") {
     return (
       <div
         className={cn(
-          "flex h-full flex-col items-center justify-center gap-0.5 border-b border-[var(--border)] px-3 py-2.5 text-center",
+          "flex h-full min-h-11 flex-col justify-center gap-px border-b border-[var(--border)] px-2.5 py-1.5",
           column.isToday ? "bg-[var(--primary-soft)]" : "bg-[var(--surface)]",
         )}
       >
-        <span
-          className={cn(
-            "text-xs font-semibold",
-            column.isToday ? "text-[var(--primary)]" : "text-[var(--text)]",
-          )}
-        >
-          {column.title}
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span
+            className={cn(
+              "truncate text-[0.8125rem] font-semibold",
+              column.isToday ? "text-[var(--primary)]" : "text-[var(--text)]",
+            )}
+          >
+            {column.title}
+          </span>
           {column.isToday ? (
-            <span className="ml-1.5 rounded-sm bg-[var(--primary)] px-1 text-[0.5625rem] font-semibold text-[var(--primary-foreground)]">
+            <span className="rounded-[3px] bg-[var(--primary)] px-1 text-[0.625rem] font-semibold text-[var(--primary-foreground)]">
               Dziś
             </span>
           ) : null}
+          <span className="ml-auto">
+            <OccupancyChip
+              occupancy={column.occupancy}
+              unavailable={column.unavailable}
+            />
+          </span>
         </span>
-        <span className="text-[0.6875rem] text-[var(--text-muted)] tabular-nums">
-          {column.subtitle}
-        </span>
-        <span className="mt-1 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5">
+        <span className="flex min-w-0 items-center gap-1 text-[0.71875rem] text-[var(--text-muted)] tabular-nums">
+          <span className="truncate">{column.subtitle}</span>
           <CountsLine column={column} />
-          <OccupancyChip
-            occupancy={column.occupancy}
-            unavailable={column.unavailable}
-          />
         </span>
       </div>
     );
   }
 
-  if (column.kind === "specialist") {
-    return (
-      <div
-        className={cn(
-          "flex h-full min-h-[108px] flex-col justify-between border-b border-[var(--border)] p-3",
-          muted ? "bg-[var(--surface-subtle)]" : "bg-[var(--surface)]",
+  // A specialist, a room or online: one line with who (or which) and the
+  // share, one with the hours and the visits.
+  const person = column.kind === "specialist";
+  const closed = !person && column.closed;
+  return (
+    <div
+      className={cn(
+        "flex h-full min-h-11 flex-col justify-center gap-px border-b border-[var(--border)] px-2.5 py-1.5",
+        muted ? "bg-[var(--surface-subtle)]" : "bg-[var(--surface)]",
+      )}
+    >
+      <span className="flex min-w-0 items-center gap-1.5">
+        {person ? (
+          <PersonAvatar
+            avatarUrl={column.avatarUrl}
+            color={column.color}
+            initials={column.initials}
+            muted={muted}
+            name={column.title}
+            seed={column.colorSeed}
+            size={20}
+          />
+        ) : (
+          <PlaceMarker column={column} size="sm" />
         )}
-      >
-        <div className="flex items-start justify-between gap-1.5">
-          <div className="flex min-w-0 flex-1 items-start gap-2.5">
-            <PersonAvatar
-              avatarUrl={column.avatarUrl}
-              color={column.color}
-              initials={column.initials}
-              muted={muted}
-              name={column.title}
-              seed={column.colorSeed}
-            />
-            <div className="min-w-0 flex-1">
-              <p
-                className={cn(
-                  "truncate text-[0.8125rem] leading-tight font-semibold",
-                  muted ? "text-[var(--text-subtle)]" : "text-[var(--text)]",
-                )}
-              >
-                {column.title}
-              </p>
-              {column.subtitle ? (
-                <p className="mt-0.5 truncate text-[0.6875rem] leading-tight text-[var(--text-muted)]">
-                  {column.subtitle}
-                </p>
-              ) : null}
-            </div>
-          </div>
+        <span
+          className={cn(
+            "truncate text-[0.8125rem] font-semibold",
+            muted ? "text-[var(--text-subtle)]" : "text-[var(--text)]",
+          )}
+          title={person && column.subtitle ? column.subtitle : undefined}
+        >
+          {column.title}
+        </span>
+        <span className="ml-auto flex shrink-0 items-center gap-0.5">
+          <OccupancyChip
+            occupancy={column.occupancy}
+            unavailable={muted}
+            title={
+              column.occupancy.overbooked
+                ? "Wizyty poza zadeklarowaną dostępnością"
+                : `${column.occupancy.percent}% obłożenia`
+            }
+          />
           {collapseHref ? (
             <CollapseLink
               collapsed={false}
@@ -599,107 +618,30 @@ export function ColumnHeader({
               label={column.title}
             />
           ) : null}
-        </div>
-        <div className="mt-2 flex items-end justify-between border-t border-[color-mix(in_srgb,var(--border)_60%,transparent)] pt-1.5">
-          <div className="min-w-0 pr-1">
-            {muted ? (
-              <span className="flex items-center gap-1.5 truncate text-[0.6875rem] font-medium text-[var(--text-subtle)]">
-                <CalendarOff aria-hidden="true" className="size-3 shrink-0" />
-                Brak dostępności
-              </span>
-            ) : (
-              <>
-                <span className="block truncate text-[0.6875rem] font-medium text-[var(--text)] tabular-nums">
-                  {column.hours ?? "Poza dostępnością"}
-                </span>
-                <CountsLine column={column} />
-              </>
-            )}
-          </div>
-          <OccupancyRing occupancy={column.occupancy} unavailable={muted} />
-        </div>
-      </div>
-    );
-  }
-
-  // A room, or online.
-  const { occupancy } = column;
-  return (
-    <div
-      className={cn(
-        "flex h-full min-h-[86px] items-center justify-between gap-2 border-b border-[var(--border)] p-3",
-        muted ? "bg-[var(--surface-subtle)]" : "bg-[var(--surface)]",
-      )}
-    >
-      <div className="flex min-w-0 flex-1 items-center gap-2.5">
-        <PlaceMarker column={column} />
-        <div className="min-w-0">
-          <p
-            className={cn(
-              "truncate text-[0.8125rem] leading-tight font-semibold",
-              muted ? "text-[var(--text-subtle)]" : "text-[var(--text)]",
-            )}
-          >
-            {column.title}
-          </p>
-          <p className="mt-0.5 truncate text-[0.625rem] text-[var(--text-muted)] tabular-nums">
-            {column.closed ? (
-              <span className="font-medium text-[var(--warning-foreground)]">
-                {column.closed === "Gabinet zamknięty"
-                  ? column.closed
-                  : `Zamknięty: ${column.closed}`}
-              </span>
-            ) : muted ? (
-              "Brak dostępności"
-            ) : (
-              column.hours
-            )}
-          </p>
-          {!muted && occupancy.visitCount > 0 ? (
-            <CountsLine column={column} />
-          ) : null}
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <span
-          className="text-right"
-          title={
-            occupancy.overbooked
-              ? "Wizyty poza godzinami otwarcia"
-              : `${occupancy.percent}% obłożenia`
-          }
-        >
-          <span
-            className={cn(
-              "block text-xs font-bold tabular-nums",
-              muted
-                ? "text-[var(--text-subtle)]"
-                : occupancy.overbooked
-                  ? "text-[var(--warning-foreground)]"
-                  : "text-[var(--text)]",
-            )}
-          >
-            {muted ? 0 : occupancy.percent}%
-          </span>
-          <span
-            className={cn(
-              "-mt-0.5 block text-[0.5625rem]",
-              occupancy.overbooked
-                ? "font-semibold text-[var(--warning-foreground)]"
-                : "text-[var(--text-muted)]",
-            )}
-          >
-            {occupancy.overbooked ? "przeciążenie" : "obłożenia"}
-          </span>
         </span>
-        {collapseHref ? (
-          <CollapseLink
-            collapsed={false}
-            href={collapseHref}
-            label={column.title}
-          />
+      </span>
+      <span className="flex min-w-0 items-center gap-1 text-[0.71875rem] text-[var(--text-muted)] tabular-nums">
+        {closed ? (
+          <span className="truncate font-medium text-[var(--warning-foreground)]">
+            {closed === "Gabinet zamknięty" ? closed : `Zamknięty: ${closed}`}
+          </span>
+        ) : muted ? (
+          <span className="flex items-center gap-1 truncate text-[var(--text-subtle)]">
+            <CalendarOff aria-hidden="true" className="size-3 shrink-0" />
+            Brak dostępności
+          </span>
+        ) : (
+          <span className="truncate">
+            {column.hours ?? "Poza dostępnością"}
+          </span>
+        )}
+        {!closed && (!muted || column.occupancy.visitCount) ? (
+          <>
+            <span aria-hidden="true">·</span>
+            <CountsLine column={column} />
+          </>
         ) : null}
-      </div>
+      </span>
     </div>
   );
 }
@@ -715,33 +657,16 @@ export function EmptyMarker({
   column: CalendarColumn;
   compact?: boolean;
 }) {
-  const closed = column.closed !== null;
-  const Icon = closed ? Lock : CalendarOff;
-  if (compact) {
-    return (
-      <span
-        className="pointer-events-none absolute inset-x-0 top-6 z-10 flex flex-col items-center text-[var(--text-muted)]"
-        title={closed ? column.closed! : "Brak dostępności"}
-      >
-        <Icon aria-hidden="true" className="size-3.5" />
-        <span className="mt-1 text-[0.5rem] font-medium tracking-wider uppercase">
-          {closed ? "Zamkn." : "Brak"}
-        </span>
-      </span>
-    );
-  }
+  // No availability: the column's hatch says it.
+  if (column.closed === null) return null;
   return (
-    <span className="pointer-events-none absolute inset-x-0 top-6 z-10 flex justify-center px-2">
-      <span
-        className={cn(
-          "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[0.6875rem] font-medium whitespace-nowrap shadow-sm",
-          closed
-            ? "border-[color-mix(in_srgb,var(--warning)_30%,transparent)] bg-[var(--warning-soft)] text-[var(--warning-foreground)]"
-            : "border-[var(--border)] bg-[var(--surface-muted)] text-[var(--text-muted)]",
-        )}
-      >
-        <Icon aria-hidden="true" className="size-3 shrink-0" />
-        {closed ? column.closed : "Brak dostępności"}
+    <span
+      className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center px-1"
+      title={column.closed}
+    >
+      <span className="inline-flex min-w-0 items-center gap-1 rounded-[4px] bg-[var(--warning-soft)] px-1.5 text-[0.6875rem] leading-[18px] font-medium text-[var(--warning-foreground)]">
+        <Lock aria-hidden="true" className="size-3 shrink-0" />
+        {compact ? null : <span className="truncate">{column.closed}</span>}
       </span>
     </span>
   );
@@ -819,23 +744,23 @@ export function AvailabilityBlock({
   const name = shortPlaceName(slot.place.name, minutes < 75);
   const chip = (
     <span
-      className="inline-flex h-[18px] min-w-0 items-center gap-1 rounded-l-[3px] px-2 text-[0.625rem] leading-none tracking-tight text-white shadow-sm"
-      style={{ backgroundColor: theme.solid }}
+      className="inline-flex h-4 min-w-0 items-center gap-1 rounded-[3px] border bg-[var(--surface)] px-1 font-mono text-[0.625rem] leading-none"
+      style={{ borderColor: theme.availBorder, color: theme.text }}
     >
-      <span className="shrink-0 font-semibold tabular-nums">{slot.time}</span>
+      <span className="shrink-0 tabular-nums">{slot.time}</span>
       {showPlace && minutes >= 30 ? (
         <>
           <span className="shrink-0 opacity-60">·</span>
-          <span className="truncate font-medium">{name}</span>
+          <span className="truncate">{name}</span>
         </>
       ) : null}
     </span>
   );
   const chipStyle = {
-    top: slot.adjacentToPrevious ? top : Math.max(0, top - 18),
+    top: top + 3,
   };
   const chipClasses =
-    "absolute right-0 z-[25] flex max-w-[calc(100%-8px)] justify-end";
+    "absolute right-1 z-[25] flex max-w-[calc(100%-12px)] justify-end";
   return (
     <div data-availability="">
       <Surface
@@ -898,7 +823,7 @@ export function BlockedBlock({
     <div
       aria-label={`Zablokowane ${slot.time}: ${slot.label}`}
       className={cn(
-        "absolute z-[15] overflow-hidden rounded-md border border-[var(--border-strong)] text-[var(--text-muted)]",
+        "absolute z-[15] overflow-hidden rounded-[5px] border border-[var(--border)] text-[var(--text-muted)]",
         compact
           ? "inset-x-0.5"
           : gutter
@@ -935,53 +860,51 @@ export function BlockedBlock({
   );
 }
 
-function cardStyle(
-  slot: VisitSlot,
-  range: MinuteRange,
-  accentWidth: number,
-): CSSProperties {
+function cardStyle(slot: VisitSlot, range: MinuteRange): CSSProperties {
   const theme = themeOf(slot.place);
   return {
     ...place(range, slot),
-    backgroundColor: slot.pending ? "var(--warning-soft)" : theme.cardBg,
-    borderColor: theme.cardBorder,
-    borderLeftColor: theme.accent,
-    borderLeftWidth: accentWidth,
+    backgroundColor: theme.cardBg,
     color: theme.text,
+    // The place's colour as a line on the left, as on the dashboard.
+    boxShadow: `inset 3px 0 0 ${theme.accent}`,
+    ["--card-accent" as string]: theme.accent,
   };
 }
 
 const cardClasses = (slot: VisitSlot, open: boolean) =>
   cn(
-    "group absolute z-20 overflow-hidden rounded-md border text-left shadow-sm transition-[filter,box-shadow] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
+    "group absolute z-20 overflow-hidden rounded-[5px] text-left transition-[filter,outline-color] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--ring)]",
     open
-      ? "z-30 ring-2 ring-[var(--text)] ring-offset-1"
-      : "hover:shadow-md hover:brightness-[0.97]",
-    slot.pending && "border-dashed",
+      ? "z-30 outline-2 outline-offset-1 outline-[var(--card-accent)]"
+      : "outline-1 -outline-offset-1 outline-transparent hover:outline-[var(--card-accent)] hover:brightness-[0.98]",
     slot.dimmed && "opacity-35",
   );
 
-/** A room tag on a card: `Gabinet 1`, or `Online` with a camera. */
-function PlaceTag({ slot }: { slot: VisitSlot }) {
-  return slot.place.online ? (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-sm bg-[color-mix(in_srgb,var(--surface)_85%,transparent)] px-1.5 py-px text-[0.5625rem] font-semibold text-[var(--info)]">
-      <Video aria-hidden="true" className="size-2.5" />
-      Online
-    </span>
-  ) : (
-    <span
-      className="min-w-0 truncate rounded-sm bg-[color-mix(in_srgb,var(--surface)_75%,transparent)] px-1.5 py-px text-[0.5625rem] font-semibold"
-      title={slot.place.name}
-    >
-      {slot.place.name.length > 10 ? slot.place.short : slot.place.name}
+/** Waiting for payment, online: small icons after the time. */
+function CardFlags({ slot }: { slot: VisitSlot }) {
+  if (!slot.pending && !slot.place.online) return null;
+  return (
+    <span className="inline-flex shrink-0 items-center gap-0.5 opacity-80">
+      {slot.pending ? (
+        <Hourglass
+          aria-label="Czeka na płatność"
+          className="size-3 text-[var(--warning)]"
+          role="img"
+        />
+      ) : null}
+      {slot.place.online ? (
+        <Video aria-label="Online" className="size-3" role="img" />
+      ) : null}
     </span>
   );
 }
 
 /**
- * A visit card in a day: time, client, service; by room the specialist's
- * picture and name, by specialist the room (unless the background says
- * it). Short visits in one line.
+ * A visit card in a day, as on the dashboard's line of hours: the place's
+ * tint with its line on the left; the time, the client, the service (and
+ * the room, unless the background says it); by room the specialist's
+ * picture. Short visits in one line.
  */
 export function VisitCard({
   slot,
@@ -1002,101 +925,70 @@ export function VisitCard({
 }) {
   const theme = themeOf(slot.place);
   const tiny = slot.minutes <= 35;
+  const where = showPlace && !slot.place.online ? slot.place.short : null;
   return (
     <Link
       aria-current={open ? "true" : undefined}
       aria-label={slot.label}
       className={cn(
         cardClasses(slot, open),
-        gutter ? "right-[18px] left-1.5" : "inset-x-1.5",
+        gutter ? "right-[18px] left-1" : "inset-x-1",
       )}
       data-visit=""
       href={href}
       scroll={false}
-      style={cardStyle(slot, range, 4)}
+      style={cardStyle(slot, range)}
       title={`${slot.time}: ${slot.client} (${slot.service})`}
     >
       {tiny ? (
-        <span className="flex h-full w-full items-center justify-between gap-1 px-2 text-[0.6875rem] leading-none">
-          <span className="flex min-w-0 items-center gap-1.5">
-            <span className="shrink-0 font-bold tabular-nums">
-              {slot.startTime}
-            </span>
-            <span className="truncate font-semibold group-hover:underline">
-              {slot.client}
-            </span>
+        <span className="flex h-full w-full items-center gap-1.5 pr-1.5 pl-2.5 text-[0.71875rem] leading-none">
+          <span className="shrink-0 font-mono text-[0.65625rem] tabular-nums opacity-80">
+            {slot.startTime}
           </span>
-          <span className="shrink-0 rounded-sm bg-[color-mix(in_srgb,var(--surface)_80%,transparent)] px-1 py-0.5 text-[0.5625rem] font-semibold">
-            {slot.minutes}m
-          </span>
-        </span>
-      ) : byRoom ? (
-        <span className="flex h-full w-full items-start gap-2 px-2 py-1">
-          <PersonAvatar
-            avatarUrl={slot.person.avatarUrl}
-            className="border-[var(--surface)] shadow-sm"
-            color={slot.place.color}
-            initials={slot.person.initials}
-            name={slot.person.name}
-            seed={slot.place.id}
-            size={28}
-          />
-          <span className="flex h-full min-w-0 flex-1 flex-col justify-between">
-            <span className="block">
-              <span className="block text-[0.6875rem] leading-tight font-bold tabular-nums">
-                {slot.time}
-              </span>
-              <span className="mt-0.5 block truncate text-xs leading-tight font-bold group-hover:underline">
-                {slot.client}
-              </span>
-              <span
-                className="mt-0.5 block truncate text-[0.6875rem] leading-tight"
-                style={{ color: theme.textMuted }}
-              >
-                {slot.service}
-              </span>
-            </span>
-            {slot.minutes > 55 ? (
-              <span
-                className="mt-auto block truncate border-t border-[color-mix(in_srgb,currentColor_12%,transparent)] pt-1 text-[0.625rem] font-medium opacity-80"
-                style={{ color: theme.textMuted }}
-              >
-                {slot.person.name}
-              </span>
-            ) : null}
-          </span>
-        </span>
-      ) : (
-        <span className="flex h-full w-full flex-col px-2 py-1">
-          <span className="flex items-center justify-between gap-1 leading-tight">
-            <span className="shrink-0 text-[0.6875rem] font-bold whitespace-nowrap tabular-nums">
-              {slot.time}
-            </span>
-            {showPlace ? <PlaceTag slot={slot} /> : null}
-          </span>
-          <span className="mt-0.5 block truncate text-xs leading-tight font-bold group-hover:underline">
+          <span className="truncate font-semibold text-[var(--text)] group-hover:underline">
             {slot.client}
           </span>
-          <span
-            className="mt-0.5 block truncate text-[0.6875rem] leading-tight"
-            style={{ color: theme.textMuted }}
-          >
-            {slot.service}
+          <CardFlags slot={slot} />
+        </span>
+      ) : (
+        <span className="flex h-full w-full items-start gap-1.5 py-1 pr-1.5 pl-2.5">
+          {byRoom ? (
+            <PersonAvatar
+              avatarUrl={slot.person.avatarUrl}
+              className="mt-px"
+              color={slot.place.color}
+              initials={slot.person.initials}
+              name={slot.person.name}
+              seed={slot.place.id}
+              size={18}
+            />
+          ) : null}
+          <span className="flex min-w-0 flex-1 flex-col leading-[1.25]">
+            <span className="flex items-center gap-1 font-mono text-[0.65625rem] tabular-nums opacity-80">
+              {slot.time}
+              <CardFlags slot={slot} />
+            </span>
+            <span className="truncate text-[0.78125rem] font-semibold text-[var(--text)] group-hover:underline">
+              {slot.client}
+            </span>
+            <span
+              className="truncate text-[0.71875rem]"
+              style={{ color: theme.textMuted }}
+            >
+              {slot.service}
+              {where ? ` · ${where}` : ""}
+              {byRoom && slot.minutes > 55 ? ` · ${slot.person.name}` : ""}
+            </span>
           </span>
         </span>
       )}
-      {slot.pending && !tiny ? (
-        <span className="absolute right-1 bottom-1 rounded-sm bg-[var(--surface)] px-1 text-[0.5625rem] font-semibold text-[var(--warning-foreground)]">
-          Czeka na płatność
-        </span>
-      ) : null}
     </Link>
   );
 }
 
 /**
- * A visit in a week lane: the client's initials (by room, the
- * specialist's picture), the start, the room's code when there is room.
+ * A visit in a week lane: the specialist's picture (by room) or the
+ * client's initials, and the start; the rest on hover.
  */
 export function CompactVisit({
   slot,
@@ -1112,53 +1004,49 @@ export function CompactVisit({
   byRoom: boolean;
 }) {
   const theme = themeOf(slot.place);
-  const tall = minutesToPx(slot.minutes) >= 48;
   return (
     <Link
       aria-current={open ? "true" : undefined}
       aria-label={`${slot.label}, ${byRoom ? slot.person.name : slot.place.name}`}
       className={cn(
         cardClasses(slot, open),
-        "inset-x-0.5 flex flex-col items-center justify-between rounded-[5px] p-0.5",
+        "inset-x-0.5 flex flex-col items-start gap-0.5 py-1 pr-0.5 pl-1.5",
       )}
       data-visit=""
       href={href}
       scroll={false}
-      style={cardStyle(slot, range, 3)}
+      style={cardStyle(slot, range)}
       title={`${slot.time}\nPacjent: ${slot.client}\nUsługa: ${slot.service}\nMiejsce: ${slot.place.name}\nSpecjalista: ${slot.person.name}`}
     >
-      {byRoom ? (
-        <PersonAvatar
-          avatarUrl={slot.person.avatarUrl}
-          className="border-[var(--surface)]"
-          color={slot.place.color}
-          initials={slot.person.initials}
-          name={slot.person.name}
-          seed={slot.place.id}
-          size={20}
-        />
-      ) : (
-        <span
-          aria-hidden="true"
-          className="flex size-5 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--surface)_80%,transparent)] text-[0.5625rem] font-bold text-white shadow-sm"
-          style={{ backgroundColor: theme.solid }}
-        >
-          {slot.clientInitials}
-        </span>
-      )}
-      <span className="flex w-full flex-col items-center gap-0.5 leading-none">
-        <span className="text-[0.5625rem] font-bold tracking-tighter tabular-nums">
+      <span className="flex items-center gap-1">
+        {byRoom ? (
+          <PersonAvatar
+            avatarUrl={slot.person.avatarUrl}
+            color={slot.place.color}
+            initials={slot.person.initials}
+            name={slot.person.name}
+            seed={slot.place.id}
+            size={16}
+          />
+        ) : (
+          <span
+            aria-hidden="true"
+            className="flex size-4 shrink-0 items-center justify-center rounded-full text-[0.5rem] font-bold text-white"
+            style={{ backgroundColor: theme.solid }}
+          >
+            {slot.clientInitials}
+          </span>
+        )}
+        <span className="font-mono text-[0.625rem] leading-none tabular-nums">
           {slot.startTime}
         </span>
-        {tall ? (
-          <span
-            className="rounded-sm border px-1 text-[0.5rem] leading-tight font-bold uppercase"
-            style={{ borderColor: theme.cardBorder }}
-          >
-            {slot.place.short}
-          </span>
-        ) : null}
       </span>
+      {slot.pending ? (
+        <Hourglass
+          aria-hidden="true"
+          className="size-2.5 text-[var(--warning)]"
+        />
+      ) : null}
     </Link>
   );
 }
@@ -1179,7 +1067,7 @@ export function CompactAvailability({
   return (
     <div data-availability="">
       <Surface
-        className="absolute inset-x-0.5 z-10 overflow-hidden rounded-md border"
+        className="absolute inset-x-0 z-10 overflow-hidden border-y"
         href={href}
         label={slot.label}
         style={{

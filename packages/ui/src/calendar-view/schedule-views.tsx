@@ -21,6 +21,7 @@ import {
   OccupancyChip,
   PersonAvatar,
   PlaceMarker,
+  AXIS_WIDTH,
   rangeHeight,
   TimeAxis,
   VisitCard,
@@ -35,7 +36,7 @@ import { SlotPickLayer } from "./slot-picker";
 export type ScheduleMode = "specialists" | "rooms" | "personal";
 
 const SCROLL =
-  "max-h-[calc(100dvh-15rem)] min-h-[24rem] overflow-auto overscroll-contain";
+  "min-h-[24rem] flex-1 overflow-auto overscroll-contain bg-[var(--surface)] md:min-h-0";
 
 function columnName(column: CalendarColumn) {
   return [
@@ -210,23 +211,27 @@ export function DaySchedule({
     );
   }
   const narrow = (column: CalendarColumn) => collapsed.includes(column.key);
-  const width = (column: CalendarColumn) =>
+  // One grid for the headers and the columns: each header sits on its
+  // column's own track, so they line up whatever their content, and
+  // hiding or collapsing columns moves both together.
+  const tracks = view.columns.map((column) =>
     narrow(column)
-      ? "w-[54px]"
+      ? "54px"
       : mode === "personal"
-        ? "min-w-[120px] flex-1"
-        : "min-w-[170px] flex-1";
+        ? "minmax(120px, 1fr)"
+        : "minmax(170px, 1fr)",
+  );
   return (
     <section aria-label={ariaLabel} className={SCROLL}>
-      <div className="flex w-full min-w-fit flex-col">
-        <div className="sticky top-0 z-40 flex border-b border-[var(--border)] bg-[var(--surface-subtle)]">
-          <div className="sticky left-0 z-10 w-14 shrink-0 border-r border-[var(--border)] bg-[var(--surface-subtle)]" />
+      <div
+        className="grid w-full min-w-fit"
+        style={{ gridTemplateColumns: `${AXIS_WIDTH}px ${tracks.join(" ")}` }}
+      >
+        <div className="sticky top-0 z-40 col-span-full grid grid-cols-subgrid border-b border-[var(--border)] bg-[var(--surface)]">
+          <div className="sticky left-0 z-10 border-r border-[var(--border)] bg-[var(--surface)]" />
           {view.columns.map((column) => (
             <div
-              className={cn(
-                "shrink-0 border-r border-[var(--border)]",
-                width(column),
-              )}
+              className="min-w-0 border-r border-[var(--border)] [&>*]:border-b-0"
               key={column.key}
             >
               {narrow(column) && collapseHref ? (
@@ -243,52 +248,46 @@ export function DaySchedule({
             </div>
           ))}
         </div>
-        <div className="flex">
-          <TimeAxis
-            className="sticky left-0 z-30"
+        <TimeAxis
+          className="sticky left-0 z-30"
+          now={view.now}
+          range={view.range}
+        />
+        {view.columns.map((column) => (
+          <ColumnBody
+            className="min-w-0"
+            column={column}
+            compact={narrow(column)}
+            key={column.key}
+            mode={mode}
             now={view.now}
+            openVisitId={openVisitId}
             range={view.range}
+            visitHref={visitHref}
+            adding={adding}
+            availabilityHref={availabilityHref}
           />
-          {view.columns.map((column) => (
-            <ColumnBody
-              className={width(column)}
-              column={column}
-              compact={narrow(column)}
-              key={column.key}
-              mode={mode}
-              now={view.now}
-              openVisitId={openVisitId}
-              range={view.range}
-              visitHref={visitHref}
-              adding={adding}
-              availabilityHref={availabilityHref}
-            />
-          ))}
-        </div>
+        ))}
       </div>
     </section>
   );
 }
 
-// A lane is at least 52px; with few lanes they share the width.
-const LANE = "min-w-[52px] flex-1";
-const groupStyle = (lanes: number) => {
-  const count = Math.max(1, lanes);
-  return { flex: `${count} 1 ${count * 52}px` };
-};
-
 function LaneHeader({
   lane,
   byRoom,
+  className,
 }: {
   lane: CalendarColumn;
   byRoom: boolean;
+  /** Its right edge (stronger after a day's last lane). */
+  className?: string;
 }) {
   return (
     <div
       className={cn(
-        "flex shrink-0 flex-col items-center justify-between gap-0.5 border-r border-[var(--border)] px-0.5 py-1 last:border-r-0",
-        LANE,
+        "flex min-w-0 flex-col items-center justify-between gap-0.5 border-[var(--border)] px-0.5 py-1",
+        className,
       )}
       data-unavailable={lane.unavailable || undefined}
       title={`${lane.title}\nObłożenie: ${lane.occupancy.percent}% (${visitsLabel(lane.occupancy.visitCount)})`}
@@ -349,133 +348,149 @@ export function WeekComparison({
   ariaLabel,
 }: WeekComparisonProps) {
   const height = rangeHeight(view.range);
+  // One grid for the days, their lanes' headers and the lanes: a track
+  // per lane (an empty day keeps one), a day's header across its lanes.
+  // Headers and lanes share the tracks, so they always line up.
+  const width = (day: CalendarWeekView["days"][number]) =>
+    Math.max(1, day.lanes.length);
+  const tracks = view.days.flatMap((day) =>
+    Array.from({ length: width(day) }, () => "minmax(52px, 1fr)"),
+  );
+  const span = (day: CalendarWeekView["days"][number]) => ({
+    gridColumn: `span ${width(day)} / span ${width(day)}`,
+  });
+  // The day's edge: a stronger line after its last lane.
+  const edge = (last: boolean) =>
+    last ? "border-r-2 border-r-[var(--border-strong)]" : "border-r";
   return (
     <section aria-label={ariaLabel} className={SCROLL}>
-      <div className="flex w-full min-w-fit flex-col">
-        <div className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--surface-subtle)] shadow-sm">
-          <div className="flex border-b border-[var(--border)]">
-            <div className="sticky left-0 z-10 w-14 shrink-0 border-r border-[var(--border)] bg-[var(--surface-subtle)]" />
-            {view.days.map((day) => (
-              <div
-                aria-current={day.isToday ? "date" : undefined}
-                className={cn(
-                  "flex shrink-0 items-center justify-between gap-1 border-r-2 border-[var(--border-strong)] px-2 py-1.5",
-                  day.isToday
-                    ? "bg-[var(--primary-soft)]"
-                    : "bg-[var(--surface-subtle)]",
-                )}
-                key={day.date}
-                style={groupStyle(day.lanes.length)}
-              >
-                <span className="flex min-w-0 items-center gap-1.5 truncate">
-                  <span
-                    className={cn(
-                      "text-[0.6875rem] font-bold tracking-tight",
-                      day.isToday
-                        ? "text-[var(--primary)]"
-                        : "text-[var(--text)]",
-                    )}
-                  >
-                    {day.label}
-                  </span>
-                  {day.isToday ? (
-                    <span className="rounded-sm bg-[var(--primary)] px-1 text-[0.5625rem] font-semibold text-[var(--primary-foreground)]">
-                      Dziś
-                    </span>
-                  ) : null}
-                </span>
-                <OccupancyChip
-                  occupancy={day.occupancy}
-                  title={visitsLabel(day.occupancy.visitCount)}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="flex">
-            <div className="sticky left-0 z-10 w-14 shrink-0 border-r border-[var(--border)] bg-[var(--surface-subtle)]" />
-            {view.days.map((day) => (
-              <div
-                className="flex shrink-0 border-r-2 border-[var(--border-strong)]"
-                key={day.date}
-                style={groupStyle(day.lanes.length)}
-              >
-                {day.lanes.length ? (
-                  day.lanes.map((lane) => (
-                    <LaneHeader byRoom={byRoom} key={lane.key} lane={lane} />
-                  ))
-                ) : (
-                  <span
-                    className={cn(
-                      "flex items-center justify-center py-2 text-[0.5625rem] text-[var(--text-subtle)]",
-                      LANE,
-                    )}
-                    title={
-                      byRoom
-                        ? "Brak dostępnych gabinetów w tym dniu"
-                        : "Brak dyżurów i wizyt w tym dniu"
-                    }
-                  >
-                    —
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="flex">
-          <TimeAxis
-            className="sticky left-0 z-30"
-            now={view.now}
-            range={view.range}
-          />
+      <div
+        className="grid w-full min-w-fit"
+        style={{ gridTemplateColumns: `${AXIS_WIDTH}px ${tracks.join(" ")}` }}
+      >
+        <div className="sticky top-0 z-40 col-span-full grid grid-cols-subgrid border-b border-[var(--border)] bg-[var(--surface)]">
+          <div className="sticky left-0 z-10 row-span-2 border-r border-[var(--border)] bg-[var(--surface)]" />
           {view.days.map((day) => (
             <div
-              aria-label={`${day.label}, ${visitsLabel(day.occupancy.visitCount)}, obłożenie ${day.occupancy.percent}%`}
-              className="flex border-r-2 border-[var(--border-strong)]"
-              key={day.date}
-              role="group"
-              style={groupStyle(day.lanes.length)}
-            >
-              {day.lanes.length ? (
-                day.lanes.map((lane) => (
-                  <ColumnBody
-                    className={cn(LANE, "last:border-r-0")}
-                    column={lane}
-                    compact
-                    key={lane.key}
-                    mode={byRoom ? "rooms" : "specialists"}
-                    now={view.now}
-                    openVisitId={openVisitId}
-                    range={view.range}
-                    visitHref={visitHref}
-                    adding={adding}
-                    availabilityHref={availabilityHref}
-                  />
-                ))
-              ) : (
-                <div
-                  className={cn(
-                    "relative flex flex-col items-center justify-center bg-[var(--surface-subtle)] text-[var(--text-muted)]",
-                    LANE,
-                  )}
-                  style={{ height }}
-                >
-                  <span className="text-[0.5rem] font-medium tracking-wider uppercase">
-                    Brak
-                  </span>
-                </div>
+              aria-current={day.isToday ? "date" : undefined}
+              className={cn(
+                "flex min-w-0 items-center justify-between gap-1 border-b border-[var(--border)] px-2 py-1.5",
+                edge(true),
+                day.isToday
+                  ? "bg-[var(--primary-soft)]"
+                  : "bg-[var(--surface)]",
               )}
+              key={day.date}
+              style={span(day)}
+            >
+              <span className="flex min-w-0 items-center gap-1.5 truncate">
+                <span
+                  className={cn(
+                    "text-[0.8125rem] font-semibold",
+                    day.isToday
+                      ? "text-[var(--primary)]"
+                      : "text-[var(--text)]",
+                  )}
+                >
+                  {day.label}
+                </span>
+                {day.isToday ? (
+                  <span className="rounded-[3px] bg-[var(--primary)] px-1 text-[0.625rem] font-semibold text-[var(--primary-foreground)]">
+                    Dziś
+                  </span>
+                ) : null}
+              </span>
+              <OccupancyChip
+                occupancy={day.occupancy}
+                title={visitsLabel(day.occupancy.visitCount)}
+              />
             </div>
           ))}
+          {view.days.flatMap((day) =>
+            day.lanes.length ? (
+              day.lanes.map((lane, index) => (
+                <LaneHeader
+                  byRoom={byRoom}
+                  className={edge(index === day.lanes.length - 1)}
+                  key={`${day.date}-${lane.key}`}
+                  lane={lane}
+                />
+              ))
+            ) : (
+              <span
+                className={cn(
+                  "flex items-center justify-center py-2 text-[0.6875rem] text-[var(--text-subtle)]",
+                  edge(true),
+                )}
+                key={`${day.date}-none`}
+                title={
+                  byRoom
+                    ? "Brak dostępnych gabinetów w tym dniu"
+                    : "Brak dyżurów i wizyt w tym dniu"
+                }
+              >
+                —
+              </span>
+            ),
+          )}
         </div>
+        <TimeAxis
+          className="sticky left-0 z-30"
+          now={view.now}
+          range={view.range}
+        />
+        {view.days.map((day) => (
+          <div
+            aria-label={`${day.label}, ${visitsLabel(day.occupancy.visitCount)}, obłożenie ${day.occupancy.percent}%`}
+            className="grid grid-cols-subgrid"
+            key={day.date}
+            role="group"
+            style={span(day)}
+          >
+            {day.lanes.length ? (
+              day.lanes.map((lane, index) => (
+                <ColumnBody
+                  className={cn(
+                    "min-w-0",
+                    edge(index === day.lanes.length - 1),
+                  )}
+                  column={lane}
+                  compact
+                  key={lane.key}
+                  mode={byRoom ? "rooms" : "specialists"}
+                  now={view.now}
+                  openVisitId={openVisitId}
+                  range={view.range}
+                  visitHref={visitHref}
+                  adding={adding}
+                  availabilityHref={availabilityHref}
+                />
+              ))
+            ) : (
+              <div
+                className={cn(
+                  "relative flex flex-col items-center justify-center bg-[var(--surface-subtle)] text-[var(--text-muted)]",
+                  edge(true),
+                )}
+                style={{ height }}
+              >
+                <span className="text-[0.625rem] font-medium tracking-wider uppercase">
+                  Brak
+                </span>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </section>
   );
 }
 
 /**
- * The calendar's card: the grid from md up, the phone list below it, a
- * summary beside it, and the visit's panel next to the card.
+ * The calendar under its bars, edge to edge as the bookings table: the
+ * grid from md up (it scrolls inside itself, the headers and hours stuck),
+ * the phone list below it, the visit's or a form's panel beside it, and
+ * the week's summary as a drawer over it.
  */
 export function ScheduleFrame({
   desktop,
@@ -485,21 +500,18 @@ export function ScheduleFrame({
 }: {
   desktop: ReactNode;
   mobile: ReactNode;
+  /** The week's summary (a drawer). */
   aside?: ReactNode;
   panel?: ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-4">
-      <div className="flex min-w-0 flex-1 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
-        <div className="min-w-0 flex-1">
-          <div className="hidden md:block">{desktop}</div>
-          <div className="bg-[var(--surface-subtle)] p-3 md:hidden">
-            {mobile}
-          </div>
-        </div>
-        {aside}
+    <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="hidden min-h-0 flex-1 flex-col md:flex">{desktop}</div>
+        <div className="bg-[var(--surface-subtle)] p-3 md:hidden">{mobile}</div>
       </div>
       {panel}
+      {aside}
     </div>
   );
 }

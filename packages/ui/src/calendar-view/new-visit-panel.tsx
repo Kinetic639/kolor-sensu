@@ -8,7 +8,7 @@ import {
   type CentreBookingValues,
 } from "@repo/contracts/booking";
 import type { NewVisitDefaults } from "@repo/scheduling";
-import { CalendarPlus, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useQueryStates } from "nuqs";
 import { useId, useMemo, useState, useTransition } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -53,7 +53,7 @@ export interface NewVisitPanelProps {
 const MODE_LABELS = { in_person: "Stacjonarnie", online: "Online" } as const;
 
 const selectClass =
-  "h-10 w-full rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none aria-invalid:border-[var(--danger)]";
+  "h-8 w-full rounded-[5px] border border-[var(--border)] bg-[var(--surface)] px-2.5 text-[0.8125rem] text-[var(--text)] focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--primary)_18%,transparent)] focus-visible:outline-none aria-invalid:border-[var(--danger)]";
 
 function money(minor: number, currencyCode: string) {
   return new Intl.NumberFormat("pl-PL", {
@@ -192,32 +192,26 @@ export function NewVisitPanel({
   return (
     <aside
       aria-labelledby={field("title")}
-      className="fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col overflow-hidden border-l border-[var(--border)] bg-[var(--surface)] shadow-xl xl:sticky xl:top-4 xl:z-auto xl:max-h-[calc(100dvh-7rem)] xl:w-[26rem] xl:shrink-0 xl:rounded-[var(--radius-surface)] xl:border xl:shadow-[var(--shadow-surface)]"
+      className="fixed inset-y-0 right-0 z-40 flex w-full max-w-sm flex-col overflow-hidden border-l border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-overlay)] xl:static xl:z-auto xl:w-96 xl:max-w-none xl:shrink-0 xl:shadow-none"
     >
       <ClosePanelOnEscape href={closeHref} />
-      <header className="flex items-start justify-between gap-3 border-b border-[var(--border)] bg-[var(--primary-soft)] p-4">
+      <header className="flex shrink-0 items-start justify-between gap-2 border-b border-[var(--border)] px-3.5 pt-2.5 pb-2">
         <div className="flex min-w-0 items-start gap-3">
-          <span
-            aria-hidden="true"
-            className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm"
-          >
-            <CalendarPlus className="size-4" />
-          </span>
           <div className="min-w-0">
             <h2
-              className="text-lg leading-tight font-semibold text-[var(--text)]"
+              className="text-[0.9375rem] leading-tight font-semibold text-[var(--text)]"
               id={field("title")}
             >
               Nowa wizyta
             </h2>
-            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+            <p className="mt-0.5 text-[0.75rem] text-[var(--text-muted)]">
               Rezerwacja opłacana online z linku w e-mailu.
             </p>
           </div>
         </div>
         <Link
           aria-label="Zamknij formularz nowej wizyty"
-          className="inline-flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+          className="-mr-1.5 inline-flex size-7 shrink-0 items-center justify-center rounded-[5px] text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
           href={closeHref}
           scroll={false}
         >
@@ -226,13 +220,13 @@ export function NewVisitPanel({
       </header>
 
       <form
-        className="flex min-h-0 flex-1 flex-col"
+        className="flex min-h-0 flex-1 flex-col [&_input]:rounded-[5px] [&_input]:text-[0.8125rem] [&_input:not([type=radio])]:h-8 [&_label]:text-[0.75rem] [&_label]:font-medium [&_label]:text-[var(--text-muted)] [&_textarea]:rounded-[5px] [&_textarea]:text-[0.8125rem]"
         noValidate
         onSubmit={(event) => void submit(event)}
       >
-        <div className="grid flex-1 content-start gap-4 overflow-y-auto p-4">
+        <div className="grid flex-1 content-start gap-3.5 overflow-y-auto px-3.5 py-3">
           <fieldset className="grid gap-3">
-            <legend className="mb-1 text-xs font-semibold tracking-[0.04em] text-[var(--text-muted)] uppercase">
+            <legend className="mb-1 text-[0.6875rem] font-semibold tracking-[0.03em] text-[var(--text-muted)]">
               Wizyta
             </legend>
             {specialists.length > 1 ? (
@@ -387,7 +381,7 @@ export function NewVisitPanel({
           </fieldset>
 
           <fieldset className="grid gap-3 border-t border-[var(--border)] pt-4">
-            <legend className="mb-1 text-xs font-semibold tracking-[0.04em] text-[var(--text-muted)] uppercase">
+            <legend className="mb-1 text-[0.6875rem] font-semibold tracking-[0.03em] text-[var(--text-muted)]">
               Klient
             </legend>
             <div className="grid gap-1.5">
@@ -453,7 +447,7 @@ export function NewVisitPanel({
             rezerwacja zostanie anulowana.
           </p>
         </div>
-        <footer className="flex items-center justify-end gap-2 border-t border-[var(--border)] p-3">
+        <footer className="flex h-11 shrink-0 items-center justify-end gap-1.5 border-t border-[var(--border)] px-2">
           <Button asChild size="sm" variant="outline">
             <Link href={closeHref} scroll={false}>
               Anuluj

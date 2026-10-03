@@ -101,7 +101,7 @@ describe("DaySchedule", () => {
         "link",
         { name: /^Ewa Kowalska.*Gabinet 1$/ },
       ),
-    ).toHaveTextContent("EK08:00G1");
+    ).toHaveTextContent("EK08:00");
   });
 
   it("rooms: closed ones say why, visits show who holds them", () => {
@@ -222,8 +222,10 @@ describe("summary panels", () => {
         period="Tydzień 30 wrz – 6 paź"
         summary={specialistsWeek.summary}
       />,
+      "?podsumowanie=true",
     );
-    const panel = screen.getByRole("complementary", {
+    // A drawer over the calendar, opened from the toolbar.
+    const panel = screen.getByRole("dialog", {
       name: "Porównanie specjalistów",
     });
     expect(within(panel).getByText("84")).toBeInTheDocument();
@@ -242,8 +244,9 @@ describe("summary panels", () => {
         summary={annaWeek.summary}
         visitHref={visitHref}
       />,
+      "?podsumowanie=true",
     );
-    const panel = screen.getByRole("complementary", { name: "Anna Nowak" });
+    const panel = screen.getByRole("dialog", { name: "Anna Nowak" });
     expect(within(panel).getByText("Najbliższe wizyty")).toBeInTheDocument();
     expect(
       within(panel).getByRole("link", { name: /Dostępność i nieobecności/ }),
@@ -286,10 +289,17 @@ describe("ScheduleToolbar", () => {
     expect(
       screen.getByRole("link", { name: "Następny dzień" }),
     ).toHaveAttribute("href", "/kalendarz?data=2030-10-03");
+    // The calendar icon goes back to today.
+    expect(screen.getByRole("link", { name: "Dziś" })).toHaveAttribute(
+      "aria-current",
+      "date",
+    );
     expect(screen.getByRole("link", { name: "Dzień" })).toHaveAttribute(
       "aria-current",
       "page",
     );
+    // The switches wait in the "Widok" menu.
+    await userEvent.click(screen.getByRole("button", { name: "Widok" }));
     await userEvent.click(
       screen.getByRole("switch", { name: "Ukryj puste kolumny" }),
     );
@@ -333,6 +343,30 @@ describe("ScheduleToolbar", () => {
     expect(
       screen.getByRole("searchbox", { name: "Szukaj pacjenta" }),
     ).toBeInTheDocument();
+  });
+
+  it("the week's summary is a button of its own", async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
+    withUrl(
+      <ScheduleToolbar
+        nav={{ ...nav, unit: "tydzień" }}
+        switches={["puste", "podsumowanie"]}
+        views={[]}
+      />,
+      "",
+      onUrlUpdate,
+    );
+    // Closed until asked for.
+    const summary = screen.getByRole("button", { name: "Podsumowanie" });
+    expect(summary).toHaveAttribute("aria-pressed", "false");
+    await userEvent.click(summary);
+    expect(onUrlUpdate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ queryString: "?podsumowanie=true" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Widok" }));
+    expect(
+      screen.queryByRole("switch", { name: "Podsumowanie" }),
+    ).not.toBeInTheDocument();
   });
 });
 

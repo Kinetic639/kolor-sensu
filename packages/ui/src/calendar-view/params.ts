@@ -68,7 +68,7 @@ export const calendarParsers = {
   wyszarz: parseAsBoolean.withDefault(true),
   wizyty: parseAsBoolean.withDefault(true),
   dostepnosc: parseAsBoolean.withDefault(true),
-  podsumowanie: parseAsBoolean.withDefault(true),
+  podsumowanie: parseAsBoolean.withDefault(false),
   /** A location's id, or "online". */
   lokalizacja: parseAsPlace,
   /** A patient (or service, number) to find. */

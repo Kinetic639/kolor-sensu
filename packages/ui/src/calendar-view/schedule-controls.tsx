@@ -1,13 +1,20 @@
 "use client";
 
 import { debounce, useQueryStates } from "nuqs";
-import { LoaderCircle, MapPin, Search, X } from "lucide-react";
+import {
+  ChartColumn,
+  LoaderCircle,
+  MapPin,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import {
   useTransition,
   type ReactNode,
   type TransitionStartFunction,
 } from "react";
 import { cn } from "../lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "../popover";
 import { Switch } from "../switch";
 import { calendarDisplayParsers, calendarParsers } from "./params";
 
@@ -35,7 +42,11 @@ function useDisplay(startTransition?: TransitionStartFunction) {
   });
 }
 
-export function ScheduleSwitches({ shown }: { shown: ScheduleSwitch[] }) {
+const ICON =
+  "inline-grid size-7 shrink-0 place-items-center rounded-[5px] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none";
+
+/** The display switches, in a menu under the sliders icon ("Widok"). */
+export function ScheduleViewMenu({ shown }: { shown: ScheduleSwitch[] }) {
   const [pending, startTransition] = useTransition();
   const [display, setDisplay] = useDisplay(startTransition);
   const [{ puste }, setServer] = useQueryStates(
@@ -44,33 +55,74 @@ export function ScheduleSwitches({ shown }: { shown: ScheduleSwitch[] }) {
   );
   const values = { ...display, puste };
   return (
-    <div
-      aria-busy={pending || undefined}
-      className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1 shadow-sm"
-      role="group"
-      aria-label="Widok kalendarza"
-    >
-      {shown.map((key, index) => (
-        <label
-          className={cn(
-            "flex cursor-pointer items-center gap-2 text-xs font-medium text-[var(--text)] select-none",
-            index > 0 && "border-l border-[var(--border)] pl-3",
-          )}
-          key={key}
+    <Popover>
+      <PopoverTrigger
+        aria-label="Widok"
+        className={cn(ICON, "data-[state=open]:bg-[var(--surface-muted)]")}
+        title="Widok"
+      >
+        {pending ? (
+          <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
+        ) : (
+          <SlidersHorizontal aria-hidden="true" className="size-4" />
+        )}
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-64 p-1">
+        <div
+          aria-busy={pending || undefined}
+          aria-label="Widok kalendarza"
+          role="group"
         >
-          {LABELS[key]}
-          <Switch
-            checked={values[key]}
-            onCheckedChange={(checked) =>
-              void (key === "puste"
-                ? setServer({ puste: checked })
-                : setDisplay({ [key]: checked }))
-            }
-            size="sm"
-          />
-        </label>
-      ))}
-    </div>
+          {shown.map((key) => (
+            <label
+              className="flex h-8 cursor-pointer items-center justify-between gap-3 rounded-[5px] px-2 text-[0.8125rem] text-[var(--text)] select-none hover:bg-[var(--surface-subtle)]"
+              key={key}
+            >
+              {LABELS[key]}
+              <Switch
+                checked={values[key]}
+                onCheckedChange={(checked) =>
+                  void (key === "puste"
+                    ? setServer({ puste: checked })
+                    : setDisplay({ [key]: checked }))
+                }
+                size="sm"
+              />
+            </label>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** Whether the week's summary drawer is open, and how to set it. */
+export function useSummaryOpen() {
+  const [display, setDisplay] = useDisplay();
+  return [
+    display.podsumowanie,
+    (open: boolean) => void setDisplay({ podsumowanie: open }),
+  ] as const;
+}
+
+/** Opens and closes the week's summary drawer. */
+export function ScheduleSummaryToggle() {
+  const [display, setDisplay] = useDisplay();
+  return (
+    <button
+      aria-label="Podsumowanie"
+      aria-pressed={display.podsumowanie}
+      className={cn(
+        ICON,
+        display.podsumowanie &&
+          "bg-[var(--primary-soft)] text-[var(--primary)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]",
+      )}
+      onClick={() => setDisplay({ podsumowanie: !display.podsumowanie })}
+      title="Podsumowanie"
+      type="button"
+    >
+      <ChartColumn aria-hidden="true" className="size-4" />
+    </button>
   );
 }
 
@@ -100,7 +152,7 @@ export function ScheduleLocationSelect({
         />
       )}
       <select
-        className="h-8 cursor-pointer appearance-none rounded-lg border border-[var(--border)] bg-[var(--surface)] pr-3 pl-7 text-xs text-[var(--text)] shadow-sm focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+        className="h-7 max-w-44 cursor-pointer appearance-none truncate rounded-[5px] border border-[var(--border)] bg-[var(--surface)] pr-2.5 pl-7 text-[0.75rem] text-[var(--text-muted)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
         onChange={(event) =>
           setParams({ lokalizacja: event.target.value || null })
         }
@@ -130,16 +182,16 @@ export function ScheduleSearch() {
       {pending ? (
         <LoaderCircle
           aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 animate-spin text-[var(--text-subtle)]"
+          className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 animate-spin text-[var(--text-subtle)]"
         />
       ) : (
         <Search
           aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-[var(--text-subtle)]"
+          className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-[var(--text-subtle)]"
         />
       )}
       <input
-        className="h-8 w-40 rounded-lg border border-[var(--border)] bg-[var(--surface)] pr-3 pl-8 text-xs text-[var(--text)] shadow-sm placeholder:text-[var(--text-subtle)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none sm:w-44"
+        className="h-7 w-36 rounded-[5px] border border-[var(--border)] bg-[var(--surface)] pr-2.5 pl-7 text-[0.75rem] text-[var(--text)] transition-[width] duration-200 placeholder:text-[var(--text-subtle)] focus:w-48 focus-visible:border-[var(--primary)] focus-visible:outline-none motion-reduce:transition-none [&::-webkit-search-cancel-button]:hidden"
         maxLength={100}
         onChange={(event) =>
           setParams(
@@ -154,22 +206,6 @@ export function ScheduleSearch() {
         value={q ?? ""}
       />
     </label>
-  );
-}
-
-/** Closes the summary panel (the "Podsumowanie" switch opens it again). */
-export function SummaryCloseButton() {
-  const [, setDisplay] = useDisplay();
-  return (
-    <button
-      aria-label="Zamknij podsumowanie"
-      className="rounded-md p-1 text-[var(--text-subtle)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-      onClick={() => setDisplay({ podsumowanie: false })}
-      title="Zamknij podsumowanie"
-      type="button"
-    >
-      <X aria-hidden="true" className="size-4" />
-    </button>
   );
 }
 
@@ -189,7 +225,7 @@ export function ScheduleCanvas({
   return (
     <div
       className={cn(
-        "[&[data-grey]_[data-unavailable]]:bg-[var(--surface-subtle)] [&[data-hide-availability]_[data-availability]]:hidden [&[data-hide-summary]_[data-summary]]:hidden [&[data-hide-visits]_[data-visit]]:hidden",
+        "[&[data-grey]_[data-unavailable]]:bg-[var(--surface-subtle)] [&[data-grey]_[data-unavailable][role=group]]:[background-image:repeating-linear-gradient(135deg,transparent_0_5px,color-mix(in_srgb,var(--text-subtle)_16%,transparent)_5px_6px)] [&[data-hide-availability]_[data-availability]]:hidden [&[data-hide-summary]_[data-summary]]:hidden [&[data-hide-visits]_[data-visit]]:hidden",
         className,
       )}
       data-grey={display.wyszarz || undefined}
