@@ -118,6 +118,7 @@ export default async function BookingsPage({
             rows={rows}
             toolbar={
               <VisitFilterBar
+                order={columns.map((column) => column.id)}
                 rooms={rooms.map((room) => ({ id: room.id, name: room.name }))}
                 services={services.map((service) => ({
                   id: service.id,

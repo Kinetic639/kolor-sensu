@@ -217,14 +217,21 @@ describe("VisitTable", () => {
 });
 
 describe("VisitFilterBar", () => {
-  const renderBar = (search: string) =>
+  const renderBar = (
+    search: string,
+    order?: string[],
+    onUrlUpdate?: (event: { queryString: string }) => void,
+  ) =>
     render(
       <VisitFilterBar
+        order={order}
         rooms={sampleRooms}
         showPayments
         specialists={sampleSpecialists}
       />,
-      { wrapper: withNuqsTestingAdapter({ searchParams: search }) },
+      {
+        wrapper: withNuqsTestingAdapter({ searchParams: search, onUrlUpdate }),
+      },
     );
 
   it("a chip per filter, the search folded to a magnifier", () => {
@@ -271,9 +278,70 @@ describe("VisitFilterBar", () => {
     expect(
       screen.getByRole("group", { name: "Wartości: Płatność" }),
     ).toBeInTheDocument();
+    // Several at once, as statuses: checkboxes.
     expect(
-      screen.getByRole("menuitemradio", { name: "Zwrot do zlecenia" }),
+      screen.getByRole("menuitemcheckbox", { name: "Zwrot do zlecenia" }),
     ).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("follows the columns' order, in the list and in the bar", async () => {
+    renderBar("?status=odwolane&zmiana=dzis", [
+      "status",
+      "zmiana",
+      "termin",
+      "specjalista",
+    ]);
+    const chips = screen
+      .getAllByRole("button", { name: /^Usuń filtr/ })
+      .map((chip) => chip.getAttribute("aria-label"));
+    expect(chips).toEqual([
+      "Usuń filtr Status",
+      "Usuń filtr Zmiana",
+      "Usuń filtr Termin",
+    ]);
+    await userEvent.click(screen.getByRole("button", { name: /^Filtry/ }));
+    const fields = within(screen.getByRole("dialog"))
+      .getAllByRole("listitem")
+      .map((item) => item.textContent?.replace(/\d+$/, "").trim());
+    expect(fields.slice(0, 4)).toEqual([
+      "Status",
+      "Zmiana",
+      "Termin",
+      "Specjalista",
+    ]);
+  });
+
+  it("ticks several specialists; dates of a change as the visit's", async () => {
+    const updates: string[] = [];
+    renderBar(`?specjalista=${sampleSpecialists[0]!.id}`, undefined, (event) =>
+      updates.push(event.queryString),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: /^Specjalista jest/ }),
+    );
+    await userEvent.click(
+      screen.getByRole("menuitemcheckbox", {
+        name: sampleSpecialists[1]!.name,
+      }),
+    );
+    expect(decodeURIComponent(updates.at(-1)!)).toContain(
+      `specjalista=${sampleSpecialists[0]!.id},${sampleSpecialists[1]!.id}`,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /^Filtry/ }));
+    await userEvent.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Utworzono",
+      }),
+    );
+    expect(
+      screen.getByRole("menuitemradio", { name: "Ostatnie 7 dni" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Własny zakres dat")).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("menuitemradio", { name: "Wczoraj" }),
+    );
+    expect(updates.at(-1)).toContain("utworzono=wczoraj");
   });
 });
 

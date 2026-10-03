@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   isFiltered,
   loadVisitTableParams,
+  pastPeriod,
   sortDirection,
   sortHref,
   toVisitSearch,
@@ -36,6 +37,12 @@ describe("the bookings table's address", () => {
       zakres: "nadchodzace",
       od: null,
       do: null,
+      utworzono: null,
+      utworzono_od: null,
+      utworzono_do: null,
+      zmiana: null,
+      zmiana_od: null,
+      zmiana_do: null,
       sort: "termin",
       kierunek: null,
       strona: 1,
@@ -45,8 +52,18 @@ describe("the bookings table's address", () => {
     });
     expect(load("q=" + "a".repeat(300)).q).toHaveLength(100);
     expect(load(`miejsce=online&wizyta=${anna}`)).toMatchObject({
-      miejsce: "online",
+      miejsce: ["online"],
       wizyta: anna,
+    });
+    // Several values each, the wrong ones left out, none twice.
+    expect(
+      load(
+        `specjalista=${anna},nie-id,${anna}&miejsce=online,${room}&platnosc=oplacone,zwrocone`,
+      ),
+    ).toMatchObject({
+      specjalista: [anna],
+      miejsce: ["online", room],
+      platnosc: ["oplacone", "zwrocone"],
     });
   });
 
@@ -89,6 +106,7 @@ describe("the bookings table's address", () => {
     expect(isFiltered(load(`wizyta=${anna}&strona=2`))).toBe(false);
     expect(isFiltered(load(`miejsce=online`))).toBe(true);
     expect(isFiltered(load(`od=2030-10-01`))).toBe(true);
+    expect(isFiltered(load(`zmiana=dzis`))).toBe(true);
   });
 });
 
@@ -124,25 +142,58 @@ describe("visitPeriod", () => {
   });
 });
 
+describe("pastPeriod", () => {
+  const past = (scope: Parameters<typeof pastPeriod>[0], own = {}) =>
+    pastPeriod(scope, { from: null, to: null, ...own }, now, timeZone);
+
+  it("ranges back from today, today included", () => {
+    expect(past("dzis")).toEqual({
+      from: "2030-10-01T22:00:00.000Z",
+      to: "2030-10-02T22:00:00.000Z",
+    });
+    expect(past("wczoraj")).toEqual({
+      from: "2030-09-30T22:00:00.000Z",
+      to: "2030-10-01T22:00:00.000Z",
+    });
+    expect(past("ostatnie-7-dni")).toEqual({
+      from: "2030-09-25T22:00:00.000Z",
+      to: "2030-10-02T22:00:00.000Z",
+    });
+    expect(past("ten-miesiac").from).toBe("2030-09-30T22:00:00.000Z");
+    expect(past(null)).toEqual({ from: null, to: null });
+  });
+
+  it("days of one's own, over the range", () => {
+    expect(past("dzis", { from: "2030-09-01", to: "2030-09-02" })).toEqual({
+      from: "2030-08-31T22:00:00.000Z",
+      to: "2030-09-02T22:00:00.000Z",
+    });
+  });
+});
+
 describe("toVisitSearch", () => {
   it("asks for the page, filtered and sorted", () => {
     expect(
       toVisitSearch(
         load(
-          `q=jan&status=odwolane&platnosc=do-zwrotu&usluga=${anna}&miejsce=${room}&sort=kwota&strona=3&wierszy=10`,
+          `q=jan&status=odwolane&platnosc=do-zwrotu&usluga=${anna}&miejsce=${room}&utworzono=dzis&sort=kwota&strona=3&wierszy=10`,
         ),
         { now, timeZone },
       ),
     ).toEqual({
       query: "jan",
       statuses: ["cancelled"],
-      payment: "refund_due",
-      specialistId: null,
-      serviceId: anna,
-      roomId: room,
+      payments: ["refund_due"],
+      specialistIds: null,
+      serviceIds: [anna],
+      roomIds: [room],
       online: null,
       from: now.toISOString(),
       to: null,
+      createdFrom: "2030-10-01T22:00:00.000Z",
+      createdTo: "2030-10-02T22:00:00.000Z",
+      changedFrom: null,
+      changedTo: null,
       sort: "price",
       descending: false,
       limit: 10,
@@ -162,9 +213,9 @@ describe("toVisitSearch", () => {
       ),
     ).toMatchObject({
       online: true,
-      roomId: null,
-      specialistId: null,
-      payment: null,
+      roomIds: null,
+      specialistIds: null,
+      payments: null,
       own: true,
     });
   });

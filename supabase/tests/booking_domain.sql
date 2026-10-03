@@ -1219,21 +1219,21 @@ BEGIN
   SELECT monday INTO week FROM booking_test;
   -- One page, and how many there are in all.
   SELECT max(total_count) INTO total
-  FROM public.search_visits(p_from => pg_temp.at(week, '00:00'), p_limit => 1);
+  FROM public.search_bookings(p_from => pg_temp.at(week, '00:00'), p_limit => 1);
   IF total < 2 THEN RAISE EXCEPTION 'U: the total count'; END IF;
-  IF (SELECT count(*) FROM public.search_visits(p_from => pg_temp.at(week, '00:00'), p_limit => 1)) <> 1 THEN
+  IF (SELECT count(*) FROM public.search_bookings(p_from => pg_temp.at(week, '00:00'), p_limit => 1)) <> 1 THEN
     RAISE EXCEPTION 'U: a page of one';
   END IF;
   -- A search is literal: "%" finds the name with a per cent sign only.
-  IF (SELECT array_agg(reference) FROM public.search_visits(p_query => '100%'))
+  IF (SELECT array_agg(reference) FROM public.search_bookings(p_query => '100%'))
      IS DISTINCT FROM ARRAY[(SELECT reference FROM s_visits WHERE name = 'u2')] THEN
     RAISE EXCEPTION 'U: a literal search';
   END IF;
-  IF EXISTS (SELECT 1 FROM public.search_visits(p_query => '_ofia')) THEN
+  IF EXISTS (SELECT 1 FROM public.search_bookings(p_query => '_ofia')) THEN
     RAISE EXCEPTION 'U: "_" matched as a wildcard';
   END IF;
   -- Sorted as asked: the latest first.
-  SELECT reference INTO first FROM public.search_visits(
+  SELECT reference INTO first FROM public.search_bookings(
     p_query => 'Test', p_from => pg_temp.at(week + 2, '00:00'),
     p_to => pg_temp.at(week + 3, '00:00'), p_statuses => ARRAY['confirmed'],
     p_desc => true, p_limit => 1);
@@ -1242,17 +1242,17 @@ BEGIN
   END IF;
   -- Only allowed sorts, statuses and page sizes.
   BEGIN
-    PERFORM public.search_visits(p_sort => 'client_email; DROP TABLE x');
+    PERFORM public.search_bookings(p_sort => 'client_email; DROP TABLE x');
     RAISE EXCEPTION 'U: an unknown sort';
   EXCEPTION WHEN invalid_parameter_value THEN NULL;
   END;
   BEGIN
-    PERFORM public.search_visits(p_statuses => ARRAY['held']);
+    PERFORM public.search_bookings(p_statuses => ARRAY['held']);
     RAISE EXCEPTION 'U: holds as a status';
   EXCEPTION WHEN invalid_parameter_value THEN NULL;
   END;
   BEGIN
-    PERFORM public.search_visits(p_limit => 1000);
+    PERFORM public.search_bookings(p_limit => 1000);
     RAISE EXCEPTION 'U: a page too large';
   EXCEPTION WHEN invalid_parameter_value THEN NULL;
   END;
@@ -1265,7 +1265,7 @@ SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-0000000
 SET LOCAL ROLE authenticated;
 DO $body$
 BEGIN
-  IF EXISTS (SELECT 1 FROM public.search_visits(p_query => 'Test')) THEN
+  IF EXISTS (SELECT 1 FROM public.search_bookings(p_query => 'Test')) THEN
     RAISE EXCEPTION 'U: Jan found Anna''s visits';
   END IF;
 END;
@@ -1275,7 +1275,7 @@ RESET ROLE;
 SET LOCAL ROLE anon;
 DO $body$
 BEGIN
-  PERFORM public.search_visits();
+  PERFORM public.search_bookings();
   RAISE EXCEPTION 'U: anon searched visits';
 EXCEPTION WHEN insufficient_privilege THEN NULL;
 END;
@@ -1294,14 +1294,14 @@ DECLARE
   service uuid := (SELECT id FROM public.services WHERE slug = 'booking-test-consultation');
   detail record;
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM public.search_visits(p_service_id => service, p_online => false, p_payment => 'paid') WHERE id = u1) THEN
+  IF NOT EXISTS (SELECT 1 FROM public.search_bookings(p_service_id => service, p_online => false, p_payment => 'paid') WHERE id = u1) THEN
     RAISE EXCEPTION 'V: service, place and payment filters';
   END IF;
-  IF EXISTS (SELECT 1 FROM public.search_visits(p_online => true) WHERE id = u1) THEN
+  IF EXISTS (SELECT 1 FROM public.search_bookings(p_online => true) WHERE id = u1) THEN
     RAISE EXCEPTION 'V: an in-person visit found as online';
   END IF;
   BEGIN
-    PERFORM public.search_visits(p_payment => 'everything');
+    PERFORM public.search_bookings(p_payment => 'everything');
     RAISE EXCEPTION 'V: an unknown payment filter';
   EXCEPTION WHEN invalid_parameter_value THEN NULL;
   END;
@@ -1326,7 +1326,7 @@ BEGIN
   IF detail IS NULL OR detail.emails IS NOT NULL OR detail.paid IS NOT NULL THEN
     RAISE EXCEPTION 'V: Anna''s view of her visit: %', row_to_json(detail);
   END IF;
-  IF EXISTS (SELECT 1 FROM public.search_visits(p_payment => 'paid')) THEN
+  IF EXISTS (SELECT 1 FROM public.search_bookings(p_payment => 'paid')) THEN
     RAISE EXCEPTION 'V: a specialist filtered by payments';
   END IF;
 END;
@@ -1989,7 +1989,7 @@ BEGIN
      IS DISTINCT FROM pg_temp.at(x.day, '11:00') - interval '48 hours'
      OR (SELECT payment_due_at FROM public.get_visit(v_id))
      IS DISTINCT FROM pg_temp.at(x.day, '11:00') - interval '48 hours'
-     OR (SELECT payment_due_at FROM public.search_visits(p_query => 'Ewa Klientka') WHERE id = v_id)
+     OR (SELECT payment_due_at FROM public.search_bookings(p_query => 'Ewa Klientka') WHERE id = v_id)
      IS DISTINCT FROM pg_temp.at(x.day, '11:00') - interval '48 hours' THEN
     RAISE EXCEPTION 'Z: the portals do not see when it must be paid by';
   END IF;
@@ -2658,7 +2658,7 @@ BEGIN
     RAISE EXCEPTION 'AE: the client''s visits';
   END IF;
   IF (SELECT total FROM public.count_visit_views('[{"id": "all"}]'::jsonb))
-     IS DISTINCT FROM (SELECT max(total_count) FROM public.search_visits(p_limit => 1)) THEN
+     IS DISTINCT FROM (SELECT max(total_count) FROM public.search_bookings(p_limit => 1)) THEN
     RAISE EXCEPTION 'AE: a view''s count';
   END IF;
   IF (SELECT id FROM public.get_visit_client(

@@ -90,16 +90,22 @@ export interface VisitSearch {
   /** Words to find in the client, reference, service or specialist. */
   query?: string | null;
   statuses?: ("confirmed" | "awaiting_payment" | "cancelled")[] | null;
-  /** Paid, unpaid, refunds to settle, refunded (admins). */
-  payment?: "paid" | "unpaid" | "refund_due" | "refunded" | null;
-  specialistId?: string | null;
-  serviceId?: string | null;
-  roomId?: string | null;
-  /** True: online visits only; false: in person only. */
+  /** Any of: paid, unpaid, refunds to settle, refunded (admins). */
+  payments?: ("paid" | "unpaid" | "refund_due" | "refunded")[] | null;
+  specialistIds?: string[] | null;
+  serviceIds?: string[] | null;
+  /** Places: these rooms, and/or (`online`) online visits. */
+  roomIds?: string[] | null;
   online?: boolean | null;
   /** Instants (ISO): visits starting from, and before. */
   from?: string | null;
   to?: string | null;
+  /** Booked from, and before. */
+  createdFrom?: string | null;
+  createdTo?: string | null;
+  /** Last changed from, and before. */
+  changedFrom?: string | null;
+  changedTo?: string | null;
   sort: VisitSort;
   descending: boolean;
   /** 1–100. */
@@ -116,13 +122,17 @@ export async function searchVisits(
   const { data, error } = await client.rpc("search_bookings", {
     p_query: search.query ?? undefined,
     p_statuses: search.statuses ?? undefined,
-    p_payment: search.payment ?? undefined,
-    p_specialist_id: search.specialistId ?? undefined,
-    p_service_id: search.serviceId ?? undefined,
-    p_room_id: search.roomId ?? undefined,
+    p_payments: search.payments ?? undefined,
+    p_specialist_ids: search.specialistIds ?? undefined,
+    p_service_ids: search.serviceIds ?? undefined,
+    p_room_ids: search.roomIds ?? undefined,
     p_online: search.online ?? undefined,
     p_from: search.from ?? undefined,
     p_to: search.to ?? undefined,
+    p_created_from: search.createdFrom ?? undefined,
+    p_created_to: search.createdTo ?? undefined,
+    p_changed_from: search.changedFrom ?? undefined,
+    p_changed_to: search.changedTo ?? undefined,
     p_sort: search.sort,
     p_desc: search.descending,
     p_limit: search.limit,

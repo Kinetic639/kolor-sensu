@@ -91,6 +91,7 @@ export default async function BookingsPage({
           specialistAvatars={avatars}
           toolbar={
             <VisitFilterBar
+              order={columns.map((column) => column.id)}
               rooms={filters.rooms}
               services={filters.services}
               showPayments

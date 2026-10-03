@@ -27,6 +27,7 @@ import {
 } from "../tooltip";
 import {
   visitTableParsers,
+  type VisitPastScope,
   type VisitPaymentFilter,
   type VisitScope,
   type VisitStatusFilter,
@@ -51,6 +52,11 @@ export interface VisitFilterBarProps {
   showPayments?: boolean;
   /** First in the bar: the view picker ("Nadchodzące 42 ▾"). */
   view?: ReactNode;
+  /**
+   * The table's columns in their order: the filters follow it (those of
+   * no column after).
+   */
+  order?: readonly string[];
 }
 
 const PERIODS: { value: VisitScope; label: string }[] = [
@@ -61,6 +67,14 @@ const PERIODS: { value: VisitScope; label: string }[] = [
   { value: "nastepny-tydzien", label: "Przyszły tydzień" },
   { value: "ten-miesiac", label: "Ten miesiąc" },
   { value: "minione", label: "Minione" },
+];
+const PAST: { value: VisitPastScope; label: string }[] = [
+  { value: "dzis", label: "Dziś" },
+  { value: "wczoraj", label: "Wczoraj" },
+  { value: "ten-tydzien", label: "Ten tydzień" },
+  { value: "ostatnie-7-dni", label: "Ostatnie 7 dni" },
+  { value: "ten-miesiac", label: "Ten miesiąc" },
+  { value: "ostatnie-30-dni", label: "Ostatnie 30 dni" },
 ];
 const STATUSES: { value: VisitStatusFilter; label: string }[] = [
   { value: "potwierdzone", label: "Potwierdzona" },
@@ -74,17 +88,31 @@ const PAYMENTS: { value: VisitPaymentFilter; label: string }[] = [
   { value: "zwrocone", label: "Zwrócona" },
 ];
 
-type FieldId =
-  "termin" | "status" | "platnosc" | "specjalista" | "usluga" | "miejsce";
+/** Where a date field lives in the address: its range, or its own days. */
+const DATE_KEYS = {
+  termin: { scope: "zakres", from: "od", to: "do" },
+  utworzono: { scope: "utworzono", from: "utworzono_od", to: "utworzono_do" },
+  zmiana: { scope: "zmiana", from: "zmiana_od", to: "zmiana_do" },
+} as const;
+type DateFieldId = keyof typeof DATE_KEYS;
+
+type ListFieldId = "status" | "platnosc" | "specjalista" | "usluga" | "miejsce";
+
+type FieldId = DateFieldId | ListFieldId;
 
 interface Field {
   id: FieldId;
   label: string;
-  multiple: boolean;
+  /** A range of dates (one ready range, or days of its own), or a list. */
+  dates: boolean;
   options: { value: string; label: string }[];
   /** The values chosen (none: not filtered). */
   chosen: string[];
+  /** A date field's own days. */
+  own?: { from: string | null; to: string | null };
 }
+
+const isDateField = (id: FieldId): id is DateFieldId => id in DATE_KEYS;
 
 const PARSERS = {
   q: visitTableParsers.q,
@@ -96,6 +124,12 @@ const PARSERS = {
   zakres: visitTableParsers.zakres,
   od: visitTableParsers.od,
   do: visitTableParsers.do,
+  utworzono: visitTableParsers.utworzono,
+  utworzono_od: visitTableParsers.utworzono_od,
+  utworzono_do: visitTableParsers.utworzono_do,
+  zmiana: visitTableParsers.zmiana,
+  zmiana_od: visitTableParsers.zmiana_od,
+  zmiana_do: visitTableParsers.zmiana_do,
   strona: visitTableParsers.strona,
   wizyta: visitTableParsers.wizyta,
 };
@@ -134,6 +168,7 @@ export function VisitFilterBar({
   rooms,
   showPayments = false,
   view,
+  order = [],
 }: VisitFilterBarProps) {
   const [pending, startTransition] = useTransition();
   const [params, setParams] = useQueryStates(PARSERS, {
@@ -144,113 +179,127 @@ export function VisitFilterBar({
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<FieldId | null>(null);
 
-  const ownRange = params.od || params.do;
-  const fields: Field[] = [
-    {
-      id: "termin" as const,
-      label: "Termin",
-      multiple: false,
-      options: PERIODS,
-      chosen: ownRange
-        ? ["wlasny"]
-        : params.zakres === "wszystkie"
-          ? []
-          : [params.zakres],
-    },
-    {
-      id: "status" as const,
-      label: "Status",
-      multiple: true,
-      options: STATUSES,
-      chosen: params.status ?? [],
-    },
-    ...(showPayments
-      ? [
-          {
-            id: "platnosc" as const,
-            label: "Płatność",
-            multiple: false,
-            options: PAYMENTS,
-            chosen: params.platnosc ? [params.platnosc] : [],
-          },
-        ]
-      : []),
+  const dateField = (
+    id: DateFieldId,
+    label: string,
+    options: { value: string; label: string }[],
+  ): Field => {
+    const keys = DATE_KEYS[id];
+    const scope = params[keys.scope];
+    const from = params[keys.from];
+    const to = params[keys.to];
+    return {
+      id,
+      label,
+      dates: true,
+      options,
+      own: { from, to },
+      chosen:
+        from || to ? ["wlasny"] : scope && scope !== "wszystkie" ? [scope] : [],
+    };
+  };
+  const listField = (
+    id: ListFieldId,
+    label: string,
+    options: { value: string; label: string }[],
+  ): Field => ({
+    id,
+    label,
+    dates: false,
+    options,
+    chosen: params[id] ?? [],
+  });
+
+  const unordered: Field[] = [
+    dateField("termin", "Termin", PERIODS),
+    dateField("utworzono", "Utworzono", PAST),
+    dateField("zmiana", "Zmiana", PAST),
+    listField("status", "Status", STATUSES),
+    ...(showPayments ? [listField("platnosc", "Płatność", PAYMENTS)] : []),
     ...(specialists.length
       ? [
-          {
-            id: "specjalista" as const,
-            label: "Specjalista",
-            multiple: false,
-            options: specialists.map((s) => ({ value: s.id, label: s.name })),
-            chosen: params.specjalista ? [params.specjalista] : [],
-          },
+          listField(
+            "specjalista",
+            "Specjalista",
+            specialists.map((one) => ({ value: one.id, label: one.name })),
+          ),
         ]
       : []),
     ...(services.length
       ? [
-          {
-            id: "usluga" as const,
-            label: "Usługa",
-            multiple: false,
-            options: services.map((s) => ({ value: s.id, label: s.name })),
-            chosen: params.usluga ? [params.usluga] : [],
-          },
+          listField(
+            "usluga",
+            "Usługa",
+            services.map((one) => ({ value: one.id, label: one.name })),
+          ),
         ]
       : []),
     ...(rooms
       ? [
-          {
-            id: "miejsce" as const,
-            label: "Miejsce",
-            multiple: false,
-            options: [
-              { value: "online", label: "Online" },
-              ...rooms.map((r) => ({ value: r.id, label: r.name })),
-            ],
-            chosen: params.miejsce ? [params.miejsce] : [],
-          },
+          listField("miejsce", "Miejsce", [
+            { value: "online", label: "Online" },
+            ...rooms.map((one) => ({ value: one.id, label: one.name })),
+          ]),
         ]
       : []),
   ];
+  // As the columns go: moved in "Kolumny", they move here too.
+  const placeOf = (id: FieldId) => {
+    const at = order.indexOf(id);
+    return at === -1 ? order.length : at;
+  };
+  const fields = unordered
+    .map((field, index) => ({ field, index }))
+    .sort(
+      (a, b) => placeOf(a.field.id) - placeOf(b.field.id) || a.index - b.index,
+    )
+    .map(({ field }) => field);
   const active = fields.filter((field) => field.chosen.length);
 
   // Every change starts at page 1 with the side panel closed.
   const change = (patch: Partial<typeof params>) =>
     void setParams({ ...patch, strona: null, wizyta: null });
 
-  const choose = (field: Field, value: string) => {
-    switch (field.id) {
-      case "termin":
-        return change({ zakres: value as VisitScope, od: null, do: null });
-      case "status": {
-        const now = params.status ?? [];
-        const next = now.includes(value as VisitStatusFilter)
-          ? now.filter((v) => v !== value)
-          : [...now, value as VisitStatusFilter];
-        return change({ status: next.length ? next : null });
-      }
-      case "platnosc":
-        return change({
-          platnosc:
-            params.platnosc === value ? null : (value as VisitPaymentFilter),
-        });
-      default: {
-        const key = field.id;
-        return change({ [key]: params[key] === value ? null : value });
-      }
-    }
+  /** A date field set to a ready range, days of its own, or nothing. */
+  const setDates = (
+    id: DateFieldId,
+    value: { scope?: string | null; from?: string | null; to?: string | null },
+  ) => {
+    const keys = DATE_KEYS[id];
+    change({
+      [keys.scope]: value.scope ?? null,
+      [keys.from]: value.from ?? null,
+      [keys.to]: value.to ?? null,
+    });
   };
+
+  const choose = (field: Field, value: string) => {
+    if (isDateField(field.id)) return setDates(field.id, { scope: value });
+    const id = field.id;
+    const now: string[] = params[id] ?? [];
+    const next = now.includes(value)
+      ? now.filter((one) => one !== value)
+      : [...now, value];
+    change({ [id]: next.length ? next : null });
+  };
+  const ownDays = (id: DateFieldId, from: string | null, to: string | null) =>
+    // For the visit's date "nadchodzace" is only the default, under them.
+    setDates(id, { scope: id === "termin" ? "nadchodzace" : null, from, to });
   const remove = (id: FieldId) =>
-    change(
-      id === "termin"
-        ? { zakres: "wszystkie", od: null, do: null }
-        : { [id]: null },
-    );
+    isDateField(id)
+      ? setDates(id, { scope: id === "termin" ? "wszystkie" : null })
+      : change({ [id]: null });
   const clearAll = () =>
     change({
       zakres: "wszystkie",
       od: null,
       do: null,
+      utworzono: null,
+      utworzono_od: null,
+      utworzono_do: null,
+      zmiana: null,
+      zmiana_od: null,
+      zmiana_do: null,
       status: null,
       platnosc: null,
       specjalista: null,
@@ -259,8 +308,9 @@ export function VisitFilterBar({
     });
 
   const chipValue = (field: Field) => {
-    if (field.id === "termin" && ownRange) {
-      return `${params.od ? shortDate(params.od) : "…"} – ${params.do ? shortDate(params.do) : "…"}`;
+    if (field.own && (field.own.from || field.own.to)) {
+      const { from, to } = field.own;
+      return `${from ? shortDate(from) : "…"} – ${to ? shortDate(to) : "…"}`;
     }
     const labels = field.chosen.map(
       (value) => field.options.find((o) => o.value === value)?.label ?? value,
@@ -290,7 +340,7 @@ export function VisitFilterBar({
             <PopoverTrigger className={CHIP_PART}>
               <span className="text-[var(--text-muted)]">
                 {field.label}
-                {field.multiple ? " jest" : ":"}
+                {field.dates ? ":" : " jest"}
               </span>
               <span className="font-semibold text-[var(--text)]">
                 {chipValue(field)}
@@ -300,14 +350,9 @@ export function VisitFilterBar({
               <FieldValues
                 field={field}
                 onChoose={(value) => choose(field, value)}
-                ownRange={
-                  field.id === "termin"
-                    ? { from: params.od, to: params.do }
-                    : undefined
-                }
-                onOwnRange={(from, to) =>
-                  change({ od: from, do: to, zakres: "nadchodzace" })
-                }
+                onOwnRange={(from, to) => {
+                  if (isDateField(field.id)) ownDays(field.id, from, to);
+                }}
               />
             </PopoverContent>
           </Popover>
@@ -367,13 +412,10 @@ export function VisitFilterBar({
               <FieldValues
                 field={editingField}
                 onChoose={(value) => choose(editingField, value)}
-                ownRange={
-                  editingField.id === "termin"
-                    ? { from: params.od, to: params.do }
-                    : undefined
-                }
                 onOwnRange={(from, to) => {
-                  change({ od: from, do: to, zakres: "nadchodzace" });
+                  if (isDateField(editingField.id)) {
+                    ownDays(editingField.id, from, to);
+                  }
                   setOpen(false);
                 }}
               />
@@ -452,19 +494,17 @@ export function VisitFilterBar({
   );
 }
 
-/** A field's values: tick several (status) or pick one. */
+/** A field's values: tick several, or (dates) a range or days of its own. */
 function FieldValues({
   field,
   onChoose,
-  ownRange,
   onOwnRange,
 }: {
   field: Field;
   onChoose: (value: string) => void;
-  /** The "Termin" field's own dates. */
-  ownRange?: { from: string | null; to: string | null };
   onOwnRange: (from: string | null, to: string | null) => void;
 }) {
+  const ownRange = field.own;
   const apply = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -488,10 +528,10 @@ function FieldValues({
                 aria-checked={checked}
                 className={OPTION}
                 onClick={() => onChoose(option.value)}
-                role={field.multiple ? "menuitemcheckbox" : "menuitemradio"}
+                role={field.dates ? "menuitemradio" : "menuitemcheckbox"}
                 type="button"
               >
-                <Box checked={checked} round={!field.multiple} />
+                <Box checked={checked} round={field.dates} />
                 <span className="truncate">{option.label}</span>
               </button>
             </li>

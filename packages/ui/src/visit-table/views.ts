@@ -26,6 +26,12 @@ const NO_FILTERS = {
   zakres: "nadchodzace",
   od: null,
   do: null,
+  utworzono: null,
+  utworzono_od: null,
+  utworzono_do: null,
+  zmiana: null,
+  zmiana_od: null,
+  zmiana_do: null,
 } as const satisfies Partial<VisitTableParams>;
 
 export const VISIT_VIEWS: VisitView[] = [
@@ -45,7 +51,7 @@ export const VISIT_VIEWS: VisitView[] = [
   {
     id: "do-rozliczenia",
     label: "Do rozliczenia",
-    filters: { zakres: "wszystkie", platnosc: "do-zwrotu" },
+    filters: { zakres: "wszystkie", platnosc: ["do-zwrotu"] },
     payments: true,
   },
   {

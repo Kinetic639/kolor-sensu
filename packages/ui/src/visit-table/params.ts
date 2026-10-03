@@ -37,6 +37,15 @@ export const VISIT_SCOPES = [
   "minione",
   "wszystkie",
 ] as const;
+/** Ranges back from today: when bookings were made or last changed. */
+export const VISIT_PAST_SCOPES = [
+  "dzis",
+  "wczoraj",
+  "ten-tydzien",
+  "ostatnie-7-dni",
+  "ten-miesiac",
+  "ostatnie-30-dni",
+] as const;
 export const VISIT_SORTS = [
   "termin",
   "klient",
@@ -53,6 +62,7 @@ export const PAGE_SIZES = [10, 20, 50] as const;
 export type VisitStatusFilter = (typeof VISIT_STATUS_FILTERS)[number];
 export type VisitPaymentFilter = (typeof VISIT_PAYMENT_FILTERS)[number];
 export type VisitScope = (typeof VISIT_SCOPES)[number];
+export type VisitPastScope = (typeof VISIT_PAST_SCOPES)[number];
 export type VisitSortColumn = (typeof VISIT_SORTS)[number];
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -88,30 +98,53 @@ export const parseAsDay = createParser({
   serialize: (value: string) => value,
 });
 
-const statusList = parseAsArrayOf(parseAsStringLiteral(VISIT_STATUS_FILTERS));
+/**
+ * Several values at once (`a,b`), each checked by `one`; the invalid are
+ * left out, none left is no filter.
+ */
+function listOf<T extends string>(one: {
+  parse: (v: string) => T | null;
+  serialize: (v: T) => string;
+}) {
+  const list = parseAsArrayOf(
+    createParser({ parse: one.parse, serialize: one.serialize }),
+  );
+  return createParser({
+    parse: (value) => {
+      const values = list.parse(value);
+      return values?.length ? [...new Set(values)] : null;
+    },
+    serialize: (value: T[]) => list.serialize(value),
+    eq: (a, b) => a.length === b.length && a.every((v, i) => v === b[i]),
+  });
+}
 
 /** Statuses, several at once; none valid is no filter. */
-export const parseAsStatuses = createParser({
-  parse: (value) => {
-    const list = statusList.parse(value);
-    return list?.length ? [...new Set(list)] : null;
-  },
-  serialize: (value: VisitStatusFilter[]) => statusList.serialize(value),
-  eq: (a, b) => a.length === b.length && a.every((v, i) => v === b[i]),
-});
+export const parseAsStatuses = listOf(
+  parseAsStringLiteral(VISIT_STATUS_FILTERS),
+);
 
 export const visitTableParsers = {
   q: parseAsSearch,
-  /** Several at once: `status=potwierdzone,oczekujace`. */
+  /** Several at once each: `status=potwierdzone,oczekujace`. */
   status: parseAsStatuses,
-  platnosc: parseAsStringLiteral(VISIT_PAYMENT_FILTERS),
-  specjalista: parseAsId,
-  usluga: parseAsId,
-  miejsce: parseAsPlace,
+  platnosc: listOf(parseAsStringLiteral(VISIT_PAYMENT_FILTERS)),
+  specjalista: listOf(parseAsId),
+  usluga: listOf(parseAsId),
+  /** Rooms and/or `online`. */
+  miejsce: listOf(parseAsPlace),
   zakres: parseAsStringLiteral(VISIT_SCOPES).withDefault("nadchodzace"),
   /** A range of days of one's own (both ends included), over `zakres`. */
   od: parseAsDay,
   do: parseAsDay,
+  /** When booked: a range back from today, or days of one's own. */
+  utworzono: parseAsStringLiteral(VISIT_PAST_SCOPES),
+  utworzono_od: parseAsDay,
+  utworzono_do: parseAsDay,
+  /** When last changed, the same way. */
+  zmiana: parseAsStringLiteral(VISIT_PAST_SCOPES),
+  zmiana_od: parseAsDay,
+  zmiana_do: parseAsDay,
   sort: parseAsStringLiteral(VISIT_SORTS).withDefault("termin"),
   kierunek: parseAsStringLiteral(["rosnaco", "malejaco"] as const),
   strona: parseAsInteger.withDefault(1),
@@ -145,12 +178,18 @@ export function isFiltered(params: VisitTableParams) {
   return Boolean(
     params.q ||
     params.status?.length ||
-    params.platnosc ||
-    params.specjalista ||
-    params.usluga ||
-    params.miejsce ||
+    params.platnosc?.length ||
+    params.specjalista?.length ||
+    params.usluga?.length ||
+    params.miejsce?.length ||
     params.od ||
     params.do ||
+    params.utworzono ||
+    params.utworzono_od ||
+    params.utworzono_do ||
+    params.zmiana ||
+    params.zmiana_od ||
+    params.zmiana_do ||
     params.zakres !== "nadchodzace",
   );
 }
@@ -285,7 +324,45 @@ export function visitPeriod(
   }
 }
 
-/** The page asked for, as the search_visits query (@repo/supabase). */
+/**
+ * The instants a range back from today covers (from, before), or days of
+ * one's own (both ends included), in the centre's days.
+ */
+export function pastPeriod(
+  scope: VisitPastScope | null,
+  own: { from: string | null; to: string | null },
+  now: Date,
+  timeZone: string,
+): { from: string | null; to: string | null } {
+  const day = (date: string) =>
+    zonedInstant(date, "00:00", timeZone).toISOString();
+  if (own.from || own.to) {
+    return {
+      from: own.from ? day(own.from) : null,
+      to: own.to ? day(addDays(own.to, 1)) : null,
+    };
+  }
+  const today = localToday(now, timeZone);
+  const tomorrow = day(addDays(today, 1));
+  switch (scope) {
+    case "dzis":
+      return { from: day(today), to: tomorrow };
+    case "wczoraj":
+      return { from: day(addDays(today, -1)), to: day(today) };
+    case "ten-tydzien":
+      return { from: day(mondayOf(today)), to: tomorrow };
+    case "ostatnie-7-dni":
+      return { from: day(addDays(today, -6)), to: tomorrow };
+    case "ten-miesiac":
+      return { from: day(`${today.slice(0, 7)}-01`), to: tomorrow };
+    case "ostatnie-30-dni":
+      return { from: day(addDays(today, -29)), to: tomorrow };
+    default:
+      return { from: null, to: null };
+  }
+}
+
+/** The page asked for, as the search_bookings query (@repo/supabase). */
 export function toVisitSearch(
   params: VisitTableParams,
   {
@@ -295,18 +372,38 @@ export function toVisitSearch(
   }: { now?: Date; own?: boolean; timeZone?: string } = {},
 ) {
   const page = Math.max(1, params.strona);
-  const place = params.miejsce;
+  const places = params.miejsce ?? [];
+  const rooms = places.filter((place) => place !== "online");
+  const created = pastPeriod(
+    params.utworzono,
+    { from: params.utworzono_od, to: params.utworzono_do },
+    now,
+    timeZone,
+  );
+  const changed = pastPeriod(
+    params.zmiana,
+    { from: params.zmiana_od, to: params.zmiana_do },
+    now,
+    timeZone,
+  );
   return {
     query: params.q,
     statuses: params.status?.length
       ? params.status.flatMap((status) => STATUSES[status])
       : null,
-    payment: !own && params.platnosc ? PAYMENTS[params.platnosc] : null,
-    specialistId: own ? null : params.specjalista,
-    serviceId: params.usluga,
-    roomId: place && place !== "online" ? place : null,
-    online: place === "online" ? true : null,
+    payments:
+      !own && params.platnosc?.length
+        ? params.platnosc.map((payment) => PAYMENTS[payment])
+        : null,
+    specialistIds: own ? null : params.specjalista,
+    serviceIds: params.usluga,
+    roomIds: rooms.length ? rooms : null,
+    online: places.includes("online") ? true : null,
     ...visitPeriod(params, now, timeZone),
+    createdFrom: created.from,
+    createdTo: created.to,
+    changedFrom: changed.from,
+    changedTo: changed.to,
     sort: SORT_COLUMNS[params.sort],
     descending: sortDirection(params) === "desc",
     limit: params.wierszy,
