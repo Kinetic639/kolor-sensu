@@ -2,7 +2,11 @@ import type { NotificationLike } from "@repo/scheduling";
 import { renderHook } from "@testing-library/react";
 import { showNotificationToast as toast } from "./notifications/toast";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useLivePortal, type LiveSignals } from "./live-updates";
+import {
+  useLivePortal,
+  useRefreshEvery,
+  type LiveSignals,
+} from "./live-updates";
 
 const router = { push: vi.fn(), refresh: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
@@ -114,5 +118,50 @@ describe("useLivePortal", () => {
     const { stop, hook } = listen();
     hook.unmount();
     expect(stop).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("useRefreshEvery", () => {
+  const setVisibility = (state: "visible" | "hidden") => {
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      value: state,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  };
+  afterEach(() => setVisibility("visible"));
+
+  it("reloads the page's data as time goes by", () => {
+    renderHook(() => useRefreshEvery(5 * 60_000));
+    vi.advanceTimersByTime(5 * 60_000 - 1);
+    expect(router.refresh).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(router.refresh).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(5 * 60_000);
+    expect(router.refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it("in a tab in the background, once when it is shown again", () => {
+    renderHook(() => useRefreshEvery(5 * 60_000));
+    setVisibility("hidden");
+    vi.advanceTimersByTime(20 * 60_000);
+    expect(router.refresh).not.toHaveBeenCalled();
+    setVisibility("visible");
+    expect(router.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("shown again before its time: nothing", () => {
+    renderHook(() => useRefreshEvery(5 * 60_000));
+    setVisibility("hidden");
+    vi.advanceTimersByTime(60_000);
+    setVisibility("visible");
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it("stops when the page goes", () => {
+    const { unmount } = renderHook(() => useRefreshEvery(5 * 60_000));
+    unmount();
+    vi.advanceTimersByTime(10 * 60_000);
+    expect(router.refresh).not.toHaveBeenCalled();
   });
 });

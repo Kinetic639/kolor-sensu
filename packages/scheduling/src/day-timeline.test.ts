@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   dayNav,
   dayTimeline,
+  nowAfter,
   weekVisitsByDay,
   weekSummary,
 } from "./day-timeline";
@@ -243,5 +244,18 @@ describe("dayNav", () => {
       label: "12 października",
       isToday: false,
     });
+  });
+});
+
+describe("nowAfter", () => {
+  const line = { startHour: 8, endHour: 18, now: 50 };
+  it("now moves on along the line as time goes by", () => {
+    // Ten hours on the line: an hour is 10%.
+    expect(nowAfter(line, 60 * 60_000)).toBeCloseTo(60);
+    expect(nowAfter(line, 0)).toBe(50);
+  });
+  it("off the line's end, or not on it at all: none", () => {
+    expect(nowAfter(line, 6 * 60 * 60_000)).toBeNull();
+    expect(nowAfter({ ...line, now: null }, 60_000)).toBeNull();
   });
 });

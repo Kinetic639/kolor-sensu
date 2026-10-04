@@ -94,3 +94,32 @@ export function useLivePortal({
     };
   }, [channelKey, portal, timeZone, delayMs, router]);
 }
+
+/**
+ * A page that shows time (now on the day's line, what is due soon, what
+ * today is) kept to it: its data reloads from the server every so often
+ * while it is shown; in a tab in the background, once when it is shown
+ * again, if its time has come meanwhile.
+ */
+export function useRefreshEvery(everyMs: number) {
+  const router = useRouter();
+  useEffect(() => {
+    let last = Date.now();
+    const refresh = () => {
+      last = Date.now();
+      router.refresh();
+    };
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") refresh();
+    }, everyMs);
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - last >= everyMs) refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [everyMs, router]);
+}

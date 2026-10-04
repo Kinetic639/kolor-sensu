@@ -10,6 +10,7 @@ import { scheduleTheme } from "../resource-colors";
 import { PlaceLabel, SpecialistChip, Tag } from "../visit-table/visit-chips";
 import { DayNav } from "./day-nav";
 import { LaneSwitch, type LaneView } from "./lane-switch";
+import { NowLine } from "./now-line";
 import { TimelineCard } from "./timeline-card";
 
 // Today on a line of hours (the dashboard, docs/product/booking-plan.md
@@ -139,17 +140,7 @@ function Lanes({
           );
         })}
       </ul>
-      {day.now !== null ? (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute top-6 right-0 bottom-0 left-[var(--name-w)]"
-        >
-          <span
-            className="absolute top-0 bottom-0 w-0.5 bg-[var(--danger)]"
-            style={{ left: `${day.now}%` }}
-          />
-        </span>
-      ) : null}
+      <NowLine line={day} />
     </div>
   );
 }

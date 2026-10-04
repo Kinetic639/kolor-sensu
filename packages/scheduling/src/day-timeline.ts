@@ -73,6 +73,21 @@ export interface DayTimeline {
   people: TimelineLane[];
 }
 
+/**
+ * Where now is on the line some time after the day was read (the line
+ * kept moving in the browser between reloads); null off its end, or when
+ * the day shown is not today.
+ */
+export function nowAfter(
+  line: Pick<DayTimeline, "startHour" | "endHour" | "now">,
+  elapsedMs: number,
+): number | null {
+  if (line.now === null) return null;
+  const lineMinutes = (line.endHour - line.startHour) * 60;
+  const at = line.now + (elapsedMs / 60_000 / lineMinutes) * 100;
+  return at > 100 ? null : at;
+}
+
 const initialsOf = (name: string) =>
   name
     .split(/\s+/)

@@ -1,3 +1,4 @@
+import { KeepFresh } from "@/features/dashboard/keep-fresh";
 import { loadAdminDashboard } from "@/features/dashboard/loaders";
 import {
   addDays,
@@ -155,6 +156,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   return (
     <FullBleed>
       <PageTitle>Dashboard</PageTitle>
+      <KeepFresh />
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto bg-[var(--surface-subtle)] p-2 sm:gap-3 sm:p-3 [&>*]:shrink-0">
         <div className={panel}>
           <DayStrip
