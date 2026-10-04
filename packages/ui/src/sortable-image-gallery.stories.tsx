@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-import { expect, fn, waitFor } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import {
   SortableImageGallery,
   type GalleryImage,
@@ -26,7 +26,7 @@ const onReorder = fn();
 function GalleryWithState({ initial }: { initial: GalleryImage[] }) {
   const [images, setImages] = useState(initial);
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-xs">
       <SortableImageGallery
         images={images}
         label="Zdjęcia gabinetu"
@@ -73,9 +73,10 @@ export const KeyboardReorder: Story = {
   render: () => <GalleryWithState initial={photos} />,
   play: async ({ canvas, userEvent }) => {
     onReorder.mockClear();
+    // One photo under another: down moves it to the next place.
     canvas.getByRole("button", { name: "Przesuń zdjęcie 1" }).focus();
     await userEvent.keyboard(" ");
-    await userEvent.keyboard("{ArrowRight}");
+    await userEvent.keyboard("{ArrowDown}");
     await userEvent.keyboard(" ");
 
     await waitFor(() =>
@@ -119,7 +120,7 @@ export const Empty: Story = {
 
 export const Saving: Story = {
   render: () => (
-    <div className="max-w-4xl">
+    <div className="max-w-xs">
       <SortableImageGallery
         error="Gabinet może mieć najwyżej 5 zdjęć."
         images={photos}
@@ -132,4 +133,21 @@ export const Saving: Story = {
       />
     </div>
   ),
+};
+
+/** A click on a photo shows it on the whole screen; arrows to the others. */
+export const Preview: Story = {
+  render: () => <GalleryWithState initial={photos} />,
+  play: async ({ canvas, canvasElement }) => {
+    await userEvent.click(
+      canvas.getByRole("button", { name: "Powiększ zdjęcie 1" }),
+    );
+    const dialog = within(canvasElement.ownerDocument.body).getByRole(
+      "dialog",
+      { name: "Zdjęcia gabinetu" },
+    );
+    await expect(dialog).toHaveTextContent("1 z 3");
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(dialog).toHaveTextContent("2 z 3");
+  },
 };

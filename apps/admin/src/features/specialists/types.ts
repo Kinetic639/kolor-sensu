@@ -1,3 +1,4 @@
+import type { SpecialistOffer } from "@repo/ui/specialists";
 import type {
   ProfilePublicationStatus,
   RichTextDocument,
@@ -11,6 +12,11 @@ export interface SpecialistListItemViewModel {
   accent: string;
   /** A light tint of it, behind initials. */
   tint: string;
+  /** Set by an admin; null: the automatic colour. */
+  color: string | null;
+  /** `2026-03-01` */
+  joinedAt: string | null;
+  publicSlug: string;
   avatarUrl: string | null;
   professionalTitle: string;
   active: boolean;
@@ -64,17 +70,6 @@ export interface SpecialistDraftViewModel extends Omit<
   reviewComment: string | null;
 }
 
-export interface SpecialistOfferViewModel {
-  id: string;
-  serviceName: string;
-  priceLabel: string;
-  durationLabel: string;
-  supportsInPerson: boolean;
-  supportsOnline: boolean;
-  active: boolean;
-  acceptingNewClients: boolean;
-}
-
 export interface SpecialistDetailViewModel {
   id: string;
   userId: string;
@@ -97,7 +92,9 @@ export interface SpecialistDetailViewModel {
   acceptingNewClients: boolean;
   publicProfile: SpecialistProfileSnapshotViewModel | null;
   draft: SpecialistDraftViewModel | null;
-  offers: SpecialistOfferViewModel[];
+  offers: SpecialistOffer[];
+  /** `4 · od 195 zł` (the active ones); `Brak` */
+  offerSummary: string;
 }
 
 export interface ProfileDiffFieldViewModel {

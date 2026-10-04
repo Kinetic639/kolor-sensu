@@ -168,7 +168,8 @@ function ColumnBody({
           range={range}
         />
       ) : null}
-      {column.isToday ? <NowLine now={now} range={range} /> : null}
+      {/* `now` is set only when the view holds today. */}
+      <NowLine now={now} range={range} today={column.isToday} />
     </div>
   );
 }

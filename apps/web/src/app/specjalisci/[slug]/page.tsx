@@ -1,12 +1,11 @@
 import {
   JsonLd,
   PrimaryButton,
+  profileFacts,
   SecondaryButton,
-  SoftCard,
-  SpecialistArtwork,
+  SpecialistProfileView,
 } from "@repo/ui/public-site";
-import { clientGroupLabels, isRichTextEmpty } from "@repo/contracts";
-import { RichTextRenderer } from "@repo/ui/rich-text-renderer";
+import { clientGroupLabels } from "@repo/contracts";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -52,25 +51,6 @@ export async function generateMetadata({
   };
 }
 
-function Facts({ title, items }: { title: string; items: string[] }) {
-  if (items.length === 0) return null;
-  return (
-    <div className="grid gap-3">
-      <h2 className="text-title text-ink font-body">{title}</h2>
-      <ul className="flex flex-wrap gap-2">
-        {items.map((item) => (
-          <li
-            key={item}
-            className="bg-primary-soft text-ink text-small rounded-full px-3.5 py-1.5"
-          >
-            {item}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 export default async function SpecialistPage({
   params,
 }: PageProps<"/specjalisci/[slug]">) {
@@ -93,101 +73,14 @@ export default async function SpecialistPage({
     all.findIndex((one) => one.publicSlug === specialist.publicSlug),
   );
   const role = specialistRole(specialist);
-  // The full bio is rich text written in the specialist portal; without one
-  // the short bio stands in.
-  const hasLongBio = !isRichTextEmpty(specialist.longBio);
 
   return (
     <>
       <PageIntro eyebrow={role} heading={specialist.displayName} />
-      <section className="max-w-page px-gutter pb-section-sm mx-auto grid items-start gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
-        <div className="mx-auto w-full max-w-96">
-          <SpecialistArtwork
-            portraitSrc={
-              specialist.portraitUrl ??
-              specialist.photoUrl ??
-              portraitPlaceholder
-            }
-            portraitAlt={`${specialist.displayName}, ${role}`}
-            splash={specialistSplash(index)}
-            sizes="(min-width: 1024px) 384px, 90vw"
-            priority
-          />
-        </div>
-        <div className="grid content-start gap-8">
-          {hasLongBio ? (
-            <RichTextRenderer
-              className="text-body text-ink max-w-copy [&_a]:text-primary-strong [&_blockquote]:border-primary [&_h2]:font-display [&_h2]:text-h3 [&_h3]:font-display [&_h3]:text-title [&>:first-child]:mt-0"
-              document={specialist.longBio}
-            />
-          ) : specialist.shortBio ? (
-            <p className="text-body text-ink max-w-copy">
-              {specialist.shortBio}
-            </p>
-          ) : null}
-          {offers.length > 0 ? (
-            <SoftCard
-              className="grid gap-4 p-6"
-              aria-labelledby="offers-heading"
-            >
-              <h2 className="text-title text-ink font-body" id="offers-heading">
-                Usługi i ceny
-              </h2>
-              <ul className="divide-border grid divide-y">
-                {offers.map((offer) => (
-                  <li
-                    className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3 first:pt-0 last:pb-0"
-                    key={offer.serviceId}
-                  >
-                    <div className="grid gap-0.5">
-                      <Link
-                        className="text-ink hover:text-primary-strong font-semibold underline-offset-4 hover:underline"
-                        href={serviceHref(offer.serviceSlug) as Route}
-                      >
-                        {offer.serviceName}
-                      </Link>
-                      <span className="text-small text-text-muted">
-                        {[
-                          formatDuration(offer.effectiveDurationMinutes),
-                          offerModes(offer),
-                          offer.acceptingNewClients ? null : "bez nowych osób",
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </span>
-                    </div>
-                    <span className="text-ink font-semibold whitespace-nowrap">
-                      {formatPrice(offer)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </SoftCard>
-          ) : null}
-          <Facts
-            title="Z kim pracuję"
-            items={clientGroupLabels(specialist.clientGroups)}
-          />
-          <Facts title="Specjalizacje" items={specialist.specializations} />
-          <Facts title="Podejście" items={specialist.therapyApproaches} />
-          <Facts title="Formy pracy" items={specialist.modalities} />
-          <Facts title="Języki" items={specialist.languages} />
-          {specialist.education.length > 0 ||
-          specialist.certificates.length > 0 ? (
-            <SoftCard className="grid gap-3 p-6">
-              <h2 className="text-title text-ink font-body">
-                Wykształcenie i kwalifikacje
-              </h2>
-              <ul className="text-small text-text-muted grid list-disc gap-1.5 pl-5">
-                {[...specialist.education, ...specialist.certificates].map(
-                  (entry) => (
-                    <li key={entry}>{entry}</li>
-                  ),
-                )}
-              </ul>
-            </SoftCard>
-          ) : null}
-          <div className="flex flex-wrap items-center gap-3">
+      <SpecialistProfileView
+        acceptingNewClients={specialist.acceptingNewClients}
+        actions={
+          <>
             <PrimaryButton asChild arrow>
               <Link href={bookingHref({ specjalista: specialist.publicSlug })}>
                 {bookingCta.label}
@@ -196,19 +89,38 @@ export default async function SpecialistPage({
             <SecondaryButton asChild>
               <Link href="/specjalisci">Wszyscy specjaliści</Link>
             </SecondaryButton>
-          </div>
-          {specialist.acceptingNewClients ? (
-            <p className="text-small text-primary-strong font-semibold">
-              Przyjmuje nowe osoby.
-            </p>
-          ) : (
-            <p className="text-small text-text-muted">
-              Obecnie nie przyjmuje nowych osób. Pomożemy dobrać innego
-              specjalistę.
-            </p>
-          )}
-        </div>
-      </section>
+          </>
+        }
+        className="max-w-page px-gutter pb-section-sm mx-auto"
+        facts={profileFacts({
+          ...specialist,
+          clientGroups: clientGroupLabels(specialist.clientGroups),
+        })}
+        linkAs={Link}
+        longBio={specialist.longBio}
+        name={specialist.displayName}
+        offers={offers.map((offer) => ({
+          key: offer.serviceId,
+          name: offer.serviceName,
+          href: serviceHref(offer.serviceSlug),
+          meta: [
+            formatDuration(offer.effectiveDurationMinutes),
+            offerModes(offer),
+            offer.acceptingNewClients ? null : "bez nowych osób",
+          ]
+            .filter(Boolean)
+            .join(" · "),
+          price: formatPrice(offer),
+        }))}
+        portraitSrc={
+          specialist.portraitUrl ?? specialist.photoUrl ?? portraitPlaceholder
+        }
+        priority
+        qualifications={[...specialist.education, ...specialist.certificates]}
+        role={role}
+        shortBio={specialist.shortBio}
+        splash={specialistSplash(index)}
+      />
       <JsonLd
         data={{
           "@context": "https://schema.org",

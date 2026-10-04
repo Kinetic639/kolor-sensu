@@ -5,12 +5,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ROOM_IMAGE_LIMIT } from "@repo/contracts";
 import { uploadRoomImage } from "@repo/supabase";
 import { Button } from "@repo/ui/button";
-import { Card } from "@repo/ui/card";
+import { DetailSection } from "@repo/ui/detail-page";
 import { ColorField, resourceColors } from "@repo/ui/color-field";
 import { ImageCropDialog } from "@repo/ui/image-crop-dialog";
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
-import { SectionHeader } from "@repo/ui/portal-content";
 import { SortableImageGallery } from "@repo/ui/sortable-image-gallery";
 import { RichTextEditor } from "@repo/ui/rich-text-editor";
 import { Switch } from "@repo/ui/switch";
@@ -105,7 +104,8 @@ function useSave() {
   return { isPending, run };
 }
 
-function RoomPhotos({ model }: { model: AdminRoomDetailModel }) {
+/** Gabinety → Profil publiczny, beside the form: the room's photos. */
+export function RoomPhotos({ model }: { model: AdminRoomDetailModel }) {
   const router = useRouter();
   const { isPending, run } = useSave();
   const [uploading, setUploading] = useState(false);
@@ -163,13 +163,9 @@ function RoomPhotos({ model }: { model: AdminRoomDetailModel }) {
   }
 
   return (
-    <Card>
-      <SectionHeader
-        title="Zdjęcia"
-        description="Zdjęcie główne pokazujemy na liście gabinetów. Kolejność zmienisz, przeciągając zdjęcia."
-      />
+    <DetailSection title="Zdjęcia">
       <SortableImageGallery
-        className="mt-4"
+        className="px-3.5 py-3"
         error={error}
         images={model.images}
         label="Zdjęcia gabinetu"
@@ -206,11 +202,12 @@ function RoomPhotos({ model }: { model: AdminRoomDetailModel }) {
         pending={uploading}
         title="Dopasuj zdjęcie gabinetu"
       />
-    </Card>
+    </DetailSection>
   );
 }
 
-function RoomProfileCard({ model }: { model: AdminRoomDetailModel }) {
+/** Gabinety → Profil publiczny: what the site says about the room. */
+export function RoomProfileForm({ model }: { model: AdminRoomDetailModel }) {
   const { isPending, run } = useSave();
   const {
     control,
@@ -231,73 +228,69 @@ function RoomProfileCard({ model }: { model: AdminRoomDetailModel }) {
   });
 
   return (
-    <Card>
-      <SectionHeader
-        title="Profil publiczny"
-        description="Treści widoczne na stronie w zakładce Gabinety. Czy gabinet jest na stronie, ustawiasz w Ustawieniach."
-      />
-      <form
-        className="mt-5 space-y-4"
-        noValidate
-        onSubmit={handleSubmit((values) =>
-          run(
-            () => saveRoomProfileAction(model.room.id, values),
-            "Zapisano profil gabinetu",
-            () => reset(values),
-          ),
-        )}
-      >
-        <div className="space-y-1.5">
-          <Label htmlFor="room-display-name">Nazwa na stronie</Label>
-          <Input
-            aria-describedby="room-display-name-error"
-            aria-invalid={errors.displayName ? true : undefined}
-            id="room-display-name"
-            {...register("displayName")}
-          />
-          <FieldError
-            id="room-display-name-error"
-            message={errors.displayName?.message}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="room-short">Krótki opis</Label>
-          <Textarea
-            id="room-short"
-            rows={2}
-            {...register("shortDescription")}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <p className="text-sm font-semibold text-[var(--text)]">Pełny opis</p>
-          <Controller
-            control={control}
-            name="longDescription"
-            render={({ field }) => (
-              <RichTextEditor
-                ariaLabel="Pełny opis gabinetu"
-                onChange={field.onChange}
-                placeholder="Opisz gabinet: atmosferę, wyposażenie, do czego służy…"
-                value={field.value}
-              />
-            )}
-          />
-          <FieldError
-            id="room-long-error"
-            message={errors.longDescription?.message}
-          />
-          <p className="text-xs text-[var(--text-muted)]">
-            Udogodnienia i dostępność budynku opisujesz w lokalizacji
-            (Ustawienia centrum).
-          </p>
-        </div>
-        <div className="flex justify-end">
-          <Button disabled={!isDirty} loading={isPending} type="submit">
-            Zapisz profil
-          </Button>
-        </div>
-      </form>
-    </Card>
+    <form
+      className="max-w-3xl space-y-4 px-3.5 py-3"
+      noValidate
+      onSubmit={handleSubmit((values) =>
+        run(
+          () => saveRoomProfileAction(model.room.id, values),
+          "Zapisano profil gabinetu",
+          () => reset(values),
+        ),
+      )}
+    >
+      <div className="space-y-1.5">
+        <Label htmlFor="room-display-name">Nazwa na stronie</Label>
+        <Input
+          aria-describedby="room-display-name-error"
+          aria-invalid={errors.displayName ? true : undefined}
+          id="room-display-name"
+          {...register("displayName")}
+        />
+        <FieldError
+          id="room-display-name-error"
+          message={errors.displayName?.message}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="room-short">Krótki opis</Label>
+        <Textarea id="room-short" rows={2} {...register("shortDescription")} />
+      </div>
+      <div className="space-y-1.5">
+        <p className="text-sm font-semibold text-[var(--text)]">Pełny opis</p>
+        <Controller
+          control={control}
+          name="longDescription"
+          render={({ field }) => (
+            <RichTextEditor
+              ariaLabel="Pełny opis gabinetu"
+              onChange={field.onChange}
+              placeholder="Opisz gabinet: atmosferę, wyposażenie, do czego służy…"
+              value={field.value}
+            />
+          )}
+        />
+        <FieldError
+          id="room-long-error"
+          message={errors.longDescription?.message}
+        />
+        <p className="text-xs text-[var(--text-muted)]">
+          Udogodnienia i dostępność budynku opisujesz w lokalizacji (Ustawienia
+          centrum).
+        </p>
+      </div>
+      <div className="flex justify-end">
+        <Button
+          className="h-7 px-2.5 text-[0.8125rem]"
+          disabled={!isDirty}
+          loading={isPending}
+          size="sm"
+          type="submit"
+        >
+          Zapisz profil
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -315,141 +308,127 @@ function RoomDetailsCard({ model }: { model: AdminRoomModel }) {
   });
 
   return (
-    <Card>
-      <SectionHeader
-        title="Dane gabinetu"
-        description="Dane gabinetu, jego kolor oraz to, czy działa i czy jest widoczny na stronie."
-      />
-      <form
-        className="mt-5 space-y-4"
-        noValidate
-        onSubmit={handleSubmit((values) =>
-          run(
-            () => saveRoomDetailsAction(model.room.id, values),
-            "Zapisano dane gabinetu",
-            () => reset(values),
-          ),
-        )}
-      >
-        <div className="space-y-1.5">
-          <Label htmlFor="room-name">Nazwa</Label>
-          <Input
-            aria-describedby="room-name-error"
-            aria-invalid={errors.name ? true : undefined}
-            id="room-name"
-            {...register("name")}
-          />
-          <FieldError id="room-name-error" message={errors.name?.message} />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="room-location">Lokalizacja</Label>
-          <Controller
-            control={control}
-            name="locationId"
-            render={({ field }) => (
-              <LocationSelect
-                describedBy="room-location-error"
-                id="room-location"
-                invalid={Boolean(errors.locationId)}
-                locations={model.locations}
-                onChange={field.onChange}
-                value={field.value}
-              />
-            )}
-          />
-          <FieldError
-            id="room-location-error"
-            message={errors.locationId?.message}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="room-capacity">Pojemność (osoby)</Label>
-          <Input
-            aria-describedby="room-capacity-error"
-            aria-invalid={errors.capacity ? true : undefined}
-            id="room-capacity"
-            inputMode="numeric"
-            {...register("capacity")}
-          />
-          <FieldError
-            id="room-capacity-error"
-            message={errors.capacity?.message}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="room-note">Notatka wewnętrzna</Label>
-          <Textarea
-            aria-describedby="room-note-hint"
-            id="room-note"
-            rows={3}
-            {...register("description")}
-          />
-          <p className="text-xs text-[var(--text-muted)]" id="room-note-hint">
-            Widoczna tylko w portalach, nie na stronie.
-          </p>
-        </div>
+    <form
+      className="max-w-2xl space-y-4 px-3.5 py-3"
+      noValidate
+      onSubmit={handleSubmit((values) =>
+        run(
+          () => saveRoomDetailsAction(model.room.id, values),
+          "Zapisano dane gabinetu",
+          () => reset(values),
+        ),
+      )}
+    >
+      <div className="space-y-1.5">
+        <Label htmlFor="room-name">Nazwa</Label>
+        <Input
+          aria-describedby="room-name-error"
+          aria-invalid={errors.name ? true : undefined}
+          id="room-name"
+          {...register("name")}
+        />
+        <FieldError id="room-name-error" message={errors.name?.message} />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="room-location">Lokalizacja</Label>
         <Controller
           control={control}
-          name="color"
+          name="locationId"
           render={({ field }) => (
-            <ColorField
-              automaticColor={resourceColors(null, model.room.id).accent}
-              description="Wyróżnia gabinet w grafikach i kalendarzach specjalistów."
-              label="Kolor gabinetu"
+            <LocationSelect
+              describedBy="room-location-error"
+              id="room-location"
+              invalid={Boolean(errors.locationId)}
+              locations={model.locations}
               onChange={field.onChange}
               value={field.value}
             />
           )}
         />
-        <Controller
-          control={control}
-          name="active"
-          render={({ field }) => (
-            <SwitchField
-              checked={field.value}
-              description="W użyciu w centrum: specjaliści mogą ustawiać w nim dyżury, pacjenci rezerwować wizyty."
-              label="Gabinet aktywny"
-              onCheckedChange={field.onChange}
-            />
-          )}
+        <FieldError
+          id="room-location-error"
+          message={errors.locationId?.message}
         />
-        <Controller
-          control={control}
-          name="onSite"
-          render={({ field }) => (
-            <SwitchField
-              checked={field.value}
-              description="Wizytówka ze zdjęciami i opisem na stronie, w zakładce Gabinety. Nieaktywnego gabinetu strona nie pokaże."
-              label="Widoczny na stronie"
-              onCheckedChange={field.onChange}
-            />
-          )}
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="room-capacity">Pojemność (osoby)</Label>
+        <Input
+          aria-describedby="room-capacity-error"
+          aria-invalid={errors.capacity ? true : undefined}
+          id="room-capacity"
+          inputMode="numeric"
+          {...register("capacity")}
         />
-        <div className="flex justify-end">
-          <Button disabled={!isDirty} loading={isPending} type="submit">
-            Zapisz dane
-          </Button>
-        </div>
-      </form>
-    </Card>
-  );
-}
-
-/** Gabinety → Profil publiczny: photos and the website profile. */
-export function RoomProfileTab({ model }: { model: AdminRoomDetailModel }) {
-  return (
-    <div className="space-y-6">
-      <RoomPhotos model={model} />
-      <RoomProfileCard model={model} />
-    </div>
+        <FieldError
+          id="room-capacity-error"
+          message={errors.capacity?.message}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="room-note">Notatka wewnętrzna</Label>
+        <Textarea
+          aria-describedby="room-note-hint"
+          id="room-note"
+          rows={3}
+          {...register("description")}
+        />
+        <p className="text-xs text-[var(--text-muted)]" id="room-note-hint">
+          Widoczna tylko w portalach, nie na stronie.
+        </p>
+      </div>
+      <Controller
+        control={control}
+        name="color"
+        render={({ field }) => (
+          <ColorField
+            automaticColor={resourceColors(null, model.room.id).accent}
+            description="Wyróżnia gabinet w grafikach i kalendarzach specjalistów."
+            label="Kolor gabinetu"
+            onChange={field.onChange}
+            value={field.value}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="active"
+        render={({ field }) => (
+          <SwitchField
+            checked={field.value}
+            description="W użyciu w centrum: specjaliści mogą ustawiać w nim dyżury, pacjenci rezerwować wizyty."
+            label="Gabinet aktywny"
+            onCheckedChange={field.onChange}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="onSite"
+        render={({ field }) => (
+          <SwitchField
+            checked={field.value}
+            description="Wizytówka ze zdjęciami i opisem na stronie, w zakładce Gabinety. Nieaktywnego gabinetu strona nie pokaże."
+            label="Widoczny na stronie"
+            onCheckedChange={field.onChange}
+          />
+        )}
+      />
+      <div className="flex justify-end">
+        <Button
+          className="h-7 px-2.5 text-[0.8125rem]"
+          disabled={!isDirty}
+          loading={isPending}
+          size="sm"
+          type="submit"
+        >
+          Zapisz dane
+        </Button>
+      </div>
+    </form>
   );
 }
 
 /** Gabinety → Ustawienia: name, location, capacity and status. */
 export function RoomSettingsTab({ model }: { model: AdminRoomModel }) {
-  return (
-    <div className="max-w-2xl">
-      <RoomDetailsCard model={model} />
-    </div>
-  );
+  return <RoomDetailsCard model={model} />;
 }

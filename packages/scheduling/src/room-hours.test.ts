@@ -3,6 +3,7 @@ import {
   closedIntervals,
   mergeIntervals,
   openIntervalsOn,
+  openingHoursByDay,
   overlapMinutes,
   summarizeOpeningHours,
   weekdaysLabel,
@@ -118,6 +119,26 @@ describe("overlapMinutes", () => {
         [{ start: 480, end: 1080 }],
       ),
     ).toBe(120);
+  });
+});
+
+describe("openingHoursByDay", () => {
+  it("each day its hours, merged; the rest closed", () => {
+    expect(
+      openingHoursByDay([
+        ...workdays,
+        { weekday: 6, startsAt: "09:00", endsAt: "11:00" },
+        { weekday: 6, startsAt: "10:00", endsAt: "13:00" },
+      ]),
+    ).toEqual([
+      { weekday: "Pn", hours: "08:00–18:00" },
+      { weekday: "Wt", hours: "08:00–18:00" },
+      { weekday: "Śr", hours: "08:00–18:00" },
+      { weekday: "Czw", hours: "08:00–18:00" },
+      { weekday: "Pt", hours: "08:00–18:00" },
+      { weekday: "Sob", hours: "09:00–13:00" },
+      { weekday: "Nd", hours: null },
+    ]);
   });
 });
 

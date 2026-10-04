@@ -2,14 +2,13 @@
 
 import type { RoomOpeningHoursIntervalInput } from "@repo/contracts";
 import { Button } from "@repo/ui/button";
-import { Card } from "@repo/ui/card";
+import { DetailSection } from "@repo/ui/detail-page";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/ui/dropdown-menu";
-import { SectionHeader } from "@repo/ui/portal-content";
 import { WeeklyHoursEditor } from "@repo/ui/weekly-hours";
 import { Copy, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -81,13 +80,12 @@ export function OpeningHoursEditor({
   }
 
   return (
-    <Card>
-      <SectionHeader
-        description="W tych godzinach specjaliści mogą ustawiać dostępność w tym gabinecie. Poza nimi system nie pozwoli zapisać dyżuru."
-        title="Tydzień gabinetu"
-      />
+    <DetailSection
+      note="W tych godzinach specjaliści ustawiają dyżury w tym gabinecie."
+      title="Godziny otwarcia"
+    >
       <form
-        className="mt-5 grid gap-4"
+        className="grid gap-3 pb-3"
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
@@ -100,12 +98,13 @@ export function OpeningHoursEditor({
               <DropdownMenuTrigger asChild>
                 <Button
                   aria-label={`Kopiuj godziny z: ${DAY_NAMES[weekday - 1]}`}
+                  className="size-[26px] rounded-[5px] text-[var(--text-muted)]"
                   disabled={isPending}
                   size="icon"
                   type="button"
                   variant="ghost"
                 >
-                  <Copy aria-hidden="true" className="size-4" />
+                  <Copy aria-hidden="true" className="size-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -134,7 +133,7 @@ export function OpeningHoursEditor({
           value={values.days}
         />
         {allClosed ? (
-          <p className="flex items-start gap-2 rounded-[var(--radius-control)] bg-[var(--info-soft)] p-3 text-sm text-[var(--text)]">
+          <p className="mx-3.5 flex items-start gap-2 rounded-[var(--radius-control)] bg-[var(--info-soft)] p-3 text-[0.8125rem] text-[var(--text)]">
             <Info
               aria-hidden="true"
               className="mt-0.5 size-4 shrink-0 text-[var(--info)]"
@@ -143,23 +142,31 @@ export function OpeningHoursEditor({
             Aby go wyłączyć z użytku, oznacz go jako nieaktywny w Ustawieniach.
           </p>
         ) : null}
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2 px-3.5">
           <Button
             disabled={!dirty || isPending}
             onClick={() => {
               setValues(initial);
               setSubmitted(false);
             }}
+            className="h-7 px-2.5 text-[0.8125rem]"
+            size="sm"
             type="button"
             variant="ghost"
           >
             Cofnij zmiany
           </Button>
-          <Button disabled={!dirty} loading={isPending} type="submit">
+          <Button
+            disabled={!dirty}
+            className="h-7 px-2.5 text-[0.8125rem]"
+            loading={isPending}
+            size="sm"
+            type="submit"
+          >
             Zapisz godziny
           </Button>
         </div>
       </form>
-    </Card>
+    </DetailSection>
   );
 }

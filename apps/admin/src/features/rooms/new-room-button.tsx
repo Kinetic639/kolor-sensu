@@ -68,8 +68,9 @@ export function NewRoomButton({ locations }: { locations: LocationOption[] }) {
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="size-4" aria-hidden="true" />
+        {/* As small as the bar it sits in. */}
+        <Button className="h-7 px-2.5 text-[0.8125rem]" size="sm">
+          <Plus className="size-3.5" aria-hidden="true" />
           Dodaj gabinet
         </Button>
       </DialogTrigger>

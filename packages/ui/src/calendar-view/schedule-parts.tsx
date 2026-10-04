@@ -175,19 +175,30 @@ export function GridLines({ range }: { range: MinuteRange }) {
 }
 
 /** The thin line for now across a column. */
+/**
+ * The time now, across a column: strong on today, faint on the week's
+ * other days (so it shows even when today is not in view).
+ */
 export function NowLine({
   now,
   range,
+  today = true,
 }: {
   now: CalendarNow | null;
   range: MinuteRange;
+  today?: boolean;
 }) {
   if (!now || now.minute < range.start || now.minute > range.end) return null;
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-x-0 z-30 h-0.5 bg-[var(--danger)]"
-      data-now-line=""
+      className={cn(
+        "pointer-events-none absolute inset-x-0 z-30",
+        today
+          ? "h-0.5 bg-[var(--danger)]"
+          : "h-px bg-[color-mix(in_srgb,var(--danger)_45%,transparent)]",
+      )}
+      data-now-line={today ? "today" : "week"}
       style={{ top: minutesToPx(now.minute - range.start) }}
     />
   );

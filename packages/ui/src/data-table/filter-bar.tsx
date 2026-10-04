@@ -371,7 +371,11 @@ export function FilterBar({
       </Popover>
       <TableSearch
         label={search.label}
-        parsers={{ q: parsers.q, strona: parsers.strona }}
+        parsers={
+          parsers.strona
+            ? { q: parsers.q, strona: parsers.strona }
+            : { q: parsers.q }
+        }
         pending={pending}
         placeholder={search.placeholder}
       />
@@ -509,24 +513,30 @@ function FieldValues({
  * The search box, folded to a magnifier until used: it opens on a click or
  * "/", and folds again when empty and left.
  */
-function TableSearch({
-  pending,
+export function TableSearch({
+  pending: outer,
   parsers,
   label,
   placeholder,
 }: {
-  pending: boolean;
-  parsers: { q: Parser; strona: Parser };
+  /** The bar's wait for the server (none: no spinner). */
+  pending?: boolean;
+  /** The search, and the page when the list has pages. */
+  parsers: { q: Parser; strona?: Parser };
   label: string;
   placeholder: string;
 }) {
   const input = useRef<HTMLInputElement>(null);
+  // The box answers at once; the bar shows the server's wait, if any.
+  const pending = outer ?? false;
   const [{ q }, setParams] = useQueryStates(parsers, {
     shallow: false,
     clearOnDefault: true,
   });
   const [focused, setFocused] = useState(false);
   const open = focused || Boolean(q);
+  // A new search starts from the first page.
+  const page = parsers.strona ? { strona: null } : {};
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -576,7 +586,7 @@ function TableSearch({
           onBlur={() => setFocused(false)}
           onChange={(event) =>
             setParams(
-              { q: event.target.value || null, strona: null },
+              { q: event.target.value || null, ...page },
               {
                 limitUrlUpdates: event.target.value ? debounce(300) : undefined,
               },
@@ -586,7 +596,7 @@ function TableSearch({
           onKeyDown={(event) => {
             if (event.key === "Escape" && q) {
               event.stopPropagation();
-              void setParams({ q: null, strona: null });
+              void setParams({ q: null, ...page });
             }
           }}
           placeholder={placeholder}
@@ -601,7 +611,7 @@ function TableSearch({
           className="mx-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-[4px] text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
           onClick={() => {
             // The whole search at once, at once (no wait), back in the box.
-            void setParams({ q: null, strona: null });
+            void setParams({ q: null, ...page });
             input.current?.focus();
           }}
           // Keeps the box open: the click does not take the focus from it.

@@ -57,3 +57,4 @@ export {
   widthsCookieName,
 } from "./columns";
 export type { ColumnLayout, ColumnWidths, VisitColumnId } from "./columns";
+export { Tag } from "./visit-chips";

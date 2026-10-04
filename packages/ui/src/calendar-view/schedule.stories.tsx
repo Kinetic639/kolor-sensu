@@ -285,13 +285,17 @@ export const CollapsedColumn: Story = {
 
 export const WeekOfSpecialists: Story = {
   args: { kind: "week-specialists" },
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole("complementary", { name: "Porównanie specjalistów" }),
-    ).toBeInTheDocument();
+  play: async ({ canvas, canvasElement }) => {
     await expect(canvas.getAllByRole("group", { name: /^Śr, 2/ })).toHaveLength(
       1,
     );
+    // The summary opens as a drawer from the bar.
+    await userEvent.click(canvas.getByRole("button", { name: "Podsumowanie" }));
+    await expect(
+      await within(canvasElement.ownerDocument.body).findByRole("dialog", {
+        name: "Porównanie specjalistów",
+      }),
+    ).toBeVisible();
   },
 };
 
@@ -301,10 +305,13 @@ export const WeekOfRooms: Story = {
 
 export const SpecialistWeek: Story = {
   args: { kind: "personal" },
-  play: async ({ canvas }) => {
+  play: async ({ canvas, canvasElement }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Podsumowanie" }));
     await expect(
-      canvas.getByRole("complementary", { name: "Anna Nowak" }),
-    ).toBeInTheDocument();
+      await within(canvasElement.ownerDocument.body).findByRole("dialog", {
+        name: "Anna Nowak",
+      }),
+    ).toBeVisible();
   },
 };
 
@@ -320,7 +327,13 @@ export const SearchAndSelection: Story = {
 export const HiddenVisits: Story = {
   args: { kind: "week-specialists" },
   play: async ({ canvas, canvasElement }) => {
-    await userEvent.click(canvas.getByRole("switch", { name: "Wizyty" }));
+    // The display switches are in the bar's "Widok" menu.
+    await userEvent.click(canvas.getByRole("button", { name: "Widok" }));
+    await userEvent.click(
+      await within(canvasElement.ownerDocument.body).findByRole("switch", {
+        name: "Wizyty",
+      }),
+    );
     await expect(
       canvasElement.querySelector("[data-hide-visits]"),
     ).not.toBeNull();

@@ -8,52 +8,15 @@ import type { ReactNode } from "react";
 import { cn } from "../lib/utils";
 import { PageLink as Link } from "../public-site/page-link";
 import { scheduleTheme } from "../resource-colors";
-import { hoursShort, PersonAvatar, themeOf } from "./schedule-parts";
+import { hoursShort, PersonAvatar } from "./schedule-parts";
 import { SummaryDrawer } from "./summary-drawer";
+import { Figures, UpcomingVisitList, weekFigures } from "./week-figures";
 
 // The week summed up, in a drawer over the calendar (the toolbar's
 // "Podsumowanie"): for the centre, the week compared (visits, occupancy,
 // what is free, then each specialist or room from the busiest, a bar in
 // their colour); for a specialist, their own week and the next visits.
 // Figures in one row, rows with bars, as on the dashboard.
-
-function Figures({
-  items,
-}: {
-  items: { label: string; value: string; note?: string; tone?: string }[];
-}) {
-  return (
-    <dl
-      className="grid border-b border-[var(--border)]"
-      style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
-    >
-      {items.map((item, index) => (
-        <div
-          className={cn(
-            "grid content-center gap-px px-3 py-2.5",
-            index > 0 && "border-l border-[var(--border)]",
-          )}
-          key={item.label}
-        >
-          <dt className="text-[0.71875rem] text-[var(--text-muted)]">
-            {item.label}
-          </dt>
-          <dd
-            className="text-[1.0625rem] leading-tight font-semibold text-[var(--text)] tabular-nums"
-            style={item.tone ? { color: item.tone } : undefined}
-          >
-            {item.value}
-            {item.note ? (
-              <span className="ml-1 text-[0.71875rem] font-normal text-[var(--text-muted)]">
-                {item.note}
-              </span>
-            ) : null}
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
 
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -144,22 +107,9 @@ export function ComparisonSummaryPanel({
       title={byRoom ? "Porównanie gabinetów" : "Porównanie specjalistów"}
     >
       <Figures
-        items={[
-          {
-            label: byRoom ? "Rezerwacje" : "Wizyty",
-            value: String(summary.visitCount),
-          },
-          {
-            label: "Obłożenie",
-            value: `${occupancy.percent}%`,
-            note: `${hoursShort(occupancy.bookedHours)} z ${hoursShort(occupancy.availableHours)}`,
-          },
-          {
-            label: "Wolne",
-            value: hoursShort(occupancy.freeHours),
-            tone: "var(--primary)",
-          },
-        ]}
+        items={weekFigures(occupancy, {
+          visitsLabel: byRoom ? "Rezerwacje" : "Wizyty",
+        })}
       />
       <Group
         title={
@@ -238,22 +188,7 @@ export function PersonalSummaryPanel({
   const { occupancy } = summary;
   return (
     <SummaryDrawer subtitle={subtitle} title={name}>
-      <Figures
-        items={[
-          { label: "Wizyty", value: String(summary.visitCount) },
-          {
-            label: "Obłożenie",
-            value: `${occupancy.percent}%`,
-            note: `${hoursShort(occupancy.bookedHours)} z ${hoursShort(occupancy.availableHours)}`,
-            tone: occupancy.overbooked ? "var(--danger)" : undefined,
-          },
-          {
-            label: "Wolne",
-            value: hoursShort(occupancy.freeHours),
-            tone: "var(--primary)",
-          },
-        ]}
-      />
+      <Figures items={weekFigures(occupancy)} />
       {availabilityHref ? (
         <div className="border-b border-[var(--border)] px-3 py-2">
           <Link
@@ -267,38 +202,10 @@ export function PersonalSummaryPanel({
       ) : null}
       {summary.upcoming.length ? (
         <Group title="Najbliższe wizyty">
-          <ul>
-            {summary.upcoming.map((slot) => {
-              const theme = themeOf(slot.place);
-              return (
-                <li key={slot.key}>
-                  <Link
-                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 border-b border-[var(--border)] px-3 py-1.5 hover:bg-[var(--surface-muted)] focus-visible:bg-[var(--surface-muted)] focus-visible:outline-none"
-                    href={visitHref(slot.visitId)}
-                    scroll={false}
-                  >
-                    <span className="truncate text-[0.8125rem] font-medium text-[var(--text)]">
-                      {slot.client}
-                    </span>
-                    <span className="text-[0.71875rem] text-[var(--text-muted)] tabular-nums">
-                      {slot.day}, {slot.time}
-                    </span>
-                    <span
-                      className="col-span-2 flex items-center gap-1.5 text-[0.71875rem] font-medium"
-                      style={{ color: theme.text }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="size-1.5 rounded-full"
-                        style={{ backgroundColor: theme.accent }}
-                      />
-                      {slot.place.name}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          <UpcomingVisitList
+            upcoming={summary.upcoming}
+            visitHref={visitHref}
+          />
         </Group>
       ) : null}
     </SummaryDrawer>

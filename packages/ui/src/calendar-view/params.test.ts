@@ -32,6 +32,7 @@ describe("the calendar's address", () => {
       data: null,
       perspektywa: "specjalisci",
       puste: false,
+      zamkniete: true,
       wyszarz: true,
       wizyty: true,
       dostepnosc: true,

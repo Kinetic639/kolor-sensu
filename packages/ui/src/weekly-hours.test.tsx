@@ -30,7 +30,7 @@ describe("WeeklyHoursEditor", () => {
     ).not.toBeChecked();
     expect(screen.getByLabelText("Od, poniedziałek")).toHaveValue("08:00");
     expect(screen.queryByLabelText("Od, sobota")).not.toBeInTheDocument();
-    expect(screen.getAllByText("Zamknięte")).toHaveLength(2);
+    expect(screen.getAllByText("zamknięty")).toHaveLength(2);
   });
 
   it("changes hours, adds and removes intervals", () => {

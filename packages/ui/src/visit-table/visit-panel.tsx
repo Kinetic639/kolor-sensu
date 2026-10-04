@@ -62,14 +62,25 @@ const TONE_DOT: Record<VisitTone, string> = {
 
 const TITLE_ID = "wizyta-panel-tytul";
 
-/** A group of properties; its name small above, a thin line between. */
-export function Group({ title, children }: { title: string; children: ReactNode }) {
+/**
+ * A group of properties; its name small above, a thin line between.
+ * `list={false}`: free content (a note), not name–value pairs.
+ */
+export function Group({
+  title,
+  children,
+  list = true,
+}: {
+  title: string;
+  children: ReactNode;
+  list?: boolean;
+}) {
   return (
     <section className="border-t border-[var(--border)] px-1.5 py-1.5 first:border-t-0">
       <h3 className="flex h-6 items-center px-2 text-[0.6875rem] font-semibold tracking-[0.04em] text-[var(--text-muted)]">
         {title}
       </h3>
-      <dl>{children}</dl>
+      {list ? <dl>{children}</dl> : <div>{children}</div>}
     </section>
   );
 }
@@ -203,7 +214,7 @@ function ClientDetails({ client }: { client: VisitPanelClient | null }) {
           </span>
         </Prop>
       </Group>
-      <Group title="Notatka centrum">
+      <Group list={false} title="Notatka centrum">
         <p className="px-2 pb-1.5 text-[0.8125rem] whitespace-pre-line text-[var(--text)]">
           {client.notes ?? (
             <span className="text-[var(--text-muted)]">Brak notatki.</span>

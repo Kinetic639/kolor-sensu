@@ -120,4 +120,25 @@ describe("SortableImageGallery", () => {
       screen.getByRole("button", { name: "Usuń zdjęcie 1" }),
     ).toBeDisabled();
   });
+
+  it("opens a photo on the whole screen, and moves on to the next", async () => {
+    const user = userEvent.setup();
+    renderGallery();
+    await user.click(
+      screen.getByRole("button", { name: "Powiększ zdjęcie 2" }),
+    );
+    const dialog = screen.getByRole("dialog", { name: "Zdjęcia gabinetu" });
+    expect(within(dialog).getByRole("img")).toHaveAttribute("src", "/b.jpg");
+    await user.click(
+      within(dialog).getByRole("button", { name: "Następne zdjęcie" }),
+    );
+    expect(within(dialog).getByRole("img")).toHaveAttribute("src", "/c.jpg");
+  });
+
+  it("opens even while saving (only looking)", () => {
+    renderGallery({ pending: true });
+    expect(
+      screen.getByRole("button", { name: "Powiększ zdjęcie 1" }),
+    ).toBeEnabled();
+  });
 });

@@ -24,10 +24,11 @@ import { calendarDisplayParsers, calendarParsers } from "./params";
 // summary) show at once, through the frame's data attributes.
 
 export type ScheduleSwitch =
-  "puste" | "wyszarz" | "wizyty" | "dostepnosc" | "podsumowanie";
+  "puste" | "zamkniete" | "wyszarz" | "wizyty" | "dostepnosc" | "podsumowanie";
 
 const LABELS: Record<ScheduleSwitch, string> = {
   puste: "Ukryj puste kolumny",
+  zamkniete: "Ukryj dni, gdy zamknięty",
   wyszarz: "Wyszarz bez dostępności",
   wizyty: "Wizyty",
   dostepnosc: "Dostępność",
@@ -49,11 +50,12 @@ const ICON =
 export function ScheduleViewMenu({ shown }: { shown: ScheduleSwitch[] }) {
   const [pending, startTransition] = useTransition();
   const [display, setDisplay] = useDisplay(startTransition);
-  const [{ puste }, setServer] = useQueryStates(
-    { puste: calendarParsers.puste },
+  // These two change what the server draws; the others only show or hide.
+  const [{ puste, zamkniete }, setServer] = useQueryStates(
+    { puste: calendarParsers.puste, zamkniete: calendarParsers.zamkniete },
     { shallow: false, startTransition, clearOnDefault: true },
   );
-  const values = { ...display, puste };
+  const values = { ...display, puste, zamkniete };
   return (
     <Popover>
       <PopoverTrigger
@@ -67,7 +69,11 @@ export function ScheduleViewMenu({ shown }: { shown: ScheduleSwitch[] }) {
           <SlidersHorizontal aria-hidden="true" className="size-4" />
         )}
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-64 p-1">
+      <PopoverContent
+        align="end"
+        aria-label="Widok kalendarza"
+        className="w-64 p-1"
+      >
         <div
           aria-busy={pending || undefined}
           aria-label="Widok kalendarza"
@@ -82,8 +88,8 @@ export function ScheduleViewMenu({ shown }: { shown: ScheduleSwitch[] }) {
               <Switch
                 checked={values[key]}
                 onCheckedChange={(checked) =>
-                  void (key === "puste"
-                    ? setServer({ puste: checked })
+                  void (key === "puste" || key === "zamkniete"
+                    ? setServer({ [key]: checked })
                     : setDisplay({ [key]: checked }))
                 }
                 size="sm"

@@ -509,7 +509,13 @@ describe("personalWeek", () => {
     expect(view.summary).toMatchObject({
       visitCount: 2,
       occupancy: { availableHours: 8 },
-      upcoming: [expect.objectContaining({ visitId: "v2", day: "Śr, 2 paź" })],
+      upcoming: [
+        expect.objectContaining({
+          visitId: "v2",
+          day: "Śr, 2 paź",
+          date: "2030-10-02",
+        }),
+      ],
     });
   });
 });

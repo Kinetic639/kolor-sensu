@@ -173,7 +173,7 @@ export function ClientPanel({
                   </span>
                 </Prop>
               </Group>
-              <Group title="Notatka centrum">
+              <Group list={false} title="Notatka centrum">
                 <p className="px-2 pb-1.5 text-[0.8125rem] whitespace-pre-line text-[var(--text)]">
                   {notes ?? (
                     <span className="text-[var(--text-muted)]">

@@ -1,4 +1,5 @@
 import { emptyRichTextDocument, type RichTextDocument } from "@repo/contracts";
+import type { PersonalWeekView } from "@repo/scheduling";
 import { describe, expect, it } from "vitest";
 import type {
   SpecialistDetailViewModel,
@@ -6,8 +7,16 @@ import type {
 } from "./types";
 import {
   createProfileDiff,
+  detailState,
   mapSpecialistsListViewModel,
-  toSpecialistListItems,
+  offerSummary,
+  profilePreview,
+  sinceLabel,
+  specialistState,
+  offersBySpecialist,
+  teamWeekSummary,
+  toSpecialistOffers,
+  toSpecialistRow,
 } from "./view-model";
 
 type Content = Omit<
@@ -53,6 +62,7 @@ function detail(draft: Partial<Content>): SpecialistDetailViewModel {
     accountActive: true,
     acceptingNewClients: true,
     offers: [],
+    offerSummary: "Brak",
     publicProfile: {
       ...snapshot,
       publicationStatus: "published",
@@ -259,7 +269,7 @@ describe("mapSpecialistsListViewModel: colours", () => {
   });
 });
 
-describe("toSpecialistListItems", () => {
+describe("toSpecialistRow", () => {
   const base = mapSpecialistsListViewModel([
     {
       id: "specialist-1",
@@ -272,7 +282,7 @@ describe("toSpecialistListItems", () => {
       acceptingNewClients: true,
       publicSlug: "anna-kowalska",
       professionalTitle: "Psychoterapeutka",
-      joinedAt: null,
+      joinedAt: "2026-03-01",
       color: "#7c3aed",
       publicDisplayName: "Anna Kowalska",
       publicProfilePhotoUrl: null,
@@ -283,55 +293,310 @@ describe("toSpecialistListItems", () => {
     },
   ]).items[0]!;
 
-  it("lists a specialist with their picture, title, services and statuses", () => {
-    const [item] = toSpecialistListItems([base]);
-    expect(item).toMatchObject({
-      id: "specialist-1",
-      href: "/specjalisci/specialist-1",
-      name: "Anna Kowalska",
-      description: "Psychoterapeutka",
-      avatar: { url: null, initials: base.initials, accent: "#7c3aed" },
-      facts: ["1 usługa"],
-      statuses: [
-        { label: "Aktywny", tone: "success" },
-        { label: "Opublikowany", tone: "success" },
+  const green = {
+    id: "green",
+    name: "Gabinet Zielony",
+    short: "GZ",
+    color: "#1e9e57",
+    online: false,
+  };
+  const week = {
+    from: "2030-09-30",
+    now: null,
+    columns: [
+      {
+        date: "2030-09-30",
+        isToday: false,
+        availability: [{ time: "08:00–12:00", place: green }],
+        visits: [],
+        occupancy: {
+          availableHours: 4,
+          bookedHours: 0.8,
+          percent: 21,
+          overbooked: false,
+        },
+      },
+    ],
+    summary: {
+      visitCount: 1,
+      occupancy: {
+        visitCount: 1,
+        bookedMinutes: 50,
+        availableMinutes: 240,
+        bookedHours: 0.8,
+        availableHours: 4,
+        freeHours: 3.2,
+        percent: 21,
+        overbooked: false,
+        overMinutes: 0,
+      },
+      upcoming: [
+        {
+          visitId: "visit-1",
+          date: "2030-09-30",
+          day: "Pon, 30 wrz",
+          time: "10:00 – 10:50",
+          startTime: "10:00",
+          service: "Konsultacja",
+          pending: false,
+          client: "Jan Kowalski",
+          place: green,
+        },
       ],
-      tags: ["active"],
-      muted: false,
+    },
+  } as unknown as PersonalWeekView;
+
+  it("who, their colour and state, and this week", () => {
+    const row = toSpecialistRow(base, week);
+    expect(row).toMatchObject({
+      id: "specialist-1",
+      name: "Anna Kowalska",
+      title: "Psychoterapeutka",
+      color: "#7c3aed",
+      href: "/specjalisci/specialist-1",
+      services: 1,
+      since: "od 03.2026",
+      slug: "anna-kowalska",
+      state: {
+        active: true,
+        acceptingNewClients: true,
+        profile: "published",
+      },
+      occupancy: { percent: 21 },
+      // Another week than this one: nothing to say about now.
+      now: null,
+      upcoming: [
+        {
+          visitId: "visit-1",
+          dateLabel: "Pn 30.9",
+          startTime: "10:00",
+          client: "Jan Kowalski",
+        },
+      ],
+    });
+    expect(row.days).toHaveLength(7);
+    expect(row.days[0]).toMatchObject({
+      weekday: "Pn",
+      shifts: [{ place: green }],
     });
   });
 
-  it("counts services in Polish", () => {
-    const facts = [0, 2, 5, 12, 22].map(
-      (serviceCount) =>
-        toSpecialistListItems([{ ...base, serviceCount }])[0]!.facts,
+  it("the team's week in a line", () => {
+    const row = toSpecialistRow(base, week);
+    expect(teamWeekSummary([row, row])).toBe(
+      "Zespół: 2 wizyty · 21% obłożenia",
     );
-    expect(facts).toEqual([
-      ["0 usług"],
-      ["2 usługi"],
-      ["5 usług"],
-      ["12 usług"],
-      ["22 usługi"],
-    ]);
+    expect(teamWeekSummary([])).toBe("Zespół: 0 wizyt · 0% obłożenia");
   });
 
-  it("files a profile waiting for review under its filter", () => {
-    const [item] = toSpecialistListItems([{ ...base, pendingDraft: true }]);
-    expect(item!.tags).toEqual(["active", "pending"]);
-    expect(item!.statuses).toContainEqual({
-      label: "Do weryfikacji",
-      tone: "warning",
+  it("a profile to review; off when they or their account are", () => {
+    expect(specialistState({ ...base, pendingDraft: true }).profile).toBe(
+      "pending",
+    );
+    expect(specialistState({ ...base, publicationStatus: null }).profile).toBe(
+      "none",
+    );
+    for (const change of [{ active: false }, { accountActive: false }]) {
+      expect(specialistState({ ...base, ...change }).active).toBe(false);
+    }
+  });
+});
+
+describe("toSpecialistOffers", () => {
+  const service = {
+    id: "service-1",
+    name: "Terapia dla par",
+    slug: "terapia-par",
+    shortDescription: null,
+    description: null,
+    category: "couples_therapy" as const,
+    defaultDurationMinutes: 50,
+    active: true,
+    publiclyVisible: true,
+    bookingEnabled: true,
+    sortOrder: 1,
+    createdAt: "",
+    updatedAt: "",
+  };
+  const offer = {
+    id: "offer-1",
+    specialistId: "specialist-1",
+    serviceId: "service-1",
+    active: true,
+    acceptingNewClients: false,
+    priceMinor: 28000,
+    currencyCode: "PLN",
+    durationMinutes: null,
+    supportsInPerson: true,
+    supportsOnline: false,
+    createdAt: "",
+    updatedAt: "",
+  };
+
+  it("the service's name and category, their price and time", () => {
+    const [mapped] = toSpecialistOffers([offer], [service]);
+    expect(mapped).toEqual({
+      id: "offer-1",
+      serviceName: "Terapia dla par",
+      category: "Terapia par",
+      // Intl puts a no-break space before the currency.
+      price: expect.stringMatching(/^280\s+zł$/),
+      duration: "50 min",
+      inPerson: true,
+      online: false,
+      active: true,
+      acceptingNewClients: false,
+    });
+    expect(
+      toSpecialistOffers(
+        [{ ...offer, priceMinor: 24550, durationMinutes: 80 }],
+        [],
+      )[0],
+    ).toMatchObject({
+      serviceName: "Usługa niedostępna w katalogu",
+      category: null,
+      price: expect.stringMatching(/^245,50\s+zł$/),
+      duration: "80 min",
+    });
+  });
+});
+
+describe("offersBySpecialist", () => {
+  it("each specialist's offers, mapped", () => {
+    const offer = (id: string, specialistId: string) => ({
+      id,
+      specialistId,
+      serviceId: "missing",
+      active: true,
+      acceptingNewClients: true,
+      priceMinor: 20000,
+      currencyCode: "PLN",
+      durationMinutes: 50,
+      supportsInPerson: true,
+      supportsOnline: false,
+      createdAt: "",
+      updatedAt: "",
+    });
+    const grouped = offersBySpecialist(
+      [offer("o1", "a"), offer("o2", "b"), offer("o3", "a")],
+      [],
+    );
+    expect(Object.keys(grouped)).toEqual(["a", "b"]);
+    expect(grouped.a!.map((one) => one.id)).toEqual(["o1", "o3"]);
+  });
+});
+
+describe("sinceLabel", () => {
+  it("the month and year they joined", () => {
+    expect(sinceLabel("2026-03-14")).toBe("od 03.2026");
+    expect(sinceLabel(null)).toBeNull();
+  });
+});
+
+describe("offerSummary", () => {
+  const offer = (priceMinor: number, active = true) => ({
+    id: `offer-${priceMinor}`,
+    specialistId: "s",
+    serviceId: "service",
+    active,
+    acceptingNewClients: true,
+    priceMinor,
+    currencyCode: "PLN",
+    durationMinutes: 50,
+    supportsInPerson: true,
+    supportsOnline: true,
+    createdAt: "",
+    updatedAt: "",
+  });
+
+  it("the active ones and the lowest price", () => {
+    expect(
+      offerSummary([offer(24000), offer(19500), offer(9000, false)]),
+    ).toMatch(/^2 · od 195\s+zł$/);
+    expect(offerSummary([offer(24000, false)])).toBe("Wszystkie wyłączone");
+    expect(offerSummary([])).toBe("Brak");
+  });
+});
+
+describe("detailState", () => {
+  it("a draft waiting outranks the published profile", () => {
+    expect(detailState(detail({}))).toEqual({
+      active: true,
+      acceptingNewClients: true,
+      profile: "pending",
+    });
+    expect(
+      detailState({ ...detail({}), draft: null, accountActive: false }),
+    ).toEqual({
+      active: false,
+      acceptingNewClients: true,
+      profile: "published",
+    });
+  });
+});
+
+describe("profilePreview", () => {
+  const offer = {
+    id: "o1",
+    serviceName: "Terapia dla par",
+    category: "Terapia par",
+    price: "280 zł",
+    duration: "50 min",
+    inPerson: true,
+    online: true,
+    active: true,
+    acceptingNewClients: false,
+  };
+
+  it("the published profile, as the site shows it", () => {
+    const preview = profilePreview(
+      { ...detail({}), offers: [offer, { ...offer, id: "o2", active: false }] },
+      "published",
+    );
+    expect(preview).toMatchObject({
+      version: "published",
+      name: "Anna Kowalska",
+      role: "Psychoterapeutka",
+      shortBio: "Opis",
+      acceptingNewClients: true,
+      offers: [
+        {
+          key: "o1",
+          name: "Terapia dla par",
+          meta: "50 min · w gabinecie lub online · bez nowych osób",
+          price: "280 zł",
+        },
+      ],
+    });
+    expect(preview!.facts[0]).toEqual({
+      title: "Z kim pracuję",
+      items: ["Dorośli"],
+    });
+    expect(preview!.photoUrl).toBe("https://signed/a?token=1");
+  });
+
+  it("the draft waiting for review, when asked; without a portrait, the photo", () => {
+    const preview = profilePreview(
+      detail({ displayName: "Anna Nowa", portraitPhotoUrl: null }),
+      "draft",
+    );
+    expect(preview).toMatchObject({
+      version: "draft",
+      name: "Anna Nowa",
+      portraitSrc: "https://signed/a?token=2",
     });
   });
 
-  it("dims an inactive specialist, or one whose account is off", () => {
-    for (const change of [{ active: false }, { accountActive: false }]) {
-      const [item] = toSpecialistListItems([{ ...base, ...change }]);
-      expect(item).toMatchObject({ tags: ["inactive"], muted: true });
-      expect(item!.statuses![0]).toEqual({
-        label: "Nieaktywny",
-        tone: "neutral",
-      });
-    }
+  it("nothing published yet: the draft; nothing at all: none", () => {
+    expect(
+      profilePreview({ ...detail({}), publicProfile: null }, "published")
+        ?.version,
+    ).toBe("draft");
+    expect(
+      profilePreview(
+        { ...detail({}), publicProfile: null, draft: null },
+        "published",
+      ),
+    ).toBeNull();
   });
 });

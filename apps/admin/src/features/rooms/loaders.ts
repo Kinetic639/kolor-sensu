@@ -3,28 +3,20 @@ import "server-only";
 import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
-import {
-  DEFAULT_TIME_ZONE,
-  mondayOf,
-  summarizeOpeningHours,
-} from "@repo/scheduling";
+import { DEFAULT_TIME_ZONE, summarizeOpeningHours } from "@repo/scheduling";
 import {
   getRoomByIdAdmin,
   getRoomPublicProfileAdmin,
   listLocations,
-  listRoomAvailabilityRules,
   listRoomExceptions,
   listRoomImages,
   listRoomOpeningHours,
   listRoomsAdmin,
-  listTimeOffForSpecialists,
-  signSpecialistPhotos,
 } from "@repo/supabase";
 import { formatInTimeZone } from "date-fns-tz";
-import { mapRoomScheduleViewModel } from "./schedule-view-model";
 
 // Rooms can be placed in any location the centre has, active or not.
-function toLocationOptions(
+export function toLocationOptions(
   locations: Awaited<ReturnType<typeof listLocations>>,
 ) {
   return locations.map((location) => ({
@@ -35,15 +27,6 @@ function toLocationOptions(
 
 function centreToday(now = new Date()) {
   return formatInTimeZone(now, DEFAULT_TIME_ZONE, "yyyy-MM-dd");
-}
-
-export async function loadAdminRooms() {
-  const client = await createClient();
-  const [rooms, locations] = await Promise.all([
-    listRoomsAdmin(client),
-    listLocations(client),
-  ]);
-  return { rooms, locations: toLocationOptions(locations) };
 }
 
 /**
@@ -92,52 +75,6 @@ export const loadAdminRoom = cache(readAdminRoom);
 export type AdminRoomModel = NonNullable<
   Awaited<ReturnType<typeof loadAdminRoom>>
 >;
-
-/** The room's week: the hours specialists have taken, over its hours. */
-export async function loadRoomSchedule(
-  base: AdminRoomModel,
-  week: string | null,
-) {
-  const client = await createClient();
-  const now = new Date();
-  const today = centreToday(now);
-  const monday = mondayOf(week ?? today);
-  const [rules, exceptions] = await Promise.all([
-    listRoomAvailabilityRules(client, base.room.id),
-    listRoomExceptions(client, base.room.id, monday),
-  ]);
-  const [timeOff, photos] = await Promise.all([
-    listTimeOffForSpecialists(client, [
-      ...new Set(rules.map((rule) => rule.specialistId)),
-    ]),
-    // The account's picture, else the published profile photo.
-    signSpecialistPhotos(
-      client,
-      rules.map((rule) =>
-        rule.specialistAvatarUrl ? null : rule.specialistPhotoPath,
-      ),
-    ),
-  ]);
-  return {
-    today,
-    model: mapRoomScheduleViewModel({
-      rules: rules.map((rule) => ({
-        ...rule,
-        specialistAvatarUrl:
-          rule.specialistAvatarUrl ??
-          (rule.specialistPhotoPath
-            ? (photos.get(rule.specialistPhotoPath) ?? null)
-            : null),
-      })),
-      timeOff,
-      hours: base.openingHours,
-      exceptions,
-      week: monday,
-      now,
-      timeZone: DEFAULT_TIME_ZONE,
-    }),
-  };
-}
 
 /** Upcoming closures and changed hours, from today. */
 export async function loadRoomExceptions(roomId: string) {

@@ -2,23 +2,40 @@ import {
   loadAdminRoom,
   loadRoomExceptions,
   loadRoomProfile,
-  loadRoomSchedule,
   type AdminRoomModel,
 } from "@/features/rooms/loaders";
 import { OpeningHoursEditor } from "@/features/rooms/opening-hours-editor";
 import { RefreshOnReturn } from "@/features/rooms/refresh-on-return";
-import { RoomProfileTab, RoomSettingsTab } from "@/features/rooms/room-detail";
+import {
+  RoomPhotos,
+  RoomProfileForm,
+  RoomSettingsTab,
+} from "@/features/rooms/room-detail";
 import { RoomExceptions } from "@/features/rooms/room-exceptions";
-import { RoomHeader } from "@/features/rooms/room-header";
-import { RoomScheduleView } from "@/features/rooms/room-schedule-view";
+import {
+  ROOM_TAB_LABELS,
+  RoomOverview,
+  RoomPageBar,
+  RoomSchedule,
+  RoomWeekAside,
+} from "@/features/rooms/room-page";
+import { loadRoomWeek } from "@/features/rooms/roster-loader";
 import {
   loadRoomParams,
+  ROOM_TABS,
+  roomHref,
   type RoomParams,
 } from "@/features/rooms/search-params";
+import { formatDateRangeShort, addDays } from "@repo/scheduling";
+import { DetailBody, DetailTabs } from "@repo/ui/detail-page";
+import { FullBleed } from "@repo/ui/full-bleed";
 import { notFound } from "next/navigation";
 
-// Each tab loads only what it shows.
-async function RoomTabContent({
+// A room's page: the bar with what it is and its state, the sections as
+// tabs in the address; each tab loads only what it shows (the week for
+// the overview and the schedule).
+
+async function Tab({
   model,
   params,
 }: {
@@ -26,38 +43,75 @@ async function RoomTabContent({
   params: RoomParams;
 }) {
   switch (params.zakladka) {
-    case "grafik": {
-      const schedule = await loadRoomSchedule(model, params.tydzien);
+    case "przeglad": {
+      const week = await loadRoomWeek(model.room.id);
+      if (!week) notFound();
       return (
-        <RoomScheduleView
-          model={schedule.model}
-          roomId={model.room.id}
-          today={schedule.today}
+        <DetailBody
+          aside={
+            <RoomWeekAside
+              label={formatDateRangeShort(week.week, addDays(week.week, 6))}
+              row={week.row}
+            />
+          }
+          asideLabel="Ten tydzień"
+        >
+          <RoomOverview model={model} row={week.row} />
+        </DetailBody>
+      );
+    }
+    case "grafik": {
+      const week = await loadRoomWeek(model.room.id, params.tydzien);
+      if (!week) notFound();
+      return (
+        <RoomSchedule
+          model={model}
+          hideClosed={params.zamkniete}
+          schedule={week.schedule}
+          thisWeek={week.thisWeek}
+          week={week.week}
         />
       );
     }
     case "godziny": {
       const { today, exceptions } = await loadRoomExceptions(model.room.id);
       return (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem] xl:items-start">
+        <DetailBody
+          aside={
+            <RoomExceptions
+              exceptions={exceptions}
+              roomId={model.room.id}
+              today={today}
+            />
+          }
+          asideLabel="Wyjątki"
+        >
           <OpeningHoursEditor
             hours={model.openingHours}
             roomId={model.room.id}
           />
-          <RoomExceptions
-            exceptions={exceptions}
-            roomId={model.room.id}
-            today={today}
-          />
-        </div>
+        </DetailBody>
       );
     }
     case "profil": {
-      const profile = await loadRoomProfile(model.room.id);
-      return <RoomProfileTab model={{ ...model, ...profile }} />;
+      const detail = { ...model, ...(await loadRoomProfile(model.room.id)) };
+      // The photos on the left, the form beside them.
+      return (
+        <DetailBody
+          aside={<RoomPhotos model={detail} />}
+          asideLabel="Zdjęcia"
+          asideSide="left"
+        >
+          <RoomProfileForm model={detail} />
+        </DetailBody>
+      );
     }
     case "ustawienia":
-      return <RoomSettingsTab model={model} />;
+      return (
+        <DetailBody>
+          <RoomSettingsTab model={model} />
+        </DetailBody>
+      );
   }
 }
 
@@ -73,10 +127,19 @@ export default async function RoomDetailPage({
   if (!model) notFound();
 
   return (
-    <div className="space-y-5">
+    <FullBleed>
       <RefreshOnReturn />
-      <RoomHeader model={model} tab={roomParams.zakladka} />
-      <RoomTabContent model={model} params={roomParams} />
-    </div>
+      <RoomPageBar model={model} tab={roomParams.zakladka} />
+      <DetailTabs
+        active={roomParams.zakladka}
+        label="Sekcje gabinetu"
+        tabs={ROOM_TABS.map((key) => ({
+          key,
+          label: ROOM_TAB_LABELS[key],
+          href: roomHref(model.room.id, { zakladka: key }),
+        }))}
+      />
+      <Tab model={model} params={roomParams} />
+    </FullBleed>
   );
 }

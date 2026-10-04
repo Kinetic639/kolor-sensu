@@ -40,6 +40,8 @@ export {
   PersonalSummaryPanel,
 } from "./schedule-summary";
 export { ScheduleToolbar } from "./schedule-toolbar";
+export { Figures, UpcomingVisitList, weekFigures } from "./week-figures";
+export type { Figure } from "./week-figures";
 export type {
   ScheduleNav,
   ScheduleToolbarProps,

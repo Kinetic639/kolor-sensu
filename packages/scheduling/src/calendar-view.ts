@@ -212,8 +212,8 @@ export interface PersonalWeekView {
   summary: {
     visitCount: number;
     occupancy: Occupancy;
-    /** The next visits not finished yet. */
-    upcoming: (VisitSlot & { day: string })[];
+    /** The next visits not finished yet (`day`: `Pon, 5 paź`). */
+    upcoming: (VisitSlot & { day: string; date: string })[];
   };
 }
 
@@ -406,7 +406,7 @@ const spaced = (range: MinuteRange) =>
 const booked = (visit: VisitLike) =>
   visit.status === "confirmed" || visit.status === "awaiting_payment";
 
-interface Input {
+export interface CalendarInput {
   timeZone: string;
   now: Date;
   people: CalendarPerson[];
@@ -431,7 +431,7 @@ interface Context {
   query: string | null;
 }
 
-function contextOf(input: Input): Context {
+function contextOf(input: CalendarInput): Context {
   const places = new Map<string, CalendarPlace>([[ONLINE.id, ONLINE]]);
   for (const room of input.rooms) {
     places.set(room.id, {
@@ -783,7 +783,7 @@ function nowOf(ctx: Context, shown: boolean): CalendarNow | null {
 
 /** A day: a column per specialist, or per room (and online, when used). */
 export function dayView(
-  input: Input & {
+  input: CalendarInput & {
     date: string;
     perspective: CalendarPerspective;
     hideEmpty?: boolean;
@@ -853,7 +853,7 @@ function summaryOf(
  * room, the day's occupancy, and the week summed up per resource.
  */
 export function weekComparison(
-  input: Input & {
+  input: CalendarInput & {
     week: string;
     perspective: CalendarPerspective;
     hideEmpty?: boolean;
@@ -926,11 +926,13 @@ const dayMonthShort = new Intl.DateTimeFormat("pl-PL", {
 
 /** A specialist's own week, a column per day, summed up. */
 export function personalWeek(
-  input: Input & {
+  input: CalendarInput & {
     week: string;
     person: CalendarPerson;
     /** Only the days with something on them. */
     hideEmpty?: boolean;
+    /** How many next visits to keep (default 3). */
+    upcomingLimit?: number;
   },
 ): PersonalWeekView {
   const ctx = contextOf(input);
@@ -955,7 +957,7 @@ export function personalWeek(
         new Date(visit.endsAt).getTime() > nowMs,
     )
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
-    .slice(0, 3)
+    .slice(0, input.upcomingLimit ?? 3)
     .flatMap((visit) => {
       const date = formatInTimeZone(
         new Date(visit.startsAt),
@@ -966,6 +968,7 @@ export function personalWeek(
       return visitSlots(ctx, [visit], date, false).map((slot) => ({
         ...slot,
         day,
+        date,
       }));
     });
   const occupancy = sumOccupancy(all.map((one) => one.occupancy));

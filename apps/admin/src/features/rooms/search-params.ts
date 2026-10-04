@@ -1,4 +1,5 @@
 import { localDateSchema } from "@repo/contracts";
+import { calendarParsers } from "@repo/ui/calendar-view";
 import {
   createLoader,
   createParser,
@@ -7,10 +8,17 @@ import {
   type inferParserType,
 } from "nuqs/server";
 
-// `/gabinety/[id]`: the section (tab) and the schedule's week live in the
-// URL, so each renders on the server and has an address.
+// `/gabinety/[id]`: the section (tab), the schedule's week and whether it
+// shows the closed days live in the URL, so each renders on the server and
+// has an address.
 
-export const ROOM_TABS = ["grafik", "godziny", "profil", "ustawienia"] as const;
+export const ROOM_TABS = [
+  "przeglad",
+  "grafik",
+  "godziny",
+  "profil",
+  "ustawienia",
+] as const;
 export type RoomTab = (typeof ROOM_TABS)[number];
 
 const parseAsDay = createParser({
@@ -19,8 +27,10 @@ const parseAsDay = createParser({
 });
 
 const roomParsers = {
-  zakladka: parseAsStringLiteral(ROOM_TABS).withDefault("grafik"),
+  zakladka: parseAsStringLiteral(ROOM_TABS).withDefault("przeglad"),
   tydzien: parseAsDay,
+  /** The schedule hides the days the room is closed (the calendar's switch). */
+  zamkniete: calendarParsers.zamkniete,
 };
 
 export type RoomParams = inferParserType<typeof roomParsers>;

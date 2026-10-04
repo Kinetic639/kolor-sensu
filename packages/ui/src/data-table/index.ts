@@ -20,6 +20,7 @@ export {
 } from "./data-table";
 export {
   FilterBar,
+  TableSearch,
   type DateFilterField,
   type FilterBarProps,
   type FilterChoice,

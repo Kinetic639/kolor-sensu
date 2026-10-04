@@ -54,12 +54,21 @@ export type {
 export { SkipLink } from "./skip-link";
 export { EditorialHeading, SectionEyebrow } from "./typography";
 export type { EditorialHeadingProps, SectionEyebrowProps } from "./typography";
-export { SpecialistArtwork, specialistSplashes } from "./specialist-artwork";
+export {
+  SpecialistArtwork,
+  specialistSplashAt,
+  specialistSplashes,
+} from "./specialist-artwork";
 export type {
   SpecialistAccent,
   SpecialistArtworkProps,
   SpecialistSplash,
 } from "./specialist-artwork";
+export { profileFacts, SpecialistProfileView } from "./specialist-profile-view";
+export type {
+  ProfileOfferRow,
+  SpecialistProfileViewProps,
+} from "./specialist-profile-view";
 export { SpecialistWatercolorCard } from "./specialist-card";
 export type {
   Specialist,

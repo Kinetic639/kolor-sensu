@@ -64,6 +64,8 @@ export const calendarParsers = {
   ),
   /** Hide columns (lanes, days) with nothing in them. */
   puste: parseAsBoolean.withDefault(false),
+  /** A room's schedule: hide the days it is closed (on by default). */
+  zamkniete: parseAsBoolean.withDefault(true),
   /** Grey out columns without availability. */
   wyszarz: parseAsBoolean.withDefault(true),
   wizyty: parseAsBoolean.withDefault(true),

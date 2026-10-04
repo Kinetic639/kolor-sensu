@@ -93,7 +93,9 @@ export function overlapMinutes(blocks: MinuteRange[], open: MinuteRange[]) {
   return total;
 }
 
-const DAY_SHORT = ["Pn", "Wt", "Śr", "Czw", "Pt", "Sob", "Nd"];
+/** `Pn`, `Wt`, … `Nd`: weekdays, as short as they go. */
+export const WEEKDAY_ABBR = ["Pn", "Wt", "Śr", "Czw", "Pt", "Sob", "Nd"];
+const DAY_SHORT = WEEKDAY_ABBR;
 
 /** Weekdays (1 = Monday), short, with runs of three or more as ranges: `Pn–Pt, Nd`. */
 export function weekdaysLabel(days: number[]) {
@@ -112,6 +114,25 @@ export function weekdaysLabel(days: number[]) {
     .join(", ");
 }
 
+/** A weekday's hours, merged (`08:00–12:00, 13:00–18:00`); empty: closed. */
+function dayHours(hours: OpeningHoursInterval[], weekday: number) {
+  return mergeIntervals(
+    hours
+      .filter((one) => one.weekday === weekday)
+      .map((one) => toRange(one.startsAt, one.endsAt)),
+  )
+    .map((one) => `${minutesToTime(one.start)}–${minutesToTime(one.end)}`)
+    .join(", ");
+}
+
+/** The seven days with their hours (null: closed), Monday first. */
+export function openingHoursByDay(hours: OpeningHoursInterval[]) {
+  return WEEKDAY_ABBR.map((weekday, index) => ({
+    weekday,
+    hours: dayHours(hours, index + 1) || null,
+  }));
+}
+
 /**
  * The week in one line, days with the same hours together:
  * `Pn–Pt 08:00–18:00 · Sob 09:00–13:00`. Null when the room has no hours.
@@ -121,13 +142,7 @@ export function summarizeOpeningHours(
 ): string | null {
   const byHours = new Map<string, number[]>();
   for (let day = 1; day <= 7; day += 1) {
-    const text = mergeIntervals(
-      hours
-        .filter((one) => one.weekday === day)
-        .map((one) => toRange(one.startsAt, one.endsAt)),
-    )
-      .map((one) => `${minutesToTime(one.start)}–${minutesToTime(one.end)}`)
-      .join(", ");
+    const text = dayHours(hours, day);
     if (text) byHours.set(text, [...(byHours.get(text) ?? []), day]);
   }
   if (!byHours.size) return null;

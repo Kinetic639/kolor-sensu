@@ -167,6 +167,22 @@ describe("DaySchedule", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Dziś")).toBeInTheDocument();
   });
+
+  it("this week: the line now across every day, strong on today", () => {
+    const { container } = render(
+      <DaySchedule
+        ariaLabel="Mój tydzień"
+        mode="personal"
+        view={annaWeek}
+        visitHref={visitHref}
+      />,
+    );
+    const lines = [...container.querySelectorAll("[data-now-line]")];
+    expect(lines).toHaveLength(annaWeek.columns.length);
+    expect(
+      lines.filter((line) => line.getAttribute("data-now-line") === "today"),
+    ).toHaveLength(1);
+  });
 });
 
 describe("WeekComparison", () => {
@@ -263,6 +279,24 @@ describe("ScheduleToolbar", () => {
     todayHref: "/kalendarz",
     isCurrent: true,
   };
+
+  it("a room's schedule: closed days hidden by default, shown on request", async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
+    withUrl(
+      <ScheduleToolbar nav={nav} switches={["zamkniete"]} views={[]} />,
+      "",
+      onUrlUpdate,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Widok" }));
+    const closed = screen.getByRole("switch", {
+      name: "Ukryj dni, gdy zamknięty",
+    });
+    expect(closed).toBeChecked();
+    await userEvent.click(closed);
+    expect(onUrlUpdate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ queryString: "?zamkniete=false" }),
+    );
+  });
 
   it("navigates with links and switches the view in the address", async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();

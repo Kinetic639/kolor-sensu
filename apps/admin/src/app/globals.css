@@ -1,5 +1,9 @@
 @import "tailwindcss";
 @import "@repo/ui/styles.css";
+/* The public site's theme and painted layers: the specialist's profile
+   preview shows them as the site does (names that never collide with the
+   portal's tokens). */
+@import "@repo/ui/public-site.css";
 @source "../../../../packages/ui/src";
 
 @layer base {

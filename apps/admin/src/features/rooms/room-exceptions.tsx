@@ -15,7 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@repo/ui/alert-dialog";
 import { Button } from "@repo/ui/button";
-import { Card } from "@repo/ui/card";
+import { DetailSection, ROW_LINE } from "@repo/ui/detail-page";
 import { ChoiceCardGroup } from "@repo/ui/choice-card";
 import {
   Dialog,
@@ -28,7 +28,7 @@ import {
 } from "@repo/ui/dialog";
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
-import { SectionHeader, StatusBadge } from "@repo/ui/portal-content";
+import { Tag } from "@repo/ui/visit-table";
 import { TimeSelect } from "@repo/ui/time-select";
 import { CalendarOff, CalendarPlus, Clock, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -104,8 +104,12 @@ function AddExceptionButton({
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus aria-hidden="true" className="size-4" />
+        <Button
+          className="h-[26px] px-2.5 text-[0.75rem]"
+          size="sm"
+          variant="outline"
+        >
+          <Plus aria-hidden="true" className="size-3.5" />
           Dodaj wyjątek
         </Button>
       </DialogTrigger>
@@ -292,21 +296,17 @@ export function RoomExceptions({
   exceptions: RoomAvailabilityException[];
 }) {
   return (
-    <Card>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <SectionHeader
-          description="Święta, remonty, dodatkowe dni. Widoczne w grafiku gabinetu."
-          title="Wyjątki"
-        />
-        <AddExceptionButton roomId={roomId} today={today} />
-      </div>
+    <DetailSection
+      actions={<AddExceptionButton roomId={roomId} today={today} />}
+      title="Wyjątki"
+    >
       {exceptions.length ? (
-        <ul className="mt-4 divide-y divide-[var(--border)] rounded-[var(--radius-control)] border border-[var(--border)]">
+        <ul>
           {exceptions.map((exception) => {
             const Icon = TYPE_ICONS[exception.type];
             return (
               <li
-                className="flex items-center gap-3 px-3 py-2.5"
+                className={`flex items-center gap-3 border-b px-3.5 py-2 last:border-b-0 ${ROW_LINE}`}
                 key={exception.id}
               >
                 <Icon
@@ -314,16 +314,16 @@ export function RoomExceptions({
                   className="size-4 shrink-0 text-[var(--text-muted)]"
                 />
                 <div className="grid min-w-0 flex-1 gap-0.5">
-                  <p className="text-sm font-semibold text-[var(--text)]">
+                  <p className="text-[0.8125rem] font-semibold text-[var(--text)]">
                     {exceptionLabel(exception)}
                   </p>
                   {exception.reason ? (
-                    <p className="truncate text-xs text-[var(--text-muted)]">
+                    <p className="truncate text-[0.75rem] text-[var(--text-muted)]">
                       {exception.reason}
                     </p>
                   ) : null}
                 </div>
-                <StatusBadge
+                <Tag
                   tone={
                     exception.type === "extra_available_interval"
                       ? "success"
@@ -331,17 +331,18 @@ export function RoomExceptions({
                   }
                 >
                   {EXCEPTION_TYPE_LABELS[exception.type]}
-                </StatusBadge>
+                </Tag>
                 <DeleteExceptionButton exception={exception} roomId={roomId} />
               </li>
             );
           })}
         </ul>
       ) : (
-        <p className="mt-4 text-sm text-[var(--text-muted)]">
-          Brak zaplanowanych wyjątków.
+        <p className="px-3.5 py-3 text-[0.8125rem] text-[var(--text-muted)]">
+          Brak zaplanowanych wyjątków. Święta, remonty, dodatkowe dni dodasz
+          tutaj; widać je w grafiku gabinetu.
         </p>
       )}
-    </Card>
+    </DetailSection>
   );
 }

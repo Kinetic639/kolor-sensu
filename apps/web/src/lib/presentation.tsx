@@ -1,8 +1,8 @@
-import type {
-  OfferPaint,
-  OfferService,
-  Specialist,
-  SpecialistSplash,
+import {
+  specialistSplashAt,
+  type OfferPaint,
+  type OfferService,
+  type Specialist,
 } from "@repo/ui/public-site";
 import { serviceIcons } from "@/content/site";
 import type {
@@ -20,7 +20,6 @@ export { formatDuration, formatPrice };
 /** Portrait for a specialist without a photo yet. */
 export const portraitPlaceholder = "/images/specjalista.svg";
 
-const splashes: SpecialistSplash[] = ["pink-1", "sage-1", "pink-2", "sage-2"];
 const paints: OfferPaint[] = ["sage-1", "pink-1", "sage-2", "pink-2"];
 
 export function specialistHref(slug: string) {
@@ -42,12 +41,12 @@ export function toSpecialistCard(
     portraitSrc:
       specialist.portraitUrl ?? specialist.photoUrl ?? portraitPlaceholder,
     portraitAlt: `${specialist.displayName}, ${specialistRole(specialist)}`,
-    splash: splashes[index % splashes.length]!,
+    splash: specialistSplashAt(index),
   };
 }
 
 export function specialistSplash(index: number) {
-  return splashes[index % splashes.length]!;
+  return specialistSplashAt(index);
 }
 
 export function toOfferTile(

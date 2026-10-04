@@ -8,8 +8,8 @@ import { Switch } from "./switch";
 import { TimeSelect } from "./time-select";
 
 // A week of opening hours: each day open or closed, with one or more
-// intervals (e.g. a lunch break). Controlled; validation comes from the
-// form that owns it.
+// intervals (e.g. a lunch break), a day a ~38 px row; the intervals as
+// small fields. Controlled; validation comes from the form that owns it.
 
 export interface WeeklyHoursInterval {
   startsAt: string;
@@ -75,36 +75,32 @@ export function WeeklyHoursEditor({
   }
 
   return (
-    <ul
-      className={cn(
-        "divide-y divide-[var(--border)] rounded-[var(--radius-control)] border border-[var(--border)]",
-        className,
-      )}
-    >
+    <ul className={className}>
       {value.map((day, dayIndex) => {
         const name = DAY_NAMES[day.weekday - 1]!;
         return (
           <li
             className={cn(
-              "grid gap-3 p-3 sm:grid-cols-[10rem_minmax(0,1fr)_auto] sm:items-start",
+              "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-b border-[color-mix(in_srgb,var(--border)_60%,transparent)] px-3.5 py-1.5 sm:grid-cols-[9rem_minmax(0,1fr)_auto]",
               !day.open && "bg-[var(--surface-subtle)]",
             )}
             key={day.weekday}
           >
-            <div className="flex min-h-10 items-center gap-3">
+            <div className="col-start-1 row-start-1 flex min-h-[26px] items-center gap-2.5">
               <Switch
                 aria-label={`${name} otwarte`}
                 checked={day.open}
                 disabled={disabled}
                 onCheckedChange={(open) => update(dayIndex, { ...day, open })}
+                size="sm"
               />
-              <span className="text-sm font-semibold text-[var(--text)] capitalize">
+              <span className="text-[0.8125rem] font-medium text-[var(--text)] capitalize">
                 {name}
               </span>
             </div>
 
             {day.open ? (
-              <div className="grid gap-2">
+              <div className="col-span-full row-start-2 flex flex-wrap items-start gap-x-2 gap-y-1.5 sm:col-span-1 sm:col-start-2 sm:row-start-1">
                 {day.intervals.map((interval, index) => {
                   const suffix = index ? `, przedział ${index + 1}` : "";
                   const error = errors[`${dayIndex}.${index}`];
@@ -118,12 +114,12 @@ export function WeeklyHoursEditor({
                     });
                   return (
                     <div className="grid gap-1" key={index}>
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="inline-flex items-center gap-1 rounded-[6px] border border-[var(--border)] bg-[var(--surface)] p-0.5">
                         <TimeSelect
                           aria-describedby={error ? errorId : undefined}
                           aria-invalid={error ? true : undefined}
                           aria-label={`Od, ${name}${suffix}`}
-                          className="w-28"
+                          className="h-[26px] w-[4.75rem] rounded-[5px] px-1.5 font-mono text-[0.75rem] font-medium shadow-none"
                           disabled={disabled}
                           onChange={(time) => set({ startsAt: time })}
                           value={interval.startsAt}
@@ -138,7 +134,7 @@ export function WeeklyHoursEditor({
                           aria-describedby={error ? errorId : undefined}
                           aria-invalid={error ? true : undefined}
                           aria-label={`Do, ${name}${suffix}`}
-                          className="w-28"
+                          className="h-[26px] w-[4.75rem] rounded-[5px] px-1.5 font-mono text-[0.75rem] font-medium shadow-none"
                           disabled={disabled}
                           onChange={(time) => set({ endsAt: time })}
                           value={interval.endsAt}
@@ -155,11 +151,12 @@ export function WeeklyHoursEditor({
                                 ),
                               })
                             }
+                            className="size-[22px] rounded-[4px]"
                             size="icon"
                             type="button"
                             variant="ghost"
                           >
-                            <X aria-hidden="true" className="size-4" />
+                            <X aria-hidden="true" className="size-3.5" />
                           </Button>
                         ) : null}
                       </div>
@@ -178,7 +175,7 @@ export function WeeklyHoursEditor({
                 {day.intervals.length < MAX_INTERVALS ? (
                   <Button
                     aria-label={`Dodaj przedział: ${name}`}
-                    className="justify-self-start"
+                    className="h-[30px] px-1.5 text-[0.75rem] text-[var(--primary)]"
                     disabled={disabled}
                     onClick={() =>
                       update(dayIndex, {
@@ -194,18 +191,18 @@ export function WeeklyHoursEditor({
                     variant="ghost"
                   >
                     <Plus aria-hidden="true" className="size-3.5" />
-                    Dodaj przedział
+                    przedział
                   </Button>
                 ) : null}
               </div>
             ) : (
-              <p className="flex min-h-10 items-center text-sm text-[var(--text-muted)]">
-                Zamknięte
+              <p className="col-span-full row-start-2 text-[0.8125rem] text-[var(--text-muted)] sm:col-span-1 sm:col-start-2 sm:row-start-1">
+                zamknięty
               </p>
             )}
 
             {dayActions ? (
-              <div className="flex min-h-10 items-center justify-end">
+              <div className="col-start-2 row-start-1 flex items-center justify-end sm:col-start-3">
                 {dayActions(day.weekday)}
               </div>
             ) : null}

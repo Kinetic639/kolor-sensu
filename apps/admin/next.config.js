@@ -1,6 +1,7 @@
 import process from "node:process";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const webUrl = process.env.NEXT_PUBLIC_WEB_URL ?? "http://localhost:3000";
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
@@ -22,6 +23,15 @@ const nextConfig = {
     "@repo/ui",
   ],
   typedRoutes: true,
+  // The site's painted assets (watercolor splashes, masks, the portrait
+  // placeholder), for the profile preview: served by the public site, not
+  // copied here.
+  async rewrites() {
+    return [
+      { source: "/watercolor/:path*", destination: `${webUrl}/watercolor/:path*` },
+      { source: "/images/specjalista.svg", destination: `${webUrl}/images/specjalista.svg` },
+    ];
+  },
   experimental: {
     // A page seen in the last 30 s (e.g. the table again after closing a
     // visit) comes back from the browser's memory instead of the server.

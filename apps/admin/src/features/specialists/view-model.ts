@@ -14,8 +14,21 @@ import type {
   SpecialistPublicProfile,
   SpecialistService,
 } from "@repo/contracts";
+import {
+  specialistNow,
+  upcomingVisits,
+  weekDays,
+  type PersonalWeekView,
+} from "@repo/scheduling";
 import { resourceColors } from "@repo/ui/resource-colors";
-import type { ResourceListItem } from "@repo/ui/resource-list";
+import { profileFacts } from "@repo/ui/public-site";
+import { rosterWeekSummary } from "@repo/ui/resource-roster";
+import type {
+  SpecialistOffer,
+  SpecialistRow,
+  SpecialistState,
+} from "@repo/ui/specialists";
+import { categoryLabels } from "@/features/services/view-model";
 import type {
   ProfileDiffFieldViewModel,
   SpecialistDetailViewModel,
@@ -70,6 +83,9 @@ export function mapSpecialistsListViewModel(
       initials: getInitials(displayName, summary),
       accent: colors.accent,
       tint: colors.tint,
+      color: summary.color,
+      joinedAt: summary.joinedAt,
+      publicSlug: summary.publicSlug,
       avatarUrl:
         summary.avatarUrl ??
         (summary.publicProfilePhotoUrl
@@ -95,64 +111,133 @@ export function mapSpecialistsListViewModel(
   };
 }
 
-/** "1 usługa", "2 usługi", "5 usług", "22 usługi". */
-function servicesLabel(count: number) {
-  const tens = count % 100;
-  const ones = count % 10;
-  if (count === 1) return "1 usługa";
-  if (ones >= 2 && ones <= 4 && (tens < 12 || tens > 14)) {
-    return `${count} usługi`;
-  }
-  return `${count} usług`;
+/** Their state, as the team's table filters and tags it. */
+export function specialistState(
+  item: Pick<
+    SpecialistListItemViewModel,
+    | "active"
+    | "accountActive"
+    | "acceptingNewClients"
+    | "pendingDraft"
+    | "publicationStatus"
+  >,
+): SpecialistState {
+  return {
+    // Working with the centre and able to sign in.
+    active: item.active && item.accountActive,
+    acceptingNewClients: item.acceptingNewClients,
+    profile: item.pendingDraft
+      ? "pending"
+      : item.publicationStatus === "pending_review"
+        ? "pending"
+        : (item.publicationStatus ?? "none"),
+  };
 }
 
-function profileStatus(
+/** `od 03.2026` */
+export function sinceLabel(joinedAt: string | null) {
+  if (!joinedAt) return null;
+  const [year, month] = joinedAt.split("-");
+  return `od ${month}.${year}`;
+}
+
+/** A specialist as a row of the team's roster, with their week. */
+export function toSpecialistRow(
   item: SpecialistListItemViewModel,
-): NonNullable<ResourceListItem["statuses"]>[number] {
-  if (item.pendingDraft) return { label: "Do weryfikacji", tone: "warning" };
-  switch (item.publicationStatus) {
-    case "published":
-      return { label: "Opublikowany", tone: "success" };
-    case "rejected":
-      return { label: "Odrzucony", tone: "danger" };
-    case "draft":
-      return { label: "Szkic", tone: "neutral" };
-    default:
-      return { label: "Brak profilu", tone: "neutral" };
-  }
+  week: PersonalWeekView,
+): SpecialistRow {
+  const state = specialistState(item);
+  return {
+    id: item.id,
+    name: item.displayName,
+    title: item.professionalTitle,
+    initials: item.initials,
+    avatarUrl: item.avatarUrl,
+    color: item.color,
+    href: `/specjalisci/${item.id}`,
+    services: item.serviceCount,
+    since: sinceLabel(item.joinedAt),
+    slug: item.publicSlug,
+    state,
+    days: weekDays(week),
+    occupancy: week.summary.occupancy,
+    now: specialistNow(week, { active: state.active }),
+    upcoming: upcomingVisits(week),
+  };
 }
 
-/** The specialists as rows of the admin list; the filters are their tags. */
-export function toSpecialistListItems(
-  items: SpecialistListItemViewModel[],
-): ResourceListItem[] {
-  return items.map((item) => {
-    const active = item.active && item.accountActive;
+/** The team's week in a line: `Zespół: 59 wizyt · 62% obłożenia`. */
+export function teamWeekSummary(rows: Pick<SpecialistRow, "occupancy">[]) {
+  return rosterWeekSummary(
+    "Zespół",
+    rows.map((row) => row.occupancy),
+  );
+}
+
+/** Everyone's offers at their prices, by specialist. */
+export function offersBySpecialist(
+  offers: SpecialistService[],
+  services: Service[],
+): Record<string, SpecialistOffer[]> {
+  const mapped = toSpecialistOffers(offers, services);
+  const grouped: Record<string, SpecialistOffer[]> = {};
+  offers.forEach((offer, index) => {
+    (grouped[offer.specialistId] ??= []).push(mapped[index]!);
+  });
+  return grouped;
+}
+
+/** Their offers at their prices, in the order they were set up. */
+export function toSpecialistOffers(
+  offers: SpecialistService[],
+  services: Service[],
+): SpecialistOffer[] {
+  const serviceById = new Map(services.map((service) => [service.id, service]));
+  return offers.map((offer) => {
+    const service = serviceById.get(offer.serviceId);
+    const duration = offer.durationMinutes ?? service?.defaultDurationMinutes;
     return {
-      id: item.id,
-      href: `/specjalisci/${item.id}`,
-      name: item.displayName,
-      description: item.professionalTitle,
-      avatar: {
-        url: item.avatarUrl,
-        initials: item.initials,
-        accent: item.accent,
-        tint: item.tint,
-      },
-      facts: [servicesLabel(item.serviceCount)],
-      statuses: [
-        active
-          ? { label: "Aktywny", tone: "success" }
-          : { label: "Nieaktywny", tone: "neutral" },
-        profileStatus(item),
-      ],
-      tags: [
-        active ? "active" : "inactive",
-        ...(item.pendingDraft ? ["pending"] : []),
-      ],
-      muted: !active,
+      id: offer.id,
+      serviceName: service?.name ?? "Usługa niedostępna w katalogu",
+      category: service ? categoryLabels[service.category] : null,
+      price: new Intl.NumberFormat("pl-PL", {
+        style: "currency",
+        currency: offer.currencyCode,
+        maximumFractionDigits: offer.priceMinor % 100 ? 2 : 0,
+      }).format(offer.priceMinor / 100),
+      duration: duration ? `${duration} min` : "Nieustalony",
+      inPerson: offer.supportsInPerson,
+      online: offer.supportsOnline,
+      active: offer.active,
+      acceptingNewClients: offer.acceptingNewClients,
     };
   });
+}
+
+/** The state on their page (their tags), as on the team's list. */
+export function detailState(detail: SpecialistDetailViewModel) {
+  return specialistState({
+    active: detail.active,
+    accountActive: detail.accountActive,
+    acceptingNewClients: detail.acceptingNewClients,
+    pendingDraft: detail.draft?.status === "pending_review",
+    publicationStatus: detail.publicProfile?.publicationStatus ?? null,
+  });
+}
+
+/** `4 · od 195 zł`: the active offers and the lowest price; `Brak`. */
+export function offerSummary(offers: SpecialistService[]) {
+  const active = offers.filter((offer) => offer.active);
+  if (!active.length) return offers.length ? "Wszystkie wyłączone" : "Brak";
+  const lowest = active.reduce((low, offer) =>
+    offer.priceMinor < low.priceMinor ? offer : low,
+  );
+  const price = new Intl.NumberFormat("pl-PL", {
+    style: "currency",
+    currency: lowest.currencyCode,
+    maximumFractionDigits: lowest.priceMinor % 100 ? 2 : 0,
+  }).format(lowest.priceMinor / 100);
+  return `${active.length} · od ${price}`;
 }
 
 export function mapSpecialistDetailViewModel({
@@ -177,7 +262,6 @@ export function mapSpecialistDetailViewModel({
     draftPortraitPhotoUrl: string | null;
   };
 }): SpecialistDetailViewModel {
-  const serviceById = new Map(services.map((service) => [service.id, service]));
   const displayName =
     publicProfile?.displayName ||
     getIdentityName({
@@ -256,23 +340,8 @@ export function mapSpecialistDetailViewModel({
           reviewComment: draft.reviewComment,
         }
       : null,
-    offers: offers.map((offer) => {
-      const service = serviceById.get(offer.serviceId);
-      const duration = offer.durationMinutes ?? service?.defaultDurationMinutes;
-      return {
-        id: offer.id,
-        serviceName: service?.name ?? "Usługa niedostępna w katalogu",
-        priceLabel: new Intl.NumberFormat("pl-PL", {
-          style: "currency",
-          currency: offer.currencyCode,
-        }).format(offer.priceMinor / 100),
-        durationLabel: duration ? `${duration} min` : "Nieustalony",
-        supportsInPerson: offer.supportsInPerson,
-        supportsOnline: offer.supportsOnline,
-        active: offer.active,
-        acceptingNewClients: offer.acceptingNewClients,
-      };
-    }),
+    offers: toSpecialistOffers(offers, services),
+    offerSummary: offerSummary(offers),
   };
 }
 
@@ -398,3 +467,63 @@ export function createProfileDiff(
 
   return [...photoFields, ...textFields, bioField];
 }
+
+/** The site's stand-in when a specialist has no picture yet. */
+export const PORTRAIT_PLACEHOLDER = "/images/specjalista.svg";
+
+/**
+ * The profile as the site would show it: the published one, or the draft
+ * waiting for review (asked for, or nothing published yet); none: neither.
+ */
+export function profilePreview(
+  detail: SpecialistDetailViewModel,
+  asked: "published" | "draft",
+) {
+  const version =
+    asked === "draft" && detail.draft
+      ? "draft"
+      : detail.publicProfile
+        ? "published"
+        : detail.draft
+          ? "draft"
+          : null;
+  if (!version) return null;
+  const profile = version === "draft" ? detail.draft! : detail.publicProfile!;
+  return {
+    version,
+    name: profile.displayName || detail.displayName,
+    role: profile.professionalTitle ?? "Specjalista",
+    photoUrl: profile.profilePhotoUrl,
+    portraitSrc:
+      profile.portraitPhotoUrl ??
+      profile.profilePhotoUrl ??
+      PORTRAIT_PLACEHOLDER,
+    shortBio: profile.shortBio || null,
+    longBio: profile.longBio,
+    facts: profileFacts(profile),
+    qualifications: [...profile.education, ...profile.certificates],
+    acceptingNewClients: detail.acceptingNewClients,
+    // What the site lists: the active offers.
+    offers: detail.offers
+      .filter((offer) => offer.active)
+      .map((offer) => ({
+        key: offer.id,
+        name: offer.serviceName,
+        meta: [
+          offer.duration,
+          [
+            offer.inPerson ? "w gabinecie" : null,
+            offer.online ? "online" : null,
+          ]
+            .filter(Boolean)
+            .join(" lub "),
+          offer.acceptingNewClients ? null : "bez nowych osób",
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        price: offer.price,
+      })),
+  };
+}
+
+export type ProfilePreview = NonNullable<ReturnType<typeof profilePreview>>;

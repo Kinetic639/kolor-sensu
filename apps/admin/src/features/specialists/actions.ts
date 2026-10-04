@@ -12,14 +12,8 @@ import {
 import { hexColorSchema } from "@repo/contracts";
 import { revalidatePath, updateTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cached";
-import { loadAdminSpecialistDetail } from "./loaders";
 import { reviewErrorMessage } from "./review-errors";
 import { publicSlugFormSchema } from "./slug-form";
-
-export async function getAdminSpecialistDetailAction(specialistId: string) {
-  await requirePortalRole();
-  return loadAdminSpecialistDetail(specialistId);
-}
 
 export async function reviewSpecialistDraftAction(input: {
   specialistId: string;
@@ -50,21 +44,30 @@ export async function reviewSpecialistDraftAction(input: {
   return { ok: true };
 }
 
-export async function updateSpecialistOfferStateAction(input: {
-  specialistId: string;
-  offerId: string;
-  active: boolean;
-  acceptingNewClients: boolean;
-}) {
+/**
+ * An offer on or off, or taking new clients or not (bound to the
+ * specialist: `updateSpecialistOfferStateAction.bind(null, id)`).
+ */
+export async function updateSpecialistOfferStateAction(
+  specialistId: string,
+  input: { offerId: string; active: boolean; acceptingNewClients: boolean },
+): Promise<{ ok: true } | { ok: false; message: string }> {
   await requirePortalRole();
-  await updateSpecialistOfferStateAdmin(await createClient(), input.offerId, {
-    active: input.active,
-    acceptingNewClients: input.acceptingNewClients,
-  });
-  revalidatePath(`/specjalisci/${input.specialistId}`);
+  try {
+    await updateSpecialistOfferStateAdmin(await createClient(), input.offerId, {
+      active: input.active,
+      acceptingNewClients: input.acceptingNewClients,
+    });
+  } catch (error) {
+    console.error("[specialists] offer change failed:", error);
+    return { ok: false, message: "Spróbuj ponownie za chwilę." };
+  }
+  revalidatePath("/specjalisci");
+  revalidatePath(`/specjalisci/${specialistId}`);
   updateTag(CACHE_TAGS.specialists);
   // Offers feed the price list, the offer pages and the specialist pages.
   await revalidateWeb([{ path: "/", type: "layout" }]);
+  return { ok: true };
 }
 
 export async function setSpecialistSlugAction(input: {
