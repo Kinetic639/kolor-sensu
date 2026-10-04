@@ -1,6 +1,7 @@
 import { BookingTab } from "@/features/center/booking-tab";
 import { CentreTab } from "@/features/center/centre-tab";
-import { loadCenterSettings } from "@/features/center/loaders";
+import { ClosuresTab } from "@/features/center/closures-tab";
+import { loadCenterSettings, loadClosures } from "@/features/center/loaders";
 import { LocationsTab } from "@/features/center/locations-tab";
 import {
   loadSettingsParams,
@@ -11,7 +12,8 @@ import { FullBleed } from "@repo/ui/full-bleed";
 import { PageTitle } from "@repo/ui/portal-content";
 
 // Ustawienia: the centre's sections as tabs in the address (the centre
-// and its company, its locations, online booking), each edited in place.
+// and its company, its locations, online booking, the days it is closed),
+// each edited in place.
 
 export default async function SettingsPage({
   searchParams,
@@ -30,6 +32,8 @@ export default async function SettingsPage({
         <CentreTab company={company} profile={profile} />
       ) : zakladka === "lokalizacje" ? (
         <LocationsTab locations={locations} />
+      ) : zakladka === "zamkniecia" ? (
+        <ClosuresTab {...await loadClosures()} />
       ) : (
         <BookingTab settings={settings} />
       )}

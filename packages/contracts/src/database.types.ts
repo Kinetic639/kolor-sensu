@@ -309,6 +309,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      centre_closures: {
+        Row: {
+          created_at: string;
+          ends_on: string;
+          id: string;
+          reason: string;
+          starts_on: string;
+        };
+        Insert: {
+          created_at?: string;
+          ends_on: string;
+          id?: string;
+          reason: string;
+          starts_on: string;
+        };
+        Update: {
+          created_at?: string;
+          ends_on?: string;
+          id?: string;
+          reason?: string;
+          starts_on?: string;
+        };
+        Relationships: [];
+      };
       center_settings: {
         Row: {
           booking_enabled: boolean;
@@ -1563,6 +1587,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      visits_on_days: {
+        Args: { p_from: string; p_to: string };
+        Returns: number;
+      };
       company_details: {
         Args: never;
         Returns: {

@@ -26,6 +26,7 @@ const STATUS: Record<string, number> = {
   specialist_busy: 409,
   room_busy: 409,
   room_closed: 409,
+  centre_closed: 409,
   time_off: 409,
 };
 

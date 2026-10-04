@@ -45,6 +45,8 @@ export type BookingErrorCode =
   | "specialist_busy"
   | "room_busy"
   | "room_closed"
+  /** The whole centre is closed that day (Dni zamknięcia). */
+  | "centre_closed"
   | "room_required"
   | "time_off"
   | "in_the_past"
@@ -77,6 +79,7 @@ const BOOKING_ERROR_CODES = new Set<string>([
   "specialist_busy",
   "room_busy",
   "room_closed",
+  "centre_closed",
   "room_required",
   "time_off",
   "in_the_past",

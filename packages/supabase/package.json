@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./browser": "./src/browser.ts",
+    "./closures": "./src/closures.ts",
     "./intakes": "./src/intakes.ts",
     "./public": "./src/public.ts",
     "./secret": "./src/secret.ts",

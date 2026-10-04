@@ -120,6 +120,7 @@ const CENTRE_BOOKING_MESSAGES: Record<string, string> = {
   specialist_busy: "Specjalista ma wtedy inną wizytę (albo przerwę po niej).",
   room_busy: "Gabinet jest wtedy zajęty.",
   room_closed: "Gabinet jest wtedy zamknięty.",
+  centre_closed: "Centrum jest wtedy zamknięte.",
   room_required: "Wybierz gabinet.",
   time_off: "Specjalista ma wtedy nieobecność.",
   in_the_past: "Ten termin już minął.",

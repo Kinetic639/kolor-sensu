@@ -7,7 +7,12 @@ import {
 // Ustawienia: the section (tab) lives in the URL, so each renders on the
 // server, loads only what it shows and has an address.
 
-export const SETTINGS_TABS = ["centrum", "lokalizacje", "rezerwacje"] as const;
+export const SETTINGS_TABS = [
+  "centrum",
+  "lokalizacje",
+  "rezerwacje",
+  "zamkniecia",
+] as const;
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
 
@@ -15,6 +20,7 @@ const LABELS: Record<SettingsTab, string> = {
   centrum: "Centrum",
   lokalizacje: "Lokalizacje",
   rezerwacje: "Rezerwacje online",
+  zamkniecia: "Dni zamknięcia",
 };
 
 const settingsParsers = {
