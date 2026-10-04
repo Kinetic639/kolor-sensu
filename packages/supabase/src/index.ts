@@ -23,6 +23,7 @@ export {
   disableLocation,
   getCenterPublicProfile,
   getCenterSettings,
+  getCompanyDetails,
   getLocationById,
   getPublicCenterProfile,
   listLocations,

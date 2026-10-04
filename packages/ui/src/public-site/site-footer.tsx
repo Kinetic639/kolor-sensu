@@ -26,6 +26,8 @@ export interface SiteFooterProps {
   about?: string;
   /** Year shown in the copyright line. */
   year?: number;
+  /** The company in one line (its name, address, NIP), under it. */
+  company?: string | null;
   className?: string;
 }
 
@@ -45,6 +47,7 @@ export function SiteFooter({
   legal = [],
   about,
   year = new Date().getFullYear(),
+  company = null,
   className,
 }: SiteFooterProps) {
   const offer = navigation.find((item) => item.footerColumn);
@@ -175,7 +178,10 @@ export function SiteFooter({
       <div className="max-w-page px-gutter mx-auto">
         <Separator className="bg-border/70" />
         <div className="text-small text-text-muted flex flex-col gap-3 py-6 sm:flex-row sm:items-center sm:justify-between">
-          <p>{`© ${year} Kolor Sensu. Wszelkie prawa zastrzeżone.`}</p>
+          <div className="grid gap-1">
+            <p>{`© ${year} Kolor Sensu. Wszelkie prawa zastrzeżone.`}</p>
+            {company ? <p>{company}</p> : null}
+          </div>
           {legal.length ? (
             <ul className="flex flex-wrap gap-x-6 gap-y-2">
               {legal.map((link) => (

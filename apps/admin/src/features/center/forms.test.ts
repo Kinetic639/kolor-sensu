@@ -143,6 +143,10 @@ describe("booking settings", () => {
     centrePaymentLinkHours: 2,
     phone: null,
     email: null,
+    legalName: null,
+    taxId: null,
+    regon: null,
+    registeredAddress: null,
     createdAt: "2026-09-19T00:00:00Z",
     updatedAt: "2026-09-19T00:00:00Z",
   };

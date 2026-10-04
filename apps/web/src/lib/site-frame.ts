@@ -1,4 +1,5 @@
 import { catalogAnchor } from "@repo/contracts";
+import { companyLine } from "@repo/contracts/company";
 import {
   serviceDisplayName,
   type SiteContact,
@@ -15,6 +16,7 @@ import {
 import {
   getAnnouncement,
   getCenter,
+  getCompany,
   getLocations,
   getOffer,
   getServices,
@@ -85,13 +87,15 @@ function navigation(offer: PublicOfferEntry[]): SiteNavItem[] {
 const dialled = (phone: string) => phone.replace(/[^\d+]/g, "");
 
 export const getSiteFrame = cache(async () => {
-  const [center, locations, services, offer, announcement] = await Promise.all([
-    getCenter(),
-    getLocations(),
-    getServices(),
-    getOffer(),
-    getAnnouncement(),
-  ]);
+  const [center, locations, services, offer, announcement, company] =
+    await Promise.all([
+      getCenter(),
+      getLocations(),
+      getServices(),
+      getOffer(),
+      getAnnouncement(),
+      getCompany(),
+    ]);
   // The first location with a usable address.
   const location = locations.find((one) => one.addressLine1 && one.city);
 
@@ -132,5 +136,6 @@ export const getSiteFrame = cache(async () => {
     locations,
     services,
     announcement,
+    company: company ? companyLine(company) : null,
   };
 });

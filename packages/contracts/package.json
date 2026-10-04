@@ -9,6 +9,7 @@
     "./availability": "./src/availability.ts",
     "./booking": "./src/booking.ts",
     "./center": "./src/center.ts",
+    "./company": "./src/company.ts",
     "./centre-changes": "./src/centre-changes.ts",
     "./intake": "./src/intake.ts",
     "./clients": "./src/clients.ts",

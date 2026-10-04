@@ -54,8 +54,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { navigation, cta, contact, socials, legal, about, announcement } =
-    await getSiteFrame();
+  const {
+    navigation,
+    cta,
+    contact,
+    socials,
+    legal,
+    about,
+    announcement,
+    company,
+  } = await getSiteFrame();
 
   return (
     <html
@@ -74,6 +82,7 @@ export default async function RootLayout({
           socials={socials}
           legal={legal}
           about={about}
+          company={company}
           siteUrl={siteUrl}
           year={new Date().getFullYear()}
         >

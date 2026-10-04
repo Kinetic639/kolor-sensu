@@ -10,8 +10,8 @@ import {
   serviceUpdateSchema,
   timezoneSchema,
 } from "@repo/contracts";
-import { describe, expect, it } from "vitest";
-import { centerMappers } from "./center";
+import { describe, expect, it, vi } from "vitest";
+import { centerMappers, getCompanyDetails } from "./center";
 
 describe("center domain schemas", () => {
   it("accepts valid IANA timezones and rejects unknown ones", () => {
@@ -109,6 +109,10 @@ describe("center domain mapping", () => {
         centre_payment_link_hours: 2,
         phone: null,
         email: null,
+        legal_name: "Kolor Sensu sp. z o.o.",
+        tax_id: "1234563218",
+        regon: null,
+        registered_address: null,
         created_at: "2026-09-19T00:00:00Z",
         updated_at: "2026-09-19T00:00:00Z",
       }),
@@ -122,6 +126,9 @@ describe("center domain mapping", () => {
       cancellationWindowHours: 48,
       rescheduleWindowHours: 48,
       maxSelfReschedules: 1,
+      legalName: "Kolor Sensu sp. z o.o.",
+      taxId: "1234563218",
+      regon: null,
     });
   });
 
@@ -170,5 +177,33 @@ describe("partial update schemas", () => {
       false,
     );
     expect(roomUpdateSchema.safeParse({ capacity: 0 }).success).toBe(false);
+  });
+});
+
+describe("getCompanyDetails", () => {
+  it("the centre's company, for the site's footer", async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: [
+        {
+          legal_name: "Kolor Sensu sp. z o.o.",
+          tax_id: "1234563218",
+          regon: null,
+          registered_address: "ul. Długa 1, 61-001 Poznań",
+        },
+      ],
+      error: null,
+    });
+    await expect(getCompanyDetails({ rpc } as never)).resolves.toEqual({
+      legalName: "Kolor Sensu sp. z o.o.",
+      taxId: "1234563218",
+      regon: null,
+      registeredAddress: "ul. Długa 1, 61-001 Poznań",
+    });
+    expect(rpc).toHaveBeenCalledWith("company_details");
+  });
+
+  it("none when nothing is set", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: [], error: null });
+    await expect(getCompanyDetails({ rpc } as never)).resolves.toBeNull();
   });
 });

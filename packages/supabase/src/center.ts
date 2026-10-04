@@ -13,6 +13,7 @@ import {
   type PublicCenterProfile,
   type PublicLocation,
 } from "@repo/contracts";
+import type { CompanyDetails } from "@repo/contracts/company";
 import type { Database } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -68,6 +69,10 @@ function mapCenterSettings(row: CenterSettingsRow): CenterSettings {
     centrePaymentLinkHours: row.centre_payment_link_hours,
     phone: row.phone,
     email: row.email,
+    legalName: row.legal_name,
+    taxId: row.tax_id,
+    regon: row.regon,
+    registeredAddress: row.registered_address,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -182,6 +187,10 @@ export async function updateCenterSettings(
       centre_payment_link_hours: patch.centrePaymentLinkHours,
       phone: patch.phone,
       email: patch.email,
+      legal_name: patch.legalName,
+      tax_id: patch.taxId,
+      regon: patch.regon,
+      registered_address: patch.registeredAddress,
     })
     .eq("id", 1)
     .select("*")
@@ -383,3 +392,19 @@ export const centerMappers = {
   location: mapLocation,
   publicLocation: mapPublicLocation,
 };
+
+/** The centre's company (Ustawienia → Centrum), for the site's footer. */
+export async function getCompanyDetails(
+  client: SupabaseClient<Database>,
+): Promise<CompanyDetails | null> {
+  const { data, error } = await client.rpc("company_details");
+  if (error) throw error;
+  const row = data?.[0];
+  if (!row) return null;
+  return {
+    legalName: row.legal_name,
+    taxId: row.tax_id,
+    regon: row.regon,
+    registeredAddress: row.registered_address,
+  };
+}

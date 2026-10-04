@@ -35,6 +35,8 @@ export interface SiteLayoutProps {
   intro?: boolean;
   /** The centre's announcement for today: a bar above the header. */
   announcement?: SiteAnnouncement | null;
+  /** The company in one line, in the footer (Ustawienia → Centrum). */
+  company?: string | null;
   children: ReactNode;
 }
 
@@ -50,6 +52,7 @@ export function SiteLayout({
   year,
   intro = true,
   announcement = null,
+  company = null,
   children,
 }: SiteLayoutProps) {
   return (
@@ -77,6 +80,7 @@ export function SiteLayout({
         legal={legal}
         about={about}
         year={year}
+        company={company}
       />
       {siteUrl ? (
         <JsonLd

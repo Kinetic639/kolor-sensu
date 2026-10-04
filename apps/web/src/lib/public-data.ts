@@ -1,6 +1,7 @@
 import {
   createSpecialistMediaSignedUrl,
   getBookingWindow as readBookingWindow,
+  getCompanyDetails,
   getCurrentAnnouncement,
   getPublicCenterProfile,
   getPublicServiceBySlug,
@@ -248,6 +249,9 @@ export const getIntakeServiceSlugs = cache(() =>
 export const getAnnouncement = cache(() =>
   load("announcement", getCurrentAnnouncement, null),
 );
+
+/** The centre's company (its name, NIP, address), for the footer. */
+export const getCompany = cache(() => load("company", getCompanyDetails, null));
 
 /** The centre's time zone and booking horizon. */
 export const getBookingWindow = cache(() =>

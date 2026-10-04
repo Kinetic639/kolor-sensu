@@ -84,6 +84,20 @@ describe("SiteLayout's announcement", () => {
   });
 });
 
+describe("SiteLayout's company", () => {
+  it("the company's line in the footer, under the copyright", () => {
+    render(
+      page({
+        company:
+          "Kolor Sensu sp. z o.o., ul. Długa 1, 61-001 Poznań · NIP 123-456-32-18",
+      }),
+    );
+    expect(screen.getByRole("contentinfo")).toHaveTextContent(
+      "Kolor Sensu sp. z o.o., ul. Długa 1, 61-001 Poznań · NIP 123-456-32-18",
+    );
+  });
+});
+
 describe("SiteLayout", () => {
   it("lays the page out in landmarks, with a skip link to the content first", () => {
     const { container } = render(page());

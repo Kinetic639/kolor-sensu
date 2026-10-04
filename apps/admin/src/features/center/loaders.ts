@@ -14,5 +14,15 @@ export async function loadCenterSettings() {
     listLocations(client),
     getCenterSettings(client),
   ]);
-  return { profile, locations, settings };
+  return {
+    profile,
+    locations,
+    settings,
+    company: {
+      legalName: settings.legalName,
+      taxId: settings.taxId,
+      regon: settings.regon,
+      registeredAddress: settings.registeredAddress,
+    },
+  };
 }

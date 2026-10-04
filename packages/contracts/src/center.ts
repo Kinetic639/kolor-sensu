@@ -49,6 +49,16 @@ export const centerSettingsUpdateSchema = z
     centrePaymentLinkHours: z.number().int().min(1).max(72),
     phone: z.string().trim().max(40).nullable(),
     email: z.email().max(320).nullable(),
+    legalName: z.string().trim().min(1).max(200).nullable(),
+    taxId: z
+      .string()
+      .regex(/^\d{10}$/)
+      .nullable(),
+    regon: z
+      .string()
+      .regex(/^(\d{9}|\d{14})$/)
+      .nullable(),
+    registeredAddress: z.string().trim().min(1).max(300).nullable(),
   })
   .partial();
 
@@ -117,6 +127,11 @@ export interface CenterSettings {
   centrePaymentLinkHours: number;
   phone: string | null;
   email: string | null;
+  /** The company (`@repo/contracts/company`): digits only. */
+  legalName: string | null;
+  taxId: string | null;
+  regon: string | null;
+  registeredAddress: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -315,6 +315,10 @@ export type Database = {
           business_name: string;
           cancellation_window_hours: number;
           centre_payment_link_hours: number;
+          legal_name: string | null;
+          regon: string | null;
+          registered_address: string | null;
+          tax_id: string | null;
           created_at: string;
           default_currency: string;
           default_locale: string;
@@ -337,6 +341,10 @@ export type Database = {
           business_name: string;
           cancellation_window_hours?: number;
           centre_payment_link_hours?: number;
+          legal_name?: string | null;
+          regon?: string | null;
+          registered_address?: string | null;
+          tax_id?: string | null;
           created_at?: string;
           default_currency?: string;
           default_locale?: string;
@@ -359,6 +367,10 @@ export type Database = {
           business_name?: string;
           cancellation_window_hours?: number;
           centre_payment_link_hours?: number;
+          legal_name?: string | null;
+          regon?: string | null;
+          registered_address?: string | null;
+          tax_id?: string | null;
           created_at?: string;
           default_currency?: string;
           default_locale?: string;
@@ -1545,6 +1557,15 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      company_details: {
+        Args: never;
+        Returns: {
+          legal_name: string | null;
+          regon: string | null;
+          registered_address: string | null;
+          tax_id: string | null;
+        }[];
+      };
       current_announcement: {
         Args: never;
         Returns: {

@@ -1,6 +1,10 @@
 "use server";
 
 import { requirePortalRole } from "@/lib/auth";
+import {
+  companyDetailsSchema,
+  type CompanyDetailsInput,
+} from "@repo/contracts/company";
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -60,6 +64,25 @@ export async function updateCenterProfileAction(
     return {
       ok: false,
       message: safeMessage(error, "Nie udało się zapisać profilu centrum."),
+    };
+  }
+}
+
+/** The company: the site's footer shows it (so the layout is refreshed). */
+export async function updateCompanyAction(
+  values: CompanyDetailsInput,
+): Promise<ActionResult> {
+  await requirePortalRole();
+  const parsed = companyDetailsSchema.safeParse(values);
+  if (!parsed.success) return { ok: false, message: "Sprawdź dane firmy." };
+  try {
+    await updateCenterSettings(await createClient(), parsed.data);
+    await refresh();
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      message: safeMessage(error, "Nie udało się zapisać danych firmy."),
     };
   }
 }
