@@ -26,7 +26,10 @@ export type NotificationKind =
   /** Money the centre gave back later (admins only). */
   | "refunded"
   /** A specialist sent their profile for review (admins only). */
-  | "profile_submitted";
+  | "profile_submitted"
+  /** Their profile approved, or sent back with a reason (the specialist). */
+  | "profile_approved"
+  | "profile_rejected";
 
 export interface NotificationDetails {
   reference: string | null;

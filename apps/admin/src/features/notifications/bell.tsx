@@ -1,3 +1,4 @@
+import { specialistAvatars, specialistSummaries } from "@/lib/reference-data";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_TIME_ZONE, notificationView } from "@repo/scheduling";
 import { listNotifications } from "@repo/supabase";
@@ -32,14 +33,32 @@ export async function NotificationBell() {
   return <NotificationsBell items={items} unreadCount={unreadCount} />;
 }
 
+/** The specialists' pictures and colours, for a profile's chip. */
+async function specialistLook() {
+  const [people, avatars] = await Promise.all([
+    specialistSummaries(),
+    specialistAvatars(),
+  ]);
+  return Object.fromEntries(
+    people.map((one) => [
+      one.id,
+      { avatar: avatars[one.id] ?? null, color: one.color },
+    ]),
+  );
+}
+
 export async function NotificationPanel() {
-  const { items, unreadCount } = await loadInbox();
+  const [{ items, unreadCount }, look] = await Promise.all([
+    loadInbox(),
+    specialistLook(),
+  ]);
   return (
     <NotificationsPanel
       items={items}
       markAllRead={markNotificationsReadAction}
       markRead={markNotificationReadAction}
       loadVisit={loadNotificationVisitAction}
+      look={look}
       markUnread={markNotificationUnreadAction}
       unreadCount={unreadCount}
     />

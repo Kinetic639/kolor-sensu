@@ -69,11 +69,7 @@ export interface AdminSpecialistSummary {
 type PublicProfileQueryRow = PublicProfileRow & {
   specialists: Pick<
     SpecialistRow,
-    | "id"
-    | "active"
-    | "public_slug"
-    | "professional_title"
-    | "joined_at"
+    "id" | "active" | "public_slug" | "professional_title" | "joined_at"
   >;
 };
 
@@ -480,11 +476,21 @@ export async function createSpecialistMediaSignedUrl(
   path: string | null,
 ): Promise<string | null> {
   if (!path) return null;
+  // The same signature again while it is good (see signedPhotos below):
+  // a page that reloads its data (the header's own avatar on each live
+  // update) keeps its picture instead of flashing initials.
+  const now = Date.now();
+  const kept = signedPhotos.get(path);
+  if (kept && kept.until - now > PHOTO_URL_REUSE_MS) return kept.url;
   const { data, error } = await client.storage
     .from(specialistMediaBucket)
-    .createSignedUrl(path, 60 * 30);
+    .createSignedUrl(path, PHOTO_URL_SECONDS);
 
   if (error) throw error;
+  signedPhotos.set(path, {
+    url: data.signedUrl,
+    until: now + PHOTO_URL_SECONDS * 1000,
+  });
   return data.signedUrl;
 }
 

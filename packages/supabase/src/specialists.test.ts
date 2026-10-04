@@ -13,6 +13,7 @@ import {
   saveMySpecialistProfileDraft,
   setSpecialistColorAdmin,
   setSpecialistPublicSlugAdmin,
+  createSpecialistMediaSignedUrl,
   forgetSignedSpecialistPhotos,
   signSpecialistPhotos,
   specialistMappers,
@@ -564,5 +565,43 @@ describe("specialist colour", () => {
         updated_at: "",
       }).color,
     ).toBe("#2f5fa7");
+  });
+});
+
+describe("createSpecialistMediaSignedUrl", () => {
+  beforeEach(() => forgetSignedSpecialistPhotos());
+
+  it("the same URL again while it is good: a refreshed page does not flash", async () => {
+    const createSignedUrl = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: { signedUrl: "https://signed/1" },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: { signedUrl: "https://signed/2" },
+        error: null,
+      });
+    const client = { storage: { from: () => ({ createSignedUrl }) } } as never;
+
+    const first = await createSpecialistMediaSignedUrl(client, "a/1.webp");
+    const again = await createSpecialistMediaSignedUrl(client, "a/1.webp");
+
+    expect(again).toBe(first);
+    expect(createSignedUrl).toHaveBeenCalledTimes(1);
+    expect(createSignedUrl).toHaveBeenCalledWith("a/1.webp", 3600);
+  });
+
+  it("no photo: none; a failure is told", async () => {
+    const createSignedUrl = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: new Error("Not found") });
+    const client = { storage: { from: () => ({ createSignedUrl }) } } as never;
+    await expect(
+      createSpecialistMediaSignedUrl(client, null),
+    ).resolves.toBeNull();
+    await expect(
+      createSpecialistMediaSignedUrl(client, "gone.webp"),
+    ).rejects.toThrow("Not found");
   });
 });

@@ -22,6 +22,14 @@ import { KindIcon, NotificationBadges } from "./icons";
 // marks the one under the pointer and the one open.
 
 /** The booking as it is now, for an open notification. */
+/** A person a notification is about, with how the portals show them. */
+export interface NotificationPerson {
+  id: string;
+  name: string;
+  avatar: string | null;
+  color: string | null;
+}
+
 export interface NotificationVisit {
   row: VisitRow;
   /** The specialist's picture (initials where none). */
@@ -59,8 +67,11 @@ function Details({
   details,
   visit,
   showSpecialist,
+  person,
 }: {
   details: NotificationDetail[];
+  /** Whom it is about, as their chip (a profile), with their look. */
+  person?: NotificationPerson | null;
   /** undefined: not asked; "loading"; null: not found. */
   visit: NotificationVisit | null | "loading" | undefined;
   showSpecialist: boolean;
@@ -105,6 +116,24 @@ function Details({
       </Detail>
     ) : null;
 
+  if (person) {
+    return (
+      <>
+        <Detail label="Specjalista">
+          <SpecialistChip
+            avatar={person.avatar}
+            row={{
+              specialistId: person.id,
+              specialistName: person.name,
+              specialistColor: person.color,
+              cancelled: false,
+            }}
+          />
+        </Detail>
+        {details.map(own)}
+      </>
+    );
+  }
   // The booking's specialist and place after the service; its payment
   // after the price (or after the place, when there is no price).
   const service = details.findIndex((d) => d.label === "Usługa");
@@ -126,11 +155,14 @@ export function NotificationRow({
   open,
   visit,
   showSpecialist = true,
+  look,
   onToggle,
   onMark,
   onOpenBooking,
 }: {
   item: NotificationView;
+  /** The specialists' pictures and colours, by id (for a person's chip). */
+  look?: Record<string, { avatar: string | null; color: string | null }>;
   unread: boolean;
   open: boolean;
   /** The booking as it is now (asked for when it is opened). */
@@ -217,7 +249,11 @@ export function NotificationRow({
                 ? `Rezerwacja ${item.reference}`
                 : `${item.linkText}: ${item.summary}`
             }
-            className="col-start-2 row-start-2 justify-self-end rounded-[3px] font-mono text-[0.6875rem] text-[var(--text-muted)] tabular-nums underline-offset-2 hover:text-[var(--primary)] hover:underline focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+            className={cn(
+              "col-start-2 row-start-2 justify-self-end rounded-[3px] text-[0.6875rem] text-[var(--text-muted)] tabular-nums underline-offset-2 hover:text-[var(--primary)] hover:underline focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
+              // A booking's number as numbers are; a word as words.
+              item.reference ? "font-mono" : "font-medium",
+            )}
             href={item.href as Route}
             onClick={onOpenBooking}
           >
@@ -243,6 +279,15 @@ export function NotificationRow({
           <div className="pr-3 pb-2.5 pl-2.5">
             <Details
               details={item.details}
+              person={
+                item.person
+                  ? {
+                      ...item.person,
+                      avatar: look?.[item.person.id]?.avatar ?? null,
+                      color: look?.[item.person.id]?.color ?? null,
+                    }
+                  : null
+              }
               showSpecialist={showSpecialist}
               visit={visit}
             />

@@ -10,4 +10,8 @@ export {
 export { KindIcon, NotificationBadges } from "./icons";
 export { NotificationsPanel } from "./panel";
 export type { NotificationsPanelProps } from "./panel";
-export { NotificationRow, type NotificationVisit } from "./row";
+export {
+  NotificationRow,
+  type NotificationPerson,
+  type NotificationVisit,
+} from "./row";

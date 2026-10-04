@@ -249,6 +249,7 @@ describe("a profile sent for review", () => {
       <NotificationsProvider defaultOpen>
         <NotificationsPanel
           items={[profile!]}
+          look={{ anna: { avatar: null, color: "#c26a12" } }}
           loadVisit={loadVisit}
           markAllRead={markAllRead}
           markRead={markRead}
@@ -266,5 +267,9 @@ describe("a profile sent for review", () => {
       within(row).getByRole("button", { name: /Profil do weryfikacji/ }),
     );
     expect(loadVisit).not.toHaveBeenCalled();
+    // Whose: their chip, as on the other notifications' bookings.
+    expect(within(row).getByText("Specjalista")).toBeInTheDocument();
+    expect(within(row).getAllByText("Anna Kłobuchowska")).toHaveLength(2);
+    expect(within(row).getByText("Wysłany")).toBeInTheDocument();
   });
 });

@@ -82,6 +82,8 @@ export interface NotificationView {
   href: string | null;
   /** What the link says: the booking's number, `Profil`. */
   linkText: string | null;
+  /** Whom it is about, shown as their chip (a profile sent for review). */
+  person?: { id: string; name: string } | null;
   /** `Dziś`, `Wczoraj`, `Poniedziałek 28.09`: the group it is in. */
   day: string;
   /** `10:05`, when it came. */
@@ -90,6 +92,11 @@ export interface NotificationView {
 }
 
 const NEW_KINDS = new Set(["booked", "reserved", "centre_booked"]);
+const PROFILE_KINDS = new Set([
+  "profile_submitted",
+  "profile_approved",
+  "profile_rejected",
+]);
 const SOON_MS = 48 * 60 * 60 * 1000;
 
 export function notificationView(
@@ -133,32 +140,51 @@ export function notificationView(
         ? "Wczoraj"
         : `${longWeekday[0]!.toUpperCase()}${longWeekday.slice(1)} ${local(notification.createdAt, "dd.MM")}`;
 
-  // A profile sent for review: whose, leading to it on their page.
-  if (kind === "profile_submitted") {
+  // The profile: sent for review (admins, leading to it on the
+  // specialist's page, their chip in the details), approved or sent back
+  // (the specialist, leading to their own profile).
+  if (PROFILE_KINDS.has(kind)) {
     const name = d.specialistName ?? "Specjalista";
-    return {
+    const when = visitTime(notification.createdAt, "dd.MM.yyyy, HH:mm");
+    const shared = {
       id: notification.id,
-      title: "Profil do weryfikacji",
       reference: null,
-      summary: name,
       badges: [],
-      details: [
-        { label: "Specjalista", value: name },
-        {
-          label: "Wysłany",
-          value: visitTime(notification.createdAt, "dd.MM.yyyy, HH:mm"),
-        },
-      ],
-      tone: "info",
-      icon: "profile",
+      icon: "profile" as const,
       visitId: null,
-      href: d.specialistId
-        ? `/specjalisci/${d.specialistId}?zakladka=profil`
-        : null,
-      linkText: d.specialistId ? "Profil" : null,
       day,
       time: local(notification.createdAt, "HH:mm"),
       unread: notification.readAt === null,
+    };
+    if (kind === "profile_submitted") {
+      return {
+        ...shared,
+        title: "Profil do weryfikacji",
+        summary: name,
+        details: [{ label: "Wysłany", value: when }],
+        tone: "info",
+        href: d.specialistId
+          ? `/specjalisci/${d.specialistId}?zakladka=profil`
+          : null,
+        linkText: d.specialistId ? "Profil" : null,
+        person: d.specialistId ? { id: d.specialistId, name } : null,
+      };
+    }
+    const approved = kind === "profile_approved";
+    return {
+      ...shared,
+      title: approved ? "Profil zatwierdzony" : "Profil do poprawy",
+      summary: approved
+        ? "Zmiany są już na stronie"
+        : (d.reason ?? "Zobacz uwagi centrum"),
+      details: [
+        { label: approved ? "Zatwierdzony" : "Odesłany", value: when },
+        ...(!approved && d.reason ? [{ label: "Powód", value: d.reason }] : []),
+      ],
+      tone: approved ? "success" : "warning",
+      href: "/profil",
+      linkText: "Profil",
+      person: null,
     };
   }
 

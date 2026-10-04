@@ -256,9 +256,47 @@ describe("a profile sent for review", () => {
       href: "/specjalisci/anna?zakladka=profil",
       linkText: "Profil",
       badges: [],
+      // Shown as their chip, with their picture.
+      person: { id: "anna", name: "Anna Kłobuchowska" },
+      details: [{ label: "Wysłany", value: "czw. 01.10.2026, 11:30" }],
+    });
+  });
+
+  it("for the specialist: approved, on the site; rejected, with the reason", () => {
+    const mine = { ...options, portal: "specialist" as const };
+    expect(
+      notificationView(
+        { ...profile, kind: "profile_approved", actor: "centre" },
+        mine,
+      ),
+    ).toMatchObject({
+      title: "Profil zatwierdzony",
+      summary: "Zmiany są już na stronie",
+      tone: "success",
+      icon: "profile",
+      href: "/profil",
+      linkText: "Profil",
+      person: null,
+      details: [{ label: "Zatwierdzony", value: "czw. 01.10.2026, 11:30" }],
+    });
+    expect(
+      notificationView(
+        {
+          ...profile,
+          kind: "profile_rejected",
+          actor: "centre",
+          details: { ...profile.details, reason: "Popraw opis." },
+        },
+        mine,
+      ),
+    ).toMatchObject({
+      title: "Profil do poprawy",
+      summary: "Popraw opis.",
+      tone: "warning",
+      href: "/profil",
       details: [
-        { label: "Specjalista", value: "Anna Kłobuchowska" },
-        { label: "Wysłany", value: "czw. 01.10.2026, 11:30" },
+        { label: "Odesłany", value: "czw. 01.10.2026, 11:30" },
+        { label: "Powód", value: "Popraw opis." },
       ],
     });
   });

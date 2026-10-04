@@ -35,6 +35,8 @@ export interface NotificationsPanelProps {
   loadVisit?: (visitId: string) => Promise<NotificationVisit | null>;
   /** The specialist in the details (admins). */
   showSpecialist?: boolean;
+  /** The specialists' pictures and colours, by id (a profile's chip). */
+  look?: Record<string, { avatar: string | null; color: string | null }>;
 }
 
 export function NotificationsPanel({
@@ -45,6 +47,7 @@ export function NotificationsPanel({
   markAllRead,
   loadVisit,
   showSpecialist = true,
+  look,
 }: NotificationsPanelProps) {
   const router = useRouter();
   const { open, setOpen, marked, mark, allReadAt, markAll } =
@@ -209,6 +212,7 @@ export function NotificationsPanel({
                       <NotificationRow
                         item={item}
                         key={item.id}
+                        look={look}
                         onMark={(read) => setRead(item, read)}
                         onOpenBooking={() => {
                           setRead(item, true);
