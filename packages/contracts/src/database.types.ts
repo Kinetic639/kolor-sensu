@@ -1507,11 +1507,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      site_announcements: {
+        Row: {
+          created_at: string;
+          ends_on: string;
+          id: string;
+          link_href: string | null;
+          link_label: string | null;
+          message: string;
+          starts_on: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          ends_on: string;
+          id?: string;
+          link_href?: string | null;
+          link_label?: string | null;
+          message: string;
+          starts_on: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          ends_on?: string;
+          id?: string;
+          link_href?: string | null;
+          link_label?: string | null;
+          message?: string;
+          starts_on?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
+      current_announcement: {
+        Args: never;
+        Returns: {
+          ends_on: string;
+          id: string;
+          link_href: string | null;
+          link_label: string | null;
+          message: string;
+        }[];
+      };
       attach_visit_intake: {
         Args: { p_access_token: string; p_intake_token: string };
         Returns: boolean;

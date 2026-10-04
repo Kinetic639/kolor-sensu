@@ -6,6 +6,8 @@ import {
   ContactRound,
   FileText,
   LayoutDashboard,
+  Mail,
+  Megaphone,
   Settings,
   Tags,
   UserRound,
@@ -37,12 +39,14 @@ import {
 } from "./sidebar";
 
 const portalIcons = {
+  announcements: Megaphone,
   bookings: CalendarCheck,
   calendar: CalendarDays,
   clients: ContactRound,
   clock: Clock3,
   cms: FileText,
   dashboard: LayoutDashboard,
+  emails: Mail,
   rooms: Armchair,
   services: Tags,
   settings: Settings,

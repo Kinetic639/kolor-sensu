@@ -54,7 +54,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { navigation, cta, contact, socials, legal, about } =
+  const { navigation, cta, contact, socials, legal, about, announcement } =
     await getSiteFrame();
 
   return (
@@ -67,6 +67,7 @@ export default async function RootLayout({
     >
       <body>
         <SiteLayout
+          announcement={announcement}
           navigation={navigation}
           cta={cta}
           contact={contact}

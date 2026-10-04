@@ -52,6 +52,8 @@ export { SiteFooter } from "./site-footer";
 export type { SiteFooterProps } from "./site-footer";
 export { SiteHeader } from "./site-header";
 export type { SiteHeaderProps } from "./site-header";
+export { AnnouncementBar } from "./announcement-bar";
+export type { SiteAnnouncement } from "./announcement-bar";
 export { SiteLayout } from "./site-layout";
 export type { SiteLayoutProps } from "./site-layout";
 export { SiteLogo } from "./site-logo";

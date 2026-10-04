@@ -23,7 +23,10 @@ export const adminNavigation: PortalNavigationSection[] = [
   },
   {
     label: "STRONA",
-    items: [{ label: "CMS", href: "/cms", icon: "cms" }],
+    items: [
+      { label: "CMS", href: "/cms", icon: "cms" },
+      { label: "Ogłoszenia", href: "/ogloszenia", icon: "announcements" },
+    ],
   },
   {
     label: "SYSTEM",

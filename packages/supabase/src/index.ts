@@ -262,3 +262,10 @@ export type {
   ClientSearch,
   ClientSort,
 } from "./clients";
+export {
+  deleteAnnouncement,
+  getCurrentAnnouncement,
+  listAnnouncements,
+  saveAnnouncement,
+} from "./announcements";
+export type { CurrentAnnouncement } from "./announcements";

@@ -52,6 +52,38 @@ afterEach(() => {
   window.localStorage.clear();
 });
 
+describe("SiteLayout's announcement", () => {
+  it("a narrow bar above the header, after the skip link, its link beside it", () => {
+    const { container } = render(
+      page({
+        announcement: {
+          id: "a-1",
+          message: "W dniach 19–23 grudnia centrum jest nieczynne.",
+          link: { label: "Szczegóły", href: "/kontakt" },
+        },
+      }),
+    );
+    const bar = screen.getByRole("region", { name: "Ogłoszenie" });
+    expect(bar).toHaveTextContent(
+      "W dniach 19–23 grudnia centrum jest nieczynne.",
+    );
+    expect(
+      within(bar).getByRole("link", { name: "Szczegóły" }),
+    ).toHaveAttribute("href", "/kontakt");
+    // Before the header, after the skip link.
+    const header = screen.getByRole("banner");
+    expect(
+      bar.compareDocumentPosition(header) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(container.querySelector("a")).toHaveTextContent("Przejdź do treści");
+  });
+
+  it("none: no bar", () => {
+    render(page());
+    expect(screen.queryByRole("region", { name: "Ogłoszenie" })).toBeNull();
+  });
+});
+
 describe("SiteLayout", () => {
   it("lays the page out in landmarks, with a skip link to the content first", () => {
     const { container } = render(page());

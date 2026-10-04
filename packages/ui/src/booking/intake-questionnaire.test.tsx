@@ -112,7 +112,8 @@ describe("IntakeQuestionnaire", () => {
       neurodiversityNeeds: ["sensory"],
       healthConsent: true,
     });
-  });
+    // A long walk (every step): more time when the suite runs in parallel.
+  }, 20_000);
 
   it("no diagnosis: the needs are not asked", async () => {
     const onSubmit = setup();

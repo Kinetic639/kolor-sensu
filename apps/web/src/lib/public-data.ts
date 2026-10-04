@@ -1,6 +1,7 @@
 import {
   createSpecialistMediaSignedUrl,
   getBookingWindow as readBookingWindow,
+  getCurrentAnnouncement,
   getPublicCenterProfile,
   getPublicServiceBySlug,
   getPublishedHomeContent,
@@ -241,6 +242,11 @@ export const getBookableCatalog = cache(() =>
  */
 export const getIntakeServiceSlugs = cache(() =>
   load("intake services", intakeServiceSlugs, new Set<string>()),
+);
+
+/** The centre's announcement for today: a bar above the header (or none). */
+export const getAnnouncement = cache(() =>
+  load("announcement", getCurrentAnnouncement, null),
 );
 
 /** The centre's time zone and booking horizon. */
