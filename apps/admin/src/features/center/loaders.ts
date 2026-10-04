@@ -11,6 +11,7 @@ import {
   getCenterPublicProfile,
   getCenterSettings,
   listLocations,
+  retentionPreview,
 } from "@repo/supabase";
 
 export async function loadCenterSettings() {
@@ -78,4 +79,14 @@ export async function loadAccess() {
     users: await listPortalUsers(client),
     me: authorization.user?.id ?? null,
   };
+}
+
+/** Dane osobowe: the periods set, and what the next night removes. */
+export async function loadRetention() {
+  const client = await createClient();
+  const [settings, preview] = await Promise.all([
+    getCenterSettings(client),
+    retentionPreview(client),
+  ]);
+  return { settings, preview };
 }

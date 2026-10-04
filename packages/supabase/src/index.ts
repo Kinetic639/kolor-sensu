@@ -250,9 +250,11 @@ export type {
 } from "./notifications";
 export {
   ClientError,
+  forgetClient,
   getClient,
   getVisitClient,
   listClientVisits,
+  retentionPreview,
   searchClients,
   updateClient,
 } from "./clients";

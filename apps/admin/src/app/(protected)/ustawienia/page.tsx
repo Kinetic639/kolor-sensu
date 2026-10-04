@@ -7,8 +7,10 @@ import {
   loadAccess,
   loadCenterSettings,
   loadClosures,
+  loadRetention,
 } from "@/features/center/loaders";
 import { LocationsTab } from "@/features/center/locations-tab";
+import { PrivacyTab } from "@/features/center/privacy-tab";
 import {
   loadSettingsParams,
   settingsTabs,
@@ -19,7 +21,8 @@ import { PageTitle } from "@repo/ui/portal-content";
 
 // Ustawienia: the centre's sections as tabs in the address (the centre
 // and its company, its locations, online booking, the days it is closed,
-// who may use this portal), each edited in place.
+// who may use this portal, how long personal data are kept), each edited
+// in place.
 
 async function accessRowsOf(timeZone: string) {
   const { users, me } = await loadAccess();
@@ -43,6 +46,8 @@ export default async function SettingsPage({
         <CentreTab company={company} profile={profile} />
       ) : zakladka === "lokalizacje" ? (
         <LocationsTab locations={locations} />
+      ) : zakladka === "dane" ? (
+        <PrivacyTab {...await loadRetention()} />
       ) : zakladka === "dostep" ? (
         <AccessTab rows={await accessRowsOf(settings.timezone)} />
       ) : zakladka === "zamkniecia" ? (

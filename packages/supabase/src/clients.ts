@@ -49,7 +49,22 @@ export interface ClientSearch {
 }
 
 export type ClientErrorCode =
-  "not_found" | "email_taken" | "invalid_details" | "forbidden" | "unknown";
+  | "not_found"
+  | "email_taken"
+  | "invalid_details"
+  | "forbidden"
+  /** A visit to come, or money owed back: their details stay for now. */
+  | "client_busy"
+  | "already_forgotten"
+  | "unknown";
+
+const HINTS = new Set<string>([
+  "not_found",
+  "email_taken",
+  "invalid_details",
+  "client_busy",
+  "already_forgotten",
+]);
 
 export class ClientError extends Error {
   override name = "ClientError";
@@ -70,9 +85,7 @@ function clientError(error: {
     return new ClientError("forbidden", error.message);
   const hint = error.hint ?? "";
   return new ClientError(
-    hint === "not_found" || hint === "email_taken" || hint === "invalid_details"
-      ? hint
-      : "unknown",
+    HINTS.has(hint) ? (hint as ClientErrorCode) : "unknown",
     error.message,
   );
 }
@@ -195,4 +208,22 @@ export async function updateClient(
   });
   if (error) throw clientError(error);
   return { upcomingUpdated: data?.[0]?.upcoming_updated ?? 0 };
+}
+
+/**
+ * Removes who the client was, at their request (RODO): their name, e-mail,
+ * phone and notes, on them and their visits, and the questionnaire's
+ * answers; the visits and payments stay. Refused while a visit is to come
+ * or money is owed back to them.
+ */
+export async function forgetClient(client: Client, id: string) {
+  const { error } = await client.rpc("forget_client", { p_client: id });
+  if (error) throw clientError(error);
+}
+
+/** What the next night removes: clients' details and answers past keeping. */
+export async function retentionPreview(client: Client) {
+  const { data, error } = await client.rpc("retention_preview");
+  if (error) throw error;
+  return { clients: data?.[0]?.clients ?? 0, intakes: data?.[0]?.intakes ?? 0 };
 }

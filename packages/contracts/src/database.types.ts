@@ -57,6 +57,7 @@ export type Database = {
           created_at: string;
           email: string;
           email_key: string;
+          forgotten_at: string | null;
           id: string;
           name: string;
           notes: string | null;
@@ -67,6 +68,7 @@ export type Database = {
           created_at?: string;
           email: string;
           email_key?: never;
+          forgotten_at?: string | null;
           id?: string;
           name: string;
           notes?: string | null;
@@ -77,6 +79,7 @@ export type Database = {
           created_at?: string;
           email?: string;
           email_key?: never;
+          forgotten_at?: string | null;
           id?: string;
           name?: string;
           notes?: string | null;
@@ -339,6 +342,8 @@ export type Database = {
           business_name: string;
           cancellation_window_hours: number;
           centre_payment_link_hours: number;
+          client_retention_years: number | null;
+          intake_retention_months: number;
           legal_name: string | null;
           regon: string | null;
           registered_address: string | null;
@@ -367,6 +372,8 @@ export type Database = {
           business_name: string;
           cancellation_window_hours?: number;
           centre_payment_link_hours?: number;
+          client_retention_years?: number | null;
+          intake_retention_months?: number;
           legal_name?: string | null;
           regon?: string | null;
           registered_address?: string | null;
@@ -395,6 +402,8 @@ export type Database = {
           business_name?: string;
           cancellation_window_hours?: number;
           centre_payment_link_hours?: number;
+          client_retention_years?: number | null;
+          intake_retention_months?: number;
           legal_name?: string | null;
           regon?: string | null;
           registered_address?: string | null;
@@ -1587,6 +1596,11 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      forget_client: { Args: { p_client: string }; Returns: undefined };
+      retention_preview: {
+        Args: never;
+        Returns: { clients: number; intakes: number }[];
+      };
       grant_admin: { Args: { p_user: string }; Returns: undefined };
       list_portal_users: {
         Args: never;

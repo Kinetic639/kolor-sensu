@@ -46,6 +46,9 @@ const MESSAGES: Record<string, string> = {
   invalid_details: "Sprawdź pola formularza.",
   not_found: "Nie znaleziono klienta.",
   forbidden: "Tylko administrator może to zrobić.",
+  client_busy:
+    "Klient ma wizytę przed sobą albo czeka na zwrot. Najpierw ją odwołaj lub rozlicz.",
+  already_forgotten: "Dane tego klienta zostały już usunięte.",
 };
 
 /** Why a client's details could not be saved, in Polish. */

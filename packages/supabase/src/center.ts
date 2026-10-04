@@ -75,6 +75,8 @@ function mapCenterSettings(row: CenterSettingsRow): CenterSettings {
     registeredAddress: row.registered_address,
     visitReminderHours: row.visit_reminder_hours,
     paymentReminderHours: row.payment_reminder_hours,
+    clientRetentionYears: row.client_retention_years,
+    intakeRetentionMonths: row.intake_retention_months,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -195,6 +197,8 @@ export async function updateCenterSettings(
       registered_address: patch.registeredAddress,
       visit_reminder_hours: patch.visitReminderHours,
       payment_reminder_hours: patch.paymentReminderHours,
+      client_retention_years: patch.clientRetentionYears,
+      intake_retention_months: patch.intakeRetentionMonths,
     })
     .eq("id", 1)
     .select("*")

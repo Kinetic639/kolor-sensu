@@ -226,3 +226,58 @@ export function toBookingSettingsUpdate(
     paymentReminderHours: reminderHours(values.paymentReminder),
   };
 }
+
+// Personal data (RODO): how many years a client's details are kept after
+// their last visit (or until removed by hand), how many months the
+// questionnaire's answers after the visit.
+
+export const CLIENT_RETENTIONS = [
+  "off",
+  "1",
+  "2",
+  "3",
+  "5",
+  "6",
+  "10",
+] as const;
+export const INTAKE_RETENTIONS = ["3", "6", "12", "24"] as const;
+
+export const retentionFormSchema = z.object({
+  clientRetention: z.enum(CLIENT_RETENTIONS),
+  intakeRetention: z.enum(INTAKE_RETENTIONS),
+});
+
+export type RetentionFormValues = z.infer<typeof retentionFormSchema>;
+
+const choice = <T extends string>(
+  value: string,
+  choices: readonly T[],
+  fallback: T,
+) => ((choices as readonly string[]).includes(value) ? (value as T) : fallback);
+
+export function toRetentionFormValues(
+  settings: Pick<
+    CenterSettings,
+    "clientRetentionYears" | "intakeRetentionMonths"
+  >,
+): RetentionFormValues {
+  return {
+    clientRetention:
+      settings.clientRetentionYears === null
+        ? "off"
+        : choice(String(settings.clientRetentionYears), CLIENT_RETENTIONS, "5"),
+    intakeRetention: choice(
+      String(settings.intakeRetentionMonths),
+      INTAKE_RETENTIONS,
+      "12",
+    ),
+  };
+}
+
+export function toRetentionUpdate(values: RetentionFormValues) {
+  return {
+    clientRetentionYears:
+      values.clientRetention === "off" ? null : Number(values.clientRetention),
+    intakeRetentionMonths: Number(values.intakeRetention),
+  };
+}

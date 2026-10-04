@@ -61,6 +61,8 @@ export const centerSettingsUpdateSchema = z
     registeredAddress: z.string().trim().min(1).max(300).nullable(),
     visitReminderHours: z.number().int().min(1).max(168).nullable(),
     paymentReminderHours: z.number().int().min(7).max(168).nullable(),
+    clientRetentionYears: z.number().int().min(1).max(20).nullable(),
+    intakeRetentionMonths: z.number().int().min(1).max(120),
   })
   .partial();
 
@@ -138,6 +140,10 @@ export interface CenterSettings {
   visitReminderHours: number | null;
   /** …and the reminder to pay, so long before the payment is due. */
   paymentReminderHours: number | null;
+  /** A client's details go so many years after their last visit (none: kept). */
+  clientRetentionYears: number | null;
+  /** The questionnaire's answers go so many months after the visit. */
+  intakeRetentionMonths: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -10,6 +10,9 @@ import {
   toLocationInput,
   toBookingSettingsFormValues,
   toBookingSettingsUpdate,
+  retentionFormSchema,
+  toRetentionFormValues,
+  toRetentionUpdate,
 } from "./forms";
 
 const profile: CenterPublicProfile = {
@@ -149,6 +152,8 @@ describe("booking settings", () => {
     registeredAddress: null,
     visitReminderHours: 24,
     paymentReminderHours: 24,
+    clientRetentionYears: 5,
+    intakeRetentionMonths: 12,
     createdAt: "2026-09-19T00:00:00Z",
     updatedAt: "2026-09-19T00:00:00Z",
   };
@@ -231,5 +236,25 @@ describe("booking settings", () => {
     expect(error({ centrePaymentLinkHours: 100 })).toBe(
       "Podaj od 1 do 72 godzin.",
     );
+  });
+});
+
+describe("retention settings", () => {
+  it("the years as a choice (none: kept), the months of the answers", () => {
+    expect(
+      toRetentionFormValues({
+        clientRetentionYears: null,
+        intakeRetentionMonths: 12,
+      }),
+    ).toEqual({ clientRetention: "off", intakeRetention: "12" });
+    expect(
+      toRetentionUpdate({ clientRetention: "5", intakeRetention: "6" }),
+    ).toEqual({ clientRetentionYears: 5, intakeRetentionMonths: 6 });
+    expect(
+      retentionFormSchema.safeParse({
+        clientRetention: "7",
+        intakeRetention: "12",
+      }).success,
+    ).toBe(false);
   });
 });

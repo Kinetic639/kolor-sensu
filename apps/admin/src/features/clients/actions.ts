@@ -8,7 +8,7 @@ import {
   type ClientDetailsValues,
   type ClientUpdateResult,
 } from "@repo/contracts/clients";
-import { ClientError, updateClient } from "@repo/supabase";
+import { ClientError, forgetClient, updateClient } from "@repo/supabase";
 import { revalidatePath } from "next/cache";
 
 // Correcting a client's details and the centre's note (R15). The database
@@ -56,5 +56,29 @@ export async function updateClientAction(
     }
     console.error("[clients] saving a client failed:", error);
     return { ok: false, message: clientMessage(undefined) };
+  }
+}
+
+/**
+ * Removes who the client was, at their request (RODO). The database
+ * refuses while a visit is to come or money is owed back to them.
+ */
+export async function forgetClientAction(
+  clientId: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  await requirePortalRole();
+  try {
+    await forgetClient(await createClient(), clientId);
+    revalidatePath("/klienci");
+    revalidatePath(`/klienci/${clientId}`);
+    revalidatePath("/rezerwacje");
+    revalidatePath("/kalendarz");
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof ClientError) {
+      return { ok: false, message: clientMessage(error.code) };
+    }
+    console.error("[clients] removing a client's details failed:", error);
+    return { ok: false, message: "Nie udało się usunąć danych klienta." };
   }
 }

@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   ClientError,
+  forgetClient,
   getClient,
   listClientVisits,
+  retentionPreview,
   searchClients,
   updateClient,
 } from "./clients";
@@ -147,5 +149,29 @@ describe("updateClient", () => {
       expect(error).toBeInstanceOf(ClientError);
       expect((error as ClientError).code).toBe(hint);
     }
+  });
+});
+
+describe("forgetClient", () => {
+  it("asks the database, which refuses while something is open", async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      error: { message: "A visit to come.", hint: "client_busy" },
+    });
+    await expect(forgetClient({ rpc } as never, "c-1")).rejects.toMatchObject({
+      code: "client_busy",
+    });
+    expect(rpc).toHaveBeenCalledWith("forget_client", { p_client: "c-1" });
+  });
+});
+
+describe("retentionPreview", () => {
+  it("what the next night removes", async () => {
+    const rpc = vi
+      .fn()
+      .mockResolvedValue({ data: [{ clients: 2, intakes: 5 }], error: null });
+    await expect(retentionPreview({ rpc } as never)).resolves.toEqual({
+      clients: 2,
+      intakes: 5,
+    });
   });
 });

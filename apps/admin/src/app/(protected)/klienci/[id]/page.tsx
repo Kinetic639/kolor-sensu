@@ -1,4 +1,5 @@
 import { updateClientAction } from "@/features/clients/actions";
+import { ForgetClientButton } from "@/features/clients/forget-client";
 import { loadClientCard } from "@/features/clients/loaders";
 import { CentreVisitToolbar } from "@/features/visits/cancel-visit";
 import { specialistAvatars } from "@/lib/reference-data";
@@ -52,16 +53,25 @@ export default async function ClientPage({
       <ClientCard
         cancelled={card.client.cancelled}
         edit={
-          <EditClientButton
-            action={updateClientAction}
-            clientId={card.client.id}
-            details={{
-              name: card.client.name,
-              email: card.client.email,
-              phone: card.client.phone,
-              notes: card.client.notes,
-            }}
-          />
+          // Removed (RODO): nothing left to change.
+          card.client.email.endsWith("@anonim.invalid") ? null : (
+            <div className="flex flex-wrap gap-2">
+              <EditClientButton
+                action={updateClientAction}
+                clientId={card.client.id}
+                details={{
+                  name: card.client.name,
+                  email: card.client.email,
+                  phone: card.client.phone,
+                  notes: card.client.notes,
+                }}
+              />
+              <ForgetClientButton
+                clientId={card.client.id}
+                name={card.client.name}
+              />
+            </div>
+          )
         }
         notes={card.client.notes}
         row={card.row}

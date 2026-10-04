@@ -19,6 +19,9 @@ import {
   bookingSettingsFormSchema,
   centerProfileFormSchema,
   locationFormSchema,
+  retentionFormSchema,
+  toRetentionUpdate,
+  type RetentionFormValues,
   toBookingSettingsUpdate,
   toCenterProfileUpdate,
   toLocationInput,
@@ -139,6 +142,29 @@ export async function updateBookingSettingsAction(
     return {
       ok: false,
       message: safeMessage(error, "Nie udało się zapisać ustawień rezerwacji."),
+    };
+  }
+}
+
+/** How long clients' details and the questionnaire's answers are kept. */
+export async function updateRetentionAction(
+  values: RetentionFormValues,
+): Promise<ActionResult> {
+  await requirePortalRole();
+  const parsed = retentionFormSchema.safeParse(values);
+  if (!parsed.success) return { ok: false, message: "Wybierz okresy." };
+  try {
+    await updateCenterSettings(
+      await createClient(),
+      toRetentionUpdate(parsed.data),
+    );
+    revalidatePath("/ustawienia");
+    updateTag(CACHE_TAGS.centre);
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      message: safeMessage(error, "Nie udało się zapisać okresów."),
     };
   }
 }
