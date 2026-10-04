@@ -1587,6 +1587,23 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      grant_admin: { Args: { p_user: string }; Returns: undefined };
+      list_portal_users: {
+        Args: never;
+        Returns: {
+          email: string;
+          first_name: string;
+          invited_at: string | null;
+          is_admin: boolean;
+          is_specialist: boolean;
+          joined: boolean;
+          last_name: string;
+          signed_in_at: string | null;
+          user_id: string;
+        }[];
+      };
+      portal_user_id_by_email: { Args: { p_email: string }; Returns: string };
+      revoke_admin: { Args: { p_user: string }; Returns: undefined };
       visits_on_days: {
         Args: { p_from: string; p_to: string };
         Returns: number;

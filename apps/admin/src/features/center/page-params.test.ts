@@ -27,6 +27,7 @@ describe("Ustawienia in the address", () => {
       ["Lokalizacje", "/ustawienia?zakladka=lokalizacje", 2],
       ["Rezerwacje online", "/ustawienia?zakladka=rezerwacje", undefined],
       ["Dni zamknięcia", "/ustawienia?zakladka=zamkniecia", undefined],
+      ["Dostęp", "/ustawienia?zakladka=dostep", undefined],
     ]);
   });
 });

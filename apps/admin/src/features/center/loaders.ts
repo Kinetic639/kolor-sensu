@@ -1,6 +1,8 @@
 import "server-only";
 
 import { localDate } from "@/features/dashboard/loaders";
+import { getCurrentPortalAuthorization } from "@/lib/auth";
+import { listPortalUsers } from "@repo/supabase/access";
 import { createClient } from "@/lib/supabase/server";
 import { missingHolidays } from "@repo/contracts/closures";
 import { listClosures, visitsOnDays } from "@repo/supabase/closures";
@@ -63,5 +65,17 @@ export async function loadClosures() {
       year: one,
       missing: missingHolidays(one, closures, today).length,
     })),
+  };
+}
+
+/** Dostęp: every portal user and who is asking (their own row). */
+export async function loadAccess() {
+  const [client, authorization] = await Promise.all([
+    createClient(),
+    getCurrentPortalAuthorization(),
+  ]);
+  return {
+    users: await listPortalUsers(client),
+    me: authorization.user?.id ?? null,
   };
 }

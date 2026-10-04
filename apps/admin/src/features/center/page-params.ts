@@ -12,6 +12,7 @@ export const SETTINGS_TABS = [
   "lokalizacje",
   "rezerwacje",
   "zamkniecia",
+  "dostep",
 ] as const;
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
@@ -21,6 +22,7 @@ const LABELS: Record<SettingsTab, string> = {
   lokalizacje: "Lokalizacje",
   rezerwacje: "Rezerwacje online",
   zamkniecia: "Dni zamknięcia",
+  dostep: "Dostęp",
 };
 
 const settingsParsers = {
