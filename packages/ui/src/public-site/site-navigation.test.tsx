@@ -71,3 +71,45 @@ describe("SiteMobileNav: the offer on a phone", () => {
     ).toHaveAttribute("href", "/oferta/konsultacje");
   });
 });
+
+describe("SiteNavigation: about us", () => {
+  it("opens on the team, the rooms and the contact, its own page last", async () => {
+    const user = userEvent.setup();
+    render(<SiteNavigation currentPath="/gabinety" items={sampleNavigation} />);
+    const about = screen.getByRole("button", { name: "O nas" });
+    // Current on any of its pages.
+    expect(about).toHaveAttribute("data-active", "true");
+    await user.click(about);
+    for (const [name, href] of [
+      ["Specjaliści", "/specjalisci"],
+      ["Gabinety", "/gabinety"],
+      ["Kontakt", "/kontakt"],
+      ["Więcej o nas", "/o-nas"],
+    ]) {
+      expect(screen.getByRole("link", { name })).toHaveAttribute("href", href);
+    }
+  });
+});
+
+describe("SiteNavigation: the offer's own pages", () => {
+  it("the price list under the services, above the whole offer", async () => {
+    const user = userEvent.setup();
+    render(<SiteNavigation currentPath="/cennik" items={sampleNavigation} />);
+    const offer = screen.getByRole("button", { name: "Oferta" });
+    expect(offer).toHaveAttribute("data-active", "true");
+    await user.click(offer);
+    const pricing = screen.getByRole("link", { name: "Cennik" });
+    const all = screen.getByRole("link", { name: /Cała oferta/ });
+    const last = screen.getByRole("link", {
+      name: "Konsultacje psychologiczne",
+    });
+    expect(pricing).toHaveAttribute("href", "/cennik");
+    // After the services, before the whole offer.
+    expect(
+      last.compareDocumentPosition(pricing) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      pricing.compareDocumentPosition(all) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+});

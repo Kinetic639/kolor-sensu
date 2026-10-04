@@ -33,3 +33,61 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+/* Moving between pages (components/page-transition.tsx): the header and
+   the footer stay still (the page's root snapshot does not fade); the old
+   page leaves quickly, the new one rises gently into place. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+/* The header is a layer of its own, above the moving page (which would
+   otherwise pass over it), and stays as it is. */
+.ks-site-header {
+  view-transition-name: ks-site-header;
+}
+
+::view-transition-group(ks-site-header) {
+  z-index: 1;
+  animation: none;
+}
+
+::view-transition-old(ks-site-header) {
+  display: none;
+}
+
+::view-transition-new(ks-site-header) {
+  animation: none;
+}
+
+::view-transition-old(.ks-page-exit) {
+  animation: 160ms cubic-bezier(0.4, 0, 1, 1) both ks-page-out;
+}
+
+::view-transition-new(.ks-page-enter) {
+  animation: 340ms cubic-bezier(0.2, 0.8, 0.2, 1) 90ms both ks-page-in;
+}
+
+@keyframes ks-page-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes ks-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

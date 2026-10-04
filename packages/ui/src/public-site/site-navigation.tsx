@@ -132,19 +132,42 @@ function DropdownList({
             </li>
           ))}
         </ul>
-        <NavigationMenuLink asChild>
-          <Link
-            href={item.href}
-            className="text-small text-ink hover:bg-cream group/all mt-1 flex-row items-center gap-1.5 rounded-full px-3 py-2 font-semibold"
-          >
-            {`Cała ${item.label.toLowerCase()}`}
-            <ArrowRight
-              aria-hidden="true"
-              className="ease-soft size-3.5 transition-transform group-hover/all:translate-x-0.5"
-              strokeWidth={1.75}
-            />
-          </Link>
-        </NavigationMenuLink>
+        {item.links?.length ? (
+          <ul className="grid gap-0.5">
+            {item.links.map((link) => (
+              <li key={link.href}>
+                <NavigationMenuLink
+                  active={isCurrent(link.href, currentPath)}
+                  asChild
+                >
+                  <Link
+                    className={rowStyle}
+                    href={link.href}
+                    onPointerEnter={() => setOpen(null)}
+                  >
+                    {link.label}
+                  </Link>
+                </NavigationMenuLink>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {/* The item's own page, set apart from its list. */}
+        <div className="border-border/70 mt-1 border-t pt-1">
+          <NavigationMenuLink asChild>
+            <Link
+              href={item.href}
+              className="text-small text-ink hover:bg-cream group/all flex-row items-center gap-1.5 rounded-full px-3 py-2 font-semibold"
+            >
+              {item.allLabel ?? `Cała ${item.label.toLowerCase()}`}
+              <ArrowRight
+                aria-hidden="true"
+                className="ease-soft size-3.5 transition-transform group-hover/all:translate-x-0.5"
+                strokeWidth={1.75}
+              />
+            </Link>
+          </NavigationMenuLink>
+        </div>
       </div>
       <div
         aria-label={group?.label}
@@ -200,7 +223,19 @@ export function SiteNavigation({
     >
       <NavigationMenuList className="gap-0.5">
         {items.map((item) => {
-          const active = isCurrent(item.href, currentPath);
+          // A dropdown is current on its own page and on any of its pages.
+          const active =
+            isCurrent(item.href, currentPath) ||
+            (item.links ?? []).some((link) =>
+              isCurrent(link.href, currentPath),
+            ) ||
+            (item.children ?? []).some(
+              (child) =>
+                isCurrent(child.href, currentPath) ||
+                (child.children ?? []).some((link) =>
+                  isCurrent(link.href, currentPath),
+                ),
+            );
           return item.children?.length ? (
             <NavigationMenuItem key={item.href}>
               <NavigationMenuTrigger

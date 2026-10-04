@@ -20,6 +20,12 @@ export interface SiteNavChild extends SiteLink {
 export interface SiteNavItem extends SiteLink {
   /** A second level, shown as a dropdown on desktop and indented on phones. */
   children?: SiteNavChild[];
+  /** Pages beside the list (`Cennik`), under it, above the item's own page. */
+  links?: SiteLink[];
+  /** The dropdown's last link, to the item's own page (default: `Cała …`). */
+  allLabel?: string;
+  /** In the footer, a column of its own (the offer's pages). */
+  footerColumn?: boolean;
 }
 
 export interface SiteContact {

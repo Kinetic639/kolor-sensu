@@ -10,11 +10,21 @@ import type {
 // footer). Not product data: the app loads the real values.
 
 export const sampleNavigation = [
-  { label: "O nas", href: "/o-nas" },
-  { label: "Specjaliści", href: "/specjalisci" },
+  {
+    label: "O nas",
+    href: "/o-nas",
+    allLabel: "Więcej o nas",
+    children: [
+      { label: "Specjaliści", href: "/specjalisci" },
+      { label: "Gabinety", href: "/gabinety" },
+      { label: "Kontakt", href: "/kontakt" },
+    ],
+  },
   {
     label: "Oferta",
     href: "/oferta",
+    footerColumn: true,
+    links: [{ label: "Cennik", href: "/cennik" }],
     children: [
       {
         label: "Psychoterapia",
@@ -42,10 +52,8 @@ export const sampleNavigation = [
       },
     ],
   },
-  { label: "Gabinety", href: "/gabinety" },
   { label: "Warsztaty", href: "/warsztaty" },
-  { label: "Cennik", href: "/cennik" },
-  { label: "Kontakt", href: "/kontakt" },
+  { label: "Edukacja", href: "/edukacja" },
 ] as const satisfies readonly SiteNavItem[];
 
 export const sampleCta = {

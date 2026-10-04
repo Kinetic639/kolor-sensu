@@ -47,8 +47,16 @@ export function SiteFooter({
   year = new Date().getFullYear(),
   className,
 }: SiteFooterProps) {
-  const offer = navigation.find((item) => item.children?.length);
-  const pages = navigation.filter((item) => item !== offer);
+  const offer = navigation.find((item) => item.footerColumn);
+  // Every other page, a dropdown's own and its pages each on a line.
+  const pages = navigation
+    .filter((item) => item !== offer)
+    .flatMap((item) => [
+      { label: item.label, href: item.href },
+      ...(item.children ?? []).map(({ label, href }) => ({ label, href })),
+    ])
+    // The offer's own pages beside its list (`Cennik`) are pages too.
+    .concat(offer?.links ?? []);
 
   return (
     <footer className={cn("border-border/70 bg-bg border-t", className)}>

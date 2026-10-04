@@ -1,0 +1,39 @@
+import { SoftCard } from "@repo/ui/public-site";
+import type { Metadata } from "next";
+import { ClosingCta } from "@/components/closing-cta";
+import { PageIntro } from "@/components/page-intro";
+import { educationPage } from "@/content/site";
+
+// Edukacja: the place for what the centre teaches (articles first, other
+// kinds later, each under its own path, e.g. /edukacja/artykuly/[slug]).
+// For now its introduction and a word that the content is coming.
+
+export const metadata: Metadata = {
+  title: "Edukacja",
+  description: educationPage.description,
+  alternates: { canonical: "/edukacja" },
+};
+
+export default function EducationPage() {
+  return (
+    <>
+      <PageIntro
+        eyebrow={educationPage.eyebrow}
+        heading={educationPage.heading}
+        accent={educationPage.accent}
+        lead={educationPage.lead}
+      />
+      <section className="max-w-page px-gutter pb-section-sm mx-auto">
+        <SoftCard tone="cream" className="grid gap-3 p-6 lg:p-8">
+          <h2 className="font-display text-h3 text-ink">
+            {educationPage.soonHeading}
+          </h2>
+          <p className="text-body text-text-muted max-w-copy">
+            {educationPage.soon}
+          </p>
+        </SoftCard>
+      </section>
+      <ClosingCta />
+    </>
+  );
+}

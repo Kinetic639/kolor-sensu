@@ -41,17 +41,28 @@ const serviceLink = (service: PublicService) => ({
 });
 
 /**
- * The header's menu. "Oferta": the services outside a catalogue one under
+ * The header's menu. "O nas": the team, the rooms and the contact, its own
+ * page at the end. "Oferta": the services outside a catalogue one under
  * another, and each catalogue opening its own (its link: its place on the
  * offer page).
  */
 function navigation(offer: PublicOfferEntry[]): SiteNavItem[] {
   return [
-    { label: "O nas", href: "/o-nas" },
-    { label: "Specjaliści", href: "/specjalisci" },
+    {
+      label: "O nas",
+      href: "/o-nas",
+      allLabel: "Więcej o nas",
+      children: [
+        { label: "Specjaliści", href: "/specjalisci" },
+        { label: "Gabinety", href: "/gabinety" },
+        { label: "Kontakt", href: "/kontakt" },
+      ],
+    },
     {
       label: "Oferta",
       href: "/oferta",
+      footerColumn: true,
+      links: [{ label: "Cennik", href: "/cennik" }],
       ...(offer.length > 0 && {
         children: offer.map((entry) =>
           entry.kind === "service"
@@ -64,10 +75,8 @@ function navigation(offer: PublicOfferEntry[]): SiteNavItem[] {
         ),
       }),
     },
-    { label: "Gabinety", href: "/gabinety" },
     { label: "Warsztaty", href: "/warsztaty" },
-    { label: "Cennik", href: "/cennik" },
-    { label: "Kontakt", href: "/kontakt" },
+    { label: "Edukacja", href: "/edukacja" },
   ];
 }
 

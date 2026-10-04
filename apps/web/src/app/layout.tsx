@@ -7,6 +7,7 @@ import {
   siteTagline,
   siteUrl,
 } from "@/content/site";
+import { PageTransition } from "@/components/page-transition";
 import { getSiteFrame } from "@/lib/site-frame";
 import "./globals.css";
 
@@ -58,6 +59,9 @@ export default async function RootLayout({
 
   return (
     <html
+      // Smooth within a page (anchors), not when Next scrolls a new page
+      // to its top: that jump stays under the page's transition.
+      data-scroll-behavior="smooth"
       lang="pl"
       className={`${lora.variable} ${figtree.variable} ${dancingScript.variable}`}
     >
@@ -72,7 +76,7 @@ export default async function RootLayout({
           siteUrl={siteUrl}
           year={new Date().getFullYear()}
         >
-          {children}
+          <PageTransition>{children}</PageTransition>
         </SiteLayout>
         <CookieConsent />
       </body>

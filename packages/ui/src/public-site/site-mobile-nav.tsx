@@ -140,6 +140,24 @@ export function SiteMobileNav({
                           )}
                         </li>
                       ))}
+                      {/* Its pages beside the list (`Cennik`), last. */}
+                      {(item.links ?? []).map((link) => (
+                        <li key={link.href}>
+                          <SheetClose asChild>
+                            <Link
+                              aria-current={
+                                isCurrent(link.href, currentPath)
+                                  ? "page"
+                                  : undefined
+                              }
+                              className="text-small text-text-muted hover:text-ink aria-[current=page]:text-primary-strong block py-1.5"
+                              href={link.href}
+                            >
+                              {link.label}
+                            </Link>
+                          </SheetClose>
+                        </li>
+                      ))}
                     </ul>
                   ) : null}
                 </li>

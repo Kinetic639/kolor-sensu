@@ -92,7 +92,7 @@ describe("SiteLayout", () => {
   });
 
   it("links every page from the main navigation and marks the current one", () => {
-    render(page({ currentPath: "/gabinety" }));
+    render(page({ currentPath: "/warsztaty" }));
     const nav = within(screen.getByRole("banner")).getByRole("navigation", {
       name: "Główna",
     });
@@ -101,12 +101,15 @@ describe("SiteLayout", () => {
         within(nav).getByRole("link", { name: item.label }),
       ).toHaveAttribute("href", item.href);
     }
-    const current = within(nav).getByRole("link", { name: "Gabinety" });
+    const current = within(nav).getByRole("link", { name: "Warsztaty" });
     expect(current).toHaveAttribute("aria-current", "page");
     // ...and shows it: Radix marks the link with aria-current, not with
     // data-active="true".
     expect(current).toHaveClass("aria-[current=page]:text-primary-strong");
-    // "Oferta" opens its services.
+    // "O nas" opens the team, the rooms and the contact; "Oferta" its services.
+    expect(
+      within(nav).getByRole("button", { name: "O nas" }),
+    ).toBeInTheDocument();
     expect(
       within(nav).getByRole("button", { name: "Oferta" }),
     ).toBeInTheDocument();

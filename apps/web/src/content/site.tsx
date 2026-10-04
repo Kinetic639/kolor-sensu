@@ -172,6 +172,17 @@ export const workshopsPage = {
     "Obecnie nie mamy zaplanowanych wydarzeń. Zostaw nam wiadomość, a damy znać, gdy pojawią się nowe terminy.",
 };
 
+export const educationPage = {
+  eyebrow: "Edukacja",
+  heading: "Edukacja",
+  accent: "Wiedza, która pomaga zrozumieć.",
+  lead: "Tu będziemy dzielić się wiedzą o zdrowiu psychicznym, emocjach i relacjach: przystępnie, rzetelnie i bez oceniania.",
+  description:
+    "Wiedza o zdrowiu psychicznym, emocjach i relacjach od specjalistów Kolor Sensu.",
+  soonHeading: "Pierwsze materiały już wkrótce",
+  soon: "Przygotowujemy artykuły i materiały edukacyjne. Jeśli masz pytanie, z którym chcesz przyjść już teraz, zadzwoń lub napisz do nas.",
+};
+
 export const bookingPage = {
   heading: "Umów wizytę",
   accent: "Pierwszy krok jest najważniejszy.",
