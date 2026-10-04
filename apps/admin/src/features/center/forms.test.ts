@@ -147,6 +147,7 @@ describe("booking settings", () => {
     taxId: null,
     regon: null,
     registeredAddress: null,
+    visitReminderHours: 24,
     createdAt: "2026-09-19T00:00:00Z",
     updatedAt: "2026-09-19T00:00:00Z",
   };
@@ -165,6 +166,7 @@ describe("booking settings", () => {
       maxSelfReschedules: 1,
       paymentDueHours: 48,
       centrePaymentLinkHours: 2,
+      visitReminder: "24",
     });
     expect(toBookingSettingsUpdate(values)).toEqual({
       bookingEnabled: true,
@@ -178,7 +180,21 @@ describe("booking settings", () => {
       maxSelfReschedules: 1,
       paymentDueHours: 48,
       centrePaymentLinkHours: 2,
+      visitReminderHours: 24,
     });
+  });
+
+  it("the visit's reminder: one of the set times, or none", () => {
+    const values = toBookingSettingsFormValues({
+      ...settings,
+      visitReminderHours: null,
+    });
+    expect(values.visitReminder).toBe("off");
+    expect(toBookingSettingsUpdate(values).visitReminderHours).toBeNull();
+    expect(
+      bookingSettingsFormSchema.safeParse({ ...values, visitReminder: "36" })
+        .error?.issues[0]?.message,
+    ).toBe("Wybierz, kiedy wysłać przypomnienie.");
   });
 
   it("keeps each setting within what the booking can work with", () => {

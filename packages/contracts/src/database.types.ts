@@ -335,6 +335,7 @@ export type Database = {
           slot_step_minutes: number;
           timezone: string;
           updated_at: string;
+          visit_reminder_hours: number | null;
         };
         Insert: {
           booking_enabled?: boolean;
@@ -361,6 +362,7 @@ export type Database = {
           slot_step_minutes?: number;
           timezone?: string;
           updated_at?: string;
+          visit_reminder_hours?: number | null;
         };
         Update: {
           booking_enabled?: boolean;
@@ -387,6 +389,7 @@ export type Database = {
           slot_step_minutes?: number;
           timezone?: string;
           updated_at?: string;
+          visit_reminder_hours?: number | null;
         };
         Relationships: [];
       };

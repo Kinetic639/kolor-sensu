@@ -113,6 +113,7 @@ describe("center domain mapping", () => {
         tax_id: "1234563218",
         regon: null,
         registered_address: null,
+        visit_reminder_hours: 24,
         created_at: "2026-09-19T00:00:00Z",
         updated_at: "2026-09-19T00:00:00Z",
       }),

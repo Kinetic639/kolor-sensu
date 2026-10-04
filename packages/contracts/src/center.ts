@@ -59,6 +59,7 @@ export const centerSettingsUpdateSchema = z
       .regex(/^(\d{9}|\d{14})$/)
       .nullable(),
     registeredAddress: z.string().trim().min(1).max(300).nullable(),
+    visitReminderHours: z.number().int().min(1).max(168).nullable(),
   })
   .partial();
 
@@ -132,6 +133,8 @@ export interface CenterSettings {
   taxId: string | null;
   regon: string | null;
   registeredAddress: string | null;
+  /** The visit's reminder goes out so long before it (none: off). */
+  visitReminderHours: number | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -135,6 +135,9 @@ const whole = (min: number, max: number, message: string) =>
 
 export const SLOT_STEPS = ["15", "20", "30", "60"] as const;
 
+/** When the visit's reminder goes out: hours before it, or not at all. */
+export const VISIT_REMINDERS = ["off", "2", "12", "24", "48", "72"] as const;
+
 export const bookingSettingsFormSchema = z.object({
   bookingEnabled: z.boolean(),
   slotStepMinutes: z.enum(SLOT_STEPS, { error: "Wybierz siatkę godzin." }),
@@ -147,6 +150,9 @@ export const bookingSettingsFormSchema = z.object({
   maxSelfReschedules: whole(0, 5, "Podaj od 0 do 5."),
   paymentDueHours: whole(1, 720, "Podaj od 1 do 720 godzin."),
   centrePaymentLinkHours: whole(1, 72, "Podaj od 1 do 72 godzin."),
+  visitReminder: z.enum(VISIT_REMINDERS, {
+    error: "Wybierz, kiedy wysłać przypomnienie.",
+  }),
 });
 
 export type BookingSettingsFormValues = z.infer<
@@ -171,6 +177,14 @@ export function toBookingSettingsFormValues(
     maxSelfReschedules: settings.maxSelfReschedules,
     paymentDueHours: settings.paymentDueHours,
     centrePaymentLinkHours: settings.centrePaymentLinkHours,
+    visitReminder:
+      settings.visitReminderHours === null
+        ? "off"
+        : (((VISIT_REMINDERS as readonly string[]).includes(
+            String(settings.visitReminderHours),
+          )
+            ? String(settings.visitReminderHours)
+            : "24") as BookingSettingsFormValues["visitReminder"]),
   };
 }
 
@@ -189,5 +203,7 @@ export function toBookingSettingsUpdate(
     maxSelfReschedules: values.maxSelfReschedules,
     paymentDueHours: values.paymentDueHours,
     centrePaymentLinkHours: values.centrePaymentLinkHours,
+    visitReminderHours:
+      values.visitReminder === "off" ? null : Number(values.visitReminder),
   };
 }

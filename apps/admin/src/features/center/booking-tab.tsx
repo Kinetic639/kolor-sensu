@@ -19,6 +19,7 @@ import {
   bookingSettingsFormSchema,
   SLOT_STEPS,
   toBookingSettingsFormValues,
+  VISIT_REMINDERS,
   type BookingSettingsFormValues,
 } from "./forms";
 
@@ -26,6 +27,9 @@ import {
 // they may change themselves, in one form (its sections side by side on
 // a wide screen, the save at the bottom). A change applies at once to new
 // bookings; booked visits keep theirs.
+
+const reminderLabel = (value: string) =>
+  value === "off" ? "Nie wysyłaj" : `${value} godz. przed wizytą`;
 
 export function BookingTab({ settings }: { settings: CenterSettings }) {
   const { isPending, run } = useSave();
@@ -178,6 +182,46 @@ export function BookingTab({ settings }: { settings: CenterSettings }) {
                 "Ważność linku do płatności (godz.)",
                 "Dla wizyt zapisanych przez centrum bliżej niż powyżej.",
               )}
+            </div>
+          </DetailSection>
+          <DetailSection note="opłaconej wizyty" title="Przypomnienie e-mail">
+            <div className="grid gap-3.5 px-3.5 py-3 sm:grid-cols-2">
+              <div className="grid content-start gap-1.5">
+                <Label htmlFor="booking-reminder">Wysyłka</Label>
+                <Controller
+                  control={control}
+                  name="visitReminder"
+                  render={({ field: reminder }) => (
+                    <Select
+                      onValueChange={reminder.onChange}
+                      value={reminder.value}
+                    >
+                      <SelectTrigger
+                        aria-describedby="booking-reminder-note"
+                        id="booking-reminder"
+                      >
+                        <SelectValue>
+                          {reminderLabel(reminder.value)}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {VISIT_REMINDERS.map((one) => (
+                          <SelectItem key={one} value={one}>
+                            {reminderLabel(one)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <p
+                  className="text-[0.75rem] text-[var(--text-muted)]"
+                  id="booking-reminder-note"
+                >
+                  Do wizyt zarezerwowanych wcześniej niż ten czas. Przypomnienia
+                  o płatności idą zawsze.
+                </p>
+              </div>
             </div>
           </DetailSection>
         </div>
