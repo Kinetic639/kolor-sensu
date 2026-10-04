@@ -1,3 +1,4 @@
+import { notificationView } from "@repo/scheduling";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -207,5 +208,63 @@ describe("the notifications panel", () => {
     expect(
       screen.queryByRole("dialog", { name: "Powiadomienia" }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("a profile sent for review", () => {
+  it("whose, leading to their profile; opened, no booking to load", async () => {
+    const [profile] = [
+      notificationView(
+        {
+          id: 50,
+          kind: "profile_submitted",
+          actor: "specialist",
+          appointmentId: null,
+          createdAt: "2026-10-03T10:20:00Z",
+          readAt: null,
+          details: {
+            reference: null,
+            startsAt: null,
+            mode: null,
+            clientName: null,
+            serviceName: null,
+            specialistName: "Anna Kłobuchowska",
+            specialistId: "anna",
+            fromStartsAt: null,
+            reason: null,
+            refundMinor: null,
+            refundDueMinor: null,
+            priceMinor: null,
+            currencyCode: null,
+          },
+        },
+        {
+          timeZone: "Europe/Warsaw",
+          portal: "admin",
+          now: new Date("2026-10-03T10:30:00Z"),
+        },
+      ),
+    ];
+    render(
+      <NotificationsProvider defaultOpen>
+        <NotificationsPanel
+          items={[profile!]}
+          loadVisit={loadVisit}
+          markAllRead={markAllRead}
+          markRead={markRead}
+          markUnread={markUnread}
+        />
+      </NotificationsProvider>,
+    );
+    const row = within(panel()).getByRole("article");
+    expect(row).toHaveTextContent("Profil do weryfikacji");
+    expect(row).toHaveTextContent("Anna Kłobuchowska");
+    expect(
+      within(row).getByRole("link", { name: "Profil: Anna Kłobuchowska" }),
+    ).toHaveAttribute("href", "/specjalisci/anna?zakladka=profil");
+    await userEvent.click(
+      within(row).getByRole("button", { name: /Profil do weryfikacji/ }),
+    );
+    expect(loadVisit).not.toHaveBeenCalled();
   });
 });

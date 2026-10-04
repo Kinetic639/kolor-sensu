@@ -43,6 +43,7 @@ describe("toPortalNotification", () => {
         clientName: "Jan Kowalski",
         serviceName: "Konsultacja",
         specialistName: "Michał Stępień",
+        specialistId: null,
         fromStartsAt: null,
         reason: null,
         refundMinor: null,
@@ -50,6 +51,22 @@ describe("toPortalNotification", () => {
         priceMinor: 20000,
         currencyCode: "PLN",
       },
+    });
+  });
+
+  it("a profile sent for review: whose, with no booking", () => {
+    const n = toPortalNotification({
+      ...row,
+      kind: "profile_submitted",
+      actor: "specialist",
+      appointment_id: null,
+      details: { specialist_id: "anna", specialist_name: "Anna Kłobuchowska" },
+    });
+    expect(n).toMatchObject({
+      kind: "profile_submitted",
+      actor: "specialist",
+      appointmentId: null,
+      details: { specialistId: "anna", specialistName: "Anna Kłobuchowska" },
     });
   });
 

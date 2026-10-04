@@ -13,7 +13,7 @@ import { bookingHref, type VisitTone } from "./visits";
 export interface NotificationLike {
   id: number;
   kind: string;
-  actor: "client" | "centre" | "payment" | "system";
+  actor: "client" | "centre" | "payment" | "system" | "specialist";
   appointmentId: string | null;
   createdAt: string;
   readAt: string | null;
@@ -24,6 +24,8 @@ export interface NotificationLike {
     clientName: string | null;
     serviceName: string | null;
     specialistName: string | null;
+    /** Whose profile (a profile sent for review). */
+    specialistId?: string | null;
     fromStartsAt: string | null;
     reason: string | null;
     refundMinor: number | null;
@@ -34,7 +36,7 @@ export interface NotificationLike {
 }
 
 export type NotificationIcon =
-  "new" | "reserved" | "paid" | "cancelled" | "moved" | "refund";
+  "new" | "reserved" | "paid" | "cancelled" | "moved" | "refund" | "profile";
 
 /** A fact shown as a small icon; `label` is what its tooltip says. */
 export interface NotificationBadge {
@@ -75,8 +77,11 @@ export interface NotificationView {
   icon: NotificationIcon;
   /** The booking, to load as it is now when opened. */
   visitId: string | null;
-  /** The booking in the bookings table: found by its number, opened. */
+  /** The booking in the bookings table: found by its number, opened; or
+   * the profile on the specialist's page. */
   href: string | null;
+  /** What the link says: the booking's number, `Profil`. */
+  linkText: string | null;
   /** `Dziś`, `Wczoraj`, `Poniedziałek 28.09`: the group it is in. */
   day: string;
   /** `10:05`, when it came. */
@@ -112,6 +117,50 @@ export function notificationView(
       currency: d.currencyCode ?? "PLN",
       maximumFractionDigits: minor % 100 === 0 ? 0 : 2,
     }).format(minor / 100);
+
+  const dayOfCreated = (instant: Date | string) =>
+    formatInTimeZone(new Date(instant), timeZone, "yyyy-MM-dd");
+  const longWeekday = new Intl.DateTimeFormat("pl-PL", {
+    weekday: "long",
+    timeZone,
+  }).format(new Date(notification.createdAt));
+  const createdOn = dayOfCreated(notification.createdAt);
+  const day =
+    createdOn === dayOfCreated(now)
+      ? "Dziś"
+      : createdOn ===
+          dayOfCreated(new Date(now.getTime() - 24 * 60 * 60 * 1000))
+        ? "Wczoraj"
+        : `${longWeekday[0]!.toUpperCase()}${longWeekday.slice(1)} ${local(notification.createdAt, "dd.MM")}`;
+
+  // A profile sent for review: whose, leading to it on their page.
+  if (kind === "profile_submitted") {
+    const name = d.specialistName ?? "Specjalista";
+    return {
+      id: notification.id,
+      title: "Profil do weryfikacji",
+      reference: null,
+      summary: name,
+      badges: [],
+      details: [
+        { label: "Specjalista", value: name },
+        {
+          label: "Wysłany",
+          value: visitTime(notification.createdAt, "dd.MM.yyyy, HH:mm"),
+        },
+      ],
+      tone: "info",
+      icon: "profile",
+      visitId: null,
+      href: d.specialistId
+        ? `/specjalisci/${d.specialistId}?zakladka=profil`
+        : null,
+      linkText: d.specialistId ? "Profil" : null,
+      day,
+      time: local(notification.createdAt, "HH:mm"),
+      unread: notification.readAt === null,
+    };
+  }
 
   let title: string;
   let tone: VisitTone;
@@ -245,20 +294,6 @@ export function notificationView(
     details.push({ label: "Powód", value: d.reason });
   }
 
-  const dayOf = (instant: Date | string) =>
-    formatInTimeZone(new Date(instant), timeZone, "yyyy-MM-dd");
-  const created = dayOf(notification.createdAt);
-  const longWeekday = new Intl.DateTimeFormat("pl-PL", {
-    weekday: "long",
-    timeZone,
-  }).format(new Date(notification.createdAt));
-  const day =
-    created === dayOf(now)
-      ? "Dziś"
-      : created === dayOf(new Date(now.getTime() - 24 * 60 * 60 * 1000))
-        ? "Wczoraj"
-        : `${longWeekday[0]!.toUpperCase()}${longWeekday.slice(1)} ${local(notification.createdAt, "dd.MM")}`;
-
   return {
     id: notification.id,
     title,
@@ -277,6 +312,7 @@ export function notificationView(
     href: notification.appointmentId
       ? bookingHref({ id: notification.appointmentId, reference: d.reference })
       : null,
+    linkText: d.reference,
     day,
     time: local(notification.createdAt, "HH:mm"),
     unread: notification.readAt === null,

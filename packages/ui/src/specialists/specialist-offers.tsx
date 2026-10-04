@@ -127,11 +127,7 @@ export function SpecialistOfferTable({
                 <OfferForms offer={offer} />
               </td>
               <td className={TD}>
-                <State
-                  action={action}
-                  label="Oferta aktywna"
-                  offer={offer}
-                />
+                <State action={action} label="Oferta aktywna" offer={offer} />
               </td>
             </tr>
           ))}

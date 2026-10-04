@@ -156,6 +156,7 @@ function Dashboard({
                       detail:
                         "Ewa Nowak · 2610-014 · pt. 02.10, 10:00 · od 02.10",
                       tone: "danger",
+                      icon: "refund",
                       href: "/rezerwacje?zakres=wszystkie&q=2610-014&wizyta=refund",
                       target: "Rezerwacja",
                     },
@@ -164,6 +165,7 @@ function Dashboard({
                       title: "Płatność do 13:00",
                       detail: "2610-031 · Tomasz Dąbrowski · 09.10, 14:00",
                       tone: "warning",
+                      icon: "reserved",
                       href: "/rezerwacje?zakres=wszystkie&q=2610-031&wizyta=pay",
                       target: "Rezerwacja",
                     },
@@ -172,8 +174,15 @@ function Dashboard({
                       title: "Profil do weryfikacji",
                       detail: "Anna Kłobuchowska · wysłany 08.10",
                       tone: "info",
-                      href: "/specjalisci/anna",
-                      target: "Specjalista",
+                      person: {
+                        id: "anna",
+                        name: "Anna Kłobuchowska",
+                        initials: "AK",
+                        avatarUrl: null,
+                        color: "#c26a12",
+                      },
+                      href: "/specjalisci/anna?zakladka=profil",
+                      target: "Profil",
                     },
                   ]
             }

@@ -209,15 +209,19 @@ export function NotificationRow({
             <MailOpen aria-hidden="true" className="size-[15px]" />
           )}
         </button>
-        {/* The number leads to the booking. */}
-        {item.href && item.reference ? (
+        {/* The number leads to the booking (a profile: to the profile). */}
+        {item.href && item.linkText ? (
           <Link
-            aria-label={`Rezerwacja ${item.reference}`}
+            aria-label={
+              item.reference
+                ? `Rezerwacja ${item.reference}`
+                : `${item.linkText}: ${item.summary}`
+            }
             className="col-start-2 row-start-2 justify-self-end rounded-[3px] font-mono text-[0.6875rem] text-[var(--text-muted)] tabular-nums underline-offset-2 hover:text-[var(--primary)] hover:underline focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
             href={item.href as Route}
             onClick={onOpenBooking}
           >
-            {item.reference}
+            {item.linkText}
           </Link>
         ) : (
           <span className="col-start-2 row-start-2 text-right font-mono text-[0.6875rem] text-[var(--text-subtle)] tabular-nums">

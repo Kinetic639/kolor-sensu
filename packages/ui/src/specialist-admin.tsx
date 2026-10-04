@@ -3,7 +3,6 @@
 import { Check, MapPin, Monitor, Pencil } from "lucide-react";
 import { Badge } from "./badge";
 import { Button } from "./button";
-import { Card } from "./card";
 import { cn } from "./lib/utils";
 import { StatusBadge } from "./portal-content";
 import { Switch } from "./switch";
@@ -61,7 +60,7 @@ function DiffValue({
       // eslint-disable-next-line @next/next/no-img-element -- short-lived signed URLs
       <img
         alt={`${field.label} – ${side === "current" ? "obecnie" : "propozycja"}`}
-        className="mt-2 h-40 w-auto rounded-[var(--radius-control)] object-cover"
+        className="h-24 w-auto rounded-[6px] object-cover"
         src={imageUrl}
       />
     );
@@ -69,7 +68,7 @@ function DiffValue({
   return (
     <p
       className={cn(
-        "mt-2 text-sm",
+        "text-[0.8125rem] leading-relaxed",
         side === "current"
           ? "text-[var(--text-muted)]"
           : "font-medium text-[var(--text)]",
@@ -81,6 +80,14 @@ function DiffValue({
   );
 }
 
+const SIDE_LABEL =
+  "text-[0.6875rem] font-semibold tracking-wide uppercase sm:hidden";
+
+/**
+ * A draft against the published profile, as a compact table: a row a
+ * changed field, what is there now beside what is proposed (on a phone,
+ * one under the other, each named).
+ */
 export function ProfileReviewDiff({
   fields,
   className,
@@ -92,43 +99,57 @@ export function ProfileReviewDiff({
 
   if (changedFields.length === 0) {
     return (
-      <div
+      <p
         className={cn(
-          "rounded-[var(--radius-control)] bg-[var(--success-soft)] p-4 text-sm text-[var(--success)]",
+          "flex items-center gap-2 rounded-[8px] bg-[var(--success-soft)] px-3 py-2.5 text-[0.8125rem] text-[var(--success)]",
           className,
         )}
       >
-        <Check className="mr-2 inline size-4" aria-hidden="true" />
+        <Check className="size-4 shrink-0" aria-hidden="true" />
         Szkic nie zmienia treści opublikowanego profilu.
-      </div>
+      </p>
     );
   }
 
   return (
-    <div className={cn("space-y-3", className)}>
-      {changedFields.map((field) => (
-        <Card className="p-0" key={field.id}>
-          <div className="border-b border-[var(--border)] px-4 py-3">
-            <p className="text-sm font-semibold text-[var(--text)]">
+    <div
+      className={cn(
+        "overflow-hidden rounded-[8px] border border-[var(--border)]",
+        className,
+      )}
+    >
+      <div
+        aria-hidden="true"
+        className="hidden h-8 grid-cols-[9rem_minmax(0,1fr)_minmax(0,1fr)] items-center border-b border-[var(--border)] bg-[var(--surface-subtle)] text-[0.75rem] font-medium text-[var(--text-muted)] sm:grid"
+      >
+        <span className="px-3">Pole</span>
+        <span className="px-3">Obecnie</span>
+        <span className="px-3 text-[var(--primary)]">Propozycja</span>
+      </div>
+      <ul>
+        {changedFields.map((field) => (
+          <li
+            className="grid border-b border-[var(--border)] last:border-b-0 sm:grid-cols-[9rem_minmax(0,1fr)_minmax(0,1fr)]"
+            key={field.id}
+          >
+            <span className="px-3 pt-2.5 text-[0.8125rem] font-semibold text-[var(--text)] sm:py-2.5">
               {field.label}
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2">
-            <div className="border-b border-[var(--border)] p-4 md:border-r md:border-b-0">
-              <p className="text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
+            </span>
+            <div className="grid gap-1 px-3 py-2.5">
+              <span className={cn(SIDE_LABEL, "text-[var(--text-muted)]")}>
                 Obecnie
-              </p>
+              </span>
               <DiffValue field={field} side="current" />
             </div>
-            <div className="bg-[var(--primary-soft)] p-4">
-              <p className="text-xs font-bold tracking-wide text-[var(--primary)] uppercase">
+            <div className="grid gap-1 bg-[var(--primary-soft)] px-3 py-2.5">
+              <span className={cn(SIDE_LABEL, "text-[var(--primary)]")}>
                 Propozycja
-              </p>
+              </span>
               <DiffValue field={field} side="proposed" />
             </div>
-          </div>
-        </Card>
-      ))}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

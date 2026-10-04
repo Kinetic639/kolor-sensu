@@ -223,6 +223,51 @@ describe("notificationView", () => {
   });
 });
 
+describe("a profile sent for review", () => {
+  const profile = at(
+    {
+      kind: "profile_submitted",
+      actor: "specialist",
+      appointmentId: null,
+      createdAt: "2026-10-01T09:30:00+00:00",
+    },
+    {
+      reference: null,
+      startsAt: null,
+      mode: null,
+      clientName: null,
+      serviceName: null,
+      priceMinor: null,
+      currencyCode: null,
+      specialistName: "Anna Kłobuchowska",
+      specialistId: "anna",
+    },
+  );
+
+  it("whose profile, leading to it on their page, no booking", () => {
+    const view = notificationView(profile, options);
+    expect(view).toMatchObject({
+      title: "Profil do weryfikacji",
+      summary: "Anna Kłobuchowska",
+      tone: "info",
+      icon: "profile",
+      reference: null,
+      visitId: null,
+      href: "/specjalisci/anna?zakladka=profil",
+      linkText: "Profil",
+      badges: [],
+      details: [
+        { label: "Specjalista", value: "Anna Kłobuchowska" },
+        { label: "Wysłany", value: "czw. 01.10.2026, 11:30" },
+      ],
+    });
+  });
+
+  it("a booking's link is its number", () => {
+    expect(notificationView(base, options).linkText).toBe("2610-004");
+  });
+});
+
 describe("notificationDays", () => {
   it("groups them by day, in order", () => {
     const views = [

@@ -24,7 +24,9 @@ export type NotificationKind =
   | "cancelled"
   | "rescheduled"
   /** Money the centre gave back later (admins only). */
-  | "refunded";
+  | "refunded"
+  /** A specialist sent their profile for review (admins only). */
+  | "profile_submitted";
 
 export interface NotificationDetails {
   reference: string | null;
@@ -33,6 +35,8 @@ export interface NotificationDetails {
   clientName: string | null;
   serviceName: string | null;
   specialistName: string | null;
+  /** Whose profile (a profile sent for review). */
+  specialistId: string | null;
   /** A move: where it was. */
   fromStartsAt: string | null;
   /** The centre's reason; "unpaid" when the system cancelled it. */
@@ -47,7 +51,7 @@ export interface NotificationDetails {
 export interface PortalNotification {
   id: number;
   kind: NotificationKind;
-  actor: "client" | "centre" | "payment" | "system";
+  actor: "client" | "centre" | "payment" | "system" | "specialist";
   appointmentId: string | null;
   createdAt: string;
   readAt: string | null;
@@ -91,6 +95,7 @@ export function toPortalNotification(
       clientName: text(d.client_name),
       serviceName: text(d.service_name),
       specialistName: text(d.specialist_name),
+      specialistId: text(d.specialist_id),
       fromStartsAt: text(d.from_starts_at),
       reason: text(d.reason),
       refundMinor: minor(d.refund_minor),

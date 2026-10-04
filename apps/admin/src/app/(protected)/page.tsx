@@ -54,6 +54,15 @@ function visitsWord(count: number) {
     : "wizyt";
 }
 
+/** `AK` for Anna Kłobuchowska. */
+const initialsOf = (name: string) =>
+  name
+    .split(/\s+/)
+    .map((part) => part[0] ?? "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
 /** A part of the dashboard, set apart on the page's ground (as a roster's). */
 const panel =
   "min-w-0 overflow-hidden rounded-[8px] border border-[var(--border)] bg-[var(--surface)]";
@@ -129,6 +138,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         title: `${item.title} · ${item.owed}`,
         detail: item.description,
         tone: "danger" as const,
+        icon: "refund" as const,
         href: item.href,
         target: "Rezerwacja",
       };
@@ -138,6 +148,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       title: `Płatność do ${at(visit.paymentDueAt!, "HH:mm")}`,
       detail: `${visit.reference} · ${visit.client.name ?? "Klient"} · ${at(visit.startsAt, "dd.MM, HH:mm")}`,
       tone: "warning" as const,
+      icon: "reserved" as const,
       href: bookingHref(visit),
       target: "Rezerwacja",
     })),
@@ -145,11 +156,21 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       id: `draft-${draft.id}`,
       title: "Profil do weryfikacji",
       detail: draft.submittedAt
-        ? `${draft.displayName} · wysłany ${at(draft.submittedAt, "dd.MM")}`
+        ? `${draft.displayName} · wysłany ${at(draft.submittedAt, "dd.MM, HH:mm")}`
         : draft.displayName,
       tone: "info" as const,
-      href: `/specjalisci/${draft.specialistId}`,
-      target: "Specjalista",
+      person: {
+        id: draft.specialistId,
+        name: draft.displayName,
+        initials: initialsOf(draft.displayName),
+        avatarUrl: avatars[draft.specialistId] ?? null,
+        color:
+          specialists.find((one) => one.id === draft.specialistId)?.color ??
+          null,
+      },
+      // The profile tab, where the draft is reviewed.
+      href: `/specjalisci/${draft.specialistId}?zakladka=profil`,
+      target: "Profil",
     })),
   ];
 

@@ -18,6 +18,7 @@ import {
   Hourglass,
   TimerOff,
   User,
+  UserCheck,
   Video,
   type LucideIcon,
 } from "lucide-react";
@@ -34,6 +35,7 @@ export const KIND_ICONS: Record<NotificationIcon, LucideIcon> = {
   cancelled: CalendarX,
   moved: CalendarClock,
   refund: Banknote,
+  profile: UserCheck,
 };
 
 export const TONE_SQUARES: Record<VisitTone, string> = {
