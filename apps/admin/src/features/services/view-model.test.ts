@@ -1,53 +1,211 @@
+import type { Service, SpecialistService } from "@repo/contracts";
+import type { ServiceWeek } from "@repo/scheduling";
 import { describe, expect, it } from "vitest";
-import type { ServiceListItemViewModel } from "./types";
-import { toServiceListItems } from "./view-model";
+import { formatOfferPrice, siteTeam, toServiceRows } from "./view-model";
 
-const service: ServiceListItemViewModel = {
-  id: "service-1",
-  name: "Konsultacja psychologiczna",
-  slug: "konsultacja-psychologiczna",
-  category: "consultation",
-  categoryLabel: "Konsultacja",
-  durationLabel: "50 min",
+const service = (
+  id: string,
+  sortOrder: number,
+  more: Partial<Service> = {},
+): Service => ({
+  id,
+  name: `Usługa ${id}`,
+  slug: `usluga-${id}`,
+  shortDescription: null,
+  description: null,
+  category: "psychotherapy",
+  defaultDurationMinutes: 50,
   active: true,
   publiclyVisible: true,
   bookingEnabled: true,
-  specialistOfferCount: 3,
-  sortOrder: 0,
+  sortOrder,
+  catalogId: null,
+  createdAt: "2030-01-01T00:00:00Z",
+  updatedAt: "2030-01-01T00:00:00Z",
+  ...more,
+});
+
+const offer = (
+  id: string,
+  serviceId: string,
+  specialistId: string,
+  more: Partial<SpecialistService> = {},
+): SpecialistService => ({
+  id,
+  specialistId,
+  serviceId,
+  active: true,
+  priceMinor: 22000,
+  currencyCode: "PLN",
+  durationMinutes: null,
+  supportsInPerson: true,
+  supportsOnline: false,
+  createdAt: "2030-01-01T00:00:00Z",
+  updatedAt: "2030-01-01T00:00:00Z",
+  ...more,
+});
+
+const person = (id: string, displayName: string) => ({
+  id,
+  displayName,
+  initials: displayName
+    .split(" ")
+    .map((word) => word[0])
+    .join(""),
+  avatarUrl: null,
+  color: null,
+  professionalTitle: "Psycholog",
+});
+
+/** Intl puts a no-break space before the currency. */
+const plain = (text: string) => text.replace(/\s/g, " ");
+
+const people = [
+  person("ms", "Michał Stępień"),
+  person("ak", "Anna Kłobuchowska"),
+];
+
+const input = {
+  week: "2030-09-30",
+  today: "2030-10-03",
+  webUrl: "https://kolorsensu.pl",
+  people,
+  catalogs: [],
 };
 
-describe("toServiceListItems", () => {
-  it("lists a service with its category, length, specialists and statuses", () => {
-    expect(toServiceListItems([service])[0]).toEqual({
-      id: "service-1",
-      href: "/oferta/service-1",
-      name: "Konsultacja psychologiczna",
-      description: "Konsultacja",
-      facts: ["50 min", "Specjaliści: 3"],
-      statuses: [
-        { label: "Aktywna", tone: "success" },
-        { label: "Na stronie", tone: "info" },
-        { label: "Rezerwacja online", tone: "info" },
+describe("toServiceRows", () => {
+  it("each service with its offers (by name), its own times and prices", () => {
+    const [row] = toServiceRows({
+      ...input,
+      services: [service("a", 1)],
+      offers: [
+        offer("o1", "a", "ms"),
+        offer("o2", "a", "ak", { durationMinutes: 60, priceMinor: 24050 }),
+        offer("o3", "b", "ms"),
       ],
-      tags: ["active", "on-site", "booking"],
-      muted: false,
+      weeks: new Map(),
     });
-  });
-
-  it("shows only what applies: hidden, without booking", () => {
-    const [item] = toServiceListItems([
-      { ...service, publiclyVisible: false, bookingEnabled: false },
+    expect(row).toMatchObject({
+      id: "a",
+      href: "/oferta/a",
+      publicUrl: "https://kolorsensu.pl/oferta/usluga-a",
+      categoryLabel: "Psychoterapia",
+      durationMinutes: 50,
+    });
+    expect(
+      row!.offers.map((one) => [
+        one.specialist.name,
+        one.durationMinutes,
+        plain(one.price),
+      ]),
+    ).toEqual([
+      ["Anna Kłobuchowska", 60, "240,50 zł"],
+      ["Michał Stępień", 50, "220 zł"],
     ]);
-    expect(item!.statuses).toEqual([{ label: "Aktywna", tone: "success" }]);
-    expect(item!.tags).toEqual(["active"]);
+    expect(row!.offers[1]!.specialist).toMatchObject({
+      initials: "MS",
+      href: "/specjalisci/ms",
+    });
   });
 
-  it("dims an inactive service, never on the site or bookable", () => {
-    const [item] = toServiceListItems([{ ...service, active: false }]);
-    expect(item).toMatchObject({
-      statuses: [{ label: "Nieaktywna", tone: "neutral" }],
-      tags: ["inactive"],
-      muted: true,
+  it("its place and watercolor in the site's offer: active and shown only", () => {
+    const rows = toServiceRows({
+      ...input,
+      services: [
+        service("a", 1),
+        service("hidden", 2, { publiclyVisible: false }),
+        service("b", 3),
+        service("off", 4, { active: false }),
+      ],
+      offers: [],
+      weeks: new Map(),
     });
+    expect(rows.map((row) => [row.id, row.position, row.paint])).toEqual([
+      ["a", 1, "sage-1"],
+      ["hidden", null, "sage-1"],
+      ["b", 2, "pink-1"],
+      ["off", null, "sage-1"],
+    ]);
+  });
+
+  it("in the offer's layout: a catalogue's services in its place, with it", () => {
+    const rows = toServiceRows({
+      ...input,
+      catalogs: [{ id: "terapie", name: "Terapie", sortOrder: 2 }],
+      services: [
+        service("dzieci", 3),
+        service("pary", 2, { catalogId: "terapie" }),
+        service("konsultacja", 1),
+        service("indywidualna", 1, { catalogId: "terapie" }),
+      ],
+      offers: [],
+      weeks: new Map(),
+    });
+    expect(
+      rows.map((row) => [row.id, row.order, row.catalog?.name ?? null]),
+    ).toEqual([
+      ["konsultacja", 1, null],
+      ["indywidualna", 2, "Terapie"],
+      ["pary", 3, "Terapie"],
+      ["dzieci", 4, null],
+    ]);
+    // The site's places follow the same layout.
+    expect(rows.map((row) => row.position)).toEqual([1, 2, 3, 4]);
+  });
+
+  it("the week read for it, else seven empty days with today marked", () => {
+    const week: ServiceWeek = {
+      days: [],
+      visitCount: 4,
+      upcoming: [],
+    };
+    const [busy, quiet] = toServiceRows({
+      ...input,
+      services: [service("a", 1), service("b", 2)],
+      offers: [],
+      weeks: new Map([["a", week]]),
+    });
+    expect(busy!.visitCount).toBe(4);
+    expect(quiet!.visitCount).toBe(0);
+    expect(quiet!.days.map((day) => day.count)).toEqual([0, 0, 0, 0, 0, 0, 0]);
+    expect(quiet!.days[3]).toMatchObject({
+      date: "2030-10-03",
+      weekday: "Czw",
+      isToday: true,
+    });
+  });
+});
+
+describe("formatOfferPrice", () => {
+  it("whole złoty without grosze, else with", () => {
+    expect(
+      plain(formatOfferPrice({ priceMinor: 22000, currencyCode: "PLN" })),
+    ).toBe("220 zł");
+    expect(
+      plain(formatOfferPrice({ priceMinor: 24050, currencyCode: "PLN" })),
+    ).toBe("240,50 zł");
+  });
+});
+
+describe("siteTeam", () => {
+  it("the active offers as the site's page lists them", () => {
+    const [row] = toServiceRows({
+      ...input,
+      services: [service("a", 1)],
+      offers: [
+        offer("o1", "a", "ms", { supportsOnline: true }),
+        offer("o2", "a", "ak", {
+          durationMinutes: 60,
+        }),
+        offer("o3", "a", "ak", { active: false }),
+      ],
+      weeks: new Map(),
+    });
+    expect(
+      siteTeam(row!.offers).map((one) => [one.name, plain(one.meta)]),
+    ).toEqual([
+      ["Anna Kłobuchowska", "220 zł · 60 min · w gabinecie"],
+      ["Michał Stępień", "220 zł · 50 min · w gabinecie lub online"],
+    ]);
   });
 });

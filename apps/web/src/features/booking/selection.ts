@@ -46,8 +46,8 @@ export function resolveBookingSelection(
   catalog: BookingCatalog,
 ): BookingSelection {
   const serviceSlugs = new Set(catalog.services.map((one) => one.slug));
-  const bookable = catalog.offers.filter(
-    (offer) => offer.acceptingNewClients && serviceSlugs.has(offer.serviceSlug),
+  const bookable = catalog.offers.filter((offer) =>
+    serviceSlugs.has(offer.serviceSlug),
   );
 
   const service =

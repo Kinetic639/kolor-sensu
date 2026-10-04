@@ -1,15 +1,5 @@
 import type { FaqItem, HeroSectionProps } from "@repo/ui/public-site";
-import {
-  Brain,
-  Heart,
-  HeartHandshake,
-  House,
-  Leaf,
-  MessagesSquare,
-  Sparkles,
-  User,
-  Users,
-} from "lucide-react";
+import { Heart, House, Leaf, Users } from "lucide-react";
 import type { ReactNode } from "react";
 
 // The site's own content: what the database does not hold (yet). Services,
@@ -139,30 +129,6 @@ export const faq = [
       "Najpóźniej 24 godziny przed spotkaniem, telefonicznie lub mailowo. Wizyta odwołana później jest płatna.",
   },
 ] satisfies FaqItem[];
-
-// ------------------------------------------------------------ services
-
-type ServiceCategory =
-  | "consultation"
-  | "psychotherapy"
-  | "couples_therapy"
-  | "assessment"
-  | "workshop_related"
-  | "other";
-
-/** The icon of a service tile, by the service's category. */
-export const serviceIcons: Record<ServiceCategory, ReactNode> = {
-  consultation: <MessagesSquare />,
-  psychotherapy: <User />,
-  couples_therapy: <Users />,
-  assessment: <Brain />,
-  workshop_related: <Sparkles />,
-  other: <HeartHandshake />,
-};
-
-/** Shown on a service's page when it has no description of its own. */
-export const serviceFallbackDescription =
-  "Szczegóły tej formy wsparcia omówimy podczas pierwszego kontaktu. Zadzwoń lub napisz do nas, a pomożemy dobrać specjalistę i termin.";
 
 // --------------------------------------------------------------- pages
 

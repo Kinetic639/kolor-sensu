@@ -60,7 +60,6 @@ function detail(draft: Partial<Content>): SpecialistDetailViewModel {
     joinedAt: null,
     active: true,
     accountActive: true,
-    acceptingNewClients: true,
     offers: [],
     offerSummary: "Brak",
     publicProfile: {
@@ -220,7 +219,6 @@ describe("mapSpecialistsListViewModel: colours", () => {
     avatarUrl: null,
     accountActive: true,
     active: true,
-    acceptingNewClients: true,
     publicSlug: "anna-kowalska",
     professionalTitle: "Psychoterapeutka",
     joinedAt: null,
@@ -279,7 +277,6 @@ describe("toSpecialistRow", () => {
       avatarUrl: null,
       accountActive: true,
       active: true,
-      acceptingNewClients: true,
       publicSlug: "anna-kowalska",
       professionalTitle: "Psychoterapeutka",
       joinedAt: "2026-03-01",
@@ -359,7 +356,6 @@ describe("toSpecialistRow", () => {
       slug: "anna-kowalska",
       state: {
         active: true,
-        acceptingNewClients: true,
         profile: "published",
       },
       occupancy: { percent: 21 },
@@ -415,6 +411,7 @@ describe("toSpecialistOffers", () => {
     publiclyVisible: true,
     bookingEnabled: true,
     sortOrder: 1,
+    catalogId: null,
     createdAt: "",
     updatedAt: "",
   };
@@ -423,7 +420,6 @@ describe("toSpecialistOffers", () => {
     specialistId: "specialist-1",
     serviceId: "service-1",
     active: true,
-    acceptingNewClients: false,
     priceMinor: 28000,
     currencyCode: "PLN",
     durationMinutes: null,
@@ -445,7 +441,6 @@ describe("toSpecialistOffers", () => {
       inPerson: true,
       online: false,
       active: true,
-      acceptingNewClients: false,
     });
     expect(
       toSpecialistOffers(
@@ -468,7 +463,6 @@ describe("offersBySpecialist", () => {
       specialistId,
       serviceId: "missing",
       active: true,
-      acceptingNewClients: true,
       priceMinor: 20000,
       currencyCode: "PLN",
       durationMinutes: 50,
@@ -499,7 +493,6 @@ describe("offerSummary", () => {
     specialistId: "s",
     serviceId: "service",
     active,
-    acceptingNewClients: true,
     priceMinor,
     currencyCode: "PLN",
     durationMinutes: 50,
@@ -522,14 +515,12 @@ describe("detailState", () => {
   it("a draft waiting outranks the published profile", () => {
     expect(detailState(detail({}))).toEqual({
       active: true,
-      acceptingNewClients: true,
       profile: "pending",
     });
     expect(
       detailState({ ...detail({}), draft: null, accountActive: false }),
     ).toEqual({
       active: false,
-      acceptingNewClients: true,
       profile: "published",
     });
   });
@@ -545,7 +536,6 @@ describe("profilePreview", () => {
     inPerson: true,
     online: true,
     active: true,
-    acceptingNewClients: false,
   };
 
   it("the published profile, as the site shows it", () => {
@@ -558,12 +548,11 @@ describe("profilePreview", () => {
       name: "Anna Kowalska",
       role: "Psychoterapeutka",
       shortBio: "Opis",
-      acceptingNewClients: true,
       offers: [
         {
           key: "o1",
           name: "Terapia dla par",
-          meta: "50 min · w gabinecie lub online · bez nowych osób",
+          meta: "50 min · w gabinecie lub online",
           price: "280 zł",
         },
       ],

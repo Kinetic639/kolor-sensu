@@ -101,6 +101,7 @@ const DOT: Record<NowStatus["tone"], string> = {
   free: "var(--success)",
   later: "var(--info)",
   off: "var(--text-subtle)",
+  warn: "var(--warning)",
 };
 
 /** What is happening now, with a dot, and what comes next. */

@@ -34,7 +34,6 @@ export interface SpecialistProfileViewProps {
   facts: { title: string; items: string[] }[];
   /** Education and certificates, as one list. */
   qualifications: string[];
-  acceptingNewClients: boolean;
   /** The buttons under it (book, all specialists). */
   actions?: ReactNode;
   /** The link component for the services (e.g. next/link). */
@@ -90,7 +89,6 @@ export function SpecialistProfileView({
   offers,
   facts,
   qualifications,
-  acceptingNewClients,
   actions,
   linkAs: Link = "a",
   priority = false,
@@ -178,16 +176,6 @@ export function SpecialistProfileView({
         {actions ? (
           <div className="flex flex-wrap items-center gap-3">{actions}</div>
         ) : null}
-        {acceptingNewClients ? (
-          <p className="text-small text-primary-strong font-semibold">
-            Przyjmuje nowe osoby.
-          </p>
-        ) : (
-          <p className="text-small text-text-muted">
-            Obecnie nie przyjmuje nowych osób. Pomożemy dobrać innego
-            specjalistę.
-          </p>
-        )}
       </div>
     </section>
   );

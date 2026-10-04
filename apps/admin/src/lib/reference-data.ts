@@ -2,6 +2,7 @@ import "server-only";
 import {
   getCenterSettings,
   listRoomsAdmin,
+  listServiceCatalogs,
   listServicesAdmin,
   listSpecialistSummariesForAdmin,
   signSpecialistPhotos,
@@ -61,5 +62,12 @@ export function services() {
 export function rooms() {
   return cachedForCaller("rooms", [CACHE_TAGS.rooms], (client) =>
     listRoomsAdmin(client),
+  );
+}
+
+/** The offer's catalogues (the menu's groups), kept with the services. */
+export function serviceCatalogs() {
+  return cachedForCaller("service-catalogs", [CACHE_TAGS.services], (client) =>
+    listServiceCatalogs(client),
   );
 }

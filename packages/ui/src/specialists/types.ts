@@ -18,7 +18,6 @@ export type SpecialistProfileState =
 export interface SpecialistState {
   /** Working with the centre (and their account on). */
   active: boolean;
-  acceptingNewClients: boolean;
   profile: SpecialistProfileState;
 }
 
@@ -60,12 +59,10 @@ export interface SpecialistOffer {
   inPerson: boolean;
   online: boolean;
   active: boolean;
-  acceptingNewClients: boolean;
 }
 
 /** Turns an offer on or off, or its new clients; refuses with a message. */
 export type OfferStateAction = (input: {
   offerId: string;
   active: boolean;
-  acceptingNewClients: boolean;
 }) => Promise<{ ok: true } | { ok: false; message: string }>;

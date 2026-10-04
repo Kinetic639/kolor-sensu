@@ -1,10 +1,10 @@
 import {
+  offerPaintAt,
+  SERVICE_ICONS,
   specialistSplashAt,
-  type OfferPaint,
   type OfferService,
   type Specialist,
 } from "@repo/ui/public-site";
-import { serviceIcons } from "@/content/site";
 import type {
   PublicOffer,
   PublicService,
@@ -19,8 +19,6 @@ export { formatDuration, formatPrice };
 
 /** Portrait for a specialist without a photo yet. */
 export const portraitPlaceholder = "/images/specjalista.svg";
-
-const paints: OfferPaint[] = ["sage-1", "pink-1", "sage-2", "pink-2"];
 
 export function specialistHref(slug: string) {
   return `/specjalisci/${slug}`;
@@ -57,8 +55,8 @@ export function toOfferTile(
     title: serviceTitle(service),
     ...(service.shortDescription && { description: service.shortDescription }),
     href: serviceHref(service.slug),
-    icon: serviceIcons[service.category],
-    paint: paints[index % paints.length]!,
+    icon: SERVICE_ICONS[service.category],
+    paint: offerPaintAt(index),
   };
 }
 

@@ -7,6 +7,7 @@ import {
   getVisit,
   listVisitEvents,
   listVisits,
+  searchAllVisits,
   searchVisits,
 } from "./visits";
 
@@ -22,6 +23,7 @@ const row = {
   mode: "in_person",
   starts_at: "2030-10-02T09:00:00+00:00",
   ends_at: "2030-10-02T09:50:00+00:00",
+  service_id: "service-1",
   service_name: "Konsultacja",
   specialist_id: "anna",
   specialist_name: "Anna Test",
@@ -69,6 +71,7 @@ describe("listVisits", () => {
       mode: "in_person",
       startsAt: "2030-10-02T09:00:00+00:00",
       endsAt: "2030-10-02T09:50:00+00:00",
+      serviceId: "service-1",
       serviceName: "Konsultacja",
       specialist: { id: "anna", name: "Anna Test", color: "#7fb3a6" },
       room: { id: "room-1", name: "Gabinet Zielony", color: null },
@@ -405,5 +408,47 @@ describe("the centre's own way (R12)", () => {
         { startsAt: "x", mode: "online", roomId: null, reason: null },
       ),
     ).rejects.toMatchObject({ code: "forbidden" });
+  });
+});
+
+describe("searchAllVisits", () => {
+  it("reads page after page until every match is in, the service's id with each", async () => {
+    const rpc = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: [
+          { ...row, id: "a", total_count: 3 },
+          { ...row, id: "b", total_count: 3 },
+        ],
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: [{ ...row, id: "c", total_count: 3 }],
+        error: null,
+      });
+    const visits = await searchAllVisits(
+      { rpc } as never,
+      {
+        statuses: ["confirmed", "awaiting_payment"],
+        from: "2030-09-30T00:00:00.000Z",
+        to: "2030-11-01T00:00:00.000Z",
+      },
+      { pageSize: 2 },
+    );
+    expect(visits.map((one) => [one.id, one.serviceId])).toEqual([
+      ["a", "service-1"],
+      ["b", "service-1"],
+      ["c", "service-1"],
+    ]);
+    expect(rpc).toHaveBeenCalledTimes(2);
+    expect(rpc).toHaveBeenLastCalledWith(
+      "search_bookings",
+      expect.objectContaining({
+        p_sort: "starts_at",
+        p_desc: false,
+        p_limit: 2,
+        p_offset: 2,
+      }),
+    );
   });
 });

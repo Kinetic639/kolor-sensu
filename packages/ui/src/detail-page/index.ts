@@ -12,3 +12,4 @@ export {
   ROW_LINE,
 } from "./detail-page";
 export type { DetailTab } from "./detail-page";
+export { DetailSwitcher } from "./detail-switcher";

@@ -33,7 +33,6 @@ const offer = (
   effectiveDurationMinutes: 50,
   supportsInPerson: true,
   supportsOnline: true,
-  acceptingNewClients: true,
   ...overrides,
 });
 

@@ -60,7 +60,6 @@ describe("SpecialistRoster", () => {
     expect(row).toHaveTextContent("78%");
     expect(row).toHaveTextContent("Wizyta online do 10:50");
     // No tags in the row: the segments above sort them out.
-    expect(row).not.toHaveTextContent("Nie przyjmuje nowych");
     expect(row).not.toHaveTextContent("Opublikowany");
     expect(
       within(row).getByRole("button", { name: /^Anna Kłobuchowska/ }),
@@ -85,8 +84,27 @@ describe("SpecialistRoster", () => {
       "true",
     );
     expect(within(row).getByRole("tabpanel")).toHaveTextContent("Czw");
-    expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toBe(
-      `?otwarte=${anna.id}`,
+    // The address follows once the row has opened.
+    await waitFor(() =>
+      expect(onUrlUpdate.mock.calls.at(-1)?.[0].queryString).toBe(
+        `?otwarte=${anna.id}`,
+      ),
+    );
+  });
+
+  it("closes again, eased, and is hidden once it has", async () => {
+    const onUrlUpdate = vi.fn<(event: UrlUpdateEvent) => void>();
+    renderRoster({ query: `?otwarte=${anna.id}`, onUrlUpdate });
+    const row = screen.getByRole("article", { name: "Anna Kłobuchowska" });
+    const toggle = within(row).getByRole("button", {
+      name: /^Anna Kłobuchowska/,
+    });
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await waitFor(() => expect(within(row).queryByRole("tabpanel")).toBeNull());
+    await waitFor(() =>
+      expect(onUrlUpdate.mock.calls.at(-1)?.[0].queryString).toBe(""),
     );
   });
 
@@ -129,12 +147,11 @@ describe("SpecialistRoster", () => {
     const action = vi.fn<OfferStateAction>().mockResolvedValue({ ok: true });
     renderRoster({ query: `?otwarte=${anna.id}:uslugi`, action });
     await userEvent.click(
-      screen.getByRole("switch", { name: "Nowi klienci: Terapia dla par" }),
+      screen.getByRole("switch", { name: "Oferta aktywna: Terapia dla par" }),
     );
     expect(action).toHaveBeenCalledWith({
       offerId: "offer-2",
-      active: true,
-      acceptingNewClients: true,
+      active: false,
     });
     await waitFor(() => expect(toast.success).toHaveBeenCalled());
   });

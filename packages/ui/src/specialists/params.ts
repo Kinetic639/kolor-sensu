@@ -22,7 +22,6 @@ export const SPECIALIST_SEGMENTS = [
   "aktywni",
   "nieaktywni",
   "weryfikacja",
-  "bez-nowych",
 ] as const;
 
 export const SPECIALIST_SORTS = [
@@ -87,9 +86,6 @@ export function specialistTags(
   const tags: { label: string; tone: VisitTone }[] = [];
   if (!state.active) tags.push({ label: "Nieaktywny", tone: "neutral" });
   else if (withActive) tags.push({ label: "Aktywny", tone: "success" });
-  if (state.active && !state.acceptingNewClients) {
-    tags.push({ label: "Nie przyjmuje nowych", tone: "warning" });
-  }
   tags.push(profileTag(state.profile));
   return tags;
 }
@@ -101,7 +97,6 @@ const IN_SEGMENT: Record<
   aktywni: (row) => row.state.active,
   nieaktywni: (row) => !row.state.active,
   weryfikacja: (row) => row.state.profile === "pending",
-  "bez-nowych": (row) => row.state.active && !row.state.acceptingNewClients,
 };
 
 const collator = new Intl.Collator("pl");
@@ -150,7 +145,6 @@ const SEGMENT_LABELS: Record<(typeof SPECIALIST_SEGMENTS)[number], string> = {
   aktywni: "Aktywni",
   nieaktywni: "Nieaktywni",
   weryfikacja: "Do weryfikacji",
-  "bez-nowych": "Nie przyjmują nowych",
 };
 
 /**

@@ -142,7 +142,6 @@ export async function listBookableCatalog(
       effectiveDurationMinutes: row.duration_minutes,
       supportsInPerson: row.supports_in_person,
       supportsOnline: row.supports_online,
-      acceptingNewClients: true,
     };
   });
   return { services: [...services.values()], offers };

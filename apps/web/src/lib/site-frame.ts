@@ -1,7 +1,9 @@
-import type {
-  SiteContact,
-  SiteNavItem,
-  SiteSocial,
+import { catalogAnchor } from "@repo/contracts";
+import {
+  serviceDisplayName,
+  type SiteContact,
+  type SiteNavItem,
+  type SiteSocial,
 } from "@repo/ui/public-site";
 import { cache } from "react";
 import {
@@ -13,7 +15,9 @@ import {
 import {
   getCenter,
   getLocations,
+  getOffer,
   getServices,
+  type PublicOfferEntry,
   type PublicService,
 } from "@/lib/public-data";
 
@@ -28,25 +32,36 @@ export function serviceHref(slug: string) {
 
 /** Service names are entered by hand; show them with a capital letter. */
 export function serviceTitle(service: Pick<PublicService, "name">) {
-  const name = service.name.trim();
-  return name.charAt(0).toLocaleUpperCase("pl-PL") + name.slice(1);
+  return serviceDisplayName(service.name);
 }
 
-function navigation(services: PublicService[]): SiteNavItem[] {
+const serviceLink = (service: PublicService) => ({
+  label: serviceTitle(service),
+  href: serviceHref(service.slug),
+});
+
+/**
+ * The header's menu. "Oferta": the services outside a catalogue one under
+ * another, and each catalogue opening its own (its link: its place on the
+ * offer page).
+ */
+function navigation(offer: PublicOfferEntry[]): SiteNavItem[] {
   return [
     { label: "O nas", href: "/o-nas" },
     { label: "Specjaliści", href: "/specjalisci" },
     {
       label: "Oferta",
       href: "/oferta",
-      ...(services.length > 0 && {
-        children: services.map((service) => ({
-          label: serviceTitle(service),
-          href: serviceHref(service.slug),
-          ...(service.shortDescription && {
-            description: service.shortDescription,
-          }),
-        })),
+      ...(offer.length > 0 && {
+        children: offer.map((entry) =>
+          entry.kind === "service"
+            ? serviceLink(entry.service)
+            : {
+                label: entry.catalog.name,
+                href: `/oferta#${catalogAnchor(entry.catalog.name)}`,
+                children: entry.services.map(serviceLink),
+              },
+        ),
       }),
     },
     { label: "Gabinety", href: "/gabinety" },
@@ -60,10 +75,11 @@ function navigation(services: PublicService[]): SiteNavItem[] {
 const dialled = (phone: string) => phone.replace(/[^\d+]/g, "");
 
 export const getSiteFrame = cache(async () => {
-  const [center, locations, services] = await Promise.all([
+  const [center, locations, services, offer] = await Promise.all([
     getCenter(),
     getLocations(),
     getServices(),
+    getOffer(),
   ]);
   // The first location with a usable address.
   const location = locations.find((one) => one.addressLine1 && one.city);
@@ -96,7 +112,7 @@ export const getSiteFrame = cache(async () => {
   ];
 
   return {
-    navigation: navigation(services),
+    navigation: navigation(offer),
     cta: bookingCta,
     contact,
     socials,

@@ -18,7 +18,6 @@ type Story = StoryObj<typeof meta>;
 export const StatusSummary: Story = {
   render: () => (
     <SpecialistStatusSummary
-      acceptingNewClients
       accountActive
       active
       publicationLabel="Profil opublikowany"
@@ -67,14 +66,11 @@ export const ReviewDiff: Story = {
 // holds the state, as this wrapper does.
 function OfferRowWithState() {
   const [active, setActive] = useState(true);
-  const [accepting, setAccepting] = useState(true);
   return (
     <ul className="max-w-4xl rounded-[var(--radius-surface)] border border-[var(--border)] bg-[var(--surface)] px-5">
       <SpecialistOfferRow
-        acceptingNewClients={accepting}
         active={active}
         durationLabel="50 min"
-        onAcceptingNewClientsChange={setAccepting}
         onActiveChange={setActive}
         priceLabel="220,00 zł"
         serviceName="Psychoterapia indywidualna"
@@ -88,12 +84,12 @@ function OfferRowWithState() {
 export const OfferRow: Story = {
   render: () => <OfferRowWithState />,
   play: async ({ canvas, userEvent }) => {
-    const acceptingToggle = canvas.getByRole("switch", {
-      name: "Przyjmowanie nowych klientów dla Psychoterapia indywidualna",
+    const activeToggle = canvas.getByRole("switch", {
+      name: "Aktywność oferty Psychoterapia indywidualna",
     });
 
-    await userEvent.click(acceptingToggle);
-    await expect(acceptingToggle).not.toBeChecked();
+    await userEvent.click(activeToggle);
+    await expect(activeToggle).not.toBeChecked();
   },
 };
 
@@ -105,11 +101,9 @@ export const SpecialistOwnOffers: Story = {
   render: () => (
     <ul className="max-w-4xl rounded-[var(--radius-surface)] border border-[var(--border)] bg-[var(--surface)] px-5">
       <SpecialistOfferRow
-        acceptingNewClients
         active
         description="Pierwsza rozmowa i diagnoza potrzeb"
         durationLabel="50 min"
-        onAcceptingNewClientsChange={() => {}}
         onEdit={onEdit}
         priceLabel="150,00 zł"
         serviceName="Konsultacja psychologiczna"
@@ -117,11 +111,9 @@ export const SpecialistOwnOffers: Story = {
         supportsOnline={false}
       />
       <SpecialistOfferRow
-        acceptingNewClients={false}
         active={false}
         description="Praca rozwojowa w formie warsztatu"
         durationLabel="90 min"
-        onAcceptingNewClientsChange={() => {}}
         onEdit={() => {}}
         priceLabel="180,00 zł"
         serviceName="Warsztat indywidualny"

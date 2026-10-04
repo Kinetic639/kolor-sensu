@@ -43,7 +43,6 @@ export function mapMyServicesViewModel(
         supportsInPerson: offer.supportsInPerson,
         supportsOnline: offer.supportsOnline,
         active: offer.active,
-        acceptingNewClients: offer.acceptingNewClients,
       };
     })
     .sort((a, b) => a.serviceName.localeCompare(b.serviceName, "pl"));

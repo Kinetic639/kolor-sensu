@@ -114,14 +114,6 @@ export function SpecialistOverview({
               {detail.active ? "Aktywna" : "Nieaktywna"}
             </Tag>
           </DetailProp>
-          <DetailProp label="Nowi klienci">
-            <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              <Tag tone={detail.acceptingNewClients ? "success" : "warning"}>
-                {detail.acceptingNewClients ? "Przyjmuje" : "Nie przyjmuje"}
-              </Tag>
-              <Muted>ustawia specjalista w swoim portalu</Muted>
-            </span>
-          </DetailProp>
         </DetailProps>
       </DetailSection>
       <DetailSection

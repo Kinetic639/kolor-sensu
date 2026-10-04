@@ -175,7 +175,6 @@ export interface Specialist {
   id: string;
   userId: string;
   active: boolean;
-  acceptingNewClients: boolean;
   publicSlug: string;
   professionalTitle: string | null;
   joinedAt: string | null;
@@ -189,7 +188,6 @@ export interface SpecialistPublicProfile {
   specialistId: string;
   publicSlug: string;
   active: boolean;
-  acceptingNewClients: boolean;
   professionalTitle: string | null;
   joinedAt: string | null;
   firstName: string;

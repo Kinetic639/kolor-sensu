@@ -63,16 +63,13 @@ describe("ProfileReviewDiff", () => {
 });
 
 describe("SpecialistOfferRow", () => {
-  it("exposes independent offer controls", () => {
+  it("switches the offer on and off", () => {
     const onActiveChange = vi.fn();
-    const onAcceptingNewClientsChange = vi.fn();
     render(
       <ul>
         <SpecialistOfferRow
-          acceptingNewClients={false}
           active
           durationLabel="50 min"
-          onAcceptingNewClientsChange={onAcceptingNewClientsChange}
           onActiveChange={onActiveChange}
           priceLabel="220,00 zł"
           serviceName="Psychoterapia indywidualna"
@@ -84,16 +81,10 @@ describe("SpecialistOfferRow", () => {
 
     fireEvent.click(
       screen.getByRole("switch", {
-        name: "Przyjmowanie nowych klientów dla Psychoterapia indywidualna",
-      }),
-    );
-    fireEvent.click(
-      screen.getByRole("switch", {
         name: "Aktywność oferty Psychoterapia indywidualna",
       }),
     );
 
-    expect(onAcceptingNewClientsChange).toHaveBeenCalledWith(true);
     expect(onActiveChange).toHaveBeenCalledWith(false);
   });
 
@@ -102,7 +93,6 @@ describe("SpecialistOfferRow", () => {
     render(
       <ul>
         <SpecialistOfferRow
-          acceptingNewClients
           active={false}
           description="Regularne spotkania terapeutyczne"
           durationLabel="50 min"
@@ -131,10 +121,8 @@ describe("SpecialistOfferRow", () => {
     render(
       <ul>
         <SpecialistOfferRow
-          acceptingNewClients
           active
           durationLabel="50 min"
-          onAcceptingNewClientsChange={() => {}}
           priceLabel="200,00 zł"
           serviceName="Terapia par"
           supportsInPerson
@@ -143,7 +131,7 @@ describe("SpecialistOfferRow", () => {
       </ul>,
     );
 
-    expect(screen.getAllByRole("switch")).toHaveLength(1);
+    expect(screen.queryByRole("switch")).toBeNull();
     expect(screen.getByText("Stacjonarnie")).toBeInTheDocument();
     expect(screen.getByText("Online")).toBeInTheDocument();
   });

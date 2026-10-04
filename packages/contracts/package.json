@@ -17,6 +17,7 @@
     "./rich-text": "./src/rich-text.ts",
     "./rooms": "./src/rooms.ts",
     "./services": "./src/services.ts",
+    "./offer-layout": "./src/offer-layout.ts",
     "./specialist": "./src/specialist.ts"
   },
   "scripts": {

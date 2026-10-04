@@ -12,7 +12,6 @@ export interface MyServiceItemViewModel {
   supportsInPerson: boolean;
   supportsOnline: boolean;
   active: boolean;
-  acceptingNewClients: boolean;
 }
 
 export interface AddableServiceViewModel {

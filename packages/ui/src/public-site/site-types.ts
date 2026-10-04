@@ -7,9 +7,19 @@ export interface SiteLink {
   href: string;
 }
 
+/**
+ * A link of a dropdown ("Oferta"): a page, or a group of them (a
+ * catalogue) opening beside it on desktop and folding out on phones; its
+ * own `href` is the group's place on the list page.
+ */
+export interface SiteNavChild extends SiteLink {
+  description?: string;
+  children?: SiteLink[];
+}
+
 export interface SiteNavItem extends SiteLink {
   /** A second level, shown as a dropdown on desktop and indented on phones. */
-  children?: Array<SiteLink & { description?: string }>;
+  children?: SiteNavChild[];
 }
 
 export interface SiteContact {

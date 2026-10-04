@@ -25,6 +25,8 @@ export interface Visit {
   mode: VisitMode;
   startsAt: string;
   endsAt: string;
+  /** Where the list gives it (the search does; the calendar's list not). */
+  serviceId?: string;
   serviceName: string;
   specialist: { id: string; name: string; color: string | null };
   room: { id: string; name: string; color: string | null } | null;
@@ -147,6 +149,33 @@ export async function searchVisits(
   };
 }
 
+/**
+ * Every visit the search finds, the soonest first, read page after page
+ * (the offer's weeks: a few weeks of a small centre's visits).
+ */
+export async function searchAllVisits(
+  client: Client,
+  search: Omit<VisitSearch, "sort" | "descending" | "limit" | "offset">,
+  {
+    pageSize = 100,
+    maxPages = 20,
+  }: { pageSize?: number; maxPages?: number } = {},
+): Promise<Visit[]> {
+  const visits: Visit[] = [];
+  for (let page = 0; page < maxPages; page += 1) {
+    const { visits: found, total } = await searchVisits(client, {
+      ...search,
+      sort: "starts_at",
+      descending: false,
+      limit: pageSize,
+      offset: page * pageSize,
+    });
+    visits.push(...found);
+    if (!found.length || visits.length >= total) break;
+  }
+  return visits;
+}
+
 /** A visit with what the side panel adds: its history and e-mails. */
 export interface VisitDetail extends Visit {
   createdAt: string;
@@ -186,6 +215,7 @@ type VisitRow =
   Database["public"]["Functions"]["list_visits"]["Returns"][number];
 
 export function toVisit(row: VisitRow): Visit {
+  const serviceId = (row as { service_id?: string }).service_id;
   return {
     id: row.id,
     // When it was booked (the table's search gives it; the calendar's list
@@ -197,6 +227,9 @@ export function toVisit(row: VisitRow): Visit {
     mode: row.mode,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
+    // The service's id (the table's search gives it; the calendar's list
+    // does not).
+    ...(serviceId && { serviceId }),
     serviceName: row.service_name,
     specialist: {
       id: row.specialist_id,

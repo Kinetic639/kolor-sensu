@@ -54,7 +54,6 @@ export interface AdminSpecialistSummary {
   avatarUrl: string | null;
   accountActive: boolean;
   active: boolean;
-  acceptingNewClients: boolean;
   publicSlug: string;
   professionalTitle: string | null;
   joinedAt: string | null;
@@ -72,7 +71,6 @@ type PublicProfileQueryRow = PublicProfileRow & {
     SpecialistRow,
     | "id"
     | "active"
-    | "accepting_new_clients"
     | "public_slug"
     | "professional_title"
     | "joined_at"
@@ -84,7 +82,6 @@ function mapSpecialist(row: SpecialistRow): Specialist {
     id: row.id,
     userId: row.user_id,
     active: row.active,
-    acceptingNewClients: row.accepting_new_clients,
     publicSlug: row.public_slug,
     professionalTitle: row.professional_title,
     joinedAt: row.joined_at,
@@ -99,7 +96,6 @@ function mapPublicProfile(row: PublicProfileQueryRow): SpecialistPublicProfile {
     specialistId: row.specialist_id,
     publicSlug: row.specialists.public_slug,
     active: row.specialists.active,
-    acceptingNewClients: row.specialists.accepting_new_clients,
     professionalTitle: row.specialists.professional_title,
     joinedAt: row.specialists.joined_at,
     firstName: row.first_name,
@@ -168,7 +164,6 @@ function mapAdminSpecialistSummary(
     avatarUrl: row.profile.avatar_url,
     accountActive: row.profile.active,
     active: row.active,
-    acceptingNewClients: row.accepting_new_clients,
     publicSlug: row.public_slug,
     professionalTitle: row.professional_title,
     joinedAt: row.joined_at,
@@ -205,7 +200,6 @@ const publicProfileSelection = `
   specialists!inner (
     id,
     active,
-    accepting_new_clients,
     public_slug,
     professional_title,
     joined_at
@@ -372,7 +366,6 @@ export async function listSpecialistSummariesForAdmin(
         id,
         user_id,
         active,
-        accepting_new_clients,
         public_slug,
         professional_title,
         joined_at,
@@ -443,7 +436,6 @@ export async function getSpecialistPublicProfileAdmin(
     specialistId: data.specialist_id,
     publicSlug: specialist.publicSlug,
     active: specialist.active,
-    acceptingNewClients: specialist.acceptingNewClients,
     professionalTitle: specialist.professionalTitle,
     joinedAt: specialist.joinedAt,
     firstName: data.first_name,

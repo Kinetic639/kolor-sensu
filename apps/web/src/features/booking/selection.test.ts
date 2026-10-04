@@ -28,7 +28,6 @@ const offer = (
   effectiveDurationMinutes: 50,
   supportsInPerson: true,
   supportsOnline: false,
-  acceptingNewClients: true,
   ...overrides,
 });
 
@@ -53,7 +52,6 @@ const catalog: BookingCatalog = {
     offer("konsultacja", "anna", { supportsOnline: true }),
     offer("konsultacja", "jan"),
     offer("terapia-par", "jan"),
-    offer("terapia-par", "ewa", { acceptingNewClients: false }),
   ],
   locations: [location("centrum")],
 };

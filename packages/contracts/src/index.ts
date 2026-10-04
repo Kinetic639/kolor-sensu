@@ -75,6 +75,8 @@ export {
   durationMinutesSchema,
   priceMinorSchema,
   resolveEffectiveDurationMinutes,
+  serviceArrangementSchema,
+  serviceCatalogNameSchema,
   serviceCategorySchema,
   serviceCreateSchema,
   serviceSlugSchema,
@@ -82,15 +84,23 @@ export {
   specialistServiceUpsertSchema,
 } from "@repo/contracts/services";
 export type {
+  PublicOfferService,
   PublicService,
   PublicSpecialistOffer,
   Service,
+  ServiceArrangement,
   ServiceCategory,
   ServiceCreate,
   ServiceUpdate,
   SpecialistService,
   SpecialistServiceUpsert,
 } from "@repo/contracts/services";
+export {
+  arrangeOffer,
+  catalogAnchor,
+  flattenOffer,
+} from "@repo/contracts/offer-layout";
+export type { OfferEntry, ServiceCatalog } from "@repo/contracts/offer-layout";
 export {
   defaultRoomsPageContent,
   homePageContentSchema,

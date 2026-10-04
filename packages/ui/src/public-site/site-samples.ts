@@ -17,14 +17,18 @@ export const sampleNavigation = [
     href: "/oferta",
     children: [
       {
-        label: "Psychoterapia indywidualna",
-        href: "/oferta/psychoterapia-indywidualna",
-        description: "Przestrzeń na Ciebie i Twoje potrzeby.",
-      },
-      {
-        label: "Psychoterapia par",
-        href: "/oferta/psychoterapia-par",
-        description: "Lepsza komunikacja, większa bliskość.",
+        label: "Psychoterapia",
+        href: "/oferta#psychoterapia",
+        children: [
+          {
+            label: "Psychoterapia indywidualna",
+            href: "/oferta/psychoterapia-indywidualna",
+          },
+          {
+            label: "Psychoterapia par",
+            href: "/oferta/psychoterapia-par",
+          },
+        ],
       },
       {
         label: "Wsparcie dla dzieci i młodzieży",

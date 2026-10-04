@@ -29,7 +29,12 @@ export type SpecialistSplash = keyof typeof specialistSplashes;
 export type SpecialistAccent = "pink" | "sage";
 
 /** The order the site gives the splashes, specialist by specialist. */
-const SPLASH_ORDER: SpecialistSplash[] = ["pink-1", "sage-1", "pink-2", "sage-2"];
+const SPLASH_ORDER: SpecialistSplash[] = [
+  "pink-1",
+  "sage-1",
+  "pink-2",
+  "sage-2",
+];
 
 /**
  * The splash of the specialist at `index` on the site (the published, the

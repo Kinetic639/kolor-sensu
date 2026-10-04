@@ -13,11 +13,16 @@ import {
   listPublishedRoomProfiles,
   listRoomImages,
   listPublicServices,
+  listServiceCatalogs,
   listPublicOffersForSpecialist,
   listPublicSpecialistOffersForService,
   listPublishedSpecialists,
 } from "@repo/supabase";
-import { defaultRoomsPageContent } from "@repo/contracts";
+import {
+  arrangeOffer,
+  defaultRoomsPageContent,
+  flattenOffer,
+} from "@repo/contracts";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
 import { groupRoomsByLocation } from "./rooms-by-location";
@@ -109,9 +114,27 @@ export const getRoomsByLocation = cache(() =>
   ),
 );
 
-export const getServices = cache(() =>
-  load("services", listPublicServices, []),
+const readServices = cache(() => load("services", listPublicServices, []));
+
+/**
+ * The offer as the menu and the offer page show it: the services outside
+ * a catalogue and the catalogues (with only their public services; an
+ * empty one left out), in the order the centre arranged.
+ */
+export const getOffer = cache(async () => {
+  const [services, catalogs] = await Promise.all([
+    readServices(),
+    load("service catalogues", listServiceCatalogs, []),
+  ]);
+  return arrangeOffer(services, catalogs);
+});
+
+/** Every public service, in the offer's order (its catalogues unfolded). */
+export const getServices = cache(async () =>
+  flattenOffer(await getOffer()).map((one) => one.service),
 );
+
+export type PublicOfferEntry = Awaited<ReturnType<typeof getOffer>>[number];
 
 export const getService = cache((slug: string) =>
   load(

@@ -15,7 +15,7 @@ import { RichTextEditor } from "@repo/ui/rich-text-editor";
 import { Switch } from "@repo/ui/switch";
 import { Textarea } from "@repo/ui/textarea";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
 import { toast } from "@repo/ui/toast";
 import {
@@ -36,12 +36,11 @@ import {
 } from "./forms";
 import type { AdminRoomDetailModel, AdminRoomModel } from "./loaders";
 import { LocationSelect } from "./location-select";
+import { useSave } from "@/lib/use-save";
 
 // The original may be large; only the cropped photo (well under 5 MB) is kept.
 const SOURCE_IMAGE_MAX_BYTES = 20 * 1024 * 1024;
 const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
-
-type ActionResult = { ok: true } | { ok: false; message: string };
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   return message ? (
@@ -80,28 +79,6 @@ function SwitchField({
       />
     </label>
   );
-}
-
-function useSave() {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  function run(
-    action: () => Promise<ActionResult>,
-    success: string,
-    after?: () => void,
-  ) {
-    startTransition(async () => {
-      const result = await action();
-      if (!result.ok) {
-        toast.error(result.message);
-        return;
-      }
-      toast.success(success);
-      after?.();
-      router.refresh();
-    });
-  }
-  return { isPending, run };
 }
 
 /** Gabinety → Profil publiczny, beside the form: the room's photos. */

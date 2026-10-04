@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail, Menu, Phone } from "lucide-react";
+import { ChevronDown, Mail, Menu, Phone } from "lucide-react";
 import { PageLink as Link } from "./page-link";
 import { usePathname } from "next/navigation";
 import { cn } from "../lib/utils";
@@ -86,19 +86,58 @@ export function SiteMobileNav({
                     <ul className="border-border mb-2 ml-1 grid gap-0.5 border-l pl-4">
                       {item.children.map((child) => (
                         <li key={child.href}>
-                          <SheetClose asChild>
-                            <Link
-                              href={child.href}
-                              aria-current={
-                                isCurrent(child.href, currentPath)
-                                  ? "page"
-                                  : undefined
-                              }
-                              className="text-small text-text-muted hover:text-ink block py-1.5"
+                          {child.children?.length ? (
+                            // A group (a catalogue): folds out its pages,
+                            // open when one of them is the page shown.
+                            <details
+                              className="group/catalog"
+                              open={child.children.some((link) =>
+                                isCurrent(link.href, currentPath),
+                              )}
                             >
-                              {child.label}
-                            </Link>
-                          </SheetClose>
+                              <summary className="text-small text-ink hover:text-primary-strong flex cursor-pointer list-none items-center justify-between gap-2 py-1.5 font-medium [&::-webkit-details-marker]:hidden">
+                                {child.label}
+                                <ChevronDown
+                                  aria-hidden="true"
+                                  className="size-4 shrink-0 transition-transform group-open/catalog:rotate-180 motion-reduce:transition-none"
+                                  strokeWidth={1.75}
+                                />
+                              </summary>
+                              <ul className="border-border mb-1 ml-1 grid gap-0.5 border-l pl-3">
+                                {child.children.map((link) => (
+                                  <li key={link.href}>
+                                    <SheetClose asChild>
+                                      <Link
+                                        aria-current={
+                                          isCurrent(link.href, currentPath)
+                                            ? "page"
+                                            : undefined
+                                        }
+                                        className="text-small text-text-muted hover:text-ink aria-[current=page]:text-primary-strong block py-1.5"
+                                        href={link.href}
+                                      >
+                                        {link.label}
+                                      </Link>
+                                    </SheetClose>
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
+                          ) : (
+                            <SheetClose asChild>
+                              <Link
+                                href={child.href}
+                                aria-current={
+                                  isCurrent(child.href, currentPath)
+                                    ? "page"
+                                    : undefined
+                                }
+                                className="text-small text-text-muted hover:text-ink aria-[current=page]:text-primary-strong block py-1.5"
+                              >
+                                {child.label}
+                              </Link>
+                            </SheetClose>
+                          )}
                         </li>
                       ))}
                     </ul>

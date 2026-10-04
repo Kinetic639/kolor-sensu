@@ -107,7 +107,7 @@ export const Services: Story = {
   args: { query: `?otwarte=${ANNA}:uslugi` },
   play: async ({ canvas }) => {
     await userEvent.click(
-      canvas.getByRole("switch", { name: "Nowi klienci: Terapia dla par" }),
+      canvas.getByRole("switch", { name: "Oferta aktywna: Terapia dla par" }),
     );
     await expect(save).toHaveBeenCalled();
   },
@@ -116,11 +116,6 @@ export const Services: Story = {
 /** The busiest first. */
 export const ByOccupancy: Story = {
   args: { query: "?sort=oblozenie" },
-};
-
-/** Only those not taking new clients. */
-export const NotTakingNewClients: Story = {
-  args: { query: "?stan=bez-nowych" },
 };
 
 /** Nobody matches. */

@@ -779,10 +779,35 @@ export type Database = {
           },
         ];
       };
+      service_catalogs: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       services: {
         Row: {
           active: boolean;
           booking_enabled: boolean;
+          catalog_id: string | null;
           category: Database["public"]["Enums"]["service_category"];
           created_at: string;
           default_duration_minutes: number;
@@ -798,6 +823,7 @@ export type Database = {
         Insert: {
           active?: boolean;
           booking_enabled?: boolean;
+          catalog_id?: string | null;
           category?: Database["public"]["Enums"]["service_category"];
           created_at?: string;
           default_duration_minutes: number;
@@ -813,6 +839,7 @@ export type Database = {
         Update: {
           active?: boolean;
           booking_enabled?: boolean;
+          catalog_id?: string | null;
           category?: Database["public"]["Enums"]["service_category"];
           created_at?: string;
           default_duration_minutes?: number;
@@ -825,7 +852,15 @@ export type Database = {
           sort_order?: number;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "services_catalog_id_fkey";
+            columns: ["catalog_id"];
+            isOneToOne: false;
+            referencedRelation: "service_catalogs";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       site_content: {
         Row: {
@@ -1131,7 +1166,6 @@ export type Database = {
       };
       specialist_services: {
         Row: {
-          accepting_new_clients: boolean;
           active: boolean;
           created_at: string;
           currency_code: string;
@@ -1145,7 +1179,6 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
-          accepting_new_clients?: boolean;
           active?: boolean;
           created_at?: string;
           currency_code?: string;
@@ -1159,7 +1192,6 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
-          accepting_new_clients?: boolean;
           active?: boolean;
           created_at?: string;
           currency_code?: string;
@@ -1252,7 +1284,6 @@ export type Database = {
       };
       specialists: {
         Row: {
-          accepting_new_clients: boolean;
           active: boolean;
           color: string | null;
           created_at: string;
@@ -1264,7 +1295,6 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          accepting_new_clients?: boolean;
           active?: boolean;
           color?: string | null;
           created_at?: string;
@@ -1276,7 +1306,6 @@ export type Database = {
           user_id: string;
         };
         Update: {
-          accepting_new_clients?: boolean;
           active?: boolean;
           color?: string | null;
           created_at?: string;
@@ -1445,6 +1474,10 @@ export type Database = {
       add_room_image: {
         Args: { p_room_id: string; p_storage_path: string };
         Returns: string;
+      };
+      arrange_services: {
+        Args: { p_catalogs: Json; p_services: Json };
+        Returns: undefined;
       };
       add_time_off: {
         Args: {

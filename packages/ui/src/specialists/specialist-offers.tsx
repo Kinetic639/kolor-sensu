@@ -9,7 +9,11 @@ import type { OfferStateAction, SpecialistOffer } from "./types";
 // they only show the state. Rendered on the server.
 
 /** In person, online: an icon and a word each. */
-export function OfferForms({ offer }: { offer: SpecialistOffer }) {
+export function OfferForms({
+  offer,
+}: {
+  offer: Pick<SpecialistOffer, "inPerson" | "online">;
+}) {
   return (
     <span className="inline-flex items-center gap-2.5 text-[0.75rem] text-[var(--text-muted)] [&_svg]:size-3.5 [&_svg]:shrink-0">
       {offer.inPerson ? (
@@ -30,23 +34,26 @@ export function OfferForms({ offer }: { offer: SpecialistOffer }) {
 
 function State({
   offer,
-  field,
   label,
   action,
 }: {
   offer: SpecialistOffer;
-  field: "active" | "acceptingNewClients";
   label: string;
   action?: OfferStateAction;
 }) {
   if (action) {
     return (
-      <OfferToggle action={action} field={field} label={label} offer={offer} />
+      <OfferToggle
+        action={action}
+        label={label}
+        offer={offer}
+        subject={offer.serviceName}
+      />
     );
   }
   return (
     <span className="text-[0.75rem] text-[var(--text-muted)]">
-      {offer[field] ? "Tak" : "Nie"}
+      {offer.active ? "Tak" : "Nie"}
     </span>
   );
 }
@@ -92,9 +99,6 @@ export function SpecialistOfferTable({
               Formy
             </th>
             <th className={TH} scope="col">
-              Nowi klienci
-            </th>
-            <th className={TH} scope="col">
               Oferta aktywna
             </th>
           </tr>
@@ -125,15 +129,6 @@ export function SpecialistOfferTable({
               <td className={TD}>
                 <State
                   action={action}
-                  field="acceptingNewClients"
-                  label="Nowi klienci"
-                  offer={offer}
-                />
-              </td>
-              <td className={TD}>
-                <State
-                  action={action}
-                  field="active"
                   label="Oferta aktywna"
                   offer={offer}
                 />

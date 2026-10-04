@@ -227,7 +227,6 @@ export function SpecialistProfileTab({
             </EditorialHeading>
           </div>
           <SpecialistProfileView
-            acceptingNewClients={preview.acceptingNewClients}
             actions={
               // As on the page; here only to look at.
               <>

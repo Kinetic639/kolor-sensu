@@ -1,11 +1,15 @@
 import {
   resolveEffectiveDurationMinutes,
+  serviceArrangementSchema,
   serviceCreateSchema,
   serviceUpdateSchema,
   specialistServiceUpsertSchema,
+  type PublicOfferService,
   type PublicService,
   type PublicSpecialistOffer,
   type Service,
+  type ServiceArrangement,
+  type ServiceCatalog,
   type ServiceCreate,
   type ServiceUpdate,
   type SpecialistService,
@@ -38,6 +42,8 @@ type PublicServiceQueryRow = Pick<
   | "description"
   | "category"
   | "default_duration_minutes"
+  | "sort_order"
+  | "catalog_id"
 >;
 
 type PublicSpecialistOfferQueryRow = {
@@ -47,7 +53,6 @@ type PublicSpecialistOfferQueryRow = {
   duration_minutes: number | null;
   supports_in_person: boolean;
   supports_online: boolean;
-  accepting_new_clients: boolean;
   specialists: {
     public_slug: string;
     professional_title: string | null;
@@ -72,12 +77,13 @@ function mapService(row: ServiceRow): Service {
     publiclyVisible: row.publicly_visible,
     bookingEnabled: row.booking_enabled,
     sortOrder: row.sort_order,
+    catalogId: row.catalog_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
-function mapPublicService(row: PublicServiceQueryRow): PublicService {
+function mapPublicService(row: PublicServiceQueryRow): PublicOfferService {
   return {
     id: row.id,
     name: row.name,
@@ -86,6 +92,8 @@ function mapPublicService(row: PublicServiceQueryRow): PublicService {
     description: row.description,
     category: row.category,
     defaultDurationMinutes: row.default_duration_minutes,
+    sortOrder: row.sort_order,
+    catalogId: row.catalog_id,
   };
 }
 
@@ -95,7 +103,6 @@ function mapSpecialistService(row: SpecialistServiceRow): SpecialistService {
     specialistId: row.specialist_id,
     serviceId: row.service_id,
     active: row.active,
-    acceptingNewClients: row.accepting_new_clients,
     priceMinor: row.price_minor,
     currencyCode: row.currency_code,
     durationMinutes: row.duration_minutes,
@@ -123,7 +130,6 @@ function mapPublicSpecialistOffer(
     ),
     supportsInPerson: row.supports_in_person,
     supportsOnline: row.supports_online,
-    acceptingNewClients: row.accepting_new_clients,
   };
 }
 
@@ -302,13 +308,12 @@ export async function listSpecialistOffersForAdmin(
 export async function updateSpecialistOfferStateAdmin(
   client: SupabaseClient<Database>,
   offerId: string,
-  state: { active: boolean; acceptingNewClients: boolean },
+  state: { active: boolean },
 ): Promise<SpecialistService> {
   const { data, error } = await client
     .from("specialist_services")
     .update({
       active: state.active,
-      accepting_new_clients: state.acceptingNewClients,
     })
     .eq("id", offerId)
     .select("*")
@@ -373,7 +378,6 @@ export async function upsertMySpecialistService(
         supports_in_person: offer.supportsInPerson,
         supports_online: offer.supportsOnline,
         active: offer.active,
-        accepting_new_clients: offer.acceptingNewClients,
       },
       { onConflict: "specialist_id,service_id" },
     )
@@ -406,12 +410,14 @@ const publicServiceSelection = `
   short_description,
   description,
   category,
-  default_duration_minutes
+  default_duration_minutes,
+  sort_order,
+  catalog_id
 `;
 
 export async function listPublicServices(
   client: SupabaseClient<Database>,
-): Promise<PublicService[]> {
+): Promise<PublicOfferService[]> {
   const { data, error } = await client
     .from("services")
     .select(publicServiceSelection)
@@ -442,7 +448,6 @@ const publicSpecialistOfferSelection = `
   duration_minutes,
   supports_in_person,
   supports_online,
-  accepting_new_clients,
   specialists!inner (
     public_slug,
     professional_title
@@ -493,3 +498,99 @@ export const serviceMappers = {
   specialistService: mapSpecialistService,
   publicSpecialistOffer: mapPublicSpecialistOffer,
 };
+
+// ------------------------------------------------------------ catalogues
+
+/** The offer's catalogues (anyone may read their names). */
+export async function listServiceCatalogs(
+  client: SupabaseClient<Database>,
+): Promise<ServiceCatalog[]> {
+  const { data, error } = await client
+    .from("service_catalogs")
+    .select("id, name, sort_order")
+    .order("sort_order");
+  if (error) throw error;
+  return data.map((row) => ({
+    id: row.id,
+    name: row.name,
+    sortOrder: row.sort_order,
+  }));
+}
+
+/**
+ * The offer arranged as the admin left it: new catalogues made, names
+ * kept, every place and catalogue set at once (arrange_services), then the
+ * catalogues no longer listed removed (their services are out by then).
+ */
+export async function saveServiceArrangement(
+  client: SupabaseClient<Database>,
+  input: ServiceArrangement,
+  existing: ServiceCatalog[],
+): Promise<void> {
+  const arrangement = serviceArrangementSchema.parse(input);
+  const ids = new Map<string, string>();
+  const made = arrangement.catalogs.filter((catalog) => !catalog.id);
+  if (made.length) {
+    const { data, error } = await client
+      .from("service_catalogs")
+      .insert(made.map((catalog) => ({ name: catalog.name })))
+      .select("id");
+    if (error) throw error;
+    made.forEach((catalog, index) => ids.set(catalog.key, data[index]!.id));
+  }
+  const names = new Map(existing.map((catalog) => [catalog.id, catalog.name]));
+  for (const catalog of arrangement.catalogs) {
+    if (!catalog.id) continue;
+    ids.set(catalog.key, catalog.id);
+    if (names.get(catalog.id) !== catalog.name) {
+      const { error } = await client
+        .from("service_catalogs")
+        .update({ name: catalog.name })
+        .eq("id", catalog.id);
+      if (error) throw error;
+    }
+  }
+
+  // One order for the loose services and the catalogues, then each
+  // catalogue's own: places 1, 2, …
+  const place = new Map(
+    arrangement.order.map((key, index) => [key, index + 1]),
+  );
+  const within = new Map<string, number>();
+  const { error } = await client.rpc("arrange_services", {
+    p_catalogs: arrangement.catalogs.map((catalog) => ({
+      id: ids.get(catalog.key)!,
+      sort_order: place.get(catalog.key) ?? 0,
+    })),
+    p_services: arrangement.services.map((service) => {
+      if (!service.catalogKey || !ids.has(service.catalogKey)) {
+        return {
+          id: service.id,
+          catalog_id: null,
+          sort_order: place.get(service.id) ?? 0,
+        };
+      }
+      const next = (within.get(service.catalogKey) ?? 0) + 1;
+      within.set(service.catalogKey, next);
+      return {
+        id: service.id,
+        catalog_id: ids.get(service.catalogKey)!,
+        sort_order: next,
+      };
+    }),
+  });
+  if (error) throw error;
+
+  const kept = new Set(ids.values());
+  const gone = existing.filter((catalog) => !kept.has(catalog.id));
+  if (gone.length) {
+    const { error: removing } = await client
+      .from("service_catalogs")
+      .delete()
+      .in(
+        "id",
+        gone.map((catalog) => catalog.id),
+      );
+    if (removing) throw removing;
+  }
+}

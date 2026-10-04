@@ -30,6 +30,18 @@ export type { HeroAction, HeroSectionProps } from "./hero-section";
 export { OfferSection } from "./offer-section";
 export type { OfferSectionProps } from "./offer-section";
 export { OfferTile } from "./offer-tile";
+export {
+  offerPaintAt,
+  SERVICE_ICONS,
+  serviceDisplayName,
+} from "./service-look";
+export {
+  SERVICE_FALLBACK_DESCRIPTION,
+  ServiceFacts,
+  ServicePageView,
+  serviceParagraphs,
+} from "./service-page-view";
+export type { ServiceTeamRow } from "./service-page-view";
 export type { OfferPaint, OfferService, OfferTileProps } from "./offer-tile";
 export { JsonLd } from "./json-ld";
 export { RoomGallery } from "./room-gallery";

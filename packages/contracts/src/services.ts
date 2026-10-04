@@ -36,6 +36,36 @@ export const serviceCreateSchema = z.object({
 
 export const serviceUpdateSchema = partialUpdateSchema(serviceCreateSchema);
 
+export const serviceCatalogNameSchema = z.string().trim().min(1).max(120);
+
+/**
+ * The offer as the admin arranges it, in order: the catalogues (a new one
+ * without an id), and every service with its catalogue (by the catalogue's
+ * key; none: outside one). Catalogues not listed are removed.
+ */
+export const serviceArrangementSchema = z.object({
+  catalogs: z
+    .array(
+      z.object({
+        key: z.string().min(1).max(64),
+        id: z.uuid().nullable(),
+        name: serviceCatalogNameSchema,
+      }),
+    )
+    .max(50),
+  /** Loose services and catalogues share one order: their keys, in it. */
+  order: z.array(z.string().min(1).max(64)).max(250),
+  services: z
+    .array(
+      z.object({
+        id: z.uuid(),
+        catalogKey: z.string().min(1).max(64).nullable(),
+      }),
+    )
+    .max(200),
+});
+export type ServiceArrangement = z.infer<typeof serviceArrangementSchema>;
+
 export const specialistServiceUpsertSchema = z
   .object({
     serviceId: z.uuid(),
@@ -45,7 +75,6 @@ export const specialistServiceUpsertSchema = z
     supportsInPerson: z.boolean().default(true),
     supportsOnline: z.boolean().default(false),
     active: z.boolean().default(true),
-    acceptingNewClients: z.boolean().default(false),
   })
   .refine(
     (data) => !data.active || data.supportsInPerson || data.supportsOnline,
@@ -73,7 +102,9 @@ export interface Service {
   active: boolean;
   publiclyVisible: boolean;
   bookingEnabled: boolean;
+  /** Its place: in its catalogue, or (none) among the catalogues. */
   sortOrder: number;
+  catalogId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -83,7 +114,6 @@ export interface SpecialistService {
   specialistId: string;
   serviceId: string;
   active: boolean;
-  acceptingNewClients: boolean;
   priceMinor: number;
   currencyCode: string;
   durationMinutes: number | null;
@@ -103,6 +133,12 @@ export interface PublicService {
   defaultDurationMinutes: number;
 }
 
+/** A service in the site's offer: with its place and catalogue. */
+export interface PublicOfferService extends PublicService {
+  sortOrder: number;
+  catalogId: string | null;
+}
+
 export interface PublicSpecialistOffer {
   serviceId: string;
   serviceName: string;
@@ -114,7 +150,6 @@ export interface PublicSpecialistOffer {
   effectiveDurationMinutes: number;
   supportsInPerson: boolean;
   supportsOnline: boolean;
-  acceptingNewClients: boolean;
 }
 
 /**

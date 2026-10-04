@@ -66,7 +66,7 @@ export function ServiceForm({
           {fieldError(errors.name?.message)}
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="service-slug">Slug</Label>
+          <Label htmlFor="service-slug">Adres na stronie</Label>
           <Input
             id="service-slug"
             placeholder="psychoterapia-indywidualna"

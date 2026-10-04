@@ -58,8 +58,11 @@ export function weekDays(
 }
 
 export interface NowStatus {
-  /** In a visit, on duty and free, later today, or not now. */
-  tone: "busy" | "free" | "later" | "off";
+  /**
+   * In a visit, on duty and free, later today, or not now; or (a service)
+   * something keeps clients from it.
+   */
+  tone: "busy" | "free" | "later" | "off" | "warn";
   /** `Wizyta do 10:50 · Gabinet Zielony` */
   title: string;
   /** What comes next. */

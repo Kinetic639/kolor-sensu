@@ -126,7 +126,11 @@ export function RosterWeek({
   );
 }
 
-/** The rows, one under another, on a light ground. */
+/**
+ * The rows, one under another, on a light ground. A column, not a grid:
+ * a grid sizes its rows before a tile sized by its width (the site's
+ * offer tile) knows its height, and cuts it.
+ */
 export function Roster({
   week,
   children,
@@ -139,7 +143,7 @@ export function Roster({
   return (
     <section
       aria-label={label}
-      className="grid min-h-0 flex-1 content-start gap-2 overflow-y-auto bg-[var(--surface-subtle)] p-2 sm:p-3"
+      className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto bg-[var(--surface-subtle)] p-2 sm:p-3 [&>*]:shrink-0"
     >
       {week}
       {children}

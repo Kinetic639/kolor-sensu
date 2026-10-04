@@ -212,7 +212,6 @@ describe("specialist domain mapping", () => {
         id: "specialist-id",
         user_id: "user-id",
         active: true,
-        accepting_new_clients: false,
         public_slug: "anna-maria",
         professional_title: null,
         joined_at: null,
@@ -224,7 +223,6 @@ describe("specialist domain mapping", () => {
       id: "specialist-id",
       userId: "user-id",
       publicSlug: "anna-maria",
-      acceptingNewClients: false,
     });
   });
 
@@ -234,7 +232,6 @@ describe("specialist domain mapping", () => {
         id: "specialist-id",
         user_id: "user-id",
         active: true,
-        accepting_new_clients: true,
         public_slug: "anna-kowalska",
         professional_title: "Psychoterapeutka",
         joined_at: "2026-09-01T00:00:00Z",
@@ -559,7 +556,6 @@ describe("specialist colour", () => {
         id: "specialist-id",
         user_id: "user-id",
         active: true,
-        accepting_new_clients: true,
         public_slug: "anna",
         professional_title: null,
         joined_at: null,

@@ -68,7 +68,6 @@ describe("listBookableCatalog", () => {
       effectiveDurationMinutes: 50,
       supportsInPerson: true,
       supportsOnline: false,
-      acceptingNewClients: true,
     });
     expect(catalog.offers).toHaveLength(2);
   });

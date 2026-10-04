@@ -45,18 +45,17 @@ export async function reviewSpecialistDraftAction(input: {
 }
 
 /**
- * An offer on or off, or taking new clients or not (bound to the
+ * An offer on or off (bound to the
  * specialist: `updateSpecialistOfferStateAction.bind(null, id)`).
  */
 export async function updateSpecialistOfferStateAction(
   specialistId: string,
-  input: { offerId: string; active: boolean; acceptingNewClients: boolean },
+  input: { offerId: string; active: boolean },
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   await requirePortalRole();
   try {
     await updateSpecialistOfferStateAdmin(await createClient(), input.offerId, {
       active: input.active,
-      acceptingNewClients: input.acceptingNewClients,
     });
   } catch (error) {
     console.error("[specialists] offer change failed:", error);
@@ -64,6 +63,8 @@ export async function updateSpecialistOfferStateAction(
   }
   revalidatePath("/specjalisci");
   revalidatePath(`/specjalisci/${specialistId}`);
+  // The offer's roster and pages list who offers each service.
+  revalidatePath("/oferta", "layout");
   updateTag(CACHE_TAGS.specialists);
   // Offers feed the price list, the offer pages and the specialist pages.
   await revalidateWeb([{ path: "/", type: "layout" }]);

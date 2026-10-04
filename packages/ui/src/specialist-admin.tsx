@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, MapPin, Monitor, Pencil, UserCheck } from "lucide-react";
+import { Check, MapPin, Monitor, Pencil } from "lucide-react";
 import { Badge } from "./badge";
 import { Button } from "./button";
 import { Card } from "./card";
@@ -11,7 +11,6 @@ import { Switch } from "./switch";
 export interface SpecialistStatusSummaryProps {
   active: boolean;
   accountActive: boolean;
-  acceptingNewClients: boolean;
   publicationLabel: string;
   publicationTone?: "neutral" | "success" | "warning" | "danger" | "info";
   className?: string;
@@ -20,7 +19,6 @@ export interface SpecialistStatusSummaryProps {
 export function SpecialistStatusSummary({
   active,
   accountActive,
-  acceptingNewClients,
   publicationLabel,
   publicationTone = "neutral",
   className,
@@ -29,11 +27,6 @@ export function SpecialistStatusSummary({
     <div className={cn("flex flex-wrap gap-2", className)}>
       <StatusBadge tone={active && accountActive ? "success" : "danger"}>
         {active && accountActive ? "Aktywny" : "Nieaktywny"}
-      </StatusBadge>
-      <StatusBadge tone={acceptingNewClients ? "info" : "neutral"}>
-        {acceptingNewClients
-          ? "Przyjmuje nowych klientów"
-          : "Nie przyjmuje nowych klientów"}
       </StatusBadge>
       <StatusBadge tone={publicationTone}>{publicationLabel}</StatusBadge>
     </div>
@@ -148,10 +141,8 @@ export interface SpecialistOfferRowProps {
   supportsInPerson: boolean;
   supportsOnline: boolean;
   active: boolean;
-  acceptingNewClients: boolean;
   pending?: boolean;
   onActiveChange?: (active: boolean) => void;
-  onAcceptingNewClientsChange?: (accepting: boolean) => void;
   /** Adds an "Edytuj" button (the specialist edits price, time and form). */
   onEdit?: () => void;
 }
@@ -164,10 +155,8 @@ export function SpecialistOfferRow({
   supportsInPerson,
   supportsOnline,
   active,
-  acceptingNewClients,
   pending = false,
   onActiveChange,
-  onAcceptingNewClientsChange,
   onEdit,
 }: SpecialistOfferRowProps) {
   return (
@@ -200,17 +189,6 @@ export function SpecialistOfferRow({
           ) : null}
         </div>
       </div>
-      <label className="flex min-h-11 items-center justify-between gap-3 text-sm lg:justify-start">
-        <span className="inline-flex items-center gap-1.5 text-[var(--text-muted)]">
-          <UserCheck className="size-4" aria-hidden="true" /> Nowi klienci
-        </span>
-        <Switch
-          checked={acceptingNewClients}
-          disabled={pending}
-          aria-label={`Przyjmowanie nowych klientów dla ${serviceName}`}
-          onCheckedChange={onAcceptingNewClientsChange}
-        />
-      </label>
       {onActiveChange ? (
         <label className="flex min-h-11 items-center justify-between gap-3 text-sm lg:justify-start">
           <span className="text-[var(--text-muted)]">Oferta aktywna</span>

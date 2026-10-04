@@ -19,7 +19,6 @@ const rows = [
     name: "Anna Kłobuchowska",
     title: "Psycholog",
     services: 4,
-    state: { accepting: false },
     percent: 78,
     next: ["2030-10-07", "08:00"],
   }),
@@ -47,14 +46,12 @@ describe("specialistTags", () => {
     expect(
       specialistTags({
         active: true,
-        acceptingNewClients: true,
         profile: "published",
       }).map((tag) => tag.label),
     ).toEqual(["Opublikowany"]);
     expect(
       specialistTags({
         active: false,
-        acceptingNewClients: false,
         profile: "pending",
       }),
     ).toEqual([
@@ -63,7 +60,7 @@ describe("specialistTags", () => {
     ]);
     expect(
       specialistTags(
-        { active: true, acceptingNewClients: true, profile: "rejected" },
+        { active: true, profile: "rejected" },
         { withActive: true },
       ),
     ).toEqual([
@@ -94,7 +91,6 @@ describe("shownSpecialists", () => {
     expect(shown("aktywni")).toEqual(["Anna Kłobuchowska", "Michał Stępień"]);
     expect(shown("nieaktywni")).toEqual(["Ewa Wójcik"]);
     expect(shown("weryfikacja")).toEqual(["Ewa Wójcik"]);
-    expect(shown("bez-nowych")).toEqual(["Anna Kłobuchowska"]);
   });
 
   it("busiest first, the soonest visit first (none last), most services first", () => {
@@ -132,7 +128,6 @@ describe("links", () => {
       ["Aktywni", 2, true],
       ["Nieaktywni", 1, false],
       ["Do weryfikacji", 1, false],
-      ["Nie przyjmują nowych", 1, false],
     ]);
     expect(segments[0]!.href).toBe(`/specjalisci?otwarte=${ANNA}`);
   });

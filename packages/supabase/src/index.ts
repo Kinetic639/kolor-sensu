@@ -72,7 +72,9 @@ export {
   listPublicServices,
   listPublicOffersForSpecialist,
   listPublicSpecialistOffersForService,
+  listServiceCatalogs,
   listServicesAdmin,
+  saveServiceArrangement,
   listServiceSummariesAdmin,
   listSpecialistOffersAdmin,
   listSpecialistOffersForServiceAdmin,
@@ -206,6 +208,7 @@ export {
   getVisit,
   listVisitEvents,
   listVisits,
+  searchAllVisits,
   searchVisits,
 } from "./visits";
 export type {

@@ -21,7 +21,6 @@ export interface SpecialistListItemViewModel {
   professionalTitle: string;
   active: boolean;
   accountActive: boolean;
-  acceptingNewClients: boolean;
   publicationStatus: ProfilePublicationStatus | null;
   serviceCount: number;
   pendingDraft: boolean;
@@ -89,7 +88,6 @@ export interface SpecialistDetailViewModel {
   joinedAt: string | null;
   active: boolean;
   accountActive: boolean;
-  acceptingNewClients: boolean;
   publicProfile: SpecialistProfileSnapshotViewModel | null;
   draft: SpecialistDraftViewModel | null;
   offers: SpecialistOffer[];

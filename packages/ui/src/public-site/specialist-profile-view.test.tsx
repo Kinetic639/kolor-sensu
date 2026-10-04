@@ -30,7 +30,6 @@ const base = {
     { title: "Języki", items: [] },
   ],
   qualifications: ["Uniwersytet Warszawski"],
-  acceptingNewClients: false,
 };
 
 describe("SpecialistProfileView", () => {
@@ -51,7 +50,6 @@ describe("SpecialistProfileView", () => {
     // A fact without items is left out.
     expect(screen.queryByText("Języki")).toBeNull();
     expect(screen.getByText("Uniwersytet Warszawski")).toBeVisible();
-    expect(screen.getByText(/Obecnie nie przyjmuje nowych osób/)).toBeVisible();
   });
 
   it("the full bio before the short one", () => {

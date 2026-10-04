@@ -28,7 +28,6 @@ export const offerFormSchema = z
     supportsInPerson: z.boolean(),
     supportsOnline: z.boolean(),
     active: z.boolean(),
-    acceptingNewClients: z.boolean(),
   })
   .refine(
     (data) => !data.active || data.supportsInPerson || data.supportsOnline,
@@ -51,7 +50,6 @@ export function toServiceUpsert(
     supportsInPerson: values.supportsInPerson,
     supportsOnline: values.supportsOnline,
     active: values.active,
-    acceptingNewClients: values.acceptingNewClients,
   };
 }
 
@@ -64,7 +62,6 @@ export function toOfferFormValues(
     | "supportsInPerson"
     | "supportsOnline"
     | "active"
-    | "acceptingNewClients"
   > | null,
 ): OfferFormValues {
   if (!offer) {
@@ -75,7 +72,6 @@ export function toOfferFormValues(
       supportsInPerson: true,
       supportsOnline: false,
       active: true,
-      acceptingNewClients: true,
     };
   }
   return {
@@ -85,6 +81,5 @@ export function toOfferFormValues(
     supportsInPerson: offer.supportsInPerson,
     supportsOnline: offer.supportsOnline,
     active: offer.active,
-    acceptingNewClients: offer.acceptingNewClients,
   };
 }

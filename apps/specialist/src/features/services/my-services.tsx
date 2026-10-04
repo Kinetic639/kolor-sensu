@@ -159,7 +159,6 @@ function OfferForm({
           [
             ["supportsInPerson", "Stacjonarnie"],
             ["supportsOnline", "Online"],
-            ["acceptingNewClients", "Przyjmuję nowych klientów"],
             ["active", "Usługa aktywna"],
           ] as const
         ).map(([name, label]) => (
@@ -263,22 +262,10 @@ export function MyServices({ model }: { model: MyServicesViewModel }) {
           <ul className="mt-3">
             {model.items.map((offer) => (
               <SpecialistOfferRow
-                acceptingNewClients={offer.acceptingNewClients}
                 active={offer.active}
                 description={offer.description}
                 durationLabel={offer.durationLabel}
                 key={offer.id}
-                onAcceptingNewClientsChange={(acceptingNewClients) =>
-                  save(
-                    { ...toOfferFormValues(offer), acceptingNewClients },
-                    {
-                      offerId: offer.id,
-                      success: acceptingNewClients
-                        ? "Przyjmujesz nowych klientów"
-                        : "Nie przyjmujesz nowych klientów",
-                    },
-                  )
-                }
                 onEdit={() => setDialog({ mode: "edit", offer })}
                 pending={isPending && pendingOfferId === offer.id}
                 priceLabel={offer.priceLabel}

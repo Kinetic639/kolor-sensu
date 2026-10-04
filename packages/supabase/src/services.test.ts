@@ -8,7 +8,11 @@ import {
   specialistServiceUpsertSchema,
 } from "@repo/contracts";
 import { describe, expect, it, vi } from "vitest";
-import { listPublicOffersForSpecialist, serviceMappers } from "./services";
+import {
+  listPublicOffersForSpecialist,
+  saveServiceArrangement,
+  serviceMappers,
+} from "./services";
 
 describe("service domain schemas", () => {
   it("accepts known categories and rejects unknown ones", () => {
@@ -106,6 +110,7 @@ describe("service domain mapping", () => {
         publicly_visible: true,
         booking_enabled: false,
         sort_order: 0,
+        catalog_id: "catalog-id",
         created_at: "2026-09-20T00:00:00Z",
         updated_at: "2026-09-20T00:00:00Z",
       }),
@@ -124,7 +129,6 @@ describe("service domain mapping", () => {
         specialist_id: "specialist-id",
         service_id: "service-id",
         active: true,
-        accepting_new_clients: true,
         price_minor: 25000,
         currency_code: "PLN",
         duration_minutes: null,
@@ -149,7 +153,6 @@ describe("service domain mapping", () => {
         duration_minutes: null,
         supports_in_person: true,
         supports_online: true,
-        accepting_new_clients: true,
         specialists: { public_slug: "anna-maria", professional_title: null },
         services: {
           name: "Psychoterapia indywidualna",
@@ -175,7 +178,6 @@ describe("a specialist's public offers", () => {
       duration_minutes: null,
       supports_in_person: true,
       supports_online: false,
-      accepting_new_clients: true,
       specialists: { public_slug: "anna", professional_title: null },
       services: { name, slug: name, default_duration_minutes: 50 },
     });
@@ -199,5 +201,79 @@ describe("a specialist's public offers", () => {
       "konsultacja",
       "terapia",
     ]);
+  });
+});
+
+describe("saveServiceArrangement", () => {
+  const uuid = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
+
+  it("makes new catalogues, renames, arranges at once and removes the rest", async () => {
+    const calls: { table?: string; op: string; args: unknown }[] = [];
+    const table = (name: string) => ({
+      insert: (rows: unknown) => {
+        calls.push({ table: name, op: "insert", args: rows });
+        return {
+          select: () =>
+            Promise.resolve({ data: [{ id: uuid(9) }], error: null }),
+        };
+      },
+      update: (patch: unknown) => ({
+        eq: (_: string, id: string) => {
+          calls.push({ table: name, op: "update", args: [id, patch] });
+          return Promise.resolve({ error: null });
+        },
+      }),
+      delete: () => ({
+        in: (_: string, ids: string[]) => {
+          calls.push({ table: name, op: "delete", args: ids });
+          return Promise.resolve({ error: null });
+        },
+      }),
+    });
+    const rpc = vi.fn().mockResolvedValue({ error: null });
+    const client = { from: table, rpc } as never;
+
+    await saveServiceArrangement(
+      client,
+      {
+        catalogs: [
+          { key: "terapie", id: uuid(1), name: "Terapie" },
+          { key: "nowy", id: null, name: "Dzieci" },
+        ],
+        order: [uuid(5), "terapie", "nowy"],
+        services: [
+          { id: uuid(5), catalogKey: null },
+          { id: uuid(6), catalogKey: "terapie" },
+          { id: uuid(7), catalogKey: "terapie" },
+          { id: uuid(8), catalogKey: "nowy" },
+        ],
+      },
+      [
+        { id: uuid(1), name: "Terapia", sortOrder: 1 },
+        { id: uuid(2), name: "Stary", sortOrder: 2 },
+      ],
+    );
+
+    expect(calls).toEqual([
+      { table: "service_catalogs", op: "insert", args: [{ name: "Dzieci" }] },
+      {
+        table: "service_catalogs",
+        op: "update",
+        args: [uuid(1), { name: "Terapie" }],
+      },
+      { table: "service_catalogs", op: "delete", args: [uuid(2)] },
+    ]);
+    expect(rpc).toHaveBeenCalledWith("arrange_services", {
+      p_catalogs: [
+        { id: uuid(1), sort_order: 2 },
+        { id: uuid(9), sort_order: 3 },
+      ],
+      p_services: [
+        { id: uuid(5), catalog_id: null, sort_order: 1 },
+        { id: uuid(6), catalog_id: uuid(1), sort_order: 1 },
+        { id: uuid(7), catalog_id: uuid(1), sort_order: 2 },
+        { id: uuid(8), catalog_id: uuid(9), sort_order: 1 },
+      ],
+    });
   });
 });

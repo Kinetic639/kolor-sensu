@@ -78,7 +78,6 @@ export default async function SpecialistPage({
     <>
       <PageIntro eyebrow={role} heading={specialist.displayName} />
       <SpecialistProfileView
-        acceptingNewClients={specialist.acceptingNewClients}
         actions={
           <>
             <PrimaryButton asChild arrow>
@@ -106,7 +105,6 @@ export default async function SpecialistPage({
           meta: [
             formatDuration(offer.effectiveDurationMinutes),
             offerModes(offer),
-            offer.acceptingNewClients ? null : "bez nowych osób",
           ]
             .filter(Boolean)
             .join(" · "),

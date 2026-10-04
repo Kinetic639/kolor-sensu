@@ -3,14 +3,17 @@
 import { ChevronRight } from "lucide-react";
 import { useQueryState } from "nuqs";
 import {
+  useEffect,
   useId,
   useRef,
+  useState,
   type KeyboardEvent,
   type MouseEvent,
   type ReactNode,
 } from "react";
 import { cn } from "../lib/utils";
 import { openTab, parseAsOpenRows, withRow, withTab } from "./open-rows";
+import { EXPAND_MS, useExpand } from "./use-expand";
 
 // A row of a roster (a specialist, a room): who or what it is and the
 // week at a glance; a click opens it in place, on tabs, each with the
@@ -42,6 +45,7 @@ export function RosterItem({
   actions,
   muted = false,
   summaryClassName,
+  wideIdentity = false,
 }: {
   id: string;
   /** Who or what it is, for the button's name. */
@@ -59,15 +63,35 @@ export function RosterItem({
   muted?: boolean;
   /** The summary's columns on a wide screen (the same in every row). */
   summaryClassName?: string;
+  /** Long names (services): a wider first column on a wide screen. */
+  wideIdentity?: boolean;
 }) {
   const [rows, setRows] = useQueryState("otwarte", OPEN);
   const tab = openTab(rows, id);
-  const open = tab !== undefined;
+  // The row opens and closes at once; the address follows once it has
+  // (a new address renders the page again, which would stall the motion).
+  const [moving, setMoving] = useState<boolean | null>(null);
+  const inAddress = tab !== undefined;
+  const open = moving ?? inAddress;
+  const write = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => {
+    if (moving !== null && moving === inAddress) setMoving(null);
+  }, [moving, inAddress]);
+  useEffect(() => () => clearTimeout(write.current), []);
   const active = tabs.find((one) => one.key === tab) ?? tabs[0];
   const base = useId();
   const tablist = useRef<HTMLDivElement>(null);
+  const { shown, expanded } = useExpand(open);
 
-  const toggle = () => void setRows((now) => withRow(now, id, !open));
+  const toggle = () => {
+    const next = !open;
+    setMoving(next);
+    clearTimeout(write.current);
+    write.current = setTimeout(
+      () => void setRows((now) => withRow(now, id, next)),
+      EXPAND_MS + 20,
+    );
+  };
   // A click anywhere on the row opens it, but not on its own links and menu.
   const onRowClick = (event: MouseEvent<HTMLDivElement>) => {
     if ((event.target as HTMLElement).closest("a, button, [role='menu']")) {
@@ -93,7 +117,8 @@ export function RosterItem({
     <article
       aria-label={name}
       className={cn(
-        "overflow-hidden rounded-[8px] border bg-[var(--surface)]",
+        // In the roster's scrolling column it keeps its height (open, tall).
+        "shrink-0 overflow-hidden rounded-[8px] border bg-[var(--surface)]",
         open
           ? "border-[color-mix(in_srgb,var(--primary)_35%,var(--border))] shadow-[0_1px_3px_rgb(16_32_28/0.06)]"
           : "border-[var(--border)]",
@@ -101,7 +126,10 @@ export function RosterItem({
     >
       <div
         className={cn(
-          "grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2.5 px-2 py-2.5 hover:bg-[var(--surface-subtle)] lg:grid-cols-[15rem_minmax(0,1fr)_28px] lg:gap-x-3.5",
+          "grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2.5 px-2 py-2.5 hover:bg-[var(--surface-subtle)] lg:gap-x-3.5",
+          wideIdentity
+            ? "lg:grid-cols-[19rem_minmax(0,1fr)_28px]"
+            : "lg:grid-cols-[15rem_minmax(0,1fr)_28px]",
           // Grey, not see-through: the text keeps its contrast.
           muted && "[&>*:not(:last-child)]:grayscale",
         )}
@@ -136,64 +164,74 @@ export function RosterItem({
         </div>
       </div>
 
-      <div hidden={!open} id={`${base}-body`}>
-        <div
-          aria-label={`Sekcje: ${name}`}
-          className="flex h-[34px] items-stretch gap-4 overflow-x-auto border-t border-b border-[color-mix(in_srgb,var(--border)_60%,transparent)] px-3.5 [scrollbar-width:none] lg:pl-[46px]"
-          ref={tablist}
-          role="tablist"
-        >
-          {tabs.map((one) => {
-            const selected = one.key === active?.key;
-            return (
-              <button
-                aria-controls={`${base}-${one.key}`}
-                aria-selected={selected}
-                className={cn(
-                  "flex shrink-0 items-center gap-1.5 text-[0.8125rem] whitespace-nowrap outline-none focus-visible:underline",
-                  selected
-                    ? "font-semibold text-[var(--text)] shadow-[inset_0_-2px_0_var(--primary)]"
-                    : "text-[var(--text-muted)] hover:text-[var(--text)]",
-                )}
-                data-tab={one.key}
-                id={`${base}-${one.key}-tab`}
-                key={one.key}
-                onClick={() => choose(one.key)}
-                onKeyDown={onTabKey}
-                role="tab"
-                tabIndex={selected ? 0 : -1}
-                type="button"
-              >
-                {one.label}
-                {one.count !== undefined ? (
-                  <>
-                    {" "}
-                    <span className="rounded-[4px] bg-[var(--surface-muted)] px-1.5 text-[0.6875rem] font-medium text-[var(--text-muted)] tabular-nums">
-                      {one.count}
-                    </span>
-                  </>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-        {tabs.map((one) => (
+      {/* Its height eases open and closed (./use-expand). */}
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none",
+          expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+        )}
+        hidden={!shown}
+        id={`${base}-body`}
+      >
+        <div className="min-h-0 overflow-hidden">
           <div
-            aria-labelledby={`${base}-${one.key}-tab`}
-            className="px-3.5 py-3 lg:pl-[46px]"
-            hidden={one.key !== active?.key}
-            id={`${base}-${one.key}`}
-            key={one.key}
-            role="tabpanel"
+            aria-label={`Sekcje: ${name}`}
+            className="flex h-[34px] items-stretch gap-4 overflow-x-auto border-t border-b border-[color-mix(in_srgb,var(--border)_60%,transparent)] px-3.5 [scrollbar-width:none] lg:pl-[46px]"
+            ref={tablist}
+            role="tablist"
           >
-            {one.content}
+            {tabs.map((one) => {
+              const selected = one.key === active?.key;
+              return (
+                <button
+                  aria-controls={`${base}-${one.key}`}
+                  aria-selected={selected}
+                  className={cn(
+                    "flex shrink-0 items-center gap-1.5 text-[0.8125rem] whitespace-nowrap outline-none focus-visible:underline",
+                    selected
+                      ? "font-semibold text-[var(--text)] shadow-[inset_0_-2px_0_var(--primary)]"
+                      : "text-[var(--text-muted)] hover:text-[var(--text)]",
+                  )}
+                  data-tab={one.key}
+                  id={`${base}-${one.key}-tab`}
+                  key={one.key}
+                  onClick={() => choose(one.key)}
+                  onKeyDown={onTabKey}
+                  role="tab"
+                  tabIndex={selected ? 0 : -1}
+                  type="button"
+                >
+                  {one.label}
+                  {one.count !== undefined ? (
+                    <>
+                      {" "}
+                      <span className="rounded-[4px] bg-[var(--surface-muted)] px-1.5 text-[0.6875rem] font-medium text-[var(--text-muted)] tabular-nums">
+                        {one.count}
+                      </span>
+                    </>
+                  ) : null}
+                </button>
+              );
+            })}
           </div>
-        ))}
-        {actions ? (
-          <div className="flex flex-wrap items-center gap-1.5 border-t border-[color-mix(in_srgb,var(--border)_60%,transparent)] bg-[var(--surface-subtle)] px-3.5 py-2 lg:pl-[46px]">
-            {actions}
-          </div>
-        ) : null}
+          {tabs.map((one) => (
+            <div
+              aria-labelledby={`${base}-${one.key}-tab`}
+              className="px-3.5 py-3 lg:pl-[46px]"
+              hidden={one.key !== active?.key}
+              id={`${base}-${one.key}`}
+              key={one.key}
+              role="tabpanel"
+            >
+              {one.content}
+            </div>
+          ))}
+          {actions ? (
+            <div className="flex flex-wrap items-center gap-1.5 border-t border-[color-mix(in_srgb,var(--border)_60%,transparent)] bg-[var(--surface-subtle)] px-3.5 py-2 lg:pl-[46px]">
+              {actions}
+            </div>
+          ) : null}
+        </div>
       </div>
     </article>
   );

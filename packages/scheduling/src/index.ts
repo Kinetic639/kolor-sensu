@@ -11,6 +11,7 @@ export * from "./labels";
 export * from "./notification-view";
 export * from "./room-hours";
 export * from "./room-week";
+export * from "./service-week";
 export * from "./slots";
 export * from "./specialist-week";
 export * from "./visit-events";

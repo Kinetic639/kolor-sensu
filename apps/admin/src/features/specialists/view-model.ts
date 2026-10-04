@@ -28,7 +28,10 @@ import type {
   SpecialistRow,
   SpecialistState,
 } from "@repo/ui/specialists";
-import { categoryLabels } from "@/features/services/view-model";
+import {
+  categoryLabels,
+  formatOfferPrice,
+} from "@/features/services/view-model";
 import type {
   ProfileDiffFieldViewModel,
   SpecialistDetailViewModel,
@@ -94,7 +97,6 @@ export function mapSpecialistsListViewModel(
       professionalTitle: summary.professionalTitle ?? "Tytuł nieuzupełniony",
       active: summary.active,
       accountActive: summary.accountActive,
-      acceptingNewClients: summary.acceptingNewClients,
       publicationStatus: summary.publicationStatus,
       serviceCount: summary.serviceCount,
       pendingDraft: Boolean(summary.pendingDraftId),
@@ -115,17 +117,12 @@ export function mapSpecialistsListViewModel(
 export function specialistState(
   item: Pick<
     SpecialistListItemViewModel,
-    | "active"
-    | "accountActive"
-    | "acceptingNewClients"
-    | "pendingDraft"
-    | "publicationStatus"
+    "active" | "accountActive" | "pendingDraft" | "publicationStatus"
   >,
 ): SpecialistState {
   return {
     // Working with the centre and able to sign in.
     active: item.active && item.accountActive,
-    acceptingNewClients: item.acceptingNewClients,
     profile: item.pendingDraft
       ? "pending"
       : item.publicationStatus === "pending_review"
@@ -200,16 +197,11 @@ export function toSpecialistOffers(
       id: offer.id,
       serviceName: service?.name ?? "Usługa niedostępna w katalogu",
       category: service ? categoryLabels[service.category] : null,
-      price: new Intl.NumberFormat("pl-PL", {
-        style: "currency",
-        currency: offer.currencyCode,
-        maximumFractionDigits: offer.priceMinor % 100 ? 2 : 0,
-      }).format(offer.priceMinor / 100),
+      price: formatOfferPrice(offer),
       duration: duration ? `${duration} min` : "Nieustalony",
       inPerson: offer.supportsInPerson,
       online: offer.supportsOnline,
       active: offer.active,
-      acceptingNewClients: offer.acceptingNewClients,
     };
   });
 }
@@ -219,7 +211,6 @@ export function detailState(detail: SpecialistDetailViewModel) {
   return specialistState({
     active: detail.active,
     accountActive: detail.accountActive,
-    acceptingNewClients: detail.acceptingNewClients,
     pendingDraft: detail.draft?.status === "pending_review",
     publicationStatus: detail.publicProfile?.publicationStatus ?? null,
   });
@@ -291,7 +282,6 @@ export function mapSpecialistDetailViewModel({
     joinedAt: specialist.joinedAt,
     active: specialist.active,
     accountActive: identity.active,
-    acceptingNewClients: specialist.acceptingNewClients,
     publicProfile: publicProfile
       ? {
           firstName: publicProfile.firstName,
@@ -502,7 +492,6 @@ export function profilePreview(
     longBio: profile.longBio,
     facts: profileFacts(profile),
     qualifications: [...profile.education, ...profile.certificates],
-    acceptingNewClients: detail.acceptingNewClients,
     // What the site lists: the active offers.
     offers: detail.offers
       .filter((offer) => offer.active)
@@ -517,7 +506,6 @@ export function profilePreview(
           ]
             .filter(Boolean)
             .join(" lub "),
-          offer.acceptingNewClients ? null : "bez nowych osób",
         ]
           .filter(Boolean)
           .join(" · "),

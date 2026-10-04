@@ -93,13 +93,16 @@ export function SiteFooter({
           <nav aria-label={offer.label}>
             <ColumnTitle>{offer.label}</ColumnTitle>
             <ul className="grid gap-2.5">
-              {offer.children!.map((child) => (
-                <li key={child.href}>
-                  <Link href={child.href} className={linkStyle}>
-                    {child.label}
-                  </Link>
-                </li>
-              ))}
+              {/* Every page: a group's (a catalogue's) unfolded. */}
+              {offer
+                .children!.flatMap((child) => child.children ?? [child])
+                .map((child) => (
+                  <li key={child.href}>
+                    <Link href={child.href} className={linkStyle}>
+                      {child.label}
+                    </Link>
+                  </li>
+                ))}
             </ul>
           </nav>
         ) : null}

@@ -117,7 +117,6 @@ export function specialistRow({
   services?: number;
   state?: Partial<{
     active: boolean;
-    accepting: boolean;
     profile: SpecialistProfileState;
   }>;
   percent?: number;
@@ -140,7 +139,6 @@ export function specialistRow({
     slug: name.toLowerCase().replace(/\s+/g, "-"),
     state: {
       active: state.active ?? true,
-      acceptingNewClients: state.accepting ?? true,
       profile: state.profile ?? "published",
     },
     days: weekOf(percent),
@@ -156,7 +154,6 @@ export const SAMPLE_SPECIALISTS: SpecialistRow[] = [
       id: "11111111-1111-4111-8111-111111111111",
       name: "Anna Kłobuchowska",
       title: "Psycholog / Psychoterapeuta",
-      state: { accepting: false },
       percent: 78,
       color: "#c26a12",
       now: {
@@ -205,7 +202,6 @@ export const SAMPLE_OFFERS: SpecialistOffer[] = [
     inPerson: true,
     online: true,
     active: true,
-    acceptingNewClients: true,
   },
   {
     id: "offer-2",
@@ -216,7 +212,6 @@ export const SAMPLE_OFFERS: SpecialistOffer[] = [
     inPerson: true,
     online: false,
     active: true,
-    acceptingNewClients: false,
   },
   {
     id: "offer-3",
@@ -227,6 +222,5 @@ export const SAMPLE_OFFERS: SpecialistOffer[] = [
     inPerson: true,
     online: true,
     active: false,
-    acceptingNewClients: true,
   },
 ];

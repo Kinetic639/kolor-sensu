@@ -12,7 +12,6 @@ const valid = {
   supportsInPerson: true,
   supportsOnline: false,
   active: true,
-  acceptingNewClients: true,
 };
 
 describe("offerFormSchema", () => {
@@ -62,7 +61,6 @@ describe("offer form conversion", () => {
       supportsInPerson: true,
       supportsOnline: false,
       active: true,
-      acceptingNewClients: true,
     });
     expect(toServiceUpsert(valid).durationMinutes).toBeNull();
   });
@@ -76,7 +74,6 @@ describe("offer form conversion", () => {
         supportsInPerson: false,
         supportsOnline: true,
         active: true,
-        acceptingNewClients: false,
       }),
     ).toMatchObject({ serviceId: "s", price: "200", duration: "80" });
     expect(toOfferFormValues(null)).toMatchObject({
@@ -85,7 +82,6 @@ describe("offer form conversion", () => {
       duration: "",
       supportsInPerson: true,
       active: true,
-      acceptingNewClients: true,
     });
   });
 });

@@ -16,6 +16,8 @@ export interface VisitLike {
   mode: "in_person" | "online";
   startsAt: string;
   endsAt: string;
+  /** Where the list gives it. */
+  serviceId?: string;
   serviceName: string;
   specialist: { id: string; name: string; color: string | null };
   room: { id: string; name: string; color: string | null } | null;

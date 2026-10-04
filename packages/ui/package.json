@@ -45,6 +45,7 @@
     "./resource-roster": "./src/resource-roster/index.ts",
     "./specialists": "./src/specialists/index.ts",
     "./rooms": "./src/rooms/index.ts",
+    "./services": "./src/services/index.ts",
     "./live-updates": "./src/live-updates.ts",
     "./rich-text-editor": "./src/rich-text-editor.tsx",
     "./rich-text-renderer": "./src/rich-text-renderer.tsx",
