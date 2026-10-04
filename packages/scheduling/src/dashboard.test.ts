@@ -190,7 +190,8 @@ describe("settlementView", () => {
       description: "Jan Kowalski · 2610-004 · sob. 03.10, 11:00 · od 01.10",
       owedMinor: 5050,
       clientName: "Jan Kowalski",
-      href: "/rezerwacje?wizyta=v9",
+      // Among all the bookings, found by its number (not only upcoming).
+      href: "/rezerwacje?zakres=wszystkie&q=2610-004&wizyta=v9",
     });
     expect(view.owed).toMatch(/^50,50\s?zł$/);
     expect(

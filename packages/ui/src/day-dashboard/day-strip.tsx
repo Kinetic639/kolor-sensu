@@ -26,7 +26,7 @@ export function DayStrip({ items }: { items: DayStripItem[] }) {
   return (
     <nav
       aria-label="Dzień w liczbach"
-      className="flex snap-x overflow-x-auto border-b border-[var(--border)] [scrollbar-width:none]"
+      className="flex snap-x overflow-x-auto [scrollbar-width:none]"
     >
       {items.map((item) => (
         <Link

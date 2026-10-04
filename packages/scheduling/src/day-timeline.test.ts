@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { dayNav, dayTimeline, weekSummary } from "./day-timeline";
+import {
+  dayNav,
+  dayTimeline,
+  weekVisitsByDay,
+  weekSummary,
+} from "./day-timeline";
 import type { VisitLike } from "./visits";
 
 const timeZone = "Europe/Warsaw";
@@ -97,6 +102,8 @@ describe("dayTimeline", () => {
       status: { label: "Minęła", tone: "neutral" },
     });
     expect(first!.width).toBeCloseTo(8.33, 1);
+    // Its own price (each specialist may ask their own).
+    expect(first!.price).toMatch(/^200\szł$/);
     expect(current).toMatchObject({
       clientName: "Piotr Zieliński",
       current: true,
@@ -188,6 +195,37 @@ describe("weekSummary", () => {
         change: "+1",
         trend: "down",
       },
+    ]);
+  });
+});
+
+describe("weekVisitsByDay", () => {
+  it("the week's visits day by day, today marked, cancelled ones left out", () => {
+    const days = weekVisitsByDay(
+      [
+        visit("08:00", "08:50"),
+        visit("09:00", "09:50", { status: "awaiting_payment" }),
+        visit("10:00", "10:50", { status: "cancelled" }),
+        // Late on Sunday in Warsaw, Sunday still (UTC: 21:30).
+        visit("08:00", "08:50", {
+          startsAt: "2026-10-11T21:30:00Z",
+          endsAt: "2026-10-11T22:20:00Z",
+        }),
+      ],
+      { timeZone, now, week: "2026-10-05" },
+    );
+    expect(days.map((day) => day.weekday)).toEqual([
+      "Pn",
+      "Wt",
+      "Śr",
+      "Czw",
+      "Pt",
+      "Sob",
+      "Nd",
+    ]);
+    expect(days.map((day) => day.count)).toEqual([0, 0, 0, 0, 2, 0, 1]);
+    expect(days.filter((day) => day.isToday).map((day) => day.date)).toEqual([
+      "2026-10-09",
     ]);
   });
 });

@@ -94,6 +94,8 @@ export interface VisitRow {
   resendable: boolean;
   /** Admins: what is left of the payment to give back (0: nothing). */
   refundableMinor: number;
+  /** Admins: a refund promised that has not gone back (0: none). */
+  owedMinor: number;
   currencyCode: string;
   mode: "in_person" | "online";
   roomId: string | null;
@@ -224,8 +226,23 @@ function rowOf(visit: VisitLike, timeZone: string, now: Date): VisitRow {
       reservation !== null &&
       new Date(reservation) > now &&
       Boolean(visit.client.email),
+    // A refund promised and not gone back yet is not given again: it is
+    // owed (settled on its own), and what is left is past it.
     refundableMinor: visit.payment?.paid
-      ? Math.max(0, visit.priceMinor - visit.payment.refundedMinor)
+      ? Math.max(
+          0,
+          visit.priceMinor -
+            Math.max(
+              visit.payment.refundedMinor,
+              visit.payment.refundDueMinor ?? 0,
+            ),
+        )
+      : 0,
+    owedMinor: visit.payment
+      ? Math.max(
+          0,
+          (visit.payment.refundDueMinor ?? 0) - visit.payment.refundedMinor,
+        )
       : 0,
     currencyCode: visit.currencyCode,
     mode: visit.mode,

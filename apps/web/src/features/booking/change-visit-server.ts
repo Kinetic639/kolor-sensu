@@ -14,6 +14,7 @@ import { getPublicSupabaseEnvironment } from "@/lib/supabase/environment";
 import { createSecretClient } from "@/lib/supabase/secret";
 import type { ChangeVisitDeps } from "./change-visit";
 import { sendVisitChangeEmail } from "./email/confirmation-server";
+import { refundThroughStripe, type RefundingStripe } from "./stripe-refund";
 
 // Changing a visit: the real dependencies (the secret client, Stripe,
 // Resend). Server only.
@@ -22,28 +23,13 @@ export function changeVisitDeps(): ChangeVisitDeps {
   const db = createSecretClient();
   return {
     cancel: (token) => cancelBooking(db, token),
-    refund: async (
-      paymentIntentId,
-      amountMinor,
-      { reference, idempotencyKey },
-    ) => {
-      const stripe = stripeServer();
-      const refund = await stripe.refunds.create(
-        {
-          payment_intent: paymentIntentId,
-          amount: amountMinor,
-          reason: "requested_by_customer",
-          metadata: { appointment_reference: reference },
-        },
-        { idempotencyKey },
-      );
-      // All given back on the payment so far (there may be several refunds).
-      const chargeId =
-        typeof refund.charge === "string" ? refund.charge : refund.charge?.id;
-      if (!chargeId) return refund.amount;
-      const charge = await stripe.charges.retrieve(chargeId);
-      return charge.amount_refunded;
-    },
+    refund: (paymentIntentId, amountMinor, options) =>
+      refundThroughStripe(
+        stripeServer() as unknown as RefundingStripe,
+        paymentIntentId,
+        amountMinor,
+        options,
+      ),
     recordRefund: (paymentIntentId, refundedMinor) =>
       recordRefund(db, paymentIntentId, refundedMinor),
     reschedule: (token, startsAt) => rescheduleBooking(db, token, startsAt),

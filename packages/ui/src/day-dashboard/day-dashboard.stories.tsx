@@ -1,9 +1,15 @@
-import { dayTimeline, weekSummary, type VisitLike } from "@repo/scheduling";
+import {
+  dayNav,
+  dayTimeline,
+  weekSummary,
+  weekVisitsByDay,
+  type VisitLike,
+} from "@repo/scheduling";
 import type { Meta, StoryObj } from "@storybook/react";
+import type { ReactNode } from "react";
 import { expect, userEvent, within } from "storybook/test";
-import { Button } from "../button";
 import { DayStrip } from "./day-strip";
-import { DayTimelineView } from "./day-timeline";
+import { DayAgenda, DayTimelineView } from "./day-timeline";
 import { TaskList } from "./task-list";
 import { WeekFigures } from "./week-figures";
 
@@ -70,6 +76,20 @@ const options = {
   specialists: [anna, michal],
 };
 
+const panel =
+  "min-w-0 overflow-hidden rounded-[8px] border border-[var(--border)] bg-[var(--surface)]";
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className={panel}>
+      <h2 className="flex h-9 items-center border-b border-[var(--border)] px-3 text-[0.8125rem] font-semibold">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
 function Dashboard({
   empty = false,
   view = "gabinety",
@@ -78,48 +98,53 @@ function Dashboard({
   view?: "gabinety" | "specjalisci";
 }) {
   const day = dayTimeline(empty ? [] : visits, options);
+  const nav = dayNav("2026-10-09", "2026-10-09");
   return (
-    <div className="bg-[var(--surface)]">
-      <DayStrip
-        items={[
-          {
-            id: "today",
-            label: "Dziś",
-            value: empty ? "0" : "8",
-            detail: "wizyt · 1 czeka",
-            href: "/rezerwacje?zakres=dzis",
-          },
-          {
-            id: "awaiting",
-            label: "Czeka na płatność",
-            value: "1",
-            detail: "najbliższa do 09.10, 13:00",
-            tone: "warning",
-            href: "/rezerwacje?status=oczekujace",
-          },
-          {
-            id: "owed",
-            label: "Do rozliczenia",
-            value: "240 zł",
-            detail: "1 do zwrotu",
-            tone: "danger",
-            href: "/rezerwacje?platnosc=do-zwrotu",
-          },
-          {
-            id: "week",
-            label: "Ten tydzień",
-            value: "31",
-            detail: "wizyt · 6 840 zł",
-            href: "/rezerwacje?zakres=ten-tydzien",
-          },
-        ]}
-      />
-      <DayTimelineView day={day} view={view} />
-      <div className="grid md:grid-cols-2">
-        <section className="border-b border-[var(--border)] md:border-r md:border-b-0">
-          <h2 className="flex h-8 items-center border-b border-[var(--border)] px-3 text-[0.8125rem] font-semibold">
-            Do zrobienia
-          </h2>
+    <div className="flex flex-col gap-2 bg-[var(--surface-subtle)] p-2 sm:gap-3 sm:p-3">
+      <div className={panel}>
+        <DayStrip
+          items={[
+            {
+              id: "today",
+              label: "Dziś",
+              value: empty ? "0" : "8",
+              detail: "wizyt · 1 czeka",
+              href: "/rezerwacje?zakres=dzis",
+            },
+            {
+              id: "awaiting",
+              label: "Czeka na płatność",
+              value: "1",
+              detail: "najbliższa do 09.10, 13:00",
+              tone: "warning",
+              href: "/rezerwacje?status=oczekujace",
+            },
+            {
+              id: "owed",
+              label: "Do rozliczenia",
+              value: "240 zł",
+              detail: "1 do zwrotu",
+              tone: "danger",
+              href: "/rezerwacje?platnosc=do-zwrotu",
+            },
+            {
+              id: "week",
+              label: "Ten tydzień",
+              value: "31",
+              detail: "wizyt · 6 840 zł",
+              href: "/rezerwacje?zakres=ten-tydzien",
+            },
+          ]}
+        />
+      </div>
+      <div className={`${panel} hidden md:block`}>
+        <DayTimelineView day={day} nav={nav} view={view} />
+      </div>
+      <div className="grid items-start gap-2 sm:gap-3 md:grid-cols-2">
+        <div className={panel}>
+          <DayAgenda day={day} nav={nav} />
+        </div>
+        <Section title="Do zrobienia">
           <TaskList
             items={
               empty
@@ -131,27 +156,40 @@ function Dashboard({
                       detail:
                         "Ewa Nowak · 2610-014 · pt. 02.10, 10:00 · od 02.10",
                       tone: "danger",
-                      href: "/rezerwacje?wizyta=refund",
-                      action: <Button size="sm">Zwróć 240 zł</Button>,
+                      href: "/rezerwacje?zakres=wszystkie&q=2610-014&wizyta=refund",
+                      target: "Rezerwacja",
                     },
                     {
                       id: "pay",
                       title: "Płatność do 13:00",
                       detail: "2610-031 · Tomasz Dąbrowski · 09.10, 14:00",
                       tone: "warning",
-                      href: "/rezerwacje?wizyta=pay",
+                      href: "/rezerwacje?zakres=wszystkie&q=2610-031&wizyta=pay",
+                      target: "Rezerwacja",
+                    },
+                    {
+                      id: "draft",
+                      title: "Profil do weryfikacji",
+                      detail: "Anna Kłobuchowska · wysłany 08.10",
+                      tone: "info",
+                      href: "/specjalisci/anna",
+                      target: "Specjalista",
                     },
                   ]
             }
           />
-        </section>
-        <section>
-          <h2 className="flex h-8 items-center border-b border-[var(--border)] px-3 text-[0.8125rem] font-semibold">
-            Ten tydzień
-          </h2>
-          <WeekFigures figures={weekSummary(visits, visits.slice(0, 5))} />
-        </section>
+        </Section>
       </div>
+      <Section title="Ten tydzień">
+        <WeekFigures
+          days={weekVisitsByDay(empty ? [] : visits, {
+            timeZone: "Europe/Warsaw",
+            now,
+            week: "2026-10-05",
+          })}
+          figures={weekSummary(visits, visits.slice(0, 5))}
+        />
+      </Section>
     </div>
   );
 }
@@ -196,7 +234,7 @@ export const Quiet: Story = {
   args: { empty: true },
 };
 
-/** On a phone: the figures scroll, the day is a list. */
+/** On a phone: the figures scroll, the day is only its list. */
 export const Phone: Story = {
   globals: { viewport: { value: "mobile", isRotated: false } },
 };

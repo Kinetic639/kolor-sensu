@@ -61,6 +61,22 @@ describe("the centre's own way (R12)", () => {
     });
   });
 
+  it("a refund owed and not gone back: owed, not given back a second time", () => {
+    const [row] = visitRows(
+      [
+        {
+          ...visit,
+          status: "cancelled",
+          cancelledBy: "centre",
+          payment: { paid: true, refundDueMinor: 20000, refundedMinor: 0 },
+        },
+      ],
+      options,
+    );
+    expect(row).toMatchObject({ refundableMinor: 0, owedMinor: 20000 });
+    expect(visitRows([visit], options)[0]!.owedMinor).toBe(0);
+  });
+
   it("a specialist, or a visit not paid, has nothing to give back", () => {
     expect(
       visitRows([{ ...visit, payment: null }], options)[0]!.refundableMinor,

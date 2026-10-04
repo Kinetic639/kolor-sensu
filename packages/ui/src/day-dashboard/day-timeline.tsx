@@ -4,9 +4,10 @@ import type {
   TimelineCard as Card,
   TimelineLane,
 } from "@repo/scheduling";
+import { ArrowUpRight, Video } from "lucide-react";
 import { PageLink as Link } from "../public-site/page-link";
 import { scheduleTheme } from "../resource-colors";
-import { SpecialistChip, Tag } from "../visit-table/visit-chips";
+import { PlaceLabel, SpecialistChip, Tag } from "../visit-table/visit-chips";
 import { DayNav } from "./day-nav";
 import { LaneSwitch, type LaneView } from "./lane-switch";
 import { TimelineCard } from "./timeline-card";
@@ -14,10 +15,10 @@ import { TimelineCard } from "./timeline-card";
 // Today on a line of hours (the dashboard, docs/product/booking-plan.md
 // R14), rendered on the server: a lane per room (or per person, switched in
 // the browser), the bookings on it, and a red line where now is. A lane
-// lights up softly in its colour on hover. On a phone the day is a list
-// by the hour instead; the line comes from a tablet on.
+// lights up softly in its colour on hover. The same day as a list by the
+// hour (DayAgenda) sits under it, and on a phone stands in for it.
 
-const LIST = "Dzisiejsze wizyty";
+const LIST = "Plan dnia";
 
 /** `1 wizyta`, `3 wizyty`, `8 wizyt`; none: `bez wizyt`. */
 function visitsCount(count: number) {
@@ -81,7 +82,7 @@ function Lanes({
           const colour = laneColour(lane);
           return (
             <li
-              className="grid h-11 grid-cols-[var(--name-w)_minmax(0,1fr)] border-b border-[var(--border)] transition-colors hover:bg-[var(--tint)] motion-reduce:transition-none"
+              className="grid h-11 grid-cols-[var(--name-w)_minmax(0,1fr)] border-b border-[var(--border)] transition-colors last:border-b-0 hover:bg-[var(--tint)] motion-reduce:transition-none"
               key={lane.id}
               style={{
                 ["--tint" as string]: `color-mix(in srgb, ${colour} 6%, transparent)`,
@@ -170,51 +171,96 @@ function DayList({
       </p>
     );
   }
+  // One line a visit (a phone: number, where and price under who): its
+  // hour and number, who leads it, where (the room in its colour, online
+  // with its mark), its price, its state, and the way to it in the
+  // bookings. From a tablet on the parts are put in their columns' order.
   return (
-    <ul aria-label={LIST}>
+    // The columns are the list's, so they line up from row to row.
+    <ul
+      aria-label={LIST}
+      className="grid grid-cols-[2.75rem_minmax(0,1fr)_auto_auto] gap-x-2.5 sm:grid-cols-[2.75rem_auto_minmax(0,1fr)_minmax(0,0.9fr)_auto_auto_auto]"
+    >
       {cards.map((card) => (
-        <li className="border-b border-[var(--border)]" key={card.id}>
-          <Link
-            className="grid min-h-12 grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 hover:bg-[var(--surface-subtle)] focus-visible:bg-[var(--surface-subtle)] focus-visible:outline-none"
-            href={card.href}
-            scroll={false}
+        <li
+          className="col-span-full grid grid-cols-subgrid items-center gap-y-0.5 border-b border-[var(--border)] px-3 py-1.5 text-[0.8125rem] last:border-b-0"
+          key={card.id}
+        >
+          <span
+            className={
+              card.past
+                ? "text-[var(--text-muted)] tabular-nums"
+                : "font-semibold tabular-nums"
+            }
           >
-            <span
-              className={
-                card.past
-                  ? "text-[0.8125rem] text-[var(--text-muted)] tabular-nums"
-                  : "text-[0.8125rem] font-semibold tabular-nums"
-              }
-            >
-              {card.time.slice(0, 5)}
+            {card.time.slice(0, 5)}
+          </span>
+          <span className="min-w-0 sm:order-2">
+            <SpecialistChip
+              avatar={avatars[card.specialist.id]}
+              row={{
+                specialistId: card.specialist.id,
+                specialistName: card.specialist.name,
+                specialistColor: card.specialist.color,
+                cancelled: false,
+              }}
+            />
+          </span>
+          <span className="col-start-2 row-start-2 flex min-w-0 items-center gap-2.5 text-[0.75rem] sm:contents sm:text-[0.8125rem]">
+            <span className="whitespace-nowrap text-[var(--text-muted)] tabular-nums sm:order-1">
+              {card.reference}
             </span>
-            <span className="grid min-w-0 gap-0.5">
-              <span className="truncate text-[0.8125rem] font-medium">
-                {card.clientName}
-              </span>
-              <span className="flex min-w-0 items-center gap-1.5">
-                <SpecialistChip
-                  avatar={avatars[card.specialist.id]}
+            <span className="min-w-0 sm:order-3">
+              {card.place.online ? (
+                <span
+                  className="inline-flex min-w-0 items-center gap-1.5 font-medium"
+                  style={{
+                    color: `color-mix(in oklab, ${scheduleTheme(null, "online", true).accent} 72%, var(--text))`,
+                  }}
+                >
+                  <Video aria-hidden="true" className="size-3.5 shrink-0" />
+                  <span className="truncate">{card.place.name}</span>
+                </span>
+              ) : (
+                <PlaceLabel
                   row={{
-                    specialistId: card.specialist.id,
-                    specialistName: card.specialist.name,
-                    specialistColor: card.specialist.color,
+                    roomId: card.place.id,
+                    roomColor: card.place.color,
+                    mode: "in_person",
+                    room: card.place.name,
                     cancelled: false,
                   }}
                 />
-                <span className="truncate text-[0.75rem] text-[var(--text-muted)]">
-                  {card.place.name}
-                </span>
-              </span>
+              )}
             </span>
+            <span className="text-right whitespace-nowrap tabular-nums sm:order-4">
+              {card.price}
+            </span>
+          </span>
+          <span className="justify-self-start sm:order-5">
             <Tag tone={card.status.tone}>
               {card.status.label.split(" · ")[0]}
             </Tag>
+          </span>
+          <Link
+            aria-label={`Szczegóły rezerwacji ${card.reference}`}
+            className="inline-grid size-7 place-items-center rounded-[5px] text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none sm:order-6"
+            href={card.href}
+            title="Szczegóły w rezerwacjach"
+          >
+            <ArrowUpRight aria-hidden="true" className="size-4" />
           </Link>
         </li>
       ))}
     </ul>
   );
+}
+
+/** The day's bookings, in order of their hour. */
+function dayCards(day: DayTimeline) {
+  return day.rooms
+    .flatMap((lane) => lane.cards)
+    .sort((a, b) => a.left - b.left);
 }
 
 export function DayTimelineView({
@@ -231,56 +277,70 @@ export function DayTimelineView({
   /** The specialists' pictures, by their id. */
   avatars?: Record<string, string | null>;
 }) {
-  const cards = day.rooms
-    .flatMap((lane) => lane.cards)
-    .sort((a, b) => a.left - b.left);
-  const count = visitsCount(cards.length);
+  const count = visitsCount(dayCards(day).length);
   return (
-    <section aria-label="Dzień" className="border-b border-[var(--border)]">
-      <div className="md:hidden">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-b border-[var(--border)] px-3 py-1.5">
-          <h2 className="text-[0.8125rem] font-semibold">
-            {nav && !nav.isToday ? "Dzień" : "Dziś"}
-          </h2>
-          <span className="text-[0.75rem] text-[var(--text-muted)]">
-            · {count}
+    <section aria-label="Dzień">
+      <LaneSwitch
+        headings={{
+          gabinety: <Heading count={count} title="Dzień w gabinetach" />,
+          specjalisci: <Heading count={count} title="Dzień zespołu" />,
+        }}
+        end={nav ? <DayNav nav={nav} /> : null}
+        initial={view}
+        people={
+          <Lanes
+            avatars={avatars}
+            by="person"
+            day={day}
+            label="Dzień zespołu"
+            lanes={day.people}
+          />
+        }
+        rooms={
+          <Lanes
+            avatars={avatars}
+            by="room"
+            day={day}
+            label="Dzień w gabinetach"
+            lanes={day.rooms}
+          />
+        }
+      />
+    </section>
+  );
+}
+
+/**
+ * The same day as a list, by the hour: beside what needs doing, and on a
+ * phone in place of the line (then with the way to other days).
+ */
+export function DayAgenda({
+  day,
+  avatars = {},
+  nav,
+}: {
+  day: DayTimeline;
+  /** The day shown and the way to others, shown on a phone only. */
+  nav?: Nav;
+  avatars?: Record<string, string | null>;
+}) {
+  const cards = dayCards(day);
+  return (
+    <section aria-labelledby="plan-dnia">
+      <div className="flex min-h-9 flex-wrap items-center gap-x-2 gap-y-1.5 border-b border-[var(--border)] px-3 py-1.5">
+        <h2 className="text-[0.8125rem] font-semibold" id="plan-dnia">
+          {LIST}
+        </h2>
+        <span className="text-[0.75rem] text-[var(--text-muted)]">
+          · {visitsCount(cards.length)}
+        </span>
+        {nav ? (
+          <span className="ml-auto md:hidden">
+            <DayNav nav={nav} />
           </span>
-          {nav ? (
-            <span className="ml-auto">
-              <DayNav nav={nav} />
-            </span>
-          ) : null}
-        </div>
-        <DayList avatars={avatars} cards={cards} today={!nav || nav.isToday} />
+        ) : null}
       </div>
-      <div className="hidden md:block">
-        <LaneSwitch
-          headings={{
-            gabinety: <Heading count={count} title="Dzień w gabinetach" />,
-            specjalisci: <Heading count={count} title="Dzień zespołu" />,
-          }}
-          end={nav ? <DayNav nav={nav} /> : null}
-          initial={view}
-          people={
-            <Lanes
-              avatars={avatars}
-              by="person"
-              day={day}
-              label="Dzień zespołu"
-              lanes={day.people}
-            />
-          }
-          rooms={
-            <Lanes
-              avatars={avatars}
-              by="room"
-              day={day}
-              label="Dzień w gabinetach"
-              lanes={day.rooms}
-            />
-          }
-        />
-      </div>
+      <DayList avatars={avatars} cards={cards} today={!nav || nav.isToday} />
     </section>
   );
 }

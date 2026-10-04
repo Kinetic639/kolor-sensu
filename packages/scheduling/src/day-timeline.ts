@@ -1,4 +1,7 @@
 import { formatInTimeZone } from "date-fns-tz";
+import { addDays } from "./availability";
+import { WEEKDAY_ABBR } from "./room-hours";
+import type { ServiceDay } from "./service-week";
 import { bookingHref, type VisitLike, type VisitTone } from "./visits";
 
 // The admin's day on a line of hours (docs/product/booking-plan.md, R14):
@@ -26,6 +29,8 @@ export interface TimelineCard {
   reference: string;
   clientName: string;
   serviceName: string;
+  /** Its own price, `200 zł` (each specialist may ask their own). */
+  price: string;
   /** `11:00–11:50`, where the centre is. */
   time: string;
   /** Where it starts and how long it is, in % of the day's line. */
@@ -154,6 +159,7 @@ export function dayTimeline(
       clientName: visit.client.name ?? "Klient bez nazwiska",
       serviceName: visit.serviceName,
       time: `${hhmm(visit.startsAt)}–${hhmm(visit.endsAt)}`,
+      price: money(visit.priceMinor, visit.currencyCode),
       left: at(start),
       width: ((end - start) / dayMinutes) * 100,
       specialist: {
@@ -248,12 +254,46 @@ export interface WeekFigure {
   trend: "up" | "down" | "flat";
 }
 
-function money(minor: number) {
+function money(minor: number, currency = "PLN") {
   return new Intl.NumberFormat("pl-PL", {
     style: "currency",
-    currency: "PLN",
+    currency,
     maximumFractionDigits: 0,
   }).format(minor / 100);
+}
+
+/**
+ * The week's visits day by day (booked ones, as its figures count them),
+ * in the centre's time; today marked.
+ */
+export function weekVisitsByDay(
+  visits: VisitLike[],
+  {
+    timeZone,
+    now,
+    week,
+  }: {
+    timeZone: string;
+    now: Date;
+    /** The week's Monday. */
+    week: string;
+  },
+): ServiceDay[] {
+  const today = formatInTimeZone(now, timeZone, "yyyy-MM-dd");
+  const days = WEEKDAY_ABBR.map((weekday, index) => {
+    const date = addDays(week, index);
+    return { date, weekday, isToday: date === today, count: 0 };
+  });
+  for (const visit of visits.filter(live)) {
+    const date = formatInTimeZone(
+      new Date(visit.startsAt),
+      timeZone,
+      "yyyy-MM-dd",
+    );
+    const day = days.find((one) => one.date === date);
+    if (day) day.count += 1;
+  }
+  return days;
 }
 
 /** This week in three figures, against the week before. */

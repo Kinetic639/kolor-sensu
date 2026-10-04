@@ -1,10 +1,15 @@
-import { dayTimeline, weekSummary, type VisitLike } from "@repo/scheduling";
+import {
+  dayTimeline,
+  weekVisitsByDay,
+  weekSummary,
+  type VisitLike,
+} from "@repo/scheduling";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { dayNav } from "@repo/scheduling";
 import { describe, expect, it, vi } from "vitest";
 import { DayStrip } from "./day-strip";
-import { DayTimelineView } from "./day-timeline";
+import { DayAgenda, DayTimelineView } from "./day-timeline";
 import { TaskList } from "./task-list";
 import { WeekFigures } from "./week-figures";
 
@@ -125,16 +130,6 @@ describe("DayTimelineView", () => {
     expect(tip).toHaveTextContent("Anna Kłobuchowska");
   });
 
-  it("on a phone: the day as a list, by the hour", () => {
-    render(<DayTimelineView day={day} />);
-    const list = screen.getByRole("list", { name: "Dzisiejsze wizyty" });
-    expect(
-      within(list)
-        .getAllByRole("link")
-        .map((link) => link.textContent?.slice(0, 5)),
-    ).toEqual(["08:00", "11:00", "12:00"]);
-  });
-
   it("goes a day back or on, and back to today, keeping the lanes", async () => {
     window.history.replaceState(null, "", "/?os=specjalisci");
     render(
@@ -154,10 +149,45 @@ describe("DayTimelineView", () => {
     );
     window.history.replaceState(null, "", "/");
   });
+});
+
+describe("DayAgenda", () => {
+  it("the day's plan as a list, by the hour", () => {
+    render(<DayAgenda day={day} />);
+    expect(
+      screen.getByRole("heading", { name: "Plan dnia" }),
+    ).toBeInTheDocument();
+    const list = screen.getByRole("list", { name: "Plan dnia" });
+    const rows = within(list).getAllByRole("listitem");
+    expect(rows.map((row) => row.textContent?.slice(0, 5))).toEqual([
+      "08:00",
+      "11:00",
+      "12:00",
+    ]);
+    // Who leads it, where, for how much, its number and state; not the
+    // client.
+    const [first] = rows;
+    expect(first).toHaveTextContent("Anna Kłobuchowska");
+    expect(first).toHaveTextContent("Gabinet Zielony");
+    expect(first).toHaveTextContent(/200\szł/);
+    expect(first).toHaveTextContent("2610-0800");
+    expect(first).not.toHaveTextContent("Ewa Nowak");
+    expect(within(rows[2]!).getByText("Online")).toBeInTheDocument();
+    // One way to the booking: its icon button.
+    expect(within(first!).getAllByRole("link")).toHaveLength(1);
+    expect(
+      within(first!).getByRole("link", {
+        name: "Szczegóły rezerwacji 2610-0800",
+      }),
+    ).toHaveAttribute(
+      "href",
+      "/rezerwacje?zakres=wszystkie&q=2610-0800&wizyta=v-08%3A00",
+    );
+  });
 
   it("a day without visits says so in a line", () => {
     render(
-      <DayTimelineView
+      <DayAgenda
         day={dayTimeline([], {
           timeZone: "Europe/Warsaw",
           now,
@@ -171,7 +201,7 @@ describe("DayTimelineView", () => {
 });
 
 describe("TaskList and WeekFigures", () => {
-  it("what needs doing, each with its action; nothing: a line", () => {
+  it("what needs doing, each leading to where it is done; nothing: a line", () => {
     const { rerender } = render(
       <TaskList
         items={[
@@ -180,16 +210,25 @@ describe("TaskList and WeekFigures", () => {
             title: "Płatność do 13:00",
             detail: "2610-031 · Tomasz Dąbrowski · 14:00",
             tone: "warning",
-            action: <button type="button">Wyślij link</button>,
+            href: "/rezerwacje?zakres=wszystkie&q=2610-031&wizyta=v1",
+            target: "Rezerwacja",
           },
         ]}
       />,
     );
     const item = screen.getByRole("listitem");
     expect(item).toHaveTextContent("Płatność do 13:00");
+    // Nothing is done from here: no buttons, one way to the booking.
+    expect(within(item).queryByRole("button")).toBeNull();
+    expect(within(item).getAllByRole("link")).toHaveLength(1);
     expect(
-      within(item).getByRole("button", { name: "Wyślij link" }),
-    ).toBeInTheDocument();
+      within(item).getByRole("link", {
+        name: "Rezerwacja: Płatność do 13:00",
+      }),
+    ).toHaveAttribute(
+      "href",
+      "/rezerwacje?zakres=wszystkie&q=2610-031&wizyta=v1",
+    );
     rerender(<TaskList items={[]} />);
     expect(
       screen.getByText("Nic nie czeka. Wszystko załatwione."),
@@ -199,5 +238,24 @@ describe("TaskList and WeekFigures", () => {
   it("the week against the last", () => {
     render(<WeekFigures figures={weekSummary([visit("08:00", "Ewa")], [])} />);
     expect(screen.getByText("Wizyty").closest("div")).toHaveTextContent("1+1");
+  });
+
+  it("the week's visits day by day, in bars", () => {
+    const visits = [visit("08:00", "Ewa"), visit("11:00", "Piotr")];
+    render(
+      <WeekFigures
+        days={weekVisitsByDay(visits, {
+          timeZone: "Europe/Warsaw",
+          now,
+          week: "2026-10-05",
+        })}
+        figures={weekSummary(visits, [])}
+      />,
+    );
+    expect(
+      screen.getByRole("img", {
+        name: "Wizyty w dniach tygodnia: Pn 0, Wt 0, Śr 0, Czw 0, Pt 2, Sob 0, Nd 0",
+      }),
+    ).toBeInTheDocument();
   });
 });

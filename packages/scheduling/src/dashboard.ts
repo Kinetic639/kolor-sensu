@@ -1,5 +1,5 @@
 import { formatInTimeZone } from "date-fns-tz";
-import type { VisitLike, VisitTone } from "./visits";
+import { bookingHref, type VisitLike, type VisitTone } from "./visits";
 
 // The admin's dashboard (docs/product/booking-plan.md, R14) from real data:
 // today's visits, the rooms and the team today, the reservations waiting to
@@ -242,7 +242,10 @@ export function settlementView(
     owedMinor: settlement.owedMinor,
     owed: moneyOf(settlement.owedMinor, settlement.currencyCode),
     clientName,
-    href: `/rezerwacje?wizyta=${settlement.appointmentId}`,
+    href: bookingHref({
+      id: settlement.appointmentId,
+      reference: settlement.reference,
+    }),
   };
 }
 
