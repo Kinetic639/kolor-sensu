@@ -138,6 +138,25 @@ export const SLOT_STEPS = ["15", "20", "30", "60"] as const;
 /** When the visit's reminder goes out: hours before it, or not at all. */
 export const VISIT_REMINDERS = ["off", "2", "12", "24", "48", "72"] as const;
 
+/**
+ * When the reminder to pay goes out: hours before the payment is due (the
+ * last call, six hours before, always goes), or not at all.
+ */
+export const PAYMENT_REMINDERS = ["off", "12", "24", "48", "72"] as const;
+
+/** A reminder's hours as the form's choice (an unknown one: a day). */
+function reminderChoice<T extends string>(
+  hours: number | null,
+  choices: readonly T[],
+): T {
+  if (hours === null) return "off" as T;
+  const choice = String(hours) as T;
+  return choices.includes(choice) ? choice : ("24" as T);
+}
+
+const reminderHours = (choice: string) =>
+  choice === "off" ? null : Number(choice);
+
 export const bookingSettingsFormSchema = z.object({
   bookingEnabled: z.boolean(),
   slotStepMinutes: z.enum(SLOT_STEPS, { error: "Wybierz siatkę godzin." }),
@@ -151,6 +170,9 @@ export const bookingSettingsFormSchema = z.object({
   paymentDueHours: whole(1, 720, "Podaj od 1 do 720 godzin."),
   centrePaymentLinkHours: whole(1, 72, "Podaj od 1 do 72 godzin."),
   visitReminder: z.enum(VISIT_REMINDERS, {
+    error: "Wybierz, kiedy wysłać przypomnienie.",
+  }),
+  paymentReminder: z.enum(PAYMENT_REMINDERS, {
     error: "Wybierz, kiedy wysłać przypomnienie.",
   }),
 });
@@ -177,14 +199,11 @@ export function toBookingSettingsFormValues(
     maxSelfReschedules: settings.maxSelfReschedules,
     paymentDueHours: settings.paymentDueHours,
     centrePaymentLinkHours: settings.centrePaymentLinkHours,
-    visitReminder:
-      settings.visitReminderHours === null
-        ? "off"
-        : (((VISIT_REMINDERS as readonly string[]).includes(
-            String(settings.visitReminderHours),
-          )
-            ? String(settings.visitReminderHours)
-            : "24") as BookingSettingsFormValues["visitReminder"]),
+    visitReminder: reminderChoice(settings.visitReminderHours, VISIT_REMINDERS),
+    paymentReminder: reminderChoice(
+      settings.paymentReminderHours,
+      PAYMENT_REMINDERS,
+    ),
   };
 }
 
@@ -203,7 +222,7 @@ export function toBookingSettingsUpdate(
     maxSelfReschedules: values.maxSelfReschedules,
     paymentDueHours: values.paymentDueHours,
     centrePaymentLinkHours: values.centrePaymentLinkHours,
-    visitReminderHours:
-      values.visitReminder === "off" ? null : Number(values.visitReminder),
+    visitReminderHours: reminderHours(values.visitReminder),
+    paymentReminderHours: reminderHours(values.paymentReminder),
   };
 }

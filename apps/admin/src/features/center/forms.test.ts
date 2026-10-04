@@ -148,6 +148,7 @@ describe("booking settings", () => {
     regon: null,
     registeredAddress: null,
     visitReminderHours: 24,
+    paymentReminderHours: 24,
     createdAt: "2026-09-19T00:00:00Z",
     updatedAt: "2026-09-19T00:00:00Z",
   };
@@ -167,6 +168,7 @@ describe("booking settings", () => {
       paymentDueHours: 48,
       centrePaymentLinkHours: 2,
       visitReminder: "24",
+      paymentReminder: "24",
     });
     expect(toBookingSettingsUpdate(values)).toEqual({
       bookingEnabled: true,
@@ -181,7 +183,21 @@ describe("booking settings", () => {
       paymentDueHours: 48,
       centrePaymentLinkHours: 2,
       visitReminderHours: 24,
+      paymentReminderHours: 24,
     });
+  });
+
+  it("the reminder to pay: further out than the last call, or none", () => {
+    const values = toBookingSettingsFormValues({
+      ...settings,
+      paymentReminderHours: null,
+    });
+    expect(values.paymentReminder).toBe("off");
+    expect(toBookingSettingsUpdate(values).paymentReminderHours).toBeNull();
+    expect(
+      toBookingSettingsUpdate({ ...values, paymentReminder: "48" })
+        .paymentReminderHours,
+    ).toBe(48);
   });
 
   it("the visit's reminder: one of the set times, or none", () => {

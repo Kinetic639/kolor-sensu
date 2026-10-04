@@ -74,6 +74,7 @@ function mapCenterSettings(row: CenterSettingsRow): CenterSettings {
     regon: row.regon,
     registeredAddress: row.registered_address,
     visitReminderHours: row.visit_reminder_hours,
+    paymentReminderHours: row.payment_reminder_hours,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -193,6 +194,7 @@ export async function updateCenterSettings(
       regon: patch.regon,
       registered_address: patch.registeredAddress,
       visit_reminder_hours: patch.visitReminderHours,
+      payment_reminder_hours: patch.paymentReminderHours,
     })
     .eq("id", 1)
     .select("*")

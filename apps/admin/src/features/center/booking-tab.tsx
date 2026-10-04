@@ -19,6 +19,7 @@ import {
   bookingSettingsFormSchema,
   SLOT_STEPS,
   toBookingSettingsFormValues,
+  PAYMENT_REMINDERS,
   VISIT_REMINDERS,
   type BookingSettingsFormValues,
 } from "./forms";
@@ -27,9 +28,6 @@ import {
 // they may change themselves, in one form (its sections side by side on
 // a wide screen, the save at the bottom). A change applies at once to new
 // bookings; booked visits keep theirs.
-
-const reminderLabel = (value: string) =>
-  value === "off" ? "Nie wysyłaj" : `${value} godz. przed wizytą`;
 
 export function BookingTab({ settings }: { settings: CenterSettings }) {
   const { isPending, run } = useSave();
@@ -64,6 +62,49 @@ export function BookingTab({ settings }: { settings: CenterSettings }) {
       type="number"
     />
   );
+
+  // A reminder's choice: so many hours before, or not at all.
+  const reminder = (
+    name: "visitReminder" | "paymentReminder",
+    label: string,
+    choices: readonly string[],
+    before: (hours: string) => string,
+    note: string,
+  ) => {
+    const id = `booking-${name}`;
+    const words = (one: string) =>
+      one === "off" ? "Nie wysyłaj" : before(one);
+    return (
+      <div className="grid content-start gap-1.5">
+        <Label htmlFor={id}>{label}</Label>
+        <Controller
+          control={control}
+          name={name}
+          render={({ field: choice }) => (
+            <Select onValueChange={choice.onChange} value={choice.value}>
+              <SelectTrigger aria-describedby={`${id}-note`} id={id}>
+                {/* Its words in the server's HTML too. */}
+                <SelectValue>{words(choice.value)}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {choices.map((one) => (
+                  <SelectItem key={one} value={one}>
+                    {words(one)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        <p
+          className="text-[0.75rem] text-[var(--text-muted)]"
+          id={`${id}-note`}
+        >
+          {note}
+        </p>
+      </div>
+    );
+  };
 
   return (
     <form
@@ -184,44 +225,22 @@ export function BookingTab({ settings }: { settings: CenterSettings }) {
               )}
             </div>
           </DetailSection>
-          <DetailSection note="opłaconej wizyty" title="Przypomnienie e-mail">
+          <DetailSection title="Przypomnienia e-mail">
             <div className="grid gap-3.5 px-3.5 py-3 sm:grid-cols-2">
-              <div className="grid content-start gap-1.5">
-                <Label htmlFor="booking-reminder">Wysyłka</Label>
-                <Controller
-                  control={control}
-                  name="visitReminder"
-                  render={({ field: reminder }) => (
-                    <Select
-                      onValueChange={reminder.onChange}
-                      value={reminder.value}
-                    >
-                      <SelectTrigger
-                        aria-describedby="booking-reminder-note"
-                        id="booking-reminder"
-                      >
-                        <SelectValue>
-                          {reminderLabel(reminder.value)}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {VISIT_REMINDERS.map((one) => (
-                          <SelectItem key={one} value={one}>
-                            {reminderLabel(one)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <p
-                  className="text-[0.75rem] text-[var(--text-muted)]"
-                  id="booking-reminder-note"
-                >
-                  Do wizyt zarezerwowanych wcześniej niż ten czas. Przypomnienia
-                  o płatności idą zawsze.
-                </p>
-              </div>
+              {reminder(
+                "paymentReminder",
+                "O zapłacie",
+                PAYMENT_REMINDERS,
+                (one) => `${one} godz. przed terminem zapłaty`,
+                "Do rezerwacji nieopłaconych. Ostatnie wezwanie idzie zawsze 6 godz. przed terminem, potem rezerwacja jest anulowana.",
+              )}
+              {reminder(
+                "visitReminder",
+                "O wizycie",
+                VISIT_REMINDERS,
+                (one) => `${one} godz. przed wizytą`,
+                "Do opłaconych wizyt zarezerwowanych wcześniej niż ten czas.",
+              )}
             </div>
           </DetailSection>
         </div>

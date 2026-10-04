@@ -60,6 +60,7 @@ export const centerSettingsUpdateSchema = z
       .nullable(),
     registeredAddress: z.string().trim().min(1).max(300).nullable(),
     visitReminderHours: z.number().int().min(1).max(168).nullable(),
+    paymentReminderHours: z.number().int().min(7).max(168).nullable(),
   })
   .partial();
 
@@ -135,6 +136,8 @@ export interface CenterSettings {
   registeredAddress: string | null;
   /** The visit's reminder goes out so long before it (none: off). */
   visitReminderHours: number | null;
+  /** …and the reminder to pay, so long before the payment is due. */
+  paymentReminderHours: number | null;
   createdAt: string;
   updatedAt: string;
 }

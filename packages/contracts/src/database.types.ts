@@ -330,6 +330,7 @@ export type Database = {
           max_self_reschedules: number;
           min_booking_lead_minutes: number;
           payment_due_hours: number;
+          payment_reminder_hours: number | null;
           phone: string | null;
           reschedule_window_hours: number;
           slot_step_minutes: number;
@@ -357,6 +358,7 @@ export type Database = {
           max_self_reschedules?: number;
           min_booking_lead_minutes?: number;
           payment_due_hours?: number;
+          payment_reminder_hours?: number | null;
           phone?: string | null;
           reschedule_window_hours?: number;
           slot_step_minutes?: number;
@@ -384,6 +386,7 @@ export type Database = {
           max_self_reschedules?: number;
           min_booking_lead_minutes?: number;
           payment_due_hours?: number;
+          payment_reminder_hours?: number | null;
           phone?: string | null;
           reschedule_window_hours?: number;
           slot_step_minutes?: number;
