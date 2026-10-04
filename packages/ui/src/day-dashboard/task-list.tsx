@@ -1,7 +1,7 @@
 import type { NotificationIcon } from "@repo/scheduling";
 import { ArrowRight } from "lucide-react";
 import { cn } from "../lib/utils";
-import { KIND_ICONS, TONE_SQUARES } from "../notifications/icons";
+import { KIND_ICONS, TONE_SQUARES } from "../notifications/kinds";
 import { PageLink as Link } from "../public-site/page-link";
 import { SpecialistAvatar } from "../specialists/specialist-parts";
 

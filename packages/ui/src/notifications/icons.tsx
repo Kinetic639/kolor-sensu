@@ -8,43 +8,25 @@ import type {
 import {
   AlarmClock,
   Ban,
-  Banknote,
   Building2,
-  CalendarClock,
-  CalendarPlus,
-  CalendarX,
   Coins,
   CreditCard,
   Hourglass,
   TimerOff,
   User,
-  UserCheck,
   Video,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip";
+import { KIND_ICONS, TONE_SQUARES } from "./kinds";
 
 // A notification's kind as a small square in its tone, and its facts as
 // tiny icons, each with its words in a tooltip (and for a screen reader).
+// The kinds' icons and the tones' colours live in a plain module (kinds.ts)
+// so that server components can read them too.
 
-export const KIND_ICONS: Record<NotificationIcon, LucideIcon> = {
-  new: CalendarPlus,
-  reserved: Hourglass,
-  paid: CreditCard,
-  cancelled: CalendarX,
-  moved: CalendarClock,
-  refund: Banknote,
-  profile: UserCheck,
-};
-
-export const TONE_SQUARES: Record<VisitTone, string> = {
-  success: "bg-[var(--success-soft)] text-[var(--success)]",
-  info: "bg-[var(--info-soft)] text-[var(--info)]",
-  warning: "bg-[var(--warning-soft)] text-[var(--warning)]",
-  danger: "bg-[var(--danger-soft)] text-[var(--danger)]",
-  neutral: "bg-[var(--surface-muted)] text-[var(--text-muted)]",
-};
+export { KIND_ICONS, TONE_SQUARES };
 
 const BADGE_ICONS: Record<NotificationBadge["id"], LucideIcon> = {
   "paid-now": CreditCard,
