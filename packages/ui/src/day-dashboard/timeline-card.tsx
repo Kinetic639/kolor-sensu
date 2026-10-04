@@ -44,12 +44,25 @@ export function TimelineCard({
           scroll={false}
           style={{
             left: `${card.left}%`,
-            width: `${card.width}%`,
+            // All the time it holds: the visit and the time after it.
+            width: `${Math.max(card.width, card.heldWidth)}%`,
             background: colour.cardBg,
             borderColor: colour.accent,
             color: colour.text,
           }}
         >
+          {card.heldWidth > card.width ? (
+            // The time after it (notes, getting ready): held, not a gap.
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-0 border-l border-dashed"
+              style={{
+                width: `${((card.heldWidth - card.width) / card.heldWidth) * 100}%`,
+                borderColor: `color-mix(in srgb, ${colour.accent} 45%, transparent)`,
+                backgroundImage: `repeating-linear-gradient(135deg, color-mix(in srgb, ${colour.accent} 16%, transparent) 0 2px, transparent 2px 6px)`,
+              }}
+            />
+          ) : null}
           {by === "room" ? (
             <>
               <Avatar aria-hidden="true" className="size-[18px] shrink-0">

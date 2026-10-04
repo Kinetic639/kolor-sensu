@@ -19,6 +19,9 @@ export const serviceSlugSchema = z
 
 export const durationMinutesSchema = z.number().int().min(15).max(300);
 
+/** The time after a visit its service holds (notes, getting ready). */
+export const afterMinutesSchema = z.number().int().min(0).max(120);
+
 export const priceMinorSchema = z.number().int().min(0).max(10_000_000);
 
 export const serviceCreateSchema = z.object({
@@ -28,6 +31,7 @@ export const serviceCreateSchema = z.object({
   description: z.string().trim().max(10_000).nullable().default(null),
   category: serviceCategorySchema.default("other"),
   defaultDurationMinutes: durationMinutesSchema,
+  afterMinutes: afterMinutesSchema.default(10),
   active: z.boolean().default(true),
   publiclyVisible: z.boolean().default(true),
   bookingEnabled: z.boolean().default(false),
@@ -71,7 +75,8 @@ export const specialistServiceUpsertSchema = z
     serviceId: z.uuid(),
     priceMinor: priceMinorSchema,
     currencyCode: currencyCodeSchema.default("PLN"),
-    durationMinutes: durationMinutesSchema.nullable().default(null),
+    // The time is the service's: a specialist sets their price only.
+    durationMinutes: z.null().default(null),
     supportsInPerson: z.boolean().default(true),
     supportsOnline: z.boolean().default(false),
     active: z.boolean().default(true),
@@ -99,6 +104,8 @@ export interface Service {
   description: string | null;
   category: ServiceCategory;
   defaultDurationMinutes: number;
+  /** Held after the visit (notes, getting ready); with it, its time in the schedule. */
+  afterMinutes: number;
   active: boolean;
   publiclyVisible: boolean;
   bookingEnabled: boolean;
@@ -153,13 +160,12 @@ export interface PublicSpecialistOffer {
 }
 
 /**
- * The single reusable implementation of the duration-fallback rule: an
- * explicit specialist override always wins, otherwise the service default
- * applies.
+ * How long a specialist's visit of a service is: the service's own time
+ * (the centre sets it; a specialist sets only their price).
  */
 export function resolveEffectiveDurationMinutes(
   service: Pick<Service, "defaultDurationMinutes">,
-  specialistService: Pick<SpecialistService, "durationMinutes">,
+  _specialistService?: Pick<SpecialistService, "durationMinutes">,
 ): number {
-  return specialistService.durationMinutes ?? service.defaultDurationMinutes;
+  return service.defaultDurationMinutes;
 }

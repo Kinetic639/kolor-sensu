@@ -36,6 +36,8 @@ export interface TimelineCard {
   /** Where it starts and how long it is, in % of the day's line. */
   left: number;
   width: number;
+  /** As wide as all the time it holds (the visit and the time after it). */
+  heldWidth: number;
   specialist: TimelinePerson & { initials: string };
   /** The room, or online (`id` null). */
   place: {
@@ -177,6 +179,11 @@ export function dayTimeline(
       price: money(visit.priceMinor, visit.currencyCode),
       left: at(start),
       width: ((end - start) / dayMinutes) * 100,
+      heldWidth:
+        ((Math.max(end, visit.heldUntil ? minutesOf(visit.heldUntil) : end) -
+          start) /
+          dayMinutes) *
+        100,
       specialist: {
         ...visit.specialist,
         initials: initialsOf(visit.specialist.name),

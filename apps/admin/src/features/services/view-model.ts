@@ -145,6 +145,7 @@ export function toServiceRows(input: {
       href: `/oferta/${service.id}`,
       publicUrl: `${input.webUrl}/oferta/${service.slug}`,
       durationMinutes: service.defaultDurationMinutes,
+      afterMinutes: service.afterMinutes,
       shortDescription: service.shortDescription,
       active: service.active,
       publiclyVisible: service.publiclyVisible,
@@ -160,4 +161,24 @@ export function toServiceRows(input: {
       upcoming: week?.upcoming ?? [],
     };
   });
+}
+
+/**
+ * A service's time in the schedule: its visit and the time after it (notes,
+ * getting ready). More than the centre's grid step, and not a whole number
+ * of steps, the next visit can only start at the following mark: said, with
+ * the totals that fit.
+ */
+export function scheduleTime(
+  visitMinutes: number,
+  afterMinutes: number,
+  stepMinutes: number,
+) {
+  const total = visitMinutes + afterMinutes;
+  const steps = Math.ceil(total / stepMinutes);
+  const warning =
+    total > stepMinutes && total % stepMinutes !== 0
+      ? `Terminy są co ${stepMinutes} min: przy ${total} min następna wizyta zacznie się dopiero po ${steps * stepMinutes} min. Ustaw łącznie ${(steps - 1) * stepMinutes} lub ${steps * stepMinutes} min.`
+      : null;
+  return { total, label: `${total} min w grafiku`, warning };
 }

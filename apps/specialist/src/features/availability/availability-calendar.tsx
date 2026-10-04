@@ -61,7 +61,13 @@ export function AvailabilityCalendar({
     },
     [dayByDate],
   );
-  const drag = useDragToCreate({ range, onCreate, blocked });
+  // On the centre's grid, as the times visits are booked at.
+  const drag = useDragToCreate({
+    range,
+    onCreate,
+    blocked,
+    step: editor.stepMinutes,
+  });
 
   return (
     <CalendarWeekGrid

@@ -50,9 +50,12 @@ function errorsOf(values: OpeningHoursFormValues) {
 export function OpeningHoursEditor({
   roomId,
   hours,
+  step,
 }: {
   roomId: string;
   hours: RoomOpeningHoursIntervalInput[];
+  /** The centre's grid: opening hours lie on it (minutes). */
+  step: number;
 }) {
   const router = useRouter();
   const initial = useMemo(() => toOpeningHoursFormValues(hours), [hours]);
@@ -93,6 +96,7 @@ export function OpeningHoursEditor({
         }}
       >
         <WeeklyHoursEditor
+          step={step}
           dayActions={(weekday) => (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

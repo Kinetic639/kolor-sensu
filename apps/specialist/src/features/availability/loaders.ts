@@ -8,6 +8,7 @@ import type {
 } from "@repo/contracts";
 import { addDays, DEFAULT_TIME_ZONE, mondayOf } from "@repo/scheduling";
 import {
+  getBookingWindow,
   getMyPublishedProfile,
   getMySpecialist,
   listActiveRoomsForSpecialist,
@@ -87,6 +88,8 @@ export async function loadAvailability(params: AvailabilityParams) {
     today,
     rules,
     specialistName,
+    // The centre's grid (visits start on it; availability lies on it).
+    stepMinutes: (await getBookingWindow(client))?.slotStepMinutes ?? 60,
     model: mapAvailabilityViewModel({
       rules,
       timeOff,

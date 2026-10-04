@@ -1,7 +1,12 @@
 import type { Service, SpecialistService } from "@repo/contracts";
 import type { ServiceWeek } from "@repo/scheduling";
 import { describe, expect, it } from "vitest";
-import { formatOfferPrice, siteTeam, toServiceRows } from "./view-model";
+import {
+  formatOfferPrice,
+  scheduleTime,
+  siteTeam,
+  toServiceRows,
+} from "./view-model";
 
 const service = (
   id: string,
@@ -15,6 +20,7 @@ const service = (
   description: null,
   category: "psychotherapy",
   defaultDurationMinutes: 50,
+  afterMinutes: 10,
   active: true,
   publiclyVisible: true,
   bookingEnabled: true,
@@ -207,5 +213,28 @@ describe("siteTeam", () => {
       ["Anna Kłobuchowska", "220 zł · 60 min · w gabinecie"],
       ["Michał Stępień", "220 zł · 50 min · w gabinecie lub online"],
     ]);
+  });
+});
+
+describe("scheduleTime", () => {
+  it("the visit and the time after it: the service's time in the schedule", () => {
+    expect(scheduleTime(50, 10, 60)).toEqual({
+      total: 60,
+      label: "60 min w grafiku",
+      warning: null,
+    });
+  });
+
+  it("more than the grid's step: the next visit waits for the next mark", () => {
+    expect(scheduleTime(60, 10, 60)).toEqual({
+      total: 70,
+      label: "70 min w grafiku",
+      warning:
+        "Terminy są co 60 min: przy 70 min następna wizyta zacznie się dopiero po 120 min. Ustaw łącznie 60 lub 120 min.",
+    });
+  });
+
+  it("less than a step: the rest of it stays free, not a problem", () => {
+    expect(scheduleTime(30, 0, 60).warning).toBeNull();
   });
 });

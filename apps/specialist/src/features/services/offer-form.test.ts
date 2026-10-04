@@ -8,14 +8,13 @@ import {
 const valid = {
   serviceId: "20000000-0000-4000-8000-000000000001",
   price: "180,50",
-  duration: "",
   supportsInPerson: true,
   supportsOnline: false,
   active: true,
 };
 
 describe("offerFormSchema", () => {
-  it("accepts a price in złoty and an empty duration", () => {
+  it("accepts a price in złoty (the time is the service's)", () => {
     expect(offerFormSchema.safeParse(valid).success).toBe(true);
   });
 
@@ -24,7 +23,6 @@ describe("offerFormSchema", () => {
       ...valid,
       serviceId: "",
       price: "abc",
-      duration: "10",
       supportsInPerson: false,
     });
     expect(result.success).toBe(false);
@@ -35,7 +33,6 @@ describe("offerFormSchema", () => {
     ).toEqual({
       serviceId: "Wybierz usługę z katalogu.",
       price: "Podaj cenę, np. 180 lub 180,50.",
-      duration: "Czas trwania od 15 do 300 minut.",
       supportsInPerson: "Aktywna usługa musi mieć co najmniej jedną formę.",
     });
   });
@@ -53,16 +50,16 @@ describe("offerFormSchema", () => {
 
 describe("offer form conversion", () => {
   it("turns the form into the upsert contract", () => {
-    expect(toServiceUpsert({ ...valid, duration: " 60 " })).toEqual({
+    expect(toServiceUpsert(valid)).toEqual({
       serviceId: valid.serviceId,
       priceMinor: 18050,
       currencyCode: "PLN",
-      durationMinutes: 60,
+      // The centre sets the time: never the specialist's own.
+      durationMinutes: null,
       supportsInPerson: true,
       supportsOnline: false,
       active: true,
     });
-    expect(toServiceUpsert(valid).durationMinutes).toBeNull();
   });
 
   it("fills the form from an existing offer or a fresh one", () => {
@@ -70,16 +67,14 @@ describe("offer form conversion", () => {
       toOfferFormValues({
         serviceId: "s",
         priceMinor: 20000,
-        durationMinutes: 80,
         supportsInPerson: false,
         supportsOnline: true,
         active: true,
       }),
-    ).toMatchObject({ serviceId: "s", price: "200", duration: "80" });
+    ).toMatchObject({ serviceId: "s", price: "200" });
     expect(toOfferFormValues(null)).toMatchObject({
       serviceId: "",
       price: "",
-      duration: "",
       supportsInPerson: true,
       active: true,
     });

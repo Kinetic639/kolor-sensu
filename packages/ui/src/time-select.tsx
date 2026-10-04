@@ -1,14 +1,20 @@
 import type { SelectHTMLAttributes } from "react";
 import { cn } from "./lib/utils";
 
-// A time of day on the 15-minute grid, always in 24-hour time (the native
-// time input follows the browser's locale and may show AM/PM). A native
-// select: renders on the server, works with the keyboard and screen readers.
+// A time of day on a grid (every 15 minutes, or the centre's: every full
+// hour), always in 24-hour time (the native time input follows the
+// browser's locale and may show AM/PM). A native select: renders on the
+// server, works with the keyboard and screen readers.
 
-export const TIME_OPTIONS = Array.from({ length: 96 }, (_, index) => {
-  const minutes = index * 15;
-  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-});
+/** The times of a day every `step` minutes, from midnight. */
+function dayTimes(step: number) {
+  return Array.from({ length: Math.floor((24 * 60) / step) }, (_, index) => {
+    const minutes = index * step;
+    return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+  });
+}
+
+export const TIME_OPTIONS = dayTimes(15);
 
 export interface TimeSelectProps extends Omit<
   SelectHTMLAttributes<HTMLSelectElement>,
@@ -16,18 +22,20 @@ export interface TimeSelectProps extends Omit<
 > {
   value: string;
   onChange: (value: string) => void;
+  /** Minutes between the times offered (the centre's grid: 60). */
+  step?: number;
 }
 
 export function TimeSelect({
   value,
   onChange,
+  step = 15,
   className,
   ...props
 }: TimeSelectProps) {
+  const times = step === 15 ? TIME_OPTIONS : dayTimes(step);
   // A stored value off the grid stays selectable instead of jumping.
-  const options = TIME_OPTIONS.includes(value)
-    ? TIME_OPTIONS
-    : [...TIME_OPTIONS, value].sort();
+  const options = times.includes(value) ? times : [...times, value].sort();
   return (
     <select
       className={cn(

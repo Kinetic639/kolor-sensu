@@ -12,6 +12,7 @@ import {
   RoomSettingsTab,
 } from "@/features/rooms/room-detail";
 import { RoomExceptions } from "@/features/rooms/room-exceptions";
+import { centreSettings } from "@/lib/reference-data";
 import {
   ROOM_TAB_LABELS,
   RoomOverview,
@@ -74,13 +75,17 @@ async function Tab({
       );
     }
     case "godziny": {
-      const { today, exceptions } = await loadRoomExceptions(model.room.id);
+      const [{ today, exceptions }, settings] = await Promise.all([
+        loadRoomExceptions(model.room.id),
+        centreSettings(),
+      ]);
       return (
         <DetailBody
           aside={
             <RoomExceptions
               exceptions={exceptions}
               roomId={model.room.id}
+              step={settings.slotStepMinutes}
               today={today}
             />
           }
@@ -89,6 +94,7 @@ async function Tab({
           <OpeningHoursEditor
             hours={model.openingHours}
             roomId={model.room.id}
+            step={settings.slotStepMinutes}
           />
         </DetailBody>
       );

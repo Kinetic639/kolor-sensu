@@ -107,6 +107,8 @@ export interface VisitSlot extends MinuteRange {
   key: string;
   visitId: string;
   minutes: number;
+  /** Where all the time it holds ends (the time after it too). */
+  heldEnd: number;
   /** `09:00 – 10:30` */
   time: string;
   startTime: string;
@@ -503,6 +505,14 @@ function visitSlots(
         ctx.timeZone,
       );
       if (!range) return [];
+      const held = visit.heldUntil
+        ? span(
+            new Date(visit.startsAt),
+            new Date(visit.heldUntil),
+            date,
+            ctx.timeZone,
+          )
+        : null;
       const place = visitPlace(ctx, visit);
       const name =
         ctx.people.get(visit.specialist.id)?.name ?? visit.specialist.name;
@@ -517,6 +527,7 @@ function visitSlots(
           visitId: visit.id,
           ...range,
           minutes: range.end - range.start,
+          heldEnd: Math.max(range.end, held?.end ?? range.end),
           time,
           startTime: minutesToTime(range.start),
           client,
@@ -564,7 +575,11 @@ function finish(ctx: Context, parts: ColumnParts): CalendarColumn {
       : null,
     unavailable:
       parts.closed !== null || (!availability.length && !visits.length),
-    occupancy: occupancyOf(visits, availability),
+    // All the time visits hold: the time after them too.
+    occupancy: occupancyOf(
+      visits.map((visit) => ({ start: visit.start, end: visit.heldEnd })),
+      availability,
+    ),
   };
 }
 

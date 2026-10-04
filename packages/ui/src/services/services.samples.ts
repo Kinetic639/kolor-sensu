@@ -112,6 +112,7 @@ const base = {
   publiclyVisible: true,
   bookingEnabled: true,
   durationMinutes: 50,
+  afterMinutes: 10,
 };
 
 export const SAMPLE_SERVICES: ServiceRow[] = [

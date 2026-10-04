@@ -338,6 +338,24 @@ describe("dayView by specialist", () => {
     ]);
   });
 
+  it("a visit holds the time after it too: drawn to its end", () => {
+    const held = dayView({
+      ...base,
+      date: "2030-10-02",
+      perspective: "specialists",
+      visits: [visit({ heldUntil: at(2, "10:40").toISOString() })],
+    });
+    expect(held.columns[0]!.visits[0]).toMatchObject({
+      end: 10 * 60 + 30,
+      heldEnd: 10 * 60 + 40,
+      minutes: 90,
+    });
+    // Without it known: the visit's own end.
+    expect(annaColumn!.visits[1]!.heldEnd).toBe(annaColumn!.visits[1]!.end);
+    // The day's occupancy counts all the time it holds (100 min, not 90).
+    expect(held.columns[0]!.occupancy.bookedHours).toBeCloseTo(100 / 60, 1);
+  });
+
   it("time off is blocked time", () => {
     expect(janColumn!.blocked).toEqual([
       expect.objectContaining({

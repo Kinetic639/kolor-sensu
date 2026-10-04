@@ -15,6 +15,7 @@ function service(id: string, name: string, minutes = 50): Service {
     description: null,
     category: "psychotherapy",
     defaultDurationMinutes: minutes,
+    afterMinutes: 10,
     active: true,
     publiclyVisible: true,
     bookingEnabled: false,

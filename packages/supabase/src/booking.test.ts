@@ -84,6 +84,7 @@ describe("getBookingWindow", () => {
         reschedule_window_hours: 48,
         max_self_reschedules: 1,
         payment_due_hours: 48,
+        slot_step_minutes: 60,
       },
     ]);
     expect(await getBookingWindow(client)).toEqual({
@@ -94,7 +95,23 @@ describe("getBookingWindow", () => {
       rescheduleWindowHours: 48,
       maxSelfReschedules: 1,
       paymentDueHours: 48,
+      slotStepMinutes: 60,
     });
+  });
+
+  it("the grid every full hour where the database does not say yet", async () => {
+    const { client } = rpcClient([
+      {
+        time_zone: "Europe/Warsaw",
+        horizon_days: 60,
+        hold_minutes: 10,
+        cancellation_window_hours: 48,
+        reschedule_window_hours: 48,
+        max_self_reschedules: 1,
+        payment_due_hours: 48,
+      },
+    ]);
+    expect((await getBookingWindow(client))!.slotStepMinutes).toBe(60);
   });
 });
 

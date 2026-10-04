@@ -407,6 +407,7 @@ describe("toSpecialistOffers", () => {
     description: null,
     category: "couples_therapy" as const,
     defaultDurationMinutes: 50,
+    afterMinutes: 10,
     active: true,
     publiclyVisible: true,
     bookingEnabled: true,

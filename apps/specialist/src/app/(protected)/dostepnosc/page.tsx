@@ -508,6 +508,7 @@ export default async function AvailabilityPage({
       occupancy={model.calendar.othersOccupancy}
       rooms={model.rooms}
       specialistName={data.specialistName}
+      stepMinutes={data.stepMinutes}
       today={data.today}
     >
       <div className="space-y-4">

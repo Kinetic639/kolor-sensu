@@ -7,7 +7,7 @@ import type {
   SpecialistAvailabilityRule,
 } from "@repo/contracts";
 import { useRefreshOnReturn } from "@repo/app-runtime/refresh-on-return";
-import { describeRecurrence } from "@repo/scheduling";
+import { describeRecurrence, gridTimes } from "@repo/scheduling";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -96,6 +96,8 @@ interface EditorApi {
   /** Runs a server action with a toast and refreshes the page. */
   run: (action: () => Promise<Result>, success: string) => void;
   pending: boolean;
+  /** The centre's grid: availability starts and ends on it (minutes). */
+  stepMinutes: number;
 }
 
 const EditorContext = createContext<EditorApi | null>(null);
@@ -140,8 +142,11 @@ export function AvailabilityEditorProvider({
   occupancy = [],
   today,
   specialistName,
+  stepMinutes,
   children,
 }: {
+  /** The centre's grid: availability starts and ends on it (minutes). */
+  stepMinutes: number;
   rooms: RoomViewModel[];
   /** Other specialists' hours in the shown week, to mark taken rooms. */
   occupancy?: RoomOccupancy[];
@@ -249,6 +254,7 @@ export function AvailabilityEditorProvider({
       setConfirm({ kind: "time-off", id, label }),
     run,
     pending,
+    stepMinutes,
   };
 
   const occurrenceNotice =
@@ -311,6 +317,7 @@ export function AvailabilityEditorProvider({
           </SheetHeader>
           {sheet ? (
             <RuleForm
+              times={gridTimes(stepMinutes)}
               defaultValues={ruleFormValues(sheet.rule, {
                 today,
                 prefill: sheet.prefill,

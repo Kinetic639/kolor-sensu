@@ -85,13 +85,35 @@ describe("effective duration resolution", () => {
     ).toBe(50);
   });
 
-  it("prefers the specialist's own duration override when present", () => {
+  it("the time is the service's: a specialist's own is not taken", () => {
     expect(
       resolveEffectiveDurationMinutes(
         { defaultDurationMinutes: 50 },
         { durationMinutes: 45 },
       ),
-    ).toBe(45);
+    ).toBe(50);
+    expect(
+      specialistServiceUpsertSchema.safeParse({
+        serviceId: "4f1e9a65-3b8e-4c3c-9d7f-2b8b1a3c4d5e",
+        priceMinor: 20000,
+        durationMinutes: 45,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("a service's time after its visit: 0 to 120 minutes, 10 by default", () => {
+    const service = {
+      name: "Konsultacja",
+      slug: "konsultacja",
+      defaultDurationMinutes: 50,
+    };
+    expect(serviceCreateSchema.parse(service).afterMinutes).toBe(10);
+    expect(
+      serviceCreateSchema.safeParse({ ...service, afterMinutes: 0 }).success,
+    ).toBe(true);
+    expect(
+      serviceCreateSchema.safeParse({ ...service, afterMinutes: 121 }).success,
+    ).toBe(false);
   });
 });
 
@@ -106,6 +128,7 @@ describe("service domain mapping", () => {
         description: null,
         category: "psychotherapy",
         default_duration_minutes: 50,
+        after_minutes: 10,
         active: true,
         publicly_visible: true,
         booking_enabled: false,
@@ -119,6 +142,7 @@ describe("service domain mapping", () => {
       slug: "psychoterapia-indywidualna",
       category: "psychotherapy",
       defaultDurationMinutes: 50,
+      afterMinutes: 10,
     });
   });
 

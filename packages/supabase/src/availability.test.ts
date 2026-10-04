@@ -144,6 +144,7 @@ describe("saveAvailabilityRule", () => {
     [{ code: "23P01", hint: "overlap" }, "overlap"],
     [{ code: "23P01", hint: "room_taken" }, "room_taken"],
     [{ code: "23P01", hint: "room_closed" }, "room_closed"],
+    [{ code: "23514", hint: "off_grid" }, "off_grid"],
     [{ code: "22023", hint: null }, "room_unavailable"],
     [{ code: "P0002", hint: null }, "not_found"],
     [{ code: "42501", hint: null }, "forbidden"],

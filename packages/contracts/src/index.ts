@@ -72,6 +72,7 @@ export type {
   SpecialistPublicProfileInput,
 } from "@repo/contracts/specialist";
 export {
+  afterMinutesSchema,
   durationMinutesSchema,
   priceMinorSchema,
   resolveEffectiveDurationMinutes,

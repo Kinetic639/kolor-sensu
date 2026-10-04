@@ -52,7 +52,7 @@ import {
 import { quickCreateDefaults, roomConflicts } from "./form-values";
 import type { RoomViewModel } from "./types";
 
-/** Quarter hours from 6:00 to 22:00. */
+/** Quarter hours from 6:00 to 22:00 (time off; availability is on the grid). */
 export const TIMES = Array.from({ length: 65 }, (_, index) => {
   const minutes = 6 * 60 + index * 15;
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
@@ -123,12 +123,15 @@ function TimeSelect<Values extends Record<string, unknown>>({
   id,
   label,
   error,
+  times = TIMES,
 }: {
   control: Control<Values>;
   name: Path<Values>;
   id: string;
   label: string;
   error?: string;
+  /** The times to choose from (the centre's grid for availability). */
+  times?: readonly string[];
 }) {
   return (
     <div className="grid gap-1">
@@ -150,7 +153,7 @@ function TimeSelect<Values extends Record<string, unknown>>({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {TIMES.map((time) => (
+              {times.map((time) => (
                 <SelectItem key={time} value={time}>
                   {time}
                 </SelectItem>
@@ -440,6 +443,7 @@ function useRuleForm(defaultValues: AvailabilityRuleInput) {
 
 export function RuleForm({
   defaultValues,
+  times,
   rooms,
   occupancy = [],
   pending,
@@ -450,6 +454,8 @@ export function RuleForm({
   onSubmit,
 }: {
   defaultValues: AvailabilityRuleInput;
+  /** The centre's grid: availability starts and ends on it. */
+  times: readonly string[];
   rooms: RoomViewModel[];
   /** Other specialists' hours in the shown week. */
   occupancy?: RoomOccupancy[];
@@ -511,6 +517,7 @@ export function RuleForm({
               id="rule-starts-at"
               label="Od"
               name="startsAt"
+              times={times}
             />
             <TimeSelect
               control={control}
@@ -518,6 +525,7 @@ export function RuleForm({
               id="rule-ends-at"
               label="Do"
               name="endsAt"
+              times={times}
             />
           </div>
           <p className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">

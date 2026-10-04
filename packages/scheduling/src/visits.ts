@@ -16,6 +16,11 @@ export interface VisitLike {
   mode: "in_person" | "online";
   startsAt: string;
   endsAt: string;
+  /**
+   * The end of its whole time: the visit and the time after it its service
+   * holds (notes, getting ready), where the list gives it.
+   */
+  heldUntil?: string | null;
   /** Where the list gives it. */
   serviceId?: string;
   serviceName: string;

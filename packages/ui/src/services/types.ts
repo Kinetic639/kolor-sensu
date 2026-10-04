@@ -40,6 +40,8 @@ export interface ServiceRow {
   /** Its page on the site. */
   publicUrl: string;
   durationMinutes: number;
+  /** Held after the visit (notes, getting ready). */
+  afterMinutes: number;
   shortDescription: string | null;
   active: boolean;
   publiclyVisible: boolean;

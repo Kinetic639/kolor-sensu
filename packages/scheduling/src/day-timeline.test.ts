@@ -105,6 +105,8 @@ describe("dayTimeline", () => {
     expect(first!.width).toBeCloseTo(8.33, 1);
     // Its own price (each specialist may ask their own).
     expect(first!.price).toMatch(/^200\szł$/);
+    // Without the time after it known: as wide as the visit.
+    expect(first!.heldWidth).toBeCloseTo(first!.width);
     expect(current).toMatchObject({
       clientName: "Piotr Zieliński",
       current: true,
@@ -119,6 +121,20 @@ describe("dayTimeline", () => {
     expect(waiting!.href).toBe(
       `/rezerwacje?zakres=wszystkie&q=${waiting!.reference}&wizyta=${waiting!.id}`,
     );
+  });
+
+  it("the time after a visit is held too: as wide as all of it", () => {
+    const [card] = dayTimeline(
+      [
+        visit("08:00", "08:50", {
+          heldUntil: "2026-10-09T09:00:00+02:00",
+        }),
+      ],
+      { timeZone, now, rooms: [green], specialists: [anna] },
+    ).rooms[0]!.cards;
+    // 50 minutes of the visit, 60 held, on a ten-hour line.
+    expect(card!.width).toBeCloseTo((50 / 600) * 100, 1);
+    expect(card!.heldWidth).toBeCloseTo((60 / 600) * 100, 1);
   });
 
   it("a lane per person of the team, their hours", () => {

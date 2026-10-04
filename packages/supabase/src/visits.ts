@@ -25,6 +25,8 @@ export interface Visit {
   mode: VisitMode;
   startsAt: string;
   endsAt: string;
+  /** The end of its whole time, the time after it too (the calendar's list). */
+  heldUntil?: string;
   /** Where the list gives it (the search does; the calendar's list not). */
   serviceId?: string;
   serviceName: string;
@@ -227,6 +229,9 @@ export function toVisit(row: VisitRow): Visit {
     mode: row.mode,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
+    // The end of its whole time, the time after it too (the calendar's
+    // list gives it).
+    ...(row.held_until && { heldUntil: row.held_until }),
     // The service's id (the table's search gives it; the calendar's list
     // does not).
     ...(serviceId && { serviceId }),

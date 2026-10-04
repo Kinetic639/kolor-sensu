@@ -3,6 +3,7 @@
 import { useSave } from "@/lib/use-save";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  afterMinutesSchema,
   durationMinutesSchema,
   serviceCategorySchema,
   type ServiceCategory,
@@ -41,10 +42,11 @@ import { useOptimistic, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { updateServiceAction } from "./actions";
-import { categoryLabels } from "./view-model";
+import { categoryLabels, scheduleTime } from "./view-model";
 
 // Ustawienia: where the service is seen (each switch saves at once, and
-// says what it does; switching it off asks first), its category and time,
+// says what it does; switching it off asks first), its category and time
+// (the visit and the time after it: together, its time in the schedule),
 // and where the site's menu has it (arranged with all the services, on
 // the offer's list).
 
@@ -53,6 +55,7 @@ type Visibility = "active" | "publiclyVisible" | "bookingEnabled";
 const catalogSchema = z.object({
   category: serviceCategorySchema,
   defaultDurationMinutes: durationMinutesSchema,
+  afterMinutes: afterMinutesSchema,
 });
 type CatalogValues = z.infer<typeof catalogSchema>;
 
@@ -151,25 +154,39 @@ function VisibilitySection({ row }: { row: ServiceRow }) {
   );
 }
 
-function CatalogSection({ row }: { row: ServiceRow }) {
+function CatalogSection({
+  row,
+  stepMinutes,
+}: {
+  row: ServiceRow;
+  /** The centre's grid of start times. */
+  stepMinutes: number;
+}) {
   const { isPending, run } = useSave();
   const {
     control,
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isDirty },
   } = useForm<CatalogValues>({
     resolver: zodResolver(catalogSchema),
     defaultValues: {
       category: row.category,
       defaultDurationMinutes: row.durationMinutes,
+      afterMinutes: row.afterMinutes,
     },
   });
+  const [visit, after] = watch(["defaultDurationMinutes", "afterMinutes"]);
+  const time =
+    Number.isFinite(visit) && Number.isFinite(after)
+      ? scheduleTime(visit, after, stepMinutes)
+      : null;
   return (
     <DetailSection title="Katalog">
       <form
-        className="grid gap-3.5 px-3.5 py-3 sm:grid-cols-2"
+        className="grid gap-3.5 px-3.5 py-3 sm:grid-cols-3"
         noValidate
         onSubmit={handleSubmit((values) =>
           run(
@@ -215,7 +232,7 @@ function CatalogSection({ row }: { row: ServiceRow }) {
           </p>
         </div>
         <div className="grid content-start gap-1.5">
-          <Label htmlFor="service-duration">Domyślny czas (min)</Label>
+          <Label htmlFor="service-duration">Czas wizyty (min)</Label>
           <Input
             aria-describedby="service-duration-hint"
             aria-invalid={errors.defaultDurationMinutes ? true : undefined}
@@ -232,10 +249,49 @@ function CatalogSection({ row }: { row: ServiceRow }) {
           >
             {errors.defaultDurationMinutes
               ? "Od 15 do 300 minut."
-              : "Specjalista może ustawić własny."}
+              : "Klient widzi go na stronie."}
           </p>
         </div>
-        <div className="flex justify-end sm:col-span-2">
+        <div className="grid content-start gap-1.5">
+          <Label htmlFor="service-after">Czas po wizycie (min)</Label>
+          <Input
+            aria-describedby="service-after-hint"
+            aria-invalid={errors.afterMinutes ? true : undefined}
+            id="service-after"
+            max={120}
+            min={0}
+            step={5}
+            type="number"
+            {...register("afterMinutes", { valueAsNumber: true })}
+          />
+          <p
+            className="text-[0.75rem] text-[var(--text-muted)]"
+            id="service-after-hint"
+          >
+            {errors.afterMinutes
+              ? "Od 0 do 120 minut."
+              : "Na notatki i przygotowanie. Klient go nie widzi."}
+          </p>
+        </div>
+        {time ? (
+          // The two together: what the schedules hold for each visit.
+          <p
+            className={
+              time.warning
+                ? "rounded-[6px] bg-[var(--warning-soft)] px-2.5 py-1.5 text-[0.75rem] text-[var(--warning-foreground)] sm:col-span-3"
+                : "text-[0.75rem] text-[var(--text-muted)] sm:col-span-3"
+            }
+            role={time.warning ? "status" : undefined}
+          >
+            <span className="font-semibold text-[var(--text)]">
+              {time.label}
+            </span>
+            {time.warning
+              ? ` · ${time.warning}`
+              : " · tyle zajmuje gabinet i specjalistę przy każdej wizycie."}
+          </p>
+        ) : null}
+        <div className="flex justify-end sm:col-span-3">
           <Button
             className="h-7 px-2.5 text-[0.8125rem]"
             disabled={!isDirty}
@@ -291,12 +347,19 @@ function MenuSection({ row }: { row: ServiceRow }) {
   );
 }
 
-export function ServiceSettings({ row }: { row: ServiceRow }) {
+export function ServiceSettings({
+  row,
+  stepMinutes,
+}: {
+  row: ServiceRow;
+  /** The centre's grid of start times (Ustawienia). */
+  stepMinutes: number;
+}) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[var(--surface)] lg:grid lg:grid-cols-2 lg:overflow-hidden">
       <div className="min-w-0 border-[var(--border)] lg:overflow-y-auto lg:border-r">
         <VisibilitySection row={row} />
-        <CatalogSection row={row} />
+        <CatalogSection row={row} stepMinutes={stepMinutes} />
       </div>
       <div className="min-w-0 lg:overflow-y-auto">
         <MenuSection row={row} />

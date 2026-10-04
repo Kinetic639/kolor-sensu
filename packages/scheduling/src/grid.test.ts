@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  gridTimes,
   dragRange,
   dragRangeAround,
   formatHours,
@@ -131,5 +132,20 @@ describe("formatHours", () => {
     expect(formatHours(360)).toBe("6 godz.");
     expect(formatHours(90)).toBe("1,5 godz.");
     expect(formatHours(0)).toBe("0 godz.");
+  });
+});
+
+describe("gridTimes", () => {
+  it("the times of day on the centre's grid, from 6:00 to 22:00", () => {
+    const hours = gridTimes(60);
+    expect(hours[0]).toBe("06:00");
+    expect(hours[1]).toBe("07:00");
+    expect(hours.at(-1)).toBe("22:00");
+    expect(hours).toHaveLength(17);
+  });
+
+  it("a finer grid, finer times", () => {
+    expect(gridTimes(30).slice(0, 3)).toEqual(["06:00", "06:30", "07:00"]);
+    expect(gridTimes(15)).toHaveLength(65);
   });
 });

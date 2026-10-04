@@ -874,7 +874,8 @@ export function BlockedBlock({
 function cardStyle(slot: VisitSlot, range: MinuteRange): CSSProperties {
   const theme = themeOf(slot.place);
   return {
-    ...place(range, slot),
+    // All the time it holds: the visit and the time after it.
+    ...place(range, { start: slot.start, end: slot.heldEnd }),
     backgroundColor: theme.cardBg,
     color: theme.text,
     // The place's colour as a line on the left, as on the dashboard.
@@ -891,6 +892,31 @@ const cardClasses = (slot: VisitSlot, open: boolean) =>
       : "outline-1 -outline-offset-1 outline-transparent hover:outline-[var(--card-accent)] hover:brightness-[0.98]",
     slot.dimmed && "opacity-35",
   );
+
+/**
+ * The time after a visit (notes, getting ready), at the end of its card:
+ * held, so not a gap, but not the visit either.
+ */
+function AfterTime({ slot }: { slot: VisitSlot }) {
+  const after = slot.heldEnd - slot.end;
+  if (after <= 0) return null;
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-x-0 bottom-0 border-t border-dashed"
+      style={{
+        height: `${(after / (slot.heldEnd - slot.start)) * 100}%`,
+        borderColor: "color-mix(in srgb, var(--card-accent) 45%, transparent)",
+        backgroundImage:
+          "repeating-linear-gradient(135deg, color-mix(in srgb, var(--card-accent) 16%, transparent) 0 2px, transparent 2px 6px)",
+      }}
+    />
+  );
+}
+
+/** `· 10 min po wizycie` for a card's tooltip, where there is time after it. */
+const afterNote = (slot: VisitSlot) =>
+  slot.heldEnd > slot.end ? ` · ${slot.heldEnd - slot.end} min po wizycie` : "";
 
 /** Waiting for payment, online: small icons after the time. */
 function CardFlags({ slot }: { slot: VisitSlot }) {
@@ -949,8 +975,9 @@ export function VisitCard({
       href={href}
       scroll={false}
       style={cardStyle(slot, range)}
-      title={`${slot.time}: ${slot.client} (${slot.service})`}
+      title={`${slot.time}: ${slot.client} (${slot.service})${afterNote(slot)}`}
     >
+      <AfterTime slot={slot} />
       {tiny ? (
         <span className="flex h-full w-full items-center gap-1.5 pr-1.5 pl-2.5 text-[0.71875rem] leading-none">
           <span className="shrink-0 font-mono text-[0.65625rem] tabular-nums opacity-80">
@@ -1027,8 +1054,9 @@ export function CompactVisit({
       href={href}
       scroll={false}
       style={cardStyle(slot, range)}
-      title={`${slot.time}\nPacjent: ${slot.client}\nUsługa: ${slot.service}\nMiejsce: ${slot.place.name}\nSpecjalista: ${slot.person.name}`}
+      title={`${slot.time}${afterNote(slot)}\nPacjent: ${slot.client}\nUsługa: ${slot.service}\nMiejsce: ${slot.place.name}\nSpecjalista: ${slot.person.name}`}
     >
+      <AfterTime slot={slot} />
       <span className="flex items-center gap-1">
         {byRoom ? (
           <PersonAvatar

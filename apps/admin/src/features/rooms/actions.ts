@@ -57,6 +57,14 @@ function failure(
     };
   if (code === "23P01")
     return { ok: false, message: "Te godziny nakładają się na już zapisane." };
+  const hint =
+    typeof error === "object" && error && "hint" in error ? error.hint : null;
+  if (code === "23514" && hint === "off_grid")
+    return {
+      ok: false,
+      message:
+        "Godziny zaczynają się i kończą o pełnej godzinie, tak jak terminy wizyt.",
+    };
   if (code === "23514")
     return { ok: false, message: "Gabinet może mieć najwyżej 5 zdjęć." };
   return { ok: false, message: fallback };

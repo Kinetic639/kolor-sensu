@@ -130,28 +130,14 @@ function OfferForm({
           />
           <FieldError id="offer-price-error" message={errors.price?.message} />
         </div>
+        {/* The time is the service's: the centre sets it for everyone. */}
         <div className="space-y-1.5">
-          <Label htmlFor="offer-duration">Czas trwania (min)</Label>
-          <Input
-            aria-describedby="offer-duration-hint offer-duration-error"
-            aria-invalid={errors.duration ? true : undefined}
-            id="offer-duration"
-            inputMode="numeric"
-            placeholder={defaultDuration ? String(defaultDuration) : "np. 50"}
-            {...register("duration")}
-          />
-          <p
-            className="text-xs text-[var(--text-muted)]"
-            id="offer-duration-hint"
-          >
+          <p className="text-sm font-medium text-[var(--text)]">Czas wizyty</p>
+          <p className="text-sm text-[var(--text-muted)]">
             {defaultDuration
-              ? `Puste pole = domyślnie ${defaultDuration} min z katalogu.`
-              : "Puste pole = czas z katalogu."}
+              ? `${defaultDuration} min, ustala centrum.`
+              : "Ustala centrum, w katalogu usług."}
           </p>
-          <FieldError
-            id="offer-duration-error"
-            message={errors.duration?.message}
-          />
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">

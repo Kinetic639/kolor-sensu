@@ -121,6 +121,22 @@ describe("DayTimelineView", () => {
     ).toBeVisible();
   });
 
+  it("a card holds the time after its visit too, marked as such", () => {
+    const held = dayTimeline(
+      [
+        visit("08:00", "Ewa Nowak", {
+          heldUntil: "2026-10-09T09:00:00+02:00",
+        }),
+      ],
+      { timeZone: "Europe/Warsaw", now, rooms: [green], specialists: [anna] },
+    );
+    render(<DayTimelineView day={held} />);
+    const card = screen.getByRole("link", { name: /Ewa Nowak/ });
+    const [shown] = held.rooms[0]!.cards;
+    expect(card.style.width).toBe(`${shown!.heldWidth}%`);
+    expect(shown!.heldWidth).toBeGreaterThan(shown!.width);
+  });
+
   it("a booking's details on hover", async () => {
     render(<DayTimelineView day={day} />);
     await userEvent.hover(screen.getByRole("link", { name: /^Ewa Nowak/ }));

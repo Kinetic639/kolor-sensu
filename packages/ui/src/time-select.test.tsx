@@ -24,3 +24,23 @@ describe("TimeSelect", () => {
     expect(screen.getByRole("combobox", { name: "Do" })).toHaveValue("10:10");
   });
 });
+
+describe("TimeSelect on the centre's grid", () => {
+  it("offers only the grid's times: every full hour", () => {
+    render(
+      <TimeSelect
+        aria-label="Od"
+        onChange={() => {}}
+        step={60}
+        value="08:00"
+      />,
+    );
+    const names = screen
+      .getAllByRole("option")
+      .map((option) => option.textContent);
+    expect(names).toContain("08:00");
+    expect(names).toContain("23:00");
+    expect(names).not.toContain("08:15");
+    expect(names).toHaveLength(24);
+  });
+});

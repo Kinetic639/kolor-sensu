@@ -806,6 +806,7 @@ export type Database = {
       services: {
         Row: {
           active: boolean;
+          after_minutes: number;
           booking_enabled: boolean;
           catalog_id: string | null;
           category: Database["public"]["Enums"]["service_category"];
@@ -822,6 +823,7 @@ export type Database = {
         };
         Insert: {
           active?: boolean;
+          after_minutes?: number;
           booking_enabled?: boolean;
           catalog_id?: string | null;
           category?: Database["public"]["Enums"]["service_category"];
@@ -838,6 +840,7 @@ export type Database = {
         };
         Update: {
           active?: boolean;
+          after_minutes?: number;
           booking_enabled?: boolean;
           catalog_id?: string | null;
           category?: Database["public"]["Enums"]["service_category"];
@@ -1520,6 +1523,7 @@ export type Database = {
           max_self_reschedules: number;
           payment_due_hours: number;
           reschedule_window_hours: number;
+          slot_step_minutes?: number;
           time_zone: string;
         }[];
       };
@@ -1946,6 +1950,8 @@ export type Database = {
           client_phone: string | null;
           currency_code: string;
           ends_at: string;
+          /** The end of its whole time (the time after it too). */
+          held_until?: string | null;
           id: string;
           location_name: string | null;
           mode: Database["public"]["Enums"]["visit_mode"];

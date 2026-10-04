@@ -159,6 +159,11 @@ export interface BookingWindow {
   maxSelfReschedules: number;
   /** A reservation is paid by this long before the visit (R11). */
   paymentDueHours: number;
+  /**
+   * The schedule's grid: visits start on it, and the times specialists are
+   * available, rooms open and are blocked lie on it (every 60 min).
+   */
+  slotStepMinutes: number;
 }
 
 export async function getBookingWindow(
@@ -176,6 +181,7 @@ export async function getBookingWindow(
         rescheduleWindowHours: row.reschedule_window_hours,
         maxSelfReschedules: row.max_self_reschedules,
         paymentDueHours: row.payment_due_hours,
+        slotStepMinutes: row.slot_step_minutes ?? 60,
       }
     : null;
 }

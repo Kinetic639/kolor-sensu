@@ -95,3 +95,15 @@ export function formatHours(minutes: number) {
   const hours = Math.round((minutes / 60) * 10) / 10;
   return `${String(hours).replace(".", ",")} godz.`;
 }
+
+/**
+ * The times of day on the centre's grid (`slot_step_minutes`), from 6:00
+ * to 22:00: what availability and a room's hours may start and end at.
+ */
+export function gridTimes(stepMinutes: number, from = 6 * 60, to = 22 * 60) {
+  const times: string[] = [];
+  for (let minute = from; minute <= to; minute += stepMinutes) {
+    times.push(minutesToTime(minute));
+  }
+  return times;
+}

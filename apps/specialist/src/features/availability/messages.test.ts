@@ -28,6 +28,9 @@ describe("availabilityErrorMessage", () => {
     expect(
       availabilityErrorMessage(new AvailabilityError("room_closed")),
     ).toMatch(/zamknięty/);
+    expect(availabilityErrorMessage(new AvailabilityError("off_grid"))).toBe(
+      "Godziny dostępności zaczynają się i kończą o pełnej godzinie, tak jak terminy wizyt. Wybierz je z listy.",
+    );
     expect(availabilityErrorMessage(new Error("boom"))).toBe(
       "Nie udało się zapisać. Spróbuj ponownie.",
     );

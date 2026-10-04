@@ -11,6 +11,8 @@ const MESSAGES: Record<AvailabilityErrorReason, string> = {
   room_closed:
     "Gabinet jest wtedy zamknięty. Wybierz godziny w jego godzinach otwarcia albo inny gabinet.",
   room_unavailable: "Ten gabinet nie jest już dostępny. Wybierz inny.",
+  off_grid:
+    "Godziny dostępności zaczynają się i kończą o pełnej godzinie, tak jak terminy wizyt. Wybierz je z listy.",
   time_off_overlap: "Ta nieobecność nakłada się na inną, już zapisaną.",
   not_found: "Nie znaleziono tych godzin. Odśwież stronę.",
   forbidden: "Brak uprawnień do zmiany tego grafiku.",

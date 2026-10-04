@@ -92,6 +92,14 @@ describe("listVisits", () => {
     });
   });
 
+  it("the end of its whole time, the time after it too, where given", async () => {
+    const { client } = rpcClient([
+      { ...row, held_until: "2030-10-02T10:00:00+00:00" },
+    ]);
+    const [visit] = await listVisits(client, { from: "a", to: "b" });
+    expect(visit!.heldUntil).toBe("2030-10-02T10:00:00+00:00");
+  });
+
   it("a reservation says when it must be paid by", async () => {
     const { client } = rpcClient([
       {

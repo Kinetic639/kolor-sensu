@@ -67,9 +67,12 @@ function exceptionLabel(exception: RoomAvailabilityException) {
 function AddExceptionButton({
   roomId,
   today,
+  step,
 }: {
   roomId: string;
   today: string;
+  /** The centre's grid: blocked time lies on it (minutes). */
+  step: number;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -173,6 +176,7 @@ function AddExceptionButton({
                       className="w-full"
                       id="exception-from"
                       onChange={field.onChange}
+                      step={step}
                       value={field.value}
                     />
                   )}
@@ -190,6 +194,7 @@ function AddExceptionButton({
                       className="w-full"
                       id="exception-to"
                       onChange={field.onChange}
+                      step={step}
                       value={field.value}
                     />
                   )}
@@ -289,15 +294,18 @@ function DeleteExceptionButton({
 export function RoomExceptions({
   roomId,
   today,
+  step,
   exceptions,
 }: {
   roomId: string;
   today: string;
   exceptions: RoomAvailabilityException[];
+  /** The centre's grid: blocked time lies on it (minutes). */
+  step: number;
 }) {
   return (
     <DetailSection
-      actions={<AddExceptionButton roomId={roomId} today={today} />}
+      actions={<AddExceptionButton roomId={roomId} step={step} today={today} />}
       title="Wyjątki"
     >
       {exceptions.length ? (

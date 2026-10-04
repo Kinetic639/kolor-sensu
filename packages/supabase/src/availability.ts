@@ -30,6 +30,8 @@ export type AvailabilityErrorReason =
   | "room_taken"
   | "room_closed"
   | "room_unavailable"
+  /** Times off the centre's grid (every full hour). */
+  | "off_grid"
   | "time_off_overlap"
   | "not_found"
   | "forbidden";
@@ -90,6 +92,10 @@ function toAvailabilityError(error: PostgrestLikeError, timeOff = false) {
       return new AvailabilityError(
         error.hint === "room_closed" ? "room_closed" : "overlap",
       );
+    case "23514":
+      return error.hint === "off_grid"
+        ? new AvailabilityError("off_grid")
+        : error;
     case "22023":
       return new AvailabilityError("room_unavailable");
     case "P0002":

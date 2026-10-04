@@ -8,6 +8,7 @@ import {
 } from "@/features/services/service-page";
 import { ServiceSettings } from "@/features/services/service-settings";
 import { siteTeam } from "@/features/services/view-model";
+import { centreSettings } from "@/lib/reference-data";
 import { DetailTabs } from "@repo/ui/detail-page";
 import { FullBleed } from "@repo/ui/full-bleed";
 import {
@@ -57,7 +58,10 @@ export default async function ServicePage({
           team={siteTeam(row.offers)}
         />
       ) : (
-        <ServiceSettings row={row} />
+        <ServiceSettings
+          row={row}
+          stepMinutes={(await centreSettings()).slotStepMinutes}
+        />
       )}
     </FullBleed>
   );

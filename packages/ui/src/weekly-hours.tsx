@@ -39,13 +39,16 @@ const toMinutes = (time: string) =>
 const toTime = (minutes: number) =>
   `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 
-/** The next interval: an hour after the last one, until 18:00 or an hour. */
-function nextInterval(last: WeeklyHoursInterval | undefined) {
+/**
+ * The next interval: an hour after the last one, until 18:00 or an hour;
+ * on the grid (`step` minutes) to the end of the day.
+ */
+function nextInterval(last: WeeklyHoursInterval | undefined, step = 15) {
   const start = Math.min(
     last ? toMinutes(last.endsAt) + 60 : 8 * 60,
-    23 * 60 - 15,
+    24 * 60 - 2 * step,
   );
-  const end = Math.min(Math.max(start + 60, 18 * 60), 23 * 60 + 45);
+  const end = Math.min(Math.max(start + 60, 18 * 60), 24 * 60 - step);
   return { startsAt: toTime(start), endsAt: toTime(end) };
 }
 
@@ -57,6 +60,8 @@ export interface WeeklyHoursEditorProps {
   /** Extra actions for a day, e.g. copying its hours to other days. */
   dayActions?: (weekday: number) => ReactNode;
   disabled?: boolean;
+  /** Minutes between the times offered (the centre's grid: 60). */
+  step?: number;
   className?: string;
 }
 
@@ -66,6 +71,7 @@ export function WeeklyHoursEditor({
   errors = {},
   dayActions,
   disabled,
+  step,
   className,
 }: WeeklyHoursEditorProps) {
   const id = useId();
@@ -122,6 +128,7 @@ export function WeeklyHoursEditor({
                           className="h-[26px] w-[4.75rem] rounded-[5px] px-1.5 font-mono text-[0.75rem] font-medium shadow-none"
                           disabled={disabled}
                           onChange={(time) => set({ startsAt: time })}
+                          step={step}
                           value={interval.startsAt}
                         />
                         <span
@@ -137,6 +144,7 @@ export function WeeklyHoursEditor({
                           className="h-[26px] w-[4.75rem] rounded-[5px] px-1.5 font-mono text-[0.75rem] font-medium shadow-none"
                           disabled={disabled}
                           onChange={(time) => set({ endsAt: time })}
+                          step={step}
                           value={interval.endsAt}
                         />
                         {day.intervals.length > 1 ? (
@@ -182,7 +190,7 @@ export function WeeklyHoursEditor({
                         ...day,
                         intervals: [
                           ...day.intervals,
-                          nextInterval(day.intervals.at(-1)),
+                          nextInterval(day.intervals.at(-1), step),
                         ],
                       })
                     }
