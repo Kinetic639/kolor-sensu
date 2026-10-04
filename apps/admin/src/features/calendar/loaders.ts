@@ -1,3 +1,4 @@
+import { panelIntake } from "@/lib/visit-intake";
 import "server-only";
 
 import {
@@ -206,6 +207,8 @@ export async function loadAdminCalendar(params: CalendarParams) {
                 currencyCode: open.currencyCode,
               })
             : null,
+          // The questionnaire before a consultation, where there is one.
+          intake: await panelIntake(client, open.id, timeZone),
         }
       : null,
   };

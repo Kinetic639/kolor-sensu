@@ -13,6 +13,7 @@ export type {
   BookingSummaryProps,
 } from "./booking-summary";
 export { HoldNotice } from "./hold-notice";
+export { IntakeQuestionnaire } from "./intake-questionnaire";
 export { SlotPicker } from "./slot-picker";
 export type {
   SlotPickerDay,

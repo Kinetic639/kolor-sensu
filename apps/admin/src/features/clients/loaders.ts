@@ -1,3 +1,4 @@
+import { panelIntake } from "@/lib/visit-intake";
 import { centreSettings } from "@/lib/reference-data";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -91,6 +92,8 @@ export async function loadClientCard(id: string, params: VisitTableParams) {
                 currencyCode: own.currencyCode,
               })
             : null,
+          // The questionnaire before a consultation, where there is one.
+          intake: await panelIntake(client, own.id, timeZone),
         }
       : null,
   };

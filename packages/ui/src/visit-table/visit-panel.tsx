@@ -108,6 +108,55 @@ export function Prop({
   );
 }
 
+/** The questionnaire before a consultation, as the panel shows it. */
+export interface VisitPanelIntake {
+  /** `05.10, 09:30` */
+  givenAt: string;
+  /** A mood of 1 or 2: said at the top. */
+  lowMood: boolean;
+  /** The answers, in the order asked. */
+  rows: { label: string; value: string }[];
+}
+
+/** The answers, one under another (they are long), its state at the top. */
+function Intake({ intake }: { intake: VisitPanelIntake }) {
+  return (
+    <section
+      aria-labelledby="wizyta-test"
+      className="border-t border-[var(--border)] px-1.5 py-1.5"
+    >
+      <div className="flex h-6 items-center gap-2 px-2">
+        <h3
+          className="text-[0.6875rem] font-semibold tracking-[0.04em] text-[var(--text-muted)]"
+          id="wizyta-test"
+        >
+          Test przed konsultacją
+        </h3>
+        <span className="text-[0.6875rem] text-[var(--text-muted)] tabular-nums">
+          wypełniony {intake.givenAt}
+        </span>
+      </div>
+      {intake.lowMood ? (
+        <p className="px-2 py-1">
+          <Tag tone="warning">Niski nastrój</Tag>
+        </p>
+      ) : null}
+      <dl className="grid gap-1.5 px-2 py-1">
+        {intake.rows.map((row) => (
+          <div className="grid gap-0.5" key={row.label}>
+            <dt className="text-[0.75rem] text-[var(--text-muted)]">
+              {row.label}
+            </dt>
+            <dd className="text-[0.8125rem] break-words text-[var(--text)]">
+              {row.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
 /** A value with its icon actions beside it (call, copy). */
 function WithActions({
   value,
@@ -237,9 +286,11 @@ function ClientDetails({ client }: { client: VisitPanelClient | null }) {
 function Details({
   row,
   specialistAvatar,
+  intake,
 }: {
   row: VisitRow;
   specialistAvatar?: string | null;
+  intake?: VisitPanelIntake | null;
 }) {
   return (
     <>
@@ -300,6 +351,8 @@ function Details({
           </Prop>
         </Group>
       ) : null}
+
+      {intake ? <Intake intake={intake} /> : null}
     </>
   );
 }
@@ -355,6 +408,7 @@ export function VisitPanel({
   toolbar,
   specialistAvatar,
   client = null,
+  intake = null,
 }: {
   row: VisitRow;
   /** The tabs' links (the table's address with each tab). */
@@ -370,6 +424,8 @@ export function VisitPanel({
   specialistAvatar?: string | null;
   /** The client's record, for the "Klient" tab. */
   client?: VisitPanelClient | null;
+  /** The questionnaire before a consultation, where there is one. */
+  intake?: VisitPanelIntake | null;
 }) {
   // A tab not offered here (e.g. "Klient" for a specialist): the details.
   const shown = tabs.some((one) => one.key === tab) ? tab : "szczegoly";
@@ -405,7 +461,13 @@ export function VisitPanel({
         initial={shown}
         key={row.id}
         panes={{
-          szczegoly: <Details row={row} specialistAvatar={specialistAvatar} />,
+          szczegoly: (
+            <Details
+              intake={intake}
+              row={row}
+              specialistAvatar={specialistAvatar}
+            />
+          ),
           historia: <History events={events ?? []} />,
           klient: <ClientDetails client={client} />,
         }}

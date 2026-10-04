@@ -35,8 +35,13 @@ export type { CancelAction, CentreVisit, RefundAction } from "./centre-changes";
 export { ResendPaymentLinkButton } from "./resend-payment-link";
 export type { ResendPaymentLinkResult } from "./resend-payment-link";
 export { VisitPanel } from "./visit-panel";
+export { visitPanelIntake } from "./visit-intake";
 export { VisitTableSearch } from "./visit-table-search";
-export type { VisitPanelClient, VisitPanelTab } from "./visit-panel";
+export type {
+  VisitPanelClient,
+  VisitPanelIntake,
+  VisitPanelTab,
+} from "./visit-panel";
 export {
   VisitTable,
   VisitTablePagination,

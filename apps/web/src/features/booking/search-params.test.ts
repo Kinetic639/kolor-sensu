@@ -3,6 +3,7 @@ import {
   bookingHref,
   bookingNoticeHref,
   changeBookingHref,
+  intakeHref,
   loadBookingParams,
   selectBookingHref,
 } from "./search-params";
@@ -54,6 +55,12 @@ describe("booking search params", () => {
       "/umow-wizyte?specjalista=anna-nowak",
     );
     expect(bookingHref({})).toBe("/umow-wizyte");
+  });
+
+  it("the test before a consultation keeps the choices, to come back to", () => {
+    expect(
+      intakeHref({ usluga: "konsultacja-psychologiczna", forma: "online" }),
+    ).toBe("/umow-wizyte/test?usluga=konsultacja-psychologiczna&forma=online");
   });
 
   it("selecting a choice keeps the others but drops the chosen time", () => {

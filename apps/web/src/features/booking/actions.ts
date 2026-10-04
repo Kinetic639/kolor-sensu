@@ -13,6 +13,7 @@ import {
 import type { Route } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { attachVisitIntake } from "@repo/supabase/intakes";
 import { getBookingWindow } from "@/lib/public-data";
 import { stripeServer } from "@/lib/stripe";
 import { createSecretClient } from "@/lib/supabase/secret";
@@ -26,6 +27,7 @@ import {
 import { claimReservationEmail } from "./email/confirmation-server";
 import { clientIp, turnstileKeys, verifyTurnstile, visitorKey } from "./guards";
 import { clearHoldToken, readHoldToken, saveHoldToken } from "./hold-cookie";
+import { clearIntake, readIntake } from "./intake-cookie";
 import { loadWizard } from "./load-wizard";
 import { checkoutSessionParams } from "./payment";
 import { expireSession } from "./payment-server";
@@ -218,8 +220,25 @@ export async function saveDetailsAction(
   if (!form.ok) return { status: "invalid", ...form };
 
   try {
-    await saveBookingDetails(createSecretClient(), token, form.details);
+    const db = createSecretClient();
+    // The questionnaire, where the service asks for it, tied to the visit.
+    await attachVisitIntake(db, token, (await readIntake())?.token ?? null);
+    await saveBookingDetails(db, token, form.details);
   } catch (error) {
+    if (error instanceof BookingError && error.code === "intake_required") {
+      return {
+        status: "invalid",
+        errors: {},
+        values: {
+          ...form.details,
+          notes: form.details.notes ?? "",
+          acceptTerms: true,
+          acceptPrivacy: true,
+        },
+        message:
+          "Ta konsultacja zaczyna się od krótkiego testu. Wróć do wyboru usługi, wypełnij go i wybierz termin ponownie.",
+      };
+    }
     if (error instanceof BookingError && error.code === "hold_expired") {
       redirect(EXPIRED);
     }
@@ -238,7 +257,9 @@ export async function saveDetailsAction(
     }
     throw error;
   }
-  // Saved: reserved to pay later, or straight on to the payment.
+  // Saved (with its questionnaire, the cookie is done with): reserved to
+  // pay later, or straight on to the payment.
+  await clearIntake();
   if (formData.get(INTENT_FIELD) === PAY_LATER) return reserveForLater(token);
   return goToPayment(token);
 }

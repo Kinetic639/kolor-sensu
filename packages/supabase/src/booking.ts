@@ -60,6 +60,8 @@ export type BookingErrorCode =
   | "nothing_owed"
   /** Settled a moment ago: a double click refunds once. */
   | "recently_settled"
+  /** The service asks for the questionnaire first, and there is none. */
+  | "intake_required"
   | "unknown";
 
 const BOOKING_ERROR_CODES = new Set<string>([
@@ -89,6 +91,7 @@ const BOOKING_ERROR_CODES = new Set<string>([
   "nothing_changed",
   "nothing_owed",
   "recently_settled",
+  "intake_required",
 ]);
 
 export class BookingError extends Error {

@@ -1,3 +1,4 @@
+import { panelIntake } from "@/lib/visit-intake";
 import "server-only";
 
 import { requirePortalRole } from "@/lib/auth";
@@ -143,6 +144,8 @@ export async function loadMyCalendar(params: CalendarParams) {
                 currencyCode: open.currencyCode,
               })
             : null,
+          // The questionnaire before a consultation, where there is one.
+          intake: await panelIntake(client, open.id, timeZone),
         }
       : null,
   };

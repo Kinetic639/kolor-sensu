@@ -1,3 +1,4 @@
+import { panelIntake } from "@/lib/visit-intake";
 import { resendPaymentLinkAction } from "@/features/calendar/actions";
 import { bookingWindow, myRooms, myServices } from "@/lib/reference-data";
 import { createClient } from "@/lib/supabase/server";
@@ -73,6 +74,8 @@ export default async function BookingsPage({
 
   const rows = visitRows(page.visits, { timeZone });
   const openRow = open ? visitRows([open], { timeZone })[0]! : null;
+  // The questionnaire before a consultation, where there is one.
+  const intake = open ? await panelIntake(client, open.id, timeZone) : null;
   const columnsCookie = columnsCookieName(TABLE);
   const widthsCookie = widthsCookieName(TABLE);
   const columns = parseColumnLayout(
@@ -140,6 +143,7 @@ export default async function BookingsPage({
                   })
                 : null
             }
+            intake={intake}
             row={openRow}
             tab={params.karta}
             tabs={visitPanelTabs(PATH, params)}

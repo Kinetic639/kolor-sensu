@@ -23,6 +23,7 @@ import {
   defaultRoomsPageContent,
   flattenOffer,
 } from "@repo/contracts";
+import { intakeServiceSlugs } from "@repo/supabase/intakes";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
 import { groupRoomsByLocation } from "./rooms-by-location";
@@ -232,6 +233,14 @@ export const getPriceList = cache(async () => {
 /** What can be booked online now (empty when bookings are off). */
 export const getBookableCatalog = cache(() =>
   load("bookable offers", listBookableCatalog, { services: [], offers: [] }),
+);
+
+/**
+ * The services that ask for the questionnaire before a first visit, by
+ * slug (none when unknown: the visit's details then insist on it).
+ */
+export const getIntakeServiceSlugs = cache(() =>
+  load("intake services", intakeServiceSlugs, new Set<string>()),
 );
 
 /** The centre's time zone and booking horizon. */

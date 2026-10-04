@@ -14,29 +14,41 @@ import {
   listVisitEvents,
   searchVisits,
 } from "@repo/supabase";
+import { panelIntake } from "@/lib/visit-intake";
 import { toVisitSearch, type VisitTableParams } from "@repo/ui/visit-table";
 
 // `/rezerwacje` (R9): one page of everyone's visits, searched, filtered and
 // sorted by the database; what the filters offer (kept between requests,
 // @/lib/reference-data); the visit open in the side panel with all its
-// tabs at once (details, history, client), so switching tabs asks the
-// server for nothing.
+// tabs at once (details with the questionnaire before a consultation,
+// history, client), so switching tabs asks the server for nothing.
 
 export async function loadAdminVisits(params: VisitTableParams) {
   const client = await createClient();
   const settings = await centreSettings();
   const timeZone = settings.timezone;
-  const [page, specialists, avatars, services, rooms, open, events, booker] =
-    await Promise.all([
-      searchVisits(client, toVisitSearch(params, { timeZone })),
-      specialistSummaries(),
-      specialistAvatars(),
-      loadServices(),
-      loadRooms(),
-      params.wizyta ? getVisit(client, params.wizyta) : null,
-      params.wizyta ? listVisitEvents(client, params.wizyta) : null,
-      params.wizyta ? getVisitClient(client, params.wizyta) : null,
-    ]);
+  const [
+    page,
+    specialists,
+    avatars,
+    services,
+    rooms,
+    open,
+    events,
+    booker,
+    intake,
+  ] = await Promise.all([
+    searchVisits(client, toVisitSearch(params, { timeZone })),
+    specialistSummaries(),
+    specialistAvatars(),
+    loadServices(),
+    loadRooms(),
+    params.wizyta ? getVisit(client, params.wizyta) : null,
+    params.wizyta ? listVisitEvents(client, params.wizyta) : null,
+    params.wizyta ? getVisitClient(client, params.wizyta) : null,
+    // The questionnaire before a consultation (none where not given).
+    params.wizyta ? panelIntake(client, params.wizyta, timeZone) : null,
+  ]);
 
   return {
     timeZone,
@@ -58,6 +70,7 @@ export async function loadAdminVisits(params: VisitTableParams) {
                 notes: booker.notes,
               }
             : null,
+          intake,
         }
       : null,
     filters: {

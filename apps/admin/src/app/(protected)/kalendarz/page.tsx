@@ -228,6 +228,7 @@ export default async function CalendarPage({
               <VisitPanel
                 closeHref={calendarPanelCloseHref(PATH, params)}
                 events={open.events}
+                intake={open.intake}
                 row={open.row}
                 tab={params.karta}
                 tabs={calendarPanelTabs(PATH, params)}

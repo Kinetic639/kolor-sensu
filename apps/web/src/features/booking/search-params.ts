@@ -94,6 +94,14 @@ export function bookingHref(values: Partial<BookingParams>): Route {
 }
 
 /**
+ * The test before a first consultation, with the wizard's choices so far
+ * (the way back to them once it is done).
+ */
+export function intakeHref(values: Partial<BookingParams>): Route {
+  return serialize(`${BOOKING_PATH}/test`, { ...values, uwaga: null }) as Route;
+}
+
+/**
  * The wizard with a notice, without the time that was refused (or with it,
  * when only the check failed and the client can simply try again).
  */

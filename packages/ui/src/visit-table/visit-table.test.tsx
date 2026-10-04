@@ -429,6 +429,32 @@ describe("VisitPanel", () => {
     ).toHaveAttribute("href", "/kalendarz");
   });
 
+  it("the questionnaire before a consultation, where there is one", () => {
+    render(
+      <VisitPanel
+        closeHref="/kalendarz"
+        events={null}
+        intake={{
+          lowMood: true,
+          givenAt: "05.10, 09:30",
+          rows: [
+            { label: "Samopoczucie", value: "2/10 · Jestem osobą…" },
+            { label: "Trudności", value: "Lęk, Stres" },
+          ],
+        }}
+        row={adminRows[0]!}
+        tab="szczegoly"
+        tabs={panelTabs}
+      />,
+    );
+    const intake = screen.getByRole("region", {
+      name: "Test przed konsultacją",
+    });
+    expect(intake).toHaveTextContent("Niski nastrój");
+    expect(intake).toHaveTextContent("wypełniony 05.10, 09:30");
+    expect(intake).toHaveTextContent("TrudnościLęk, Stres");
+  });
+
   it("closes through the panel: its link and Escape leave the address", async () => {
     render(
       <VisitPanel

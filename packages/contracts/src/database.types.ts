@@ -816,6 +816,7 @@ export type Database = {
           id: string;
           name: string;
           publicly_visible: boolean;
+          requires_intake: boolean;
           short_description: string | null;
           slug: string;
           sort_order: number;
@@ -833,6 +834,7 @@ export type Database = {
           id?: string;
           name: string;
           publicly_visible?: boolean;
+          requires_intake?: boolean;
           short_description?: string | null;
           slug: string;
           sort_order?: number;
@@ -850,6 +852,7 @@ export type Database = {
           id?: string;
           name?: string;
           publicly_visible?: boolean;
+          requires_intake?: boolean;
           short_description?: string | null;
           slug?: string;
           sort_order?: number;
@@ -1468,11 +1471,51 @@ export type Database = {
           },
         ];
       };
+      visit_intakes: {
+        Row: {
+          answers: Json;
+          appointment_id: string | null;
+          created_at: string;
+          health_consent_at: string;
+          id: string;
+          mood: number;
+          service_id: string;
+          token_hash: string;
+          version: number;
+        };
+        Insert: {
+          answers: Json;
+          appointment_id?: string | null;
+          created_at?: string;
+          health_consent_at: string;
+          id?: string;
+          mood: number;
+          service_id: string;
+          token_hash: string;
+          version?: number;
+        };
+        Update: {
+          answers?: Json;
+          appointment_id?: string | null;
+          created_at?: string;
+          health_consent_at?: string;
+          id?: string;
+          mood?: number;
+          service_id?: string;
+          token_hash?: string;
+          version?: number;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
+      attach_visit_intake: {
+        Args: { p_access_token: string; p_intake_token: string };
+        Returns: boolean;
+      };
       accept_booking_terms: { Args: { p_token: string }; Returns: undefined };
       add_room_image: {
         Args: { p_room_id: string; p_storage_path: string };
