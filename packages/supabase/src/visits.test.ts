@@ -77,6 +77,8 @@ describe("listVisits", () => {
       room: { id: "room-1", name: "Gabinet Zielony", color: null },
       locationName: "Siedziba",
       client: {
+        // The calendar's list gives no client card.
+        id: null,
         name: "Jan Kowalski",
         email: "jan@example.com",
         phone: "600100200",
