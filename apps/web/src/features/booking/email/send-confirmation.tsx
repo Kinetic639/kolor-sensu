@@ -27,6 +27,7 @@ export interface ConfirmationEmailDeps {
   siteUrl: string;
   timeZone: string;
   contact: { phone?: string; email?: string };
+  company?: string | null;
 }
 
 export function sendConfirmationEmail(

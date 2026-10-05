@@ -32,7 +32,7 @@ export function siteUrl() {
 
 /** What every visit e-mail needs: the sender, the site, the centre. */
 async function emailBasics() {
-  const [{ contact }, window] = await Promise.all([
+  const [{ contact, company }, window] = await Promise.all([
     getSiteFrame(),
     getBookingWindow(),
   ]);
@@ -42,6 +42,7 @@ async function emailBasics() {
     siteUrl: siteUrl(),
     timeZone: window?.timeZone ?? "Europe/Warsaw",
     contact: { phone: contact?.phoneLabel, email: contact?.email },
+    company,
   };
 }
 

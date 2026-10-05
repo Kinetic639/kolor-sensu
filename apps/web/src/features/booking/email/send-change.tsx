@@ -5,7 +5,7 @@ import {
   refundedContent,
   rescheduledContent,
 } from "./change-content";
-import type { ConfirmationOptions } from "./confirmation-content";
+import { withCompany, type ConfirmationOptions } from "./confirmation-content";
 import { ConfirmationEmail } from "./confirmation-email";
 import type { OutgoingEmail } from "./send-confirmation";
 
@@ -97,8 +97,10 @@ export async function sendChangeEmail(
         from: deps.from,
         to: visit.clientEmail,
         subject: content.subject,
-        html: await render(<ConfirmationEmail content={content} />),
-        text: content.text,
+        html: await render(
+          <ConfirmationEmail company={deps.company} content={content} />,
+        ),
+        text: withCompany(content.text, deps.company),
         attachments: content.ics
           ? [
               {

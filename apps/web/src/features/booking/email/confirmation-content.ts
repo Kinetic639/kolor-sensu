@@ -13,6 +13,18 @@ export interface ConfirmationOptions {
   siteUrl: string;
   timeZone: string;
   contact: { phone?: string; email?: string };
+  /** The company in one line (its name, address, NIP), at the foot. */
+  company?: string | null;
+}
+
+/** The plain text with the company at its foot (when it is set). */
+export function withCompany(text: string, company?: string | null) {
+  return company
+    ? `${text}
+
+--
+${company}`
+    : text;
 }
 
 /** What a visit e-mail says; the template (./confirmation-email) lays it out. */

@@ -26,6 +26,7 @@ export const adminNavigation: PortalNavigationSection[] = [
     items: [
       { label: "CMS", href: "/cms", icon: "cms" },
       { label: "Ogłoszenia", href: "/ogloszenia", icon: "announcements" },
+      { label: "E-maile", href: "/maile", icon: "emails" },
     ],
   },
   {

@@ -24,7 +24,14 @@ const colors = {
   border: "#e3e0d8",
 };
 
-export function ConfirmationEmail({ content }: { content: VisitEmailContent }) {
+export function ConfirmationEmail({
+  content,
+  company = null,
+}: {
+  content: VisitEmailContent;
+  /** The company in one line, at the foot (Ustawienia → Centrum). */
+  company?: string | null;
+}) {
   return (
     <Html lang="pl">
       <Head />
@@ -117,6 +124,13 @@ export function ConfirmationEmail({ content }: { content: VisitEmailContent }) {
             <br />
             Kolor Sensu
           </Text>
+          {company ? (
+            <Text
+              style={{ color: colors.muted, fontSize: 11, lineHeight: "16px" }}
+            >
+              {company}
+            </Text>
+          ) : null}
         </Container>
       </Body>
     </Html>

@@ -1,7 +1,7 @@
 import { render } from "@react-email/components";
 import { createHash } from "node:crypto";
 import type { BookingEmailKind, ClaimedBookingEmail } from "@repo/supabase";
-import { confirmationContent } from "./confirmation-content";
+import { confirmationContent, withCompany } from "./confirmation-content";
 import { ConfirmationEmail } from "./confirmation-email";
 import {
   reservationContent,
@@ -76,8 +76,10 @@ export async function deliverVisitEmail(
         from: deps.from,
         to: visit.clientEmail,
         subject: content.subject,
-        html: await render(<ConfirmationEmail content={content} />),
-        text: content.text,
+        html: await render(
+          <ConfirmationEmail company={deps.company} content={content} />,
+        ),
+        text: withCompany(content.text, deps.company),
         attachments: [
           {
             filename: `wizyta-${visit.reference}.ics`,
