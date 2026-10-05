@@ -403,6 +403,37 @@ describe("dayView by specialist", () => {
   });
 });
 
+describe("dayView on a day the centre is closed", () => {
+  const view = dayView({
+    ...base,
+    closures: [
+      { startsOn: "2030-10-01", endsOn: "2030-10-03", reason: "Remont klatki" },
+    ],
+    date: "2030-10-02",
+    perspective: "specialists",
+  });
+
+  it("every column says so, with no time to book; booked visits stay", () => {
+    const [annaColumn] = view.columns;
+    expect(annaColumn).toMatchObject({
+      closed: "Centrum zamknięte · Remont klatki",
+      unavailable: true,
+      availability: [],
+    });
+    expect(annaColumn!.visits.length).toBeGreaterThan(0);
+  });
+
+  it("another day is as it was", () => {
+    const other = dayView({
+      ...base,
+      closures: [{ startsOn: "2030-10-01", endsOn: "2030-10-01", reason: "x" }],
+      date: "2030-10-02",
+      perspective: "specialists",
+    });
+    expect(other.columns[0]!.closed).toBeNull();
+  });
+});
+
 describe("dayView by room", () => {
   const view = dayView({ ...base, date: "2030-10-02", perspective: "rooms" });
   const [greenColumn, blueColumn, onlineColumn] = view.columns;

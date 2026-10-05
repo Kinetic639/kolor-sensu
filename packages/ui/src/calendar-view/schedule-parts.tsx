@@ -634,7 +634,9 @@ export function ColumnHeader({
       <span className="flex min-w-0 items-center gap-1 text-[0.71875rem] text-[var(--text-muted)] tabular-nums">
         {closed ? (
           <span className="truncate font-medium text-[var(--warning-foreground)]">
-            {closed === "Gabinet zamknięty" ? closed : `Zamknięty: ${closed}`}
+            {closed === "Gabinet zamknięty" || closed.startsWith("Centrum")
+              ? closed
+              : `Zamknięty: ${closed}`}
           </span>
         ) : muted ? (
           <span className="flex items-center gap-1 truncate text-[var(--text-subtle)]">

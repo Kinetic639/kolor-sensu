@@ -209,7 +209,7 @@ function Fold({
             ) : (
               <CalendarOff aria-hidden="true" className="size-3" />
             )}
-            {column.closed ? "Gabinet zamknięty" : "Brak zaplanowanych wizyt"}
+            {column.closed ?? "Brak zaplanowanych wizyt"}
           </p>
         )}
       </div>

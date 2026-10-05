@@ -1,4 +1,5 @@
 import "server-only";
+import { listClosures } from "@repo/supabase/closures";
 
 import { cache } from "react";
 
@@ -84,8 +85,11 @@ async function readWeeks(
     to: sunday,
     timeZone,
   });
+  // The days the whole centre is closed: shown, nothing to book.
+  const closures = await listClosures(client);
   const input = {
     timeZone,
+    closures,
     now: new Date(),
     people,
     // Only for the rooms' names and colours.

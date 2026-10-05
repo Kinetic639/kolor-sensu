@@ -169,6 +169,20 @@ describe("calendar week", () => {
     ]);
   });
 
+  it("a day the whole centre is closed is blocked, with why", () => {
+    const model = mapAvailabilityViewModel({
+      ...base,
+      rules: [],
+      closures: [
+        { startsOn: "2030-01-08", endsOn: "2030-01-08", reason: "Święto" },
+      ],
+    });
+    expect(model.calendar.days[1]!.timeOff).toEqual([
+      expect.objectContaining({ label: "Centrum zamknięte · Święto" }),
+    ]);
+    expect(model.calendar.days[0]!.timeOff).toEqual([]);
+  });
+
   it("widens the hours for early or late windows", () => {
     const model = mapAvailabilityViewModel({
       ...base,

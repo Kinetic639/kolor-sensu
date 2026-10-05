@@ -6,6 +6,7 @@ import type {
 } from "@repo/contracts";
 import {
   addDays,
+  centreClosedOn,
   closedIntervals,
   describeRecurrence,
   expandAvailability,
@@ -21,6 +22,7 @@ import {
   WEEKDAY_NAMES,
   WEEKDAY_SHORT,
   zonedInstant,
+  type CalendarClosure,
   type OpeningHoursInterval,
   type RoomDateException,
 } from "@repo/scheduling";
@@ -125,7 +127,10 @@ export function mapAvailabilityViewModel({
   specialistId,
   occupancy = [],
   room = null,
+  closures = [],
 }: {
+  /** The days the whole centre is closed: blocked, with why. */
+  closures?: CalendarClosure[];
   rules: SpecialistAvailabilityRule[];
   timeOff: SpecialistTimeOff[];
   rooms: { id: string; name: string; color?: string | null }[];
@@ -284,7 +289,19 @@ export function mapAvailabilityViewModel({
             ? `Nieobecność: ${off.off.reason}`
             : "Nieobecność",
         }))
-        .filter((off) => off.end > off.start),
+        .filter((off) => off.end > off.start)
+        .concat(
+          centreClosedOn(closures, date)
+            ? [
+                {
+                  id: `closed-${date}`,
+                  start: range.start,
+                  end: range.end,
+                  label: centreClosedOn(closures, date)!,
+                },
+              ]
+            : [],
+        ),
     };
   });
 

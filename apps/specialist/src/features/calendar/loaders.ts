@@ -1,4 +1,5 @@
 import { panelIntake } from "@/lib/visit-intake";
+import { listClosures } from "@repo/supabase/closures";
 import "server-only";
 
 import { requirePortalRole } from "@/lib/auth";
@@ -92,8 +93,11 @@ export async function loadMyCalendar(params: CalendarParams) {
     to: period.to,
     timeZone,
   });
+  // The days the whole centre is closed: shown, nothing to book.
+  const closures = await listClosures(client);
   const input = {
     timeZone,
+    closures,
     now,
     people: [me],
     // Only for the rooms' names and colours.

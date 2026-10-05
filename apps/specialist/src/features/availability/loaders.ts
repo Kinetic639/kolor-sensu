@@ -1,4 +1,5 @@
 import "server-only";
+import { listClosures } from "@repo/supabase/closures";
 
 import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -91,6 +92,8 @@ export async function loadAvailability(params: AvailabilityParams) {
     // The centre's grid (visits start on it; availability lies on it).
     stepMinutes: (await getBookingWindow(client))?.slotStepMinutes ?? 60,
     model: mapAvailabilityViewModel({
+      // The days the whole centre is closed: blocked, with why.
+      closures: await listClosures(client),
       rules,
       timeOff,
       rooms: rooms.map((room) => ({

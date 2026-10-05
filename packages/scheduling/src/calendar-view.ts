@@ -416,8 +416,19 @@ export interface CalendarInput {
   windows: CalendarWindow[];
   timeOff: CalendarTimeOff[];
   visits: VisitLike[];
+  /**
+   * The days the whole centre is closed (Ustawienia → Dni zamknięcia):
+   * nothing to book then; visits booked before stay.
+   */
+  closures?: CalendarClosure[];
   /** Words to find in the client, service, reference or specialist. */
   query?: string | null;
+}
+
+export interface CalendarClosure {
+  startsOn: string;
+  endsOn: string;
+  reason: string;
 }
 
 interface Context {
@@ -430,6 +441,7 @@ interface Context {
   windows: CalendarWindow[];
   timeOff: CalendarTimeOff[];
   visits: VisitLike[];
+  closures: CalendarClosure[];
   query: string | null;
 }
 
@@ -454,6 +466,7 @@ function contextOf(input: CalendarInput): Context {
     windows: input.windows,
     timeOff: input.timeOff,
     visits: input.visits.filter(booked),
+    closures: input.closures ?? [],
     query: input.query?.trim().toLowerCase() || null,
   };
 }
@@ -562,7 +575,23 @@ type ColumnParts = Omit<
   "isToday" | "hours" | "unavailable" | "occupancy"
 >;
 
-function finish(ctx: Context, parts: ColumnParts): CalendarColumn {
+/** Why the whole centre is closed that day, or null. */
+export function centreClosedOn(
+  closures: readonly CalendarClosure[],
+  date: string,
+) {
+  const closure = closures.find(
+    (one) => one.startsOn <= date && date <= one.endsOn,
+  );
+  return closure ? `Centrum zamknięte · ${closure.reason}` : null;
+}
+
+function finish(ctx: Context, given: ColumnParts): CalendarColumn {
+  // The whole centre closed: no time to book, its visits still shown.
+  const closedCentre = centreClosedOn(ctx.closures, given.date);
+  const parts = closedCentre
+    ? { ...given, closed: closedCentre, availability: [] }
+    : given;
   const { availability, visits } = parts;
   return {
     ...parts,
