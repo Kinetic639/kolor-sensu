@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   ClientError,
+  clientDuplicates,
   forgetClient,
+  mergeClients,
   getClient,
   listClientVisits,
   retentionPreview,
@@ -172,6 +174,40 @@ describe("retentionPreview", () => {
     await expect(retentionPreview({ rpc } as never)).resolves.toEqual({
       clients: 2,
       intakes: 5,
+    });
+  });
+});
+
+describe("clientDuplicates and mergeClients", () => {
+  it("other cards of the same person, and merging one in", async () => {
+    const rpc = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: "c-2",
+            name: "Jan Kowalski",
+            email: "jan2@example.invalid",
+            phone: null,
+            reason: "name",
+          },
+        ],
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: 3, error: null });
+    await expect(clientDuplicates({ rpc } as never, "c-1")).resolves.toEqual([
+      {
+        id: "c-2",
+        name: "Jan Kowalski",
+        email: "jan2@example.invalid",
+        phone: null,
+        reason: "name",
+      },
+    ]);
+    await expect(mergeClients({ rpc } as never, "c-1", "c-2")).resolves.toBe(3);
+    expect(rpc).toHaveBeenLastCalledWith("merge_clients", {
+      p_keep: "c-1",
+      p_merge: "c-2",
     });
   });
 });

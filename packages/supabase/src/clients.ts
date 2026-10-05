@@ -56,6 +56,7 @@ export type ClientErrorCode =
   /** A visit to come, or money owed back: their details stay for now. */
   | "client_busy"
   | "already_forgotten"
+  | "same_client"
   | "unknown";
 
 const HINTS = new Set<string>([
@@ -64,6 +65,7 @@ const HINTS = new Set<string>([
   "invalid_details",
   "client_busy",
   "already_forgotten",
+  "same_client",
 ]);
 
 export class ClientError extends Error {
@@ -226,4 +228,48 @@ export async function retentionPreview(client: Client) {
   const { data, error } = await client.rpc("retention_preview");
   if (error) throw error;
   return { clients: data?.[0]?.clients ?? 0, intakes: data?.[0]?.intakes ?? 0 };
+}
+
+export interface ClientDuplicate {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  /** Why it may be the same person. */
+  reason: "name" | "phone";
+}
+
+/** Other cards likely of the same person (the same name or phone). */
+export async function clientDuplicates(
+  client: Client,
+  id: string,
+): Promise<ClientDuplicate[]> {
+  const { data, error } = await client.rpc("client_duplicates", {
+    p_client: id,
+  });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    reason: row.reason === "phone" ? "phone" : "name",
+  }));
+}
+
+/**
+ * Merges another card into this one: its visits come over (those to come
+ * take this card's details), the notes are put together, the other goes.
+ */
+export async function mergeClients(
+  client: Client,
+  keep: string,
+  merge: string,
+) {
+  const { data, error } = await client.rpc("merge_clients", {
+    p_keep: keep,
+    p_merge: merge,
+  });
+  if (error) throw clientError(error);
+  return data ?? 0;
 }

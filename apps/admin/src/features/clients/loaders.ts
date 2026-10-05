@@ -13,6 +13,7 @@ import {
   listClientVisits,
   listVisitEvents,
   searchClients,
+  clientDuplicates,
 } from "@repo/supabase";
 import { toClientSearch, type ClientTableParams } from "@repo/ui/client-table";
 import { sortDirection, type VisitTableParams } from "@repo/ui/visit-table";
@@ -59,11 +60,13 @@ export async function loadClientCard(id: string, params: VisitTableParams) {
   const timeZone = settings.timezone;
   // Every tab of the open visit at once: switching tabs asks for nothing.
   const history = Boolean(params.wizyta);
-  const [found, visits, open, events] = await Promise.all([
+  const [found, visits, open, events, duplicates] = await Promise.all([
     getClient(client, id),
     listClientVisits(client, id),
     params.wizyta ? getVisit(client, params.wizyta) : null,
     history ? listVisitEvents(client, params.wizyta!) : null,
+    // Other cards likely of the same person (to merge).
+    clientDuplicates(client, id).catch(() => []),
   ]);
   if (!found) return null;
 
@@ -80,6 +83,7 @@ export async function loadClientCard(id: string, params: VisitTableParams) {
 
   return {
     client: found,
+    duplicates,
     row: clientRows([found], { timeZone })[0]!,
     visits: visitRows(shown, { timeZone }),
     total: sorted.length,

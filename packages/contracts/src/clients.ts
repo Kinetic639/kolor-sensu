@@ -49,6 +49,7 @@ const MESSAGES: Record<string, string> = {
   client_busy:
     "Klient ma wizytę przed sobą albo czeka na zwrot. Najpierw ją odwołaj lub rozlicz.",
   already_forgotten: "Dane tego klienta zostały już usunięte.",
+  same_client: "Wybierz innego klienta niż ten.",
 };
 
 /** Why a client's details could not be saved, in Polish. */

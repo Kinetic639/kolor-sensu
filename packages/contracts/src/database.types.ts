@@ -1599,6 +1599,17 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      client_duplicates: {
+        Args: { p_client: string };
+        Returns: {
+          email: string;
+          id: string;
+          name: string;
+          phone: string | null;
+          reason: string;
+        }[];
+      };
+      merge_clients: { Args: { p_keep: string; p_merge: string }; Returns: number };
       forget_client: { Args: { p_client: string }; Returns: undefined };
       retention_preview: {
         Args: never;

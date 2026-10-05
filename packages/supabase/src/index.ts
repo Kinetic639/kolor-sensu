@@ -250,7 +250,9 @@ export type {
 } from "./notifications";
 export {
   ClientError,
+  clientDuplicates,
   forgetClient,
+  mergeClients,
   getClient,
   getVisitClient,
   listClientVisits,
@@ -261,6 +263,7 @@ export {
 export type {
   CentreClient,
   ClientDetails,
+  ClientDuplicate,
   ClientErrorCode,
   ClientSearch,
   ClientSort,

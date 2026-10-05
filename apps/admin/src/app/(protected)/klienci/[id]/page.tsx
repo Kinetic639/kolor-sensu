@@ -1,5 +1,6 @@
 import { updateClientAction } from "@/features/clients/actions";
 import { ForgetClientButton } from "@/features/clients/forget-client";
+import { MergeClientButton } from "@/features/clients/merge-client";
 import { loadClientCard } from "@/features/clients/loaders";
 import { CentreVisitToolbar } from "@/features/visits/cancel-visit";
 import { specialistAvatars } from "@/lib/reference-data";
@@ -65,6 +66,12 @@ export default async function ClientPage({
                   phone: card.client.phone,
                   notes: card.client.notes,
                 }}
+              />
+              <MergeClientButton
+                clientId={card.client.id}
+                duplicates={card.duplicates}
+                email={card.client.email}
+                name={card.client.name}
               />
               <ForgetClientButton
                 clientId={card.client.id}
