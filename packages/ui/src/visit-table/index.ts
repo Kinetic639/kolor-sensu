@@ -63,3 +63,5 @@ export {
 } from "./columns";
 export type { ColumnLayout, ColumnWidths, VisitColumnId } from "./columns";
 export { Tag } from "./visit-chips";
+export { VisitClosingForm } from "./visit-closing-form";
+export type { CloseVisitAction } from "./visit-closing-form";

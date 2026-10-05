@@ -1602,6 +1602,47 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      close_visit: {
+        Args: {
+          p_note?: string;
+          p_outcome: "attended" | "no_show";
+          p_tags?: string[];
+          p_visit: string;
+        };
+        Returns: undefined;
+      };
+      get_visit_closure: {
+        Args: { p_visit: string };
+        Returns: {
+          closed_at: string;
+          closed_by_name: string | null;
+          note: string | null;
+          outcome: "attended" | "no_show";
+          tags: string[];
+        }[];
+      };
+      unclosed_visits_summary: {
+        Args: { p_own?: boolean };
+        Returns: {
+          oldest_at: string;
+          specialist_id: string;
+          specialist_name: string;
+          visits: number;
+        }[];
+      };
+      visits_to_close_by_specialist: {
+        Args: never;
+        Returns: {
+          email: string;
+          specialist_id: string;
+          specialist_name: string;
+          visits: {
+            reference: string;
+            service_name: string;
+            starts_at: string;
+          }[];
+        }[];
+      };
       set_specialist_active: {
         Args: { p_active: boolean; p_specialist: string };
         Returns: number;
@@ -1633,7 +1674,10 @@ export type Database = {
           reason: string;
         }[];
       };
-      merge_clients: { Args: { p_keep: string; p_merge: string }; Returns: number };
+      merge_clients: {
+        Args: { p_keep: string; p_merge: string };
+        Returns: number;
+      };
       forget_client: { Args: { p_client: string }; Returns: undefined };
       retention_preview: {
         Args: never;
@@ -1933,6 +1977,7 @@ export type Database = {
           cancelled_at: string | null;
           cancelled_by: string | null;
           client_email: string | null;
+          client_id: string | null;
           client_name: string | null;
           client_notes: string | null;
           client_phone: string | null;
@@ -2344,6 +2389,7 @@ export type Database = {
           p_archived?: boolean;
           p_changed_from?: string;
           p_client_id?: string;
+          p_closure?: string;
           p_changed_to?: string;
           p_created_from?: string;
           p_created_to?: string;
@@ -2368,6 +2414,7 @@ export type Database = {
           cancelled_by: string | null;
           client_email: string | null;
           client_id: string | null;
+          closure: string | null;
           client_name: string | null;
           client_notes: string | null;
           client_phone: string | null;

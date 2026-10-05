@@ -168,22 +168,22 @@ export function TablePagination({
           className="flex items-center gap-0.5"
         >
           <span className="mr-1">Wierszy:</span>
-        {sizes.map((option) => (
-          <Link
-            aria-current={option.current ? "true" : undefined}
-            className={cn(
-              "inline-flex h-6 min-w-6 items-center justify-center rounded-[4px] px-1 font-medium focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
-              option.current
-                ? "bg-[var(--primary-soft)] text-[var(--primary)]"
-                : "hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]",
-            )}
-            href={option.href}
-            key={option.size}
-            scroll={false}
-          >
-            {option.size}
-          </Link>
-        ))}
+          {sizes.map((option) => (
+            <Link
+              aria-current={option.current ? "true" : undefined}
+              className={cn(
+                "inline-flex h-6 min-w-6 items-center justify-center rounded-[4px] px-1 font-medium focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
+                option.current
+                  ? "bg-[var(--primary-soft)] text-[var(--primary)]"
+                  : "hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]",
+              )}
+              href={option.href}
+              key={option.size}
+              scroll={false}
+            >
+              {option.size}
+            </Link>
+          ))}
         </nav>
         <span aria-hidden="true" className="h-4 w-px bg-[var(--border)]" />
         <nav aria-label="Strony" className="flex items-center gap-0.5">

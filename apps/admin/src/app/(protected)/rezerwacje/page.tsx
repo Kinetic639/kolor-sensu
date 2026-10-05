@@ -101,6 +101,7 @@ export default async function BookingsPage({
             events={open.events}
             row={open.row}
             client={open.client}
+            closing={open.closing}
             intake={open.intake}
             specialistAvatar={avatars[open.row.specialistId]}
             tab={params.karta}

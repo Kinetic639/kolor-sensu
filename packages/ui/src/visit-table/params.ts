@@ -38,6 +38,8 @@ export const VISIT_SCOPES = [
   "wszystkie",
   /** Visits with nothing left to do (a week after, settled). */
   "archiwum",
+  /** Held visits begun and not closed by their specialist. */
+  "do-zamkniecia",
 ] as const;
 /** Ranges back from today: when bookings were made or last changed. */
 export const VISIT_PAST_SCOPES = [
@@ -421,15 +423,17 @@ export function toVisitSearch(
     offset: (page - 1) * params.wierszy,
     own,
     clientId,
+    closure: params.zakres === "do-zamkniecia" ? ("open" as const) : null,
     // The archive: only in its own view; the past and all leave it out
-    // (a client's card shows everything).
-    archived: clientId
-      ? null
-      : params.zakres === "archiwum"
-        ? true
-        : params.zakres === "minione" || params.zakres === "wszystkie"
-          ? false
-          : null,
+    // (a client's card and the visits to close show everything).
+    archived:
+      clientId || params.zakres === "do-zamkniecia"
+        ? null
+        : params.zakres === "archiwum"
+          ? true
+          : params.zakres === "minione" || params.zakres === "wszystkie"
+            ? false
+            : null,
   };
 }
 

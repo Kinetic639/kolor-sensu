@@ -1,6 +1,7 @@
 import { panelIntake } from "@/lib/visit-intake";
 import { listClosures } from "@repo/supabase/closures";
 import "server-only";
+import { panelClosing } from "@/lib/visit-closing";
 
 import {
   centreSettings,
@@ -213,6 +214,8 @@ export async function loadAdminCalendar(params: CalendarParams) {
             : null,
           // The questionnaire before a consultation, where there is one.
           intake: await panelIntake(client, open.id, timeZone),
+          // Its closing (a held visit once begun).
+          closing: await panelClosing(client, open),
         }
       : null,
   };

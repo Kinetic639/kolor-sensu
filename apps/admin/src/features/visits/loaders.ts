@@ -16,6 +16,7 @@ import {
 } from "@repo/supabase";
 import { panelIntake } from "@/lib/visit-intake";
 import { toVisitSearch, type VisitTableParams } from "@repo/ui/visit-table";
+import { panelClosing } from "@/lib/visit-closing";
 
 // `/rezerwacje` (R9): one page of everyone's visits, searched, filtered and
 // sorted by the database; what the filters offer (kept between requests,
@@ -71,6 +72,8 @@ export async function loadAdminVisits(params: VisitTableParams) {
               }
             : null,
           intake,
+          // Its closing (a held visit once begun).
+          closing: await panelClosing(client, open),
         }
       : null,
     filters: {

@@ -8,6 +8,7 @@ import {
   Hourglass,
   UserCheck,
   type LucideIcon,
+  ClipboardCheck,
 } from "lucide-react";
 
 // A notification's kind as an icon, a tone as a small square's colours: a
@@ -23,6 +24,7 @@ export const KIND_ICONS: Record<NotificationIcon, LucideIcon> = {
   moved: CalendarClock,
   refund: Banknote,
   profile: UserCheck,
+  closing: ClipboardCheck,
 };
 
 export const TONE_SQUARES: Record<VisitTone, string> = {

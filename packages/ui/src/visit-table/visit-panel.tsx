@@ -287,13 +287,16 @@ function Details({
   row,
   specialistAvatar,
   intake,
+  closing,
 }: {
   row: VisitRow;
   specialistAvatar?: string | null;
   intake?: VisitPanelIntake | null;
+  closing?: ReactNode;
 }) {
   return (
     <>
+      {closing}
       <Group title="Wizyta">
         <Prop icon={<CircleDot aria-hidden="true" />} label="Status">
           <span className="flex flex-wrap items-center gap-1.5">
@@ -409,6 +412,7 @@ export function VisitPanel({
   specialistAvatar,
   client = null,
   intake = null,
+  closing = null,
 }: {
   row: VisitRow;
   /** The tabs' links (the table's address with each tab). */
@@ -426,6 +430,8 @@ export function VisitPanel({
   client?: VisitPanelClient | null;
   /** The questionnaire before a consultation, where there is one. */
   intake?: VisitPanelIntake | null;
+  /** Its closing (`VisitClosingForm`), at the top of the details. */
+  closing?: ReactNode;
 }) {
   // A tab not offered here (e.g. "Klient" for a specialist): the details.
   const shown = tabs.some((one) => one.key === tab) ? tab : "szczegoly";
@@ -463,6 +469,7 @@ export function VisitPanel({
         panes={{
           szczegoly: (
             <Details
+              closing={closing}
               intake={intake}
               row={row}
               specialistAvatar={specialistAvatar}

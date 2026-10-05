@@ -27,6 +27,11 @@ export interface VisitLike {
   specialist: { id: string; name: string; color: string | null };
   room: { id: string; name: string; color: string | null } | null;
   locationName: string | null;
+  /**
+   * Its closing (the table's search gives it): closed (attended, no_show),
+   * to close (open), or nothing to close (null).
+   */
+  closure?: "attended" | "no_show" | "open" | null;
   client: {
     /** The centre's client (their card), where the list says. */
     id?: string | null;
@@ -141,6 +146,14 @@ function statusOf(visit: VisitLike): VisitRow["status"] {
   }
   if (visit.status === "awaiting_payment") {
     return { label: "Czeka na płatność", tone: "warning" };
+  }
+  // A held visit once begun: closed by its specialist, or waiting to be.
+  if (visit.closure === "attended") return { label: "Odbyta", tone: "success" };
+  if (visit.closure === "no_show") {
+    return { label: "Nieobecność klienta", tone: "danger" };
+  }
+  if (visit.closure === "open") {
+    return { label: "Do zamknięcia", tone: "warning" };
   }
   return { label: "Potwierdzona", tone: "success" };
 }

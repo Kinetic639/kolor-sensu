@@ -29,6 +29,8 @@ export type NotificationKind =
   | "profile_submitted"
   /** Their profile approved, or sent back with a reason (the specialist). */
   | "profile_approved"
+  /** A held visit has ended and waits for its specialist to close it. */
+  | "visit_to_close"
   | "profile_rejected";
 
 export interface NotificationDetails {

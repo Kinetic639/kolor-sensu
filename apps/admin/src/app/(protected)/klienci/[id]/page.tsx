@@ -120,6 +120,7 @@ export default async function ClientPage({
           <VisitPanel
             closeHref={visitPanelCloseHref(path, tableParams)}
             events={card.open.events}
+            closing={card.open.closing}
             intake={card.open.intake}
             row={card.open.row}
             specialistAvatar={avatars[card.open.row.specialistId]}

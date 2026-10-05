@@ -302,3 +302,17 @@ describe("visitRows", () => {
     ]);
   });
 });
+
+describe("a held visit's closing, in its status", () => {
+  it("to close, attended, or the client did not come", () => {
+    const status = (closure: VisitLike["closure"]) =>
+      visitRows([{ ...visit, closure }], options)[0]!.status;
+    expect(status("open")).toEqual({ label: "Do zamknięcia", tone: "warning" });
+    expect(status("attended")).toEqual({ label: "Odbyta", tone: "success" });
+    expect(status("no_show")).toEqual({
+      label: "Nieobecność klienta",
+      tone: "danger",
+    });
+    expect(status(null)).toEqual({ label: "Potwierdzona", tone: "success" });
+  });
+});

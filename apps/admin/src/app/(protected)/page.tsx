@@ -1,4 +1,6 @@
 import { KeepFresh } from "@/features/dashboard/keep-fresh";
+import { createClient } from "@/lib/supabase/server";
+import { unclosedVisitsSummary } from "@repo/supabase/visit-closing";
 import { loadAdminDashboard } from "@/features/dashboard/loaders";
 import {
   addDays,
@@ -107,6 +109,10 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     pendingDrafts,
   } = await loadAdminDashboard(validDay(dzien));
 
+  // The visits their specialists have not closed yet, per specialist.
+  const unclosed = await unclosedVisitsSummary(await createClient()).catch(
+    () => [],
+  );
   const counts = todayCounts(todayVisits);
   const reservations = awaitingPaymentSummary(waiting, { timeZone, now });
   const day = dayTimeline(dayVisits, {
@@ -171,6 +177,23 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       // The profile tab, where the draft is reviewed.
       href: `/specjalisci/${draft.specialistId}?zakladka=profil`,
       target: "Profil",
+    })),
+    ...unclosed.map((one) => ({
+      id: `close-${one.specialistId}`,
+      title: `Wizyty do zamknięcia: ${one.visits}`,
+      detail: `${one.specialistName} · najstarsza z ${at(one.oldestAt, "dd.MM")}`,
+      tone: "warning" as const,
+      person: {
+        id: one.specialistId,
+        name: one.specialistName,
+        initials: initialsOf(one.specialistName),
+        avatarUrl: avatars[one.specialistId] ?? null,
+        color:
+          specialists.find((specialist) => specialist.id === one.specialistId)
+            ?.color ?? null,
+      },
+      href: `/rezerwacje?zakres=do-zamkniecia&specjalista=${one.specialistId}`,
+      target: "Rezerwacje",
     })),
   ];
 

@@ -143,10 +143,7 @@ export function ClientPanel({
                     ) : null}
                   </span>
                 </Prop>
-                <Prop
-                  icon={<CalendarX aria-hidden="true" />}
-                  label="Odwołane"
-                >
+                <Prop icon={<CalendarX aria-hidden="true" />} label="Odwołane">
                   <span className="tabular-nums">{cancelled}</span>
                 </Prop>
                 <Prop

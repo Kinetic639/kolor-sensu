@@ -530,9 +530,9 @@ describe("detailState", () => {
   });
 
   it("hidden from the site, said so", () => {
-    expect(
-      detailState({ ...detail({}), publiclyVisible: false }).hidden,
-    ).toBe(true);
+    expect(detailState({ ...detail({}), publiclyVisible: false }).hidden).toBe(
+      true,
+    );
   });
 });
 

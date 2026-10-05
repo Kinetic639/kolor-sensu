@@ -23,6 +23,7 @@ import {
   widthsCookieName,
 } from "@repo/ui/visit-table";
 import { cookies } from "next/headers";
+import { panelClosing } from "@/lib/visit-closing";
 
 // Moje rezerwacje (R9): the specialist's own visits (even when they are also
 // the centre's admin), with the client's contact and notes; no payments.
@@ -76,6 +77,8 @@ export default async function BookingsPage({
   const openRow = open ? visitRows([open], { timeZone })[0]! : null;
   // The questionnaire before a consultation, where there is one.
   const intake = open ? await panelIntake(client, open.id, timeZone) : null;
+  // Its closing (a held visit once begun).
+  const closing = await panelClosing(client, open);
   const columnsCookie = columnsCookieName(TABLE);
   const widthsCookie = widthsCookieName(TABLE);
   const columns = parseColumnLayout(
@@ -143,6 +146,7 @@ export default async function BookingsPage({
                   })
                 : null
             }
+            closing={closing}
             intake={intake}
             row={openRow}
             tab={params.karta}

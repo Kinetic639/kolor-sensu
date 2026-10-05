@@ -17,6 +17,7 @@ import {
 } from "@repo/ui/visit-table";
 import { Mail, Phone } from "lucide-react";
 import { notFound } from "next/navigation";
+import { panelClosing } from "@/lib/visit-closing";
 
 // A client's card in the specialist's portal: how to reach them, and their
 // visits with this specialist (all of them, the archive too) in the
@@ -60,6 +61,8 @@ export default async function MyClientPage({
   const rows = visitRows(page.visits, { timeZone });
   const openRow = open ? visitRows([open], { timeZone })[0]! : null;
   const intake = open ? await panelIntake(client, open.id, timeZone) : null;
+  // Its closing (a held visit once begun).
+  const closing = await panelClosing(client, open);
 
   return (
     <FullBleed>
@@ -117,6 +120,7 @@ export default async function MyClientPage({
                   })
                 : null
             }
+            closing={closing}
             intake={intake}
             row={openRow}
             tab={tableParams.karta}

@@ -306,6 +306,24 @@ describe("a profile sent for review", () => {
   });
 });
 
+describe("a visit to close", () => {
+  it("what, when, and the way to it", () => {
+    const view = notificationView(
+      at({ kind: "visit_to_close", actor: "system" }, { clientName: null }),
+      { ...options, portal: "specialist" },
+    );
+    expect(view).toMatchObject({
+      title: "Wizyta do zamknięcia",
+      summary: "Konsultacja · czw. 08.10, 11:00",
+      tone: "warning",
+      icon: "closing",
+      reference: "2610-004",
+      linkText: "2610-004",
+    });
+    expect(view.href).toContain("2610-004");
+  });
+});
+
 describe("notificationDays", () => {
   it("groups them by day, in order", () => {
     const views = [

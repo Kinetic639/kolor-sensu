@@ -4,6 +4,7 @@ export {
   Armchair,
   CalendarDays,
   CircleAlert,
+  ClipboardCheck,
   CreditCard,
   Hourglass,
   Clock3,

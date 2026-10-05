@@ -17,6 +17,7 @@ import {
 } from "@repo/supabase";
 import { toClientSearch, type ClientTableParams } from "@repo/ui/client-table";
 import { sortDirection, type VisitTableParams } from "@repo/ui/visit-table";
+import { panelClosing } from "@/lib/visit-closing";
 
 // The centre's clients (R15): one page of the list from the database, and a
 // client's card with their visits, sorted and paged here (a client has a
@@ -98,6 +99,8 @@ export async function loadClientCard(id: string, params: VisitTableParams) {
             : null,
           // The questionnaire before a consultation, where there is one.
           intake: await panelIntake(client, own.id, timeZone),
+          // Its closing (a held visit once begun).
+          closing: await panelClosing(client, own),
         }
       : null,
   };

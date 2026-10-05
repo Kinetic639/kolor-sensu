@@ -42,6 +42,7 @@ const PERIODS: { value: VisitScope; label: string }[] = [
   { value: "ten-miesiac", label: "Ten miesiąc" },
   { value: "minione", label: "Minione" },
   { value: "archiwum", label: "Archiwum" },
+  { value: "do-zamkniecia", label: "Do zamknięcia" },
 ];
 export const PAST_RANGES: { value: VisitPastScope; label: string }[] = [
   { value: "dzis", label: "Dziś" },

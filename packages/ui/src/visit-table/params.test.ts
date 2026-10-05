@@ -200,8 +200,19 @@ describe("toVisitSearch", () => {
       offset: 20,
       own: false,
       clientId: null,
+      closure: null,
       archived: null,
     });
+  });
+
+  it("to close: visits begun and not closed, whenever", () => {
+    expect(toVisitSearch(load("zakres=do-zamkniecia"), { now })).toMatchObject({
+      closure: "open",
+      archived: null,
+      from: null,
+      to: null,
+    });
+    expect(toVisitSearch(load(""), { now }).closure).toBeNull();
   });
 
   it("a client's card: their visits, the archive too", () => {

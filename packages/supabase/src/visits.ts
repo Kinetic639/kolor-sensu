@@ -33,6 +33,8 @@ export interface Visit {
   specialist: { id: string; name: string; color: string | null };
   room: { id: string; name: string; color: string | null } | null;
   locationName: string | null;
+  /** Its closing (the table's search gives it). */
+  closure?: "attended" | "no_show" | "open" | null;
   client: {
     /** The centre's client (their card); the table's search gives it. */
     id?: string | null;
@@ -122,6 +124,8 @@ export interface VisitSearch {
   archived?: boolean | null;
   /** One client's visits (their card). */
   clientId?: string | null;
+  /** By their closing: to close (open), attended, no_show. */
+  closure?: "open" | "attended" | "no_show" | null;
 }
 
 /** One page of visits and how many match in all (the bookings table). */
@@ -150,6 +154,7 @@ export async function searchVisits(
     p_own: search.own,
     p_archived: search.archived ?? undefined,
     p_client_id: search.clientId ?? undefined,
+    p_closure: search.closure ?? undefined,
   });
   if (error) throw error;
   const rows = data ?? [];
@@ -224,6 +229,11 @@ export async function getVisit(
 type VisitRow =
   Database["public"]["Functions"]["list_visits"]["Returns"][number];
 
+const closureOf = (value: string | null | undefined) =>
+  value === "attended" || value === "no_show" || value === "open"
+    ? value
+    : null;
+
 export function toVisit(row: VisitRow): Visit {
   const serviceId = (row as { service_id?: string }).service_id;
   return {
@@ -258,6 +268,7 @@ export function toVisit(row: VisitRow): Visit {
           }
         : null,
     locationName: row.location_name ?? null,
+    closure: closureOf((row as { closure?: string | null }).closure),
     client: {
       // The client's card (the table's search gives it).
       id: (row as { client_id?: string | null }).client_id ?? null,

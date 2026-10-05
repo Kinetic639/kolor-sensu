@@ -190,6 +190,8 @@ export interface AttentionItemData {
   description: string;
   icon: LucideIcon;
   tone?: StatusTone;
+  /** Where to deal with it (the title links there). */
+  href?: string;
 }
 
 export function AttentionItem({ item }: { item: AttentionItemData }) {
@@ -205,7 +207,18 @@ export function AttentionItem({ item }: { item: AttentionItemData }) {
         <Icon className="size-4.5" aria-hidden="true" />
       </span>
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-[var(--text)]">{item.title}</p>
+        <p className="text-sm font-semibold text-[var(--text)]">
+          {item.href ? (
+            <a
+              className="underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
+              href={item.href}
+            >
+              {item.title}
+            </a>
+          ) : (
+            item.title
+          )}
+        </p>
         <p className="mt-0.5 text-xs leading-relaxed text-[var(--text-muted)]">
           {item.description}
         </p>

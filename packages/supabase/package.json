@@ -8,6 +8,7 @@
     "./browser": "./src/browser.ts",
     "./access": "./src/access.ts",
     "./closures": "./src/closures.ts",
+    "./visit-closing": "./src/visit-closing.ts",
     "./intakes": "./src/intakes.ts",
     "./public": "./src/public.ts",
     "./secret": "./src/secret.ts",

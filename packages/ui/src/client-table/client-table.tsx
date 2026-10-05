@@ -176,7 +176,9 @@ export function ClientTable({
               : null
           }
           previousHref={
-            page > 1 ? clientTableHref(path, params, { strona: page - 1 }) : null
+            page > 1
+              ? clientTableHref(path, params, { strona: page - 1 })
+              : null
           }
           range={range}
           sizes={PAGE_SIZES.map((size) => ({

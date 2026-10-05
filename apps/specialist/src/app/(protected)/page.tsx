@@ -8,8 +8,10 @@ import {
   listMySpecialistServices,
 } from "@repo/supabase";
 import { SpecialistDashboard } from "@repo/ui/portal-dashboards";
+import { unclosedVisitsSummary } from "@repo/supabase/visit-closing";
 import {
   CalendarDays,
+  ClipboardCheck,
   CircleAlert,
   Clock3,
   FileText,
@@ -20,14 +22,25 @@ import {
 export default async function Home() {
   const client = await createClient();
   const specialist = await getMySpecialist(client);
-  const [publishedProfile, draft, locations, availableServices, myServices] =
-    await Promise.all([
-      specialist ? getMyPublishedProfile(client, specialist.id) : null,
-      specialist ? getMyDraft(client, specialist.id) : null,
-      listLocations(client),
-      listAvailableServicesForSpecialist(client),
-      listMySpecialistServices(client, specialist?.id),
-    ]);
+  const [
+    publishedProfile,
+    draft,
+    locations,
+    availableServices,
+    myServices,
+    unclosed,
+  ] = await Promise.all([
+    specialist ? getMyPublishedProfile(client, specialist.id) : null,
+    specialist ? getMyDraft(client, specialist.id) : null,
+    listLocations(client),
+    listAvailableServicesForSpecialist(client),
+    listMySpecialistServices(client, specialist?.id),
+    // Their visits that have ended and wait to be closed.
+    specialist
+      ? unclosedVisitsSummary(client, { own: true }).catch(() => [])
+      : Promise.resolve([]),
+  ]);
+  const toClose = unclosed.reduce((sum, one) => sum + one.visits, 0);
   const serviceById = new Map(
     availableServices.map((service) => [service.id, service]),
   );
@@ -36,6 +49,19 @@ export default async function Home() {
     currency: "PLN",
   });
   const attention = [
+    ...(toClose
+      ? [
+          {
+            id: "visits-to-close",
+            title: `Wizyty do zamknięcia: ${toClose}`,
+            description:
+              "Zaznacz, czy się odbyły (albo klient nie przyszedł), i dodaj tagi.",
+            icon: ClipboardCheck,
+            tone: "warning" as const,
+            href: "/rezerwacje?zakres=do-zamkniecia",
+          },
+        ]
+      : []),
     ...(!specialist
       ? [
           {

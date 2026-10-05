@@ -76,6 +76,7 @@ describe("listVisits", () => {
       specialist: { id: "anna", name: "Anna Test", color: "#7fb3a6" },
       room: { id: "room-1", name: "Gabinet Zielony", color: null },
       locationName: "Siedziba",
+      closure: null,
       client: {
         // The calendar's list gives no client card.
         id: null,

@@ -12,6 +12,7 @@
     "./center": "./src/center.ts",
     "./closures": "./src/closures.ts",
     "./company": "./src/company.ts",
+    "./visit-closing": "./src/visit-closing.ts",
     "./centre-changes": "./src/centre-changes.ts",
     "./intake": "./src/intake.ts",
     "./clients": "./src/clients.ts",

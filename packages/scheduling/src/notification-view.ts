@@ -36,7 +36,14 @@ export interface NotificationLike {
 }
 
 export type NotificationIcon =
-  "new" | "reserved" | "paid" | "cancelled" | "moved" | "refund" | "profile";
+  | "new"
+  | "reserved"
+  | "paid"
+  | "cancelled"
+  | "moved"
+  | "refund"
+  | "profile"
+  | "closing";
 
 /** A fact shown as a small icon; `label` is what its tooltip says. */
 export interface NotificationBadge {
@@ -185,6 +192,44 @@ export function notificationView(
       href: "/profil",
       linkText: "Profil",
       person: null,
+    };
+  }
+
+  // A visit that has ended, to close: what it was and when, leading to it.
+  if (kind === "visit_to_close") {
+    const what = [
+      d.serviceName,
+      d.startsAt ? visitTime(d.startsAt, "dd.MM, HH:mm") : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    return {
+      id: notification.id,
+      title: "Wizyta do zamknięcia",
+      reference: d.reference,
+      summary: what,
+      badges: [],
+      details: [
+        {
+          label: "Do zrobienia",
+          value: "Zaznacz, czy się odbyła, i dodaj tagi.",
+        },
+      ],
+      tone: "warning",
+      icon: "closing",
+      visitId: notification.appointmentId,
+      href:
+        notification.appointmentId && d.reference
+          ? bookingHref({
+              id: notification.appointmentId,
+              reference: d.reference,
+            })
+          : null,
+      linkText: d.reference,
+      person: null,
+      day,
+      time: local(notification.createdAt, "HH:mm"),
+      unread: notification.readAt === null,
     };
   }
 

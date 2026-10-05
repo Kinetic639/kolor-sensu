@@ -11,10 +11,7 @@ const meta = {
       email: "anna@example.com",
     },
     notificationCount: 3,
-    breadcrumbs: [
-      { label: "Dashboard", href: "/" },
-      { label: "Dostępność" },
-    ],
+    breadcrumbs: [{ label: "Dashboard", href: "/" }, { label: "Dostępność" }],
     profileHref: "/profil",
     portalSwitch: {
       label: "Przejdź do panelu administratora",
