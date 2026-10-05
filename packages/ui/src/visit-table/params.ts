@@ -36,6 +36,8 @@ export const VISIT_SCOPES = [
   "ten-miesiac",
   "minione",
   "wszystkie",
+  /** Visits with nothing left to do (a week after, settled). */
+  "archiwum",
 ] as const;
 /** Ranges back from today: when bookings were made or last changed. */
 export const VISIT_PAST_SCOPES = [
@@ -197,7 +199,9 @@ export function isFiltered(params: VisitTableParams) {
 /** Past periods show the latest first unless asked otherwise. */
 export function sortDirection(params: VisitTableParams): "asc" | "desc" {
   if (params.kierunek) return params.kierunek === "malejaco" ? "desc" : "asc";
-  return params.zakres === "minione" && params.sort === "termin" && !params.od
+  return (params.zakres === "minione" || params.zakres === "archiwum") &&
+    params.sort === "termin" &&
+    !params.od
     ? "desc"
     : "asc";
 }
@@ -409,6 +413,13 @@ export function toVisitSearch(
     limit: params.wierszy,
     offset: (page - 1) * params.wierszy,
     own,
+    // The archive: only in its own view; the past and all leave it out.
+    archived:
+      params.zakres === "archiwum"
+        ? true
+        : params.zakres === "minione" || params.zakres === "wszystkie"
+          ? false
+          : null,
   };
 }
 

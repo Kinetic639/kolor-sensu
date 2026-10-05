@@ -34,6 +34,8 @@ export interface Visit {
   room: { id: string; name: string; color: string | null } | null;
   locationName: string | null;
   client: {
+    /** The centre's client (their card); the table's search gives it. */
+    id?: string | null;
     name: string | null;
     email: string | null;
     phone: string | null;
@@ -116,6 +118,8 @@ export interface VisitSearch {
   limit: number;
   offset: number;
   own?: boolean;
+  /** The archive: null all, false without it, true only it. */
+  archived?: boolean | null;
 }
 
 /** One page of visits and how many match in all (the bookings table). */
@@ -142,6 +146,7 @@ export async function searchVisits(
     p_limit: search.limit,
     p_offset: search.offset,
     p_own: search.own,
+    p_archived: search.archived ?? undefined,
   });
   if (error) throw error;
   const rows = data ?? [];
@@ -251,6 +256,8 @@ export function toVisit(row: VisitRow): Visit {
         : null,
     locationName: row.location_name ?? null,
     client: {
+      // The client's card (the table's search gives it).
+      id: (row as { client_id?: string | null }).client_id ?? null,
       name: row.client_name ?? null,
       email: row.client_email ?? null,
       phone: row.client_phone ?? null,

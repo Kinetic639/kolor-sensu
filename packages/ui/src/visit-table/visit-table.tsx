@@ -44,10 +44,12 @@ function Cell({
   column,
   row,
   avatars,
+  clientPath,
 }: {
   column: VisitColumnId;
   row: VisitRow;
   avatars: Record<string, string | null>;
+  clientPath?: string;
 }) {
   const muted = row.cancelled && "text-[var(--text-muted)]";
   switch (column) {
@@ -86,7 +88,21 @@ function Cell({
       );
     }
     case "klient":
-      return <td className={cn(TD, "font-medium", muted)}>{row.clientName}</td>;
+      return (
+        <td className={cn(TD, "font-medium", muted)}>
+          {clientPath && row.clientId ? (
+            // The client's card (the admin's table).
+            <Link
+              className="underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
+              href={`${clientPath}/${row.clientId}`}
+            >
+              {row.clientName}
+            </Link>
+          ) : (
+            row.clientName
+          )}
+        </td>
+      );
     case "telefon":
       return (
         <td className={cn(TD, "text-[var(--text-muted)] tabular-nums")}>
@@ -233,6 +249,8 @@ export interface VisitTableProps {
   actions?: Record<string, ReactNode>;
   /** Specialists' pictures, by their id (initials where none). */
   specialistAvatars?: Record<string, string | null>;
+  /** Where the clients' cards are (`/klienci`): the client's name links there. */
+  clientPath?: string;
   caption?: string;
 }
 
@@ -250,6 +268,7 @@ export function VisitTable({
   widthsCookie,
   actions = {},
   specialistAvatars = {},
+  clientPath,
   caption = "Rezerwacje",
 }: VisitTableProps) {
   const layout =
@@ -264,6 +283,7 @@ export function VisitTable({
       cell={(row, column) => (
         <Cell
           avatars={specialistAvatars}
+          clientPath={clientPath}
           column={column as VisitColumnId}
           key={column}
           row={row}

@@ -41,6 +41,7 @@ const PERIODS: { value: VisitScope; label: string }[] = [
   { value: "nastepny-tydzien", label: "Przyszły tydzień" },
   { value: "ten-miesiac", label: "Ten miesiąc" },
   { value: "minione", label: "Minione" },
+  { value: "archiwum", label: "Archiwum" },
 ];
 export const PAST_RANGES: { value: VisitPastScope; label: string }[] = [
   { value: "dzis", label: "Dziś" },

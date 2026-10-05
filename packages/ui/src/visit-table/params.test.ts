@@ -199,6 +199,19 @@ describe("toVisitSearch", () => {
       limit: 10,
       offset: 20,
       own: false,
+      archived: null,
+    });
+  });
+
+  it("the past and all leave the archive out; the archive is only it", () => {
+    expect(toVisitSearch(load("zakres=minione"), { now }).archived).toBe(false);
+    expect(toVisitSearch(load("zakres=wszystkie"), { now }).archived).toBe(
+      false,
+    );
+    expect(toVisitSearch(load("zakres=archiwum"), { now })).toMatchObject({
+      archived: true,
+      from: null,
+      to: null,
     });
   });
 

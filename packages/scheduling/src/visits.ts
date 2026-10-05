@@ -28,6 +28,8 @@ export interface VisitLike {
   room: { id: string; name: string; color: string | null } | null;
   locationName: string | null;
   client: {
+    /** The centre's client (their card), where the list says. */
+    id?: string | null;
     name: string | null;
     email: string | null;
     phone: string | null;
@@ -67,6 +69,8 @@ export interface VisitRow {
   /** When it last changed, as `created`. */
   changed: string | null;
   clientName: string;
+  /** The centre's client (their card), where known. */
+  clientId: string | null;
   serviceName: string;
   specialistId: string;
   specialistName: string;
@@ -194,6 +198,7 @@ function rowOf(visit: VisitLike, timeZone: string, now: Date): VisitRow {
     created: visit.createdAt ? stamp(visit.createdAt) : null,
     changed: visit.changedAt ? stamp(visit.changedAt) : null,
     clientName: visit.client.name ?? "Klient",
+    clientId: visit.client.id ?? null,
     serviceName: visit.serviceName,
     specialistId: visit.specialist.id,
     specialistName: visit.specialist.name,

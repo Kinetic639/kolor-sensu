@@ -2306,6 +2306,7 @@ export type Database = {
       };
       search_bookings: {
         Args: {
+          p_archived?: boolean;
           p_changed_from?: string;
           p_changed_to?: string;
           p_created_from?: string;
@@ -2326,9 +2327,11 @@ export type Database = {
           p_to?: string;
         };
         Returns: {
+          archived: boolean;
           cancelled_at: string | null;
           cancelled_by: string | null;
           client_email: string | null;
+          client_id: string | null;
           client_name: string | null;
           client_notes: string | null;
           client_phone: string | null;

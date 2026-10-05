@@ -53,6 +53,7 @@ export default async function BookingsPage({
       <PageTitle>Rezerwacje</PageTitle>
       <div className="flex min-h-0 flex-1">
         <VisitTable
+          clientPath="/klienci"
           actions={Object.fromEntries(
             rows.map((row) => [
               row.id,
