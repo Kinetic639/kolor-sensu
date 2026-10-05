@@ -29,9 +29,9 @@ VALUES
   ('71000000-0000-4000-8000-000000000002', 'specialist'),
   ('71000000-0000-4000-8000-000000000003', 'specialist');
 
-UPDATE public.specialists SET public_slug = 'booking-test-anna', active = true
+UPDATE public.specialists SET public_slug = 'booking-test-anna', active = true, publicly_visible = true
 WHERE user_id = '71000000-0000-4000-8000-000000000002';
-UPDATE public.specialists SET public_slug = 'booking-test-jan', active = true
+UPDATE public.specialists SET public_slug = 'booking-test-jan', active = true, publicly_visible = true
 WHERE user_id = '71000000-0000-4000-8000-000000000003';
 
 INSERT INTO public.specialist_public_profiles (specialist_id, display_name, publication_status, published_at)
@@ -53,20 +53,21 @@ INSERT INTO public.services (name, slug, category, default_duration_minutes, act
 VALUES ('Booking Consultation', 'booking-test-consultation', 'consultation', 50, true, true, true);
 
 INSERT INTO public.specialist_services (
-  specialist_id, service_id, active, accepting_new_clients, price_minor,
+  specialist_id, service_id, active, price_minor,
   supports_in_person, supports_online
 )
-SELECT specialists.id, services.id, true, true, 25000, true, true
+SELECT specialists.id, services.id, true, 25000, true, true
 FROM public.specialists, public.services
 WHERE specialists.public_slug IN ('booking-test-anna', 'booking-test-jan')
   AND services.slug = 'booking-test-consultation';
 
 -- The centre: bookings on, a 60-minute grid, 10 minutes between visits,
--- an hour's notice, 60 days ahead.
+-- an hour's notice, 60 days ahead, reminders a day before.
 UPDATE public.center_settings
 SET booking_enabled = true, slot_step_minutes = 60,
     default_visit_buffer_minutes = 10, min_booking_lead_minutes = 60,
-    max_booking_horizon_days = 60, hold_minutes = 10;
+    max_booking_horizon_days = 60, hold_minutes = 10,
+    visit_reminder_hours = 24, payment_reminder_hours = 24;
 
 -- Next week's Monday and Tuesday, where the centre is.
 CREATE TEMP TABLE booking_test AS
@@ -78,7 +79,7 @@ SELECT
   (SELECT id FROM public.rooms WHERE slug = 'booking-test-room') AS room_id;
 GRANT SELECT ON booking_test TO authenticated, anon, service_role;
 
--- Anna: Monday 9–12 in the room, Monday 13–15 online, Tuesday 9–11:30
+-- Anna: Monday 9–12 in the room, Monday 13–15 online, Tuesday 9–11
 -- hybrid (in the room, or online from it).
 INSERT INTO public.specialist_availability_rules (
   specialist_id, recurrence, weekdays, starts_at, ends_at, valid_from, mode, room_id
@@ -87,7 +88,7 @@ SELECT anna_id, 'weekly'::public.availability_recurrence, ARRAY[1]::smallint[], 
 UNION ALL
 SELECT anna_id, 'weekly', ARRAY[1]::smallint[], '13:00', '15:00', monday, 'online', NULL FROM booking_test
 UNION ALL
-SELECT anna_id, 'weekly', ARRAY[2]::smallint[], '09:00', '11:30', monday, 'hybrid', room_id FROM booking_test;
+SELECT anna_id, 'weekly', ARRAY[2]::smallint[], '09:00', '11:00', monday, 'hybrid', room_id FROM booking_test;
 
 -- The free times of a day, as local `HH:MM`, in order.
 CREATE FUNCTION pg_temp.free_times(p_mode public.visit_mode, p_day date, p_location text DEFAULT NULL)
@@ -313,7 +314,7 @@ BEGIN
   END IF;
   DELETE FROM public.room_availability_exceptions WHERE room_id = t.room_id;
   INSERT INTO public.room_availability_exceptions (room_id, date, type, starts_at, ends_at)
-  VALUES (t.room_id, t.monday, 'blocked_interval', '11:30', '12:00');
+  VALUES (t.room_id, t.monday, 'blocked_interval', '11:00', '12:00');
   IF pg_temp.free_times('in_person', t.monday) <> '09:00 10:00' THEN
     RAISE EXCEPTION 'J: room blocked for a while: %', pg_temp.free_times('in_person', t.monday);
   END IF;
@@ -322,10 +323,10 @@ BEGIN
   -- K: not bookable: the offer, the form, the service, the specialist, the centre.
   UPDATE public.specialist_services SET supports_online = false WHERE specialist_id = t.anna_id;
   IF pg_temp.free_times('online', t.monday) <> '' THEN RAISE EXCEPTION 'K: online not offered'; END IF;
-  UPDATE public.specialist_services SET supports_online = true, accepting_new_clients = false
+  UPDATE public.specialist_services SET supports_online = true, active = false
   WHERE specialist_id = t.anna_id;
-  IF pg_temp.free_times('online', t.monday) <> '' THEN RAISE EXCEPTION 'K: not accepting'; END IF;
-  UPDATE public.specialist_services SET accepting_new_clients = true WHERE specialist_id = t.anna_id;
+  IF pg_temp.free_times('online', t.monday) <> '' THEN RAISE EXCEPTION 'K: offer inactive'; END IF;
+  UPDATE public.specialist_services SET active = true WHERE specialist_id = t.anna_id;
   UPDATE public.services SET booking_enabled = false WHERE slug = 'booking-test-consultation';
   IF pg_temp.free_times('online', t.monday) <> '' THEN RAISE EXCEPTION 'K: service not bookable'; END IF;
   UPDATE public.services SET booking_enabled = true WHERE slug = 'booking-test-consultation';
@@ -376,12 +377,12 @@ $$;
 RESET ROLE;
 DO $$
 BEGIN
-  UPDATE public.specialist_services SET accepting_new_clients = false
+  UPDATE public.specialist_services SET active = false
   WHERE specialist_id = (SELECT anna_id FROM booking_test);
   IF EXISTS (SELECT 1 FROM public.list_bookable_offers() WHERE specialist_slug = 'booking-test-anna') THEN
-    RAISE EXCEPTION 'N: an offer not taking new clients was listed';
+    RAISE EXCEPTION 'N: an inactive offer was listed';
   END IF;
-  UPDATE public.specialist_services SET accepting_new_clients = true
+  UPDATE public.specialist_services SET active = true
   WHERE specialist_id = (SELECT anna_id FROM booking_test);
   UPDATE public.center_settings SET booking_enabled = false;
   IF EXISTS (SELECT 1 FROM public.list_bookable_offers()) THEN
@@ -1236,6 +1237,8 @@ BEGIN
   SELECT reference INTO first FROM public.search_bookings(
     p_query => 'Test', p_from => pg_temp.at(week + 2, '00:00'),
     p_to => pg_temp.at(week + 3, '00:00'), p_statuses => ARRAY['confirmed'],
+    -- (Anna's only: the DEV data has other visits that match "Test".)
+    p_specialist_ids => ARRAY[(SELECT anna_id FROM booking_test)],
     p_desc => true, p_limit => 1);
   IF first <> (SELECT reference FROM s_visits WHERE name = 'u2') THEN
     RAISE EXCEPTION 'U: sorting by time, latest first: %', first;
@@ -1294,14 +1297,14 @@ DECLARE
   service uuid := (SELECT id FROM public.services WHERE slug = 'booking-test-consultation');
   detail record;
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM public.search_bookings(p_service_id => service, p_online => false, p_payment => 'paid') WHERE id = u1) THEN
+  IF NOT EXISTS (SELECT 1 FROM public.search_bookings(p_specialist_ids => ARRAY[(SELECT anna_id FROM booking_test)], p_service_ids => ARRAY[service], p_room_ids => ARRAY[(SELECT room_id FROM booking_test)], p_payments => ARRAY['paid']) WHERE id = u1) THEN
     RAISE EXCEPTION 'V: service, place and payment filters';
   END IF;
-  IF EXISTS (SELECT 1 FROM public.search_bookings(p_online => true) WHERE id = u1) THEN
+  IF EXISTS (SELECT 1 FROM public.search_bookings(p_specialist_ids => ARRAY[(SELECT anna_id FROM booking_test)], p_online => true) WHERE id = u1) THEN
     RAISE EXCEPTION 'V: an in-person visit found as online';
   END IF;
   BEGIN
-    PERFORM public.search_bookings(p_payment => 'everything');
+    PERFORM public.search_bookings(p_payments => ARRAY['everything']);
     RAISE EXCEPTION 'V: an unknown payment filter';
   EXCEPTION WHEN invalid_parameter_value THEN NULL;
   END;
@@ -1326,7 +1329,7 @@ BEGIN
   IF detail IS NULL OR detail.emails IS NOT NULL OR detail.paid IS NOT NULL THEN
     RAISE EXCEPTION 'V: Anna''s view of her visit: %', row_to_json(detail);
   END IF;
-  IF EXISTS (SELECT 1 FROM public.search_bookings(p_payment => 'paid')) THEN
+  IF EXISTS (SELECT 1 FROM public.search_bookings(p_payments => ARRAY['paid'])) THEN
     RAISE EXCEPTION 'V: a specialist filtered by payments';
   END IF;
 END;
@@ -2376,8 +2379,14 @@ BEGIN
     RAISE EXCEPTION 'AC: the admin was told of their own booking';
   END IF;
   -- Holds and their lapsing are nobody's news.
+  -- (The test's visits only, and only news from their history: "to close"
+  -- comes from the clock.)
   IF EXISTS (SELECT 1 FROM public.notifications AS n
-             WHERE NOT EXISTS (
+             JOIN public.appointments AS visit ON visit.id = n.appointment_id
+             JOIN public.specialists AS specialist ON specialist.id = visit.specialist_id
+             WHERE specialist.user_id IN (anna_id, '71000000-0000-4000-8000-000000000003')
+               AND n.kind <> 'visit_to_close'
+               AND NOT EXISTS (
                SELECT 1 FROM public.appointment_events AS e
                WHERE e.appointment_id = n.appointment_id
                  AND (e.kind NOT IN ('created', 'details_saved', 'hold_released', 'hold_expired')
@@ -2405,10 +2414,13 @@ BEGIN
   END IF;
   -- One marked read by its button: that one only, and only once.
   SELECT count(*) INTO unread FROM public.notifications WHERE portal = 'specialist' AND read_at IS NULL;
+  -- (The count is a statement of its own: one expression sees one snapshot.)
   IF unread > 1 THEN
-    IF NOT public.mark_notification_read((SELECT max(id) FROM public.notifications WHERE portal = 'specialist' AND read_at IS NULL))
-       OR (SELECT count(*) FROM public.notifications WHERE portal = 'specialist' AND read_at IS NULL) <> unread - 1 THEN
+    IF NOT public.mark_notification_read((SELECT max(id) FROM public.notifications WHERE portal = 'specialist' AND read_at IS NULL)) THEN
       RAISE EXCEPTION 'AC: marking one notification read';
+    END IF;
+    IF (SELECT count(*) FROM public.notifications WHERE portal = 'specialist' AND read_at IS NULL) <> unread - 1 THEN
+      RAISE EXCEPTION 'AC: marking one notification read marked others';
     END IF;
   END IF;
   IF public.mark_notification_read(-1) THEN
@@ -2449,7 +2461,8 @@ SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-0000000
 SET LOCAL ROLE authenticated;
 DO $body$
 BEGIN
-  IF EXISTS (SELECT 1 FROM public.notifications) THEN
+  IF EXISTS (SELECT 1 FROM public.notifications
+             WHERE user_id <> '71000000-0000-4000-8000-000000000003') THEN
     RAISE EXCEPTION 'AC: Jan read others'' notifications';
   END IF;
 END;
@@ -2676,8 +2689,8 @@ BEGIN
        ola, 'Ola Test', 'not an e-mail')) <> 'invalid_details' THEN
     RAISE EXCEPTION 'AE: saved a wrong address';
   END IF;
-  SELECT count(*) INTO future FROM public.appointments
-  WHERE client_id = ola AND status IN ('confirmed', 'awaiting_payment') AND lower(during) > now();
+  SELECT count(*) INTO future FROM public.list_client_visits(ola)
+  WHERE status IN ('confirmed', 'awaiting_payment') AND starts_at > now();
   SELECT * INTO u FROM public.admin_update_client(ola, 'Ola Nowak', ' Ola.Nowak@Example.invalid ', '600 200 300', 'Woli popołudnia');
   IF u.upcoming_updated <> future THEN
     RAISE EXCEPTION 'AE: % visits to come followed, not %', u.upcoming_updated, future;
@@ -2686,6 +2699,18 @@ BEGIN
   IF (c.name, c.email, c.phone, c.notes)
      IS DISTINCT FROM ('Ola Nowak'::text, 'ola.nowak@example.invalid'::text, '600 200 300'::text, 'Woli popołudnia'::text) THEN
     RAISE EXCEPTION 'AE: the saved details: %', row_to_json(c);
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- (The visits themselves, read past the admin's functions.)
+DO $body$
+DECLARE
+  ola uuid := (SELECT id FROM public.clients WHERE email_key = 'ola.nowak@example.invalid');
+BEGIN
+  IF ola IS NULL THEN
+    RAISE EXCEPTION 'AE: the client''s new address';
   END IF;
   IF EXISTS (SELECT 1 FROM public.appointments
              WHERE client_id = ola AND status IN ('confirmed', 'awaiting_payment') AND lower(during) > now()

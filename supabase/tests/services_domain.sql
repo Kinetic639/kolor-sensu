@@ -40,6 +40,10 @@ SELECT
 
 GRANT SELECT ON services_test_ids TO authenticated, anon;
 
+-- A new specialist starts inactive and off the site; the admin turns both on.
+UPDATE public.specialists SET active = true, publicly_visible = true
+WHERE id IN (SELECT specialist_a_id FROM services_test_ids UNION ALL SELECT specialist_b_id FROM services_test_ids);
+
 -- A/B: admin creates and updates the global catalog.
 SELECT set_config(
   'request.jwt.claims',
@@ -116,11 +120,11 @@ BEGIN
 
   INSERT INTO public.specialist_services (
     specialist_id, service_id, price_minor, duration_minutes,
-    supports_in_person, supports_online, accepting_new_clients
+    supports_in_person, supports_online
   )
   VALUES (
     (SELECT specialist_a_id FROM services_test_ids), public_service_id, 25000, NULL,
-    true, true, true
+    true, true
   );
 
   BEGIN
@@ -168,12 +172,12 @@ BEGIN
   END;
 
   INSERT INTO public.specialist_services (
-    specialist_id, service_id, price_minor, duration_minutes,
-    supports_in_person, supports_online, accepting_new_clients
+    specialist_id, service_id, price_minor,
+    supports_in_person, supports_online
   )
   VALUES (
-    (SELECT specialist_a_id FROM services_test_ids), effective_service_id, 20000, 45,
-    true, false, true
+    (SELECT specialist_a_id FROM services_test_ids), effective_service_id, 20000,
+    true, false
   );
 
   IF (
@@ -186,12 +190,14 @@ BEGIN
     RAISE EXCEPTION 'P: unexpected service default duration';
   END IF;
 
-  IF (
-    SELECT duration_minutes FROM public.specialist_services
-    WHERE specialist_id = (SELECT specialist_a_id FROM services_test_ids) AND service_id = effective_service_id
-  ) <> 45 THEN
-    RAISE EXCEPTION 'Q: specialist duration override was not stored';
-  END IF;
+  -- Q: an offer takes its service's duration; it cannot set its own.
+  BEGIN
+    UPDATE public.specialist_services SET duration_minutes = 45
+    WHERE specialist_id = (SELECT specialist_a_id FROM services_test_ids) AND service_id = effective_service_id;
+    RAISE EXCEPTION 'Q: an offer overrode its service''s duration';
+  EXCEPTION
+    WHEN check_violation THEN NULL;
+  END;
 
   UPDATE public.specialist_services
   SET price_minor = 27000
@@ -251,12 +257,12 @@ BEGIN
   END IF;
 
   UPDATE public.specialist_services
-  SET accepting_new_clients = false
+  SET active = false
   WHERE specialist_id = (SELECT specialist_a_id FROM services_test_ids)
     AND service_id = (SELECT id FROM public.services WHERE slug = 'test-svc-effective');
 
   IF (
-    SELECT accepting_new_clients FROM public.specialist_services
+    SELECT active FROM public.specialist_services
     WHERE specialist_id = (SELECT specialist_a_id FROM services_test_ids)
       AND service_id = (SELECT id FROM public.services WHERE slug = 'test-svc-effective')
   ) IS NOT false THEN
@@ -377,7 +383,8 @@ $$;
 
 RESET ROLE;
 
--- S: an inactive specialist suppresses every one of their public offerings.
+-- S: a specialist taken off the site takes every one of their public
+-- offerings with them; an inactive one on the site keeps them shown.
 SELECT set_config(
   'request.jwt.claims',
   '{"sub":"40000000-0000-4000-8000-000000000001","role":"authenticated"}',
@@ -397,12 +404,31 @@ $$;
 RESET ROLE;
 
 -- specialists has no client UPDATE grant at all (locked to service_role/RPCs
--- by the Specialist Domain's own design), so this toggle runs at the
+-- by the Specialist Domain's own design), so these toggles run at the
 -- elevated connection role, not as authenticated/admin.
 UPDATE public.specialists
 SET active = false
 WHERE id = (SELECT specialist_a_id FROM services_test_ids);
 SELECT set_config('request.jwt.claims', '', true);
+SET LOCAL ROLE anon;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.specialist_services ss
+    JOIN public.services s ON s.id = ss.service_id
+    WHERE s.slug IN ('test-svc-public', 'test-svc-effective')
+  ) THEN
+    RAISE EXCEPTION 'S: an inactive specialist on the site lost their public offerings';
+  END IF;
+END;
+$$;
+
+RESET ROLE;
+UPDATE public.specialists
+SET publicly_visible = false
+WHERE id = (SELECT specialist_a_id FROM services_test_ids);
 SET LOCAL ROLE anon;
 
 DO $$
@@ -413,7 +439,7 @@ BEGIN
     JOIN public.services s ON s.id = ss.service_id
     WHERE s.slug IN ('test-svc-public', 'test-svc-effective')
   ) THEN
-    RAISE EXCEPTION 'S: an inactive specialist did not suppress their public offerings';
+    RAISE EXCEPTION 'S: a specialist off the site did not suppress their public offerings';
   END IF;
 END;
 $$;

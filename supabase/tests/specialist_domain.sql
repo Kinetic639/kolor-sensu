@@ -302,6 +302,34 @@ END;
 $$;
 
 RESET ROLE;
+
+-- A new specialist starts inactive and off the site: a published profile
+-- alone does not put them there.
+DO $$
+BEGIN
+  IF (SELECT (active, publicly_visible) FROM public.specialists
+      WHERE id = (SELECT first_specialist_id FROM domain_test_ids)) IS DISTINCT FROM (false, false) THEN
+    RAISE EXCEPTION 'J: a new specialist was active or on the site';
+  END IF;
+END;
+$$;
+SET LOCAL ROLE anon;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM public.specialist_public_profiles
+    WHERE specialist_id = (SELECT first_specialist_id FROM domain_test_ids)
+  ) THEN
+    RAISE EXCEPTION 'J: anonymous user saw a profile not yet on the site';
+  END IF;
+END;
+$$;
+RESET ROLE;
+
+-- The admin puts them on the site (still not taking visits).
+UPDATE public.specialists
+SET publicly_visible = true
+WHERE id = (SELECT first_specialist_id FROM domain_test_ids);
 SET LOCAL ROLE anon;
 
 DO $$
@@ -338,21 +366,42 @@ END;
 $$;
 
 RESET ROLE;
+
+-- Signed in, someone else (another specialist) sees them on the site too.
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"20000000-0000-4000-8000-000000000002","role":"authenticated"}',
+  true
+);
+SET LOCAL ROLE authenticated;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialists
+    WHERE id = (SELECT first_specialist_id FROM domain_test_ids)
+  ) THEN
+    RAISE EXCEPTION 'J: a signed-in visitor did not see a specialist on the site';
+  END IF;
+END;
+$$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '', true);
+
 UPDATE public.specialists
-SET active = false
+SET publicly_visible = false
 WHERE id = (SELECT first_specialist_id FROM domain_test_ids);
 SET LOCAL ROLE anon;
 
 DO $$
 BEGIN
   -- Not a bare EXISTS on the whole table: real published specialists
-  -- remain visible regardless. Assert specifically that the now-inactive
-  -- test specialist's profile disappeared.
+  -- remain visible regardless. Assert specifically that the test
+  -- specialist's profile disappeared once taken off the site.
   IF EXISTS (
     SELECT 1 FROM public.specialist_public_profiles
     WHERE specialist_id = (SELECT first_specialist_id FROM domain_test_ids)
   ) THEN
-    RAISE EXCEPTION 'L: anonymous user read an inactive specialist profile';
+    RAISE EXCEPTION 'L: anonymous user read a profile taken off the site';
   END IF;
 END;
 $$;
@@ -374,11 +423,11 @@ BEGIN
 END;
 $$;
 
--- Only admins rename a specialist's public address. The specialist is
--- active again: redirects are readable only for published, active ones.
+-- Only admins rename a specialist's public address. The specialist is on
+-- the site again: redirects are readable only for published, visible ones.
 RESET ROLE;
 UPDATE public.specialists
-SET active = true
+SET publicly_visible = true
 WHERE id = (SELECT first_specialist_id FROM domain_test_ids);
 SELECT set_config(
   'request.jwt.claims',
