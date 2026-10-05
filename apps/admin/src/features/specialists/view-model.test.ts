@@ -518,13 +518,21 @@ describe("detailState", () => {
     expect(detailState(detail({}))).toEqual({
       active: true,
       profile: "pending",
+      hidden: false,
     });
     expect(
       detailState({ ...detail({}), draft: null, accountActive: false }),
     ).toEqual({
       active: false,
       profile: "published",
+      hidden: false,
     });
+  });
+
+  it("hidden from the site, said so", () => {
+    expect(
+      detailState({ ...detail({}), publiclyVisible: false }).hidden,
+    ).toBe(true);
   });
 });
 
