@@ -175,6 +175,8 @@ export interface Specialist {
   id: string;
   userId: string;
   active: boolean;
+  /** On the site and booked online (the admin hides them for a while). */
+  publiclyVisible: boolean;
   publicSlug: string;
   professionalTitle: string | null;
   joinedAt: string | null;

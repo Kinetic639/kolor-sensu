@@ -87,6 +87,8 @@ export interface SpecialistDetailViewModel {
   publicSlug: string;
   joinedAt: string | null;
   active: boolean;
+  /** On the site and booked online. */
+  publiclyVisible: boolean;
   accountActive: boolean;
   publicProfile: SpecialistProfileSnapshotViewModel | null;
   draft: SpecialistDraftViewModel | null;

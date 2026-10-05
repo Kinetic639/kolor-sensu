@@ -3,9 +3,11 @@ import {
   adminInviteSchema,
   type AdminInvite,
   type AdminInviteResult,
+  type PortalRole,
 } from "@repo/contracts/access";
 
-// The admin's portal invites a new admin (Ustawienia → Dostęp) through
+// The admin's portal invites a new admin (Ustawienia → Dostęp) or a new
+// specialist (Specjaliści) through
 // the site, which holds the service key and the e-mails. Someone with an
 // account already (a specialist) is given the access at once; a new
 // address gets an account, the access, and an e-mail with the link that
@@ -17,14 +19,15 @@ export interface InviteDeps {
   /** The one asking is an admin (their token, checked by the database). */
   isAdmin: () => Promise<boolean>;
   findUser: (email: string) => Promise<string | null>;
-  hasAdminRole: (userId: string) => Promise<boolean>;
-  grant: (userId: string) => Promise<void>;
+  hasRole: (userId: string, role: PortalRole) => Promise<boolean>;
+  grant: (userId: string, role: PortalRole) => Promise<void>;
   createInvite: (
     invite: AdminInvite,
   ) => Promise<{ userId: string; tokenHash: string }>;
   /** Sends the invitation; false when it did not go. */
   sendInvite: (invite: AdminInvite, link: string) => Promise<boolean>;
-  adminUrl: string;
+  /** Each portal's address: the link signs them in there. */
+  portalUrls: Record<PortalRole, string>;
 }
 
 type Answer = { status: number; body: AdminInviteResult };
@@ -60,14 +63,19 @@ export async function inviteAdmin(
 
   const existing = await deps.findUser(invite.email);
   if (existing) {
-    if (await deps.hasAdminRole(existing)) return refused(409, "already_admin");
-    await deps.grant(existing);
+    if (await deps.hasRole(existing, invite.role)) {
+      return refused(
+        409,
+        invite.role === "admin" ? "already_admin" : "already_specialist",
+      );
+    }
+    await deps.grant(existing, invite.role);
     return { status: 200, body: { ok: true, status: "granted" } };
   }
 
   const { userId, tokenHash } = await deps.createInvite(invite);
-  await deps.grant(userId);
-  const link = new URL("/auth/confirm", deps.adminUrl);
+  await deps.grant(userId, invite.role);
+  const link = new URL("/auth/confirm", deps.portalUrls[invite.role]);
   link.searchParams.set("token_hash", tokenHash);
   link.searchParams.set("type", "invite");
   link.searchParams.set("next", "/reset-password");

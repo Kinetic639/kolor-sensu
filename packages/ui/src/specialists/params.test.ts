@@ -55,7 +55,7 @@ describe("specialistTags", () => {
         profile: "pending",
       }),
     ).toEqual([
-      { label: "Nieaktywny", tone: "neutral" },
+      { label: "Zawieszony", tone: "neutral" },
       { label: "Do weryfikacji", tone: "warning" },
     ]);
     expect(

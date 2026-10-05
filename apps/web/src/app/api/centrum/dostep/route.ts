@@ -7,11 +7,12 @@ import { emailSender, sendEmail } from "@/lib/email";
 import { getPublicSupabaseEnvironment } from "@/lib/supabase/environment";
 import { createSecretClient } from "@/lib/supabase/secret";
 
-// The admin's portal invites a new admin (Ustawienia → Dostęp). The
+// The admin's portal invites a new admin (Ustawienia → Dostęp) or a new
+// specialist (Specjaliści). The
 // signed-in admin's token comes with the request (the database says
 // whether they are one); the account, the role and the e-mail are made
-// here, with the service key. The invitation's link leads to the admin's
-// portal (ADMIN_URL), where it signs them in to set their password.
+// here, with the service key. The invitation's link leads to their portal
+// (ADMIN_URL, SPECIALIST_URL), where it signs them in to set a password.
 
 export const dynamic = "force-dynamic";
 
@@ -38,21 +39,21 @@ export async function POST(request: Request) {
         return data === true;
       },
       findUser: (email) => portalUserIdByEmail(secret, email),
-      hasAdminRole: async (userId) => {
+      hasRole: async (userId, role) => {
         const { data, error } = await secret
           .from("user_roles")
           .select("user_id")
           .eq("user_id", userId)
-          .eq("role", "admin")
+          .eq("role", role)
           .maybeSingle();
         if (error) throw error;
         return Boolean(data);
       },
-      grant: async (userId) => {
+      grant: async (userId, role) => {
         const { error } = await secret
           .from("user_roles")
           .upsert(
-            { user_id: userId, role: "admin" },
+            { user_id: userId, role },
             { onConflict: "user_id,role", ignoreDuplicates: true },
           );
         if (error) throw error;
@@ -84,7 +85,10 @@ export async function POST(request: Request) {
           return false;
         }
       },
-      adminUrl: process.env.ADMIN_URL || "http://localhost:3001",
+      portalUrls: {
+        admin: process.env.ADMIN_URL || "http://localhost:3001",
+        specialist: process.env.SPECIALIST_URL || "http://localhost:3002",
+      },
     });
     return NextResponse.json(answer.body, { status: answer.status });
   } catch (error) {

@@ -13,6 +13,7 @@ const specialist: Specialist = {
   id: "20000000-0000-4000-8000-000000000001",
   userId: "user-id",
   active: true,
+  publiclyVisible: true,
   publicSlug: "anna-kowalska",
   professionalTitle: "Psychoterapeutka",
   joinedAt: null,

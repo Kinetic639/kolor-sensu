@@ -84,9 +84,12 @@ export function specialistTags(
   { withActive = false }: { withActive?: boolean } = {},
 ): { label: string; tone: VisitTone }[] {
   const tags: { label: string; tone: VisitTone }[] = [];
-  if (!state.active) tags.push({ label: "Nieaktywny", tone: "neutral" });
+  if (!state.active) tags.push({ label: "Zawieszony", tone: "neutral" });
   else if (withActive) tags.push({ label: "Aktywny", tone: "success" });
   tags.push(profileTag(state.profile));
+  if (state.active && state.hidden) {
+    tags.push({ label: "Ukryty na stronie", tone: "warning" });
+  }
   return tags;
 }
 

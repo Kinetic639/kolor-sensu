@@ -11,13 +11,16 @@ function deps(overrides: Partial<InviteDeps> = {}): InviteDeps {
   return {
     isAdmin: vi.fn().mockResolvedValue(true),
     findUser: vi.fn().mockResolvedValue(null),
-    hasAdminRole: vi.fn().mockResolvedValue(false),
+    hasRole: vi.fn().mockResolvedValue(false),
     grant: vi.fn().mockResolvedValue(undefined),
     createInvite: vi
       .fn()
       .mockResolvedValue({ userId: "u-new", tokenHash: "hash-1" }),
     sendInvite: vi.fn().mockResolvedValue(true),
-    adminUrl: "https://admin.example.invalid",
+    portalUrls: {
+      admin: "https://admin.example.invalid",
+      specialist: "https://specjalista.example.invalid",
+    },
     ...overrides,
   };
 }
@@ -36,8 +39,9 @@ describe("inviteAdmin", () => {
       email: "anna@example.invalid",
       firstName: "Anna",
       lastName: "Nowak",
+      role: "admin",
     });
-    expect(given.grant).toHaveBeenCalledWith("u-new");
+    expect(given.grant).toHaveBeenCalledWith("u-new", "admin");
     expect(given.sendInvite).toHaveBeenCalledWith(
       expect.objectContaining({ firstName: "Anna" }),
       link,
@@ -50,7 +54,7 @@ describe("inviteAdmin", () => {
       status: 200,
       body: { ok: true, status: "granted" },
     });
-    expect(given.grant).toHaveBeenCalledWith("u-1");
+    expect(given.grant).toHaveBeenCalledWith("u-1", "admin");
     expect(given.createInvite).not.toHaveBeenCalled();
   });
 
@@ -59,13 +63,35 @@ describe("inviteAdmin", () => {
       body,
       deps({
         findUser: vi.fn().mockResolvedValue("u-1"),
-        hasAdminRole: vi.fn().mockResolvedValue(true),
+        hasRole: vi.fn().mockResolvedValue(true),
       }),
     );
     expect(answer.status).toBe(409);
     expect(answer.body).toMatchObject({
       ok: false,
       message: "Ta osoba jest już administratorem.",
+    });
+  });
+
+  it("a specialist: the role given, the link to the specialist's portal", async () => {
+    const given = deps();
+    const answer = await inviteAdmin({ ...body, role: "specialist" }, given);
+    expect(given.grant).toHaveBeenCalledWith("u-new", "specialist");
+    expect(answer.body).toMatchObject({
+      ok: true,
+      link: expect.stringContaining(
+        "https://specjalista.example.invalid/auth/confirm",
+      ),
+    });
+    const taken = await inviteAdmin(
+      { ...body, role: "specialist" },
+      deps({
+        findUser: vi.fn().mockResolvedValue("u-1"),
+        hasRole: vi.fn().mockResolvedValue(true),
+      }),
+    );
+    expect(taken.body).toMatchObject({
+      message: "Ta osoba jest już specjalistą.",
     });
   });
 

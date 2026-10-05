@@ -1,7 +1,11 @@
 "use client";
 
 import { useSave } from "@/lib/use-save";
-import { adminInviteSchema, type AdminInvite } from "@repo/contracts/access";
+import {
+  adminInviteSchema,
+  type AdminInvite,
+  type PortalRole,
+} from "@repo/contracts/access";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,12 +46,38 @@ import type { AccessRow } from "./access-view";
 // not the last one's), a new admin is invited by e-mail. The invitation's
 // link is shown too, to pass on when the e-mail does not reach them.
 
-const blank: AdminInvite = { email: "", firstName: "", lastName: "" };
+const COPY = {
+  admin: {
+    title: "Zaproś administratora",
+    description:
+      "Dostanie e-mail z linkiem do ustawienia hasła. Jeśli adres ma już konto (np. specjalisty), dostęp zostanie nadany od razu.",
+    granted: "Nadano dostęp administratora",
+  },
+  specialist: {
+    title: "Zaproś specjalistę",
+    description:
+      "Dostanie e-mail z linkiem do portalu specjalisty, gdzie ustawi hasło i uzupełni profil. Jeśli adres ma już konto (np. administratora), dostęp zostanie nadany od razu.",
+    granted: "Nadano dostęp specjalisty",
+  },
+} as const;
 
-function InviteDialog({ onClose }: { onClose: () => void }) {
+/** The invitation to a portal: an admin's or a specialist's. */
+export function InviteDialog({
+  onClose,
+  role = "admin",
+}: {
+  onClose: () => void;
+  role?: PortalRole;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [draft, setDraft] = useState(blank);
+  const [draft, setDraft] = useState<AdminInvite>({
+    email: "",
+    firstName: "",
+    lastName: "",
+    role,
+  });
+  const copy = COPY[role];
   const [errors, setErrors] = useState<
     Partial<Record<keyof AdminInvite, string>>
   >({});
@@ -78,7 +108,7 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
       }
       router.refresh();
       if (answer.status === "granted") {
-        toast.success("Nadano dostęp administratora");
+        toast.success(copy.granted);
         onClose();
         return;
       }
@@ -116,11 +146,8 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
     <Dialog onOpenChange={(open) => (open ? null : onClose())} open>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Zaproś administratora</DialogTitle>
-          <DialogDescription>
-            Dostanie e-mail z linkiem do ustawienia hasła. Jeśli adres ma już
-            konto (np. specjalisty), dostęp zostanie nadany od razu.
-          </DialogDescription>
+          <DialogTitle>{copy.title}</DialogTitle>
+          <DialogDescription>{copy.description}</DialogDescription>
         </DialogHeader>
         {sent ? (
           <div className="grid gap-2">

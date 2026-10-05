@@ -59,6 +59,7 @@ function detail(draft: Partial<Content>): SpecialistDetailViewModel {
     publicSlug: "anna",
     joinedAt: null,
     active: true,
+    publiclyVisible: true,
     accountActive: true,
     offers: [],
     offerSummary: "Brak",

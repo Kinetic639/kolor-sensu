@@ -3,7 +3,12 @@ import { inviteEmail } from "./invite-email";
 
 describe("inviteEmail", () => {
   const email = inviteEmail(
-    { email: "anna@example.invalid", firstName: "Anna <b>", lastName: "Nowak" },
+    {
+      email: "anna@example.invalid",
+      firstName: "Anna <b>",
+      lastName: "Nowak",
+      role: "admin",
+    },
     "https://admin.example.invalid/auth/confirm?token_hash=h&type=invite",
   );
 

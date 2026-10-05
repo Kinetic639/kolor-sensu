@@ -1,4 +1,5 @@
 import { updateSpecialistOfferStateAction } from "@/features/specialists/actions";
+import { InviteSpecialistButton } from "@/features/specialists/invite-specialist";
 import { loadSpecialists } from "@/features/specialists/loaders";
 import { visitHref } from "@/features/specialists/specialist-page";
 import { teamWeekSummary } from "@/features/specialists/view-model";
@@ -37,6 +38,7 @@ export default async function SpecialistsPage({
     <FullBleed>
       <PageTitle>Specjaliści</PageTitle>
       <RosterBar
+        action={<InviteSpecialistButton />}
         label="Którzy specjaliści"
         search={<SpecialistSearch />}
         segments={specialistSegments(PATH, params, rows)}

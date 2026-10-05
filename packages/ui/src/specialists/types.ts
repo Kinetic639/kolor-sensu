@@ -19,6 +19,8 @@ export interface SpecialistState {
   /** Working with the centre (and their account on). */
   active: boolean;
   profile: SpecialistProfileState;
+  /** Hidden from the site and online booking for a while. */
+  hidden?: boolean;
 }
 
 export interface SpecialistRow {

@@ -1342,6 +1342,7 @@ export type Database = {
       specialists: {
         Row: {
           active: boolean;
+          publicly_visible: boolean;
           color: string | null;
           created_at: string;
           id: string;
@@ -1353,6 +1354,7 @@ export type Database = {
         };
         Insert: {
           active?: boolean;
+          publicly_visible?: boolean;
           color?: string | null;
           created_at?: string;
           id?: string;
@@ -1364,6 +1366,7 @@ export type Database = {
         };
         Update: {
           active?: boolean;
+          publicly_visible?: boolean;
           color?: string | null;
           created_at?: string;
           id?: string;
@@ -1599,6 +1602,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      set_specialist_active: {
+        Args: { p_active: boolean; p_specialist: string };
+        Returns: number;
+      };
+      set_specialist_visibility: {
+        Args: { p_specialist: string; p_visible: boolean };
+        Returns: undefined;
+      };
       my_clients: {
         Args: { p_query?: string };
         Returns: {

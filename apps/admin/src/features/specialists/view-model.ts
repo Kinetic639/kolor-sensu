@@ -208,12 +208,15 @@ export function toSpecialistOffers(
 
 /** The state on their page (their tags), as on the team's list. */
 export function detailState(detail: SpecialistDetailViewModel) {
-  return specialistState({
-    active: detail.active,
-    accountActive: detail.accountActive,
-    pendingDraft: detail.draft?.status === "pending_review",
-    publicationStatus: detail.publicProfile?.publicationStatus ?? null,
-  });
+  return {
+    ...specialistState({
+      active: detail.active,
+      accountActive: detail.accountActive,
+      pendingDraft: detail.draft?.status === "pending_review",
+      publicationStatus: detail.publicProfile?.publicationStatus ?? null,
+    }),
+    hidden: !detail.publiclyVisible,
+  };
 }
 
 /** `4 · od 195 zł`: the active offers and the lowest price; `Brak`. */
@@ -281,6 +284,7 @@ export function mapSpecialistDetailViewModel({
     publicSlug: specialist.publicSlug,
     joinedAt: specialist.joinedAt,
     active: specialist.active,
+    publiclyVisible: specialist.publiclyVisible,
     accountActive: identity.active,
     publicProfile: publicProfile
       ? {

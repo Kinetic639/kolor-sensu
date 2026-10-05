@@ -5,8 +5,10 @@ import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import { createClient } from "@/lib/supabase/server";
 import {
   reviewSpecialistProfileDraft,
+  setSpecialistActiveAdmin,
   setSpecialistColorAdmin,
   setSpecialistPublicSlugAdmin,
+  setSpecialistVisibilityAdmin,
   updateSpecialistOfferStateAdmin,
 } from "@repo/supabase";
 import { hexColorSchema } from "@repo/contracts";
@@ -136,5 +138,57 @@ export async function setSpecialistColorAction(input: {
   } catch (error) {
     console.error("[specialists] colour change failed:", error);
     return { ok: false, message: "Nie udało się zapisać koloru." };
+  }
+}
+
+/** Everything that shows a specialist: the centre's lists, the site. */
+async function refreshSpecialist(specialistId: string) {
+  revalidatePath("/specjalisci");
+  revalidatePath(`/specjalisci/${specialistId}`);
+  revalidatePath("/kalendarz");
+  updateTag(CACHE_TAGS.specialists);
+  await revalidateWeb([{ path: "/", type: "layout" }]);
+}
+
+/** On the site and booked online, or hidden for a while. */
+export async function setSpecialistVisibilityAction(
+  specialistId: string,
+  visible: boolean,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  await requirePortalRole();
+  try {
+    await setSpecialistVisibilityAdmin(
+      await createClient(),
+      specialistId,
+      visible,
+    );
+    await refreshSpecialist(specialistId);
+    return { ok: true };
+  } catch (error) {
+    console.error("[specialists] visibility change failed:", error);
+    return { ok: false, message: "Nie udało się zmienić widoczności." };
+  }
+}
+
+/**
+ * Suspends a specialist (no site, no booking, no portal) or resumes them;
+ * says how many visits are still booked with them.
+ */
+export async function setSpecialistActiveAction(
+  specialistId: string,
+  active: boolean,
+): Promise<{ ok: true; upcoming: number } | { ok: false; message: string }> {
+  await requirePortalRole();
+  try {
+    const upcoming = await setSpecialistActiveAdmin(
+      await createClient(),
+      specialistId,
+      active,
+    );
+    await refreshSpecialist(specialistId);
+    return { ok: true, upcoming };
+  } catch (error) {
+    console.error("[specialists] suspension change failed:", error);
+    return { ok: false, message: "Nie udało się zmienić dostępu." };
   }
 }

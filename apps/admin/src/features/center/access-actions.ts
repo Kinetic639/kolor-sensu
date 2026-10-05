@@ -73,7 +73,10 @@ export async function inviteAdminAction(
     if (!answer) {
       return { ok: false, message: "Nie udało się wysłać zaproszenia." };
     }
-    if (answer.ok) revalidatePath("/ustawienia");
+    if (answer.ok) {
+      revalidatePath("/ustawienia");
+      revalidatePath("/specjalisci");
+    }
     return answer;
   } catch (error) {
     console.error("[access] the invitation failed:", error);

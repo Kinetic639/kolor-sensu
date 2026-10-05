@@ -78,6 +78,7 @@ function mapSpecialist(row: SpecialistRow): Specialist {
     id: row.id,
     userId: row.user_id,
     active: row.active,
+    publiclyVisible: row.publicly_visible,
     publicSlug: row.public_slug,
     professionalTitle: row.professional_title,
     joinedAt: row.joined_at,
@@ -750,3 +751,33 @@ export const specialistMappers = {
   publicProfile: mapPublicProfile,
   specialist: mapSpecialist,
 };
+
+/** Hides a specialist from the site and online booking, or shows them. */
+export async function setSpecialistVisibilityAdmin(
+  client: SupabaseClient<Database>,
+  specialistId: string,
+  visible: boolean,
+) {
+  const { error } = await client.rpc("set_specialist_visibility", {
+    p_specialist: specialistId,
+    p_visible: visible,
+  });
+  if (error) throw error;
+}
+
+/**
+ * Suspends a specialist (no site, no booking, no portal) or resumes them;
+ * how many visits are still booked with them (for the centre to move).
+ */
+export async function setSpecialistActiveAdmin(
+  client: SupabaseClient<Database>,
+  specialistId: string,
+  active: boolean,
+) {
+  const { data, error } = await client.rpc("set_specialist_active", {
+    p_specialist: specialistId,
+    p_active: active,
+  });
+  if (error) throw error;
+  return data ?? 0;
+}

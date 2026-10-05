@@ -13,7 +13,16 @@ describe("adminInviteSchema", () => {
       email: "anna.nowak@example.invalid",
       firstName: "Anna",
       lastName: "Nowak",
+      role: "admin",
     });
+    expect(
+      adminInviteSchema.parse({
+        email: "a@example.invalid",
+        firstName: "A",
+        lastName: "B",
+        role: "specialist",
+      }).role,
+    ).toBe("specialist");
   });
 
   it("says what is missing", () => {

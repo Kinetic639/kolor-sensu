@@ -13,9 +13,12 @@ export const adminInviteSchema = z.object({
     .pipe(z.email("Podaj poprawny adres e-mail.").max(320)),
   firstName: z.string().trim().min(1, "Podaj imię.").max(100),
   lastName: z.string().trim().min(1, "Podaj nazwisko.").max(100),
+  /** Into which portal: the centre's (an admin) or a specialist's. */
+  role: z.enum(["admin", "specialist"]).default("admin"),
 });
 
 export type AdminInvite = z.infer<typeof adminInviteSchema>;
+export type PortalRole = AdminInvite["role"];
 
 export interface PortalUser {
   id: string;
@@ -48,6 +51,7 @@ const MESSAGES: Record<string, string> = {
   forbidden: "Tylko administrator może to zrobić.",
   not_found: "Nie znaleziono tego użytkownika.",
   already_admin: "Ta osoba jest już administratorem.",
+  already_specialist: "Ta osoba jest już specjalistą.",
   invalid: "Sprawdź pola formularza.",
 };
 
