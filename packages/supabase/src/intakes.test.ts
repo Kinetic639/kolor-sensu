@@ -6,6 +6,7 @@ import {
   getVisitIntake,
   intakeServiceSlugs,
   intakeTokenHash,
+  IntakeLimitError,
   saveVisitIntake,
 } from "./intakes";
 
@@ -71,6 +72,32 @@ describe("saveVisitIntake", () => {
       }),
     ).rejects.toThrow(/crisis/);
     expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("keeps the visitor's key; too many from them is refused with a code", async () => {
+    const { client, insert } = insertClient();
+    await saveVisitIntake(client, {
+      serviceId: "service-1",
+      answers: { ...answers },
+      clientKey: "key-1",
+    });
+    expect(insert.mock.calls[0]![0]).toMatchObject({ client_key: "key-1" });
+
+    const refusing = {
+      from: () => ({
+        insert: () =>
+          Promise.resolve({
+            error: { message: "Too many", hint: "too_many_intakes" },
+          }),
+      }),
+    };
+    await expect(
+      saveVisitIntake(refusing as never, {
+        serviceId: "service-1",
+        answers: { ...answers },
+        clientKey: "key-1",
+      }),
+    ).rejects.toBeInstanceOf(IntakeLimitError);
   });
 });
 

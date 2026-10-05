@@ -5,9 +5,11 @@ import {
   intakeOutcome,
   type IntakeAnswers,
 } from "@repo/contracts/intake";
-import { saveVisitIntake } from "@repo/supabase/intakes";
+import { IntakeLimitError, saveVisitIntake } from "@repo/supabase/intakes";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSecretClient } from "@/lib/supabase/secret";
+import { clientIp, visitorKey } from "./guards";
 import { saveIntake } from "./intake-cookie";
 import { bookingHref, loadBookingParams } from "./search-params";
 
@@ -46,8 +48,19 @@ export async function saveIntakeAction(
     token = await saveVisitIntake(db, {
       serviceId: service.id,
       answers: parsed.data,
+      // At most a few from one visitor at a time (the database counts).
+      clientKey: visitorKey(
+        clientIp(await headers()),
+        process.env.SUPABASE_SECRET_KEY ?? "",
+      ),
     });
   } catch (failure) {
+    if (failure instanceof IntakeLimitError) {
+      return {
+        message:
+          "Za dużo prób w krótkim czasie. Odczekaj kilkanaście minut i spróbuj ponownie.",
+      };
+    }
     console.error("[booking] intake not saved:", failure);
     return { message: "Nie udało się zapisać odpowiedzi. Spróbuj ponownie." };
   }

@@ -41,9 +41,19 @@ function newToken() {
  * Keeps the answers; the token to tie them to the visit later. A crisis
  * (mood 0) is never kept for a booking: the site points to help instead.
  */
+/** Too many questionnaires from one visitor lately (hint too_many_intakes). */
+export class IntakeLimitError extends Error {
+  override name = "IntakeLimitError";
+}
+
 export async function saveVisitIntake(
   client: Client,
-  input: { serviceId: string; answers: IntakeAnswers },
+  input: {
+    serviceId: string;
+    answers: IntakeAnswers;
+    /** The visitor's key (an HMAC of their address): at most 5 in 15 min. */
+    clientKey?: string | null;
+  },
 ): Promise<string> {
   const {
     healthConsent: _consent,
@@ -61,7 +71,11 @@ export async function saveVisitIntake(
     mood,
     answers,
     health_consent_at: new Date().toISOString(),
+    client_key: input.clientKey ?? null,
   });
+  if (error?.hint === "too_many_intakes") {
+    throw new IntakeLimitError(error.message);
+  }
   if (error) throw error;
   return token;
 }

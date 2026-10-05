@@ -1524,6 +1524,7 @@ export type Database = {
       };
       visit_intakes: {
         Row: {
+          client_key: string | null;
           answers: Json;
           appointment_id: string | null;
           created_at: string;
@@ -1535,6 +1536,7 @@ export type Database = {
           version: number;
         };
         Insert: {
+          client_key?: string | null;
           answers: Json;
           appointment_id?: string | null;
           created_at?: string;
@@ -1546,6 +1548,7 @@ export type Database = {
           version?: number;
         };
         Update: {
+          client_key?: string | null;
           answers?: Json;
           appointment_id?: string | null;
           created_at?: string;
