@@ -40,6 +40,20 @@ const personOf = (detail: SpecialistDetailViewModel) => ({
   color: detail.color,
 });
 
+/** The visits still booked with them (to move if they are suspended). */
+async function upcomingVisits(specialistId: string) {
+  const { total } = await searchVisits(await createClient(), {
+    specialistIds: [specialistId],
+    statuses: ["confirmed", "awaiting_payment"],
+    from: new Date().toISOString(),
+    sort: "starts_at",
+    descending: false,
+    limit: 1,
+    offset: 0,
+  });
+  return total;
+}
+
 async function Tab({
   detail,
   params,
@@ -49,12 +63,23 @@ async function Tab({
 }) {
   switch (params.zakladka) {
     case "przeglad": {
-      const { view } = await loadSpecialistWeek(personOf(detail));
+      const [{ view }, upcoming] = await Promise.all([
+        loadSpecialistWeek(personOf(detail)),
+        upcomingVisits(detail.id),
+      ]);
       return (
         <DetailBody
           aside={<SpecialistWeekAside view={view} />}
           asideLabel="Ten tydzień"
         >
+          <SpecialistAccess
+            active={detail.active}
+            name={detail.displayName}
+            onSite={detail.publicProfile?.publicationStatus === "published"}
+            publiclyVisible={detail.publiclyVisible}
+            specialistId={detail.id}
+            upcoming={upcoming}
+          />
           <SpecialistOverview detail={detail} />
         </DetailBody>
       );
@@ -94,30 +119,12 @@ async function Tab({
           splash={await loadProfileSplash(detail.id)}
         />
       );
-    case "ustawienia": {
-      // The visits still booked with them (to move if they are suspended).
-      const { total: upcoming } = await searchVisits(await createClient(), {
-        specialistIds: [detail.id],
-        statuses: ["confirmed", "awaiting_payment"],
-        from: new Date().toISOString(),
-        sort: "starts_at",
-        descending: false,
-        limit: 1,
-        offset: 0,
-      });
+    case "ustawienia":
       return (
         <DetailBody>
-          <SpecialistAccess
-            active={detail.active}
-            name={detail.displayName}
-            publiclyVisible={detail.publiclyVisible}
-            specialistId={detail.id}
-            upcoming={upcoming}
-          />
           <SpecialistSettings detail={detail} />
         </DetailBody>
       );
-    }
   }
 }
 

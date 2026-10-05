@@ -518,6 +518,7 @@ describe("detailState", () => {
     expect(detailState(detail({}))).toEqual({
       active: true,
       profile: "pending",
+      onSite: true,
       hidden: false,
     });
     expect(
@@ -525,6 +526,7 @@ describe("detailState", () => {
     ).toEqual({
       active: false,
       profile: "published",
+      onSite: true,
       hidden: false,
     });
   });

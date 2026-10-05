@@ -74,12 +74,15 @@ export function SpecialistAccess({
   name,
   active,
   publiclyVisible,
+  onSite,
   upcoming,
 }: {
   specialistId: string;
   name: string;
   active: boolean;
   publiclyVisible: boolean;
+  /** Their profile approved (else nothing of theirs is on the site yet). */
+  onSite: boolean;
   /** Visits still booked with them. */
   upcoming: number;
 }) {
@@ -109,7 +112,11 @@ export function SpecialistAccess({
     >
       <Row
         checked={state.publiclyVisible}
-        description="Wyłączone: profil znika ze strony i z rezerwacji online. Centrum nadal zapisuje wizyty, portal działa."
+        description={
+          onSite
+            ? "Wyłączone: profil znika ze strony i z rezerwacji online. Centrum nadal zapisuje wizyty, portal działa."
+            : "Profil nie jest jeszcze zatwierdzony: specjalista pojawi się na stronie dopiero po zatwierdzeniu profilu (o ile to jest włączone)."
+        }
         disabled={isPending || !state.active}
         label="Na stronie"
         onChange={(next) =>
@@ -126,7 +133,7 @@ export function SpecialistAccess({
       />
       <Row
         checked={state.active}
-        description="Wyłączone (zawieszony): bez strony, rezerwacji online i nowych wizyt od centrum; nie zaloguje się do portalu. Umówione wizyty zostają."
+        description="Dostęp do portalu specjalisty. Wyłączone (zawieszony): bez strony, rezerwacji online i nowych wizyt od centrum; nie zaloguje się do portalu. Umówione wizyty zostają."
         disabled={isPending}
         label="Aktywny"
         onChange={(next) => (next ? setActive(true) : setConfirming(true))}

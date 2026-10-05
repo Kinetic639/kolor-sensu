@@ -123,6 +123,8 @@ export function specialistState(
   return {
     // Working with the centre and able to sign in.
     active: item.active && item.accountActive,
+    // On the site: their profile approved (else in preparation).
+    onSite: item.publicationStatus === "published",
     profile: item.pendingDraft
       ? "pending"
       : item.publicationStatus === "pending_review"

@@ -90,7 +90,7 @@ export function SpecialistPageBar({
   );
 }
 
-/** Przegląd: the account and the work, the profile on the site. */
+/** Przegląd: the profile on the site (its switches above it, in the page). */
 export function SpecialistOverview({
   detail,
 }: {
@@ -101,26 +101,12 @@ export function SpecialistOverview({
   const publicUrl = publicUrlOf(detail);
   return (
     <>
-      <DetailSection title="Konto i współpraca">
-        <DetailProps>
-          <DetailProp label="Współpraca od">{day(detail.joinedAt)}</DetailProp>
-          <DetailProp label="Konto">
-            <Tag tone={detail.accountActive ? "success" : "neutral"}>
-              {detail.accountActive ? "Aktywne" : "Nieaktywne"}
-            </Tag>
-          </DetailProp>
-          <DetailProp label="Współpraca">
-            <Tag tone={detail.active ? "success" : "neutral"}>
-              {detail.active ? "Aktywna" : "Nieaktywna"}
-            </Tag>
-          </DetailProp>
-        </DetailProps>
-      </DetailSection>
       <DetailSection
         actions={<PreviewLink href={publicUrl} />}
         title="Profil na stronie"
       >
         <DetailProps>
+          <DetailProp label="Współpraca od">{day(detail.joinedAt)}</DetailProp>
           <DetailProp label="Stan">
             <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <Tag tone={profileTag(detailState(detail).profile).tone}>

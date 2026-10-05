@@ -68,6 +68,21 @@ describe("specialistTags", () => {
       { label: "Profil odrzucony", tone: "danger" },
     ]);
   });
+
+  it("not on the site yet (no profile approved): in preparation, not active", () => {
+    expect(
+      specialistTags(
+        { active: true, profile: "draft", onSite: false },
+        { withActive: true },
+      ).map((tag) => tag.label),
+    ).toEqual(["W przygotowaniu", "Szkic profilu"]);
+    expect(
+      specialistTags(
+        { active: true, profile: "published", onSite: true, hidden: true },
+        { withActive: true },
+      ).map((tag) => tag.label),
+    ).toEqual(["Aktywny", "Opublikowany", "Ukryty na stronie"]);
+  });
 });
 
 describe("shownSpecialists", () => {

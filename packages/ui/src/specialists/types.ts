@@ -21,6 +21,11 @@ export interface SpecialistState {
   profile: SpecialistProfileState;
   /** Hidden from the site and online booking for a while. */
   hidden?: boolean;
+  /**
+   * Their profile approved and on the site (false: in preparation, a new
+   * specialist whose profile no admin has approved yet).
+   */
+  onSite?: boolean;
 }
 
 export interface SpecialistRow {
