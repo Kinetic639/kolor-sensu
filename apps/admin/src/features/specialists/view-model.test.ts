@@ -220,6 +220,7 @@ describe("mapSpecialistsListViewModel: colours", () => {
     avatarUrl: null,
     accountActive: true,
     active: true,
+    publiclyVisible: true,
     publicSlug: "anna-kowalska",
     professionalTitle: "Psychoterapeutka",
     joinedAt: null,
@@ -278,6 +279,7 @@ describe("toSpecialistRow", () => {
       avatarUrl: null,
       accountActive: true,
       active: true,
+      publiclyVisible: true,
       publicSlug: "anna-kowalska",
       professionalTitle: "Psychoterapeutka",
       joinedAt: "2026-03-01",
@@ -518,22 +520,20 @@ describe("detailState", () => {
     expect(detailState(detail({}))).toEqual({
       active: true,
       profile: "pending",
-      onSite: true,
-      hidden: false,
+      visible: true,
     });
     expect(
       detailState({ ...detail({}), draft: null, accountActive: false }),
     ).toEqual({
       active: false,
       profile: "published",
-      onSite: true,
-      hidden: false,
+      visible: true,
     });
   });
 
-  it("hidden from the site, said so", () => {
-    expect(detailState({ ...detail({}), publiclyVisible: false }).hidden).toBe(
-      true,
+  it("not on the site when hidden, or the profile not approved", () => {
+    expect(detailState({ ...detail({}), publiclyVisible: false }).visible).toBe(
+      false,
     );
   });
 });

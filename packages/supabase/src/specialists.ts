@@ -54,6 +54,8 @@ export interface AdminSpecialistSummary {
   avatarUrl: string | null;
   accountActive: boolean;
   active: boolean;
+  /** Shown on the site (with an approved profile). */
+  publiclyVisible: boolean;
   publicSlug: string;
   professionalTitle: string | null;
   joinedAt: string | null;
@@ -161,6 +163,7 @@ function mapAdminSpecialistSummary(
     avatarUrl: row.profile.avatar_url,
     accountActive: row.profile.active,
     active: row.active,
+    publiclyVisible: row.publicly_visible,
     publicSlug: row.public_slug,
     professionalTitle: row.professional_title,
     joinedAt: row.joined_at,

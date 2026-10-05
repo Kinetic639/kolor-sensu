@@ -55,7 +55,7 @@ describe("specialistTags", () => {
         profile: "pending",
       }),
     ).toEqual([
-      { label: "Zawieszony", tone: "neutral" },
+      { label: "Nieaktywny", tone: "neutral" },
       { label: "Do weryfikacji", tone: "warning" },
     ]);
     expect(
@@ -69,19 +69,27 @@ describe("specialistTags", () => {
     ]);
   });
 
-  it("not on the site yet (no profile approved): in preparation, not active", () => {
+  it("two settings: active or not, on the site or not", () => {
     expect(
       specialistTags(
-        { active: true, profile: "draft", onSite: false },
+        { active: false, profile: "draft", visible: false },
         { withActive: true },
       ).map((tag) => tag.label),
-    ).toEqual(["W przygotowaniu", "Szkic profilu"]);
+    ).toEqual(["Nieaktywny", "Niewidoczny", "Szkic profilu"]);
     expect(
       specialistTags(
-        { active: true, profile: "published", onSite: true, hidden: true },
+        { active: true, profile: "published", visible: true },
         { withActive: true },
       ).map((tag) => tag.label),
-    ).toEqual(["Aktywny", "Opublikowany", "Ukryty na stronie"]);
+    ).toEqual(["Aktywny", "Na stronie", "Opublikowany"]);
+    // In the lists: only what is off.
+    expect(
+      specialistTags({
+        active: true,
+        profile: "published",
+        visible: false,
+      }).map((tag) => tag.label),
+    ).toEqual(["Niewidoczny", "Opublikowany"]);
   });
 });
 

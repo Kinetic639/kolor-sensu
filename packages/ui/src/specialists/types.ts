@@ -16,16 +16,11 @@ export type SpecialistProfileState =
   | "none";
 
 export interface SpecialistState {
-  /** Working with the centre (and their account on). */
+  /** Takes new visits (online when visible, and from the centre). */
   active: boolean;
   profile: SpecialistProfileState;
-  /** Hidden from the site and online booking for a while. */
-  hidden?: boolean;
-  /**
-   * Their profile approved and on the site (false: in preparation, a new
-   * specialist whose profile no admin has approved yet).
-   */
-  onSite?: boolean;
+  /** On the site: shown by the admin and their profile approved. */
+  visible?: boolean;
 }
 
 export interface SpecialistRow {

@@ -96,6 +96,7 @@ export function mapSpecialistsListViewModel(
           : null),
       professionalTitle: summary.professionalTitle ?? "Tytuł nieuzupełniony",
       active: summary.active,
+      publiclyVisible: summary.publiclyVisible,
       accountActive: summary.accountActive,
       publicationStatus: summary.publicationStatus,
       serviceCount: summary.serviceCount,
@@ -117,14 +118,18 @@ export function mapSpecialistsListViewModel(
 export function specialistState(
   item: Pick<
     SpecialistListItemViewModel,
-    "active" | "accountActive" | "pendingDraft" | "publicationStatus"
+    | "active"
+    | "publiclyVisible"
+    | "accountActive"
+    | "pendingDraft"
+    | "publicationStatus"
   >,
 ): SpecialistState {
   return {
-    // Working with the centre and able to sign in.
+    // Takes new visits (and the account on).
     active: item.active && item.accountActive,
-    // On the site: their profile approved (else in preparation).
-    onSite: item.publicationStatus === "published",
+    // On the site: shown by the admin, the profile approved.
+    visible: item.publiclyVisible && item.publicationStatus === "published",
     profile: item.pendingDraft
       ? "pending"
       : item.publicationStatus === "pending_review"
@@ -210,15 +215,13 @@ export function toSpecialistOffers(
 
 /** The state on their page (their tags), as on the team's list. */
 export function detailState(detail: SpecialistDetailViewModel) {
-  return {
-    ...specialistState({
-      active: detail.active,
-      accountActive: detail.accountActive,
-      pendingDraft: detail.draft?.status === "pending_review",
-      publicationStatus: detail.publicProfile?.publicationStatus ?? null,
-    }),
-    hidden: !detail.publiclyVisible,
-  };
+  return specialistState({
+    active: detail.active,
+    publiclyVisible: detail.publiclyVisible,
+    accountActive: detail.accountActive,
+    pendingDraft: detail.draft?.status === "pending_review",
+    publicationStatus: detail.publicProfile?.publicationStatus ?? null,
+  });
 }
 
 /** `4 · od 195 zł`: the active offers and the lowest price; `Brak`. */

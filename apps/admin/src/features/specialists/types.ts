@@ -20,6 +20,7 @@ export interface SpecialistListItemViewModel {
   avatarUrl: string | null;
   professionalTitle: string;
   active: boolean;
+  publiclyVisible: boolean;
   accountActive: boolean;
   publicationStatus: ProfilePublicationStatus | null;
   serviceCount: number;

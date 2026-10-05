@@ -13,7 +13,6 @@ import {
 } from "@repo/ui/alert-dialog";
 import { DetailSection } from "@repo/ui/detail-page";
 import { Switch } from "@repo/ui/switch";
-import { toast } from "@repo/ui/toast";
 import type { Route } from "next";
 import Link from "next/link";
 import { useOptimistic, useState } from "react";
@@ -22,10 +21,11 @@ import {
   setSpecialistVisibilityAction,
 } from "./actions";
 
-// A specialist's page → Ustawienia: on the site or hidden for a while (the
-// centre still books them, their portal works), and active or suspended
-// (no site, no online booking, no portal; booked visits stay for the
-// centre to move or cancel). Suspending asks first.
+// A specialist's page → Przegląd: their two settings, both off for a new
+// specialist. Aktywny: takes new visits (online when also visible, and
+// from the centre). Widoczny na stronie: their profile, once approved, on
+// the site. Their portal works either way; booked visits stay. Turning
+// "Aktywny" off asks first.
 
 const visitsLabel = (count: number) =>
   count === 1
@@ -95,30 +95,29 @@ export function SpecialistAccess({
       async () => {
         setState((now) => ({ ...now, active: next }));
         const result = await setSpecialistActiveAction(specialistId, next);
-        if (result.ok && !next && result.upcoming > 0) {
-          toast.info(
-            `Do przełożenia lub odwołania: ${visitsLabel(result.upcoming)}.`,
-          );
-        }
         return result.ok ? { ok: true } : result;
       },
-      next ? "Przywrócono specjalistę" : "Zawieszono specjalistę",
+      next ? "Specjalista jest aktywny" : "Specjalista jest nieaktywny",
     );
 
   return (
-    <DetailSection
-      note="strona, rezerwacje, portal"
-      title="Widoczność i dostęp"
-    >
+    <DetailSection note="rezerwacje i strona" title="Ustawienia specjalisty">
       <Row
-        checked={state.publiclyVisible}
+        checked={state.active}
+        description="Przyjmuje nowe wizyty: online (gdy jest też widoczny na stronie) i zapisywane przez centrum. Wyłączone: bez nowych wizyt; umówione zostają, portal działa."
+        disabled={isPending}
+        label="Aktywny"
+        onChange={(next) => (next ? setActive(true) : setConfirming(true))}
+      />
+      <Row
+        checked={onSite && state.publiclyVisible}
         description={
           onSite
-            ? "Wyłączone: profil znika ze strony i z rezerwacji online. Centrum nadal zapisuje wizyty, portal działa."
-            : "Profil nie jest jeszcze zatwierdzony: specjalista pojawi się na stronie dopiero po zatwierdzeniu profilu (o ile to jest włączone)."
+            ? "Profil na stronie Specjaliści. Wyłączone: profil znika ze strony (i z rezerwacji online)."
+            : "Najpierw zatwierdź profil specjalisty (zakładka Profil publiczny): niezatwierdzonego profilu nie można pokazać na stronie."
         }
-        disabled={isPending || !state.active}
-        label="Na stronie"
+        disabled={isPending || !onSite}
+        label="Widoczny na stronie"
         onChange={(next) =>
           run(
             async () => {
@@ -126,17 +125,10 @@ export function SpecialistAccess({
               return setSpecialistVisibilityAction(specialistId, next);
             },
             next
-              ? "Specjalista jest na stronie"
-              : "Ukryto specjalistę na stronie",
+              ? "Specjalista jest widoczny na stronie"
+              : "Specjalista jest niewidoczny na stronie",
           )
         }
-      />
-      <Row
-        checked={state.active}
-        description="Dostęp do portalu specjalisty. Wyłączone (zawieszony): bez strony, rezerwacji online i nowych wizyt od centrum; nie zaloguje się do portalu. Umówione wizyty zostają."
-        disabled={isPending}
-        label="Aktywny"
-        onChange={(next) => (next ? setActive(true) : setConfirming(true))}
       />
       {!state.active && upcoming > 0 ? (
         <p
@@ -150,28 +142,27 @@ export function SpecialistAccess({
               `/rezerwacje?specjalista=${specialistId}&status=potwierdzone&status=oczekujace` as Route
             }
           >
-            Przełóż lub odwołaj
+            Zobacz
           </Link>
         </p>
       ) : null}
       <AlertDialog onOpenChange={setConfirming} open={confirming}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Zawiesić specjalistę?</AlertDialogTitle>
+            <AlertDialogTitle>Wyłączyć specjalistę?</AlertDialogTitle>
             <AlertDialogDescription>
-              {name} zniknie ze strony i z rezerwacji, centrum nie zapisze już
-              nowych wizyt, a logowanie do portalu specjalisty zostanie
-              zablokowane.
+              {name} nie przyjmie nowych wizyt: ani online, ani zapisywanych
+              przez centrum.
               {upcoming > 0
-                ? ` Do przełożenia lub odwołania w Rezerwacjach: ${visitsLabel(upcoming)}.`
+                ? ` Umówione wizyty (${visitsLabel(upcoming)}) zostają.`
                 : ""}{" "}
-              Można to cofnąć w każdej chwili.
+              Portal specjalisty działa dalej. Można to cofnąć w każdej chwili.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Anuluj</AlertDialogCancel>
             <AlertDialogAction onClick={() => setActive(false)}>
-              Zawieś
+              Wyłącz
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

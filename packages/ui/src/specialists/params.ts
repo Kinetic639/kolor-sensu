@@ -84,15 +84,14 @@ export function specialistTags(
   { withActive = false }: { withActive?: boolean } = {},
 ): { label: string; tone: VisitTone }[] {
   const tags: { label: string; tone: VisitTone }[] = [];
-  if (!state.active) tags.push({ label: "Zawieszony", tone: "neutral" });
-  // Signed in, maybe, but nothing of theirs is on the site yet.
-  else if (state.onSite === false) {
-    tags.push({ label: "W przygotowaniu", tone: "info" });
-  } else if (withActive) tags.push({ label: "Aktywny", tone: "success" });
-  tags.push(profileTag(state.profile));
-  if (state.active && state.onSite !== false && state.hidden) {
-    tags.push({ label: "Ukryty na stronie", tone: "warning" });
+  if (!state.active) tags.push({ label: "Nieaktywny", tone: "neutral" });
+  else if (withActive) tags.push({ label: "Aktywny", tone: "success" });
+  if (state.visible === false)
+    tags.push({ label: "Niewidoczny", tone: "neutral" });
+  else if (withActive && state.visible) {
+    tags.push({ label: "Na stronie", tone: "info" });
   }
+  tags.push(profileTag(state.profile));
   return tags;
 }
 
@@ -100,7 +99,7 @@ const IN_SEGMENT: Record<
   (typeof SPECIALIST_SEGMENTS)[number],
   (row: SpecialistRow) => boolean
 > = {
-  aktywni: (row) => row.state.active && row.state.onSite !== false,
+  aktywni: (row) => row.state.active,
   nieaktywni: (row) => !row.state.active,
   weryfikacja: (row) => row.state.profile === "pending",
 };
