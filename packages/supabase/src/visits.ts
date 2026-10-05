@@ -120,6 +120,8 @@ export interface VisitSearch {
   own?: boolean;
   /** The archive: null all, false without it, true only it. */
   archived?: boolean | null;
+  /** One client's visits (their card). */
+  clientId?: string | null;
 }
 
 /** One page of visits and how many match in all (the bookings table). */
@@ -147,6 +149,7 @@ export async function searchVisits(
     p_offset: search.offset,
     p_own: search.own,
     p_archived: search.archived ?? undefined,
+    p_client_id: search.clientId ?? undefined,
   });
   if (error) throw error;
   const rows = data ?? [];

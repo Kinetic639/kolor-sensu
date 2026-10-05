@@ -373,7 +373,14 @@ export function toVisitSearch(
     now = new Date(),
     own = false,
     timeZone = "Europe/Warsaw",
-  }: { now?: Date; own?: boolean; timeZone?: string } = {},
+    clientId = null,
+  }: {
+    now?: Date;
+    own?: boolean;
+    timeZone?: string;
+    /** One client's visits (their card): all of them, the archive too. */
+    clientId?: string | null;
+  } = {},
 ) {
   const page = Math.max(1, params.strona);
   const places = params.miejsce ?? [];
@@ -413,9 +420,12 @@ export function toVisitSearch(
     limit: params.wierszy,
     offset: (page - 1) * params.wierszy,
     own,
-    // The archive: only in its own view; the past and all leave it out.
-    archived:
-      params.zakres === "archiwum"
+    clientId,
+    // The archive: only in its own view; the past and all leave it out
+    // (a client's card shows everything).
+    archived: clientId
+      ? null
+      : params.zakres === "archiwum"
         ? true
         : params.zakres === "minione" || params.zakres === "wszystkie"
           ? false

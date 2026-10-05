@@ -199,8 +199,15 @@ describe("toVisitSearch", () => {
       limit: 10,
       offset: 20,
       own: false,
+      clientId: null,
       archived: null,
     });
+  });
+
+  it("a client's card: their visits, the archive too", () => {
+    expect(
+      toVisitSearch(load("zakres=wszystkie"), { now, clientId: "c-1" }),
+    ).toMatchObject({ clientId: "c-1", archived: null });
   });
 
   it("the past and all leave the archive out; the archive is only it", () => {

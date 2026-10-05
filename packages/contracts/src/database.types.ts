@@ -1599,6 +1599,19 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      my_clients: {
+        Args: { p_query?: string };
+        Returns: {
+          email: string;
+          id: string;
+          last_visit_at: string | null;
+          name: string;
+          next_visit_at: string | null;
+          phone: string | null;
+          upcoming: number;
+          visits: number;
+        }[];
+      };
       client_duplicates: {
         Args: { p_client: string };
         Returns: {
@@ -2319,6 +2332,7 @@ export type Database = {
         Args: {
           p_archived?: boolean;
           p_changed_from?: string;
+          p_client_id?: string;
           p_changed_to?: string;
           p_created_from?: string;
           p_created_to?: string;

@@ -252,6 +252,7 @@ export {
   ClientError,
   clientDuplicates,
   forgetClient,
+  listMyClients,
   mergeClients,
   getClient,
   getVisitClient,
@@ -265,6 +266,7 @@ export type {
   ClientDetails,
   ClientDuplicate,
   ClientErrorCode,
+  MyClient,
   ClientSearch,
   ClientSort,
 } from "./clients";

@@ -273,3 +273,39 @@ export async function mergeClients(
   if (error) throw clientError(error);
   return data ?? 0;
 }
+
+export interface MyClient {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  /** Visits with this specialist that take place (paid or to pay). */
+  visits: number;
+  upcoming: number;
+  lastVisitAt: string | null;
+  nextVisitAt: string | null;
+}
+
+/**
+ * A specialist's own clients (Moi klienci): those with a visit with them,
+ * the next first; never the centre's notes about them.
+ */
+export async function listMyClients(
+  client: Client,
+  query?: string | null,
+): Promise<MyClient[]> {
+  const { data, error } = await client.rpc("my_clients", {
+    p_query: query ?? undefined,
+  });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    visits: row.visits,
+    upcoming: row.upcoming,
+    lastVisitAt: row.last_visit_at,
+    nextVisitAt: row.next_visit_at,
+  }));
+}
