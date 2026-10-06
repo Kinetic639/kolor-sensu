@@ -9,8 +9,21 @@ priorytet i status.
 
 Stan na 06.10.2026. Aktualizowany po każdym etapie.
 
-**Całość: 10 z 117 punktów zrobionych (9%), 56 częściowo, 51 do zrobienia.
+**Całość: 10 z 117 punktów zrobionych (9%), 57 częściowo, 50 do zrobienia.
 Blokujące start (P0): 4 z 70 zrobione. Lista „Przed startem”: 0 z 11.**
+
+**Teraz:** 17.3, nowe testy bazy (0 z 4 plików): centrum (zamknięcia, dane
+firmy, ogłoszenia, siatka), dostęp i role, klienci i RODO, zamykanie wizyt.
+
+**Ostatnio (06.10.2026):**
+
+- 17.1 i 17.2: wszystkie 11 testów bazy przechodzi na DEV (przestarzałe
+  kolumny i parametry, godziny poza siatką, zależność od danych demo).
+- Błąd znaleziony testami: strona brała pod uwagę „Aktywny” zamiast „Widoczny
+  na stronie” przy ofertach na profilu i przekierowaniu starego adresu
+  profilu; poprawione migracją `20261006020000_site_reads_visible_specialists`.
+- Błąd znaleziony testami: admin nie mógł zapisać godzin sali (siatka);
+  poprawione migracją `20261006010000_grid_triggers_definer`.
 
 | Sekcja                                                                                |  Punkty |     ✅ |     🟨 |     ⬜ | P0 zrobione |
 | ------------------------------------------------------------------------------------- | ------: | -----: | -----: | -----: | ----------: |
@@ -31,9 +44,9 @@ Blokujące start (P0): 4 z 70 zrobione. Lista „Przed startem”: 0 z 11.**
 | [14. Komponenty i Storybook](#14-komponenty-i-storybook-p1)                           |       5 |      0 |      1 |      4 |       0 / 1 |
 | [15. Bezpieczeństwo](#15-bezpieczeństwo-p0)                                           |       6 |      0 |      3 |      3 |       0 / 5 |
 | [16. Wydajność](#16-wydajność-p1)                                                     |       4 |      0 |      0 |      4 |           — |
-| [17. Testy bazy do aktualizacji](#17-baza-testy-domen-do-aktualizacji-i-dopisania-p0) |       3 |      2 |      0 |      1 |       2 / 3 |
+| [17. Testy bazy do aktualizacji](#17-baza-testy-domen-do-aktualizacji-i-dopisania-p0) |       3 |      2 |      1 |      0 |       2 / 3 |
 | [18. Do dodania przed startem](#18-funkcje-do-dodania-przed-startem-mvp)              |       7 |      0 |      0 |      7 |       0 / 1 |
-| **Razem**                                                                             | **117** | **10** | **56** | **51** |  **4 / 70** |
+| **Razem**                                                                             | **117** | **10** | **57** | **50** |  **4 / 70** |
 
 Kolejność pracy: 0 → 17 i 1 (baza i uprawnienia) → 4 i 3 (pieniądze) → 18.1 →
 2, 5, 8, 11, 9 (pozostałe P0) → 15 → 14 → 18 (inFakt) → reszta P1 → „Przed
@@ -300,7 +313,7 @@ Macierz na trybie testowym Stripe, z webhookami przez `stripe listen`.
 | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | 17.1 | `booking_domain.sql`, `services_domain.sql`: usunięta kolumna `accepting_new_clients`                                                                                                          | ✅     |
 | 17.2 | `specialist_domain.sql`: nowy specjalista domyślnie nieaktywny i niewidoczny                                                                                                                   | ✅     |
-| 17.3 | Nowe pliki: zamknięcia centrum, przypomnienia, dostęp i role, RODO (usuwanie i retencja), łączenie klientów, archiwum, zamykanie wizyt, ogłoszenia, dane firmy, limit testu, macierz uprawnień | ⬜     |
+| 17.3 | Nowe pliki: zamknięcia centrum, przypomnienia, dostęp i role, RODO (usuwanie i retencja), łączenie klientów, archiwum, zamykanie wizyt, ogłoszenia, dane firmy, limit testu, macierz uprawnień | 🟨     |
 
 ## 18. Funkcje do dodania przed startem (MVP)
 
