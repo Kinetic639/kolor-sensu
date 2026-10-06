@@ -1,0 +1,25 @@
+# What every code job needs after the checkout: pnpm, Node, the packages
+# (pnpm's store cached), and Turborepo's cache from earlier runs, so a
+# package the change does not touch is not checked again.
+name: Setup
+description: pnpm, Node, dependencies and the Turborepo cache
+inputs:
+  cache-name:
+    description: Which job's Turborepo cache (each job caches its own tasks)
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+    - uses: actions/setup-node@v5
+      with:
+        node-version: 24
+        cache: pnpm
+    - shell: bash
+      run: pnpm install --frozen-lockfile
+    - uses: actions/cache@v4
+      with:
+        path: .turbo/cache
+        key: turbo-${{ runner.os }}-${{ inputs.cache-name }}-${{ github.sha }}
+        restore-keys: |
+          turbo-${{ runner.os }}-${{ inputs.cache-name }}-

@@ -291,7 +291,8 @@ export function createPaintMatte(host: Element): PaintMatte {
 // paint yet) and the paint front runs through its time map.
 function strokeTimeline(stroke: PaintStroke, timing: StrokeTiming) {
   const [from, to] = frontRange(stroke.sharpness);
-  const timeline = gsap.timeline();
+  // Not lazy, like the whole reveal (createPaintTimeline).
+  const timeline = gsap.timeline({ defaults: { lazy: false } });
   timeline.set(stroke.group, { attr: { visibility: "visible" } }, 0);
   timeline.fromTo(
     stroke.front,

@@ -1,7 +1,8 @@
 # Every pull request, every push to main, and every deployment (deploy.yml
-# calls it first): the code (format, types, lint, unit tests) and the
-# database (the migrations from scratch on a local Supabase in the runner,
-# then every database test).
+# calls it first): the code (format and lint, types, unit tests, side by
+# side) and the database (the migrations from scratch on a local Supabase
+# in the runner, then every database test). Turborepo's cache carries over
+# between runs, so a package a change does not touch is not checked again.
 name: CI
 
 on:
@@ -18,33 +19,48 @@ permissions:
   contents: read
 
 jobs:
-  code:
-    name: Code
+  lint:
+    name: Format and lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+        with:
+          cache-name: lint
+      - name: Format
+        run: pnpm format:check
+      - name: Lint
+        run: pnpm lint
+
+  types:
+    name: Types
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+        with:
+          cache-name: types
+      - run: pnpm typecheck
+
+  tests:
+    name: Unit tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
         with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Format
-        run: pnpm format:check
-      - name: Types
-        run: pnpm typecheck
-      - name: Lint
-        run: pnpm lint
-      - name: Unit tests
-        run: pnpm test:run
+          cache-name: tests
+      - run: pnpm test:run
 
   database:
     name: Database
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: supabase/setup-cli@v1
         with:
           version: 2.117.0
