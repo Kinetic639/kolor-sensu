@@ -1,0 +1,55 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { SiteFooter } from "./site-footer";
+import type { SiteNavItem } from "./site-types";
+
+const home: SiteNavItem = { label: "Start", href: "/" };
+
+describe("SiteFooter", () => {
+  it("lists the offer's pages, a catalogue's unfolded", () => {
+    render(
+      <SiteFooter
+        navigation={[
+          home,
+          {
+            label: "Oferta",
+            href: "/oferta",
+            footerColumn: true,
+            children: [
+              { label: "Konsultacja", href: "/oferta/konsultacja" },
+              {
+                label: "Terapia",
+                href: "/oferta/terapia",
+                children: [
+                  { label: "Indywidualna", href: "/oferta/indywidualna" },
+                  { label: "Par", href: "/oferta/par" },
+                ],
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+    const offer = screen.getByRole("navigation", { name: "Oferta" });
+    expect(
+      Array.from(offer.querySelectorAll("a"), (link) => link.textContent),
+    ).toEqual(["Konsultacja", "Indywidualna", "Par"]);
+  });
+
+  // A new centre has no services yet: the site still renders (it used to
+  // fail the build on every page).
+  it("has no offer column while the offer is empty", () => {
+    render(
+      <SiteFooter
+        navigation={[
+          home,
+          { label: "Oferta", href: "/oferta", footerColumn: true },
+        ]}
+      />,
+    );
+    expect(
+      screen.queryByRole("navigation", { name: "Oferta" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Start" })).toBeInTheDocument();
+  });
+});
