@@ -1,0 +1,14 @@
+# main, develop and staging change only through a pull request (the free
+# GitHub plan cannot protect them, so this guards against a slip, e.g. a
+# plain `git push` from a branch that tracks main). Bypass, knowingly:
+# git push --no-verify.
+protected="refs/heads/main refs/heads/develop refs/heads/staging"
+while read -r local_ref local_sha remote_ref remote_sha; do
+  for ref in $protected; do
+    if [ "$remote_ref" = "$ref" ]; then
+      echo "Push to ${ref#refs/heads/} is blocked: open a pull request instead." >&2
+      exit 1
+    fi
+  done
+done
+exit 0
