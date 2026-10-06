@@ -50,7 +50,8 @@ import { categoryLabels, scheduleTime } from "./view-model";
 // and where the site's menu has it (arranged with all the services, on
 // the offer's list).
 
-type Visibility = "active" | "publiclyVisible" | "bookingEnabled";
+type Visibility =
+  "active" | "publiclyVisible" | "bookingEnabled" | "requiresIntake";
 
 const catalogSchema = z.object({
   category: serviceCategorySchema,
@@ -98,6 +99,7 @@ function VisibilitySection({ row }: { row: ServiceRow }) {
     active: row.active,
     publiclyVisible: row.publiclyVisible,
     bookingEnabled: row.bookingEnabled,
+    requiresIntake: row.requiresIntake,
   });
   const [confirming, setConfirming] = useState(false);
   const save = (field: Visibility, next: boolean) =>
@@ -110,47 +112,60 @@ function VisibilitySection({ row }: { row: ServiceRow }) {
     );
 
   return (
-    <DetailSection title="Widoczność">
-      <VisibilitySwitch
-        checked={state.active}
-        description="Wyłączona znika ze strony i z rezerwacji. Oferty specjalistów i umówione wizyty zostają."
-        disabled={isPending}
-        label="Aktywna"
-        onChange={(next) => (next ? save("active", true) : setConfirming(true))}
-      />
-      <VisibilitySwitch
-        checked={state.publiclyVisible}
-        description={`Kafelek w ofercie i strona /oferta/${row.slug}.`}
-        disabled={isPending || !state.active}
-        label="Na stronie"
-        onChange={(next) => save("publiclyVisible", next)}
-      />
-      <VisibilitySwitch
-        checked={state.bookingEnabled}
-        description="Klient wybierze ją w „Umów wizytę” u osób, które ją prowadzą."
-        disabled={isPending || !state.active}
-        label="Rezerwacja online"
-        onChange={(next) => save("bookingEnabled", next)}
-      />
-      <AlertDialog onOpenChange={setConfirming} open={confirming}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Wyłączyć usługę?</AlertDialogTitle>
-            <AlertDialogDescription>
-              „{row.name}” zniknie ze strony i z rezerwacji online, także u
-              specjalistów, którzy ją prowadzą. Ich oferty i umówione wizyty
-              zostają; usługę można włączyć z powrotem.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Anuluj</AlertDialogCancel>
-            <AlertDialogAction onClick={() => save("active", false)}>
-              Wyłącz usługę
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </DetailSection>
+    <>
+      <DetailSection title="Widoczność">
+        <VisibilitySwitch
+          checked={state.active}
+          description="Wyłączona znika ze strony i z rezerwacji. Oferty specjalistów i umówione wizyty zostają."
+          disabled={isPending}
+          label="Aktywna"
+          onChange={(next) =>
+            next ? save("active", true) : setConfirming(true)
+          }
+        />
+        <VisibilitySwitch
+          checked={state.publiclyVisible}
+          description={`Kafelek w ofercie i strona /oferta/${row.slug}.`}
+          disabled={isPending || !state.active}
+          label="Na stronie"
+          onChange={(next) => save("publiclyVisible", next)}
+        />
+        <VisibilitySwitch
+          checked={state.bookingEnabled}
+          description="Klient wybierze ją w „Umów wizytę” u osób, które ją prowadzą."
+          disabled={isPending || !state.active}
+          label="Rezerwacja online"
+          onChange={(next) => save("bookingEnabled", next)}
+        />
+        <AlertDialog onOpenChange={setConfirming} open={confirming}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Wyłączyć usługę?</AlertDialogTitle>
+              <AlertDialogDescription>
+                „{row.name}” zniknie ze strony i z rezerwacji online, także u
+                specjalistów, którzy ją prowadzą. Ich oferty i umówione wizyty
+                zostają; usługę można włączyć z powrotem.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Anuluj</AlertDialogCancel>
+              <AlertDialogAction onClick={() => save("active", false)}>
+                Wyłącz usługę
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </DetailSection>
+      <DetailSection title="Przy rezerwacji">
+        <VisibilitySwitch
+          checked={state.requiresIntake}
+          description="Rezerwując online, klient wypełnia ankietę przed płatnością; odpowiedzi widać przy wizycie."
+          disabled={isPending || !state.bookingEnabled}
+          label="Ankieta przed wizytą"
+          onChange={(next) => save("requiresIntake", next)}
+        />
+      </DetailSection>
+    </>
   );
 }
 
