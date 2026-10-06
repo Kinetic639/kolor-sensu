@@ -146,7 +146,9 @@ export function RoomOverview({
         <DetailProps>
           <DetailProp label="Tydzień">
             {row.hoursSummary ?? (
-              <Muted>bez godzin: otwarty, gdy ktoś ma dyżur</Muted>
+              <Tag tone="warning">
+                bez godzin: zamknięty, dyżurów nie da się ustawić
+              </Tag>
             )}
           </DetailProp>
           <DetailProp label="Wyjątki">

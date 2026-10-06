@@ -242,8 +242,12 @@ DECLARE
   approval_draft_id uuid;
   rejection_draft_id uuid;
 BEGIN
-  -- The dual-role admin's own draft (F) is already approved.
-  IF (SELECT count(*) FROM public.specialist_profile_drafts WHERE status = 'pending_review') <> 2 THEN
+  -- The dual-role admin's own draft (F) is already approved. (The test's
+  -- specialists only: the DEV data may have drafts waiting too.)
+  IF (SELECT count(*) FROM public.specialist_profile_drafts
+      WHERE status = 'pending_review'
+        AND specialist_id IN (SELECT first_specialist_id FROM domain_test_ids
+                              UNION ALL SELECT second_specialist_id FROM domain_test_ids)) <> 2 THEN
     RAISE EXCEPTION 'G: admin could not read all pending drafts';
   END IF;
 
