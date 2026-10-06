@@ -321,7 +321,13 @@ export function createPaintTimeline(
   matte: PaintMatte,
   { paused = false, onComplete, caption }: PaintTimelineOptions = {},
 ) {
-  const timeline = gsap.timeline({ paused, onComplete });
+  // Not lazy: the unpainted start is written at once, not at the end of the
+  // frame (nothing flashes, and it holds however busy the machine is).
+  const timeline = gsap.timeline({
+    paused,
+    onComplete,
+    defaults: { lazy: false },
+  });
   for (const stroke of matte.backdrop.strokes) {
     const timing = strokeTiming(stroke.id);
     timeline.add(strokeTimeline(stroke, timing), timing.at);

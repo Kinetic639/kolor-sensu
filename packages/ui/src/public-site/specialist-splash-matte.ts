@@ -175,7 +175,14 @@ export function createSplashTimeline({
   onComplete,
 }: SplashTimelineOptions) {
   const timing = specialistRevealTiming;
-  const timeline = gsap.timeline({ paused, delay, onComplete });
+  // Not lazy: the hidden start is written at once, not at the end of the
+  // frame (nothing flashes, and it holds however busy the machine is).
+  const timeline = gsap.timeline({
+    paused,
+    delay,
+    onComplete,
+    defaults: { lazy: false },
+  });
 
   if (portrait) {
     timeline.fromTo(
