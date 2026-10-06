@@ -23,6 +23,15 @@ const nextConfig = {
     "@repo/ui",
   ],
   typedRoutes: true,
+  // A private portal: never in search results, in any environment.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+    ];
+  },
   // The site's painted assets (watercolor splashes, masks, the portrait
   // placeholder), for the profile preview: served by the public site, not
   // copied here.
