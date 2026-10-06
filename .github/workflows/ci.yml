@@ -1,12 +1,14 @@
-# Every pull request and every push to the long-lived branches: the code
-# (format, types, lint, unit tests) and the database (the migrations from
-# scratch on a local Supabase in the runner, then every database test).
+# Every pull request, every push to main, and every deployment (deploy.yml
+# calls it first): the code (format, types, lint, unit tests) and the
+# database (the migrations from scratch on a local Supabase in the runner,
+# then every database test).
 name: CI
 
 on:
   pull_request:
   push:
-    branches: [main, develop, staging]
+    branches: [main]
+  workflow_call:
 
 concurrency:
   group: ci-${{ github.ref }}
