@@ -80,22 +80,22 @@ describe("RichTextEditor", () => {
     render(
       <RichTextEditor value={emptyRichTextDocument} onChange={onChange} />,
     );
+    const textbox = await screen.findByRole("textbox");
     await user.click(await screen.findByRole("button", { name: "Nagłówek 2" }));
-    // The paragraph has become a heading before anything is typed (on a
-    // slow machine the first keys went to the paragraph being replaced).
+    // A toolbar button hands the focus back to the editor a moment later:
+    // typing waits for it and for the heading (on a slow machine the keys
+    // went to the button, or to the paragraph being replaced).
     await screen.findByRole("heading", { level: 2 });
-    await user.type(screen.getByRole("textbox"), "Nagłówek", {
-      skipClick: true,
-    });
+    await waitFor(() => expect(textbox).toHaveFocus());
+    await user.type(textbox, "Nagłówek", { skipClick: true });
     expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
       "Nagłówek",
     );
 
     await user.keyboard("{Enter}");
     await user.click(screen.getByRole("button", { name: "Lista punktowana" }));
-    await user.type(screen.getByRole("textbox"), "Element", {
-      skipClick: true,
-    });
+    await waitFor(() => expect(textbox).toHaveFocus());
+    await user.type(textbox, "Element", { skipClick: true });
     expect(screen.getByRole("list")).toBeVisible();
     expect(onChange).toHaveBeenCalled();
   });

@@ -64,3 +64,9 @@ jobs:
       - if: steps.target.outputs.ready == 'true'
         name: Apply them
         run: supabase db push --linked --yes
+      # Auth (site and redirect addresses, sign-ups), the Data API and
+      # storage, as supabase/config.toml says, with the environment's
+      # [remotes.*] overrides: the dashboard never drifts from the repo.
+      - if: steps.target.outputs.ready == 'true'
+        name: Settings from config.toml
+        run: supabase config push --yes
