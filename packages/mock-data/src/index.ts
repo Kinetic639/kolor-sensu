@@ -8,10 +8,12 @@ export const sampleService = {
   description: null,
   category: "other",
   defaultDurationMinutes: 50,
+  afterMinutes: 10,
   active: true,
   publiclyVisible: true,
   bookingEnabled: false,
   sortOrder: 0,
+  catalogId: null,
   createdAt: "2026-01-01T00:00:00Z",
   updatedAt: "2026-01-01T00:00:00Z",
 } satisfies Service;

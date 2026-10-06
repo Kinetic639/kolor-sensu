@@ -10,3 +10,5 @@ out
 storybook-static
 supabase/.temp
 pnpm-lock.yaml
+next-env.d.ts
+coverage
