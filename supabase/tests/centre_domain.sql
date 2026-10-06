@@ -44,6 +44,12 @@ INSERT INTO public.rooms (location_id, name, slug, capacity, active)
 SELECT id, 'Centre Room', 'centre-test-room', 2, true
 FROM public.locations WHERE slug = 'centre-test-location';
 
+-- Open every day 06:00–22:00 (a room without hours is closed).
+INSERT INTO public.room_opening_hours (room_id, weekday, starts_at, ends_at)
+SELECT room.id, day, '06:00', '22:00'
+FROM public.rooms AS room CROSS JOIN generate_series(1, 7) AS day
+WHERE room.slug = 'centre-test-room';
+
 INSERT INTO public.services (
   name, slug, category, default_duration_minutes, after_minutes,
   active, publicly_visible, booking_enabled
@@ -462,6 +468,35 @@ BEGIN
   ) VALUES (t.anna_id, 'weekly', ARRAY[3]::smallint[], '09:30', '11:00', t.monday, 'in_person', t.room_id);
   IF pg_temp.hint_of('UPDATE public.center_settings SET slot_step_minutes = 60 WHERE id = 1') <> 'grid_misfit' THEN
     RAISE EXCEPTION 'G: the grid changed under hours that do not fit it';
+  END IF;
+END;
+$$;
+
+-- H: free times only while the room is open. Hours narrowed under Anna's
+-- Monday 9–12, or removed, and that Monday offers nothing any more.
+DO $$
+DECLARE
+  v_day date := (SELECT monday + 21 FROM centre_test);
+  v_room uuid := (SELECT room_id FROM centre_test);
+BEGIN
+  IF pg_temp.free_times(v_day) = '' THEN
+    RAISE EXCEPTION 'H: no free times while the room is open';
+  END IF;
+  DELETE FROM public.room_opening_hours WHERE room_id = v_room AND weekday = 1;
+  INSERT INTO public.room_opening_hours (room_id, weekday, starts_at, ends_at)
+  VALUES (v_room, 1, '09:00', '11:00');
+  IF pg_temp.free_times(v_day) <> '' THEN
+    RAISE EXCEPTION 'H: times offered past the room''s hours: %', pg_temp.free_times(v_day);
+  END IF;
+  DELETE FROM public.room_opening_hours WHERE room_id = v_room;
+  IF pg_temp.free_times(v_day) <> '' THEN
+    RAISE EXCEPTION 'H: times offered in a room without hours';
+  END IF;
+  -- An extra opening that day opens it again.
+  INSERT INTO public.room_availability_exceptions (room_id, date, type, starts_at, ends_at, reason)
+  VALUES (v_room, v_day, 'extra_available_interval', '08:00', '13:00', 'Dodatkowo');
+  IF pg_temp.free_times(v_day) = '' THEN
+    RAISE EXCEPTION 'H: an extra opening offered nothing';
   END IF;
 END;
 $$;
