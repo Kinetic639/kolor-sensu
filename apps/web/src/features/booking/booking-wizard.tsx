@@ -4,11 +4,9 @@ import {
   BookingSummary,
   SlotPicker,
 } from "@repo/ui/booking";
-import { PrimaryButton } from "@repo/ui/public-site";
 import { CalendarDays, FileText, House, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
-import { holdTimeAction } from "./actions";
-import { TurnstileWidget } from "./turnstile-widget";
+import { HoldTimeForm } from "./hold-time-form";
 import type { BookingNotice, BookingParams } from "./search-params";
 import type { WizardSummaryRow, WizardView } from "./wizard";
 
@@ -115,17 +113,15 @@ export function BookingWizard({
           }))}
         >
           {chosen ? (
-            <form action={holdTimeAction} className="grid gap-3">
-              {Object.entries(params).map(([key, value]) =>
-                value && key !== "uwaga" ? (
-                  <input key={key} name={key} type="hidden" value={value} />
-                ) : null,
+            <HoldTimeForm
+              fields={Object.fromEntries(
+                Object.entries(params).filter(
+                  (entry): entry is [string, string] =>
+                    Boolean(entry[1]) && entry[0] !== "uwaga",
+                ),
               )}
-              <TurnstileWidget siteKey={turnstileSiteKey} />
-              <PrimaryButton arrow className="w-full" type="submit">
-                Przejdź dalej
-              </PrimaryButton>
-            </form>
+              turnstileSiteKey={turnstileSiteKey}
+            />
           ) : (
             <p className="text-small text-text-muted">
               Jeśli nie widzisz dogodnego terminu, zadzwoń lub napisz do nas.

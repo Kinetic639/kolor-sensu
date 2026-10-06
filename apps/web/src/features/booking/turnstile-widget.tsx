@@ -38,8 +38,25 @@ function loadScript() {
   });
 }
 
-export function TurnstileWidget({ siteKey }: { siteKey: string }) {
+export interface TurnstileEvents {
+  /** The check passed: its token is in the form. */
+  onVerify?: () => void;
+  /** The token ran out; Turnstile checks again by itself. */
+  onExpire?: () => void;
+  /** The check failed, timed out, or Turnstile did not load. */
+  onError?: () => void;
+}
+
+export function TurnstileWidget({
+  siteKey,
+  ...events
+}: { siteKey: string } & TurnstileEvents) {
   const container = useRef<HTMLDivElement>(null);
+  // The latest handlers, without rendering the check again for each.
+  const handlers = useRef(events);
+  useEffect(() => {
+    handlers.current = events;
+  });
 
   useEffect(() => {
     let widgetId: string | null = null;
@@ -52,10 +69,15 @@ export function TurnstileWidget({ siteKey }: { siteKey: string }) {
           language: "pl",
           theme: "light",
           size: "flexible",
+          callback: () => handlers.current.onVerify?.(),
+          "expired-callback": () => handlers.current.onExpire?.(),
+          "error-callback": () => handlers.current.onError?.(),
+          "timeout-callback": () => handlers.current.onError?.(),
         });
       })
       .catch(() => {
         console.error("[booking] Turnstile could not load");
+        handlers.current.onError?.();
       });
     return () => {
       cancelled = true;
