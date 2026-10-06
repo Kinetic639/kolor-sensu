@@ -1,0 +1,66 @@
+# Every pull request and every push to the long-lived branches: the code
+# (format, types, lint, unit tests) and the database (the migrations from
+# scratch on a local Supabase in the runner, then every database test).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop, staging]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  code:
+    name: Code
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format
+        run: pnpm format:check
+      - name: Types
+        run: pnpm typecheck
+      - name: Lint
+        run: pnpm lint
+      - name: Unit tests
+        run: pnpm test:run
+
+  database:
+    name: Database
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.117.0
+      - name: Start Supabase (database, auth, storage, realtime)
+        run: >-
+          supabase start
+          -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,postgres-meta,supavisor
+      - name: Database tests
+        env:
+          DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          status=0
+          for test in supabase/tests/*.sql; do
+            if psql "$DB_URL" -X -q -v ON_ERROR_STOP=1 -f "$test" > /dev/null 2> error.log; then
+              echo "PASS $test"
+            else
+              echo "::error file=$test::$(tail -n 5 error.log | tr '\n' ' ')"
+              status=1
+            fi
+          done
+          exit $status

@@ -28,8 +28,14 @@ const nextConfig = {
   // copied here.
   async rewrites() {
     return [
-      { source: "/watercolor/:path*", destination: `${webUrl}/watercolor/:path*` },
-      { source: "/images/specjalista.svg", destination: `${webUrl}/images/specjalista.svg` },
+      {
+        source: "/watercolor/:path*",
+        destination: `${webUrl}/watercolor/:path*`,
+      },
+      {
+        source: "/images/specjalista.svg",
+        destination: `${webUrl}/images/specjalista.svg`,
+      },
     ];
   },
   experimental: {

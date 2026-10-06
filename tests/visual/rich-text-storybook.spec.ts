@@ -107,4 +107,3 @@ for (const story of [
     ).toBeVisible();
   });
 }
-
