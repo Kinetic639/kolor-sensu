@@ -25,10 +25,24 @@ const storagePatterns = supabaseUrl
     ]
   : [];
 
+// Search engines index production only (Vercel sets VERCEL_ENV to
+// "production" for main): DEV, staging and local runs ask them not to.
+const indexable = process.env.VERCEL_ENV === "production";
+
 /** @type {import("next").NextConfig} */
 const nextConfig = {
   transpilePackages: ["@repo/app-runtime", "@repo/ui"],
   typedRoutes: true,
+  async headers() {
+    return indexable
+      ? []
+      : [
+          {
+            source: "/:path*",
+            headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+          },
+        ];
+  },
   images: {
     // AVIF first (about 20% smaller than WebP; slower only on the first,
     // uncached request), WebP for browsers without AVIF.

@@ -7,6 +7,15 @@ const nextConfig = {
     "@repo/ui",
   ],
   typedRoutes: true,
+  // A private portal: never in search results, in any environment.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+    ];
+  },
   experimental: {
     // A page seen in the last 30 s (e.g. the table again after closing a
     // visit) comes back from the browser's memory instead of the server.
