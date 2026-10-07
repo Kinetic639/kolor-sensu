@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 590" width="650" height="590">
+  <defs>
+    <linearGradient id="ks-head" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="545">
+      <stop offset="0" stop-color="#2b4454"/>
+      <stop offset="0.55" stop-color="#6b8292"/>
+      <stop offset="1" stop-color="#93a5b2"/>
+    </linearGradient>
+    <linearGradient id="ks-face" gradientUnits="userSpaceOnUse" x1="0" y1="140" x2="0" y2="560">
+      <stop offset="0" stop-color="#f6ede8"/>
+      <stop offset="0.45" stop-color="#e9e2de"/>
+      <stop offset="1" stop-color="#a9b1b6"/>
+    </linearGradient>
+    <linearGradient id="ks-leaf" gradientUnits="userSpaceOnUse" x1="0" y1="300" x2="0" y2="575">
+      <stop offset="0" stop-color="#7da688"/>
+      <stop offset="1" stop-color="#97c392"/>
+    </linearGradient>
+    <clipPath id="ks-head-clip"><circle cx="328" cy="282" r="265"/></clipPath>
+    <path id="ks-leaf-left-shape" d="M12 296 C120 294 176 316 224 366 C276 420 314 492 326 568 C250 584 150 568 92 502 C40 442 14 384 12 296 Z"/>
+    <path id="ks-leaf-right-shape" d="M640 296 C532 294 476 316 428 366 C376 420 338 492 326 568 C402 584 502 568 560 502 C612 442 638 384 640 296 Z"/>
+    <clipPath id="ks-leaf-left-clip"><use href="#ks-leaf-left-shape"/></clipPath>
+    <clipPath id="ks-leaf-right-clip"><use href="#ks-leaf-right-shape"/></clipPath>
+  </defs>
+
+  <!-- Each part is its own group, so it can be animated on its own
+       (CSS transform-box: fill-box / transform-origin, or SMIL). -->
+  <g fill="none" stroke="#233b49" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+    <g id="head">
+      <circle cx="328" cy="282" r="265" fill="url(#ks-head)"/>
+      <!-- soft inner rim -->
+      <circle cx="328" cy="282" r="249" stroke="#ffffff" stroke-opacity="0.12" stroke-width="12"/>
+    </g>
+
+    <g id="face" clip-path="url(#ks-head-clip)">
+      <path fill="url(#ks-face)" d="M326 230 C320 172 284 135 212 135 C142 135 103 188 103 252 L106 590 L546 590 L549 252 C549 188 510 135 440 135 C368 135 332 172 326 230 Z"/>
+    </g>
+
+    <g id="eyes" stroke-width="14">
+      <path id="eye-left" d="M166 261 C182 244 214 242 238 258"/>
+      <path id="eye-right" d="M414 258 C438 242 470 244 486 261"/>
+    </g>
+
+    <g id="beak" stroke-width="13">
+      <path fill="#e7e0dc" d="M330 276 C349 276 355 294 347 307 L336 327 Q330 336 324 327 L313 307 C305 294 311 276 330 276 Z"/>
+    </g>
+
+    <g id="leaf-left">
+      <use href="#ks-leaf-left-shape" fill="url(#ks-leaf)" stroke="none"/>
+      <!-- darker band inside the edge -->
+      <use href="#ks-leaf-left-shape" clip-path="url(#ks-leaf-left-clip)" stroke-width="52" stroke-opacity="0.16"/>
+      <use href="#ks-leaf-left-shape"/>
+    </g>
+
+    <g id="leaf-right">
+      <use href="#ks-leaf-right-shape" fill="url(#ks-leaf)" stroke="none"/>
+      <use href="#ks-leaf-right-shape" clip-path="url(#ks-leaf-right-clip)" stroke-width="52" stroke-opacity="0.16"/>
+      <use href="#ks-leaf-right-shape"/>
+    </g>
+  </g>
+</svg>
