@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -5 650 600" width="650" height="600">
   <title>Kolor Sensu</title>
   <!-- Geometric, symmetric version of the logo (axis x = 325).
-       Head: an ellipse. Face: a heart - two circles a little apart, tangent
-       lines from their inner sides meeting in a V where the beak hangs, and
-       tangent lines from their outer sides down to the bottom of the head. Eyes: a mirrored wave.
+       Head: an ellipse. Face: two circles almost touching on the axis;
+       their inner sides meet in one line down to the beak, their outer
+       sides run on as straight lines down behind the leaves. Eyes: a mirrored wave.
        Leaves: arcs (circles stretched upwards) and a shared stem, with a round notch at the
        bottom where the feet show. The leaves read as slightly see-through:
        inside each leaf the head (fill and outline) is drawn again in greens.
@@ -20,9 +20,9 @@
     </g>
 
     <g id="face" clip-path="url(#ks-head)">
-      <path fill="#f3eae5" stroke="none" d="M325 272 L306.1 210.23 A112 112 0 1 0 111.97 313.49 L325 576.5 L538.03 313.49 A112 112 0 1 0 343.9 210.23 Z"/>
-      <path id="face-left" d="M325 272 L306.1 210.23 A112 112 0 1 0 111.97 313.49 L325 576.5"/>
-      <path id="face-right" d="M325 272 L343.9 210.23 A112 112 0 1 1 538.03 313.49 L325 576.5"/>
+      <path fill="#f3eae5" stroke="none" d="M325 248 L308.71 201 A105 105 0 0 0 105.52 250.01 L151.41 576.5 L498.59 576.5 L544.48 250.01 A105 105 0 0 0 341.29 201 Z"/>
+      <path id="face-left" d="M325 271 L325 248 L308.71 201 A105 105 0 0 0 105.52 250.01 L151.41 576.5"/>
+      <path id="face-right" d="M325 271 L325 248 L341.29 201 A105 105 0 0 1 544.48 250.01 L498.59 576.5"/>
     </g>
 
     <g id="eyes">
@@ -31,7 +31,7 @@
     </g>
 
     <g id="beak">
-      <path fill="#f3eae5" d="M309.8 296.61 A17 17 0 1 1 340.2 296.61 L325 327 Z"/>
+      <path fill="#f3eae5" d="M309.7 295.41 A17 17 0 1 1 340.3 295.41 L325 327 Z"/>
     </g>
 
     <g id="leaf-left">
