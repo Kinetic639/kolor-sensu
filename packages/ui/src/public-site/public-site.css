@@ -105,14 +105,16 @@
     will-change: transform;
   }
 
-  /* Optional decorative overlay in the caption's place (WatercolorImage
+  /* Optional decorative overlay at the lower right (WatercolorImage
      `mark`): the homepage's animated penguin (which brings its own motion),
-     lifted off the photo by a soft shadow. */
+     lifted off the photo by a soft shadow. It sits on the picture's bottom
+     edge, half of it hanging out below. */
   .ks-wc__mark {
     position: absolute;
-    right: 5%;
-    bottom: 12%;
+    right: 12%;
+    bottom: 0;
     z-index: 1;
+    translate: 0 50%;
     width: 26%;
     max-width: 13rem;
     pointer-events: none;
