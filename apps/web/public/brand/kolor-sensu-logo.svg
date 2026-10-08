@@ -1,28 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 565" width="650" height="565">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 590" width="650" height="590">
   <title>Kolor Sensu</title>
   <!-- Geometric, symmetric version of the logo (axis x = 325).
-       Head: a circle. Face: two circles on straight sides; tangents from
-       them meet in a heart notch, and one line runs on to the beak. Beak: a circle with
+       Head: a circle. Face: a heart - two circles touching on the axis,
+       the beak hanging from where they touch, and tangent lines from
+       their outer sides down to the bottom of the head. Beak: a circle with
        tangents to a point. Eyes: a mirrored wave. Leaves: circular arcs,
        with a round notch at the bottom where the feet show.
        The leaves read as slightly see-through: inside each leaf the head
        (fill and outline) is drawn again in greens.
        Every part has its own group and id for animation. -->
   <defs>
-    <clipPath id="ks-head"><circle cx="325" cy="282" r="270"/></clipPath>
-    <clipPath id="ks-leaf-left"><path d="M15 276 A277.86 277.86 0 0 1 325 552 A312.09 312.09 0 0 1 321 551.97 A31 31 0 0 0 265 546.18 A312.09 312.09 0 0 1 15 276 Z"/></clipPath>
-    <clipPath id="ks-leaf-right"><path d="M635 276 A277.86 277.86 0 0 0 325 552 A312.09 312.09 0 0 0 329 551.97 A31 31 0 0 1 385 546.18 A312.09 312.09 0 0 0 635 276 Z"/></clipPath>
+    <clipPath id="ks-head"><circle cx="325" cy="294" r="278"/></clipPath>
+    <clipPath id="ks-leaf-left"><path d="M15 296 A277.86 277.86 0 0 1 325 572 A312.09 312.09 0 0 1 321 571.97 A31 31 0 0 0 265 566.18 A312.09 312.09 0 0 1 15 296 Z"/></clipPath>
+    <clipPath id="ks-leaf-right"><path d="M635 296 A277.86 277.86 0 0 0 325 572 A312.09 312.09 0 0 0 329 571.97 A31 31 0 0 1 385 566.18 A312.09 312.09 0 0 0 635 296 Z"/></clipPath>
   </defs>
 
   <g fill="none" stroke="#233b49" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
     <g id="head">
-      <circle cx="325" cy="282" r="270" fill="#3e5767"/>
+      <circle cx="325" cy="294" r="278" fill="#3e5767"/>
     </g>
 
     <g id="face" clip-path="url(#ks-head)">
-      <path fill="#f3eae5" stroke="none" d="M101 552 L101 239 A108 108 0 0 1 308.46 196.92 L325 236 L341.54 196.92 A108 108 0 0 1 549 239 L549 552 Z"/>
-      <path id="face-left" d="M101 279.41 L101 239 A108 108 0 0 1 308.46 196.92 L325 236 L325 276"/>
-      <path id="face-right" d="M549 279.41 L549 239 A108 108 0 0 0 341.54 196.92 L325 236 L325 276"/>
+      <path fill="#f3eae5" stroke="none" d="M325 248 A110 110 0 1 0 127.74 314.97 L325 572 L522.26 314.97 A110 110 0 1 0 325 248 Z"/>
+      <path id="face-left" d="M325 248 A110 110 0 1 0 127.74 314.97 L325 572"/>
+      <path id="face-right" d="M325 248 A110 110 0 1 1 522.26 314.97 L325 572"/>
     </g>
 
     <g id="eyes">
@@ -31,33 +32,33 @@
     </g>
 
     <g id="beak">
-      <path fill="#f3eae5" d="M309.9 300.81 A17 17 0 1 1 340.1 300.81 L325 330 Z"/>
+      <path fill="#f3eae5" d="M309.8 272.61 A17 17 0 1 1 340.2 272.61 L325 303 Z"/>
     </g>
 
     <g id="leaf-left">
-      <path fill="#9dc495" d="M15 276 A277.86 277.86 0 0 1 325 552 A312.09 312.09 0 0 1 321 551.97 A31 31 0 0 0 265 546.18 A312.09 312.09 0 0 1 15 276 Z"/>
+      <path fill="#9dc495" d="M15 296 A277.86 277.86 0 0 1 325 572 A312.09 312.09 0 0 1 321 571.97 A31 31 0 0 0 265 566.18 A312.09 312.09 0 0 1 15 296 Z"/>
       <!-- the head seen through the leaf -->
       <g clip-path="url(#ks-leaf-left)">
-        <circle cx="325" cy="282" r="270" fill="#82a787" stroke="#5a7b67"/>
+        <circle cx="325" cy="294" r="278" fill="#82a787" stroke="#5a7b67"/>
       </g>
-      <path stroke="#233b49" d="M15 276 A277.86 277.86 0 0 1 325 552 A312.09 312.09 0 0 1 321 551.97 A31 31 0 0 0 265 546.18 A312.09 312.09 0 0 1 15 276 Z"/>
+      <path stroke="#233b49" d="M15 296 A277.86 277.86 0 0 1 325 572 A312.09 312.09 0 0 1 321 571.97 A31 31 0 0 0 265 566.18 A312.09 312.09 0 0 1 15 296 Z"/>
     </g>
 
     <g id="leaf-right">
-      <path fill="#9dc495" d="M635 276 A277.86 277.86 0 0 0 325 552 A312.09 312.09 0 0 0 329 551.97 A31 31 0 0 1 385 546.18 A312.09 312.09 0 0 0 635 276 Z"/>
+      <path fill="#9dc495" d="M635 296 A277.86 277.86 0 0 0 325 572 A312.09 312.09 0 0 0 329 571.97 A31 31 0 0 1 385 566.18 A312.09 312.09 0 0 0 635 296 Z"/>
       <!-- the head seen through the leaf -->
       <g clip-path="url(#ks-leaf-right)">
-        <circle cx="325" cy="282" r="270" fill="#82a787" stroke="#5a7b67"/>
+        <circle cx="325" cy="294" r="278" fill="#82a787" stroke="#5a7b67"/>
       </g>
-      <path stroke="#233b49" d="M635 276 A277.86 277.86 0 0 0 325 552 A312.09 312.09 0 0 0 329 551.97 A31 31 0 0 1 385 546.18 A312.09 312.09 0 0 0 635 276 Z"/>
+      <path stroke="#233b49" d="M635 296 A277.86 277.86 0 0 0 325 572 A312.09 312.09 0 0 0 329 571.97 A31 31 0 0 1 385 566.18 A312.09 312.09 0 0 0 635 296 Z"/>
     </g>
 
     <g id="feet" fill="#1a2b35" stroke="none">
       <!-- outline under the foot, then the dark foot itself -->
-      <path fill="#233b49" d="M261.54 554.67 A31 31 0 0 1 322.65 560.99 A321.09 321.09 0 0 1 261.54 554.67 Z"/>
-      <path id="foot-left" d="M272.81 550.65 A22 22 0 0 1 312.44 554.75 A315.09 315.09 0 0 1 272.81 550.65 Z"/>
-      <path fill="#233b49" d="M388.46 554.67 A31 31 0 0 0 327.35 560.99 A321.09 321.09 0 0 0 388.46 554.67 Z"/>
-      <path id="foot-right" d="M377.19 550.65 A22 22 0 0 0 337.56 554.75 A315.09 315.09 0 0 0 377.19 550.65 Z"/>
+      <path fill="#233b49" d="M261.54 574.67 A31 31 0 0 1 322.65 580.99 A321.09 321.09 0 0 1 261.54 574.67 Z"/>
+      <path id="foot-left" d="M272.81 570.65 A22 22 0 0 1 312.44 574.75 A315.09 315.09 0 0 1 272.81 570.65 Z"/>
+      <path fill="#233b49" d="M388.46 574.67 A31 31 0 0 0 327.35 580.99 A321.09 321.09 0 0 0 388.46 574.67 Z"/>
+      <path id="foot-right" d="M377.19 570.65 A22 22 0 0 0 337.56 574.75 A315.09 315.09 0 0 0 377.19 570.65 Z"/>
     </g>
   </g>
 </svg>
