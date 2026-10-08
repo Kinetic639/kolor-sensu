@@ -3,7 +3,7 @@
   <!-- Geometric, symmetric version of the logo (axis x = 325).
        Head: an ellipse. Face: arcs only - per side a cheek circle, an
        inner arc running on from it to the top of the beak, and an outer
-       arc running on from it down to the bottom of the head. Eyes: a mirrored wave.
+       arc running on from it down behind the leaf. Eyes: a mirrored wave.
        Leaves: arcs (circles stretched upwards) and a shared stem, with a round notch at the
        bottom where the feet show. The leaves read as slightly see-through:
        inside each leaf the head (fill and outline) is drawn again in greens.
@@ -20,9 +20,9 @@
     </g>
 
     <g id="face" clip-path="url(#ks-head)">
-      <path fill="#f3eae5" stroke="none" d="M325 576.5 A374.08 374.08 0 0 1 104.5 235.4 A105 105 0 0 1 297.69 178.42 A170.6 170.6 0 0 1 325 271 A170.6 170.6 0 0 1 352.31 178.42 A105 105 0 0 1 545.5 235.4 A374.08 374.08 0 0 1 325 576.5 Z"/>
-      <path id="face-left" d="M325 576.5 A374.08 374.08 0 0 1 104.5 235.4 A105 105 0 0 1 297.69 178.42 A170.6 170.6 0 0 1 325 271"/>
-      <path id="face-right" d="M325 576.5 A374.08 374.08 0 0 0 545.5 235.4 A105 105 0 0 0 352.31 178.42 A170.6 170.6 0 0 0 325 271"/>
+      <path fill="#f3eae5" stroke="none" d="M325 576.5 L143.14 360 A155 155 0 0 1 111.84 196.83 A105 105 0 0 1 297.69 178.42 A170.6 170.6 0 0 1 325 271 A170.6 170.6 0 0 1 352.31 178.42 A105 105 0 0 1 538.16 196.83 A155 155 0 0 1 506.86 360 Z"/>
+      <path id="face-left" d="M325 576.5 L143.14 360 A155 155 0 0 1 111.84 196.83 A105 105 0 0 1 297.69 178.42 A170.6 170.6 0 0 1 325 271 L325 278"/>
+      <path id="face-right" d="M325 576.5 L506.86 360 A155 155 0 0 0 538.16 196.83 A105 105 0 0 0 352.31 178.42 A170.6 170.6 0 0 0 325 271 L325 278"/>
     </g>
 
     <g id="eyes">
@@ -31,7 +31,7 @@
     </g>
 
     <g id="beak">
-      <path fill="#f3eae5" d="M309.7 295.41 A17 17 0 1 1 340.3 295.41 L325 327 Z"/>
+      <path fill="#f3eae5" d="M309.7 302.41 A17 17 0 1 1 340.3 302.41 L325 334 Z"/>
     </g>
 
     <g id="leaf-left">
