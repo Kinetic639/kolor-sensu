@@ -1,6 +1,8 @@
 import { render } from "@testing-library/react";
+import { gsap } from "gsap";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { INTRO_HANDOFF } from "./intro-motion";
 import { introRemaining, watchReveal } from "./reveal-support";
 import { introStorageKey, SiteIntro } from "./site-intro";
 import { SiteLayout } from "./site-layout";
@@ -43,9 +45,27 @@ describe("SiteIntro", () => {
       /^<div id="ks-intro" class="ks-intro" aria-hidden="true">.*<\/div><script>/,
     );
     expect(html).not.toContain("data-intro");
-    // Not preloaded or fetched while hidden: returning visitors pay nothing.
-    expect(html).toContain('loading="lazy"');
     expect(html).toContain(introStorageKey);
+  });
+
+  it("draws the closed bud and the greeting in the markup, for the first paint", () => {
+    const { container } = render(<SiteIntro />);
+    const intro = container.querySelector<HTMLElement>(".ks-intro")!;
+    // The penguin and its bud: two top and two middle petals, turned in.
+    expect(intro.querySelector("svg.ks-intro__penguin")).not.toBeNull();
+    const petals = intro.querySelectorAll(".ks-intro__petal");
+    expect(petals).toHaveLength(4);
+    for (const petal of petals) {
+      expect(petal.getAttribute("transform")).toMatch(/rotate\(-?\d/);
+    }
+    expect(intro.querySelector(".ks-intro__centre-leaf")).not.toBeNull();
+    // "Witaj", one span per letter for the motion.
+    expect(intro.querySelector(".ks-intro__greeting")).toHaveTextContent(
+      "Witaj",
+    );
+    expect(intro.querySelectorAll(".ks-intro__letter")).toHaveLength(5);
+    // Not playing: nothing for the motion to do.
+    expect(intro).not.toHaveAttribute("data-motion");
   });
 
   it("comes first in the layout, before the skip link", () => {
@@ -104,14 +124,35 @@ describe("SiteIntro", () => {
   });
 });
 
+describe("IntroMotion", () => {
+  it("takes over a playing intro and records when its paper starts to fade", () => {
+    vi.spyOn(performance, "now").mockReturnValue(500);
+    const { container, unmount } = render(<SiteIntro replay />);
+    const intro = container.querySelector<HTMLElement>(".ks-intro")!;
+    expect(intro.dataset.motion).toBe("on");
+    expect(Number(intro.dataset.introEnd)).toBe(500 + INTRO_HANDOFF * 1000);
+    // The eyes morph by tweening their path data.
+    const eye = intro.querySelector(".ks-intro__eye")!;
+    expect(gsap.getTweensOf(eye).length).toBeGreaterThan(0);
+    unmount();
+  });
+
+  it("leaves an intro that does not play alone", () => {
+    const { container } = render(<SiteIntro />);
+    const intro = container.querySelector<HTMLElement>(".ks-intro")!;
+    expect(intro).not.toHaveAttribute("data-motion");
+    expect(intro).not.toHaveAttribute("data-intro-end");
+  });
+});
+
 describe("reveals and the intro", () => {
   it("hold a visible reveal back until the intro starts to fade", () => {
     vi.useFakeTimers();
     vi.spyOn(performance, "now").mockReturnValue(300);
     const { container } = render(<SiteIntro replay />);
     const intro = container.querySelector<HTMLElement>(".ks-intro")!;
-    intro.dataset.introAt = "200";
-    // Starts at 200 ms, hands over at 1.3 s: 1 s from now.
+    // The motion recorded when the paper starts to fade: 1 s from now.
+    intro.dataset.introEnd = "1300";
     expect(introRemaining()).toBe(1000);
 
     vi.stubGlobal("IntersectionObserver", undefined);
@@ -120,7 +161,37 @@ describe("reveals and the intro", () => {
     watchReveal(document.body, { threshold: 0.3, near, visible });
     expect(near).toHaveBeenCalledOnce();
     expect(visible).not.toHaveBeenCalled();
+    vi.spyOn(performance, "now").mockReturnValue(1300);
     vi.advanceTimersByTime(1000);
+    expect(visible).toHaveBeenCalledOnce();
+    vi.unstubAllGlobals();
+  });
+
+  it("wait for the stylesheet's fallback fade while the motion has not started", () => {
+    vi.spyOn(performance, "now").mockReturnValue(300);
+    const { container } = render(<SiteIntro replay />);
+    const intro = container.querySelector<HTMLElement>(".ks-intro")!;
+    delete intro.dataset.introEnd;
+    intro.dataset.introAt = "200";
+    // Started at 200 ms, the fallback fade begins at 4.2 s.
+    expect(introRemaining()).toBe(3900);
+  });
+
+  it("wait longer when the intro's end moves while they wait", () => {
+    vi.useFakeTimers();
+    vi.spyOn(performance, "now").mockReturnValue(0);
+    const { container } = render(<SiteIntro replay />);
+    const intro = container.querySelector<HTMLElement>(".ks-intro")!;
+    intro.dataset.introEnd = "500";
+    vi.stubGlobal("IntersectionObserver", undefined);
+    const visible = vi.fn();
+    watchReveal(document.body, { threshold: 0.3, near: vi.fn(), visible });
+    intro.dataset.introEnd = "900";
+    vi.spyOn(performance, "now").mockReturnValue(500);
+    vi.advanceTimersByTime(500);
+    expect(visible).not.toHaveBeenCalled();
+    vi.spyOn(performance, "now").mockReturnValue(900);
+    vi.advanceTimersByTime(400);
     expect(visible).toHaveBeenCalledOnce();
     vi.unstubAllGlobals();
   });
