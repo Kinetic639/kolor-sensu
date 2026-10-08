@@ -179,7 +179,8 @@ function IntroReplay() {
 }
 
 /**
- * The first-visit intro (about 1.5 s), over the page it uncovers. On the
+ * The first-visit intro (about 4.4 s): the bud opens, the penguin rises
+ * out of it and "Witaj" writes itself in, over the page it uncovers. On the
  * site it plays once per visitor, never under reduced motion, and the
  * page's reveals start as it fades.
  */

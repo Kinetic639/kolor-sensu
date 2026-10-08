@@ -11,6 +11,7 @@
   "scripts": {
     "generate:watercolor": "node scripts/generate-watercolor-masks.mjs && node scripts/generate-photo-mask.mjs && node scripts/generate-paint-matte.mjs && node scripts/generate-watercolor-splash.mjs && node scripts/generate-splash-matte.mjs && node scripts/generate-offer-matte.mjs",
     "generate:brand": "node scripts/generate-brand-icons.mjs",
+    "generate:intro": "node scripts/generate-intro-penguin.mjs",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit"
   },

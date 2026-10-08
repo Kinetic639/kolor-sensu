@@ -12,8 +12,6 @@
 //   apps/web/public/brand/logo-mark.png
 //                                    the mark for the site header, 2x of its
 //                                    largest rendered size
-//   apps/web/public/brand/logo-intro.png
-//                                    the larger mark of the first-visit intro
 //
 // Next.js picks the three app/ files up by file convention and writes the
 // <link> tags itself. The logo is not square (650 x 590): it is centred on a
@@ -100,16 +98,7 @@ const mark = await sharp(source)
   .toBuffer({ resolveWithObject: true });
 writeFileSync(resolve(web, "public/brand/logo-mark.png"), mark.data);
 
-// First-visit intro (SiteIntro): 96 CSS px tall, so 192 px.
-const intro = await sharp(source)
-  .trim()
-  .resize({ height: 192 })
-  .png({ compressionLevel: 9, palette: true, quality: 95, effort: 10 })
-  .toBuffer({ resolveWithObject: true });
-writeFileSync(resolve(web, "public/brand/logo-intro.png"), intro.data);
-
 stdout.write(
   `favicon.ico (16, 32, 48), icon.png 512, apple-icon.png 180, ` +
-    `logo-mark.png ${mark.info.width} x ${mark.info.height}, ` +
-    `logo-intro.png ${intro.info.width} x ${intro.info.height}\n`,
+    `logo-mark.png ${mark.info.width} x ${mark.info.height}\n`,
 );
