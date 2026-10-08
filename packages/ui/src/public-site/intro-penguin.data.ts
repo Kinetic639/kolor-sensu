@@ -3,7 +3,7 @@
 // logo (or the intro's eyes and bud there) and run
 // `pnpm --filter @repo/design-system generate:intro`.
 //
-// The first-visit intro's penguin (site-intro.tsx), in the logo's own
+// The animated penguin (site-intro.tsx, penguin-loader.tsx), in the logo's own
 // coordinates (axis x = 325): its parts, the three states of the
 // eyes (same commands, so they morph), the bud's centre leaf, the closed
 // bud's pose and the colours.
@@ -89,5 +89,7 @@ export const introPenguin = {
     head: "#3e5767",
     face: "#f3eae5",
     leaf: "#9dc495",
+    leafHead: "#82a787",
+    leafLine: "#5a7b67",
   },
 } as const;

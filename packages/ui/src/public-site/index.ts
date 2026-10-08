@@ -28,6 +28,8 @@ export type { HeroPoint, HeroPointsProps } from "./hero-points";
 export { HeroSection } from "./hero-section";
 export type { HeroAction, HeroSectionProps } from "./hero-section";
 export { OfferSection } from "./offer-section";
+export { PenguinLoader } from "./penguin-loader";
+export type { PenguinLoaderProps } from "./penguin-loader";
 export type { OfferSectionProps } from "./offer-section";
 export { OfferTile } from "./offer-tile";
 export {

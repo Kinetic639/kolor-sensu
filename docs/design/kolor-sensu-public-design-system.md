@@ -157,7 +157,9 @@ WatercolorImage (.ks-wc, aspect-ratio box)
 │              box by about 9 % either side and 5 % above and below
 ├── photo      the uploaded photo, cropped by the component and cut by the
 │              dry-brush photo mask
-└── caption    optional handwritten line (real text)
+├── caption    optional handwritten line (real text)
+└── mark       optional decorative overlay in the caption's place (the
+               homepage's animated penguin), aria-hidden
 ```
 
 ```tsx
@@ -209,6 +211,14 @@ photos without an image editor.
 **Caption.** Real text in `<figcaption>`, lower right, rotated, one or two
 words per line, with a brush underline. A soft text shadow keeps white text
 readable on any photo.
+
+**Mark.** Instead of (or besides) the caption, `mark` puts a decorative
+overlay in the same place, hidden from assistive technology and lifted off
+the photo by a soft shadow; in the entrance animation it appears with the
+caption's timing. The homepage hero uses it for `PenguinLoader`: the logo's
+penguin in a 4.4 s loop (it blinks, smiles and flaps its leaves), all SVG
+and CSS, no client JavaScript; it plays only while marked
+`data-animation="loop"`, and under reduced motion it is the still logo.
 
 ## 7. Mask technique
 
@@ -499,6 +509,7 @@ Only what the references repeat:
 | `SectionEyebrow`              | "CENTRUM PSYCHOTERAPII I ROZWOJU"          |
 | `EditorialHeading`            | Serif H1/H2 with optional accent line      |
 | `HeroSection`, `HeroPoints`   | Homepage first screen, reassurance row     |
+| `PenguinLoader`               | The logo's penguin, alive, over the hero   |
 | `FeatureSection`              | "Nasze gabinety", "Warsztaty i rozwój"     |
 | `PrimaryButton`               | Solid green pill "Umów wizytę →"           |
 | `SecondaryButton`             | Outline pill "Poznaj nas"                  |

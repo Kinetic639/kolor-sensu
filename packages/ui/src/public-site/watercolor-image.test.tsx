@@ -270,6 +270,7 @@ describe("WatercolorImage reveal styles", () => {
       ".ks-wc__backdrop",
       ".ks-wc__img",
       ".ks-wc__caption",
+      ".ks-wc__mark",
     ]) {
       const { selector, context } = paintingRule(layer);
       expect(selector).toContain(':not([data-reveal="done"])');
@@ -299,16 +300,18 @@ describe("WatercolorImage reveal styles", () => {
       expect(body).not.toMatch(
         /clip-path|filter|blur|mask-(size|position|composite)|transform|translate|scale|url\(/,
       );
-      if (!selector.endsWith(".ks-wc__caption")) {
+      if (!/\.ks-wc__(caption|mark)$/.test(selector)) {
         expect(body).not.toContain("opacity");
       }
     }
   });
 
-  it("shows the caption late, with a fade and no movement", () => {
-    expect(paintingRule(".ks-wc__caption").body).toBe(
-      "opacity: var(--ks-reveal-caption, 0);",
-    );
+  it("shows the caption (or the mark in its place) late, with a fade and no movement", () => {
+    for (const layer of [".ks-wc__caption", ".ks-wc__mark"]) {
+      expect(paintingRule(layer).body).toBe(
+        "opacity: var(--ks-reveal-caption, 0);",
+      );
+    }
   });
 
   it("keeps the matte out of the layout without switching it off", () => {
