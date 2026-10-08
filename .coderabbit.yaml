@@ -1,0 +1,78 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit's review of every pull request: in Polish, quiet on style
+# (Prettier and ESLint run in CI), loud where this app can hurt someone:
+# money, who may see or change what in the database, personal (mental
+# health) data, and accessibility.
+language: "pl-PL"
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "develop"
+      - "staging"
+      - "main"
+  path_filters:
+    - "!pnpm-lock.yaml"
+    - "!**/coverage/**"
+    - "!**/storybook-static/**"
+    # Generated: the database's types, and the dump the database starts from.
+    - "!packages/contracts/src/database.types.ts"
+    - "!supabase/migrations/20261006120000_baseline.sql"
+  path_instructions:
+    - path: "supabase/migrations/**"
+      instructions: |
+        Migrations run on DEV, staging and production with real data:
+        - Every SECURITY DEFINER function sets `search_path = ''` and checks
+          the caller's role (public.has_role) before acting; flag any that
+          does not.
+        - New tables: RLS enabled, `REVOKE ALL ... FROM PUBLIC, anon,
+          authenticated` and only the grants the app needs; new functions
+          revoked from PUBLIC/anon unless meant for visitors.
+        - The previous app version must keep working after it (add first,
+          remove later): flag dropped or renamed columns and functions the
+          apps still use, and changed function signatures without updating
+          their callers.
+        - Flag data changes that cannot be undone, locks on large tables,
+          and anything that leaks clients' personal data to specialists or
+          visitors.
+    - path: "supabase/tests/**"
+      instructions: |
+        Database tests run in one transaction rolled back at the end, on an
+        empty database in CI and on DEV with data in it: flag assertions that
+        depend on other rows in the database (count everything, first row of
+        a whole table) instead of the test's own data.
+    - path: "apps/web/src/{app/api,features/booking,features/payments}/**"
+      instructions: |
+        Bookings and Stripe payments:
+        - Stripe webhooks verify the signature and are idempotent (the same
+          event twice changes nothing); a payment confirms the visit exactly
+          once; refunds never exceed what was paid.
+        - Secrets (SUPABASE_SECRET_KEY, STRIPE_SECRET_KEY, CRON_SECRET,
+          RESEND_API_KEY) stay on the server; never `NEXT_PUBLIC_`.
+        - No personal data (names, e-mails, phones, intake answers) in logs
+          or error messages sent to the client.
+        - Inputs from the client are validated (zod) before use.
+    - path: "apps/{admin,specialist}/src/**"
+      instructions: |
+        Portals: every server action and loader checks the user's role on
+        the server; a specialist sees only their own visits and clients and
+        never payments. Client-side checks alone are not enough.
+    - path: "{apps,packages}/**/*.tsx"
+      instructions: |
+        The UI is in Polish, for clients of a psychotherapy centre: flag
+        unclear or careless copy. Check accessibility: labels for controls,
+        keyboard use, focus, `aria-*` that match the state, and colour not
+        being the only signal.
+    - path: "**/*.test.{ts,tsx}"
+      instructions: |
+        Tests should check behaviour a user or the database can see, not
+        implementation details, and not depend on timing (wait for the state
+        instead of a fixed delay).
+chat:
+  auto_reply: true
