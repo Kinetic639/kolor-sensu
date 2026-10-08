@@ -1,4 +1,8 @@
-import type { FaqItem, HeroSectionProps } from "@repo/ui/public-site";
+import {
+  type FaqItem,
+  type HeroSectionProps,
+  PenguinLoader,
+} from "@repo/ui/public-site";
 import { Heart, House, Leaf, Users } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -60,7 +64,7 @@ export const hero = {
   image: {
     src: "/images/gabinet-fotel.webp",
     alt: "Jasny gabinet z fotelem, stolikiem i roślinami przy dużym oknie",
-    caption: "Przestrzeń dla ważnych rozmów",
+    mark: <PenguinLoader />,
   },
 } satisfies HeroSectionProps;
 

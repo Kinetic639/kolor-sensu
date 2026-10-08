@@ -105,6 +105,20 @@
     will-change: transform;
   }
 
+  /* Optional decorative overlay in the caption's place (WatercolorImage
+     `mark`): the homepage's animated penguin (which brings its own motion),
+     lifted off the photo by a soft shadow. */
+  .ks-wc__mark {
+    position: absolute;
+    right: 5%;
+    bottom: 12%;
+    z-index: 1;
+    width: 26%;
+    max-width: 13rem;
+    pointer-events: none;
+    filter: drop-shadow(0 0.5rem 0.75rem rgb(22 48 47 / 0.28));
+  }
+
   .ks-wc__underline {
     display: block;
     width: 80%;
@@ -150,6 +164,12 @@
          fading it in. */
       .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])
         .ks-wc__caption {
+        opacity: var(--ks-reveal-caption, 0);
+      }
+
+      /* Nor is the mark in its place: it appears the same way. */
+      .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])
+        .ks-wc__mark {
         opacity: var(--ks-reveal-caption, 0);
       }
     }
@@ -628,6 +648,116 @@
     to {
       opacity: 0;
       visibility: hidden;
+    }
+  }
+
+  /* --------------------------------------------------------- PenguinLoader */
+
+  /* The logo's penguin in a 4.4 s loop (penguin-loader.tsx): the eyes
+     (SMIL, in the SVG) blink and smile; here the body gives a small squash
+     as it smiles, then the leaves flap twice like wings. Everything turns
+     and scales about the point where the leaves meet (set inline, in the
+     SVG's own units). Only while marked data-animation="loop"; without it
+     the penguin is the still logo. The head seen through a leaf (__unflap) turns back
+     by as much as its leaf, so it stays under the real head. */
+  .ks-penguin {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .ks-penguin__body,
+  .ks-penguin__leaf,
+  .ks-penguin__unflap {
+    transform-box: view-box;
+  }
+
+  .ks-penguin[data-animation="loop"] .ks-penguin__eyes-still {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-penguin[data-animation="loop"] .ks-penguin__body {
+      animation: ks-penguin-perk 4.4s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+    }
+
+    .ks-penguin[data-animation="loop"] .ks-penguin__leaf[data-side="left"],
+    .ks-penguin[data-animation="loop"] .ks-penguin__unflap[data-side="right"] {
+      animation: ks-penguin-flap-left 4.4s cubic-bezier(0.45, 0, 0.25, 1)
+        infinite;
+    }
+
+    .ks-penguin[data-animation="loop"] .ks-penguin__leaf[data-side="right"],
+    .ks-penguin[data-animation="loop"] .ks-penguin__unflap[data-side="left"] {
+      animation: ks-penguin-flap-right 4.4s cubic-bezier(0.45, 0, 0.25, 1)
+        infinite;
+    }
+  }
+
+  /* Reduced motion: no CSS motion, and the logo's still smile instead of
+     the eyes' own (SMIL) animation. */
+  @media (prefers-reduced-motion: reduce) {
+    .ks-penguin[data-animation="loop"] .ks-penguin__eyes {
+      display: none;
+    }
+
+    .ks-penguin[data-animation="loop"] .ks-penguin__eyes-still {
+      display: inline;
+    }
+  }
+
+  @keyframes ks-penguin-perk {
+    0%,
+    46% {
+      transform: scale(1);
+    }
+    52% {
+      transform: scale(1.025, 0.975);
+    }
+    58%,
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes ks-penguin-flap-left {
+    0%,
+    60% {
+      transform: rotate(0);
+    }
+    65% {
+      transform: rotate(6deg);
+    }
+    70% {
+      transform: rotate(-1deg);
+    }
+    75% {
+      transform: rotate(5deg);
+    }
+    81%,
+    100% {
+      transform: rotate(0);
+    }
+  }
+
+  @keyframes ks-penguin-flap-right {
+    0%,
+    60% {
+      transform: rotate(0);
+    }
+    65% {
+      transform: rotate(-6deg);
+    }
+    70% {
+      transform: rotate(1deg);
+    }
+    75% {
+      transform: rotate(-5deg);
+    }
+    81%,
+    100% {
+      transform: rotate(0);
     }
   }
 

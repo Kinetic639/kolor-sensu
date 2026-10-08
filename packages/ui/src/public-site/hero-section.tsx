@@ -15,7 +15,8 @@ import { WatercolorImage, type WatercolorImageProps } from "./watercolor-image";
 //   picture      WatercolorImage, its backdrop painted in with brush strokes
 //                and its photo spreading in blooms when it first comes into
 //                view (animationPreset="watercolor-reveal"), with
-//                its handwritten caption
+//                its handwritten caption or, in its place, a decorative
+//                mark (the homepage's animated penguin)
 //
 // Text first on phones, side by side from 64 rem, the picture reaching into
 // the right margin.
@@ -38,6 +39,8 @@ export interface HeroSectionProps {
     src: ImageProps["src"];
     alt: string;
     caption?: ReactNode;
+    /** Decorative overlay in the caption's place (WatercolorImage `mark`). */
+    mark?: ReactNode;
     objectPosition?: string;
   };
   /** The picture's entrance animation (WatercolorImage). */
@@ -104,6 +107,7 @@ export function HeroSection({
         src={image.src}
         alt={image.alt}
         caption={image.caption}
+        mark={image.mark}
         objectPosition={image.objectPosition}
         animationPreset={animationPreset}
         reducedMotionMode={reducedMotionMode}
