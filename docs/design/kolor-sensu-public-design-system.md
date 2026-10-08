@@ -543,17 +543,23 @@ islands hydrate: the desktop dropdown, the phone menu and the cookie notice.
   client-only (never in the first paint, no layout shift); the choice is
   kept in localStorage and passed to the app before any analytics load.
 - **First-visit intro:** `SiteIntro` (first in `SiteLayout`, `intro`
-  prop): paper, a pink and sage watercolor patch spreading, the owl mark,
-  the name, a pink brush swash drawn under it, the tagline, then the paper
-  fades away (about 1.5 s). Pure CSS from the first paint, no JavaScript
-  bundle needed; an inline script before the first paint lets it play only
-  on the first visit (localStorage `ks-intro`), never under reduced motion
-  or where storage is blocked. It takes no clicks or focus and is hidden
-  from assistive technology; the page underneath is already rendered, so
-  it is not a preloader and does not delay LCP. The page's reveals start as
-  it fades (1.1 s; `introRemaining` in `reveal-support.ts`). Returning
-  visitors download nothing for it (lazy image, CSS images of a hidden
-  element).
+  prop): on paper, over a pink and sage watercolor patch, a closed flower
+  bud (the logo's leaves as petals) opens and the penguin rises out of it;
+  a big handwritten "Witaj" (`--font-hand`) writes itself in, letter by
+  letter, with a pink brush swash under it, then the name and tagline; the
+  penguin blinks and smiles, and the paper fades away (about 4.4 s). The
+  first paint already shows the paper and the closed bud (markup and CSS);
+  the motion is one GSAP timeline (`IntroMotion`) that starts as soon as it
+  hydrates, and if it never does the stylesheet fades the paper out after
+  4 s. The penguin's shapes come from the logo
+  (`intro-penguin.data.ts`, `pnpm --filter @repo/design-system
+generate:intro`). An inline script before the first paint lets it play
+  only on the first visit (localStorage `ks-intro`), never under reduced
+  motion or where storage is blocked. It takes no clicks or focus and is
+  hidden from assistive technology; the page underneath is already
+  rendered, so it is not a preloader and does not delay LCP. The page's
+  reveals start as it fades (`introRemaining` in `reveal-support.ts`,
+  which reads the moment the motion records).
 - **SEO:** one H1 per page; landmarks and labelled navigations;
   structured data as JSON-LD (`JsonLd`, `<` escaped): `MedicalBusiness`
   for the centre (from `SiteLayout` when `siteUrl` is set),

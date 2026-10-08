@@ -44,7 +44,7 @@ describe("WatercolorImage on the server", () => {
     }
   });
 
-  it("keeps client-only code to small islands: reveals, caption motion, navigation, cookie notice, room gallery", () => {
+  it("keeps client-only code to small islands: reveals, caption motion, intro motion, navigation, cookie notice, room gallery", () => {
     const clientFiles = readdirSync(here)
       .filter(
         (file) => /\.tsx?$/.test(file) && !/\.(test|stories)\./.test(file),
@@ -56,6 +56,7 @@ describe("WatercolorImage on the server", () => {
 
     expect(clientFiles).toEqual([
       "cookie-consent.tsx",
+      "intro-motion.tsx",
       "offer-reveal.tsx",
       "room-gallery.tsx",
       "site-mobile-nav.tsx",
