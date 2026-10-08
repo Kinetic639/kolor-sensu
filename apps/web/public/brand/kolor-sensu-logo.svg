@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -5 650 600" width="650" height="600">
   <title>Kolor Sensu</title>
   <!-- Geometric, symmetric version of the logo (axis x = 325).
-       Head: an ellipse. Face: a heart - two circles touching on the axis,
-       the beak hanging from where they touch, and tangent lines from their
-       outer sides down to the bottom of the head. Eyes: a mirrored wave.
-       Leaves: circular arcs and a shared stem, with a round notch at the
+       Head: an ellipse. Face: a heart - two circles a little apart, tangent
+       lines from their inner sides meeting in a V where the beak hangs, and
+       tangent lines from their outer sides down to the bottom of the head. Eyes: a mirrored wave.
+       Leaves: arcs (circles stretched upwards) and a shared stem, with a round notch at the
        bottom where the feet show. The leaves read as slightly see-through:
        inside each leaf the head (fill and outline) is drawn again in greens.
        Every part has its own group and id for animation. -->
   <defs>
     <clipPath id="ks-head"><ellipse cx="325" cy="293.5" rx="266" ry="283"/></clipPath>
-    <clipPath id="ks-leaf-left"><path d="M16.42 310.06 A314.4 314.4 0 0 1 325 537.67 L325 576.49 A266.7 266.7 0 0 1 321 577.09 A31 31 0 0 0 265 579.19 A266.7 266.7 0 0 1 16.42 310.06 Z"/></clipPath>
-    <clipPath id="ks-leaf-right"><path d="M633.58 310.06 A314.4 314.4 0 0 0 325 537.67 L325 576.49 A266.7 266.7 0 0 0 329 577.09 A31 31 0 0 1 385 579.19 A266.7 266.7 0 0 0 633.58 310.06 Z"/></clipPath>
+    <clipPath id="ks-leaf-left"><path d="M16.42 291.42 A314.4 336.41 0 0 1 325 534.95 L325 576.49 A266.7 285.37 0 0 1 321 577.14 A31 33.17 0 0 0 265 579.37 A266.7 285.37 0 0 1 16.42 291.42 Z"/></clipPath>
+    <clipPath id="ks-leaf-right"><path d="M633.58 291.42 A314.4 336.41 0 0 0 325 534.95 L325 576.49 A266.7 285.37 0 0 0 329 577.14 A31 33.17 0 0 1 385 579.37 A266.7 285.37 0 0 0 633.58 291.42 Z"/></clipPath>
   </defs>
 
   <g fill="none" stroke="#233b49" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
@@ -20,9 +20,9 @@
     </g>
 
     <g id="face" clip-path="url(#ks-head)">
-      <path fill="#f3eae5" stroke="none" d="M325 243 A112 112 0 1 0 123.7 310.6 L325 576.5 L526.3 310.6 A112 112 0 1 0 325 243 Z"/>
-      <path id="face-left" d="M325 243 A112 112 0 1 0 123.7 310.6 L325 576.5"/>
-      <path id="face-right" d="M325 243 A112 112 0 1 1 526.3 310.6 L325 576.5"/>
+      <path fill="#f3eae5" stroke="none" d="M325 272 L306.1 210.23 A112 112 0 1 0 111.97 313.49 L325 576.5 L538.03 313.49 A112 112 0 1 0 343.9 210.23 Z"/>
+      <path id="face-left" d="M325 272 L306.1 210.23 A112 112 0 1 0 111.97 313.49 L325 576.5"/>
+      <path id="face-right" d="M325 272 L343.9 210.23 A112 112 0 1 1 538.03 313.49 L325 576.5"/>
     </g>
 
     <g id="eyes">
@@ -31,33 +31,33 @@
     </g>
 
     <g id="beak">
-      <path fill="#f3eae5" d="M309.8 267.61 A17 17 0 1 1 340.2 267.61 L325 298 Z"/>
+      <path fill="#f3eae5" d="M309.8 296.61 A17 17 0 1 1 340.2 296.61 L325 327 Z"/>
     </g>
 
     <g id="leaf-left">
-      <path fill="#9dc495" d="M16.42 310.06 A314.4 314.4 0 0 1 325 537.67 L325 576.49 A266.7 266.7 0 0 1 321 577.09 A31 31 0 0 0 265 579.19 A266.7 266.7 0 0 1 16.42 310.06 Z"/>
+      <path fill="#9dc495" d="M16.42 291.42 A314.4 336.41 0 0 1 325 534.95 L325 576.49 A266.7 285.37 0 0 1 321 577.14 A31 33.17 0 0 0 265 579.37 A266.7 285.37 0 0 1 16.42 291.42 Z"/>
       <!-- the head seen through the leaf -->
       <g clip-path="url(#ks-leaf-left)">
         <ellipse cx="325" cy="293.5" rx="266" ry="283" fill="#82a787" stroke="#5a7b67"/>
       </g>
-      <path stroke="#233b49" d="M16.42 310.06 A314.4 314.4 0 0 1 325 537.67 L325 576.49 A266.7 266.7 0 0 1 321 577.09 A31 31 0 0 0 265 579.19 A266.7 266.7 0 0 1 16.42 310.06 Z"/>
+      <path stroke="#233b49" d="M16.42 291.42 A314.4 336.41 0 0 1 325 534.95 L325 576.49 A266.7 285.37 0 0 1 321 577.14 A31 33.17 0 0 0 265 579.37 A266.7 285.37 0 0 1 16.42 291.42 Z"/>
     </g>
 
     <g id="leaf-right">
-      <path fill="#9dc495" d="M633.58 310.06 A314.4 314.4 0 0 0 325 537.67 L325 576.49 A266.7 266.7 0 0 0 329 577.09 A31 31 0 0 1 385 579.19 A266.7 266.7 0 0 0 633.58 310.06 Z"/>
+      <path fill="#9dc495" d="M633.58 291.42 A314.4 336.41 0 0 0 325 534.95 L325 576.49 A266.7 285.37 0 0 0 329 577.14 A31 33.17 0 0 1 385 579.37 A266.7 285.37 0 0 0 633.58 291.42 Z"/>
       <!-- the head seen through the leaf -->
       <g clip-path="url(#ks-leaf-right)">
         <ellipse cx="325" cy="293.5" rx="266" ry="283" fill="#82a787" stroke="#5a7b67"/>
       </g>
-      <path stroke="#233b49" d="M633.58 310.06 A314.4 314.4 0 0 0 325 537.67 L325 576.49 A266.7 266.7 0 0 0 329 577.09 A31 31 0 0 1 385 579.19 A266.7 266.7 0 0 0 633.58 310.06 Z"/>
+      <path stroke="#233b49" d="M633.58 291.42 A314.4 336.41 0 0 0 325 534.95 L325 576.49 A266.7 285.37 0 0 0 329 577.14 A31 33.17 0 0 1 385 579.37 A266.7 285.37 0 0 0 633.58 291.42 Z"/>
     </g>
 
     <g id="feet" fill="#1a2b35" stroke="none">
       <!-- outline under the foot, then the dark foot itself -->
-      <path fill="#233b49" d="M262.68 588.04 A31 31 0 0 1 323.98 585.75 A275.7 275.7 0 0 1 262.68 588.04 Z"/>
-      <path id="foot-left" d="M273.32 582.62 A22 22 0 0 1 312.96 581.14 A269.7 269.7 0 0 1 273.32 582.62 Z"/>
-      <path fill="#233b49" d="M387.32 588.04 A31 31 0 0 0 326.02 585.75 A275.7 275.7 0 0 0 387.32 588.04 Z"/>
-      <path id="foot-right" d="M376.68 582.62 A22 22 0 0 0 337.04 581.14 A269.7 269.7 0 0 0 376.68 582.62 Z"/>
+      <path fill="#233b49" d="M262.68 588.85 A31 33.17 0 0 1 323.98 586.4 A275.7 295 0 0 1 262.68 588.85 Z"/>
+      <path id="foot-left" d="M273.32 583.05 A22 23.54 0 0 1 312.96 581.47 A269.7 288.58 0 0 1 273.32 583.05 Z"/>
+      <path fill="#233b49" d="M387.32 588.85 A31 33.17 0 0 0 326.02 586.4 A275.7 295 0 0 0 387.32 588.85 Z"/>
+      <path id="foot-right" d="M376.68 583.05 A22 23.54 0 0 0 337.04 581.47 A269.7 288.58 0 0 0 376.68 583.05 Z"/>
     </g>
   </g>
 </svg>
