@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
-
-const webUrl = "http://localhost:3000";
+import { webUrl } from "./support/target";
 
 test("public center API exposes only safe published fields", async ({
   request,

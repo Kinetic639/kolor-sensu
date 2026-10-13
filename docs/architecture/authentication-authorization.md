@@ -83,7 +83,7 @@ Component validation remains accessible: explicit labels, semantic errors/status
 
 - `supabase/tests/auth_authorization.sql` creates three transaction-only identities and proves anonymous denial, own-profile/role reads, role-write denial, cross-user privacy, single-role rejection, dual-role success, and helper safety before rolling back.
 - Vitest covers role resolution and auth form schemas without mocking Supabase internals.
-- Playwright proves anonymous redirects and responsive login behavior. The dual-role/login/logout scenario runs only when `E2E_ANNA_EMAIL` and `E2E_ANNA_PASSWORD` are provided outside the repository.
+- Playwright proves anonymous redirects, responsive login, signing in and out of each portal and the dual-role account; the signed-in scenarios run only when the test accounts are provided outside the repository (see [end-to-end-tests.md](end-to-end-tests.md)).
 - Full-page accessibility and real-session behavior remain Playwright/manual QA responsibilities; database tests prove the authorization boundary.
 
 Local database tests require the Docker daemon. When Docker is unavailable, the same transactional SQL is run against the linked DEV database and cleanup is verified afterward.

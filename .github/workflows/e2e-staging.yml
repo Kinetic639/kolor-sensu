@@ -1,0 +1,122 @@
+# After STAGING is deployed, the end-to-end tests run against the live
+# sites (tests/e2e, E2E_TARGET=staging): a guest books and pays with BLIK,
+# the visit shows in both portals, the portals sign in and out, the public
+# API keeps its fields to itself. Each run leaves one test visit behind.
+#
+# Vercel reports each app's deployment to GitHub (by commit, not branch),
+# so this starts on those reports and goes on only once all three apps
+# are live with the commit at the head of `staging`, and only for the last
+# of the three, so a release is tested once. It can be started by hand too
+# (Actions → Staging E2E → Run workflow).
+#
+# Secrets (Settings → Secrets and variables → Actions):
+#   E2E_STAGING_ADMIN_EMAIL, E2E_STAGING_ADMIN_PASSWORD,
+#   E2E_STAGING_SPECIALIST_EMAIL, E2E_STAGING_SPECIALIST_PASSWORD
+name: Staging E2E
+
+on:
+  deployment_status:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: read
+
+jobs:
+  ready:
+    name: Is STAGING deployed?
+    if: github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+      sha: ${{ steps.check.outputs.sha }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          SHA: ${{ github.event.deployment.sha }}
+          DEPLOYMENT: ${{ github.event.deployment.id }}
+        run: |
+          set -euo pipefail
+          head=$(gh api "repos/$REPO/commits/staging" --jq .sha)
+          if [ "$EVENT" = workflow_dispatch ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "sha=$head" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          if [ "$SHA" != "$head" ]; then
+            echo "::notice::$SHA is not the head of staging: nothing to test."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Each app's deployment of this commit, and when it went live.
+          latest="" latest_at=""
+          for app in web admin specialist; do
+            env="Preview – kolor-sensu-$app"
+            id=$(gh api -X GET "repos/$REPO/deployments" -f sha="$SHA" -f environment="$env" --jq '.[0].id // empty')
+            at=$([ -n "$id" ] && gh api "repos/$REPO/deployments/$id/statuses" --jq '[.[] | select(.state == "success")][0].created_at // empty' || true)
+            if [ -z "$at" ]; then
+              echo "::notice::kolor-sensu-$app is not live with $SHA yet."
+              echo "run=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [ -z "$latest_at" ] || [[ "$at" > "$latest_at" ]]; then
+              latest=$id latest_at=$at
+            fi
+          done
+          if [ "$latest" != "$DEPLOYMENT" ]; then
+            echo "::notice::Another app went live last; its run tests this release."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "run=true" >> "$GITHUB_OUTPUT"
+
+  e2e:
+    name: End-to-end on STAGING
+    needs: ready
+    if: needs.ready.outputs.run == 'true'
+    # Only here, not on the whole workflow: every deployment report (of
+    # pull requests and develop too) starts it, and a later one waiting in
+    # the same group would cancel the release's run while one is going.
+    concurrency:
+      group: e2e-staging
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      E2E_TARGET: staging
+      E2E_STAGING_ADMIN_EMAIL: ${{ secrets.E2E_STAGING_ADMIN_EMAIL }}
+      E2E_STAGING_ADMIN_PASSWORD: ${{ secrets.E2E_STAGING_ADMIN_PASSWORD }}
+      E2E_STAGING_SPECIALIST_EMAIL: ${{ secrets.E2E_STAGING_SPECIALIST_EMAIL }}
+      E2E_STAGING_SPECIALIST_PASSWORD: ${{ secrets.E2E_STAGING_SPECIALIST_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.ready.outputs.sha }}
+      - uses: ./.github/actions/setup
+        with:
+          cache-name: e2e
+      - name: Browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Accounts
+        run: |
+          for name in E2E_STAGING_ADMIN_EMAIL E2E_STAGING_ADMIN_PASSWORD E2E_STAGING_SPECIALIST_EMAIL E2E_STAGING_SPECIALIST_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::The $name secret is missing."
+              exit 1
+            fi
+          done
+      - name: Tests
+        run: pnpm test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 14

@@ -1,23 +1,22 @@
 import { expect, test } from "@playwright/test";
+import {
+  adminAccount,
+  adminUrl,
+  missingAccount,
+  signIn,
+  webUrl,
+} from "./support/target";
 
-const webUrl = "http://localhost:3000";
-const adminUrl = "http://localhost:3001";
-const annaEmail = process.env.E2E_ANNA_EMAIL;
-const annaPassword = process.env.E2E_ANNA_PASSWORD;
-
-test("published CMS home content renders server-side with SEO metadata in the initial HTML", async ({
+test("the home page is rendered on the server with its title", async ({
   request,
 }) => {
   const response = await request.get(webUrl);
   expect(response.ok()).toBe(true);
 
+  // The heading is in the HTML the server sends, not fetched afterwards.
   const html = await response.text();
-  // Proves the heading/body came from the server-rendered HTML, not a
-  // client fetch: the published site_content payload is "Kolor Sensu" /
-  // "Centrum Psychoterapii. Treść strony głównej w przygotowaniu.".
-  expect(html).toContain("<title>Kolor Sensu</title>");
-  expect(html).toContain("Kolor Sensu");
-  expect(html).toContain("Centrum Psychoterapii");
+  expect(html).toMatch(/<title>[^<]*Kolor Sensu[^<]*<\/title>/);
+  expect(html).toMatch(/<h1[\s>]/);
 });
 
 test("an arbitrary unmatched path 404s (no dynamic CMS route exists)", async ({
@@ -27,25 +26,21 @@ test("an arbitrary unmatched path 404s (no dynamic CMS route exists)", async ({
   expect(response.status()).toBe(404);
 });
 
-test("/specjalisci renders exactly the two published specialists from the real Specialist Domain", async ({
+test("/specjalisci shows every published specialist", async ({
   page,
+  request,
 }) => {
+  const published = (await (
+    await request.get(`${webUrl}/api/specialists`)
+  ).json()) as Array<{ displayName: string }>;
+
   const response = await page.goto(`${webUrl}/specjalisci`);
   expect(response?.ok()).toBe(true);
-
-  await expect(page.getByText("Specjalista 1", { exact: true })).toBeVisible();
-  await expect(page.getByText("Specjalista 2", { exact: true })).toBeVisible();
-
-  // Exactly two rendered cards: count DOM nodes with the shared DEV bio
-  // sentence (a raw-HTML/regex count is not reliable here -- Next.js's RSC
-  // flight payload re-serializes the same text into an embedded <script>,
-  // doubling a naive substring count).
-  await expect(
-    page.getByText(
-      "Profil testowy wykorzystywany do weryfikacji listy specjalistów.",
-      { exact: true },
-    ),
-  ).toHaveCount(2);
+  for (const { displayName } of published) {
+    await expect(
+      page.getByText(displayName, { exact: true }).first(),
+    ).toBeVisible();
+  }
 });
 
 test("/specjalisci is responsive at common viewport widths", async ({
@@ -55,36 +50,35 @@ test("/specjalisci is responsive at common viewport widths", async ({
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`${webUrl}/specjalisci`);
     await expect(
-      page.getByRole("heading", { name: "Specjaliści" }),
+      page.getByRole("heading", { name: "Specjaliści", level: 1 }),
     ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
   }
 });
 
 test.describe("admin CMS editor", () => {
-  test.skip(
-    !annaEmail || !annaPassword,
-    "Set E2E_ANNA_EMAIL and E2E_ANNA_PASSWORD outside the repository.",
+  test.skip(!adminAccount, missingAccount);
+
+  // Saving replaces the home page's draft, so it runs only locally.
+  test(
+    "admin saves a draft of the home page",
+    { tag: "@writes-data" },
+    async ({ page }) => {
+      await signIn(page, adminUrl, adminAccount!);
+      await page.goto(`${adminUrl}/cms`);
+      await expect(
+        page.getByRole("button", { name: "Publikuj" }),
+      ).toBeVisible();
+
+      await page.getByRole("button", { name: "Edytuj treść" }).click();
+      const dialog = page.getByRole("dialog", { name: "Treść strony głównej" });
+      await dialog.getByRole("button", { name: "Zapisz szkic" }).click();
+      await expect(page.getByText("Zapisano szkic")).toBeVisible();
+      await expect(dialog).not.toBeVisible();
+    },
   );
-
-  test("admin can edit and publish the Home content", async ({ page }) => {
-    await page.goto(`${adminUrl}/login`);
-    await page.getByLabel("Adres e-mail").fill(annaEmail!);
-    await page.getByLabel("Hasło").fill(annaPassword!);
-    await page.getByRole("button", { name: "Zaloguj się" }).click();
-
-    await page.goto(`${adminUrl}/cms`);
-    await expect(
-      page.getByRole("heading", { name: "Strona główna" }),
-    ).toBeVisible();
-    await expect(page.getByRole("button", { name: "Publikuj" })).toBeVisible();
-
-    await page.getByRole("button", { name: "Edytuj treść" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Treść strony głównej" }),
-    ).toBeVisible();
-    await page.getByRole("button", { name: "Zapisz szkic" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Treść strony głównej" }),
-    ).not.toBeVisible();
-  });
 });
