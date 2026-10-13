@@ -2,11 +2,11 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   adminAccount,
   adminUrl,
+  dualRoleAccount,
   missingAccount,
   signIn,
   specialistAccount,
   specialistUrl,
-  target,
 } from "./support/target";
 
 async function signOut(page: Page, portalUrl: string) {
@@ -100,16 +100,16 @@ test("specialist signs in to their portal and signs out", async ({ page }) => {
   await signOut(page, specialistUrl);
 });
 
-test("the admin, also a specialist, reaches both portals", async ({ page }) => {
-  // Anna holds both roles locally and on DEV; STAGING's test admin does not.
-  test.skip(target === "staging", "STAGING's test admin is not a specialist.");
-  test.skip(!adminAccount, missingAccount);
-  await signIn(page, adminUrl, adminAccount!);
+test("an admin who is also a specialist reaches both portals", async ({
+  page,
+}) => {
+  test.skip(!dualRoleAccount, "No account with both roles for this target.");
+  await signIn(page, adminUrl, dualRoleAccount!);
   await expect(
     page.getByRole("navigation", { name: "Nawigacja portalu" }),
   ).toBeVisible();
   // The portals are separate sites (separate sessions once deployed).
-  await signIn(page, specialistUrl, adminAccount!);
+  await signIn(page, specialistUrl, dualRoleAccount!);
   await expect(
     page.getByRole("heading", { name: "Panel główny" }),
   ).toBeVisible();

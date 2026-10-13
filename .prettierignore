@@ -4,6 +4,7 @@ node_modules
 .playwright-mcp
 artifacts
 test-results
+playwright-report
 dist
 build
 out

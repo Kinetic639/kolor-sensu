@@ -52,12 +52,17 @@ function credentials(prefix: string): Credentials | null {
 }
 
 // The centre's admin, and a specialist without the admin role. Locally and
-// on DEV the admin is "Anna" (who is a specialist too).
+// on DEV (whose database the local apps use) the admin is "E2E_ANNA".
 export const adminAccount = credentials(
   target === "staging" ? "E2E_STAGING_ADMIN" : "E2E_ANNA",
 );
 export const specialistAccount = credentials(
   target === "staging" ? "E2E_STAGING_SPECIALIST" : "E2E_SPECIALIST",
+);
+// Optional: an account with both roles, for the test that it reaches both
+// portals (E2E_DUAL_ROLE_*, or E2E_STAGING_DUAL_ROLE_* for STAGING).
+export const dualRoleAccount = credentials(
+  target === "staging" ? "E2E_STAGING_DUAL_ROLE" : "E2E_DUAL_ROLE",
 );
 
 export const missingAccount =
