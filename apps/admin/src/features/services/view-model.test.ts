@@ -24,6 +24,7 @@ const service = (
   active: true,
   publiclyVisible: true,
   bookingEnabled: true,
+  requiresIntake: false,
   sortOrder,
   catalogId: null,
   createdAt: "2030-01-01T00:00:00Z",

@@ -41,7 +41,18 @@ SELECT id, 'Availability Room 2', 'availability-room-2', 2, true
 FROM public.locations WHERE slug = 'test-loc-availability'
 UNION ALL
 SELECT id, 'Availability Room Closed', 'availability-room-closed', 2, false
+FROM public.locations WHERE slug = 'test-loc-availability'
+UNION ALL
+SELECT id, 'Availability Room Bare', 'availability-room-bare', 2, true
 FROM public.locations WHERE slug = 'test-loc-availability';
+
+-- Rooms 1 and 2 open every day 06:00–22:00 (a room without hours is
+-- closed; the bare room has none).
+INSERT INTO public.room_opening_hours (room_id, weekday, starts_at, ends_at)
+SELECT room.id, day, '06:00', '22:00'
+FROM public.rooms AS room
+CROSS JOIN generate_series(1, 7) AS day
+WHERE room.slug IN ('availability-room-1', 'availability-room-2');
 
 CREATE TEMP TABLE availability_test_ids AS
 SELECT
@@ -387,7 +398,22 @@ BEGIN
   EXCEPTION WHEN exclusion_violation THEN NULL;
   END;
 
-  -- Within the hours, a room without hours, or online: fine.
+  -- A room without opening hours is closed: nobody is on duty there.
+  BEGIN
+    PERFORM public.save_availability_rule(
+      p_specialist_id => ids.anna_id,
+      p_recurrence => 'weekly', p_weekdays => ARRAY[2]::smallint[],
+      p_starts_at => '10:00', p_ends_at => '11:00',
+      p_valid_from => '2030-01-07', p_mode => 'in_person',
+      p_room_id => (SELECT id FROM public.rooms WHERE slug = 'availability-room-bare')
+    );
+    RAISE EXCEPTION 'U: duty in a room without opening hours was accepted';
+  EXCEPTION WHEN exclusion_violation THEN
+    GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
+    IF hint <> 'room_closed' THEN RAISE EXCEPTION 'U: expected room_closed, got %', hint; END IF;
+  END;
+
+  -- Within the hours, or online: fine.
   PERFORM public.save_availability_rule(
     p_specialist_id => ids.anna_id,
     p_recurrence => 'weekly', p_weekdays => ARRAY[2]::smallint[],

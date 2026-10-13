@@ -121,7 +121,10 @@ export function WatercolorReveal({
       let timer: ReturnType<typeof setTimeout> | undefined;
       let animation: gsap.core.Animation | undefined;
       let matte: PaintMatte | undefined;
-      const caption = root.querySelector<HTMLElement>(".ks-wc__caption");
+      // The caption, or the decorative mark in its place: shown late.
+      const caption = root.querySelector<HTMLElement>(
+        ".ks-wc__caption, .ks-wc__mark",
+      );
 
       // Back to the server markup: no reveal values, and no empty style
       // attributes left where the reveal was the only one to set a style.

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { sampleHero } from "./hero-samples";
 import { HeroSection } from "./hero-section";
+import { PenguinLoader } from "./penguin-loader";
 
 // The homepage's first screen (reference A): pink eyebrow, H1 with a green
 // second line, lead, actions, reassurances, and the painted hero picture
@@ -53,4 +54,26 @@ export const Mobile: Story = {
 export const Static: Story = {
   args: { animationPreset: "none" },
   globals: { viewport: { value: "desktop", isRotated: false } },
+};
+
+/**
+ * As on the homepage: the animated penguin (PenguinLoader) in the caption's
+ * place over the picture, appearing as the picture finishes painting in.
+ */
+export const WithPenguin: Story = {
+  name: "With the penguin",
+  args: {
+    image: {
+      ...sampleHero.image,
+      caption: undefined,
+      mark: <PenguinLoader />,
+    },
+  },
+  globals: { viewport: { value: "desktop", isRotated: false } },
+};
+
+export const WithPenguinMobile: Story = {
+  name: "With the penguin · Mobile",
+  args: WithPenguin.args,
+  globals: { viewport: { value: "mobile", isRotated: false } },
 };

@@ -157,7 +157,9 @@ WatercolorImage (.ks-wc, aspect-ratio box)
 │              box by about 9 % either side and 5 % above and below
 ├── photo      the uploaded photo, cropped by the component and cut by the
 │              dry-brush photo mask
-└── caption    optional handwritten line (real text)
+├── caption    optional handwritten line (real text)
+└── mark       optional decorative overlay in the caption's place (the
+               homepage's animated penguin), aria-hidden
 ```
 
 ```tsx
@@ -209,6 +211,14 @@ photos without an image editor.
 **Caption.** Real text in `<figcaption>`, lower right, rotated, one or two
 words per line, with a brush underline. A soft text shadow keeps white text
 readable on any photo.
+
+**Mark.** Instead of (or besides) the caption, `mark` puts a decorative
+overlay in the same place, hidden from assistive technology and lifted off
+the photo by a soft shadow; in the entrance animation it appears with the
+caption's timing. The homepage hero uses it for `PenguinLoader`: the logo's
+penguin in a 4.4 s loop (it blinks, smiles and flaps its leaves), all SVG
+and CSS, no client JavaScript; it plays only while marked
+`data-animation="loop"`, and under reduced motion it is the still logo.
 
 ## 7. Mask technique
 
@@ -499,6 +509,7 @@ Only what the references repeat:
 | `SectionEyebrow`              | "CENTRUM PSYCHOTERAPII I ROZWOJU"          |
 | `EditorialHeading`            | Serif H1/H2 with optional accent line      |
 | `HeroSection`, `HeroPoints`   | Homepage first screen, reassurance row     |
+| `PenguinLoader`               | The logo's penguin, alive, over the hero   |
 | `FeatureSection`              | "Nasze gabinety", "Warsztaty i rozwój"     |
 | `PrimaryButton`               | Solid green pill "Umów wizytę →"           |
 | `SecondaryButton`             | Outline pill "Poznaj nas"                  |
@@ -543,17 +554,23 @@ islands hydrate: the desktop dropdown, the phone menu and the cookie notice.
   client-only (never in the first paint, no layout shift); the choice is
   kept in localStorage and passed to the app before any analytics load.
 - **First-visit intro:** `SiteIntro` (first in `SiteLayout`, `intro`
-  prop): paper, a pink and sage watercolor patch spreading, the owl mark,
-  the name, a pink brush swash drawn under it, the tagline, then the paper
-  fades away (about 1.5 s). Pure CSS from the first paint, no JavaScript
-  bundle needed; an inline script before the first paint lets it play only
-  on the first visit (localStorage `ks-intro`), never under reduced motion
-  or where storage is blocked. It takes no clicks or focus and is hidden
-  from assistive technology; the page underneath is already rendered, so
-  it is not a preloader and does not delay LCP. The page's reveals start as
-  it fades (1.1 s; `introRemaining` in `reveal-support.ts`). Returning
-  visitors download nothing for it (lazy image, CSS images of a hidden
-  element).
+  prop): on paper, over a pink and sage watercolor patch, a closed flower
+  bud (the logo's leaves as petals) opens and the penguin rises out of it;
+  a big handwritten "Witaj" (`--font-hand`) writes itself in, letter by
+  letter, with a pink brush swash under it, then the name and tagline; the
+  penguin blinks and smiles, and the paper fades away (about 4.4 s). The
+  first paint already shows the paper and the closed bud (markup and CSS);
+  the motion is one GSAP timeline (`IntroMotion`) that starts as soon as it
+  hydrates, and if it never does the stylesheet fades the paper out after
+  4 s. The penguin's shapes come from the logo
+  (`intro-penguin.data.ts`, `pnpm --filter @repo/design-system
+generate:intro`). An inline script before the first paint lets it play
+  only on the first visit (localStorage `ks-intro`), never under reduced
+  motion or where storage is blocked. It takes no clicks or focus and is
+  hidden from assistive technology; the page underneath is already
+  rendered, so it is not a preloader and does not delay LCP. The page's
+  reveals start as it fades (`introRemaining` in `reveal-support.ts`,
+  which reads the moment the motion records).
 - **SEO:** one H1 per page; landmarks and labelled navigations;
   structured data as JSON-LD (`JsonLd`, `<` escaped): `MedicalBusiness`
   for the centre (from `SiteLayout` when `siteUrl` is set),

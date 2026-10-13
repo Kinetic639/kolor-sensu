@@ -46,6 +46,8 @@ export interface ServiceRow {
   active: boolean;
   publiclyVisible: boolean;
   bookingEnabled: boolean;
+  /** The client fills in the questionnaire when booking it online. */
+  requiresIntake: boolean;
   sortOrder: number;
   /** Its catalogue in the site's menu (none: on the menu's first level). */
   catalog: { id: string; name: string } | null;

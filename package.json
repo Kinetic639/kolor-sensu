@@ -2,6 +2,7 @@
   "name": "kolor-sensu",
   "private": true,
   "scripts": {
+    "prepare": "husky",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
@@ -23,6 +24,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
     "prettier": "3.9.7",
     "prettier-plugin-tailwindcss": "0.8.1",
     "supabase": "2.117.0",
@@ -32,5 +35,8 @@
   "packageManager": "pnpm@11.25.0",
   "engines": {
     "node": ">=24"
+  },
+  "lint-staged": {
+    "*": "prettier --write --ignore-unknown"
   }
 }

@@ -16,12 +16,17 @@ import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
 //   │                         ancestor, as the page's <main> is
 //   ├── .ks-wc__photo         the uploaded photo, cropped with object-fit:
 //   │                         cover and cut by the dry-brush photo mask
-//   └── .ks-wc__caption       optional handwritten overlay (real text),
-//                             its own tiny client island (CaptionMotion:
-//                             watercolor-caption-motion.tsx) for a discreet
-//                             idle float and a few pixels of scroll
-//                             parallax; present with or without the
-//                             entrance animation below.
+//   ├── .ks-wc__caption       optional handwritten overlay (real text),
+//   │                         its own tiny client island (CaptionMotion:
+//   │                         watercolor-caption-motion.tsx) for a discreet
+//   │                         idle float and a few pixels of scroll
+//   │                         parallax; present with or without the
+//   │                         entrance animation below.
+//   └── .ks-wc__mark          optional decorative overlay in the caption's
+//                             place (e.g. the animated PenguinLoader),
+//                             hidden from assistive technology; it appears
+//                             with the caption's timing in the entrance
+//                             animation.
 //
 // The optional entrance animation (animationPreset="watercolor-reveal")
 // wraps the same layers in a small client component, WatercolorReveal, that
@@ -65,6 +70,11 @@ export interface WatercolorImageProps {
   /** Optional handwritten overlay, rendered as real text in <figcaption>. */
   caption?: ReactNode;
   /**
+   * Optional decorative overlay in the caption's place (lower right), e.g.
+   * the animated penguin. Hidden from assistive technology.
+   */
+  mark?: ReactNode;
+  /**
    * Entrance animation, played once when the image comes into view: the
    * backdrop is painted in with brush strokes from both sides, the photo
    * spreads in blooms from its middle outward, then the caption appears
@@ -94,6 +104,7 @@ export function WatercolorImage({
   priority = false,
   quality,
   caption,
+  mark,
   animationPreset = "none",
   reducedMotionMode = "static",
   className,
@@ -141,6 +152,11 @@ export function WatercolorImage({
           {caption}
           <BrushUnderline />
         </CaptionMotion>
+      ) : null}
+      {mark ? (
+        <div className="ks-wc__mark" aria-hidden="true">
+          {mark}
+        </div>
       ) : null}
     </>
   );

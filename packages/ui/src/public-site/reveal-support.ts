@@ -50,8 +50,10 @@ export function shownByFallback(
 }
 
 // When the page's reveals may start while SiteIntro plays: as its paper
-// begins to fade (ms after it started; public-site.css, .ks-intro).
-const INTRO_HANDOFF = 1100;
+// begins to fade. Once its motion runs it records that moment itself
+// (data-intro-end, intro-motion.tsx); until then, the stylesheet's own
+// fallback fade (public-site.css, .ks-intro) is the latest it can be.
+const INTRO_FALLBACK_HANDOFF = 4000;
 
 /** How long (ms) the first-visit intro still covers the page; 0 if none. */
 export function introRemaining() {
@@ -59,8 +61,11 @@ export function introRemaining() {
     '.ks-intro[data-intro="play"]',
   );
   if (!intro) return 0;
-  const at = Number(intro.dataset.introAt ?? 0);
-  return Math.max(0, at + INTRO_HANDOFF - performance.now());
+  const end =
+    intro.dataset.introEnd !== undefined
+      ? Number(intro.dataset.introEnd)
+      : Number(intro.dataset.introAt ?? 0) + INTRO_FALLBACK_HANDOFF;
+  return Math.max(0, end - performance.now());
 }
 
 /**
@@ -80,11 +85,16 @@ export function watchReveal(
   }: { threshold: number; near: () => void; visible: () => void },
 ) {
   let timer: ReturnType<typeof setTimeout> | undefined;
+  // The intro's end can move once its motion starts, so check again when
+  // the wait is over.
+  const whenUncovered = () => {
+    const wait = introRemaining();
+    if (wait > 0) timer = setTimeout(whenUncovered, wait);
+    else visible();
+  };
   const show = () => {
     near();
-    const wait = introRemaining();
-    if (wait > 0) timer = setTimeout(visible, wait);
-    else visible();
+    whenUncovered();
   };
   if (typeof IntersectionObserver !== "function") {
     show();

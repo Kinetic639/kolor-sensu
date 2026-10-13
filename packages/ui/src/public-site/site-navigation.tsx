@@ -187,7 +187,7 @@ function DropdownList({
               {group.label}
             </p>
             <ul className="grid gap-0.5">
-              {group.children!.map((link) => (
+              {(group.children ?? []).map((link) => (
                 <li key={link.href}>
                   <NavigationMenuLink
                     active={isCurrent(link.href, currentPath)}

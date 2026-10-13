@@ -111,6 +111,7 @@ const base = {
   active: true,
   publiclyVisible: true,
   bookingEnabled: true,
+  requiresIntake: false,
   durationMinutes: 50,
   afterMinutes: 10,
 };

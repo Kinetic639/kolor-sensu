@@ -105,6 +105,22 @@
     will-change: transform;
   }
 
+  /* Optional decorative overlay at the lower right (WatercolorImage
+     `mark`): the homepage's animated penguin (which brings its own motion),
+     lifted off the photo by a soft shadow. It sits on the picture's bottom
+     edge, half of it hanging out below. */
+  .ks-wc__mark {
+    position: absolute;
+    right: 12%;
+    bottom: 0;
+    z-index: 1;
+    translate: 0 50%;
+    width: 26%;
+    max-width: 13rem;
+    pointer-events: none;
+    filter: drop-shadow(0 0.5rem 0.75rem rgb(22 48 47 / 0.28));
+  }
+
   .ks-wc__underline {
     display: block;
     width: 80%;
@@ -150,6 +166,12 @@
          fading it in. */
       .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])
         .ks-wc__caption {
+        opacity: var(--ks-reveal-caption, 0);
+      }
+
+      /* Nor is the mark in its place: it appears the same way. */
+      .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])
+        .ks-wc__mark {
         opacity: var(--ks-reveal-caption, 0);
       }
     }
@@ -497,15 +519,10 @@
   /* First-visit brand intro (site-intro.tsx). Hidden unless its inline
      script marked it data-intro="play" before the first paint, so without
      JavaScript, on later visits and under reduced motion there is nothing.
-     All transforms and opacity (plus one tiny clip-path), about 1.5 s:
-
-       0.05–0.75 s  a watercolor patch spreads behind the logo
-       0.15–0.65 s  the owl mark rises in
-       0.30–0.75 s  the name
-       0.55–0.95 s  the pink swash is drawn under it
-       0.65–1.05 s  the tagline
-       1.05–1.50 s  the paper fades away; the page's reveals start at 1.1 s
-                    (INTRO_HANDOFF in reveal-support.ts) */
+     The first paint shows the paper, the watercolor patch and the closed
+     bud; the greeting waits, hidden, for the motion. The motion itself is
+     a GSAP timeline (intro-motion.tsx), which marks the intro
+     data-motion="on" when it takes over and data-intro="done" at the end. */
   .ks-intro {
     position: fixed;
     inset: 0;
@@ -519,7 +536,12 @@
 
   .ks-intro[data-intro="play"] {
     display: grid;
-    animation: ks-intro-out 0.45s 1.05s ease-in-out forwards;
+  }
+
+  /* Safety net: if the motion never takes over (the bundle failed), the
+     paper fades away on its own. */
+  .ks-intro[data-intro="play"]:not([data-motion]) {
+    animation: ks-intro-out 0.45s 4s ease-in-out forwards;
   }
 
   @media (prefers-reduced-motion: reduce), print {
@@ -532,17 +554,19 @@
     position: relative;
     display: grid;
     justify-items: center;
+    padding-inline: var(--spacing-gutter);
     isolation: isolate;
+    text-align: center;
   }
 
   .ks-intro__wash {
     position: absolute;
     z-index: -1;
-    top: 50%;
+    top: 32%;
     left: 50%;
-    width: 24rem;
-    height: 18rem;
-    margin: -9rem 0 0 -12rem;
+    width: min(30rem, 92vw);
+    height: min(22rem, 68vw);
+    translate: -50% -50%;
     background:
       radial-gradient(
         ellipse 55% 60% at 36% 44%,
@@ -568,32 +592,46 @@
     opacity: 0.25;
   }
 
-  .ks-intro__mark {
+  .ks-intro__penguin {
     display: block;
-    width: auto;
-    height: 6rem;
+    width: clamp(9rem, 6rem + 12vw, 13rem);
+    height: auto;
+    overflow: visible;
+  }
+
+  .ks-intro__greeting {
+    margin: 0.25rem 0 0;
+    color: var(--color-ink);
+    font-family: var(--font-hand);
+    font-size: clamp(4.5rem, 3rem + 7vw, 7.5rem);
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .ks-intro__letter {
+    display: inline-block;
+  }
+
+  .ks-intro__swash {
+    display: block;
+    width: clamp(10rem, 7rem + 12vw, 15rem);
+    height: auto;
+    margin: -0.25rem 0 0 2.5rem;
+    fill: var(--color-pink);
   }
 
   .ks-intro__name {
-    margin-top: 0.625rem;
+    margin-top: 0.75rem;
     color: var(--color-ink);
     font-family: var(--font-display);
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 600;
     line-height: 1.1;
     letter-spacing: -0.01em;
   }
 
-  .ks-intro__swash {
-    display: block;
-    width: 9.5rem;
-    height: auto;
-    margin: 0.125rem 0 0 2.5rem;
-    fill: var(--color-pink);
-  }
-
   .ks-intro__tagline {
-    margin-top: 0.5rem;
+    margin-top: 0.375rem;
     color: var(--color-pink-strong);
     font-family: var(--font-body);
     font-size: 0.8125rem;
@@ -602,54 +640,126 @@
     text-transform: uppercase;
   }
 
-  /* The sequence, only while it plays. */
-  .ks-intro[data-intro="play"] .ks-intro__wash {
-    animation: ks-intro-wash 0.7s 0.05s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  }
-
-  .ks-intro[data-intro="play"] .ks-intro__mark {
-    animation: ks-intro-rise 0.5s 0.15s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  }
-
-  .ks-intro[data-intro="play"] .ks-intro__name {
-    animation: ks-intro-rise 0.45s 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  }
-
-  .ks-intro[data-intro="play"] .ks-intro__swash {
-    animation: ks-intro-draw 0.4s 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
-  }
-
-  .ks-intro[data-intro="play"] .ks-intro__tagline {
-    animation: ks-intro-rise 0.4s 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  }
-
-  @keyframes ks-intro-wash {
-    from {
-      opacity: 0;
-      transform: scale(0.7) rotate(-4deg);
-    }
-  }
-
-  @keyframes ks-intro-rise {
-    from {
-      opacity: 0;
-      transform: translateY(0.5rem);
-    }
-  }
-
-  @keyframes ks-intro-draw {
-    from {
-      clip-path: inset(0 100% 0 0);
-    }
-    to {
-      clip-path: inset(0 0 0 0);
-    }
+  /* Until the motion takes over, only the paper, the patch and the bud. */
+  .ks-intro:not([data-motion])
+    :is(.ks-intro__greeting, .ks-intro__swash, .ks-intro__line) {
+    opacity: 0;
   }
 
   @keyframes ks-intro-out {
     to {
       opacity: 0;
       visibility: hidden;
+    }
+  }
+
+  /* --------------------------------------------------------- PenguinLoader */
+
+  /* The logo's penguin in a 4.4 s loop (penguin-loader.tsx): the eyes
+     (SMIL, in the SVG) blink and smile; here the body gives a small squash
+     as it smiles, then the leaves flap twice like wings. Everything turns
+     and scales about the point where the leaves meet (set inline, in the
+     SVG's own units). Only while marked data-animation="loop"; without it
+     the penguin is the still logo. The head seen through a leaf (__unflap) turns back
+     by as much as its leaf, so it stays under the real head. */
+  .ks-penguin {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .ks-penguin__body,
+  .ks-penguin__leaf,
+  .ks-penguin__unflap {
+    transform-box: view-box;
+  }
+
+  .ks-penguin[data-animation="loop"] .ks-penguin__eyes-still {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-penguin[data-animation="loop"] .ks-penguin__body {
+      animation: ks-penguin-perk 4.4s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+    }
+
+    .ks-penguin[data-animation="loop"] .ks-penguin__leaf[data-side="left"],
+    .ks-penguin[data-animation="loop"] .ks-penguin__unflap[data-side="right"] {
+      animation: ks-penguin-flap-left 4.4s cubic-bezier(0.45, 0, 0.25, 1)
+        infinite;
+    }
+
+    .ks-penguin[data-animation="loop"] .ks-penguin__leaf[data-side="right"],
+    .ks-penguin[data-animation="loop"] .ks-penguin__unflap[data-side="left"] {
+      animation: ks-penguin-flap-right 4.4s cubic-bezier(0.45, 0, 0.25, 1)
+        infinite;
+    }
+  }
+
+  /* Reduced motion: no CSS motion, and the logo's still smile instead of
+     the eyes' own (SMIL) animation. */
+  @media (prefers-reduced-motion: reduce) {
+    .ks-penguin[data-animation="loop"] .ks-penguin__eyes {
+      display: none;
+    }
+
+    .ks-penguin[data-animation="loop"] .ks-penguin__eyes-still {
+      display: inline;
+    }
+  }
+
+  @keyframes ks-penguin-perk {
+    0%,
+    46% {
+      transform: scale(1);
+    }
+    52% {
+      transform: scale(1.025, 0.975);
+    }
+    58%,
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes ks-penguin-flap-left {
+    0%,
+    60% {
+      transform: rotate(0);
+    }
+    65% {
+      transform: rotate(6deg);
+    }
+    70% {
+      transform: rotate(-1deg);
+    }
+    75% {
+      transform: rotate(5deg);
+    }
+    81%,
+    100% {
+      transform: rotate(0);
+    }
+  }
+
+  @keyframes ks-penguin-flap-right {
+    0%,
+    60% {
+      transform: rotate(0);
+    }
+    65% {
+      transform: rotate(-6deg);
+    }
+    70% {
+      transform: rotate(1deg);
+    }
+    75% {
+      transform: rotate(-5deg);
+    }
+    81%,
+    100% {
+      transform: rotate(0);
     }
   }
 

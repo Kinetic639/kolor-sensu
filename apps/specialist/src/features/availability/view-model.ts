@@ -187,8 +187,9 @@ export function mapAvailabilityViewModel({
   const roomBusy = room
     ? othersOccupancy.filter((one) => one.roomId === room.id)
     : [];
+  // A room without opening hours is closed all day (no duty there).
   const roomOpen = new Map(
-    room && room.hours.length
+    room
       ? Array.from({ length: 7 }, (_, index) => {
           const date = addDays(week, index);
           return [date, openIntervalsOn(date, room.hours, room.exceptions)];

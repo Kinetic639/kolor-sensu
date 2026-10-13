@@ -5,6 +5,19 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": [
+        "VERCEL_ENV",
+        "ADMIN_URL",
+        "SPECIALIST_URL",
+        "EMAIL_FROM",
+        "SUPABASE_SECRET_KEY",
+        "CMS_REVALIDATE_SECRET",
+        "CRON_SECRET",
+        "RESEND_API_KEY",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "TURNSTILE_SECRET_KEY"
+      ],
       "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"]
     },
     "lint": {

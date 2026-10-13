@@ -1,0 +1,3 @@
+# Formats what is about to be committed (Prettier, only the staged files),
+# so the CI's format check never fails on it.
+pnpm exec lint-staged

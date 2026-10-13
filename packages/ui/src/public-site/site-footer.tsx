@@ -60,6 +60,11 @@ export function SiteFooter({
     ])
     // The offer's own pages beside its list (`Cennik`) are pages too.
     .concat(offer?.links ?? []);
+  // Every offer page: a group's (a catalogue's) unfolded. None yet (a new
+  // centre without services): no offer column.
+  const offerPages = (offer?.children ?? []).flatMap(
+    (child) => child.children ?? [child],
+  );
 
   return (
     <footer className={cn("border-border/70 bg-bg border-t", className)}>
@@ -100,20 +105,17 @@ export function SiteFooter({
           </ul>
         </nav>
 
-        {offer ? (
+        {offer && offerPages.length > 0 ? (
           <nav aria-label={offer.label}>
             <ColumnTitle>{offer.label}</ColumnTitle>
             <ul className="grid gap-2.5">
-              {/* Every page: a group's (a catalogue's) unfolded. */}
-              {offer
-                .children!.flatMap((child) => child.children ?? [child])
-                .map((child) => (
-                  <li key={child.href}>
-                    <Link href={child.href} className={linkStyle}>
-                      {child.label}
-                    </Link>
-                  </li>
-                ))}
+              {offerPages.map((child) => (
+                <li key={child.href}>
+                  <Link href={child.href} className={linkStyle}>
+                    {child.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </nav>
         ) : null}

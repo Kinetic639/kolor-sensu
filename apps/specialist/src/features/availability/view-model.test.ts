@@ -454,6 +454,23 @@ describe("room occupancy in the calendar", () => {
     ]);
   });
 
+  it("shows a room without opening hours closed all day", () => {
+    const model = mapAvailabilityViewModel({
+      ...base,
+      rules: [],
+      specialistId: "specialist",
+      occupancy,
+      room: { id: "room-1", hours: [], exceptions: [] },
+    });
+    for (const day of model.calendar.days) {
+      expect(day.room.closed).toHaveLength(1);
+      expect(day.room.closed[0]!.label).toBe("Gabinet 1 zamknięty");
+      // The whole visible day, Anna's 10–12 included.
+      expect(day.room.closed[0]!.start).toBeLessThanOrEqual(600);
+      expect(day.room.closed[0]!.end).toBeGreaterThanOrEqual(720);
+    }
+  });
+
   it("shows nothing of rooms when none is chosen", () => {
     const model = mapAvailabilityViewModel({
       ...base,

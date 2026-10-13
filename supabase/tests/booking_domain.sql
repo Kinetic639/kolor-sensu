@@ -49,6 +49,12 @@ INSERT INTO public.rooms (location_id, name, slug, capacity, active)
 SELECT id, 'Booking Room', 'booking-test-room', 2, true
 FROM public.locations WHERE slug = 'booking-test-location';
 
+-- Open every day 06:00–22:00 (a room without hours is closed).
+INSERT INTO public.room_opening_hours (room_id, weekday, starts_at, ends_at)
+SELECT room.id, day, '06:00', '22:00'
+FROM public.rooms AS room CROSS JOIN generate_series(1, 7) AS day
+WHERE room.slug = 'booking-test-room';
+
 INSERT INTO public.services (name, slug, category, default_duration_minutes, active, publicly_visible, booking_enabled)
 VALUES ('Booking Consultation', 'booking-test-consultation', 'consultation', 50, true, true, true);
 

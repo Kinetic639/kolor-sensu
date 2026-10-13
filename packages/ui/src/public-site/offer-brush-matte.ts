@@ -197,7 +197,14 @@ export function createOfferTimeline({
   onComplete,
 }: OfferTimelineOptions) {
   const timing = offerRevealTiming;
-  const timeline = gsap.timeline({ paused, delay, onComplete });
+  // Not lazy: the hidden start is written at once, not at the end of the
+  // frame (nothing flashes, and it holds however busy the machine is).
+  const timeline = gsap.timeline({
+    paused,
+    delay,
+    onComplete,
+    defaults: { lazy: false },
+  });
 
   if (paint && matte) {
     // Visible from the start, but masked: nothing shows until a stroke does.

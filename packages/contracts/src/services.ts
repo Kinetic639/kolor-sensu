@@ -35,6 +35,8 @@ export const serviceCreateSchema = z.object({
   active: z.boolean().default(true),
   publiclyVisible: z.boolean().default(true),
   bookingEnabled: z.boolean().default(false),
+  /** The client fills in the questionnaire when booking it online. */
+  requiresIntake: z.boolean().default(false),
   sortOrder: z.number().int().min(0).max(10_000).default(0),
 });
 
@@ -109,6 +111,8 @@ export interface Service {
   active: boolean;
   publiclyVisible: boolean;
   bookingEnabled: boolean;
+  /** The client fills in the questionnaire when booking it online. */
+  requiresIntake: boolean;
   /** Its place: in its catalogue, or (none) among the catalogues. */
   sortOrder: number;
   catalogId: string | null;
