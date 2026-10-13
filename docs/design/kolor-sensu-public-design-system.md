@@ -545,6 +545,26 @@ thoughts with kinder ones hidden under them. Copy: `thoughts` in
   of words are hidden and the positive thoughts are read as a list.
 - **Storybook:** Thoughts lens (Playground).
 
+### Painted story
+
+`PaintedStory` (homepage, after the team; copy: `story` in
+`apps/web/src/content/site.tsx`) tells "Jak zacząć / Twoja droga do
+lepszego samopoczucia" in a few steps while scrolling, after David Whyte
+Experience. Brought over from PR #12; to be reworked.
+
+- **Wide screens with motion** (from 64 rem): one screen stays pinned for
+  as long as it takes to scroll through the steps. The text column changes
+  step by step (the others are inert), a thin `pink-strong` line fills as
+  the story goes on, and each step's picture is painted over the previous
+  one with WatercolorImage's own brush (`watercolor-paint-matte.ts`).
+  Scrolling back lifts the later pictures off again.
+- **Phones:** the steps follow one another, text then picture, each
+  picture painted in as it comes into view.
+- **Fallbacks:** reduced motion and no script show every step plainly;
+  Safari (no SVG masks on HTML) gets a short cross-fade instead of the
+  brush. The step count ("01 / 03") is `pink-strong`, as text under 24px.
+- **Storybook:** Painted story (Default).
+
 ## 12. Primitives
 
 Only what the references repeat:

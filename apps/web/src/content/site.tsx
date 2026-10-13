@@ -1,6 +1,7 @@
 import {
   type FaqItem,
   type HeroSectionProps,
+  type PaintedStoryProps,
   PenguinLoader,
   type ThoughtsLensProps,
 } from "@repo/ui/public-site";
@@ -156,6 +157,32 @@ export const workshops = {
     alt: "Uczestnicy warsztatu rozmawiają w kręgu",
   },
 };
+
+// The homepage's scroll story (PaintedStory): how a first visit goes.
+export const story = {
+  eyebrow: "Jak zacząć",
+  heading: "Twoja droga do lepszego samopoczucia",
+  steps: [
+    {
+      heading: "Pierwsza rozmowa",
+      text: "Zaczynamy od konsultacji: rozmawiamy o tym, z czym przychodzisz i czego potrzebujesz. Nie musisz się do niej specjalnie przygotowywać.",
+      cta: bookingCta,
+      image: rooms.image,
+    },
+    {
+      heading: rooms.heading,
+      text: rooms.description,
+      cta: { href: "/gabinety", label: "Zobacz nasze gabinety" },
+      image: hero.image,
+    },
+    {
+      heading: workshops.heading,
+      text: workshops.description,
+      cta: { href: "/warsztaty", label: "Zobacz nadchodzące wydarzenia" },
+      image: workshops.image,
+    },
+  ],
+} satisfies PaintedStoryProps;
 
 export const closingCta = "Zrób pierwszy krok do lepszego samopoczucia";
 
