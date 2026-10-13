@@ -14,9 +14,13 @@ import { EditorialHeading, SectionEyebrow } from "./typography";
 // the same entrance (SpecialistReveal) when animationPreset asks for it.
 //
 //   section
-//   ├── header: eyebrow, h2, caption
-//   ├── .ks-spotlight__art   the portrait on its splash (SpecialistArtwork)
+//   ├── header: eyebrow, h2, caption (across the top)
+//   ├── .ks-spotlight__art   the portrait on its splash (SpecialistArtwork),
+//   │                        on the left from 64 rem
 //   └── .ks-spotlight__body  name (h3), role, bio, facts, booking, profile
+//
+// The entrance waits until most of the portrait is on screen (the cards
+// start sooner: they are small).
 
 export interface SpecialistSpotlightProps {
   eyebrow?: ReactNode;
@@ -93,6 +97,7 @@ export function SpecialistSpotlight({
             matte="a"
             reducedMotionMode="static"
             delay={0}
+            threshold={0.8}
             className="ks-sp ks-spotlight__art"
           >
             {artwork}
