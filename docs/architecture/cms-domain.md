@@ -129,12 +129,21 @@ never drift.
 
 ## Admin CMS UI
 
-`/cms` is a single fixed page (no `[id]` route, no list): a summary card
-showing publish status, last-updated/last-published timestamps, an
-"Edytuj treść" button (opens a `Dialog` with an RHF+Zod form for
-heading/body/buttonLabel), a "Podgląd" link, and a "Publikuj" button.
-There is no create-page button, no slug field, no section type picker, no
-reorder control anywhere in this UI.
+`/cms` has one tab per page of the public site, in the address
+(`/cms?strona=glowna|gabinety`, `features/cms/page-params.ts`), in the
+portal's compact style (the same pieces as Ustawienia: `DetailTabs`,
+`DetailSection`, switch rows, a save at the end of each form). A tab lists
+that page's sections top to bottom: those with settings show them, those
+whose content lives in the site's code show as "treść stała", so the whole
+page reads in order. Each section saves its own draft; a bar over the
+sections shows the page's status (published, unpublished changes, the
+latest publish and edit) and its one "Publikuj stronę", which publishes
+every section of the page at once and refreshes it on the site. A section
+whose settings cannot load says so; the rest keeps working.
+
+There is no create-page button, no slug field, no section type picker:
+the pages and their sections are code's; adding a page's settings means a
+new site_content key and a new tab.
 
 ## Home → Obszary wsparcia (`support_areas`)
 
@@ -154,7 +163,7 @@ imageAlt, link: { href, label } | null }] }`. Ids are unique; `href` is a
 - **Draft/publish** as for the other keys. The migration seeds a starting
   draft and publishes nothing; until the first publish the site shows its
   own areas (`defaultSupportAreas` in `apps/web/src/content/site.tsx`).
-- **Admin**: `/cms` → tab "Obszary wsparcia": add, remove and reorder
+- **Admin**: `/cms` → Strona główna → "Obszary wsparcia": add, remove and reorder
   areas, upload a photo, set an optional link, save the draft, publish.
   Publishing revalidates `/`.
 - **Tests**: `supabase/tests/support_areas.sql` (who may read, edit,
@@ -181,7 +190,8 @@ description ≤300, imagePath | null, imageAlt } }`. A visible spotlight
 - **Until the first publish**: the team shows, the spotlight does not
   (`defaultHomeSections`). The migration seeds that draft with the usual
   texts filled in.
-- **Admin**: `/cms` → tab "Specjaliści". Publishing revalidates `/`.
+- **Admin**: `/cms` → Strona główna → "Z kim porozmawiasz" and "Poznaj
+  nasz zespół" (one form, one draft). Publishing the page revalidates `/`.
 - **The payload check is total**: since `20261013180000_home_sections.sql`
   `private.site_content_payload_is_valid` returns `COALESCE(…, false)`. A
   missing field used to make it NULL, and a `CHECK` passes on NULL, so a

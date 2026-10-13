@@ -1,77 +1,106 @@
+import { FixedSection, UnavailableSection } from "@/features/cms/fixed-section";
+import { HeroSection } from "@/features/cms/hero-section";
 import {
   loadHomeContent,
   loadHomeSections,
   loadRoomsPageContent,
   loadSupportAreas,
 } from "@/features/cms/loaders";
+import { cmsTabs, loadCmsParams } from "@/features/cms/page-params";
+import { PagePublishBar } from "@/features/cms/page-publish-bar";
+import { RoomsPageSections } from "@/features/cms/rooms-page-sections";
 import { settle } from "@/features/cms/settle";
-import { Card } from "@repo/ui/card";
+import { SpecialistsSections } from "@/features/cms/specialists-sections";
+import { SupportAreasSection } from "@/features/cms/support-areas-section";
+import { pageStatus } from "@/features/cms/view-model";
+import { DetailTabs } from "@repo/ui/detail-page";
+import { FullBleed } from "@repo/ui/full-bleed";
 import { PageTitle } from "@repo/ui/portal-content";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/tabs";
-import type { ReactNode } from "react";
-import { CmsHomeEditor } from "./cms-home-editor";
-import { CmsHomeSectionsEditor } from "./cms-home-sections-editor";
-import { CmsRoomsEditor } from "./cms-rooms-editor";
-import { CmsSupportAreasEditor } from "./cms-support-areas-editor";
 
-/** A tab whose content could not load: say so, keep the others working. */
-function Unavailable({ children }: { children: ReactNode }) {
+// CMS: one tab per page of the public site (in the address); in each, that
+// page's sections top to bottom with their settings, and over them the
+// page's status and its one "Publikuj stronę". Sections whose content lives
+// in the site's code are listed in their place as "treść stała". A section
+// whose settings cannot load says so; the rest keeps working.
+
+async function HomePage() {
+  const [hero, areas, sections] = await Promise.all([
+    settle("hero", loadHomeContent),
+    settle("obszary wsparcia", loadSupportAreas),
+    settle("sekcje specjalistów", loadHomeSections),
+  ]);
+  const loaded = [hero, areas, sections].filter((one) => one !== null);
   return (
-    <Card className="p-5 text-sm text-[var(--text-muted)]" role="status">
-      Nie udało się wczytać ustawień sekcji „{children}”. Odśwież stronę; jeśli
-      to nie pomoże, sekcja nie jest jeszcze gotowa w bazie danych.
-    </Card>
+    <>
+      <PagePublishBar page="glowna" status={pageStatus(loaded)} />
+      {hero ? (
+        <HeroSection content={hero} />
+      ) : (
+        <UnavailableSection title="Hero" />
+      )}
+      <FixedSection title="Myśli">
+        Pas trudnych myśli zamieniających się w dobre, pod hero.
+      </FixedSection>
+      {areas ? (
+        <SupportAreasSection content={areas} />
+      ) : (
+        <UnavailableSection title="Obszary wsparcia" />
+      )}
+      {sections ? (
+        <SpecialistsSections content={sections} />
+      ) : (
+        <UnavailableSection title="Z kim porozmawiasz · Poznaj nasz zespół" />
+      )}
+      <FixedSection title="Jak zacząć">
+        Historia „Twoja droga do lepszego samopoczucia”, malowana przy
+        przewijaniu.
+      </FixedSection>
+      <FixedSection title="Przestrzeń, która wspiera">
+        Zdjęcie i opis gabinetów z linkiem do strony Gabinety.
+      </FixedSection>
+      <FixedSection title="Wydarzenia, które inspirują">
+        Zdjęcie i opis warsztatów z linkiem do strony Warsztaty.
+      </FixedSection>
+      <FixedSection title="Zanim się zobaczymy">
+        Najczęstsze pytania przed pierwszą wizytą.
+      </FixedSection>
+      <FixedSection title="Zrób pierwszy krok">
+        Końcowe zaproszenie do umówienia wizyty.
+      </FixedSection>
+    </>
   );
 }
 
-export default async function CmsPage() {
-  // Each tab on its own: one that cannot load does not take the page down.
-  const [home, areas, sections, rooms] = await Promise.all([
-    settle("strona główna", loadHomeContent),
-    settle("obszary wsparcia", loadSupportAreas),
-    settle("specjaliści", loadHomeSections),
-    settle("gabinety", loadRoomsPageContent),
-  ]);
-
+async function RoomsPage() {
+  const rooms = await settle("gabinety", loadRoomsPageContent);
   return (
-    <div className="space-y-5">
+    <>
+      <PagePublishBar
+        page="gabinety"
+        status={pageStatus(rooms ? [rooms] : [])}
+      />
+      <FixedSection title="Tytuł strony">
+        Nagłówek strony Gabinety.
+      </FixedSection>
+      {rooms ? (
+        <RoomsPageSections content={rooms} />
+      ) : (
+        <UnavailableSection title="Co u nas znajdziesz · Opis siedziby" />
+      )}
+      <FixedSection title="Gabinety">
+        Zdjęcia i opisy gabinetów edytujesz w Gabinety, przy każdym gabinecie.
+      </FixedSection>
+    </>
+  );
+}
+
+export default async function CmsPage({ searchParams }: PageProps<"/cms">) {
+  const { strona } = loadCmsParams(await searchParams);
+  return (
+    <FullBleed>
       <PageTitle>CMS</PageTitle>
-      <Tabs defaultValue="home">
-        <TabsList>
-          <TabsTrigger value="home">Strona główna</TabsTrigger>
-          <TabsTrigger value="areas">Obszary wsparcia</TabsTrigger>
-          <TabsTrigger value="specialists">Specjaliści</TabsTrigger>
-          <TabsTrigger value="rooms">Gabinety</TabsTrigger>
-        </TabsList>
-        <TabsContent value="home">
-          {home ? (
-            <CmsHomeEditor initialData={home} />
-          ) : (
-            <Unavailable>Strona główna</Unavailable>
-          )}
-        </TabsContent>
-        <TabsContent value="areas">
-          {areas ? (
-            <CmsSupportAreasEditor initialData={areas} />
-          ) : (
-            <Unavailable>Obszary wsparcia</Unavailable>
-          )}
-        </TabsContent>
-        <TabsContent value="specialists">
-          {sections ? (
-            <CmsHomeSectionsEditor initialData={sections} />
-          ) : (
-            <Unavailable>Specjaliści</Unavailable>
-          )}
-        </TabsContent>
-        <TabsContent value="rooms">
-          {rooms ? (
-            <CmsRoomsEditor initialData={rooms} />
-          ) : (
-            <Unavailable>Gabinety</Unavailable>
-          )}
-        </TabsContent>
-      </Tabs>
-    </div>
+      <DetailTabs active={strona} label="Strony serwisu" tabs={cmsTabs()} />
+      {strona === "gabinety" ? <RoomsPage /> : <HomePage />}
+    </FullBleed>
   );
 }

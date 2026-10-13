@@ -2,11 +2,16 @@
 
 import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type {
-  HomePageContent,
-  HomeSectionsContent,
-  RoomsPageContent,
-  SupportAreasContent,
+import type { ActionResult } from "@/lib/use-save";
+import {
+  homePageContentSchema,
+  homeSectionsContentSchema,
+  roomsPageContentSchema,
+  supportAreasContentSchema,
+  type HomePageContent,
+  type HomeSectionsContent,
+  type RoomsPageContent,
+  type SupportAreasContent,
 } from "@repo/contracts";
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import {
@@ -20,117 +25,84 @@ import {
   updateSupportAreasDraft,
 } from "@repo/supabase";
 import { revalidatePath } from "next/cache";
-import {
-  loadHomeContent,
-  loadHomeSections,
-  loadRoomsPageContent,
-  loadSupportAreas,
-} from "./loaders";
+import type { z } from "zod";
 
-async function revalidatePublicHome() {
-  const webUrl = process.env.NEXT_PUBLIC_WEB_URL ?? "http://localhost:3000";
-  const secret = process.env.CMS_REVALIDATE_SECRET;
+// The CMS's saves, page by page: each section saves its own draft; a
+// page is published whole ("Publikuj stronę"), every section of it at
+// once, and the site refreshes that page.
 
-  if (!secret) {
-    throw new Error("CMS_REVALIDATE_SECRET is not configured");
+type Client = Awaited<ReturnType<typeof createClient>>;
+
+function failure(error: unknown, fallback: string): ActionResult {
+  if (typeof error === "object" && error && "code" in error) {
+    if (error.code === "42501")
+      return { ok: false, message: "Brak uprawnień do tej zmiany." };
   }
+  return { ok: false, message: fallback };
+}
 
-  const response = await fetch(new URL("/api/revalidate", webUrl), {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${secret}`,
-    },
-    body: JSON.stringify({ path: "/" }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to revalidate the public home page");
+async function saveDraft<Content>(
+  schema: z.ZodType<Content>,
+  values: unknown,
+  save: (client: Client, content: Content) => Promise<unknown>,
+): Promise<ActionResult> {
+  await requirePortalRole();
+  const parsed = schema.safeParse(values);
+  if (!parsed.success)
+    return { ok: false, message: "Sprawdź zaznaczone pola." };
+  try {
+    await save(await createClient(), parsed.data);
+    revalidatePath("/cms");
+    return { ok: true };
+  } catch (error) {
+    return failure(error, "Nie udało się zapisać szkicu.");
   }
 }
 
-export async function getHomeContentAction() {
-  await requirePortalRole();
-  return loadHomeContent();
-}
-
-export async function updateHomeDraftAction(input: HomePageContent) {
-  await requirePortalRole();
-  const client = await createClient();
-  await updateHomeDraft(client, input);
-  revalidatePath("/cms");
-  return loadHomeContent();
-}
-
-export async function publishHomeContentAction() {
-  await requirePortalRole();
-  const client = await createClient();
-  await publishHomeContent(client);
-  await revalidatePublicHome();
-  revalidatePath("/cms");
-  return loadHomeContent();
-}
-
-export async function getRoomsPageContentAction() {
-  await requirePortalRole();
-  return loadRoomsPageContent();
-}
-
-export async function updateRoomsPageDraftAction(input: RoomsPageContent) {
-  await requirePortalRole();
-  await updateRoomsPageDraft(await createClient(), input);
-  revalidatePath("/cms");
-  return loadRoomsPageContent();
-}
-
-export async function publishRoomsPageContentAction() {
-  await requirePortalRole();
-  await publishRoomsPageContent(await createClient());
-  await revalidateWeb([{ path: "/gabinety" }]);
-  revalidatePath("/cms");
-  return loadRoomsPageContent();
-}
-
-export async function getSupportAreasAction() {
-  await requirePortalRole();
-  return loadSupportAreas();
+export async function updateHomeDraftAction(values: HomePageContent) {
+  return saveDraft(homePageContentSchema, values, updateHomeDraft);
 }
 
 export async function updateSupportAreasDraftAction(
-  input: SupportAreasContent,
+  values: SupportAreasContent,
 ) {
-  await requirePortalRole();
-  await updateSupportAreasDraft(await createClient(), input);
-  revalidatePath("/cms");
-  return loadSupportAreas();
-}
-
-export async function publishSupportAreasAction() {
-  await requirePortalRole();
-  await publishSupportAreas(await createClient());
-  await revalidateWeb([{ path: "/" }]);
-  revalidatePath("/cms");
-  return loadSupportAreas();
-}
-
-export async function getHomeSectionsAction() {
-  await requirePortalRole();
-  return loadHomeSections();
+  return saveDraft(supportAreasContentSchema, values, updateSupportAreasDraft);
 }
 
 export async function updateHomeSectionsDraftAction(
-  input: HomeSectionsContent,
+  values: HomeSectionsContent,
 ) {
-  await requirePortalRole();
-  await updateHomeSectionsDraft(await createClient(), input);
-  revalidatePath("/cms");
-  return loadHomeSections();
+  return saveDraft(homeSectionsContentSchema, values, updateHomeSectionsDraft);
 }
 
-export async function publishHomeSectionsAction() {
+export async function updateRoomsPageDraftAction(values: RoomsPageContent) {
+  return saveDraft(roomsPageContentSchema, values, updateRoomsPageDraft);
+}
+
+async function publishPage(
+  publish: readonly ((client: Client) => Promise<void>)[],
+  path: string,
+): Promise<ActionResult> {
   await requirePortalRole();
-  await publishHomeSections(await createClient());
-  await revalidateWeb([{ path: "/" }]);
-  revalidatePath("/cms");
-  return loadHomeSections();
+  try {
+    const client = await createClient();
+    for (const section of publish) await section(client);
+    await revalidateWeb([{ path }]);
+    revalidatePath("/cms");
+    return { ok: true };
+  } catch (error) {
+    return failure(error, "Publikacja się nie powiodła.");
+  }
+}
+
+/** The homepage: the hero, the areas of help and the specialist sections. */
+export async function publishHomePageAction() {
+  return publishPage(
+    [publishHomeContent, publishSupportAreas, publishHomeSections],
+    "/",
+  );
+}
+
+export async function publishRoomsPageAction() {
+  return publishPage([publishRoomsPageContent], "/gabinety");
 }

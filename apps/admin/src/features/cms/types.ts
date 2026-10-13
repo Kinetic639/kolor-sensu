@@ -8,6 +8,9 @@ export interface HomeContentViewModel {
   hasUnpublishedChanges: boolean;
   publishedAtLabel: string | null;
   updatedAtLabel: string;
+  /** Raw, for the page's status (pageStatus). */
+  publishedAt: string | null;
+  updatedAt: string;
 }
 
 export interface RoomsPageViewModel {
@@ -17,6 +20,9 @@ export interface RoomsPageViewModel {
   hasUnpublishedChanges: boolean;
   publishedAtLabel: string | null;
   updatedAtLabel: string;
+  /** Raw, for the page's status (pageStatus). */
+  publishedAt: string | null;
+  updatedAt: string;
 }
 
 /** An area of help as the editor shows it: its photo's address to preview. */
@@ -30,6 +36,9 @@ export interface SupportAreasViewModel {
   hasUnpublishedChanges: boolean;
   publishedAtLabel: string | null;
   updatedAtLabel: string;
+  /** Raw, for the page's status (pageStatus). */
+  publishedAt: string | null;
+  updatedAt: string;
 }
 
 export interface HomeSectionsViewModel {
@@ -41,4 +50,7 @@ export interface HomeSectionsViewModel {
   hasUnpublishedChanges: boolean;
   publishedAtLabel: string | null;
   updatedAtLabel: string;
+  /** Raw, for the page's status (pageStatus). */
+  publishedAt: string | null;
+  updatedAt: string;
 }

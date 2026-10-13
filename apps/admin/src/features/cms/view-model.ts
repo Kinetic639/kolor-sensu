@@ -39,6 +39,8 @@ export function mapHomeContentViewModel(
     hasUnpublishedChanges,
     publishedAtLabel: formatDate(content.publishedAt),
     updatedAtLabel: formatDate(content.updatedAt) ?? "",
+    publishedAt: content.publishedAt,
+    updatedAt: content.updatedAt,
   };
 }
 
@@ -55,6 +57,8 @@ export function mapRoomsPageViewModel(
       published.showLocationDetails !== draft.showLocationDetails,
     publishedAtLabel: formatDate(content.publishedAt),
     updatedAtLabel: formatDate(content.updatedAt) ?? "",
+    publishedAt: content.publishedAt,
+    updatedAt: content.updatedAt,
   };
 }
 
@@ -73,6 +77,8 @@ export function mapSupportAreasViewModel(
       !published || JSON.stringify(published) !== JSON.stringify(draft),
     publishedAtLabel: formatDate(content.publishedAt),
     updatedAtLabel: formatDate(content.updatedAt) ?? "",
+    publishedAt: content.publishedAt,
+    updatedAt: content.updatedAt,
   };
 }
 
@@ -102,5 +108,45 @@ export function mapHomeSectionsViewModel(
       !published || JSON.stringify(published) !== JSON.stringify(draft),
     publishedAtLabel: formatDate(content.publishedAt),
     updatedAtLabel: formatDate(content.updatedAt) ?? "",
+    publishedAt: content.publishedAt,
+    updatedAt: content.updatedAt,
+  };
+}
+
+export interface PageStatus {
+  /** Every section of the page has been published at least once. */
+  isPublished: boolean;
+  hasUnpublishedChanges: boolean;
+  publishedAtLabel: string | null;
+  updatedAtLabel: string | null;
+}
+
+const latest = (dates: (string | null)[]) =>
+  dates.reduce<string | null>(
+    (last, date) => (date && (!last || date > last) ? date : last),
+    null,
+  );
+
+/** One page's status from its sections' (those that loaded). */
+export function pageStatus(
+  sections: readonly {
+    isPublished: boolean;
+    hasUnpublishedChanges: boolean;
+    publishedAt: string | null;
+    updatedAt: string;
+  }[],
+): PageStatus {
+  return {
+    isPublished:
+      sections.length > 0 && sections.every((section) => section.isPublished),
+    hasUnpublishedChanges: sections.some(
+      (section) => section.hasUnpublishedChanges,
+    ),
+    publishedAtLabel: formatDate(
+      latest(sections.map((section) => section.publishedAt)),
+    ),
+    updatedAtLabel: formatDate(
+      latest(sections.map((section) => section.updatedAt)),
+    ),
   };
 }
