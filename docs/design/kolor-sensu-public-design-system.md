@@ -439,7 +439,8 @@ revealed by **blooms**, never brush strokes.
   supplied splash asset, whole and unframed; the cut-out portrait at full box
   width, its lower edge dissolving into the watercolor in patches between
   67 % and 80 % of the box (`portrait-dissolve.png`), with the splash's own
-  pigment multiplied over the clothes there (`portrait-stain.png`); then the
+  pigment multiplied over its very bottom (`portrait-stain.png`, only from
+  70 % of the box: higher up it reads as stains on the clothes); then the
   info plate, the only rectangular element, overlapping from 80 %.
 - **Splash matte** (`generate-splash-matte.mjs` →
   `specialist-splash-matte.data.ts`, `splash-time.png`): 27 bloom regions.
@@ -635,13 +636,16 @@ CMS; `docs/architecture/cms-domain.md`) presents one specialist at length.
 
 - **Portrait:** the cards' own artwork (`SpecialistArtwork`: the cut-out
   portrait on its watercolor splash), only larger (up to 30 rem), with the
-  cards' entrance (`SpecialistReveal`, no plate). No new mask or backdrop.
+  cards' entrance (`SpecialistReveal`, no plate), which waits until 80 %
+  of the portrait is on screen (or as much as the screen can show). No new
+  mask or backdrop.
 - **Words:** the section header as elsewhere (eyebrow, heading, caption),
   then the name (h3), the role, the short bio, and short lists as chips on
   `primary-soft`: "W czym pomagam", "Z kim pracuję", "Formy pracy" (empty
   ones are left out). "Umów wizytę" and "Poznaj mnie bliżej" (the profile).
-- **Layout:** phones stack header, portrait, words; from 64 rem the words
-  take the left (header above the rest), the portrait the right.
+- **Layout:** phones stack header, portrait, words; from 64 rem the header
+  runs across the top, under it the portrait on the left and the words on
+  the right.
 - **Storybook:** Specialist spotlight (Default, Animated).
 
 ## 12. Primitives

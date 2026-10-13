@@ -69,6 +69,11 @@ export interface SpecialistRevealProps {
   reducedMotionMode: ReducedMotionMode;
   /** Extra wait (s) before this card starts, to stagger a row of cards. */
   delay: number;
+  /**
+   * How much of the card has to be on screen before it plays (0 to 1);
+   * less where the screen is too short to show that much of it.
+   */
+  threshold?: number;
   className?: string;
   children: ReactNode;
 }
@@ -88,6 +93,7 @@ export function SpecialistReveal({
   matte: variant,
   reducedMotionMode,
   delay,
+  threshold = 0.3,
   className,
   children,
 }: SpecialistRevealProps) {
@@ -212,12 +218,15 @@ export function SpecialistReveal({
         else reveal();
       };
 
-      // Prepare when the card comes near, play once a good part of it is on
-      // screen. (A frozen debug frame is drawn at once.)
+      // Prepare when the card comes near, play once enough of it is on
+      // screen: `threshold` of it, or as much as nine tenths of the
+      // screen can show. (A frozen debug frame is drawn at once.)
+      const height = root.getBoundingClientRect().height;
+      const fits = height > 0 ? (window.innerHeight * 0.9) / height : threshold;
       const stop =
         frozen === undefined
           ? watchReveal(root, {
-              threshold: 0.3,
+              threshold: Math.min(threshold, fits),
               near: () => void prepare(),
               visible: () => void start(),
             })
