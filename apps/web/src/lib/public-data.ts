@@ -5,6 +5,7 @@ import {
   getCurrentAnnouncement,
   getPublicCenterProfile,
   getPublicServiceBySlug,
+  getPublishedFirstSteps,
   getPublishedHomeContent,
   getPublishedHomeSections,
   getPublishedRoomsPageContent,
@@ -25,6 +26,7 @@ import {
 } from "@repo/supabase";
 import {
   arrangeOffer,
+  defaultFirstSteps,
   defaultHomeSections,
   defaultRoomsPageContent,
   flattenOffer,
@@ -90,6 +92,11 @@ export const getHomeContent = cache(() =>
 /** Home → Obszary wsparcia, published from the admin's /cms; null until then. */
 export const getSupportAreas = cache(() =>
   load("support areas", getPublishedSupportAreas, null),
+);
+
+/** Home → "Pierwszy krok", published from the admin's /cms (the site's own until then). */
+export const getFirstSteps = cache(() =>
+  load("first steps", getPublishedFirstSteps, defaultFirstSteps),
 );
 
 /**

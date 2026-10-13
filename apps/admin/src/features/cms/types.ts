@@ -1,4 +1,8 @@
-import type { HomeSpotlight, SupportArea } from "@repo/contracts";
+import type {
+  FirstStepsContent,
+  HomeSpotlight,
+  SupportArea,
+} from "@repo/contracts";
 
 export interface HomeContentViewModel {
   heading: string;
@@ -51,6 +55,15 @@ export interface HomeSectionsViewModel {
   publishedAtLabel: string | null;
   updatedAtLabel: string;
   /** Raw, for the page's status (pageStatus). */
+  publishedAt: string | null;
+  updatedAt: string;
+}
+
+export interface FirstStepsViewModel extends FirstStepsContent {
+  isPublished: boolean;
+  hasUnpublishedChanges: boolean;
+  publishedAtLabel: string | null;
+  updatedAtLabel: string;
   publishedAt: string | null;
   updatedAt: string;
 }

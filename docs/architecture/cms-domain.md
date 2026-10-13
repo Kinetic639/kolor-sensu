@@ -43,7 +43,7 @@ separation" below.
 
 ```
 site_content
-  key                text PRIMARY KEY CHECK (key IN ('home', 'rooms', 'support_areas', 'home_sections'))
+  key                text PRIMARY KEY CHECK (key IN ('home', 'rooms', 'support_areas', 'home_sections', 'first_steps'))
   draft_payload       jsonb NOT NULL
   published_payload   jsonb            -- null until first publish
   published_at        timestamptz
@@ -197,6 +197,24 @@ description ≤300, imagePath | null, imageAlt } }`. A visible spotlight
   missing field used to make it NULL, and a `CHECK` passes on NULL, so a
   payload missing e.g. `areas` or a /gabinety switch was accepted.
 - **Tests**: `supabase/tests/home_sections.sql`.
+
+## Home → Pierwszy krok (`first_steps`)
+
+The homepage band "Pierwszy krok" (`FirstSteps`: four steps of starting
+therapy on a brush stroke that paints itself with scroll) is code-owned,
+with its wave, icons and animation; the CMS sets whether it shows and its
+words.
+
+- **Payload** (`firstStepsContentSchema`): `{ visible, eyebrow ≤60,
+heading 1..100, description ≤300, steps: exactly 4 × { title ≤40,
+text ≤200 } }`. The database checks the switch, the heading and that
+  there are four steps each with a title and a text.
+- **Until the first publish** the band shows with the site's own words
+  (`defaultFirstSteps`); the migration
+  (`20261013200000_first_steps.sql`) seeds the same as the draft.
+- **Admin**: `/cms` → Strona główna → "Pierwszy krok". Published with the
+  page.
+- **Tests**: `supabase/tests/first_steps.sql`.
 
 ## Domain separation
 

@@ -1,4 +1,5 @@
 import {
+  defaultFirstSteps,
   defaultHomeSections,
   defaultRoomsPageContent,
   homePageContentSchema,
@@ -6,12 +7,15 @@ import {
 } from "@repo/contracts";
 import { describe, expect, it, vi } from "vitest";
 import {
+  getPublishedFirstSteps,
   getPublishedHomeSections,
   getPublishedRoomsPageContent,
   getPublishedSupportAreas,
+  publishFirstSteps,
   publishHomeSections,
   publishRoomsPageContent,
   publishSupportAreas,
+  updateFirstStepsDraft,
   updateHomeSectionsDraft,
   updateRoomsPageDraft,
   updateSupportAreasDraft,
@@ -347,5 +351,34 @@ describe("home sections", () => {
     expect(await uploadSiteImage(client, file, "spotlight")).toMatch(
       /^spotlight\/[0-9a-f-]{36}\.webp$/,
     );
+  });
+});
+
+describe("first steps", () => {
+  const steps = { ...defaultFirstSteps, heading: "Jak zacząć" };
+
+  it("shows the site's own band until something is published", async () => {
+    const eq = vi.fn(() => ({
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+    }));
+    const client = { from: () => ({ select: () => ({ eq }) }) } as never;
+    expect(await getPublishedFirstSteps(client)).toEqual(defaultFirstSteps);
+    expect(eq).toHaveBeenCalledWith("key", "first_steps");
+  });
+
+  it("saves the draft and publishes under the first_steps key", async () => {
+    const single = vi
+      .fn()
+      .mockResolvedValue({ data: { draft_payload: steps }, error: null });
+    const eq = vi.fn(() => ({ select: () => ({ single }) }));
+    const rpc = vi.fn().mockResolvedValue({ error: null });
+    const client = { from: () => ({ update: () => ({ eq }) }), rpc } as never;
+
+    expect(await updateFirstStepsDraft(client, steps)).toEqual(steps);
+    await publishFirstSteps(client);
+    expect(eq).toHaveBeenCalledWith("key", "first_steps");
+    expect(rpc).toHaveBeenCalledWith("publish_site_content", {
+      p_key: "first_steps",
+    });
   });
 });

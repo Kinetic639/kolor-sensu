@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import {
+  getFirstStepsAdmin,
   getHomeContentAdmin,
   getHomeSectionsAdmin,
   listSpecialistSummariesForAdmin,
@@ -10,6 +11,7 @@ import {
   supportAreaImageUrl,
 } from "@repo/supabase";
 import {
+  mapFirstStepsViewModel,
   mapHomeContentViewModel,
   mapHomeSectionsViewModel,
   mapRoomsPageViewModel,
@@ -44,4 +46,8 @@ export async function loadHomeSections() {
     (path) => supportAreaImageUrl(client, path),
     specialists,
   );
+}
+
+export async function loadFirstSteps() {
+  return mapFirstStepsViewModel(await getFirstStepsAdmin(await createClient()));
 }

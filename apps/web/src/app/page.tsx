@@ -1,6 +1,7 @@
 import {
   FaqSection,
   FeatureSection,
+  FirstSteps,
   HeroSection,
   PaintedStory,
   SpecialistSpotlight,
@@ -25,6 +26,7 @@ import {
 import { withHomeContent } from "@/lib/home-content";
 import { toSpecialistCard } from "@/lib/presentation";
 import {
+  getFirstSteps,
   getHomeContent,
   getHomeSections,
   getSpecialists,
@@ -38,12 +40,14 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [homeContent, supportAreas, sections, specialists] = await Promise.all([
-    getHomeContent(),
-    getSupportAreas(),
-    getHomeSections(),
-    getSpecialists(),
-  ]);
+  const [homeContent, supportAreas, firstSteps, sections, specialists] =
+    await Promise.all([
+      getHomeContent(),
+      getSupportAreas(),
+      getFirstSteps(),
+      getHomeSections(),
+      getSpecialists(),
+    ]);
   const spotlight = toSpotlight(sections, specialists);
 
   return (
@@ -62,6 +66,14 @@ export default async function Home() {
         )}
         cta={{ href: "/oferta", label: "Zobacz całą ofertę" }}
       />
+      {firstSteps.visible ? (
+        <FirstSteps
+          eyebrow={firstSteps.eyebrow || undefined}
+          heading={firstSteps.heading}
+          description={firstSteps.description || undefined}
+          steps={firstSteps.steps}
+        />
+      ) : null}
       {spotlight ? (
         <SpecialistSpotlight
           {...spotlight}

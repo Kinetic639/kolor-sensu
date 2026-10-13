@@ -1,6 +1,8 @@
+import { FirstStepsSection } from "@/features/cms/first-steps-section";
 import { FixedSection, UnavailableSection } from "@/features/cms/fixed-section";
 import { HeroSection } from "@/features/cms/hero-section";
 import {
+  loadFirstSteps,
   loadHomeContent,
   loadHomeSections,
   loadRoomsPageContent,
@@ -24,12 +26,13 @@ import { PageTitle } from "@repo/ui/portal-content";
 // whose settings cannot load says so; the rest keeps working.
 
 async function HomePage() {
-  const [hero, areas, sections] = await Promise.all([
+  const [hero, areas, steps, sections] = await Promise.all([
     settle("hero", loadHomeContent),
     settle("obszary wsparcia", loadSupportAreas),
+    settle("pierwszy krok", loadFirstSteps),
     settle("sekcje specjalistów", loadHomeSections),
   ]);
-  const loaded = [hero, areas, sections].filter((one) => one !== null);
+  const loaded = [hero, areas, steps, sections].filter((one) => one !== null);
   return (
     <>
       <PagePublishBar page="glowna" status={pageStatus(loaded)} />
@@ -45,6 +48,11 @@ async function HomePage() {
         <SupportAreasSection content={areas} />
       ) : (
         <UnavailableSection title="Obszary wsparcia" />
+      )}
+      {steps ? (
+        <FirstStepsSection content={steps} />
+      ) : (
+        <UnavailableSection title="Pierwszy krok" />
       )}
       {sections ? (
         <SpecialistsSections content={sections} />

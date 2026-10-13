@@ -4,10 +4,12 @@ import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/use-save";
 import {
+  firstStepsContentSchema,
   homePageContentSchema,
   homeSectionsContentSchema,
   roomsPageContentSchema,
   supportAreasContentSchema,
+  type FirstStepsContent,
   type HomePageContent,
   type HomeSectionsContent,
   type RoomsPageContent,
@@ -15,10 +17,12 @@ import {
 } from "@repo/contracts";
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import {
+  publishFirstSteps,
   publishHomeContent,
   publishHomeSections,
   publishRoomsPageContent,
   publishSupportAreas,
+  updateFirstStepsDraft,
   updateHomeDraft,
   updateHomeSectionsDraft,
   updateRoomsPageDraft,
@@ -75,6 +79,10 @@ export async function updateHomeSectionsDraftAction(
   return saveDraft(homeSectionsContentSchema, values, updateHomeSectionsDraft);
 }
 
+export async function updateFirstStepsDraftAction(values: FirstStepsContent) {
+  return saveDraft(firstStepsContentSchema, values, updateFirstStepsDraft);
+}
+
 export async function updateRoomsPageDraftAction(values: RoomsPageContent) {
   return saveDraft(roomsPageContentSchema, values, updateRoomsPageDraft);
 }
@@ -95,10 +103,18 @@ async function publishPage(
   }
 }
 
-/** The homepage: the hero, the areas of help and the specialist sections. */
+/**
+ * The homepage: the hero, the areas of help, the first steps and the
+ * specialist sections.
+ */
 export async function publishHomePageAction() {
   return publishPage(
-    [publishHomeContent, publishSupportAreas, publishHomeSections],
+    [
+      publishHomeContent,
+      publishSupportAreas,
+      publishFirstSteps,
+      publishHomeSections,
+    ],
     "/",
   );
 }

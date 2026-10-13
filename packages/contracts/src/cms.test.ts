@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  defaultFirstSteps,
   defaultHomeSections,
+  firstStepsContentSchema,
   homeSectionsContentSchema,
   SUPPORT_AREAS_MAX,
   supportAreasContentSchema,
@@ -171,6 +173,53 @@ describe("home sections", () => {
         spotlight,
         showFaq: true,
       }).success,
+    ).toBe(false);
+  });
+});
+
+describe("first steps", () => {
+  it("starts shown, with four steps and the usual words", () => {
+    expect(firstStepsContentSchema.parse(defaultFirstSteps)).toEqual(
+      defaultFirstSteps,
+    );
+    expect(defaultFirstSteps.visible).toBe(true);
+    expect(defaultFirstSteps.steps.map((step) => step.title)).toEqual([
+      "Kontakt",
+      "Pierwsze spotkanie",
+      "Wspólny plan",
+      "Rozpoczęcie pracy",
+    ]);
+  });
+
+  it("has exactly four steps, each with a title and a sentence", () => {
+    const three = {
+      ...defaultFirstSteps,
+      steps: defaultFirstSteps.steps.slice(0, 3),
+    };
+    expect(firstStepsContentSchema.safeParse(three).success).toBe(false);
+    const empty = {
+      ...defaultFirstSteps,
+      steps: defaultFirstSteps.steps.map((step, index) =>
+        index === 1 ? { ...step, title: " " } : step,
+      ),
+    };
+    expect(firstStepsContentSchema.safeParse(empty).success).toBe(false);
+  });
+
+  it("needs a heading, keeps texts short and rejects unknown fields", () => {
+    expect(
+      firstStepsContentSchema.safeParse({ ...defaultFirstSteps, heading: "" })
+        .success,
+    ).toBe(false);
+    expect(
+      firstStepsContentSchema.safeParse({
+        ...defaultFirstSteps,
+        description: "x".repeat(301),
+      }).success,
+    ).toBe(false);
+    expect(
+      firstStepsContentSchema.safeParse({ ...defaultFirstSteps, color: "red" })
+        .success,
     ).toBe(false);
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  mapFirstStepsViewModel,
   mapHomeSectionsViewModel,
   pageStatus,
   mapRoomsPageViewModel,
@@ -213,5 +214,37 @@ describe("pageStatus", () => {
 
   it("is not published when no section loaded", () => {
     expect(pageStatus([]).isPublished).toBe(false);
+  });
+});
+
+describe("mapFirstStepsViewModel", () => {
+  const steps = {
+    visible: true,
+    eyebrow: "Pierwszy krok",
+    heading: "Jak zacząć",
+    description: "",
+    steps: [1, 2, 3, 4].map((n) => ({ title: `Krok ${n}`, text: "Opis." })),
+  };
+  const content = {
+    draft: steps,
+    published: steps,
+    publishedAt: "2026-10-13T10:00:00Z",
+    updatedAt: "2026-10-13T11:00:00Z",
+  };
+
+  it("edits the draft and knows it is published as it stands", () => {
+    const model = mapFirstStepsViewModel(content);
+    expect(model.steps).toHaveLength(4);
+    expect(model.heading).toBe("Jak zacząć");
+    expect(model.hasUnpublishedChanges).toBe(false);
+  });
+
+  it("notices a draft that differs from what is published", () => {
+    expect(
+      mapFirstStepsViewModel({
+        ...content,
+        draft: { ...steps, visible: false },
+      }).hasUnpublishedChanges,
+    ).toBe(true);
   });
 });
