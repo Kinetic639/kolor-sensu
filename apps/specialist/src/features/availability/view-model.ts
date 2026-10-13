@@ -367,6 +367,21 @@ export function mapAvailabilityViewModel({
     });
 
   const weekly = formatHours(weekMinutes);
+  // The rules' usual week: every recurring rule's hours on each of its
+  // days (every other week: half that, on average); one-day windows are
+  // not part of it. Not what is left of this week (#31).
+  const rulesWeekly = formatHours(
+    current
+      .filter((rule) => rule.recurrence === "weekly")
+      .reduce(
+        (sum, rule) =>
+          sum +
+          ((timeToMinutes(rule.endsAt) - timeToMinutes(rule.startsAt)) *
+            rule.weekdays.length) /
+            rule.intervalWeeks,
+        0,
+      ),
+  );
   return {
     rooms: roomViews,
     calendar: {
@@ -395,7 +410,11 @@ export function mapAvailabilityViewModel({
       items,
       total: current.length,
       dayCounts,
-      metrics: { weekly, booked: formatHours(0), free: weekly },
+      metrics: {
+        weekly: rulesWeekly,
+        booked: formatHours(0),
+        free: rulesWeekly,
+      },
     },
     timeOff: timeOff
       .filter((off) => new Date(off.endsAt) > now)

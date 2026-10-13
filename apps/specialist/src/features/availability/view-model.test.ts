@@ -319,6 +319,33 @@ describe("rules list", () => {
     });
   });
 
+  it("totals the rules' usual week, not what is left of this one (#31)", () => {
+    // Made on Wednesday: this week has only Wednesday to Friday of it.
+    const model = mapAvailabilityViewModel({
+      ...base,
+      now: new Date("2030-01-09T07:00:00Z"),
+      rules: [
+        rule({
+          id: "workdays",
+          weekdays: [1, 2, 3, 4, 5],
+          startsAt: "09:00",
+          endsAt: "17:00",
+          validFrom: "2030-01-09",
+        }),
+        // Every other week: half of it a week, on average.
+        rule({ id: "fortnight", weekdays: [6], intervalWeeks: 2 }),
+        // Once: not part of a usual week.
+        rule({ id: "once", recurrence: "once", validFrom: "2030-01-12" }),
+      ],
+    });
+    expect(model.calendar.stats.available).toBe("32 godz.");
+    expect(model.rules.metrics).toEqual({
+      weekly: "42 godz.",
+      booked: "0 godz.",
+      free: "42 godz.",
+    });
+  });
+
   it("lists time off that has not ended", () => {
     const model = mapAvailabilityViewModel({
       ...base,
