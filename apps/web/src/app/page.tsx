@@ -3,6 +3,7 @@ import {
   FeatureSection,
   HeroSection,
   OfferSection,
+  PaintedStory,
   SpecialistsSection,
   ThoughtsLens,
 } from "@repo/ui/public-site";
@@ -14,6 +15,7 @@ import {
   offerCopy,
   rooms,
   specialistsCopy,
+  story,
   thoughts,
   workshops,
 } from "@/content/site";
@@ -58,6 +60,7 @@ export default async function Home() {
           animationPreset="splash-reveal"
         />
       ) : null}
+      <PaintedStory {...story} />
       <FeatureSection
         {...rooms}
         cta={{ href: "/gabinety", label: "Zobacz nasze gabinety" }}

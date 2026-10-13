@@ -1047,6 +1047,123 @@
       translate: -20% 0;
     }
   }
+
+  /* --------------------------------------------------------- Painted story */
+
+  /* PaintedStory (painted-story.tsx). Without the script, on phones and
+     under reduced motion: the steps follow one another, text then picture. */
+  .ks-story {
+    padding-block: var(--spacing-section);
+  }
+
+  .ks-story__stage {
+    display: grid;
+    gap: clamp(2.5rem, 6vw, 4.5rem);
+  }
+
+  .ks-story__step {
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+  }
+
+  .ks-story__count {
+    font-size: 1.125rem;
+    letter-spacing: 0.08em;
+  }
+
+  .ks-story__line {
+    display: none;
+  }
+
+  @media (min-width: 64rem) {
+    .ks-story__step {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      column-gap: 5rem;
+    }
+  }
+
+  /* Phones: each picture waits unpainted until it scrolls in. */
+  .ks-story[data-flowing] .ks-story__picture:not([data-shown]),
+  .ks-story[data-pinned] .ks-story__picture:not([data-shown]) {
+    opacity: 0;
+  }
+
+  .ks-story__picture {
+    transition: opacity 450ms var(--ease-soft);
+  }
+
+  /* Wide screens with motion: one pinned screen, the steps stacked in it. */
+  .ks-story[data-pinned] {
+    height: calc(var(--ks-story-steps) * 90vh + 10vh);
+    padding-block: 0;
+  }
+
+  .ks-story[data-pinned] .ks-story__stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    grid-template-columns: minmax(0, 4.5fr) 1px minmax(0, 7.5fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    column-gap: clamp(2.5rem, 4vw, 4rem);
+    row-gap: 2.5rem;
+    align-content: center;
+    padding-block: 6rem 3rem;
+  }
+
+  .ks-story[data-pinned] .ks-story__intro {
+    grid-area: 1 / 1;
+  }
+
+  .ks-story[data-pinned] .ks-story__line {
+    position: relative;
+    display: block;
+    grid-area: 1 / 2 / 3 / 3;
+    background: var(--color-border);
+  }
+
+  .ks-story__line-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--color-pink-strong);
+    transform-origin: top;
+    transform: scaleY(0);
+  }
+
+  .ks-story[data-pinned] .ks-story__step {
+    display: contents;
+  }
+
+  .ks-story[data-pinned] .ks-story__text {
+    grid-area: 2 / 1;
+    align-self: start;
+    opacity: 0;
+    translate: 0 1.75rem;
+    visibility: hidden;
+    transition:
+      opacity 350ms ease-out,
+      translate 350ms ease-out,
+      visibility 0s linear 350ms;
+  }
+
+  .ks-story[data-pinned] .ks-story__text[data-active] {
+    opacity: 1;
+    translate: 0 0;
+    visibility: visible;
+    transition:
+      opacity 700ms var(--ease-soft) 250ms,
+      translate 900ms var(--ease-soft) 250ms,
+      visibility 0s;
+  }
+
+  .ks-story[data-pinned] .ks-story__picture {
+    grid-area: 1 / 3 / 3 / 4;
+    align-self: center;
+  }
+
+  .ks-story[data-pinned] .ks-story__picture[data-shown] {
+    transition-duration: 150ms;
+  }
 }
 
 /* The ring's size eases between states (the stretch, set every frame, must
