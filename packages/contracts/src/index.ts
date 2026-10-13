@@ -106,12 +106,17 @@ export {
   defaultRoomsPageContent,
   homePageContentSchema,
   roomsPageContentSchema,
+  SUPPORT_AREAS_MAX,
+  supportAreaSchema,
+  supportAreasContentSchema,
 } from "@repo/contracts/cms";
 export type {
   HomeContentAdmin,
   HomePageContent,
   RoomsPageContent,
   SiteContentAdmin,
+  SupportArea,
+  SupportAreasContent,
 } from "@repo/contracts/cms";
 export {
   emptyRichTextDocument,

@@ -43,7 +43,7 @@ separation" below.
 
 ```
 site_content
-  key                text PRIMARY KEY CHECK (key IN ('home', 'rooms'))
+  key                text PRIMARY KEY CHECK (key IN ('home', 'rooms', 'support_areas'))
   draft_payload       jsonb NOT NULL
   published_payload   jsonb            -- null until first publish
   published_at        timestamptz
@@ -52,8 +52,10 @@ site_content
 
 The set of keys is a hard database-level guarantee, not a UI convention
 (`home` for the home hero, `rooms` for /gabinety's section switches,
-added in `20260927201414_site_content_rooms_page.sql`; each key's payload
-shape is checked by `private.site_content_payload_is_valid`):
+added in `20260927201414_site_content_rooms_page.sql`, `support_areas` for
+the homepage's areas of help, added in
+`20261013150000_support_areas.sql`; each key's payload shape is checked by
+`private.site_content_payload_is_valid`):
 `admin` has **no `INSERT` grant at all** on this table (each row
 is seeded once by migration, same pattern as `center_settings`/
 `center_public_profile`), so not even Admin can create a second/arbitrary
@@ -131,6 +133,30 @@ showing publish status, last-updated/last-published timestamps, an
 heading/body/buttonLabel), a "Podgląd" link, and a "Publikuj" button.
 There is no create-page button, no slug field, no section type picker, no
 reorder control anywhere in this UI.
+
+## Home → Obszary wsparcia (`support_areas`)
+
+The homepage section "W czym możemy pomóc" (`SupportAreas`, small circles
+around a large one) is code-owned; the CMS edits only its list of areas.
+
+- **Payload** (`supportAreasContentSchema`, `packages/contracts/src/cms.ts`):
+  `{ areas: [1..10 × { id, title ≤60, lead ≤240, imagePath | null,
+imageAlt, link: { href, label } | null }] }`. Ids are unique; `href` is a
+  path within the site (starts with one `/`, no spaces), so no outside or
+  `javascript:` links. The database checks the list's length and each
+  area's `id`/`title`/`lead`; the schema checks the rest.
+- **Photos**: the public `site-media` bucket (5 MB, JPG/PNG/WebP), under
+  `support-areas/<uuid>.<ext>`; only admins insert, update or delete (RLS on
+  `storage.objects`), anyone reads by URL. Each upload gets a new name, so a
+  draft never changes the file the published areas show.
+- **Draft/publish** as for the other keys. The migration seeds a starting
+  draft and publishes nothing; until the first publish the site shows its
+  own areas (`defaultSupportAreas` in `apps/web/src/content/site.tsx`).
+- **Admin**: `/cms` → tab "Obszary wsparcia": add, remove and reorder
+  areas, upload a photo, set an optional link, save the draft, publish.
+  Publishing revalidates `/`.
+- **Tests**: `supabase/tests/support_areas.sql` (who may read, edit,
+  publish and upload; malformed lists refused).
 
 ## Domain separation
 

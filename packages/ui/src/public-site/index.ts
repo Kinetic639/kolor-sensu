@@ -19,6 +19,8 @@ export type {
 } from "./surfaces";
 export { CookieConsent } from "./cookie-consent";
 export { CursorRing } from "./cursor-ring";
+export { SUPPORT_AREA_SLOTS, SupportAreas } from "./support-areas";
+export type { SupportAreaItem, SupportAreasProps } from "./support-areas";
 export { ThoughtsLens } from "./thoughts-lens";
 export type { ThoughtsLensProps } from "./thoughts-lens";
 export type { CookieChoice, CookieConsentProps } from "./cookie-consent";

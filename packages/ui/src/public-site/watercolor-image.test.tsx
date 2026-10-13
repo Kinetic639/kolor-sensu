@@ -235,13 +235,13 @@ describe("WatercolorImage", () => {
       container.querySelector("[data-animation], [data-reveal]"),
     ).toBeNull();
     // Whatever animates only targets components marked for the reveal, or
-    // ThoughtsLens' drifting rows; the base rules of the static composition
-    // never read a reveal value.
+    // ThoughtsLens' drifting rows, or SupportAreas' circles; the base rules
+    // of the static composition never read a reveal value.
     for (const { selector, body, context } of cssRules()) {
       if (!/--ks-reveal|animation\b/.test(body)) continue;
       if (context.some((at) => at.startsWith("@keyframes"))) continue;
       expect(selector).toMatch(
-        /\[data-(animation|reduced-motion|reveal|intro)[=\]]|\.ks-thoughts/,
+        /\[data-(animation|reduced-motion|reveal|intro)[=\]]|\.ks-thoughts|\.ks-areas/,
       );
     }
   });

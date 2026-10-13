@@ -2,35 +2,42 @@ import {
   FaqSection,
   FeatureSection,
   HeroSection,
-  OfferSection,
   PaintedStory,
   SpecialistsSection,
+  SupportAreas,
   ThoughtsLens,
 } from "@repo/ui/public-site";
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
 import {
+  bookingCta,
+  defaultSupportAreas,
   faq,
   hero,
-  offerCopy,
   rooms,
   specialistsCopy,
   story,
+  supportAreasCopy,
   thoughts,
   workshops,
 } from "@/content/site";
 import { withHomeContent } from "@/lib/home-content";
-import { toOfferTile, toSpecialistCard } from "@/lib/presentation";
-import { getHomeContent, getServices, getSpecialists } from "@/lib/public-data";
+import { toSpecialistCard } from "@/lib/presentation";
+import {
+  getHomeContent,
+  getSpecialists,
+  getSupportAreas,
+} from "@/lib/public-data";
+import { toSupportAreaItems } from "@/lib/support-areas";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
 export default async function Home() {
-  const [homeContent, services, specialists] = await Promise.all([
+  const [homeContent, supportAreas, specialists] = await Promise.all([
     getHomeContent(),
-    getServices(),
+    getSupportAreas(),
     getSpecialists(),
   ]);
 
@@ -41,14 +48,15 @@ export default async function Home() {
         animationPreset="watercolor-reveal"
       />
       <ThoughtsLens {...thoughts} />
-      {services.length > 0 ? (
-        <OfferSection
-          {...offerCopy}
-          services={services.slice(0, 4).map(toOfferTile)}
-          cta={{ href: "/oferta", label: "Zobacz całą ofertę" }}
-          animationPreset="brush-reveal"
-        />
-      ) : null}
+      <SupportAreas
+        {...supportAreasCopy}
+        areas={toSupportAreaItems(
+          supportAreas,
+          defaultSupportAreas,
+          bookingCta,
+        )}
+        cta={{ href: "/oferta", label: "Zobacz całą ofertę" }}
+      />
       {specialists.length > 0 ? (
         <SpecialistsSection
           {...specialistsCopy}
