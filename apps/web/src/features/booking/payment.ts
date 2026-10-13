@@ -8,6 +8,18 @@ import type Stripe from "stripe";
 /** Stripe needs a session to live at least 30 minutes; one more for clocks. */
 const SESSION_MINUTES = 31;
 
+/**
+ * What a visit can be paid with, whatever else is switched on in Stripe's
+ * dashboard: a card (Apple Pay and Google Pay pay as one), BLIK and
+ * Przelewy24. Not Klarna, Link or other later methods (#27). A filter on
+ * the dashboard's methods; the SDK's types do not list it for Checkout yet.
+ */
+export const PAYMENT_METHODS = ["card", "blik", "p24"] as const;
+
+export type CheckoutSessionParams = Stripe.Checkout.SessionCreateParams & {
+  allowed_payment_method_types: string[];
+};
+
 export function checkoutSessionParams({
   booking,
   returnUrl,
@@ -20,11 +32,12 @@ export function checkoutSessionParams({
   /** "czwartek, 2 października 2030, godz. 10:00" */
   visitLabel: string;
   now?: Date;
-}): Stripe.Checkout.SessionCreateParams {
+}): CheckoutSessionParams {
   const metadata = { appointment_reference: booking.reference };
   return {
     ui_mode: "elements",
     mode: "payment",
+    allowed_payment_method_types: [...PAYMENT_METHODS],
     // Stripe needs the e-mail for the receipt; nothing else of the client
     // (their name, phone or notes) goes to Stripe.
     customer_email: booking.details?.email,
