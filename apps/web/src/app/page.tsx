@@ -21,7 +21,6 @@ import {
   story,
   supportAreasCopy,
   thoughts,
-  workshops,
 } from "@/content/site";
 import { withHomeContent } from "@/lib/home-content";
 import { toSpecialistCard } from "@/lib/presentation";
@@ -92,19 +91,13 @@ export default async function Home() {
           animationPreset="splash-reveal"
         />
       ) : null}
-      <PaintedStory {...story} />
       <FeatureSection
         {...rooms}
         cta={{ href: "/gabinety", label: "Zobacz nasze gabinety" }}
         imagePosition="left"
         animationPreset="watercolor-reveal"
       />
-      <FeatureSection
-        {...workshops}
-        cta={{ href: "/warsztaty", label: "Zobacz nadchodzące wydarzenia" }}
-        imagePosition="right"
-        animationPreset="watercolor-reveal"
-      />
+      <PaintedStory {...story} />
       <FaqSection
         items={faq}
         description="Najczęstsze pytania osób, które zastanawiają się nad pierwszą wizytą."

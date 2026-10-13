@@ -8,25 +8,20 @@
 // for as long as it takes to scroll through its steps. The text column
 // changes step by step, and each new step's picture is painted over the
 // previous one with the same brush strokes WatercolorImage's entrance uses
-// (watercolor-paint-matte.ts). Between the two runs the tracker: the wave
-// of FirstSteps stood on end (painted-story-wave.ts), a point per step; the
-// line draws itself down to each step's point as that step begins, and the
-// points it has reached take colour, the current one largest. Scrolling
-// back lifts the later pictures off again and takes the line back.
+// (watercolor-paint-matte.ts). Scrolling back lifts the later pictures off
+// again.
 //
-// On phones, under reduced motion and without a script, the steps simply
-// follow one another: text, then picture; on phones each picture is still
-// painted in as it comes into view. Safari (no SVG masks on HTML elements)
-// gets a short cross-fade instead of the brush.
+// Where the story is, is told by one counter over the text ("01 / 03"):
+// when the step changes its number rolls, the old one leaving upwards
+// into mist, the new one coming up sharp.
 
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { ImageProps } from "next/image";
-import { type CSSProperties, type ReactNode, useId, useRef } from "react";
+import { type CSSProperties, type ReactNode, useRef } from "react";
 import { cn } from "../lib/utils";
 import { ArrowLink } from "./actions";
-import { storyWave, storyWaveDrawn } from "./painted-story-wave";
 import { matches, svgMasksSupported, watchReveal } from "./reveal-support";
 import { EditorialHeading, SectionEyebrow } from "./typography";
 import { revealProperties } from "./watercolor-reveal";
@@ -103,9 +98,8 @@ export function PaintedStory({
   className,
 }: PaintedStoryProps) {
   const ref = useRef<HTMLElement>(null);
-  const gradientId = useId();
-  const count = steps.length;
-  const wave = storyWave(count);
+  const total = steps.length;
+  const numbered = (value: number) => String(value).padStart(2, "0");
 
   useGSAP(
     () => {
@@ -121,11 +115,8 @@ export function PaintedStory({
       const pictures = Array.from(
         root.querySelectorAll<HTMLElement>(".ks-story__picture"),
       );
-      const dots = Array.from(
-        root.querySelectorAll<HTMLElement>(".ks-story__dot"),
-      );
-      const waveLine = root.querySelector<SVGPathElement>(
-        ".ks-story__wave-line",
+      const digits = Array.from(
+        root.querySelectorAll<HTMLElement>(".ks-story__counter-digit"),
       );
       const media = gsap.matchMedia();
 
@@ -157,20 +148,23 @@ export function PaintedStory({
             else delete text.dataset.active;
             text.inert = at !== index;
           });
-          dots.forEach((dot, at) => {
-            if (at <= index) dot.dataset.reached = "true";
-            else delete dot.dataset.reached;
-            if (at === index) dot.dataset.active = "true";
-            else delete dot.dataset.active;
+          count(index);
+          active = index;
+        };
+        // The counter: which number shows.
+        const count = (index: number) => {
+          digits.forEach((digit, at) => {
+            if (at === index) digit.dataset.active = "true";
+            else delete digit.dataset.active;
           });
           root.style.setProperty("--ks-story-step", String(index));
-          active = index;
         };
 
         // The first picture is painted when the section comes into view;
         // after that, scrolling chooses the step.
         texts[0]!.dataset.active = "true";
         texts.forEach((text, at) => (text.inert = at !== 0));
+        count(0);
         let started = false;
         const stopWatch = watchReveal(root, {
           threshold: 0.3,
@@ -180,25 +174,9 @@ export function PaintedStory({
             if (active < 0) show(0);
           },
         });
-        // The tracker's line follows the scroll with a little lag.
-        const drawn = { share: 0 };
-        const draw = () => {
-          if (waveLine) {
-            waveLine.style.strokeDashoffset = String(
-              Math.round((1 - drawn.share) * 1000) / 1000,
-            );
-          }
-        };
-        draw();
-        const drawTo = gsap.quickTo(drawn, "share", {
-          duration: 0.4,
-          ease: "power2.out",
-          onUpdate: draw,
-        });
         const follow = (self: ScrollTrigger) => {
-          drawTo(storyWaveDrawn(self.progress, count));
           if (!started) return;
-          show(Math.min(count - 1, Math.floor(self.progress * count)));
+          show(Math.min(steps.length - 1, Math.floor(self.progress * total)));
         };
         const trigger = ScrollTrigger.create({
           trigger: root,
@@ -211,11 +189,8 @@ export function PaintedStory({
         return () => {
           stopWatch();
           trigger.kill();
-          gsap.killTweensOf(drawn);
-          waveLine?.style.removeProperty("stroke-dashoffset");
           stops.forEach((stop) => stop());
-          for (const element of [...texts, ...pictures, ...dots]) {
-            delete element.dataset.reached;
+          for (const element of [...texts, ...pictures, ...digits]) {
             delete element.dataset.active;
             delete element.dataset.shown;
             element.inert = false;
@@ -258,55 +233,29 @@ export function PaintedStory({
       ref={ref}
       id={id}
       className={cn("ks-story", className)}
-      style={{ "--ks-story-steps": count } as CSSProperties}
+      style={{ "--ks-story-steps": total } as CSSProperties}
     >
       <div className="ks-story__stage max-w-page px-gutter mx-auto">
         <div className="ks-story__intro grid gap-3">
           {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
           <EditorialHeading size="h3">{heading}</EditorialHeading>
         </div>
-        <div className="ks-story__line" aria-hidden="true">
-          <svg
-            className="ks-story__wave"
-            viewBox="0 0 50 1000"
-            preserveAspectRatio="none"
-            focusable="false"
-          >
-            <defs>
-              {/* Pink, then green, changing quickly in the middle, as in
-                  FirstSteps: mixed evenly they would pass through brown.
-                  In the tracker's own space: a straight line (a story of
-                  one step) has no box to measure a gradient by. */}
-              <linearGradient
-                id={gradientId}
-                gradientUnits="userSpaceOnUse"
-                x1="0"
-                x2="0"
-                y1="0"
-                y2="1000"
-              >
-                <stop offset="0" stopColor="var(--color-pink)" />
-                <stop offset="0.44" stopColor="var(--color-pink)" />
-                <stop offset="0.56" stopColor="var(--color-primary)" />
-                <stop offset="1" stopColor="var(--color-primary)" />
-              </linearGradient>
-            </defs>
-            <path className="ks-story__wave-ghost" d={wave.path} />
-            <path
-              className="ks-story__wave-line"
-              d={wave.path}
-              pathLength={1}
-              stroke={`url(#${gradientId})`}
-            />
-          </svg>
-          {wave.points.map((y) => (
-            <span
-              key={y}
-              className="ks-story__dot"
-              data-tone={y < 500 ? "pink" : "sage"}
-              style={{ top: `${y / 10}%` }}
-            />
-          ))}
+        {/* The pinned story's one counter (each step's own count, below,
+            is for the steps that follow one another). */}
+        <div className="ks-story__counter font-display" aria-hidden="true">
+          <span className="ks-story__counter-window">
+            <span className="ks-story__counter-reel">
+              {steps.map((_, index) => (
+                <span key={index} className="ks-story__counter-digit">
+                  {numbered(index + 1)}
+                </span>
+              ))}
+            </span>
+          </span>
+          <span className="ks-story__counter-total">
+            {"/ "}
+            {numbered(total)}
+          </span>
         </div>
         {steps.map((step, index) => (
           <div key={index} className="ks-story__step">
@@ -315,10 +264,10 @@ export function PaintedStory({
                 className="ks-story__count font-display text-pink-strong"
                 aria-hidden="true"
               >
-                {String(index + 1).padStart(2, "0")}
+                {numbered(index + 1)}
                 <span className="text-text-muted">
                   {" / "}
-                  {String(count).padStart(2, "0")}
+                  {numbered(total)}
                 </span>
               </p>
               <EditorialHeading as="h3" size="h2">

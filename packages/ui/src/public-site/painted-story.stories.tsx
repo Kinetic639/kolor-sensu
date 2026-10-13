@@ -4,7 +4,7 @@ import { PaintedStory } from "./painted-story";
 
 // PaintedStory: a short story told while scrolling (after David Whyte
 // Experience). From 64 rem up, with motion welcome, one screen stays pinned
-// while you scroll through the steps: the text changes, a wavy line runs down from point to point,
+// while you scroll through the steps: the text changes, the counter's numbers roll,
 // and each picture is painted over the previous one with the watercolour
 // brush. On phones the steps follow one another, each picture painted in
 // as it comes into view; under reduced motion everything simply shows.
