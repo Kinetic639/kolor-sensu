@@ -135,6 +135,55 @@ export const defaultHomeSections: HomeSectionsContent = {
   },
 };
 
+/**
+ * Home → "Pierwszy krok": a compact band of four steps of starting
+ * therapy, joined by a wave that paints itself as the page scrolls. The
+ * band (its animation, icons, layout) is code's; the CMS sets whether it
+ * shows, its words and the four steps' names and sentences.
+ */
+export const firstStepsContentSchema = z.strictObject({
+  visible: z.boolean(),
+  eyebrow: z.string().trim().max(60).default(""),
+  heading: z.string().trim().min(1).max(100),
+  description: z.string().trim().max(300).default(""),
+  steps: z
+    .array(
+      z.strictObject({
+        title: z.string().trim().min(1).max(40),
+        text: z.string().trim().min(1).max(200),
+      }),
+    )
+    .length(4),
+});
+
+export type FirstStepsContent = z.infer<typeof firstStepsContentSchema>;
+
+/** Until anything is published: shown, with these words. */
+export const defaultFirstSteps: FirstStepsContent = {
+  visible: true,
+  eyebrow: "Pierwszy krok",
+  heading: "Od pierwszego kontaktu do wsparcia na dłużej",
+  description: "",
+  steps: [
+    {
+      title: "Kontakt",
+      text: "Umawiasz się na dogodny termin: telefonicznie, przez formularz lub online.",
+    },
+    {
+      title: "Pierwsze spotkanie",
+      text: "Rozmawiamy o Twoich potrzebach, pytaniach i oczekiwaniach.",
+    },
+    {
+      title: "Wspólny plan",
+      text: "Proponujemy możliwe formy wsparcia i dalsze kroki.",
+    },
+    {
+      title: "Rozpoczęcie pracy",
+      text: "Zaczynamy proces terapeutyczny w Twoim tempie i w bezpiecznej atmosferze.",
+    },
+  ],
+};
+
 export interface SiteContentAdmin<Content> {
   draft: Content;
   published: Content | null;

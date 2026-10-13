@@ -587,6 +587,43 @@ art counseling gallery (https://talkingwalls.co.il/art-counseling).
   Reduced motion: no drift, no fades of the text.
 - **Storybook:** Support areas (Default, TenAreas).
 
+### First steps
+
+`FirstSteps` ("Pierwszy krok", homepage, between the areas of help and the
+specialist sections; words from the CMS) shows four steps of starting
+therapy on a compact band, after the last variant of the owner's mock-up
+sheet: circles joined by a wave.
+
+- **Stroke:** the supplied brush stroke (pink flowing into sage,
+  `docs/design/references/public/first-steps-ribbon.png`, cropped by
+  `generate-first-steps-ribbon.mjs`) lies behind the band at half
+  strength. While the band comes up the screen it fills in from both
+  sides to the middle: a threshold on its time map
+  (`first-steps-matte.ts`, #11's technique at a small scale), frayed
+  along the bristles.
+- **Hold:** from 64 rem, with motion welcome, the band then stays in the
+  middle of the screen (sticky, as `PaintedStory` holds its screen) for
+  110 vh of scrolling. Only then does the wave start.
+- **Wave:** a line from the heading's side through the middle of each
+  circle, rising and falling between them, ending in the last circle
+  (`first-steps-wave.ts`); pink then green with a quick change in the
+  middle (mixed evenly the two pass through brown). Its whole way shows
+  faintly in grey; scrolling draws it in colour from the left over the
+  first 82 % of the hold, a drop of paint at its tip (0.45 s lag).
+  Scrolling back takes the wave back.
+- **Steps:** circles drawn by hand (not quite round), a pale wash of
+  green or pink by turns, an ink line icon, the name in the display face,
+  a sentence under it. They wait grey: the circle colourless, icon and
+  name muted, the sentence hidden. When the line gets to a step it takes
+  colour, for good: the wash spreads from the middle (0.9 s), a ring
+  ripples out (1.3 s), the icon settles with a small overshoot (the last
+  step's sprout grows from its root), the name darkens and the sentence
+  comes up under it; coloured circles breathe (7 % over 6 s).
+- **Phones:** the steps one under another, circle left, words right; no
+  wave and no hold, each step takes colour as it comes into view. Reduced
+  motion and no script: the finished band.
+- **Storybook:** First steps (ScrollToPaint, Finished).
+
 ### Specialist spotlight
 
 `SpecialistSpotlight` ("Z kim porozmawiasz", homepage, switched on in the

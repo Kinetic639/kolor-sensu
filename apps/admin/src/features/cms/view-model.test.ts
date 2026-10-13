@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  mapFirstStepsViewModel,
   mapHomeSectionsViewModel,
+  pageStatus,
   mapRoomsPageViewModel,
   mapSupportAreasViewModel,
 } from "./view-model";
@@ -157,5 +159,92 @@ describe("mapHomeSectionsViewModel", () => {
       [],
     );
     expect(model.hasUnpublishedChanges).toBe(true);
+  });
+});
+
+describe("pageStatus", () => {
+  const section = (overrides: Record<string, unknown> = {}) => ({
+    isPublished: true,
+    hasUnpublishedChanges: false,
+    publishedAt: "2026-10-13T10:00:00Z",
+    updatedAt: "2026-10-13T10:00:00Z",
+    ...overrides,
+  });
+
+  it("is published with nothing pending when every section is", () => {
+    const status = pageStatus([section(), section()]);
+    expect(status.isPublished).toBe(true);
+    expect(status.hasUnpublishedChanges).toBe(false);
+    expect(status.publishedAtLabel).not.toBeNull();
+  });
+
+  it("has changes when any section has, and is unpublished while any never was", () => {
+    const status = pageStatus([
+      section(),
+      section({
+        isPublished: false,
+        hasUnpublishedChanges: true,
+        publishedAt: null,
+      }),
+    ]);
+    expect(status.isPublished).toBe(false);
+    expect(status.hasUnpublishedChanges).toBe(true);
+  });
+
+  it("dates the page by its latest publish and latest edit", () => {
+    const status = pageStatus([
+      section({
+        publishedAt: "2026-10-01T10:00:00Z",
+        updatedAt: "2026-10-01T10:00:00Z",
+      }),
+      section({
+        publishedAt: "2026-10-12T10:00:00Z",
+        updatedAt: "2026-10-13T12:00:00Z",
+      }),
+    ]);
+    expect(status.publishedAtLabel).toBe(
+      pageStatus([section({ publishedAt: "2026-10-12T10:00:00Z" })])
+        .publishedAtLabel,
+    );
+    expect(status.updatedAtLabel).toBe(
+      pageStatus([section({ updatedAt: "2026-10-13T12:00:00Z" })])
+        .updatedAtLabel,
+    );
+  });
+
+  it("is not published when no section loaded", () => {
+    expect(pageStatus([]).isPublished).toBe(false);
+  });
+});
+
+describe("mapFirstStepsViewModel", () => {
+  const steps = {
+    visible: true,
+    eyebrow: "Pierwszy krok",
+    heading: "Jak zacząć",
+    description: "",
+    steps: [1, 2, 3, 4].map((n) => ({ title: `Krok ${n}`, text: "Opis." })),
+  };
+  const content = {
+    draft: steps,
+    published: steps,
+    publishedAt: "2026-10-13T10:00:00Z",
+    updatedAt: "2026-10-13T11:00:00Z",
+  };
+
+  it("edits the draft and knows it is published as it stands", () => {
+    const model = mapFirstStepsViewModel(content);
+    expect(model.steps).toHaveLength(4);
+    expect(model.heading).toBe("Jak zacząć");
+    expect(model.hasUnpublishedChanges).toBe(false);
+  });
+
+  it("notices a draft that differs from what is published", () => {
+    expect(
+      mapFirstStepsViewModel({
+        ...content,
+        draft: { ...steps, visible: false },
+      }).hasUnpublishedChanges,
+    ).toBe(true);
   });
 });

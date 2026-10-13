@@ -1531,6 +1531,356 @@
       max-width: 30rem;
     }
   }
+
+  /* ------------------------------------------------------------ First steps */
+
+  /* FirstSteps (first-steps.tsx), "Pierwszy krok": four steps on a compact
+     band. The supplied brush stroke lies behind them, a wave runs through
+     their circles and ends in the last. The script says how far things are
+     (the stroke's matte, the wave's dash, --ks-steps-progress, data-bloomed
+     per step); with data-armed (motion welcome) the waiting state below
+     applies, without it the band is simply finished. */
+  .ks-steps {
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+  }
+
+  .ks-steps__stage {
+    position: relative;
+  }
+
+  /* The stroke: a little wider than the page, low behind the steps. Its
+     mask (the time map's front) is set by the script. */
+  .ks-steps__ribbon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: -1;
+    width: max(108%, 56rem);
+    aspect-ratio: 2172 / 300;
+    translate: -50% -50%;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* The matte's <svg>: draws nothing, takes no room, stays rendered. */
+  .ks-steps__matte {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  .ks-steps__inner {
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+  }
+
+  .ks-steps__track {
+    position: relative;
+    --ks-steps-bubble: 4.75rem;
+  }
+
+  .ks-steps__list {
+    display: grid;
+    gap: 1.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Phones: the steps one under another, circle left, words right. */
+  .ks-steps__step {
+    --ks-steps-tone: color-mix(in oklch, var(--color-primary) 24%, white);
+    --ks-steps-deep: var(--color-primary);
+    display: grid;
+    grid-template-columns: var(--ks-steps-bubble) minmax(0, 1fr);
+    column-gap: 1.25rem;
+    row-gap: 0.25rem;
+    align-items: start;
+    align-content: start;
+  }
+
+  .ks-steps__step[data-tone="pink"] {
+    --ks-steps-tone: color-mix(in oklch, var(--color-pink) 26%, white);
+    --ks-steps-deep: var(--color-pink);
+  }
+
+  /* A circle drawn by hand: not quite round. */
+  .ks-steps__bubble,
+  .ks-steps__bubble::before,
+  .ks-steps__wash,
+  .ks-steps__ring {
+    border-radius: 53% 47% 51% 49% / 48% 52% 47% 53%;
+  }
+
+  .ks-steps__bubble {
+    position: relative;
+    z-index: 1;
+    grid-row: span 2;
+    display: grid;
+    place-items: center;
+    width: var(--ks-steps-bubble);
+    aspect-ratio: 1;
+  }
+
+  /* The paper under the wash: it hides the wave where it passes behind,
+     and is the grey circle that waits for its colour. */
+  .ks-steps__bubble::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklab, var(--color-ink) 8%, var(--color-bg));
+  }
+
+  /* The wash: pale in the middle, pooled a little darker at the rim. Its
+     own layer, so it can spread and breathe without the icon. */
+  .ks-steps__wash {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at 46% 42%,
+      color-mix(in oklab, var(--ks-steps-tone) 70%, white),
+      var(--ks-steps-tone) 72%,
+      color-mix(in oklab, var(--ks-steps-deep) 9%, var(--ks-steps-tone))
+    );
+    transition:
+      scale 900ms var(--ease-soft),
+      opacity 450ms ease-out;
+  }
+
+  /* The ripple a step sends out as it takes colour; otherwise unseen. */
+  .ks-steps__ring {
+    position: absolute;
+    inset: 0;
+    border: 1.5px solid var(--ks-steps-deep);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ks-steps__icon {
+    position: relative;
+    display: grid;
+    color: var(--color-ink);
+    transform-origin: 50% 100%;
+    transition:
+      color 500ms ease-out 150ms,
+      opacity 500ms ease-out 150ms,
+      scale 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 150ms;
+  }
+
+  .ks-steps__icon svg {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .ks-steps__title {
+    align-self: end;
+    font-size: 1.1875rem;
+    line-height: 1.2;
+    color: var(--color-ink);
+    transition: color 600ms ease-out 150ms;
+  }
+
+  .ks-steps__text {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+    transition:
+      opacity 600ms ease-out 300ms,
+      translate 700ms var(--ease-soft) 300ms;
+  }
+
+  /* The wave and its drop: wide screens only (see below). */
+  .ks-steps__wave,
+  .ks-steps__drop {
+    display: none;
+  }
+
+  @media (min-width: 64rem) {
+    .ks-steps__inner {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 9fr);
+      column-gap: clamp(2rem, 4vw, 4rem);
+    }
+
+    .ks-steps__list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.5rem;
+    }
+
+    .ks-steps__step {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: center;
+      row-gap: 0.5rem;
+      text-align: center;
+    }
+
+    .ks-steps__bubble {
+      grid-row: auto;
+      margin-bottom: 0.5rem;
+    }
+
+    /* The wave's 1000 x 100 space over the row of circles: its mid height
+       is the circles' middle. */
+    .ks-steps__wave {
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: block;
+      width: 100%;
+      height: var(--ks-steps-bubble);
+      overflow: visible;
+    }
+
+    .ks-steps__wave path {
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+    }
+
+    /* The way ahead, faint, under the drawn line. */
+    .ks-steps__wave-ghost {
+      display: none;
+      stroke: var(--color-border-strong);
+      opacity: 0.3;
+    }
+
+    .ks-steps__wave-line {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 0;
+    }
+
+    .ks-steps[data-armed] .ks-steps__wave-ghost {
+      display: block;
+    }
+
+    /* Held (the script found room and motion): the band stays in the
+       middle of the screen (--ks-steps-top) while this much scrolling
+       draws the wave. */
+    .ks-steps[data-held] .ks-steps__stage {
+      position: sticky;
+      top: var(--ks-steps-top, 20vh);
+    }
+
+    .ks-steps[data-held]::after {
+      content: "";
+      display: block;
+      height: 110vh;
+    }
+  }
+
+  /* --- Waiting (motion welcome): grey until the line arrives. --- */
+
+  .ks-steps[data-armed] .ks-steps__step:not([data-bloomed]) .ks-steps__wash {
+    scale: 0.15;
+    opacity: 0;
+  }
+
+  .ks-steps[data-armed] .ks-steps__step:not([data-bloomed]) .ks-steps__icon {
+    color: var(--color-text-muted);
+    opacity: 0.55;
+    scale: 0.86;
+  }
+
+  .ks-steps[data-armed] .ks-steps__step:not([data-bloomed]) .ks-steps__title {
+    color: var(--color-text-muted);
+  }
+
+  .ks-steps[data-armed] .ks-steps__step:not([data-bloomed]) .ks-steps__text {
+    opacity: 0;
+    translate: 0 0.6rem;
+  }
+
+  @media (min-width: 64rem) {
+    /* The drop of paint at the wave's tip: pink, turning green quickly in
+       the middle, as the wave and the stroke do (mixed evenly the two pass
+       through brown); it slips under the circles, and is gone before the
+       start and after the end. */
+    .ks-steps[data-armed] .ks-steps__drop {
+      position: absolute;
+      z-index: 0;
+      display: block;
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+      background: color-mix(
+        in oklab,
+        var(--color-primary)
+          clamp(0%, (var(--ks-steps-progress, 0) - 0.44) * 833%, 100%),
+        var(--color-pink)
+      );
+      translate: -50% -50%;
+      opacity: clamp(
+        0,
+        min(
+          var(--ks-steps-progress, 0) * 40,
+          (1 - var(--ks-steps-progress, 0)) * 40
+        ),
+        1
+      );
+      pointer-events: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Taking colour: a ring ripples out of the circle... */
+    .ks-steps[data-armed] .ks-steps__step[data-bloomed] .ks-steps__ring {
+      animation: ks-steps-ripple 1300ms ease-out 100ms both;
+    }
+
+    /* ...the last step's sprout grows from its root... */
+    .ks-steps[data-armed]
+      .ks-steps__step[data-bloomed]:last-child
+      .ks-steps__icon {
+      animation: ks-steps-grow 1100ms var(--ease-soft) 200ms both;
+    }
+
+    /* ...and coloured circles breathe, each a little out of step with
+       the next. */
+    .ks-steps[data-armed] .ks-steps__step[data-bloomed] .ks-steps__wash {
+      animation: ks-steps-breathe 6s ease-in-out 1.2s infinite alternate;
+    }
+
+    .ks-steps[data-armed]
+      .ks-steps__step[data-bloomed]:nth-child(even)
+      .ks-steps__wash {
+      animation-delay: 2.7s;
+    }
+  }
+
+  @keyframes ks-steps-ripple {
+    from {
+      opacity: 0.6;
+      scale: 1;
+    }
+
+    to {
+      opacity: 0;
+      scale: 1.8;
+    }
+  }
+
+  @keyframes ks-steps-grow {
+    from {
+      scale: 0.7 0.25;
+    }
+
+    60% {
+      scale: 1 1.12;
+    }
+
+    to {
+      scale: 1;
+    }
+  }
+
+  @keyframes ks-steps-breathe {
+    to {
+      scale: 1.07;
+    }
+  }
 }
 
 /* The ring's size eases between states (the stretch, set every frame, must

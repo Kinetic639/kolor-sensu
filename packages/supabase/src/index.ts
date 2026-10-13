@@ -89,7 +89,11 @@ export {
 } from "./services";
 export type { AdminServiceOfferSummary, AdminServiceSummary } from "./services";
 export {
+  getFirstStepsAdmin,
   getHomeContentAdmin,
+  getPublishedFirstSteps,
+  publishFirstSteps,
+  updateFirstStepsDraft,
   getHomeSectionsAdmin,
   getPublishedHomeContent,
   getPublishedHomeSections,

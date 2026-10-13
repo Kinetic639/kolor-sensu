@@ -1,10 +1,13 @@
 import {
+  defaultFirstSteps,
   defaultHomeSections,
   defaultRoomsPageContent,
+  firstStepsContentSchema,
   homePageContentSchema,
   homeSectionsContentSchema,
   roomsPageContentSchema,
   supportAreasContentSchema,
+  type FirstStepsContent,
   type HomeContentAdmin,
   type HomePageContent,
   type HomeSectionsContent,
@@ -24,6 +27,7 @@ const HOME_KEY = "home";
 const ROOMS_KEY = "rooms";
 const SUPPORT_AREAS_KEY = "support_areas";
 const HOME_SECTIONS_KEY = "home_sections";
+const FIRST_STEPS_KEY = "first_steps";
 
 // The site's own photos: a public bucket only admins write to.
 const SITE_MEDIA_BUCKET = "site-media";
@@ -292,5 +296,34 @@ export async function getPublishedHomeSections(
       HOME_SECTIONS_KEY,
       homeSectionsContentSchema,
     )) ?? defaultHomeSections
+  );
+}
+
+export function getFirstStepsAdmin(
+  client: SupabaseClient<Database>,
+): Promise<SiteContentAdmin<FirstStepsContent>> {
+  return getContentAdmin(client, FIRST_STEPS_KEY, firstStepsContentSchema);
+}
+
+export function updateFirstStepsDraft(
+  client: SupabaseClient<Database>,
+  input: FirstStepsContent,
+): Promise<FirstStepsContent> {
+  return updateDraft(client, FIRST_STEPS_KEY, firstStepsContentSchema, input);
+}
+
+export function publishFirstSteps(
+  client: SupabaseClient<Database>,
+): Promise<void> {
+  return publish(client, FIRST_STEPS_KEY);
+}
+
+/** The published band; the site's own words, shown, until then. */
+export async function getPublishedFirstSteps(
+  client: SupabaseClient<Database>,
+): Promise<FirstStepsContent> {
+  return (
+    (await getPublished(client, FIRST_STEPS_KEY, firstStepsContentSchema)) ??
+    defaultFirstSteps
   );
 }
