@@ -131,25 +131,11 @@ enabled = true
 # [storage.image_transformation]
 # enabled = true
 
-# Store analytical data in S3 for running ETL jobs over Iceberg Catalog
-# This feature is only available on the hosted platform.
-[storage.analytics]
-enabled = true
-max_namespaces = 10
-max_tables = 10
-max_catalogs = 2
-
-# Analytics Buckets is available to Supabase Pro plan.
-# [storage.analytics.buckets.my-warehouse]
-
-# Store vector embeddings in S3 for large and durable datasets
-[storage.vector]
-enabled = true
-max_buckets = 10
-max_indexes = 5
-
-[storage.image_transformation]
-enabled = true
+# Storage analytics, vector buckets and image transformation are not
+# declared: the app uses none of them, and projects differ (DEV has them
+# off, a new project on), so `config push` leaves each project's own value
+# alone. (`supabase init` declared them on, and the push then tried to
+# switch them on remotely.)
 
 # Vector Buckets is available to Supabase Pro plan.
 # [storage.vector.buckets.documents-openai]
