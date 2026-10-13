@@ -3,6 +3,7 @@ import {
   FeatureSection,
   HeroSection,
   PaintedStory,
+  SpecialistSpotlight,
   SpecialistsSection,
   SupportAreas,
   ThoughtsLens,
@@ -25,9 +26,11 @@ import { withHomeContent } from "@/lib/home-content";
 import { toSpecialistCard } from "@/lib/presentation";
 import {
   getHomeContent,
+  getHomeSections,
   getSpecialists,
   getSupportAreas,
 } from "@/lib/public-data";
+import { toSpotlight } from "@/lib/spotlight";
 import { toSupportAreaItems } from "@/lib/support-areas";
 
 export const metadata: Metadata = {
@@ -35,11 +38,13 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [homeContent, supportAreas, specialists] = await Promise.all([
+  const [homeContent, supportAreas, sections, specialists] = await Promise.all([
     getHomeContent(),
     getSupportAreas(),
+    getHomeSections(),
     getSpecialists(),
   ]);
+  const spotlight = toSpotlight(sections, specialists);
 
   return (
     <>
@@ -57,7 +62,14 @@ export default async function Home() {
         )}
         cta={{ href: "/oferta", label: "Zobacz całą ofertę" }}
       />
-      {specialists.length > 0 ? (
+      {spotlight ? (
+        <SpecialistSpotlight
+          {...spotlight}
+          booking={bookingCta}
+          animationPreset="splash-reveal"
+        />
+      ) : null}
+      {sections.showSpecialists && specialists.length > 0 ? (
         <SpecialistsSection
           {...specialistsCopy}
           specialists={specialists.slice(0, 3).map(toSpecialistCard)}

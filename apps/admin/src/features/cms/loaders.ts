@@ -3,12 +3,15 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import {
   getHomeContentAdmin,
+  getHomeSectionsAdmin,
+  listSpecialistSummariesForAdmin,
   getRoomsPageContentAdmin,
   getSupportAreasAdmin,
   supportAreaImageUrl,
 } from "@repo/supabase";
 import {
   mapHomeContentViewModel,
+  mapHomeSectionsViewModel,
   mapRoomsPageViewModel,
   mapSupportAreasViewModel,
 } from "./view-model";
@@ -27,5 +30,18 @@ export async function loadSupportAreas() {
   const client = await createClient();
   return mapSupportAreasViewModel(await getSupportAreasAdmin(client), (path) =>
     supportAreaImageUrl(client, path),
+  );
+}
+
+export async function loadHomeSections() {
+  const client = await createClient();
+  const [sections, specialists] = await Promise.all([
+    getHomeSectionsAdmin(client),
+    listSpecialistSummariesForAdmin(client),
+  ]);
+  return mapHomeSectionsViewModel(
+    sections,
+    (path) => supportAreaImageUrl(client, path),
+    specialists,
   );
 }

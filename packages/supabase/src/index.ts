@@ -90,7 +90,12 @@ export {
 export type { AdminServiceOfferSummary, AdminServiceSummary } from "./services";
 export {
   getHomeContentAdmin,
+  getHomeSectionsAdmin,
   getPublishedHomeContent,
+  getPublishedHomeSections,
+  publishHomeSections,
+  updateHomeSectionsDraft,
+  uploadSiteImage,
   getPublishedRoomsPageContent,
   getPublishedSupportAreas,
   getRoomsPageContentAdmin,

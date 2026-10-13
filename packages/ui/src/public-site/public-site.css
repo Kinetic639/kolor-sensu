@@ -1483,6 +1483,54 @@
       transition: none;
     }
   }
+
+  /* ----------------------------------------------------- Specialist spotlight */
+
+  /* SpecialistSpotlight ("Z kim porozmawiasz"): phones stack the header,
+     the portrait and the rest; from 64 rem the words take the left, the
+     portrait (the cards' artwork, larger) the right. */
+  .ks-spotlight__grid {
+    display: grid;
+    gap: 2.5rem;
+  }
+
+  .ks-spotlight__art {
+    width: 100%;
+    max-width: 26rem;
+    justify-self: center;
+  }
+
+  .ks-spotlight__chip {
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+    background: var(--color-primary-soft);
+  }
+
+  @media (min-width: 64rem) {
+    .ks-spotlight__grid {
+      grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+      grid-template-areas:
+        "header art"
+        "body art";
+      align-items: start;
+      column-gap: clamp(3rem, 6vw, 6rem);
+      row-gap: 2rem;
+    }
+
+    .ks-spotlight__header {
+      grid-area: header;
+    }
+
+    .ks-spotlight__body {
+      grid-area: body;
+    }
+
+    .ks-spotlight__art {
+      grid-area: art;
+      align-self: center;
+      max-width: 30rem;
+    }
+  }
 }
 
 /* The ring's size eases between states (the stretch, set every frame, must

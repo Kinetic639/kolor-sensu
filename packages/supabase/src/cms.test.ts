@@ -1,16 +1,21 @@
 import {
+  defaultHomeSections,
   defaultRoomsPageContent,
   homePageContentSchema,
   roomsPageContentSchema,
 } from "@repo/contracts";
 import { describe, expect, it, vi } from "vitest";
 import {
+  getPublishedHomeSections,
   getPublishedRoomsPageContent,
   getPublishedSupportAreas,
+  publishHomeSections,
   publishRoomsPageContent,
   publishSupportAreas,
+  updateHomeSectionsDraft,
   updateRoomsPageDraft,
   updateSupportAreasDraft,
+  uploadSiteImage,
   uploadSupportAreaImage,
 } from "./cms";
 
@@ -274,5 +279,73 @@ describe("support areas", () => {
       "Wybierz plik JPG, PNG lub WebP.",
     );
     expect(from).not.toHaveBeenCalled();
+  });
+});
+
+describe("home sections", () => {
+  const sections = {
+    showSpecialists: false,
+    spotlight: {
+      visible: true,
+      specialistId: "6f1c2b9a-3c41-4e2b-9a55-0d3f2a7b8c10",
+      eyebrow: "Poznaj nasz zespół",
+      heading: "Z kim porozmawiasz",
+      description: "",
+      imagePath: "spotlight/a.webp",
+      imageAlt: "Anna",
+    },
+  };
+
+  function publicClient(published: unknown) {
+    const eq = vi.fn(() => ({
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: published
+          ? { key: "home_sections", published_payload: published }
+          : null,
+        error: null,
+      }),
+    }));
+    return {
+      client: { from: () => ({ select: () => ({ eq }) }) } as never,
+      eq,
+    };
+  }
+
+  it("shows the team and hides the spotlight until something is published", async () => {
+    const { client } = publicClient(null);
+    expect(await getPublishedHomeSections(client)).toEqual(defaultHomeSections);
+  });
+
+  it("reads the published sections", async () => {
+    const { client, eq } = publicClient(sections);
+    expect(await getPublishedHomeSections(client)).toEqual(sections);
+    expect(eq).toHaveBeenCalledWith("key", "home_sections");
+  });
+
+  it("saves the draft and publishes under the home_sections key", async () => {
+    const single = vi
+      .fn()
+      .mockResolvedValue({ data: { draft_payload: sections }, error: null });
+    const eq = vi.fn(() => ({ select: () => ({ single }) }));
+    const update = vi.fn(() => ({ eq }));
+    const rpc = vi.fn().mockResolvedValue({ error: null });
+    const client = { from: () => ({ update }), rpc } as never;
+
+    expect(await updateHomeSectionsDraft(client, sections)).toEqual(sections);
+    await publishHomeSections(client);
+    expect(eq).toHaveBeenCalledWith("key", "home_sections");
+    expect(rpc).toHaveBeenCalledWith("publish_site_content", {
+      p_key: "home_sections",
+    });
+  });
+
+  it("uploads a site photo into the folder it is for", async () => {
+    const upload = vi.fn().mockResolvedValue({ error: null });
+    const client = { storage: { from: () => ({ upload }) } } as never;
+    const file = new File(["x"], "anna.webp", { type: "image/webp" });
+
+    expect(await uploadSiteImage(client, file, "spotlight")).toMatch(
+      /^spotlight\/[0-9a-f-]{36}\.webp$/,
+    );
   });
 });

@@ -1,11 +1,14 @@
 import type {
   HomeContentAdmin,
+  HomeSectionsContent,
   RoomsPageContent,
   SiteContentAdmin,
   SupportAreasContent,
 } from "@repo/contracts";
+import type { AdminSpecialistSummary } from "@repo/supabase";
 import type {
   HomeContentViewModel,
+  HomeSectionsViewModel,
   RoomsPageViewModel,
   SupportAreasViewModel,
 } from "./types";
@@ -64,6 +67,35 @@ export function mapSupportAreasViewModel(
     areas: draft.areas.map((area) => ({
       ...area,
       imageUrl: area.imagePath ? imageUrl(area.imagePath) : null,
+    })),
+    isPublished: published !== null,
+    hasUnpublishedChanges:
+      !published || JSON.stringify(published) !== JSON.stringify(draft),
+    publishedAtLabel: formatDate(content.publishedAt),
+    updatedAtLabel: formatDate(content.updatedAt) ?? "",
+  };
+}
+
+export function mapHomeSectionsViewModel(
+  content: SiteContentAdmin<HomeSectionsContent>,
+  imageUrl: (path: string) => string,
+  specialists: readonly AdminSpecialistSummary[],
+): HomeSectionsViewModel {
+  const { draft, published } = content;
+  return {
+    showSpecialists: draft.showSpecialists,
+    spotlight: {
+      ...draft.spotlight,
+      imageUrl: draft.spotlight.imagePath
+        ? imageUrl(draft.spotlight.imagePath)
+        : null,
+    },
+    specialists: specialists.map((specialist) => ({
+      id: specialist.id,
+      name:
+        specialist.publicDisplayName ??
+        `${specialist.firstName} ${specialist.lastName}`,
+      onSite: specialist.active && specialist.publicationStatus === "published",
     })),
     isPublished: published !== null,
     hasUnpublishedChanges:

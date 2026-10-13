@@ -587,6 +587,22 @@ art counseling gallery (https://talkingwalls.co.il/art-counseling).
   Reduced motion: no drift, no fades of the text.
 - **Storybook:** Support areas (Default, TenAreas).
 
+### Specialist spotlight
+
+`SpecialistSpotlight` ("Z kim porozmawiasz", homepage, switched on in the
+CMS; `docs/architecture/cms-domain.md`) presents one specialist at length.
+
+- **Portrait:** the cards' own artwork (`SpecialistArtwork`: the cut-out
+  portrait on its watercolor splash), only larger (up to 30 rem), with the
+  cards' entrance (`SpecialistReveal`, no plate). No new mask or backdrop.
+- **Words:** the section header as elsewhere (eyebrow, heading, caption),
+  then the name (h3), the role, the short bio, and short lists as chips on
+  `primary-soft`: "W czym pomagam", "Z kim pracuję", "Formy pracy" (empty
+  ones are left out). "Umów wizytę" and "Poznaj mnie bliżej" (the profile).
+- **Layout:** phones stack header, portrait, words; from 64 rem the words
+  take the left (header above the rest), the portrait the right.
+- **Storybook:** Specialist spotlight (Default, Animated).
+
 ## 12. Primitives
 
 Only what the references repeat:

@@ -43,7 +43,7 @@ separation" below.
 
 ```
 site_content
-  key                text PRIMARY KEY CHECK (key IN ('home', 'rooms', 'support_areas'))
+  key                text PRIMARY KEY CHECK (key IN ('home', 'rooms', 'support_areas', 'home_sections'))
   draft_payload       jsonb NOT NULL
   published_payload   jsonb            -- null until first publish
   published_at        timestamptz
@@ -54,7 +54,9 @@ The set of keys is a hard database-level guarantee, not a UI convention
 (`home` for the home hero, `rooms` for /gabinety's section switches,
 added in `20260927201414_site_content_rooms_page.sql`, `support_areas` for
 the homepage's areas of help, added in
-`20261013150000_support_areas.sql`; each key's payload shape is checked by
+`20261013150000_support_areas.sql`, `home_sections` for which specialist
+sections the homepage shows, added in `20261013180000_home_sections.sql`;
+each key's payload shape is checked by
 `private.site_content_payload_is_valid`):
 `admin` has **no `INSERT` grant at all** on this table (each row
 is seeded once by migration, same pattern as `center_settings`/
@@ -157,6 +159,34 @@ imageAlt, link: { href, label } | null }] }`. Ids are unique; `href` is a
   Publishing revalidates `/`.
 - **Tests**: `supabase/tests/support_areas.sql` (who may read, edit,
   publish and upload; malformed lists refused).
+
+## Home → specialist sections (`home_sections`)
+
+Two homepage sections show on their own switches, so the admin can show
+either or both: "Poznaj nasz zespół" (every specialist on the site, as
+cards) and "Z kim porozmawiasz" (`SpecialistSpotlight`: one chosen
+specialist presented at length).
+
+- **Payload** (`homeSectionsContentSchema`): `{ showSpecialists, spotlight:
+{ visible, specialistId | null, eyebrow ≤60, heading ≤100,
+description ≤300, imagePath | null, imageAlt } }`. A visible spotlight
+  needs a specialist. Empty texts fall back to the site's own ("Poznaj nasz
+  zespół", "Z kim porozmawiasz", no caption).
+- **The specialist** is read from the Specialist Domain on the site; if the
+  chosen one is not on the site (inactive, or no published profile), the
+  section simply does not show. Name, role, bio and facts come from the
+  profile; the CMS adds only the texts around it and, optionally, its own
+  photo (`site-media/spotlight/…`, ideally a cut-out portrait on a
+  transparent background, like the cards'), else the profile's portrait.
+- **Until the first publish**: the team shows, the spotlight does not
+  (`defaultHomeSections`). The migration seeds that draft with the usual
+  texts filled in.
+- **Admin**: `/cms` → tab "Specjaliści". Publishing revalidates `/`.
+- **The payload check is total**: since `20261013180000_home_sections.sql`
+  `private.site_content_payload_is_valid` returns `COALESCE(…, false)`. A
+  missing field used to make it NULL, and a `CHECK` passes on NULL, so a
+  payload missing e.g. `areas` or a /gabinety switch was accepted.
+- **Tests**: `supabase/tests/home_sections.sql`.
 
 ## Domain separation
 

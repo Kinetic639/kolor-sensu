@@ -1,4 +1,4 @@
-import type { SupportArea } from "@repo/contracts";
+import type { HomeSpotlight, SupportArea } from "@repo/contracts";
 
 export interface HomeContentViewModel {
   heading: string;
@@ -26,6 +26,17 @@ export interface SupportAreaRow extends SupportArea {
 
 export interface SupportAreasViewModel {
   areas: SupportAreaRow[];
+  isPublished: boolean;
+  hasUnpublishedChanges: boolean;
+  publishedAtLabel: string | null;
+  updatedAtLabel: string;
+}
+
+export interface HomeSectionsViewModel {
+  showSpecialists: boolean;
+  spotlight: HomeSpotlight & { imageUrl: string | null };
+  /** Whom the spotlight may show; only those on the site will appear. */
+  specialists: { id: string; name: string; onSite: boolean }[];
   isPublished: boolean;
   hasUnpublishedChanges: boolean;
   publishedAtLabel: string | null;

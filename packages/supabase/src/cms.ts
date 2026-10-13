@@ -1,10 +1,13 @@
 import {
+  defaultHomeSections,
   defaultRoomsPageContent,
   homePageContentSchema,
+  homeSectionsContentSchema,
   roomsPageContentSchema,
   supportAreasContentSchema,
   type HomeContentAdmin,
   type HomePageContent,
+  type HomeSectionsContent,
   type RoomsPageContent,
   type SiteContentAdmin,
   type SupportArea,
@@ -20,6 +23,7 @@ import { validateSpecialistImage } from "./specialists";
 const HOME_KEY = "home";
 const ROOMS_KEY = "rooms";
 const SUPPORT_AREAS_KEY = "support_areas";
+const HOME_SECTIONS_KEY = "home_sections";
 
 // The site's own photos: a public bucket only admins write to.
 const SITE_MEDIA_BUCKET = "site-media";
@@ -224,23 +228,69 @@ export function supportAreaImageUrl(
 }
 
 /**
- * Uploads an area's photo (admins only) under a new name, so replacing it in
- * the draft never touches the file the published areas still show. Returns
- * its path, for the draft's imagePath.
+ * Uploads one of the site's own photos (admins only) into `folder` of the
+ * public site-media bucket, under a new name, so replacing it in a draft
+ * never touches the file the published page still shows. Returns its path.
  */
-export async function uploadSupportAreaImage(
+export async function uploadSiteImage(
   client: SupabaseClient<Database>,
   file: File,
+  folder: "support-areas" | "spotlight",
 ): Promise<string> {
   const problem = validateSpecialistImage(file);
   if (problem) throw new Error(problem);
 
   const extension =
     siteImageExtensions[file.type as keyof typeof siteImageExtensions];
-  const path = `support-areas/${crypto.randomUUID()}.${extension}`;
+  const path = `${folder}/${crypto.randomUUID()}.${extension}`;
   const { error } = await client.storage
     .from(SITE_MEDIA_BUCKET)
     .upload(path, file, { contentType: file.type, upsert: false });
   if (error) throw error;
   return path;
+}
+
+/** An area of help's photo (see uploadSiteImage). */
+export function uploadSupportAreaImage(
+  client: SupabaseClient<Database>,
+  file: File,
+): Promise<string> {
+  return uploadSiteImage(client, file, "support-areas");
+}
+
+export function getHomeSectionsAdmin(
+  client: SupabaseClient<Database>,
+): Promise<SiteContentAdmin<HomeSectionsContent>> {
+  return getContentAdmin(client, HOME_SECTIONS_KEY, homeSectionsContentSchema);
+}
+
+export function updateHomeSectionsDraft(
+  client: SupabaseClient<Database>,
+  input: HomeSectionsContent,
+): Promise<HomeSectionsContent> {
+  return updateDraft(
+    client,
+    HOME_SECTIONS_KEY,
+    homeSectionsContentSchema,
+    input,
+  );
+}
+
+export function publishHomeSections(
+  client: SupabaseClient<Database>,
+): Promise<void> {
+  return publish(client, HOME_SECTIONS_KEY);
+}
+
+/** The published sections; the team shown, no spotlight, until then. */
+export async function getPublishedHomeSections(
+  client: SupabaseClient<Database>,
+): Promise<HomeSectionsContent> {
+  return (
+    (await getPublished(
+      client,
+      HOME_SECTIONS_KEY,
+      homeSectionsContentSchema,
+    )) ?? defaultHomeSections
+  );
 }

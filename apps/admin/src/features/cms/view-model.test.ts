@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { mapRoomsPageViewModel, mapSupportAreasViewModel } from "./view-model";
+import {
+  mapHomeSectionsViewModel,
+  mapRoomsPageViewModel,
+  mapSupportAreasViewModel,
+} from "./view-model";
 
 const base = {
   draft: { showAmenitiesSection: true, showLocationDetails: false },
@@ -86,5 +90,72 @@ describe("mapSupportAreasViewModel", () => {
     expect(model.isPublished).toBe(false);
     expect(model.hasUnpublishedChanges).toBe(true);
     expect(model.areas[0]?.imageUrl).toBeNull();
+  });
+});
+
+describe("mapHomeSectionsViewModel", () => {
+  const sections = {
+    showSpecialists: true,
+    spotlight: {
+      visible: true,
+      specialistId: "6f1c2b9a-3c41-4e2b-9a55-0d3f2a7b8c10",
+      eyebrow: "Poznaj nasz zespół",
+      heading: "Z kim porozmawiasz",
+      description: "",
+      imagePath: "spotlight/a.webp",
+      imageAlt: "",
+    },
+  };
+  const content = {
+    draft: sections,
+    published: sections,
+    publishedAt: "2026-10-13T10:00:00Z",
+    updatedAt: "2026-10-13T11:00:00Z",
+  };
+  const summary = (overrides: Record<string, unknown>) =>
+    ({
+      id: "6f1c2b9a-3c41-4e2b-9a55-0d3f2a7b8c10",
+      firstName: "Anna",
+      lastName: "Nowak",
+      publicDisplayName: "Anna Nowak",
+      active: true,
+      publicationStatus: "published",
+      ...overrides,
+    }) as never;
+
+  it("lists the specialists to choose from, saying who is on the site", () => {
+    const model = mapHomeSectionsViewModel(
+      content,
+      (path) => `https://cdn.test/${path}`,
+      [
+        summary({}),
+        summary({
+          id: "b",
+          firstName: "Tomasz",
+          lastName: "Wójcik",
+          publicDisplayName: null,
+          active: false,
+        }),
+      ],
+    );
+    expect(model.specialists).toEqual([
+      {
+        id: "6f1c2b9a-3c41-4e2b-9a55-0d3f2a7b8c10",
+        name: "Anna Nowak",
+        onSite: true,
+      },
+      { id: "b", name: "Tomasz Wójcik", onSite: false },
+    ]);
+    expect(model.spotlight.imageUrl).toBe("https://cdn.test/spotlight/a.webp");
+    expect(model.hasUnpublishedChanges).toBe(false);
+  });
+
+  it("notices changes not yet published", () => {
+    const model = mapHomeSectionsViewModel(
+      { ...content, draft: { ...sections, showSpecialists: false } },
+      (path) => path,
+      [],
+    );
+    expect(model.hasUnpublishedChanges).toBe(true);
   });
 });

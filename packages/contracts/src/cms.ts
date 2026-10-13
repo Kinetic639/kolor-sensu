@@ -87,6 +87,54 @@ export const supportAreasContentSchema = z.strictObject({
 
 export type SupportAreasContent = z.infer<typeof supportAreasContentSchema>;
 
+/**
+ * Home → which specialist sections show. "Poznaj nasz zespół" (all
+ * specialists, as cards) and "Z kim porozmawiasz" (one chosen specialist,
+ * presented at length) are switched separately; the latter brings its own
+ * texts and, optionally, a photo of its own (else the specialist's
+ * profile photo). Empty texts fall back to the site's own.
+ */
+export const homeSpotlightSchema = z
+  .strictObject({
+    visible: z.boolean(),
+    specialistId: z.uuid().nullable().default(null),
+    eyebrow: z.string().trim().max(60).default(""),
+    heading: z.string().trim().max(100).default(""),
+    description: z.string().trim().max(300).default(""),
+    /** A photo for this section, in the public site-media bucket. */
+    imagePath: z.string().trim().min(1).max(300).nullable().default(null),
+    imageAlt: z.string().trim().max(200).default(""),
+  })
+  .refine((spotlight) => !spotlight.visible || spotlight.specialistId, {
+    message: "Wybierz specjalistę, aby pokazać sekcję",
+    path: ["specialistId"],
+  });
+
+export type HomeSpotlight = z.infer<typeof homeSpotlightSchema>;
+
+export const homeSectionsContentSchema = z.strictObject({
+  /** "Poznaj nasz zespół": the specialists' cards. */
+  showSpecialists: z.boolean(),
+  /** "Z kim porozmawiasz": one specialist. */
+  spotlight: homeSpotlightSchema,
+});
+
+export type HomeSectionsContent = z.infer<typeof homeSectionsContentSchema>;
+
+/** Until anything is published: the team shown, the spotlight hidden. */
+export const defaultHomeSections: HomeSectionsContent = {
+  showSpecialists: true,
+  spotlight: {
+    visible: false,
+    specialistId: null,
+    eyebrow: "",
+    heading: "",
+    description: "",
+    imagePath: null,
+    imageAlt: "",
+  },
+};
+
 export interface SiteContentAdmin<Content> {
   draft: Content;
   published: Content | null;
