@@ -434,3 +434,16 @@ additional_redirect_urls = [
   "http://localhost:3001/**",
   "http://localhost:3002/**",
 ]
+
+# STAGING (kolor-sensu-staging): the deployed apps on ambrasystem.eu only
+# (nothing runs locally against staging).
+[remotes.staging]
+project_id = "jmjenrepttbpnwxegauq"
+
+[remotes.staging.auth]
+site_url = "https://ks-staging.ambrasystem.eu"
+additional_redirect_urls = [
+  "https://ks-staging.ambrasystem.eu/**",
+  "https://ks-staging-admin.ambrasystem.eu/**",
+  "https://ks-staging-specjalista.ambrasystem.eu/**",
+]
