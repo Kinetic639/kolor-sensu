@@ -14,6 +14,7 @@ import {
 } from "@repo/ui/select";
 import { Switch } from "@repo/ui/switch";
 import { Textarea } from "@repo/ui/textarea";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 import { serviceFormSchema } from "./form-schema";
@@ -24,12 +25,16 @@ export function ServiceForm({
   defaultValues,
   pending,
   error,
+  slugError,
   submitLabel,
   onSubmit,
 }: {
   defaultValues?: ServiceCreate;
   pending?: boolean;
+  /** What went wrong saving, said on the form. */
   error?: string | null;
+  /** The address is taken: said under its field. */
+  slugError?: string | null;
   submitLabel: string;
   onSubmit: (values: ServiceCreate) => void;
 }) {
@@ -37,6 +42,7 @@ export function ServiceForm({
     register,
     control,
     handleSubmit,
+    setError,
     setValue,
     getFieldState,
     formState: { errors },
@@ -55,6 +61,17 @@ export function ServiceForm({
       sortOrder: 0,
     },
   });
+  // A taken address comes back from the save: shown under the field, with
+  // the cursor in it, until the address is changed.
+  useEffect(() => {
+    if (slugError) {
+      setError(
+        "slug",
+        { type: "server", message: slugError },
+        { shouldFocus: true },
+      );
+    }
+  }, [slugError, setError]);
   const fieldError = (id: string, message?: string) =>
     message ? (
       <p

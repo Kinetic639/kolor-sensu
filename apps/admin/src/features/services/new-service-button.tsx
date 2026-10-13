@@ -15,6 +15,7 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "@repo/ui/toast";
+import type { ServiceFailure } from "./action-errors";
 import { createServiceAction } from "./actions";
 import { ServiceForm } from "./service-form";
 
@@ -22,12 +23,13 @@ import { ServiceForm } from "./service-form";
 export function NewServiceButton() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<ServiceFailure | null>(null);
   const create = useMutation({
     mutationFn: createServiceAction,
+    onMutate: () => setFailure(null),
     onSuccess: (result) => {
       if (!result.ok) {
-        setError(result.message);
+        setFailure(result);
         return;
       }
       setOpen(false);
@@ -37,7 +39,13 @@ export function NewServiceButton() {
   });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setFailure(null);
+      }}
+    >
       <DialogTrigger asChild>
         <Button>
           <Plus aria-hidden="true" className="size-4" />
@@ -52,7 +60,8 @@ export function NewServiceButton() {
           </DialogDescription>
         </DialogHeader>
         <ServiceForm
-          error={error}
+          error={failure && !failure.field ? failure.message : null}
+          slugError={failure?.field === "slug" ? failure.message : null}
           onSubmit={(values) => create.mutate(values)}
           pending={create.isPending}
           submitLabel="Utwórz usługę"
