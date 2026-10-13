@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { webUrl } from "./support/target";
 
-const webUrl = "http://localhost:3000";
 const unpublishedSlug = process.env.E2E_UNPUBLISHED_SPECIALIST_SLUG;
 
 test("public API returns only active published specialist profiles", async ({
