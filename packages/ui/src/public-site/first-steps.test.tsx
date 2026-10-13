@@ -131,7 +131,8 @@ describe("showProgress", () => {
     ]);
     expect(region.style.getPropertyValue("--ks-steps-progress")).toBe("0.45");
 
-    // Scrolling back takes the wave with it, not the steps.
+    // Shown a smaller progress, the wave goes back (the band itself never
+    // asks for less), the steps keep their colour.
     showProgress(region, 0.1);
     expect(line.style.strokeDashoffset).toBe("0.9");
     expect(items[1]).toHaveAttribute("data-bloomed");
