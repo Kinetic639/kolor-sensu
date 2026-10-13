@@ -18,10 +18,6 @@ on:
   deployment_status:
   workflow_dispatch:
 
-concurrency:
-  group: e2e-staging
-  cancel-in-progress: false
-
 permissions:
   contents: read
   deployments: read
@@ -83,6 +79,12 @@ jobs:
     name: End-to-end on STAGING
     needs: ready
     if: needs.ready.outputs.run == 'true'
+    # Only here, not on the whole workflow: every deployment report (of
+    # pull requests and develop too) starts it, and a later one waiting in
+    # the same group would cancel the release's run while one is going.
+    concurrency:
+      group: e2e-staging
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
