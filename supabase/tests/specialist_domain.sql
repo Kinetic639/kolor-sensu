@@ -412,6 +412,36 @@ $$;
 
 RESET ROLE;
 
+-- The first approved profile named the address (#26): "Approved
+-- Specialist" in place of the one made with the account, which redirects.
+DO $$
+DECLARE
+  first_id uuid := (SELECT first_specialist_id FROM domain_test_ids);
+  second_id uuid := (SELECT second_specialist_id FROM domain_test_ids);
+BEGIN
+  IF (SELECT public_slug FROM public.specialists WHERE id = first_id)
+     <> 'approved-specialist' THEN
+    RAISE EXCEPTION 'W: the approved name did not make the address';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.specialist_slug_redirects
+    WHERE specialist_id = first_id
+      AND old_slug = 'specialist-' || replace('20000000-0000-4000-8000-000000000001', '-', '')
+  ) THEN
+    RAISE EXCEPTION 'W: the address made with the account does not redirect';
+  END IF;
+  -- The same name for another: numbered; Polish letters folded; too
+  -- little of a name: none.
+  IF private.specialist_slug_from_name(second_id, 'Approved', 'Specialist')
+       <> 'approved-specialist-2'
+     OR private.specialist_slug_from_name(second_id, 'Anna', 'Żółkiewska-Nowak')
+       <> 'anna-zolkiewska-nowak'
+     OR private.specialist_slug_from_name(second_id, 'Ł', '') IS NOT NULL THEN
+    RAISE EXCEPTION 'W: the address from a name';
+  END IF;
+END;
+$$;
+
 DO $$
 BEGIN
   BEGIN
