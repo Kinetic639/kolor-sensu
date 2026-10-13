@@ -267,15 +267,20 @@
     object-position: 50% 0;
   }
 
-  /* The splash's pigment soaking into the lower portrait: the same asset in
-     the same place, multiplied over the portrait in patches. */
+  /* The splash's pigment soaking into the portrait's very bottom: the same
+     asset in the same place, multiplied over the portrait in patches, and
+     only where the portrait is already dissolving (from 70 % of the box).
+     Higher up it would read as stains on the person's clothes. */
   .ks-sp__stain {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    mask-image: url("/watercolor/portrait-stain.png");
+    mask-image:
+      url("/watercolor/portrait-stain.png"),
+      linear-gradient(to bottom, transparent 70%, black 79%);
     mask-size: 100% 100%;
     mask-repeat: no-repeat;
+    mask-composite: intersect;
     /* On the masked element itself: its mask makes it a group, so a blend
        mode on the image inside would only blend within that group. */
     mix-blend-mode: multiply;
@@ -1487,8 +1492,9 @@
   /* ----------------------------------------------------- Specialist spotlight */
 
   /* SpecialistSpotlight ("Z kim porozmawiasz"): phones stack the header,
-     the portrait and the rest; from 64 rem the words take the left, the
-     portrait (the cards' artwork, larger) the right. */
+     the portrait and the rest; from 64 rem the header runs across the top,
+     under it the portrait (the cards' artwork, larger) on the left and the
+     words on the right. */
   .ks-spotlight__grid {
     display: grid;
     gap: 2.5rem;
@@ -1508,13 +1514,13 @@
 
   @media (min-width: 64rem) {
     .ks-spotlight__grid {
-      grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
       grid-template-areas:
-        "header art"
-        "body art";
-      align-items: start;
+        "header header"
+        "art body";
+      align-items: center;
       column-gap: clamp(3rem, 6vw, 6rem);
-      row-gap: 2rem;
+      row-gap: 2.5rem;
     }
 
     .ks-spotlight__header {
@@ -1527,7 +1533,6 @@
 
     .ks-spotlight__art {
       grid-area: art;
-      align-self: center;
       max-width: 30rem;
     }
   }
