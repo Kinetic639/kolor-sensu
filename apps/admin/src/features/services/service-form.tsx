@@ -1,4 +1,5 @@
 "use client";
+import { numberRange } from "@/lib/number-range";
 import { slugify } from "@/lib/slugify";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { ServiceCreate } from "@repo/contracts";
@@ -127,6 +128,7 @@ export function ServiceForm({
           <Input
             id="service-duration"
             type="number"
+            {...numberRange(serviceFormSchema.shape.defaultDurationMinutes)}
             {...invalid(
               "service-duration",
               errors.defaultDurationMinutes?.message,
@@ -167,6 +169,7 @@ export function ServiceForm({
           <Input
             id="service-order"
             type="number"
+            {...numberRange(serviceFormSchema.shape.sortOrder)}
             {...invalid("service-order", errors.sortOrder?.message)}
             {...register("sortOrder", { valueAsNumber: true })}
           />
