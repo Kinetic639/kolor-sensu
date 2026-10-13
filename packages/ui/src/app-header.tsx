@@ -11,7 +11,7 @@ import {
   Sun,
   UserRound,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 import { Button } from "./button";
 import { PortalBreadcrumbTrail } from "./portal-layout";
@@ -76,6 +76,9 @@ export function AppHeader({
   className,
 }: AppHeaderProps) {
   const [currentTheme, setCurrentTheme] = useState(theme);
+  // The logout form lives outside the menu: the menu unmounts its items as
+  // it closes, before a form inside would be submitted.
+  const logoutForm = useRef<HTMLFormElement>(null);
   const initials = user.name
     .split(" ")
     .map((part) => part[0])
@@ -220,14 +223,12 @@ export function AppHeader({
               {logoutAction ? (
                 <>
                   <DropdownMenuSeparator />
-                  <form action={logoutAction}>
-                    <DropdownMenuItem asChild>
-                      <button className="w-full" type="submit">
-                        <LogOut className="size-4" aria-hidden="true" />
-                        Wyloguj się
-                      </button>
-                    </DropdownMenuItem>
-                  </form>
+                  <DropdownMenuItem
+                    onSelect={() => logoutForm.current?.requestSubmit()}
+                  >
+                    <LogOut className="size-4" aria-hidden="true" />
+                    Wyloguj się
+                  </DropdownMenuItem>
                 </>
               ) : null}
             </DropdownMenuContent>
@@ -235,6 +236,9 @@ export function AppHeader({
         ) : (
           <div className="flex items-center gap-2">{userIdentity}</div>
         )}
+        {logoutAction ? (
+          <form action={logoutAction} hidden ref={logoutForm} />
+        ) : null}
       </div>
     </header>
   );
