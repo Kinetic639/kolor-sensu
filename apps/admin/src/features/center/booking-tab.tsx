@@ -1,5 +1,6 @@
 "use client";
 
+import { numberRange } from "@/lib/number-range";
 import { useSave } from "@/lib/use-save";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { CenterSettings } from "@repo/contracts";
@@ -60,6 +61,7 @@ export function BookingTab({ settings }: { settings: CenterSettings }) {
       label={label}
       registration={number(name)}
       type="number"
+      {...numberRange(bookingSettingsFormSchema.shape[name])}
     />
   );
 
