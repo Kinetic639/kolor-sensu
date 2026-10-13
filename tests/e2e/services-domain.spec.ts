@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
-
-const webUrl = "http://localhost:3000";
+import { webUrl } from "./support/target";
 
 test("public services API exposes only safe catalog fields", async ({
   request,
@@ -13,7 +12,7 @@ test("public services API exposes only safe catalog fields", async ({
     expect(service).not.toHaveProperty("active");
     expect(service).not.toHaveProperty("publiclyVisible");
     expect(service).not.toHaveProperty("bookingEnabled");
-    expect(service).not.toHaveProperty("sortOrder");
+    // sortOrder and catalogId stay: the site's menu is arranged by them.
     expect(service).not.toHaveProperty("createdAt");
     expect(service).not.toHaveProperty("updatedAt");
   }
