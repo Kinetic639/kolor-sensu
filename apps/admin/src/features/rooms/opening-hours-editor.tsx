@@ -142,8 +142,9 @@ export function OpeningHoursEditor({
               aria-hidden="true"
               className="mt-0.5 size-4 shrink-0 text-[var(--info)]"
             />
-            Bez godzin otwarcia gabinet nie ogranicza dostępności specjalistów.
-            Aby go wyłączyć z użytku, oznacz go jako nieaktywny w Ustawieniach.
+            Bez godzin otwarcia gabinet jest zamknięty: specjaliści nie ustawią
+            w nim dyżurów, a centrum nie zapisze w nim wizyt. Otwórz go
+            przynajmniej jednego dnia.
           </p>
         ) : null}
         <div className="flex flex-wrap justify-end gap-2 px-3.5">
