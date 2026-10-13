@@ -131,11 +131,17 @@ enabled = true
 # [storage.image_transformation]
 # enabled = true
 
-# Storage analytics, vector buckets and image transformation are not
-# declared: the app uses none of them, and projects differ (DEV has them
-# off, a new project on), so `config push` leaves each project's own value
-# alone. (`supabase init` declared them on, and the push then tried to
-# switch them on remotely.)
+# Storage analytics, vector buckets and image transformation: off in every
+# project (the app uses none of them). `supabase init` declared them on,
+# and the push then tried to switch them on remotely.
+[storage.analytics]
+enabled = false
+
+[storage.vector]
+enabled = false
+
+[storage.image_transformation]
+enabled = false
 
 # Vector Buckets is available to Supabase Pro plan.
 # [storage.vector.buckets.documents-openai]
