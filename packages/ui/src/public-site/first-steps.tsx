@@ -17,9 +17,11 @@
 // gets to a step, the step takes colour for good: paint spreads through
 // the circle, a ring ripples out of it, the icon settles (the last step's
 // sprout grows), the name darkens and the sentence comes up under it;
-// coloured circles breathe, slowly. Scrolling back takes the wave back,
-// never the steps. Below 64 rem there is no wave and nothing holds: each
-// step takes colour as it comes into view.
+// coloured circles breathe, slowly. It all happens once: scrolling back
+// takes nothing back (the stroke, the wave and the steps stay), and when
+// the band has been scrolled past it lets go for good, an ordinary section
+// from then on. Below 64 rem there is no wave and nothing holds: each step
+// takes colour as it comes into view.
 //
 // The script only says how far things are (the wave's dash,
 // --ks-steps-progress, data-bloomed, the matte's front); public-site.css
@@ -127,17 +129,30 @@ export function FirstSteps({
           : null;
       root.dataset.armed = "true";
 
-      // The stroke follows the scroll with a little lag, like a wet brush.
+      // The stroke follows the scroll with a little lag, like a wet brush,
+      // and only ever forwards: paint does not come off.
       const paint = { front: 0 };
-      const brush = gsap.quickTo(paint, "front", {
+      const spread = gsap.quickTo(paint, "front", {
         duration: 0.5,
         ease: "power2.out",
         onUpdate: () => matte?.set(paint.front),
       });
+      let painted = 0;
+      const brush = (front: number) => {
+        if (front <= painted) return;
+        painted = front;
+        spread(front);
+      };
+      // Once the held band has been scrolled past, it never holds again.
+      let released = false;
 
       const media = gsap.matchMedia();
 
       media.add(HELD, () => {
+        if (released) {
+          showProgress(root, 1);
+          return;
+        }
         root.dataset.held = "true";
         // Where the band holds: the middle of the screen.
         const top = () => {
@@ -164,11 +179,40 @@ export function FirstSteps({
           }
         };
         draw();
-        const follow = gsap.quickTo(wave, "progress", {
+        const run = gsap.quickTo(wave, "progress", {
           duration: 0.45,
           ease: "power2.out",
           onUpdate: draw,
         });
+        // Forwards only, like the stroke.
+        let drawn = 0;
+        const follow = (progress: number) => {
+          if (progress <= drawn) return;
+          drawn = progress;
+          run(progress);
+        };
+        // Letting go: the band becomes an ordinary section, finished. The
+        // room it held for the wave goes, and the page is moved by as much
+        // at once, so nothing on screen jumps.
+        const release = () => {
+          if (released) return;
+          released = true;
+          const room = root.offsetHeight - stage.offsetHeight;
+          approach.kill();
+          hold.kill();
+          gsap.killTweensOf(wave);
+          wave.progress = 1;
+          draw();
+          brush(1);
+          delete root.dataset.held;
+          if (room > 0 && typeof window.scrollBy === "function") {
+            window.scrollBy({ top: -room, behavior: "instant" });
+          }
+          ScrollTrigger.refresh();
+        };
+        // Not from inside a trigger's own callback: it kills that trigger
+        // and re-measures the page.
+        const letGo = () => gsap.delayedCall(0, release);
         // The stroke, while the band comes up to its place... (onRefresh
         // as well: a page opened or reloaded further down never "updates"
         // a trigger it is already past.)
@@ -185,15 +229,22 @@ export function FirstSteps({
           start: () => `top ${top()}px`,
           end: () => `+=${Math.max(1, root.offsetHeight - stage.offsetHeight)}`,
           onUpdate: (self) => follow(Math.min(1, self.progress / WAVE_SHARE)),
-          onRefresh: (self) => follow(Math.min(1, self.progress / WAVE_SHARE)),
+          // A page opened below the band has passed it already.
+          onRefresh: (self) => {
+            follow(Math.min(1, self.progress / WAVE_SHARE));
+            if (self.progress >= 1 && self.end > self.start + 1) letGo();
+          },
+          onLeave: letGo,
         });
 
         return () => {
           approach.kill();
           hold.kill();
           gsap.killTweensOf(wave);
+          gsap.killTweensOf(release);
           delete root.dataset.held;
           root.style.removeProperty("--ks-steps-top");
+          if (released) return;
           root.style.removeProperty("--ks-steps-progress");
           line?.style.removeProperty("stroke-dashoffset");
         };
@@ -224,6 +275,8 @@ export function FirstSteps({
       return () => {
         media.revert();
         gsap.killTweensOf(paint);
+        root.style.removeProperty("--ks-steps-progress");
+        line?.style.removeProperty("stroke-dashoffset");
         matte?.remove();
         ribbon?.style.removeProperty("mask-image");
         ribbon?.style.removeProperty("-webkit-mask-image");

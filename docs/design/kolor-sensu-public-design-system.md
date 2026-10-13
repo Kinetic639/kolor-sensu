@@ -604,13 +604,17 @@ sheet: circles joined by a wave.
 - **Hold:** from 64 rem, with motion welcome, the band then stays in the
   middle of the screen (sticky, as `PaintedStory` holds its screen) for
   110 vh of scrolling. Only then does the wave start.
+- **Once:** nothing is taken back by scrolling up: the stroke, the wave
+  and the steps stay. When the held band has been scrolled past it lets
+  go for good: the room it held goes (the page is moved by as much at
+  once, so nothing jumps) and it is an ordinary, finished section from
+  then on, until the page is loaded again.
 - **Wave:** a line from the heading's side through the middle of each
   circle, rising and falling between them, ending in the last circle
   (`first-steps-wave.ts`); pink then green with a quick change in the
   middle (mixed evenly the two pass through brown). Its whole way shows
   faintly in grey; scrolling draws it in colour from the left over the
   first 82 % of the hold, a drop of paint at its tip (0.45 s lag).
-  Scrolling back takes the wave back.
 - **Steps:** circles drawn by hand (not quite round), a pale wash of
   green or pink by turns, an ink line icon, the name in the display face,
   a sentence under it. They wait grey: the circle colourless, icon and

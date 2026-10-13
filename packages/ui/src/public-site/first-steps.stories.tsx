@@ -42,7 +42,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Scroll down slowly: the band holds mid-screen while the wave runs. */
+/**
+ * Scroll down slowly: the band holds mid-screen while the wave runs. Once
+ * past, it stays finished and no longer holds.
+ */
 export const ScrollToPaint: Story = {
   decorators: [
     (Story) => (
