@@ -103,8 +103,11 @@ export {
 } from "@repo/contracts/offer-layout";
 export type { OfferEntry, ServiceCatalog } from "@repo/contracts/offer-layout";
 export {
+  defaultHomeSections,
   defaultRoomsPageContent,
   homePageContentSchema,
+  homeSectionsContentSchema,
+  homeSpotlightSchema,
   roomsPageContentSchema,
   SUPPORT_AREAS_MAX,
   supportAreaSchema,
@@ -113,6 +116,8 @@ export {
 export type {
   HomeContentAdmin,
   HomePageContent,
+  HomeSectionsContent,
+  HomeSpotlight,
   RoomsPageContent,
   SiteContentAdmin,
   SupportArea,

@@ -6,6 +6,7 @@ import {
   getPublicCenterProfile,
   getPublicServiceBySlug,
   getPublishedHomeContent,
+  getPublishedHomeSections,
   getPublishedRoomsPageContent,
   getPublishedSupportAreas,
   getPublishedSpecialistBySlug,
@@ -20,15 +21,18 @@ import {
   listPublicOffersForSpecialist,
   listPublicSpecialistOffersForService,
   listPublishedSpecialists,
+  supportAreaImageUrl,
 } from "@repo/supabase";
 import {
   arrangeOffer,
+  defaultHomeSections,
   defaultRoomsPageContent,
   flattenOffer,
 } from "@repo/contracts";
 import { intakeServiceSlugs } from "@repo/supabase/intakes";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
+import type { HomeSections } from "@/lib/spotlight";
 import { groupRoomsByLocation } from "./rooms-by-location";
 
 // Everything the public pages read from Supabase, in one place. Each
@@ -86,6 +90,25 @@ export const getHomeContent = cache(() =>
 /** Home → Obszary wsparcia, published from the admin's /cms; null until then. */
 export const getSupportAreas = cache(() =>
   load("support areas", getPublishedSupportAreas, null),
+);
+
+/**
+ * Home → which specialist sections show, published from the admin's /cms
+ * (the team until then), with the spotlight's own photo as an address.
+ */
+export const getHomeSections = cache(() =>
+  load<HomeSections>(
+    "home sections",
+    async (client) => {
+      const sections = await getPublishedHomeSections(client);
+      const path = sections.spotlight.imagePath;
+      return {
+        ...sections,
+        spotlightImage: path ? supportAreaImageUrl(client, path) : null,
+      };
+    },
+    { ...defaultHomeSections, spotlightImage: null },
+  ),
 );
 
 /** Which optional sections /gabinety shows, set in the admin's CMS. */

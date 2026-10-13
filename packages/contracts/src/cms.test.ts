@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { SUPPORT_AREAS_MAX, supportAreasContentSchema } from "./cms";
+import {
+  defaultHomeSections,
+  homeSectionsContentSchema,
+  SUPPORT_AREAS_MAX,
+  supportAreasContentSchema,
+} from "./cms";
 
 const area = (overrides: Record<string, unknown> = {}) => ({
   id: "indywidualna",
@@ -100,6 +105,72 @@ describe("support areas content", () => {
     expect(
       supportAreasContentSchema.safeParse({ areas: [area()], heading: "x" })
         .success,
+    ).toBe(false);
+  });
+});
+
+describe("home sections", () => {
+  const spotlight = {
+    visible: true,
+    specialistId: "6f1c2b9a-3c41-4e2b-9a55-0d3f2a7b8c10",
+    eyebrow: "Poznaj nasz zespół",
+    heading: "Z kim porozmawiasz",
+    description: "Krótkie wprowadzenie.",
+    imagePath: "spotlight/a.webp",
+    imageAlt: "Anna w gabinecie",
+  };
+
+  it("switches the team and the spotlight, the spotlight with its own texts and photo", () => {
+    expect(
+      homeSectionsContentSchema.parse({ showSpecialists: false, spotlight }),
+    ).toEqual({ showSpecialists: false, spotlight });
+  });
+
+  it("starts with the team shown and the spotlight hidden", () => {
+    expect(homeSectionsContentSchema.parse(defaultHomeSections)).toEqual(
+      defaultHomeSections,
+    );
+    expect(defaultHomeSections.showSpecialists).toBe(true);
+    expect(defaultHomeSections.spotlight.visible).toBe(false);
+  });
+
+  it("shows the spotlight only with a specialist chosen", () => {
+    const result = homeSectionsContentSchema.safeParse({
+      showSpecialists: true,
+      spotlight: { ...spotlight, specialistId: null },
+    });
+    expect(result.success).toBe(false);
+    expect(
+      homeSectionsContentSchema.safeParse({
+        showSpecialists: true,
+        spotlight: { ...spotlight, visible: false, specialistId: null },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("keeps the texts short and the specialist an id", () => {
+    for (const change of [
+      { heading: "x".repeat(101) },
+      { description: "x".repeat(301) },
+      { specialistId: "anna" },
+    ]) {
+      expect(
+        homeSectionsContentSchema.safeParse({
+          showSpecialists: true,
+          spotlight: { ...spotlight, ...change },
+        }).success,
+        JSON.stringify(change),
+      ).toBe(false);
+    }
+  });
+
+  it("rejects unknown fields", () => {
+    expect(
+      homeSectionsContentSchema.safeParse({
+        showSpecialists: true,
+        spotlight,
+        showFaq: true,
+      }).success,
     ).toBe(false);
   });
 });

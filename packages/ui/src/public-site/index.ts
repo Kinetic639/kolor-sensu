@@ -99,6 +99,8 @@ export type {
 } from "./specialist-card";
 export { SpecialistInfoPlate } from "./specialist-info-plate";
 export type { SpecialistInfoPlateProps } from "./specialist-info-plate";
+export { SpecialistSpotlight } from "./specialist-spotlight";
+export type { SpecialistSpotlightProps } from "./specialist-spotlight";
 export { SpecialistsSection } from "./specialists-section";
 export type { SpecialistsSectionProps } from "./specialists-section";
 export { defaultWatercolorSrc, WatercolorImage } from "./watercolor-image";

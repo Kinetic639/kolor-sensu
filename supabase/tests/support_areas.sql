@@ -75,6 +75,13 @@ BEGIN
 
   BEGIN
     UPDATE public.site_content
+    SET draft_payload = '{"heading": "x"}'::jsonb WHERE key = 'support_areas';
+    RAISE EXCEPTION 'V: settings without a list of areas were accepted';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+
+  BEGIN
+    UPDATE public.site_content
     SET draft_payload = '{"areas": {"id": "a"}}'::jsonb WHERE key = 'support_areas';
     RAISE EXCEPTION 'V: areas that are not a list were accepted';
   EXCEPTION WHEN check_violation THEN NULL;

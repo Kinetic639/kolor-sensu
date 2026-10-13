@@ -4,21 +4,25 @@ import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type {
   HomePageContent,
+  HomeSectionsContent,
   RoomsPageContent,
   SupportAreasContent,
 } from "@repo/contracts";
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import {
   publishHomeContent,
+  publishHomeSections,
   publishRoomsPageContent,
   publishSupportAreas,
   updateHomeDraft,
+  updateHomeSectionsDraft,
   updateRoomsPageDraft,
   updateSupportAreasDraft,
 } from "@repo/supabase";
 import { revalidatePath } from "next/cache";
 import {
   loadHomeContent,
+  loadHomeSections,
   loadRoomsPageContent,
   loadSupportAreas,
 } from "./loaders";
@@ -107,4 +111,26 @@ export async function publishSupportAreasAction() {
   await revalidateWeb([{ path: "/" }]);
   revalidatePath("/cms");
   return loadSupportAreas();
+}
+
+export async function getHomeSectionsAction() {
+  await requirePortalRole();
+  return loadHomeSections();
+}
+
+export async function updateHomeSectionsDraftAction(
+  input: HomeSectionsContent,
+) {
+  await requirePortalRole();
+  await updateHomeSectionsDraft(await createClient(), input);
+  revalidatePath("/cms");
+  return loadHomeSections();
+}
+
+export async function publishHomeSectionsAction() {
+  await requirePortalRole();
+  await publishHomeSections(await createClient());
+  await revalidateWeb([{ path: "/" }]);
+  revalidatePath("/cms");
+  return loadHomeSections();
 }
