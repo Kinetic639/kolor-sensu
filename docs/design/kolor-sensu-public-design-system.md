@@ -565,6 +565,28 @@ Experience. Brought over from PR #12; to be reworked.
   brush. The step count ("01 / 03") is `pink-strong`, as text under 24px.
 - **Storybook:** Painted story (Default).
 
+### Support areas
+
+`SupportAreas` (homepage, under the thoughts, in place of the offer tiles;
+the areas come from the CMS, `docs/architecture/cms-domain.md`) shows the
+areas of help as small circles around a large one, after Talking Walls'
+art counseling gallery (https://talkingwalls.co.il/art-counseling).
+
+- **Large circle** (a link): the chosen area's photo fades in (0.7 s)
+  under a 42 % ink veil, with a hairline `pink` ring inside, the area's
+  name in the display face, its sentence and where it leads ("Umów
+  wizytę" unless the CMS gives a link). Pointed at, the picture grows 3 %.
+- **Small circles** (buttons): pointing at one, focusing it or tapping it
+  chooses it; the chosen one fades to 30 % with the same ring. Ten slots
+  around the stage (`SUPPORT_AREA_SLOTS`), left and right by turns, two
+  depths: near ones drift 5 rem, far ones 14 rem as the section scrolls by
+  (scroll-driven CSS).
+- **No photo:** a wash of `sage` or `blush` on paper grain, the area's
+  name inside the small circle; the large circle then shows ink text.
+- **Phones:** the large circle first, the small ones in rows under it.
+  Reduced motion: no drift, no fades of the text.
+- **Storybook:** Support areas (Default, TenAreas).
+
 ## 12. Primitives
 
 Only what the references repeat:

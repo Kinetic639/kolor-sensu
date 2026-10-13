@@ -6,8 +6,12 @@ import {
 import { describe, expect, it, vi } from "vitest";
 import {
   getPublishedRoomsPageContent,
+  getPublishedSupportAreas,
   publishRoomsPageContent,
+  publishSupportAreas,
   updateRoomsPageDraft,
+  updateSupportAreasDraft,
+  uploadSupportAreaImage,
 } from "./cms";
 
 describe("home page content schema", () => {
@@ -140,5 +144,135 @@ describe("rooms page content", () => {
     expect(rpc).toHaveBeenCalledWith("publish_site_content", {
       p_key: "rooms",
     });
+  });
+});
+
+describe("support areas", () => {
+  const stored = {
+    areas: [
+      {
+        id: "indywidualna",
+        title: "Terapia indywidualna",
+        lead: "Przestrzeń na Ciebie.",
+        imagePath: "support-areas/a.webp",
+        imageAlt: "Gabinet",
+        link: null,
+      },
+      {
+        id: "warsztaty",
+        title: "Warsztaty",
+        lead: "Rozwój w grupie.",
+        imagePath: null,
+        imageAlt: "",
+        link: { href: "/warsztaty", label: "Zobacz warsztaty" },
+      },
+    ],
+  };
+
+  function publicClient(published: unknown) {
+    const eq = vi.fn(() => ({
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: published
+          ? { key: "support_areas", published_payload: published }
+          : null,
+        error: null,
+      }),
+    }));
+    const getPublicUrl = vi.fn((path: string) => ({
+      data: { publicUrl: `https://cdn.test/site-media/${path}` },
+    }));
+    const from = vi.fn(() => ({ getPublicUrl }));
+    const client = {
+      from: () => ({ select: () => ({ eq }) }),
+      storage: { from },
+    } as never;
+    return { client, eq, from };
+  }
+
+  it("reads nothing when the areas were never published", async () => {
+    const { client } = publicClient(null);
+    expect(await getPublishedSupportAreas(client)).toBeNull();
+  });
+
+  it("reads the published areas, each photo as a public address", async () => {
+    const { client, eq, from } = publicClient(stored);
+    const areas = await getPublishedSupportAreas(client);
+
+    expect(eq).toHaveBeenCalledWith("key", "support_areas");
+    expect(from).toHaveBeenCalledWith("site-media");
+    expect(areas).toEqual([
+      {
+        id: "indywidualna",
+        title: "Terapia indywidualna",
+        lead: "Przestrzeń na Ciebie.",
+        image: {
+          src: "https://cdn.test/site-media/support-areas/a.webp",
+          alt: "Gabinet",
+        },
+        link: null,
+      },
+      {
+        id: "warsztaty",
+        title: "Warsztaty",
+        lead: "Rozwój w grupie.",
+        image: null,
+        link: { href: "/warsztaty", label: "Zobacz warsztaty" },
+      },
+    ]);
+  });
+
+  it("saves the draft and publishes under the support_areas key", async () => {
+    const single = vi
+      .fn()
+      .mockResolvedValue({ data: { draft_payload: stored }, error: null });
+    const eq = vi.fn(() => ({ select: () => ({ single }) }));
+    const update = vi.fn(() => ({ eq }));
+    const rpc = vi.fn().mockResolvedValue({ error: null });
+    const client = { from: () => ({ update }), rpc } as never;
+
+    expect(await updateSupportAreasDraft(client, stored)).toEqual(stored);
+    await publishSupportAreas(client);
+
+    expect(update).toHaveBeenCalledWith({ draft_payload: stored });
+    expect(eq).toHaveBeenCalledWith("key", "support_areas");
+    expect(rpc).toHaveBeenCalledWith("publish_site_content", {
+      p_key: "support_areas",
+    });
+  });
+
+  it("refuses a draft the schema refuses, before writing anything", async () => {
+    const update = vi.fn();
+    const client = { from: () => ({ update }) } as never;
+    await expect(
+      updateSupportAreasDraft(client, { areas: [] }),
+    ).rejects.toThrow();
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("uploads an area's photo under its own new name", async () => {
+    const upload = vi.fn().mockResolvedValue({ error: null });
+    const from = vi.fn(() => ({ upload }));
+    const client = { storage: { from } } as never;
+    const file = new File(["x"], "zdjecie.png", { type: "image/png" });
+
+    const path = await uploadSupportAreaImage(client, file);
+
+    expect(from).toHaveBeenCalledWith("site-media");
+    expect(path).toMatch(/^support-areas\/[0-9a-f-]{36}\.png$/);
+    expect(upload).toHaveBeenCalledWith(path, file, {
+      contentType: "image/png",
+      upsert: false,
+    });
+  });
+
+  it("refuses a file that is not a JPG, PNG or WebP photo", async () => {
+    const from = vi.fn();
+    const client = { storage: { from } } as never;
+    const file = new File(["x"], "plik.gif", { type: "image/gif" });
+
+    await expect(uploadSupportAreaImage(client, file)).rejects.toThrow(
+      "Wybierz plik JPG, PNG lub WebP.",
+    );
+    expect(from).not.toHaveBeenCalled();
   });
 });

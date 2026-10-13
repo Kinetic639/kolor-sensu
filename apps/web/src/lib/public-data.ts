@@ -7,6 +7,7 @@ import {
   getPublicServiceBySlug,
   getPublishedHomeContent,
   getPublishedRoomsPageContent,
+  getPublishedSupportAreas,
   getPublishedSpecialistBySlug,
   getSpecialistSlugRedirect,
   listBookableCatalog,
@@ -80,6 +81,11 @@ export const getLocations = cache(() =>
 /** The home hero's CMS fields, published from the admin's /cms. */
 export const getHomeContent = cache(() =>
   load("home content", getPublishedHomeContent, null),
+);
+
+/** Home → Obszary wsparcia, published from the admin's /cms; null until then. */
+export const getSupportAreas = cache(() =>
+  load("support areas", getPublishedSupportAreas, null),
 );
 
 /** Which optional sections /gabinety shows, set in the admin's CMS. */

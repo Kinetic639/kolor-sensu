@@ -92,12 +92,19 @@ export {
   getHomeContentAdmin,
   getPublishedHomeContent,
   getPublishedRoomsPageContent,
+  getPublishedSupportAreas,
   getRoomsPageContentAdmin,
+  getSupportAreasAdmin,
   publishHomeContent,
   publishRoomsPageContent,
+  publishSupportAreas,
+  supportAreaImageUrl,
   updateHomeDraft,
   updateRoomsPageDraft,
+  updateSupportAreasDraft,
+  uploadSupportAreaImage,
 } from "./cms";
+export type { PublicSupportArea } from "./cms";
 export {
   addRoomException,
   createRoom,

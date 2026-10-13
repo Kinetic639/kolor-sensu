@@ -1,8 +1,17 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { getHomeContentAdmin, getRoomsPageContentAdmin } from "@repo/supabase";
-import { mapHomeContentViewModel, mapRoomsPageViewModel } from "./view-model";
+import {
+  getHomeContentAdmin,
+  getRoomsPageContentAdmin,
+  getSupportAreasAdmin,
+  supportAreaImageUrl,
+} from "@repo/supabase";
+import {
+  mapHomeContentViewModel,
+  mapRoomsPageViewModel,
+  mapSupportAreasViewModel,
+} from "./view-model";
 
 export async function loadHomeContent() {
   const client = await createClient();
@@ -12,4 +21,11 @@ export async function loadHomeContent() {
 export async function loadRoomsPageContent() {
   const client = await createClient();
   return mapRoomsPageViewModel(await getRoomsPageContentAdmin(client));
+}
+
+export async function loadSupportAreas() {
+  const client = await createClient();
+  return mapSupportAreasViewModel(await getSupportAreasAdmin(client), (path) =>
+    supportAreaImageUrl(client, path),
+  );
 }

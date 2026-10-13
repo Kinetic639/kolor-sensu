@@ -2,16 +2,26 @@
 
 import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type { HomePageContent, RoomsPageContent } from "@repo/contracts";
+import type {
+  HomePageContent,
+  RoomsPageContent,
+  SupportAreasContent,
+} from "@repo/contracts";
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import {
   publishHomeContent,
   publishRoomsPageContent,
+  publishSupportAreas,
   updateHomeDraft,
   updateRoomsPageDraft,
+  updateSupportAreasDraft,
 } from "@repo/supabase";
 import { revalidatePath } from "next/cache";
-import { loadHomeContent, loadRoomsPageContent } from "./loaders";
+import {
+  loadHomeContent,
+  loadRoomsPageContent,
+  loadSupportAreas,
+} from "./loaders";
 
 async function revalidatePublicHome() {
   const webUrl = process.env.NEXT_PUBLIC_WEB_URL ?? "http://localhost:3000";
@@ -75,4 +85,26 @@ export async function publishRoomsPageContentAction() {
   await revalidateWeb([{ path: "/gabinety" }]);
   revalidatePath("/cms");
   return loadRoomsPageContent();
+}
+
+export async function getSupportAreasAction() {
+  await requirePortalRole();
+  return loadSupportAreas();
+}
+
+export async function updateSupportAreasDraftAction(
+  input: SupportAreasContent,
+) {
+  await requirePortalRole();
+  await updateSupportAreasDraft(await createClient(), input);
+  revalidatePath("/cms");
+  return loadSupportAreas();
+}
+
+export async function publishSupportAreasAction() {
+  await requirePortalRole();
+  await publishSupportAreas(await createClient());
+  await revalidateWeb([{ path: "/" }]);
+  revalidatePath("/cms");
+  return loadSupportAreas();
 }

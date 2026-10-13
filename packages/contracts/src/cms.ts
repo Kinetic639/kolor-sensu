@@ -35,6 +35,58 @@ export const defaultRoomsPageContent: RoomsPageContent = {
   showLocationDetails: true,
 };
 
+/**
+ * Home → the areas of help ("Obszary wsparcia"): small circles around a large
+ * one, each area shown in the large one when chosen. The section is
+ * code-owned; the CMS edits the list of areas only.
+ */
+export const SUPPORT_AREAS_MAX = 10;
+
+/** A path within the public site ("/oferta", "/umow-wizyte#termin"). */
+const sitePathSchema = z
+  .string()
+  .trim()
+  .max(200)
+  .refine(
+    (href) =>
+      href.startsWith("/") && !href.startsWith("//") && !/\s/.test(href),
+    "Podaj adres na stronie, zaczynający się od /",
+  );
+
+export const supportAreaSchema = z.strictObject({
+  /** Stable while the area is edited or moved (also the key on the site). */
+  id: z.string().trim().min(1).max(64),
+  title: z.string().trim().min(1).max(60),
+  /** A sentence or two, shown in the large circle. */
+  lead: z.string().trim().min(1).max(240),
+  /** The photo, a file in the public site-media bucket (none: paint only). */
+  imagePath: z.string().trim().min(1).max(300).nullable().default(null),
+  imageAlt: z.string().trim().max(200).default(""),
+  /** Where the large circle leads (none: to booking). */
+  link: z
+    .strictObject({
+      href: sitePathSchema,
+      label: z.string().trim().min(1).max(40),
+    })
+    .nullable()
+    .default(null),
+});
+
+export type SupportArea = z.infer<typeof supportAreaSchema>;
+
+export const supportAreasContentSchema = z.strictObject({
+  areas: z
+    .array(supportAreaSchema)
+    .min(1)
+    .max(SUPPORT_AREAS_MAX)
+    .refine(
+      (areas) => new Set(areas.map((area) => area.id)).size === areas.length,
+      "Każdy obszar musi mieć inny identyfikator",
+    ),
+});
+
+export type SupportAreasContent = z.infer<typeof supportAreasContentSchema>;
+
 export interface SiteContentAdmin<Content> {
   draft: Content;
   published: Content | null;

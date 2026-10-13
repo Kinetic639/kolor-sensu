@@ -7,3 +7,8 @@ export const roomsPageKeys = {
   all: ["admin", "cms", "rooms"] as const,
   detail: () => [...roomsPageKeys.all, "detail"] as const,
 };
+
+export const supportAreasKeys = {
+  all: ["admin", "cms", "support-areas"] as const,
+  detail: () => [...supportAreasKeys.all, "detail"] as const,
+};

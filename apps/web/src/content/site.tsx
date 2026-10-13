@@ -5,6 +5,7 @@ import {
   PenguinLoader,
   type ThoughtsLensProps,
 } from "@repo/ui/public-site";
+import type { PublicSupportArea } from "@repo/supabase";
 import { Heart, House, Leaf, Users } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -121,6 +122,60 @@ export const thoughts = {
     "Mam na kogo liczyć",
   ],
 } satisfies ThoughtsLensProps;
+
+// Home → Obszary wsparcia: the section's own words; the areas themselves
+// come from the CMS once published, these until then (same as the CMS's
+// starting draft, plus the site's photos).
+export const supportAreasCopy = {
+  eyebrow: "Obszary wsparcia",
+  heading: "W czym możemy pomóc",
+  description:
+    "Wybierz koło, aby zobaczyć, czym zajmujemy się w każdym z obszarów.",
+};
+
+export const defaultSupportAreas = [
+  {
+    id: "indywidualna",
+    title: "Terapia indywidualna",
+    lead: "Spotkania jeden na jeden, w Twoim tempie: o tym, co trudne, i o tym, czego potrzebujesz.",
+    image: {
+      src: "/images/gabinet-fotel.webp",
+      alt: "Jasny gabinet z fotelem i roślinami",
+    },
+    link: null,
+  },
+  {
+    id: "pary",
+    title: "Terapia dla par",
+    lead: "Wspólna przestrzeń, by lepiej się słyszeć, rozumieć i szukać porozumienia.",
+    image: { src: "/images/gabinet.jpg", alt: "Gabinet z dwoma fotelami" },
+    link: null,
+  },
+  {
+    id: "mlodziez",
+    title: "Wsparcie dzieci i młodzieży",
+    lead: "Pomoc dla młodszych osób i ich rodziców: w trudnych emocjach, w szkole i w relacjach.",
+    image: null,
+    link: null,
+  },
+  {
+    id: "rodzinna",
+    title: "Terapia rodzinna",
+    lead: "Praca z całą rodziną nad tym, co dzieje się między jej członkami.",
+    image: null,
+    link: null,
+  },
+  {
+    id: "warsztaty",
+    title: "Warsztaty i rozwój",
+    lead: "Grupy i spotkania tematyczne dla osób, które chcą lepiej siebie poznać.",
+    image: {
+      src: "/images/warsztaty.jpg",
+      alt: "Uczestnicy warsztatu rozmawiają w kręgu",
+    },
+    link: { href: "/warsztaty", label: "Zobacz warsztaty" },
+  },
+] satisfies PublicSupportArea[];
 
 export const offerCopy = {
   eyebrow: "Nasza oferta",
