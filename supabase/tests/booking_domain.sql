@@ -1555,6 +1555,12 @@ BEGIN
   IF pg_temp.refusal(x.anna_offer, 'in_person', pg_temp.at(x.day + 1, '10:00'), x.room_id) <> 'room_closed' THEN
     RAISE EXCEPTION 'X: booked a closed room';
   END IF;
+  -- Only while the room is open (06:00–22:00, #33): not past closing, not
+  -- before opening.
+  IF pg_temp.refusal(x.anna_offer, 'in_person', pg_temp.at(x.day, '21:30'), x.room_id) <> 'room_closed'
+     OR pg_temp.refusal(x.anna_offer, 'in_person', pg_temp.at(x.day, '05:30'), x.room_id) <> 'room_closed' THEN
+    RAISE EXCEPTION 'X: booked outside the room''s hours';
+  END IF;
   IF pg_temp.refusal(x.anna_offer, 'online', pg_temp.at(x.day, '18:30'), NULL) <> 'time_off' THEN
     RAISE EXCEPTION 'X: booked during time off';
   END IF;
@@ -1576,6 +1582,45 @@ BEGIN
 END;
 $body$;
 RESET ROLE;
+
+-- The room's hours, changed and undone (#33): a visit ending at closing
+-- (its buffer after it may run past), no hours (closed), an extra opening.
+DO $body$
+DECLARE
+  x x_day%ROWTYPE;
+  v_hint text;
+BEGIN
+  SELECT * INTO x FROM x_day;
+  BEGIN
+    PERFORM pg_temp.book(x.anna_offer, 'in_person', pg_temp.at(x.day, '21:10'), x.room_id);
+    RAISE EXCEPTION 'undo' USING HINT = 'booked';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_hint = PG_EXCEPTION_HINT;
+    IF v_hint <> 'booked' THEN
+      RAISE EXCEPTION 'X: a visit ending at closing was refused: %', v_hint;
+    END IF;
+  END;
+
+  BEGIN
+    DELETE FROM public.room_opening_hours WHERE room_id = x.room_id;
+    IF pg_temp.refusal(x.anna_offer, 'in_person', pg_temp.at(x.day, '10:00'), x.room_id) <> 'room_closed' THEN
+      RAISE EXCEPTION 'X: booked a room without opening hours';
+    END IF;
+    INSERT INTO public.room_availability_exceptions (room_id, date, type, starts_at, ends_at, reason)
+    VALUES (x.room_id, x.day, 'extra_available_interval', '09:00', '12:00', 'Dyżur dodatkowy');
+    IF pg_temp.refusal(x.jan_offer, 'in_person', pg_temp.at(x.day, '11:30'), x.room_id) <> 'room_closed' THEN
+      RAISE EXCEPTION 'X: booked past an extra opening';
+    END IF;
+    IF pg_temp.refusal(x.jan_offer, 'in_person', pg_temp.at(x.day, '10:00'), x.room_id) <> '' THEN
+      RAISE EXCEPTION 'X: an extra opening did not open the room';
+    END IF;
+    RAISE EXCEPTION 'undo' USING HINT = 'checked';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_hint = PG_EXCEPTION_HINT;
+    IF v_hint IS DISTINCT FROM 'checked' THEN RAISE; END IF;
+  END;
+END;
+$body$;
 
 DO $body$
 DECLARE
@@ -2216,6 +2261,11 @@ BEGIN
      OR pg_temp.hint_of(format('SELECT public.centre_reschedule_visit(%L, %L, %L, NULL)',
        aa2, pg_temp.at(wed, '15:00'), 'in_person')) <> 'room_required' THEN
     RAISE EXCEPTION 'AA: moved to the past, or in person without a room';
+  END IF;
+  -- Not past the room's closing (22:00, #33).
+  IF pg_temp.hint_of(format('SELECT public.centre_reschedule_visit(%L, %L, %L, %L)',
+       aa2, pg_temp.at(wed, '21:30'), 'in_person', room)) <> 'room_closed' THEN
+    RAISE EXCEPTION 'AA: moved outside the room''s hours';
   END IF;
   SELECT * INTO m FROM public.centre_reschedule_visit(aa2, pg_temp.at(wed, '15:00'), 'in_person', room, 'Prośba klienta');
   IF (m.starts_at, m.ends_at, m.sequence)
