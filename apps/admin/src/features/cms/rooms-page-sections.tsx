@@ -3,7 +3,7 @@
 import { SaveRow, SwitchRow } from "@/features/center/fields";
 import { useSave } from "@/lib/use-save";
 import type { RoomsPageContent } from "@repo/contracts";
-import { DetailSection } from "@repo/ui/detail-page";
+import { CmsSection } from "./cms-section";
 import { useState } from "react";
 import { updateRoomsPageDraftAction } from "./actions";
 import type { RoomsPageViewModel } from "./types";
@@ -39,7 +39,7 @@ export function RoomsPageSections({
         );
       }}
     >
-      <DetailSection note="pod tytułem strony" title="Co u nas znajdziesz">
+      <CmsSection note="pod tytułem strony" title="Co u nas znajdziesz">
         <SwitchRow
           checked={draft.showAmenitiesSection}
           description="Lista zalet centrum pod nagłówkiem strony."
@@ -48,11 +48,13 @@ export function RoomsPageSections({
             setDraft((current) => ({ ...current, showAmenitiesSection }))
           }
         />
-      </DetailSection>
-      <DetailSection
-        note="nad gabinetami każdej siedziby"
-        title="Opis siedziby"
-      >
+        <div className="px-3.5 py-2.5">
+          <SaveRow dirty={dirty} pending={isPending}>
+            Zapisz szkic
+          </SaveRow>
+        </div>
+      </CmsSection>
+      <CmsSection note="nad gabinetami każdej siedziby" title="Opis siedziby">
         <SwitchRow
           checked={draft.showLocationDetails}
           description="Nazwa, adres, opis i udogodnienia każdej lokalizacji nad jej gabinetami."
@@ -66,7 +68,7 @@ export function RoomsPageSections({
             Zapisz szkic
           </SaveRow>
         </div>
-      </DetailSection>
+      </CmsSection>
     </form>
   );
 }

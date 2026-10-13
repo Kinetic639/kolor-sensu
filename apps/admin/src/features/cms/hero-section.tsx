@@ -4,7 +4,7 @@ import { Field, SaveRow } from "@/features/center/fields";
 import { useSave } from "@/lib/use-save";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { homePageContentSchema, type HomePageContent } from "@repo/contracts";
-import { DetailSection } from "@repo/ui/detail-page";
+import { CmsSection } from "./cms-section";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { updateHomeDraftAction } from "./actions";
@@ -36,7 +36,7 @@ export function HeroSection({ content }: { content: HomeContentViewModel }) {
   });
 
   return (
-    <DetailSection note="pierwszy ekran" title="Hero">
+    <CmsSection note="pierwszy ekran" title="Hero">
       <form
         className="grid gap-3.5 px-3.5 py-3 sm:grid-cols-2"
         noValidate
@@ -75,6 +75,6 @@ export function HeroSection({ content }: { content: HomeContentViewModel }) {
           Zapisz szkic
         </SaveRow>
       </form>
-    </DetailSection>
+    </CmsSection>
   );
 }

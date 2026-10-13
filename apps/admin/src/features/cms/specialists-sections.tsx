@@ -8,7 +8,8 @@ import {
   type HomeSectionsContent,
 } from "@repo/contracts";
 import { supportAreaImageUrl, uploadSiteImage } from "@repo/supabase";
-import { DETAIL_BUTTON, DetailSection } from "@repo/ui/detail-page";
+import { DETAIL_BUTTON } from "@repo/ui/detail-page";
+import { CmsSection } from "./cms-section";
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
 import { cn } from "@repo/ui/lib/utils";
@@ -108,7 +109,7 @@ export function SpecialistsSections({
         );
       }}
     >
-      <DetailSection
+      <CmsSection
         note="jedna osoba, większy portret"
         title="Z kim porozmawiasz"
       >
@@ -245,8 +246,13 @@ export function SpecialistsSections({
             </div>
           ) : null}
         </div>
-      </DetailSection>
-      <DetailSection
+        <div className="px-3.5 py-2.5">
+          <SaveRow dirty={dirty} pending={isPending}>
+            Zapisz szkic obu sekcji
+          </SaveRow>
+        </div>
+      </CmsSection>
+      <CmsSection
         note="karty wszystkich specjalistów"
         title="Poznaj nasz zespół"
       >
@@ -261,7 +267,7 @@ export function SpecialistsSections({
             Zapisz szkic obu sekcji
           </SaveRow>
         </div>
-      </DetailSection>
+      </CmsSection>
     </form>
   );
 }

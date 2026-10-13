@@ -8,7 +8,6 @@ import { supportAreaImageUrl, uploadSupportAreaImage } from "@repo/supabase";
 import {
   DETAIL_BUTTON,
   DETAIL_ICON_BUTTON,
-  DetailSection,
   ROW_LINE,
 } from "@repo/ui/detail-page";
 import { Input } from "@repo/ui/input";
@@ -26,6 +25,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { updateSupportAreasDraftAction } from "./actions";
+import { CmsSection } from "./cms-section";
 import {
   addArea,
   moveArea,
@@ -238,22 +238,7 @@ export function SupportAreasSection({
   }
 
   return (
-    <DetailSection
-      actions={
-        <button
-          className={DETAIL_BUTTON}
-          disabled={areas.length >= SUPPORT_AREAS_MAX}
-          onClick={() => {
-            const next = addArea(areas);
-            change(next);
-            setOpen(next.at(-1)!.id);
-          }}
-          type="button"
-        >
-          <Plus aria-hidden="true" />
-          Dodaj obszar
-        </button>
-      }
+    <CmsSection
       note={`koła pod myślami · ${areas.length} z ${SUPPORT_AREAS_MAX}`}
       title="Obszary wsparcia"
     >
@@ -368,12 +353,27 @@ export function SupportAreasSection({
             );
           })}
         </ul>
-        <div className="px-3.5 py-2.5">
-          <SaveRow dirty={dirty} pending={isPending}>
-            Zapisz szkic
-          </SaveRow>
+        <div className="flex items-center gap-3 px-3.5 py-2.5">
+          <button
+            className={DETAIL_BUTTON}
+            disabled={areas.length >= SUPPORT_AREAS_MAX}
+            onClick={() => {
+              const next = addArea(areas);
+              change(next);
+              setOpen(next.at(-1)!.id);
+            }}
+            type="button"
+          >
+            <Plus aria-hidden="true" />
+            Dodaj obszar
+          </button>
+          <div className="flex-1">
+            <SaveRow dirty={dirty} pending={isPending}>
+              Zapisz szkic
+            </SaveRow>
+          </div>
         </div>
       </form>
-    </DetailSection>
+    </CmsSection>
   );
 }
