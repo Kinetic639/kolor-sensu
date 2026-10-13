@@ -17,29 +17,12 @@ import {
   updateSpecialistOfferStateAdmin,
 } from "@repo/supabase";
 import { revalidatePath, updateTag } from "next/cache";
+import { serviceFailure } from "./action-errors";
 
 // The offer's changes: a service's data, the offer's arrangement (its
 // catalogues and order, as the site's menu shows them), a specialist's
 // offer of a service. Each one is seen at once in the portal and
 // on the site (its offer, the service's page, the price list).
-
-function safeMessage(error: unknown) {
-  if (
-    typeof error === "object" &&
-    error &&
-    "code" in error &&
-    error.code === "23505"
-  )
-    return "Usługa z takim adresem już istnieje.";
-  if (
-    typeof error === "object" &&
-    error &&
-    "name" in error &&
-    error.name === "ZodError"
-  )
-    return "Sprawdź poprawność danych formularza.";
-  return "Nie udało się zapisać usługi. Spróbuj ponownie.";
-}
 
 /** The portal's offer, the specialists (their offers), and the site. */
 async function refresh(serviceId?: string) {
@@ -57,7 +40,7 @@ export async function createServiceAction(input: ServiceCreate) {
     await refresh(service.id);
     return { ok: true as const, serviceId: service.id };
   } catch (error) {
-    return { ok: false as const, message: safeMessage(error) };
+    return serviceFailure(error);
   }
 }
 
@@ -66,7 +49,7 @@ export async function updateServiceAction(id: string, input: ServiceUpdate) {
   try {
     await updateService(await createClient(), id, input);
   } catch (error) {
-    return { ok: false as const, message: safeMessage(error) };
+    return serviceFailure(error);
   }
   await refresh(id);
   return { ok: true as const };
