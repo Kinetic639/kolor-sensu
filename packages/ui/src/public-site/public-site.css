@@ -1103,9 +1103,9 @@
     position: sticky;
     top: 0;
     height: 100vh;
-    grid-template-columns: minmax(0, 4.5fr) 1px minmax(0, 7.5fr);
+    grid-template-columns: minmax(0, 4.5fr) 2.5rem minmax(0, 7.5fr);
     grid-template-rows: auto minmax(0, 1fr);
-    column-gap: clamp(2.5rem, 4vw, 4rem);
+    column-gap: clamp(2rem, 3.5vw, 3.5rem);
     row-gap: 2.5rem;
     align-content: center;
     padding-block: 6rem 3rem;
@@ -1115,19 +1115,69 @@
     grid-area: 1 / 1;
   }
 
+  /* The tracker: FirstSteps' wave stood on end (painted-story-wave.ts), a
+     point per step. Its 50 x 1000 space is stretched over the column. */
   .ks-story[data-pinned] .ks-story__line {
     position: relative;
     display: block;
     grid-area: 1 / 2 / 3 / 3;
-    background: var(--color-border);
   }
 
-  .ks-story__line-fill {
+  .ks-story__wave {
     position: absolute;
     inset: 0;
-    background: var(--color-pink-strong);
-    transform-origin: top;
-    transform: scaleY(0);
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .ks-story__wave path {
+    fill: none;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+  }
+
+  /* The way ahead, faint, under the drawn line. */
+  .ks-story__wave-ghost {
+    stroke: var(--color-border-strong);
+    opacity: 0.3;
+  }
+
+  .ks-story__wave-line {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+
+  /* A step's point: grey until the line gets to it, then in its colour;
+     the current step's is the largest, with a soft ring. */
+  .ks-story__dot {
+    --ks-story-tone: var(--color-pink);
+    position: absolute;
+    left: 50%;
+    width: 0.625rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--color-ink) 22%, var(--color-bg));
+    box-shadow: 0 0 0 0 transparent;
+    translate: -50% -50%;
+    transition:
+      background-color 450ms ease-out,
+      scale 600ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 600ms var(--ease-soft);
+  }
+
+  .ks-story__dot[data-tone="sage"] {
+    --ks-story-tone: var(--color-primary);
+  }
+
+  .ks-story__dot[data-reached] {
+    background: var(--ks-story-tone);
+  }
+
+  .ks-story__dot[data-active] {
+    scale: 1.5;
+    box-shadow: 0 0 0 0.3rem
+      color-mix(in oklab, var(--ks-story-tone) 22%, transparent);
   }
 
   .ks-story[data-pinned] .ks-story__step {

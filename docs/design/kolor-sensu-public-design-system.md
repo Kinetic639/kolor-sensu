@@ -554,8 +554,13 @@ Experience. Brought over from PR #12; to be reworked.
 
 - **Wide screens with motion** (from 64 rem): one screen stays pinned for
   as long as it takes to scroll through the steps. The text column changes
-  step by step (the others are inert), a thin `pink-strong` line fills as
-  the story goes on, and each step's picture is painted over the previous
+  step by step (the others are inert). Between the text and the picture
+  runs the tracker: `FirstSteps`' wave stood on end
+  (`painted-story-wave.ts`), swinging right and left between one point per
+  step; its whole way shows faintly in grey, scrolling draws it in colour
+  (pink, then green) down to each step's point as that step begins, the
+  points reached take colour and the current one is the largest, with a
+  soft ring. Each step's picture is painted over the previous
   one with WatercolorImage's own brush (`watercolor-paint-matte.ts`).
   Scrolling back lifts the later pictures off again.
 - **Phones:** the steps follow one another, text then picture, each
