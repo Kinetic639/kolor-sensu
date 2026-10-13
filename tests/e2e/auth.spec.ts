@@ -14,7 +14,7 @@ async function signOut(page: Page, portalUrl: string) {
   await page.goto(portalUrl);
   await page.getByRole("button", { name: "Menu użytkownika" }).click();
   await page.getByRole("menuitem", { name: "Wyloguj się" }).click();
-  await expect(page).toHaveURL(`${portalUrl}/login`);
+  await expect(page).toHaveURL(`${portalUrl}/login?status=signed-out`);
   await page.goto(portalUrl);
   await expect(page).toHaveURL(`${portalUrl}/login`);
 }
