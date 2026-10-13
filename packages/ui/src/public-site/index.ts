@@ -18,6 +18,7 @@ export type {
   WatercolorSectionBackgroundProps,
 } from "./surfaces";
 export { CookieConsent } from "./cookie-consent";
+export { CursorRing } from "./cursor-ring";
 export type { CookieChoice, CookieConsentProps } from "./cookie-consent";
 export { FaqSection } from "./faq-section";
 export type { FaqItem, FaqSectionProps } from "./faq-section";

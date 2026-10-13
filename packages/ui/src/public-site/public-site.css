@@ -795,4 +795,93 @@
   .ks-paint--band {
     --ks-paint-mask: url("/watercolor/band.svg");
   }
+
+  /* ---------------------------------------------------------------- Cursor */
+
+  /* CursorRing (cursor-ring.tsx), after Talking Walls. .ks-cursor is a
+     zero-size point the script moves to the ring's place and turns along
+     its way; the ring is centred on it and grows along that way by
+     --ks-cursor-stretch (a spring, cursor-ring-motion.ts). Over links it
+     steps aside, over cards it becomes a "Zobacz" disc. The real cursor
+     stays; this only accompanies it. Hidden until the mouse moves, and for
+     touch or reduced motion never shown. Above the intro (z-index 100). */
+  .ks-cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 110;
+    pointer-events: none;
+    transition: opacity 300ms ease;
+  }
+
+  .ks-cursor__ring {
+    --ks-cursor-size: 1.25rem;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    place-items: center;
+    width: var(--ks-cursor-size);
+    height: calc(var(--ks-cursor-size) + var(--ks-cursor-stretch, 0px));
+    border: 1px solid var(--color-pink);
+    border-radius: calc(var(--ks-cursor-size) / 2);
+    color: var(--color-on-primary);
+    translate: -50% -50%;
+    transition:
+      --ks-cursor-size 300ms var(--ease-soft),
+      background-color 300ms ease,
+      border-color 300ms ease,
+      opacity 300ms ease;
+  }
+
+  .ks-cursor__label {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+
+  .ks-cursor[data-state="away"] {
+    opacity: 0;
+  }
+
+  .ks-cursor[data-state="link"] .ks-cursor__ring {
+    --ks-cursor-size: 0.25rem;
+    opacity: 0;
+  }
+
+  /* Wide enough for its word: "Zobacz" fits 5.5rem, a longer
+     data-cursor-label grows the disc (--ks-cursor-chars, set by the
+     script). */
+  .ks-cursor[data-state="view"] .ks-cursor__ring {
+    --ks-cursor-size: max(
+      5.5rem,
+      calc(var(--ks-cursor-chars, 6) * 0.62rem + 1.5rem)
+    );
+    border-color: transparent;
+    /* Solid: the white word needs the full 5 : 1 (public-theme.css). */
+    background-color: var(--color-pink-strong);
+  }
+
+  .ks-cursor[data-state="view"] .ks-cursor__label {
+    opacity: 1;
+    transition-delay: 120ms;
+  }
+
+  @media not (pointer: fine), (prefers-reduced-motion: reduce) {
+    .ks-cursor {
+      display: none;
+    }
+  }
+}
+
+/* The ring's size eases between states (the stretch, set every frame, must
+   not). */
+@property --ks-cursor-size {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 1.25rem;
 }

@@ -500,6 +500,25 @@ band after another.
   Brush Matte Debug, Slow Motion Debug, Frame Strip, All Paints Animated)
   and OfferSection (Desktop, Tablet, Mobile).
 
+### Cursor ring
+
+`CursorRing` (in `SiteLayout`, so on every page) is a hairline ring that
+accompanies the mouse, after Talking Walls
+(https://talkingwalls.co.il/art-counseling). The real cursor stays.
+
+- **Spring** (`cursor-ring-motion.ts`): each frame the 20 px ring closes a
+  fifth of the gap to the mouse (at any frame rate), turns along that gap and
+  grows along it by half of it, up to 40 px. A quick flick pulls it into a
+  capsule; at rest it settles back into a circle and stops redrawing.
+- **States:** over links and buttons it shrinks and fades (the pointer is
+  enough); over offer tiles and specialist cards (`.ks-of`, `.ks-sp`) it
+  becomes a solid `pink-strong` disc saying "Zobacz" (white, 5 : 1);
+  `data-cursor-label="…"` on any element gives another word, and the disc
+  grows to fit it. The disc never turns or stretches, so its word reads.
+- **Fallbacks:** touch, pens and reduced motion get nothing (no listener,
+  CSS hides it); it is `aria-hidden`.
+- **Storybook:** Cursor ring (Playground, Shapes).
+
 ## 12. Primitives
 
 Only what the references repeat:

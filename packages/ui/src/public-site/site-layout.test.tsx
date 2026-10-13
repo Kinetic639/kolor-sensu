@@ -110,6 +110,14 @@ describe("SiteLayout", () => {
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
   });
 
+  it("brings the mouse's ring along on every page, hidden from assistive tech", () => {
+    const { container } = render(page());
+    expect(container.querySelector(".ks-cursor")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+  });
+
   it("puts the logo, linking home, in the header", () => {
     render(page());
     const header = screen.getByRole("banner");
