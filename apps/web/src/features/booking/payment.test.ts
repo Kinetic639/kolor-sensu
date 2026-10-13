@@ -47,6 +47,7 @@ describe("checkoutSessionParams", () => {
     expect(params).toEqual({
       ui_mode: "elements",
       mode: "payment",
+      allowed_payment_method_types: ["card", "blik", "p24"],
       customer_email: "jan@example.com",
       line_items: [
         {
@@ -89,6 +90,19 @@ describe("checkoutSessionParams", () => {
     expect(params).not.toContain("Jan Kowalski");
     expect(params).not.toContain("600100200");
     expect(params).not.toContain("lęki");
+  });
+
+  it("offers only a card (with its wallets), BLIK and Przelewy24", () => {
+    const params = checkoutSessionParams({
+      booking,
+      returnUrl: "https://kolorsensu.pl/x",
+      visitLabel: "…",
+    });
+    expect(params.allowed_payment_method_types).toEqual([
+      "card",
+      "blik",
+      "p24",
+    ]);
   });
 });
 
