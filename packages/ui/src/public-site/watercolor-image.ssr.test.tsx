@@ -44,7 +44,7 @@ describe("WatercolorImage on the server", () => {
     }
   });
 
-  it("keeps client-only code to small islands: reveals, caption motion, intro motion, navigation, cookie notice, room gallery, cursor ring", () => {
+  it("keeps client-only code to small islands: reveals, caption motion, intro motion, navigation, cookie notice, room gallery, cursor ring, thoughts lens", () => {
     const clientFiles = readdirSync(here)
       .filter(
         (file) => /\.tsx?$/.test(file) && !/\.(test|stories)\./.test(file),
@@ -63,6 +63,7 @@ describe("WatercolorImage on the server", () => {
       "site-mobile-nav.tsx",
       "site-navigation.tsx",
       "specialist-reveal.tsx",
+      "thoughts-lens.tsx",
       "watercolor-caption-motion.tsx",
       "watercolor-reveal.tsx",
     ]);

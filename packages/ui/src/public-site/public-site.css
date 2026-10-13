@@ -876,6 +876,177 @@
       display: none;
     }
   }
+
+  /* --------------------------------------------------------- Thoughts lens */
+
+  /* ThoughtsLens (thoughts-lens.tsx): a crowd of negative thoughts outlined
+     in pink, two rows drifting apart as the band scrolls by. Each hides a
+     positive thought: pointed at or tapped (data-found), the negative one
+     dissolves like mist, its letters drifting apart, turning, swelling and
+     fading (--ks-drift-*, set per letter), and the positive one condenses
+     in its place, in pastel green, out of a blur. The word eases its width
+     from one to the other (set by the script), so the crowd makes room.
+     Transitions only: nothing runs while no word turns. */
+  .ks-thoughts {
+    position: relative;
+    overflow: clip;
+    padding-block: clamp(3rem, 8vw, 6rem);
+    font-family: var(--font-display);
+    user-select: none;
+    /* The theme's own colours only: powder pink and sage green, each as a
+       hairline outline or a fill. */
+    --ks-thoughts-pink-line: var(--color-pink);
+    --ks-thoughts-pink-fill: color-mix(
+      in oklab,
+      var(--color-pink) 55%,
+      var(--color-blush)
+    );
+    --ks-thoughts-green-line: color-mix(
+      in oklab,
+      var(--color-primary) 80%,
+      var(--color-sage)
+    );
+    --ks-thoughts-green-fill: color-mix(
+      in oklab,
+      var(--color-primary) 62%,
+      var(--color-sage)
+    );
+  }
+
+  .ks-thoughts__noise {
+    display: grid;
+    /* One column the band's width, however long the rows inside. */
+    grid-template-columns: minmax(0, 1fr);
+    font-size: clamp(2.25rem, 4.2vw, 3.75rem);
+    line-height: 1.12;
+  }
+
+  .ks-thoughts__row {
+    display: flex;
+    gap: 0.45em;
+    width: max-content;
+    margin: 0;
+    white-space: nowrap;
+    translate: -8% 0;
+  }
+
+  .ks-thoughts__row:nth-child(even) {
+    translate: -20% 0;
+    font-style: italic;
+  }
+
+  .ks-thoughts__run {
+    display: flex;
+    gap: 0.45em;
+  }
+
+  .ks-thoughts__word {
+    position: relative;
+    display: inline-block;
+    transition: width 450ms ease-in-out;
+  }
+
+  .ks-thoughts__fear {
+    display: inline-block;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--ks-thoughts-pink-line);
+  }
+
+  .ks-thoughts__fear > span {
+    display: inline-block;
+    transition:
+      opacity 380ms ease-out,
+      translate 450ms ease-out,
+      rotate 450ms ease-out,
+      scale 450ms ease-out,
+      visibility 0s linear 450ms;
+  }
+
+  .ks-thoughts__hope {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    translate: -50% 0;
+    color: var(--ks-thoughts-green-fill);
+    opacity: 0;
+    filter: blur(0.35em);
+    pointer-events: none;
+    transition:
+      opacity 400ms ease-out 80ms,
+      filter 400ms ease-out 80ms;
+  }
+
+  .ks-thoughts__word[data-found] .ks-thoughts__fear > span {
+    opacity: 0;
+    translate: var(--ks-drift-x) var(--ks-drift-y);
+    rotate: var(--ks-drift-turn);
+    scale: 1.35;
+    /* Gone for good once dissolved: no layer kept for it. */
+    visibility: hidden;
+  }
+
+  .ks-thoughts__word[data-found] .ks-thoughts__hope {
+    opacity: 1;
+    filter: none;
+  }
+
+  .ks-thoughts__word--filled .ks-thoughts__fear {
+    color: var(--ks-thoughts-pink-fill);
+    -webkit-text-stroke-width: 0;
+  }
+
+  .ks-thoughts__word--filled .ks-thoughts__hope {
+    color: transparent;
+    -webkit-text-stroke: 1px var(--ks-thoughts-green-line);
+  }
+
+  /* Reduced motion: the turn is instant. */
+  @media (prefers-reduced-motion: reduce) {
+    .ks-thoughts__word,
+    .ks-thoughts__fear > span,
+    .ks-thoughts__hope {
+      transition: none;
+    }
+  }
+
+  /* The drift: rows slide gently in opposite directions (12vw in all)
+     while the band crosses the screen; in vw, not % of the long rows, so
+     the pace keeps to the screen (scroll-driven; where unsupported they
+     stay put). */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .ks-thoughts {
+        view-timeline: --ks-thoughts;
+      }
+
+      .ks-thoughts__row {
+        animation: ks-thoughts-left linear both;
+        animation-timeline: --ks-thoughts;
+      }
+
+      .ks-thoughts__row:nth-child(even) {
+        animation-name: ks-thoughts-right;
+      }
+    }
+  }
+
+  @keyframes ks-thoughts-left {
+    from {
+      translate: -8% 0;
+    }
+    to {
+      translate: calc(-8% - 12vw) 0;
+    }
+  }
+
+  @keyframes ks-thoughts-right {
+    from {
+      translate: calc(-20% - 12vw) 0;
+    }
+    to {
+      translate: -20% 0;
+    }
+  }
 }
 
 /* The ring's size eases between states (the stretch, set every frame, must
