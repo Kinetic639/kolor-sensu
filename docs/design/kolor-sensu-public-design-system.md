@@ -519,6 +519,32 @@ accompanies the mouse, after Talking Walls
   CSS hides it); it is `aria-hidden`.
 - **Storybook:** Cursor ring (Playground, Shapes).
 
+### Thoughts lens
+
+`ThoughtsLens` (homepage, right under the hero) is a crowd of difficult
+thoughts with kinder ones hidden under them. Copy: `thoughts` in
+`apps/web/src/content/site.tsx`.
+
+- **Crowd:** the negative thoughts in two rows of large display type
+  (the same size as the hero's own lines, about 3.75rem), outlined
+  (`pink`, hairline) and filled (`pink` mixed with `blush`, a powder pink)
+  by turns, so neighbours read apart. Each row is repeated three times and
+  slides gently, the two rows in opposite directions, 12vw in all while the
+  band crosses the screen (scroll-driven CSS; static where unsupported or
+  under reduced motion).
+- **Turn:** every negative thought hides a positive one (dealt in turn
+  from the list). Pointed at, or tapped, the negative one dissolves like
+  mist: each letter drifts its own way (`thoughts-mist.ts`), turns, swells
+  and fades in about 0.45 s. The positive one condenses in its place out of
+  a blur, in sage green (`primary` mixed with `sage`), filled where the
+  negative was outlined and the other way round. The word eases its width
+  from one thought to the other, so the crowd makes room. A turned thought
+  stays turned until the page is loaded again. Transitions only: nothing
+  runs while no word turns. Reduced motion: the turn is instant.
+- **Assistive tech:** the band is a region named by `label`; the pictures
+  of words are hidden and the positive thoughts are read as a list.
+- **Storybook:** Thoughts lens (Playground).
+
 ## 12. Primitives
 
 Only what the references repeat:

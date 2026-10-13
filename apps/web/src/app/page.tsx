@@ -4,6 +4,7 @@ import {
   HeroSection,
   OfferSection,
   SpecialistsSection,
+  ThoughtsLens,
 } from "@repo/ui/public-site";
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
@@ -13,6 +14,7 @@ import {
   offerCopy,
   rooms,
   specialistsCopy,
+  thoughts,
   workshops,
 } from "@/content/site";
 import { withHomeContent } from "@/lib/home-content";
@@ -36,6 +38,7 @@ export default async function Home() {
         {...withHomeContent(hero, homeContent)}
         animationPreset="watercolor-reveal"
       />
+      <ThoughtsLens {...thoughts} />
       {services.length > 0 ? (
         <OfferSection
           {...offerCopy}

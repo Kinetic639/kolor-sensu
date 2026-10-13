@@ -19,6 +19,8 @@ export type {
 } from "./surfaces";
 export { CookieConsent } from "./cookie-consent";
 export { CursorRing } from "./cursor-ring";
+export { ThoughtsLens } from "./thoughts-lens";
+export type { ThoughtsLensProps } from "./thoughts-lens";
 export type { CookieChoice, CookieConsentProps } from "./cookie-consent";
 export { FaqSection } from "./faq-section";
 export type { FaqItem, FaqSectionProps } from "./faq-section";

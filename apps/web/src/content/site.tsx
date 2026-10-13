@@ -2,6 +2,7 @@ import {
   type FaqItem,
   type HeroSectionProps,
   PenguinLoader,
+  type ThoughtsLensProps,
 } from "@repo/ui/public-site";
 import { Heart, House, Leaf, Users } from "lucide-react";
 import type { ReactNode } from "react";
@@ -67,6 +68,58 @@ export const hero = {
     mark: <PenguinLoader />,
   },
 } satisfies HeroSectionProps;
+
+// Under the hero: a crowd of difficult thoughts, and kinder ones the
+// mouse finds under them (ThoughtsLens).
+export const thoughts = {
+  label: "Pod natłokiem trudnych myśli kryją się inne",
+  negative: [
+    "nie dam rady",
+    "znowu to samo",
+    "co jeśli",
+    "nie mam siły",
+    "wstyd",
+    "lęk",
+    "a jeśli to moja wina",
+    "za mało",
+    "nikt mnie nie rozumie",
+    "pustka",
+    "nie zasługuję",
+    "muszę",
+    "co pomyślą inni",
+    "złość",
+    "napięcie",
+    "nie śpię",
+    "wszystko na mojej głowie",
+    "nie wiem, co dalej",
+    "bezsilność",
+    "smutek",
+    "znowu zawiodę",
+    "chaos",
+    "nie potrafię",
+    "porażka",
+    "nie umiem odpocząć",
+    "zawsze tak będzie",
+    "samotność",
+    "boję się",
+  ],
+  positive: [
+    "Mam prawo tak czuć",
+    "Krok po kroku",
+    "Mogę poprosić o pomoc",
+    "Wystarczy, że jestem",
+    "Zasługuję na spokój",
+    "To minie",
+    "Mogę odpocząć",
+    "Nie muszę dźwigać wszystkiego",
+    "To, co czuję, jest ważne",
+    "Oddech po oddechu",
+    "Mam w sobie siłę",
+    "Wolno mi się mylić",
+    "Jutro może być lżej",
+    "Mam na kogo liczyć",
+  ],
+} satisfies ThoughtsLensProps;
 
 export const offerCopy = {
   eyebrow: "Nasza oferta",
