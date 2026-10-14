@@ -23,7 +23,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { updateSupportAreasDraftAction } from "./actions";
 import { CmsSection } from "./cms-section";
 import {
@@ -220,8 +220,11 @@ function AreaFields({
 
 export function SupportAreasSection({
   content,
+  header,
 }: {
   content: SupportAreasViewModel;
+  /** The section's header block (HeaderBlock), above its own form. */
+  header?: ReactNode;
 }) {
   const { isPending, run } = useSave();
   const [areas, setAreas] = useState<SupportAreaRow[]>(content.areas);
@@ -242,6 +245,7 @@ export function SupportAreasSection({
       note={`koła pod myślami · ${areas.length} z ${SUPPORT_AREAS_MAX}`}
       title="Obszary wsparcia"
     >
+      {header}
       <form
         noValidate
         onSubmit={(event) => {

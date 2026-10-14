@@ -49,15 +49,14 @@ BEGIN
 
   UPDATE public.site_content
   SET draft_payload = jsonb_build_object(
-    'visible', false, 'eyebrow', '', 'heading', 'Jak zacząć',
-    'description', '', 'steps', jsonb_build_array(step, step, step, step)
+    'visible', false, 'steps', jsonb_build_array(step, step, step, step)
   )
   WHERE key = 'first_steps';
 
   BEGIN
     UPDATE public.site_content
     SET draft_payload = jsonb_build_object(
-      'visible', true, 'heading', 'x', 'steps', jsonb_build_array(step, step, step)
+      'visible', true, 'steps', jsonb_build_array(step, step, step)
     )
     WHERE key = 'first_steps';
     RAISE EXCEPTION 'V: three steps were accepted';
@@ -67,7 +66,7 @@ BEGIN
   BEGIN
     UPDATE public.site_content
     SET draft_payload = jsonb_build_object(
-      'visible', true, 'heading', 'x',
+      'visible', true,
       'steps', jsonb_build_array(step, step, step, step - 'text')
     )
     WHERE key = 'first_steps';
@@ -78,7 +77,7 @@ BEGIN
   BEGIN
     UPDATE public.site_content
     SET draft_payload = jsonb_build_object(
-      'heading', 'x', 'steps', jsonb_build_array(step, step, step, step)
+      'steps', jsonb_build_array(step, step, step, step)
     )
     WHERE key = 'first_steps';
     RAISE EXCEPTION 'V: a band without its switch was accepted';
@@ -88,9 +87,9 @@ BEGIN
   PERFORM public.publish_site_content('first_steps');
 
   IF (
-    SELECT published_payload ->> 'heading'
+    SELECT published_payload ->> 'visible'
     FROM public.site_content WHERE key = 'first_steps'
-  ) IS DISTINCT FROM 'Jak zacząć' THEN
+  ) IS DISTINCT FROM 'false' THEN
     RAISE EXCEPTION 'P: publishing did not copy the draft';
   END IF;
 END;

@@ -5,25 +5,32 @@ import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/use-save";
 import {
   firstStepsContentSchema,
+  HOME_HEADER_SECTIONS,
   homePageContentSchema,
+  sectionHeaderSchema,
   homeSectionsContentSchema,
   roomsPageContentSchema,
   supportAreasContentSchema,
   type FirstStepsContent,
+  type HomeHeaderSection,
   type HomePageContent,
+  type SectionHeaderContent,
   type HomeSectionsContent,
   type RoomsPageContent,
   type SupportAreasContent,
 } from "@repo/contracts";
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import {
+  getHomeHeadersAdmin,
   publishFirstSteps,
   publishHomeContent,
+  publishHomeHeaders,
   publishHomeSections,
   publishRoomsPageContent,
   publishSupportAreas,
   updateFirstStepsDraft,
   updateHomeDraft,
+  updateHomeHeadersDraft,
   updateHomeSectionsDraft,
   updateRoomsPageDraft,
   updateSupportAreasDraft,
@@ -83,6 +90,22 @@ export async function updateFirstStepsDraftAction(values: FirstStepsContent) {
   return saveDraft(firstStepsContentSchema, values, updateFirstStepsDraft);
 }
 
+/**
+ * One section's header into the draft of the homepage's headers (the
+ * others as they are in it).
+ */
+export async function updateHomeHeaderDraftAction(
+  section: HomeHeaderSection,
+  values: SectionHeaderContent,
+): Promise<ActionResult> {
+  if (!HOME_HEADER_SECTIONS.some((one) => one.key === section))
+    return { ok: false, message: "Nieznana sekcja." };
+  return saveDraft(sectionHeaderSchema, values, async (client, header) => {
+    const { draft } = await getHomeHeadersAdmin(client);
+    await updateHomeHeadersDraft(client, { ...draft, [section]: header });
+  });
+}
+
 export async function updateRoomsPageDraftAction(values: RoomsPageContent) {
   return saveDraft(roomsPageContentSchema, values, updateRoomsPageDraft);
 }
@@ -104,8 +127,8 @@ async function publishPage(
 }
 
 /**
- * The homepage: the hero, the areas of help, the first steps and the
- * specialist sections.
+ * The homepage: the hero, the areas of help, the first steps, the
+ * specialist sections and the sections' headers.
  */
 export async function publishHomePageAction() {
   return publishPage(
@@ -114,6 +137,7 @@ export async function publishHomePageAction() {
       publishSupportAreas,
       publishFirstSteps,
       publishHomeSections,
+      publishHomeHeaders,
     ],
     "/",
   );

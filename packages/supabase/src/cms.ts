@@ -1,14 +1,17 @@
 import {
   defaultFirstSteps,
+  defaultHomeHeaders,
   defaultHomeSections,
   defaultRoomsPageContent,
   firstStepsContentSchema,
+  homeHeadersContentSchema,
   homePageContentSchema,
   homeSectionsContentSchema,
   roomsPageContentSchema,
   supportAreasContentSchema,
   type FirstStepsContent,
   type HomeContentAdmin,
+  type HomeHeadersContent,
   type HomePageContent,
   type HomeSectionsContent,
   type RoomsPageContent,
@@ -28,6 +31,7 @@ const ROOMS_KEY = "rooms";
 const SUPPORT_AREAS_KEY = "support_areas";
 const HOME_SECTIONS_KEY = "home_sections";
 const FIRST_STEPS_KEY = "first_steps";
+const HOME_HEADERS_KEY = "home_headers";
 
 // The site's own photos: a public bucket only admins write to.
 const SITE_MEDIA_BUCKET = "site-media";
@@ -318,12 +322,41 @@ export function publishFirstSteps(
   return publish(client, FIRST_STEPS_KEY);
 }
 
-/** The published band; the site's own words, shown, until then. */
+/** The published band; the site's own steps, shown, until then. */
 export async function getPublishedFirstSteps(
   client: SupabaseClient<Database>,
 ): Promise<FirstStepsContent> {
   return (
     (await getPublished(client, FIRST_STEPS_KEY, firstStepsContentSchema)) ??
     defaultFirstSteps
+  );
+}
+
+export function getHomeHeadersAdmin(
+  client: SupabaseClient<Database>,
+): Promise<SiteContentAdmin<HomeHeadersContent>> {
+  return getContentAdmin(client, HOME_HEADERS_KEY, homeHeadersContentSchema);
+}
+
+export function updateHomeHeadersDraft(
+  client: SupabaseClient<Database>,
+  input: HomeHeadersContent,
+): Promise<HomeHeadersContent> {
+  return updateDraft(client, HOME_HEADERS_KEY, homeHeadersContentSchema, input);
+}
+
+export function publishHomeHeaders(
+  client: SupabaseClient<Database>,
+): Promise<void> {
+  return publish(client, HOME_HEADERS_KEY);
+}
+
+/** The homepage's published headers; the site's own words until then. */
+export async function getPublishedHomeHeaders(
+  client: SupabaseClient<Database>,
+): Promise<HomeHeadersContent> {
+  return (
+    (await getPublished(client, HOME_HEADERS_KEY, homeHeadersContentSchema)) ??
+    defaultHomeHeaders
   );
 }

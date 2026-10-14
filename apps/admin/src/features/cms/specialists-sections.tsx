@@ -20,10 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/ui/select";
-import { Textarea } from "@repo/ui/textarea";
 import { toast } from "@repo/ui/toast";
 import { ImagePlus } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { updateHomeSectionsDraftAction } from "./actions";
 import type { HomeSectionsViewModel } from "./types";
 
@@ -46,8 +45,13 @@ function toContent({
 
 export function SpecialistsSections({
   content,
+  spotlightHeader,
+  teamHeader,
 }: {
   content: HomeSectionsViewModel;
+  /** Each section's header block (HeaderBlock), at its top. */
+  spotlightHeader?: ReactNode;
+  teamHeader?: ReactNode;
 }) {
   const { isPending, run } = useSave();
   const initial: Draft = {
@@ -113,6 +117,7 @@ export function SpecialistsSections({
         note="jedna osoba, większy portret"
         title="Z kim porozmawiasz"
       >
+        {spotlightHeader}
         <SwitchRow
           checked={draft.visible}
           description="Prezentacja wybranej osoby: portret, opis, w czym pomaga, z kim pracuje."
@@ -158,38 +163,6 @@ export function SpecialistsSections({
             >
               {hint}
             </p>
-          </div>
-          <div className="grid content-start gap-1.5">
-            <Label htmlFor="cms-spotlight-eyebrow">Nadtytuł</Label>
-            <Input
-              id="cms-spotlight-eyebrow"
-              maxLength={60}
-              onChange={(event) => change({ eyebrow: event.target.value })}
-              placeholder="Poznaj nasz zespół"
-              value={draft.eyebrow}
-            />
-          </div>
-          <div className="grid content-start gap-1.5">
-            <Label htmlFor="cms-spotlight-heading">Tytuł</Label>
-            <Input
-              id="cms-spotlight-heading"
-              maxLength={100}
-              onChange={(event) => change({ heading: event.target.value })}
-              placeholder="Z kim porozmawiasz"
-              value={draft.heading}
-            />
-          </div>
-          <div className="grid content-start gap-1.5 sm:col-span-2">
-            <Label htmlFor="cms-spotlight-description">
-              Podpis pod tytułem
-            </Label>
-            <Textarea
-              id="cms-spotlight-description"
-              maxLength={300}
-              onChange={(event) => change({ description: event.target.value })}
-              rows={2}
-              value={draft.description}
-            />
           </div>
           <div className="grid content-start gap-1.5 sm:col-span-2">
             <Label>Własne zdjęcie (opcjonalnie)</Label>
@@ -256,6 +229,7 @@ export function SpecialistsSections({
         note="karty wszystkich specjalistów"
         title="Poznaj nasz zespół"
       >
+        {teamHeader}
         <SwitchRow
           checked={draft.showSpecialists}
           description="Karty specjalistów widocznych na stronie (aktywnych, z opublikowanym profilem)."

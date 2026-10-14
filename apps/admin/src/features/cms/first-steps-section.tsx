@@ -10,29 +10,30 @@ import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
 import { Textarea } from "@repo/ui/textarea";
 import { toast } from "@repo/ui/toast";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { updateFirstStepsDraftAction } from "./actions";
 import { CmsSection } from "./cms-section";
 import type { FirstStepsViewModel } from "./types";
 
-// Home → "Pierwszy krok": whether the band shows, its words and the four
-// steps' names and sentences. The wave, the icons and the animation are
-// the site's own. Saved as a draft; the page bar publishes.
+// Home → "Pierwszy krok": its header (the block above the form), whether
+// the band shows and the four steps' names and sentences. The wave, the
+// icons and the animation are the site's own. Saved as a draft; the page
+// bar publishes.
 
 function toContent(model: FirstStepsViewModel): FirstStepsContent {
   return {
     visible: model.visible,
-    eyebrow: model.eyebrow,
-    heading: model.heading,
-    description: model.description,
     steps: model.steps.map(({ title, text }) => ({ title, text })),
   };
 }
 
 export function FirstStepsSection({
   content,
+  header,
 }: {
   content: FirstStepsViewModel;
+  /** The section's header block (HeaderBlock), above its own form. */
+  header?: ReactNode;
 }) {
   const { isPending, run } = useSave();
   const [draft, setDraft] = useState<FirstStepsContent>(() =>
@@ -41,7 +42,7 @@ export function FirstStepsSection({
   const [saved, setSaved] = useState<FirstStepsContent>(() =>
     toContent(content),
   );
-  // What the schema refuses, by field path ("heading", "steps.2.title").
+  // What the schema refuses, by field path ("steps.2.title").
   const [problems, setProblems] = useState<Record<string, true>>({});
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
 
@@ -60,6 +61,7 @@ export function FirstStepsSection({
 
   return (
     <CmsSection note="cztery kroki na malowanym pasie" title="Pierwszy krok">
+      {header}
       <form
         noValidate
         onSubmit={(event) => {
@@ -92,37 +94,6 @@ export function FirstStepsSection({
           onCheckedChange={(visible) => change({ visible })}
         />
         <div className="grid gap-3.5 px-3.5 py-3 sm:grid-cols-2">
-          <div className="grid content-start gap-1.5">
-            <Label htmlFor="cms-steps-eyebrow">Nadtytuł</Label>
-            <Input
-              id="cms-steps-eyebrow"
-              maxLength={60}
-              onChange={(event) => change({ eyebrow: event.target.value })}
-              value={draft.eyebrow}
-            />
-          </div>
-          <div className="grid content-start gap-1.5">
-            <Label htmlFor="cms-steps-heading">Tytuł</Label>
-            <Input
-              aria-invalid={problems.heading ? true : undefined}
-              id="cms-steps-heading"
-              maxLength={100}
-              onChange={(event) => change({ heading: event.target.value })}
-              value={draft.heading}
-            />
-          </div>
-          <div className="grid content-start gap-1.5 sm:col-span-2">
-            <Label htmlFor="cms-steps-description">
-              Podpis pod tytułem (opcjonalnie)
-            </Label>
-            <Textarea
-              id="cms-steps-description"
-              maxLength={300}
-              onChange={(event) => change({ description: event.target.value })}
-              rows={2}
-              value={draft.description}
-            />
-          </div>
           {draft.steps.map((step, index) => (
             <fieldset
               className="grid content-start gap-1.5 rounded-[5px] border border-[var(--border)] p-2.5"

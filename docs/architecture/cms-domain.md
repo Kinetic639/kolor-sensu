@@ -43,7 +43,7 @@ separation" below.
 
 ```
 site_content
-  key                text PRIMARY KEY CHECK (key IN ('home', 'rooms', 'support_areas', 'home_sections', 'first_steps'))
+  key                text PRIMARY KEY CHECK (key IN ('home', 'rooms', 'support_areas', 'home_sections', 'first_steps', 'home_headers'))
   draft_payload       jsonb NOT NULL
   published_payload   jsonb            -- null until first publish
   published_at        timestamptz
@@ -55,7 +55,9 @@ The set of keys is a hard database-level guarantee, not a UI convention
 added in `20260927201414_site_content_rooms_page.sql`, `support_areas` for
 the homepage's areas of help, added in
 `20261013150000_support_areas.sql`, `home_sections` for which specialist
-sections the homepage shows, added in `20261013180000_home_sections.sql`;
+sections the homepage shows, added in `20261013180000_home_sections.sql`,
+`first_steps` and `home_headers` for the homepage's sections' headers,
+added in `20261014090000_home_headers.sql`;
 each key's payload shape is checked by
 `private.site_content_payload_is_valid`):
 `admin` has **no `INSERT` grant at all** on this table (each row
@@ -177,14 +179,13 @@ cards) and "Z kim porozmawiasz" (`SpecialistSpotlight`: one chosen
 specialist presented at length).
 
 - **Payload** (`homeSectionsContentSchema`): `{ showSpecialists, spotlight:
-{ visible, specialistId | null, eyebrow ≤60, heading ≤100,
-description ≤300, imagePath | null, imageAlt } }`. A visible spotlight
-  needs a specialist. Empty texts fall back to the site's own ("Poznaj nasz
-  zespół", "Z kim porozmawiasz", no caption).
+{ visible, specialistId | null, imagePath | null, imageAlt } }`. A visible
+  spotlight needs a specialist. Both sections' headers are among the
+  homepage's headers (`home_headers`, below).
 - **The specialist** is read from the Specialist Domain on the site; if the
   chosen one is not on the site (inactive, or no published profile), the
   section simply does not show. Name, role, bio and facts come from the
-  profile; the CMS adds only the texts around it and, optionally, its own
+  profile; the CMS adds only the header around it and, optionally, its own
   photo (`site-media/spotlight/…`, ideally a cut-out portrait on a
   transparent background, like the cards'), else the profile's portrait.
 - **Until the first publish**: the team shows, the spotlight does not
@@ -202,12 +203,11 @@ description ≤300, imagePath | null, imageAlt } }`. A visible spotlight
 
 The homepage band "Pierwszy krok" (`FirstSteps`: four steps of starting
 therapy on a brush stroke that paints itself with scroll) is code-owned,
-with its wave, icons and animation; the CMS sets whether it shows and its
-words.
+with its wave, icons and animation; the CMS sets whether it shows and the
+steps' words. Its header is among the homepage's headers (`home_headers`).
 
-- **Payload** (`firstStepsContentSchema`): `{ visible, eyebrow ≤60,
-heading 1..100, description ≤300, steps: exactly 4 × { title ≤40,
-text ≤200 } }`. The database checks the switch, the heading and that
+- **Payload** (`firstStepsContentSchema`): `{ visible, steps: exactly 4 ×
+{ title ≤40, text ≤200 } }`. The database checks the switch and that
   there are four steps each with a title and a text.
 - **Until the first publish** the band shows with the site's own words
   (`defaultFirstSteps`); the migration
@@ -215,6 +215,42 @@ text ≤200 } }`. The database checks the switch, the heading and that
 - **Admin**: `/cms` → Strona główna → "Pierwszy krok". Published with the
   page.
 - **Tests**: `supabase/tests/first_steps.sql`.
+
+## Home → the sections' headers (`home_headers`)
+
+Nearly every homepage section opens with an eyebrow, a title, a
+description and sometimes a call to action. The CMS edits them in one
+shared format (`sectionHeaderSchema`, `packages/contracts/src/section-header.ts`;
+drawn by `SectionHeader`, see the design system): **words and colours,
+never the markup**. Each section's heading level (one `h1`, in the hero;
+section titles `h2`), its size, the order of the sections and of the
+header's parts are code's, and no field of the payload can change them.
+
+- **Payload** (`homeHeadersContentSchema`): one header per section, in the
+  page's order: `supportAreas`, `firstSteps`, `spotlight`, `specialists`,
+  `rooms`, `story`, `faq`. A header is `{ eyebrow: { text ≤60, tone },
+title: 1..2 lines × runs of { text, tone } (≤100 together), description:
+runs of { text, link | null } (≤300, at most one link), cta: { label ≤40,
+href, style } | null }`. Tones are `default | green | pink` (the theme's;
+  the site picks the shade readable at each size), links and calls to
+  action go only to the pages in `SITE_PAGES`, styles are `button |
+outline | arrow`. The database checks the shape, the tones and styles,
+  the one link and that every section is there
+  (`private.section_header_is_valid`); the schema checks the rest.
+- **The move**: the migration built the headers from the site's own words,
+  taking "Pierwszy krok"'s and "Z kim porozmawiasz"'s eyebrow, heading and
+  description from their payloads (draft into draft, published into
+  published, so the site showed the same after it) and removing them there.
+- **Until the first publish** the site shows its own words
+  (`defaultHomeHeaders`).
+- **Admin**: `/cms` → Strona główna: every section with a header has a
+  "Nagłówek" block at its top (`features/cms/header-block.tsx`): the
+  eyebrow and its colour, the title's lines (a click on a word cycles its
+  colour), the description with "Zrób link z zaznaczenia" (the link's page
+  and colour), the call to action, a preview in the site's colours, and
+  "Zapisz nagłówek", which saves that section's header into the draft. The
+  page bar publishes them with the rest.
+- **Tests**: `supabase/tests/home_headers.sql`.
 
 ## Domain separation
 

@@ -1,5 +1,6 @@
 import type {
   FirstStepsContent,
+  HomeHeadersContent,
   HomeSpotlight,
   SupportArea,
 } from "@repo/contracts";
@@ -60,6 +61,16 @@ export interface HomeSectionsViewModel {
 }
 
 export interface FirstStepsViewModel extends FirstStepsContent {
+  isPublished: boolean;
+  hasUnpublishedChanges: boolean;
+  publishedAtLabel: string | null;
+  updatedAtLabel: string;
+  publishedAt: string | null;
+  updatedAt: string;
+}
+
+export interface HomeHeadersViewModel {
+  headers: HomeHeadersContent;
   isPublished: boolean;
   hasUnpublishedChanges: boolean;
   publishedAtLabel: string | null;

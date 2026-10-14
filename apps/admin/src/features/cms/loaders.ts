@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   getFirstStepsAdmin,
   getHomeContentAdmin,
+  getHomeHeadersAdmin,
   getHomeSectionsAdmin,
   listSpecialistSummariesForAdmin,
   getRoomsPageContentAdmin,
@@ -13,6 +14,7 @@ import {
 import {
   mapFirstStepsViewModel,
   mapHomeContentViewModel,
+  mapHomeHeadersViewModel,
   mapHomeSectionsViewModel,
   mapRoomsPageViewModel,
   mapSupportAreasViewModel,
@@ -45,6 +47,12 @@ export async function loadHomeSections() {
     sections,
     (path) => supportAreaImageUrl(client, path),
     specialists,
+  );
+}
+
+export async function loadHomeHeaders() {
+  return mapHomeHeadersViewModel(
+    await getHomeHeadersAdmin(await createClient()),
   );
 }
 

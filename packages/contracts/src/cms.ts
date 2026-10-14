@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  plainHeader,
+  sectionHeaderSchema,
+} from "@repo/contracts/section-header";
 
 /**
  * The public website's routes/layout/structure are code-owned in Next.js.
@@ -92,15 +96,13 @@ export type SupportAreasContent = z.infer<typeof supportAreasContentSchema>;
  * specialists, as cards) and "Z kim porozmawiasz" (one chosen specialist,
  * presented at length) are switched separately; the latter brings its own
  * texts and, optionally, a photo of its own (else the specialist's
- * profile photo). Empty texts fall back to the site's own.
+ * profile photo). Its header (eyebrow, title, description) is among the
+ * homepage's headers (homeHeadersContentSchema).
  */
 export const homeSpotlightSchema = z
   .strictObject({
     visible: z.boolean(),
     specialistId: z.uuid().nullable().default(null),
-    eyebrow: z.string().trim().max(60).default(""),
-    heading: z.string().trim().max(100).default(""),
-    description: z.string().trim().max(300).default(""),
     /** A photo for this section, in the public site-media bucket. */
     imagePath: z.string().trim().min(1).max(300).nullable().default(null),
     imageAlt: z.string().trim().max(200).default(""),
@@ -127,9 +129,6 @@ export const defaultHomeSections: HomeSectionsContent = {
   spotlight: {
     visible: false,
     specialistId: null,
-    eyebrow: "",
-    heading: "",
-    description: "",
     imagePath: null,
     imageAlt: "",
   },
@@ -139,13 +138,11 @@ export const defaultHomeSections: HomeSectionsContent = {
  * Home → "Pierwszy krok": a compact band of four steps of starting
  * therapy, joined by a wave that paints itself as the page scrolls. The
  * band (its animation, icons, layout) is code's; the CMS sets whether it
- * shows, its words and the four steps' names and sentences.
+ * shows and the four steps' names and sentences. Its header is among the
+ * homepage's headers (homeHeadersContentSchema).
  */
 export const firstStepsContentSchema = z.strictObject({
   visible: z.boolean(),
-  eyebrow: z.string().trim().max(60).default(""),
-  heading: z.string().trim().min(1).max(100),
-  description: z.string().trim().max(300).default(""),
   steps: z
     .array(
       z.strictObject({
@@ -158,12 +155,9 @@ export const firstStepsContentSchema = z.strictObject({
 
 export type FirstStepsContent = z.infer<typeof firstStepsContentSchema>;
 
-/** Until anything is published: shown, with these words. */
+/** Until anything is published: shown, with these steps. */
 export const defaultFirstSteps: FirstStepsContent = {
   visible: true,
-  eyebrow: "Pierwszy krok",
-  heading: "Od pierwszego kontaktu do wsparcia na dłużej",
-  description: "",
   steps: [
     {
       title: "Kontakt",
@@ -182,6 +176,86 @@ export const defaultFirstSteps: FirstStepsContent = {
       text: "Zaczynamy proces terapeutyczny w Twoim tempie i w bezpiecznej atmosferze.",
     },
   ],
+};
+
+/**
+ * Home → the sections' headers (eyebrow, title, description, call to
+ * action; @repo/contracts/section-header), one per section in the page's
+ * order. Words and colours only: each section's markup is code's.
+ */
+export const HOME_HEADER_SECTIONS = [
+  { key: "supportAreas", label: "Obszary wsparcia" },
+  { key: "firstSteps", label: "Pierwszy krok" },
+  { key: "spotlight", label: "Z kim porozmawiasz" },
+  { key: "specialists", label: "Poznaj nasz zespół" },
+  { key: "rooms", label: "Przestrzeń, która wspiera" },
+  { key: "story", label: "Jak zacząć" },
+  { key: "faq", label: "Zanim się zobaczymy" },
+] as const;
+
+export type HomeHeaderSection = (typeof HOME_HEADER_SECTIONS)[number]["key"];
+
+export const homeHeadersContentSchema = z.strictObject({
+  supportAreas: sectionHeaderSchema,
+  firstSteps: sectionHeaderSchema,
+  spotlight: sectionHeaderSchema,
+  specialists: sectionHeaderSchema,
+  rooms: sectionHeaderSchema,
+  story: sectionHeaderSchema,
+  faq: sectionHeaderSchema,
+});
+
+export type HomeHeadersContent = z.infer<typeof homeHeadersContentSchema>;
+
+/** Until anything is published: the site's own words, in plain colours. */
+export const defaultHomeHeaders: HomeHeadersContent = {
+  supportAreas: plainHeader({
+    eyebrow: "Obszary wsparcia",
+    title: "W czym możemy pomóc",
+    description:
+      "Wybierz koło, aby zobaczyć, czym zajmujemy się w każdym z obszarów.",
+  }),
+  firstSteps: plainHeader({
+    eyebrow: "Pierwszy krok",
+    title: "Od pierwszego kontaktu do wsparcia na dłużej",
+  }),
+  spotlight: plainHeader({
+    eyebrow: "Poznaj nasz zespół",
+    title: "Z kim porozmawiasz",
+  }),
+  specialists: plainHeader({
+    eyebrow: "Nasi specjaliści",
+    title: "Poznaj nasz zespół",
+    description:
+      "Doświadczony zespół specjalistów, którzy z empatią i zaangażowaniem towarzyszą w drodze do lepszego samopoczucia.",
+    cta: {
+      label: "Zobacz wszystkich specjalistów",
+      href: "/specjalisci",
+      style: "arrow",
+    },
+  }),
+  rooms: plainHeader({
+    eyebrow: "Nasze gabinety",
+    title: "Przestrzeń, która wspiera",
+    description:
+      "Jasne, przytulne gabinety stworzone z myślą o Twoim komforcie i poczuciu bezpieczeństwa.",
+    cta: { label: "Zobacz nasze gabinety", href: "/gabinety", style: "arrow" },
+  }),
+  story: plainHeader({
+    eyebrow: "Jak zacząć",
+    title: "Twoja droga do lepszego samopoczucia",
+  }),
+  faq: plainHeader({
+    eyebrow: "Pytania i odpowiedzi",
+    title: "Zanim się zobaczymy",
+    description:
+      "Najczęstsze pytania osób, które zastanawiają się nad pierwszą wizytą.",
+    cta: {
+      label: "Masz inne pytanie? Napisz do nas",
+      href: "/kontakt",
+      style: "arrow",
+    },
+  }),
 };
 
 export interface SiteContentAdmin<Content> {

@@ -1,9 +1,12 @@
+import { CmsSection } from "@/features/cms/cms-section";
 import { FirstStepsSection } from "@/features/cms/first-steps-section";
 import { FixedSection, UnavailableSection } from "@/features/cms/fixed-section";
+import { HeaderBlock } from "@/features/cms/header-block";
 import { HeroSection } from "@/features/cms/hero-section";
 import {
   loadFirstSteps,
   loadHomeContent,
+  loadHomeHeaders,
   loadHomeSections,
   loadRoomsPageContent,
   loadSupportAreas,
@@ -15,6 +18,7 @@ import { settle } from "@/features/cms/settle";
 import { SpecialistsSections } from "@/features/cms/specialists-sections";
 import { SupportAreasSection } from "@/features/cms/support-areas-section";
 import { pageStatus } from "@/features/cms/view-model";
+import type { HomeHeaderSection } from "@repo/contracts";
 import { DetailTabs } from "@repo/ui/detail-page";
 import { FullBleed } from "@repo/ui/full-bleed";
 import { PageTitle } from "@repo/ui/portal-content";
@@ -26,13 +30,21 @@ import { PageTitle } from "@repo/ui/portal-content";
 // whose settings cannot load says so; the rest keeps working.
 
 async function HomePage() {
-  const [hero, areas, steps, sections] = await Promise.all([
+  const [hero, headers, areas, steps, sections] = await Promise.all([
     settle("hero", loadHomeContent),
+    settle("nagłówki sekcji", loadHomeHeaders),
     settle("obszary wsparcia", loadSupportAreas),
     settle("pierwszy krok", loadFirstSteps),
     settle("sekcje specjalistów", loadHomeSections),
   ]);
-  const loaded = [hero, areas, steps, sections].filter((one) => one !== null);
+  const loaded = [hero, headers, areas, steps, sections].filter(
+    (one) => one !== null,
+  );
+  // A section's header block, when the headers loaded.
+  const header = (section: HomeHeaderSection) =>
+    headers ? (
+      <HeaderBlock header={headers.headers[section]} section={section} />
+    ) : null;
   return (
     <>
       <PagePublishBar page="glowna" status={pageStatus(loaded)} />
@@ -45,33 +57,45 @@ async function HomePage() {
         Pas trudnych myśli zamieniających się w dobre, pod hero.
       </FixedSection>
       {areas ? (
-        <SupportAreasSection content={areas} />
+        <SupportAreasSection content={areas} header={header("supportAreas")} />
       ) : (
         <UnavailableSection title="Obszary wsparcia" />
       )}
       {steps ? (
-        <FirstStepsSection content={steps} />
+        <FirstStepsSection content={steps} header={header("firstSteps")} />
       ) : (
         <UnavailableSection title="Pierwszy krok" />
       )}
       {sections ? (
-        <SpecialistsSections content={sections} />
+        <SpecialistsSections
+          content={sections}
+          spotlightHeader={header("spotlight")}
+          teamHeader={header("specialists")}
+        />
       ) : (
         <UnavailableSection title="Z kim porozmawiasz · Poznaj nasz zespół" />
       )}
-      <FixedSection title="Jak zacząć">
-        Historia „Twoja droga do lepszego samopoczucia”, malowana przy
-        przewijaniu.
-      </FixedSection>
-      <FixedSection title="Przestrzeń, która wspiera">
-        Zdjęcie i opis gabinetów z linkiem do strony Gabinety.
-      </FixedSection>
-      <FixedSection title="Wydarzenia, które inspirują">
-        Zdjęcie i opis warsztatów z linkiem do strony Warsztaty.
-      </FixedSection>
-      <FixedSection title="Zanim się zobaczymy">
-        Najczęstsze pytania przed pierwszą wizytą.
-      </FixedSection>
+      {headers ? (
+        <>
+          <CmsSection
+            note="zdjęcie gabinetu, link do strony Gabinety"
+            title="Przestrzeń, która wspiera"
+          >
+            {header("rooms")}
+          </CmsSection>
+          <CmsSection
+            note="historia malowana przy przewijaniu"
+            title="Jak zacząć"
+          >
+            {header("story")}
+          </CmsSection>
+          <CmsSection note="najczęstsze pytania" title="Zanim się zobaczymy">
+            {header("faq")}
+          </CmsSection>
+        </>
+      ) : (
+        <UnavailableSection title="Przestrzeń, która wspiera · Jak zacząć · Zanim się zobaczymy" />
+      )}
       <FixedSection title="Zrób pierwszy krok">
         Końcowe zaproszenie do umówienia wizyty.
       </FixedSection>
