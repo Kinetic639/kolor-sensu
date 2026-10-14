@@ -4,8 +4,8 @@ import { z } from "zod";
  * A section's header on the public site, as the CMS edits it: the eyebrow
  * over the title, the title (one or two lines, any words in another
  * colour), the description under it (with, anywhere in it, at most one
- * link to another page of the site) and, optionally, a call to action
- * under the description.
+ * link to another page of the site, or to booking a chosen service) and,
+ * optionally, a call to action under the description.
  *
  * Only words and colours: the markup (which heading level, which size,
  * where the header stands) is the section's own, in code. Colours and
@@ -36,6 +36,36 @@ export type SitePage = (typeof SITE_PAGES)[number]["href"];
 export const sitePageSchema = z.enum(
   SITE_PAGES.map((page) => page.href) as [SitePage, ...SitePage[]],
 );
+
+/**
+ * Booking a chosen service: the booking page with the service chosen. A
+ * service that asks for the questionnaire first sends the client to it
+ * there (the booking page's own rule), so the link stays right when the
+ * admin attaches or detaches a questionnaire.
+ */
+export type ServiceBookingHref = `/umow-wizyte?usluga=${string}`;
+
+const SERVICE_BOOKING = /^\/umow-wizyte\?usluga=([a-z0-9]+(?:-[a-z0-9]+)*)$/;
+
+export function serviceBookingHref(slug: string): ServiceBookingHref {
+  return `/umow-wizyte?usluga=${slug}`;
+}
+
+/** The service a link books, if it books one. */
+export function bookedService(href: string): string | null {
+  return SERVICE_BOOKING.exec(href)?.[1] ?? null;
+}
+
+/** Where a header may link to: a page of the site, or booking a service. */
+export type HeaderHref = SitePage | ServiceBookingHref;
+
+export const headerHrefSchema = z.union([
+  sitePageSchema,
+  z
+    .string()
+    .regex(SERVICE_BOOKING, "Nieznany adres")
+    .transform((href) => href as ServiceBookingHref),
+]);
 
 export const HEADER_LIMITS = {
   eyebrow: 60,
@@ -76,7 +106,7 @@ export const titleLineSchema = z
 export const descriptionPartSchema = z.strictObject({
   text: z.string().min(1).max(HEADER_LIMITS.description),
   link: z
-    .strictObject({ href: sitePageSchema, tone: headerToneSchema })
+    .strictObject({ href: headerHrefSchema, tone: headerToneSchema })
     .nullable()
     .default(null),
 });
@@ -85,7 +115,7 @@ export const CTA_STYLES = ["button", "outline", "arrow"] as const;
 
 export const headerCtaSchema = z.strictObject({
   label: z.string().trim().min(1).max(HEADER_LIMITS.ctaLabel),
-  href: sitePageSchema,
+  href: headerHrefSchema,
   style: z.enum(CTA_STYLES),
 });
 

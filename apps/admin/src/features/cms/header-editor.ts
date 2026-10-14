@@ -2,8 +2,8 @@ import type {
   DescriptionPart,
   HeaderCta,
   HeaderTone,
+  HeaderHref,
   SectionHeaderContent,
-  SitePage,
   TitleSegment,
 } from "@repo/contracts";
 
@@ -23,7 +23,7 @@ export interface LinkDraft {
   /** Where the linked words sit in the description's text. */
   start: number;
   end: number;
-  href: SitePage;
+  href: HeaderHref;
   tone: HeaderTone;
 }
 
@@ -168,7 +168,7 @@ export function linkOver(
   text: string,
   start: number,
   end: number,
-  href: SitePage,
+  href: HeaderHref,
 ): LinkDraft | null {
   let from = Math.min(start, end);
   let to = Math.max(start, end);

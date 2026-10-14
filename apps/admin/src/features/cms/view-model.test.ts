@@ -1,6 +1,8 @@
+import { defaultHomeHeaders, type Service } from "@repo/contracts";
 import { describe, expect, it } from "vitest";
 import {
   mapFirstStepsViewModel,
+  mapHomeHeadersViewModel,
   mapHomeSectionsViewModel,
   pageStatus,
   mapRoomsPageViewModel,
@@ -239,5 +241,52 @@ describe("mapFirstStepsViewModel", () => {
         draft: { ...steps, visible: false },
       }).hasUnpublishedChanges,
     ).toBe(true);
+  });
+});
+
+describe("mapHomeHeadersViewModel", () => {
+  const service = (overrides: Partial<Service>): Service => ({
+    id: "s1",
+    name: "Konsultacja psychologiczna",
+    slug: "konsultacja-psychologiczna",
+    shortDescription: null,
+    description: null,
+    category: "other",
+    defaultDurationMinutes: 50,
+    afterMinutes: 0,
+    active: true,
+    publiclyVisible: true,
+    bookingEnabled: true,
+    requiresIntake: true,
+    sortOrder: 0,
+    catalogId: null,
+    createdAt: "2026-10-01T00:00:00Z",
+    updatedAt: "2026-10-01T00:00:00Z",
+    ...overrides,
+  });
+
+  it("offers for booking links only the services clients can book online", () => {
+    const model = mapHomeHeadersViewModel(
+      {
+        draft: defaultHomeHeaders,
+        published: defaultHomeHeaders,
+        publishedAt: "2026-10-14T06:36:31Z",
+        updatedAt: "2026-10-14T06:36:31Z",
+      },
+      [
+        service({}),
+        service({ slug: "ukryta", publiclyVisible: false }),
+        service({ slug: "bez-rezerwacji", bookingEnabled: false }),
+        service({ slug: "nieaktywna", active: false }),
+      ],
+    );
+    expect(model.services).toEqual([
+      {
+        slug: "konsultacja-psychologiczna",
+        name: "Konsultacja psychologiczna",
+        requiresIntake: true,
+      },
+    ]);
+    expect(model.hasUnpublishedChanges).toBe(false);
   });
 });

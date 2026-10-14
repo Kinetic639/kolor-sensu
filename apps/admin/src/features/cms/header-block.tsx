@@ -2,15 +2,17 @@
 
 import { useSave } from "@/lib/use-save";
 import {
+  bookedService,
   CTA_STYLES,
   HEADER_LIMITS,
   sectionHeaderSchema,
   SITE_PAGES,
   type CtaStyle,
+  type HeaderHref,
   type HeaderTone,
   type HomeHeaderSection,
   type SectionHeaderContent,
-  type SitePage,
+  serviceBookingHref,
 } from "@repo/contracts";
 import { Button } from "@repo/ui/button";
 import { DETAIL_BUTTON } from "@repo/ui/detail-page";
@@ -20,14 +22,16 @@ import { cn } from "@repo/ui/lib/utils";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/ui/select";
 import { Switch } from "@repo/ui/switch";
 import { Textarea } from "@repo/ui/textarea";
 import { Link2, Plus, X } from "lucide-react";
-import { useId, useState } from "react";
+import { createContext, useContext, useId, useState } from "react";
 import { updateHomeHeaderDraftAction } from "./actions";
 import {
   draftToHeader,
@@ -69,15 +73,37 @@ const CTA_LABELS: Record<CtaStyle, string> = {
   arrow: "Link ze strzałką",
 };
 
-const pageLabel = (href: string) =>
-  SITE_PAGES.find((page) => page.href === href)?.label ?? href;
+/** A service a header can link to booking (bookable online). */
+export interface BookableService {
+  slug: string;
+  name: string;
+  /** The client fills in the questionnaire first. */
+  requiresIntake: boolean;
+}
+
+const BookableServices = createContext<readonly BookableService[]>([]);
+
+function useHrefLabel() {
+  const services = useContext(BookableServices);
+  return (href: string) => {
+    const slug = bookedService(href);
+    if (slug) {
+      const name = services.find((service) => service.slug === slug)?.name;
+      return `Umów: ${name ?? slug}`;
+    }
+    return SITE_PAGES.find((page) => page.href === href)?.label ?? href;
+  };
+}
 
 export function HeaderBlock({
   section,
   header,
+  services,
 }: {
   section: HomeHeaderSection;
   header: SectionHeaderContent;
+  /** What a link or the call to action may book. */
+  services: readonly BookableService[];
 }) {
   const id = useId();
   const { isPending, run } = useSave();
@@ -106,57 +132,59 @@ export function HeaderBlock({
   }
 
   return (
-    <div className="grid gap-3 border-b border-[var(--border)] px-3.5 py-3">
-      <p className="m-0 text-[0.75rem] font-semibold tracking-wide text-[var(--text-muted)] uppercase">
-        Nagłówek
-      </p>
-      <div className="grid gap-3.5 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-        <div className="grid content-start gap-3.5">
-          <EyebrowField
-            id={`${id}-eyebrow`}
-            onChange={(eyebrow) => change({ eyebrow })}
-            value={draft.eyebrow}
-          />
-          <TitleField
-            id={`${id}-title`}
-            lines={draft.lines}
-            onChange={(lines) => change({ lines })}
-          />
-          <DescriptionField
-            id={`${id}-description`}
-            onChange={(description) => change({ description })}
-            value={draft.description}
-          />
-          <CtaField
-            id={`${id}-cta`}
-            onChange={(cta) => change({ cta })}
-            value={draft.cta}
-          />
+    <BookableServices.Provider value={services}>
+      <div className="grid gap-3 border-b border-[var(--border)] px-3.5 py-3">
+        <p className="m-0 text-[0.75rem] font-semibold tracking-wide text-[var(--text-muted)] uppercase">
+          Nagłówek
+        </p>
+        <div className="grid gap-3.5 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+          <div className="grid content-start gap-3.5">
+            <EyebrowField
+              id={`${id}-eyebrow`}
+              onChange={(eyebrow) => change({ eyebrow })}
+              value={draft.eyebrow}
+            />
+            <TitleField
+              id={`${id}-title`}
+              lines={draft.lines}
+              onChange={(lines) => change({ lines })}
+            />
+            <DescriptionField
+              id={`${id}-description`}
+              onChange={(description) => change({ description })}
+              value={draft.description}
+            />
+            <CtaField
+              id={`${id}-cta`}
+              onChange={(cta) => change({ cta })}
+              value={draft.cta}
+            />
+          </div>
+          <Preview header={current} />
         </div>
-        <Preview header={current} />
+        <div className="flex items-center justify-end gap-3">
+          {problem ? (
+            <span className="text-[0.75rem] text-[var(--danger)]" role="alert">
+              {problem}
+            </span>
+          ) : dirty ? (
+            <span className="text-[0.75rem] text-[var(--text-muted)]">
+              Niezapisane zmiany
+            </span>
+          ) : null}
+          <Button
+            className="h-7 px-2.5 text-[0.8125rem]"
+            disabled={!dirty}
+            loading={isPending}
+            onClick={save}
+            size="sm"
+            type="button"
+          >
+            Zapisz nagłówek
+          </Button>
+        </div>
       </div>
-      <div className="flex items-center justify-end gap-3">
-        {problem ? (
-          <span className="text-[0.75rem] text-[var(--danger)]" role="alert">
-            {problem}
-          </span>
-        ) : dirty ? (
-          <span className="text-[0.75rem] text-[var(--text-muted)]">
-            Niezapisane zmiany
-          </span>
-        ) : null}
-        <Button
-          className="h-7 px-2.5 text-[0.8125rem]"
-          disabled={!dirty}
-          loading={isPending}
-          onClick={save}
-          size="sm"
-          type="button"
-        >
-          Zapisz nagłówek
-        </Button>
-      </div>
-    </div>
+    </BookableServices.Provider>
   );
 }
 
@@ -425,27 +453,46 @@ function PageSelect({
 }: {
   id: string;
   label: string;
-  value: SitePage;
-  onChange: (href: SitePage) => void;
+  value: HeaderHref;
+  onChange: (href: HeaderHref) => void;
 }) {
+  const services = useContext(BookableServices);
+  const hrefLabel = useHrefLabel();
   return (
     <div className="grid gap-1">
       <Label className="sr-only" htmlFor={id}>
         {label}
       </Label>
       <Select
-        onValueChange={(href) => onChange(href as SitePage)}
+        onValueChange={(href) => onChange(href as HeaderHref)}
         value={value}
       >
-        <SelectTrigger aria-label={label} className="h-[26px] w-44" id={id}>
-          <SelectValue>{pageLabel(value)}</SelectValue>
+        <SelectTrigger aria-label={label} className="h-[26px] w-56" id={id}>
+          <SelectValue>{hrefLabel(value)}</SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {SITE_PAGES.map((page) => (
-            <SelectItem key={page.href} value={page.href}>
-              {page.label}
-            </SelectItem>
-          ))}
+          <SelectGroup>
+            <SelectLabel>Strony</SelectLabel>
+            {SITE_PAGES.map((page) => (
+              <SelectItem key={page.href} value={page.href}>
+                {page.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+          {services.length > 0 ? (
+            <SelectGroup>
+              <SelectLabel>Umów wybraną usługę</SelectLabel>
+              {services.map((service) => (
+                <SelectItem
+                  key={service.slug}
+                  value={serviceBookingHref(service.slug)}
+                >
+                  {service.name}
+                  {service.requiresIntake ? " (najpierw ankieta)" : ""}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          ) : null}
         </SelectContent>
       </Select>
     </div>
@@ -538,6 +585,7 @@ function CtaField({
 /** The header in the site's colours, roughly as the section shows it. */
 function Preview({ header }: { header: SectionHeaderContent }) {
   const { eyebrow, title, description, cta } = header;
+  const pageLabel = useHrefLabel();
   return (
     <div
       aria-label="Podgląd nagłówka"

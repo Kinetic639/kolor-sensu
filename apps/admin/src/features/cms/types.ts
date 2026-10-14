@@ -71,6 +71,8 @@ export interface FirstStepsViewModel extends FirstStepsContent {
 
 export interface HomeHeadersViewModel {
   headers: HomeHeadersContent;
+  /** What a header may link to booking. */
+  services: { slug: string; name: string; requiresIntake: boolean }[];
   isPublished: boolean;
   hasUnpublishedChanges: boolean;
   publishedAtLabel: string | null;

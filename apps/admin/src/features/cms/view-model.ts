@@ -2,6 +2,7 @@ import type {
   FirstStepsContent,
   HomeContentAdmin,
   HomeHeadersContent,
+  Service,
   HomeSectionsContent,
   RoomsPageContent,
   SiteContentAdmin,
@@ -157,10 +158,22 @@ export function pageStatus(
 
 export function mapHomeHeadersViewModel(
   content: SiteContentAdmin<HomeHeadersContent>,
+  services: readonly Service[],
 ): HomeHeadersViewModel {
   const { draft, published } = content;
   return {
     headers: draft,
+    // What a header may book: the services clients can book on the site.
+    services: services
+      .filter(
+        (service) =>
+          service.active && service.publiclyVisible && service.bookingEnabled,
+      )
+      .map(({ slug, name, requiresIntake }) => ({
+        slug,
+        name,
+        requiresIntake,
+      })),
     isPublished: published !== null,
     hasUnpublishedChanges:
       !published || JSON.stringify(published) !== JSON.stringify(draft),
