@@ -24,6 +24,8 @@ import { cn } from "../lib/utils";
 import { ArrowLink } from "./actions";
 import { matches, svgMasksSupported, watchReveal } from "./reveal-support";
 import { EditorialHeading, SectionEyebrow } from "./typography";
+import type { SectionHeaderContent } from "@repo/contracts/section-header";
+import { SectionHeader } from "./section-header";
 import { revealProperties } from "./watercolor-reveal";
 import { WatercolorImage } from "./watercolor-image";
 import {
@@ -46,8 +48,14 @@ export interface PaintedStoryStep {
 }
 
 export interface PaintedStoryProps {
+  /**
+   * The header as the CMS edits it (words and colours; the markup stays
+   * this section's). When given, it replaces eyebrow, heading and
+   * description.
+   */
+  header?: SectionHeaderContent;
   eyebrow?: ReactNode;
-  heading: ReactNode;
+  heading?: ReactNode;
   steps: readonly PaintedStoryStep[];
   id?: string;
   className?: string;
@@ -91,6 +99,7 @@ function paint(picture: HTMLElement, onDone?: () => void) {
 }
 
 export function PaintedStory({
+  header,
   eyebrow,
   heading,
   steps,
@@ -236,10 +245,18 @@ export function PaintedStory({
       style={{ "--ks-story-steps": total } as CSSProperties}
     >
       <div className="ks-story__stage max-w-page px-gutter mx-auto">
-        <div className="ks-story__intro grid gap-3">
-          {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
-          <EditorialHeading size="h3">{heading}</EditorialHeading>
-        </div>
+        {header ? (
+          <SectionHeader
+            content={header}
+            size="h3"
+            className="ks-story__intro"
+          />
+        ) : (
+          <div className="ks-story__intro grid gap-3">
+            {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
+            <EditorialHeading size="h3">{heading}</EditorialHeading>
+          </div>
+        )}
         {/* The pinned story's one counter (each step's own count, below,
             is for the steps that follow one another). */}
         <div className="ks-story__counter font-display" aria-hidden="true">

@@ -6,6 +6,8 @@ import { PageLink } from "./page-link";
 import { type SpecialistSplash, SpecialistArtwork } from "./specialist-artwork";
 import { SpecialistReveal } from "./specialist-reveal";
 import { EditorialHeading, SectionEyebrow } from "./typography";
+import type { SectionHeaderContent } from "@repo/contracts/section-header";
+import { SectionHeader } from "./section-header";
 
 // Server-safe: "Z kim porozmawiasz", one specialist presented at length,
 // for when the centre has one (Home → the CMS chooses whom; it shows instead
@@ -23,8 +25,14 @@ import { EditorialHeading, SectionEyebrow } from "./typography";
 // start sooner: they are small).
 
 export interface SpecialistSpotlightProps {
+  /**
+   * The header as the CMS edits it (words and colours; the markup stays
+   * this section's). When given, it replaces eyebrow, heading and
+   * description.
+   */
+  header?: SectionHeaderContent;
   eyebrow?: ReactNode;
-  heading: ReactNode;
+  heading?: ReactNode;
   /** The caption under the heading. */
   description?: ReactNode;
   specialist: {
@@ -48,6 +56,7 @@ export interface SpecialistSpotlightProps {
 }
 
 export function SpecialistSpotlight({
+  header,
   eyebrow,
   heading,
   description,
@@ -81,15 +90,23 @@ export function SpecialistSpotlight({
       className={cn("ks-spotlight py-section", className)}
     >
       <div className="ks-spotlight__grid max-w-page px-gutter mx-auto">
-        <header className="ks-spotlight__header grid gap-3">
-          {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
-          <EditorialHeading id={headingId}>{heading}</EditorialHeading>
-          {description ? (
-            <p className="text-body text-text-muted max-w-copy">
-              {description}
-            </p>
-          ) : null}
-        </header>
+        {header ? (
+          <SectionHeader
+            content={header}
+            id={headingId}
+            className="ks-spotlight__header"
+          />
+        ) : (
+          <header className="ks-spotlight__header grid gap-3">
+            {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
+            <EditorialHeading id={headingId}>{heading}</EditorialHeading>
+            {description ? (
+              <p className="text-body text-text-muted max-w-copy">
+                {description}
+              </p>
+            ) : null}
+          </header>
+        )}
 
         {animationPreset === "splash-reveal" ? (
           <SpecialistReveal

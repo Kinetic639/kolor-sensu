@@ -1,4 +1,8 @@
-import { clientGroupLabels, type HomeSectionsContent } from "@repo/contracts";
+import {
+  clientGroupLabels,
+  plainHeader,
+  type HomeSectionsContent,
+} from "@repo/contracts";
 import type { SpecialistSpotlightProps } from "@repo/ui/public-site";
 import {
   portraitPlaceholder,
@@ -33,9 +37,11 @@ export function toSpotlight(
 
   const role = specialistRole(chosen);
   return {
-    eyebrow: spotlight.eyebrow || "Poznaj nasz zespół",
-    heading: spotlight.heading || "Z kim porozmawiasz",
-    description: spotlight.description || undefined,
+    header: plainHeader({
+      eyebrow: spotlight.eyebrow || "Poznaj nasz zespół",
+      title: spotlight.heading || "Z kim porozmawiasz",
+      description: spotlight.description,
+    }),
     specialist: {
       name: chosen.displayName,
       role,

@@ -193,3 +193,29 @@ export {
   isReadableOnLight,
 } from "@repo/contracts/colors";
 export type { PaletteColor } from "@repo/contracts/colors";
+export {
+  CTA_STYLES,
+  HEADER_LIMITS,
+  HEADER_TONES,
+  SITE_PAGES,
+  descriptionPartSchema,
+  headerCtaSchema,
+  headerEyebrowSchema,
+  headerTitleText,
+  headerToneSchema,
+  plainHeader,
+  sectionHeaderSchema,
+  sitePageSchema,
+  titleLineSchema,
+  titleSegmentSchema,
+} from "@repo/contracts/section-header";
+export type {
+  CtaStyle,
+  DescriptionPart,
+  HeaderCta,
+  HeaderEyebrow,
+  HeaderTone,
+  SectionHeaderContent,
+  SitePage,
+  TitleSegment,
+} from "@repo/contracts/section-header";

@@ -29,7 +29,7 @@ describe("public site primitives", () => {
     );
     const heading = screen.getByRole("heading", { level: 1 });
     expect(heading).toHaveClass("font-display", "text-display", "text-ink");
-    expect(heading).toHaveTextContent("Więcej zrozumienia.Więcej sensu.");
+    expect(heading).toHaveTextContent("Więcej zrozumienia. Więcej sensu.");
     expect(screen.getByText("Więcej sensu.")).toHaveClass("text-pink");
   });
 
