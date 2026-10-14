@@ -233,7 +233,11 @@ title: 1..2 lines × runs of { text, tone } (≤100 together), description:
 runs of { text, link | null } (≤300, at most one link), cta: { label ≤40,
 href, style } | null }`. Tones are `default | green | pink` (the theme's;
   the site picks the shade readable at each size), links and calls to
-  action go only to the pages in `SITE_PAGES`, styles are `button |
+  action go only to the pages in `SITE_PAGES` or to booking a chosen
+  service (`/umow-wizyte?usluga=<slug>`: the booking page sends the client
+  to the service's questionnaire first when it has one, so the link stays
+  right when the admin attaches or detaches one; the CMS lists the services
+  clients can book online), styles are `button |
 outline | arrow`. The database checks the shape, the tones and styles,
   the one link and that every section is there
   (`private.section_header_is_valid`); the schema checks the rest.

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  bookedService,
   headerTitleText,
+  serviceBookingHref,
   plainHeader,
   sectionHeaderSchema,
   SITE_PAGES,
@@ -92,6 +94,39 @@ describe("section header", () => {
     expect(SITE_PAGES.map((page) => page.href)).toContain("/oferta");
   });
 
+  it("links to booking a chosen service, and to nothing else under the booking page", () => {
+    const booking = header({
+      description: [
+        {
+          text: "test",
+          link: {
+            href: "/umow-wizyte?usluga=konsultacja-psychologiczna",
+            tone: "green",
+          },
+        },
+      ],
+      cta: {
+        label: "Umów konsultację",
+        href: "/umow-wizyte?usluga=konsultacja-psychologiczna",
+        style: "button",
+      },
+    });
+    expect(sectionHeaderSchema.safeParse(booking).success).toBe(true);
+    for (const href of [
+      "/umow-wizyte?usluga=",
+      "/umow-wizyte?usluga=Konsultacja",
+      "/umow-wizyte?usluga=a&b=c",
+      "/umow-wizyte/test?usluga=konsultacja",
+    ]) {
+      expect(
+        sectionHeaderSchema.safeParse(
+          header({ cta: { label: "Umów", href, style: "button" } }),
+        ).success,
+        href,
+      ).toBe(false);
+    }
+  });
+
   it("allows one link in the description", () => {
     const link = { href: "/oferta", tone: "default" };
     expect(
@@ -175,5 +210,14 @@ describe("headerTitleText", () => {
     expect(headerTitleText(sectionHeaderSchema.parse(header()))).toBe(
       "Twoja droga do lepszego samopoczucia",
     );
+  });
+});
+
+describe("serviceBookingHref", () => {
+  it("is the booking page with the service chosen, and reads back", () => {
+    const href = serviceBookingHref("konsultacja-psychologiczna");
+    expect(href).toBe("/umow-wizyte?usluga=konsultacja-psychologiczna");
+    expect(bookedService(href)).toBe("konsultacja-psychologiczna");
+    expect(bookedService("/oferta")).toBeNull();
   });
 });

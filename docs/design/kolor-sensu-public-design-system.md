@@ -691,10 +691,11 @@ the CMS will edit: **words and colours only, never the markup.**
   inside the one heading and the second line a line break after a space, so
   a screen reader or a search engine reads one plain title.
 - **Description:** a paragraph, with at most one link anywhere in it, to a
-  page of the site (`SITE_PAGES`), in the default ink, green or pink (the
+  page of the site (`SITE_PAGES`) or to booking a chosen service, in the default ink, green or pink (the
   strong shades: it is small text). Underlined, so it is not told by colour
   alone.
-- **Call to action** under the description, to a page of the site: the green
+- **Call to action** under the description, to a page of the site or to
+  booking a chosen service: the green
   button, the outlined button or the arrow link.
 - Empty parts leave no element behind. The site's own headers are built with
   `plainHeader` (every word in the default colour) until the CMS publishes

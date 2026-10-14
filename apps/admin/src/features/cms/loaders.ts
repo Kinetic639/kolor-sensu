@@ -5,6 +5,7 @@ import {
   getFirstStepsAdmin,
   getHomeContentAdmin,
   getHomeHeadersAdmin,
+  listServicesAdmin,
   getHomeSectionsAdmin,
   listSpecialistSummariesForAdmin,
   getRoomsPageContentAdmin,
@@ -51,9 +52,12 @@ export async function loadHomeSections() {
 }
 
 export async function loadHomeHeaders() {
-  return mapHomeHeadersViewModel(
-    await getHomeHeadersAdmin(await createClient()),
-  );
+  const client = await createClient();
+  const [headers, services] = await Promise.all([
+    getHomeHeadersAdmin(client),
+    listServicesAdmin(client),
+  ]);
+  return mapHomeHeadersViewModel(headers, services);
 }
 
 export async function loadFirstSteps() {

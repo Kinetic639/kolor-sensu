@@ -43,7 +43,11 @@ async function HomePage() {
   // A section's header block, when the headers loaded.
   const header = (section: HomeHeaderSection) =>
     headers ? (
-      <HeaderBlock header={headers.headers[section]} section={section} />
+      <HeaderBlock
+        header={headers.headers[section]}
+        section={section}
+        services={headers.services}
+      />
     ) : null;
   return (
     <>

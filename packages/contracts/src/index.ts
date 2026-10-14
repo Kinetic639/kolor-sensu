@@ -212,6 +212,9 @@ export {
   sectionHeaderSchema,
   sitePageSchema,
   titleLineSchema,
+  bookedService,
+  headerHrefSchema,
+  serviceBookingHref,
   titleSegmentSchema,
 } from "@repo/contracts/section-header";
 export type {
@@ -223,4 +226,6 @@ export type {
   SectionHeaderContent,
   SitePage,
   TitleSegment,
+  HeaderHref,
+  ServiceBookingHref,
 } from "@repo/contracts/section-header";
