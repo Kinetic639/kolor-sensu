@@ -6,15 +6,14 @@
 //
 // From 64 rem up, with motion welcome, the section pins one screen in place
 // for as long as it takes to scroll through its steps. The text column
-// changes step by step, a thin line fills as the story goes on, and each new
-// step's picture is painted over the previous one with the same brush
-// strokes WatercolorImage's entrance uses (watercolor-paint-matte.ts).
-// Scrolling back lifts the later pictures off again.
+// changes step by step, and each new step's picture is painted over the
+// previous one with the same brush strokes WatercolorImage's entrance uses
+// (watercolor-paint-matte.ts). Scrolling back lifts the later pictures off
+// again.
 //
-// On phones, under reduced motion and without a script, the steps simply
-// follow one another: text, then picture; on phones each picture is still
-// painted in as it comes into view. Safari (no SVG masks on HTML elements)
-// gets a short cross-fade instead of the brush.
+// Where the story is, is told by one counter over the text ("01 / 03"):
+// when the step changes its number rolls, the old one leaving upwards
+// into mist, the new one coming up sharp.
 
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
@@ -99,7 +98,8 @@ export function PaintedStory({
   className,
 }: PaintedStoryProps) {
   const ref = useRef<HTMLElement>(null);
-  const count = steps.length;
+  const total = steps.length;
+  const numbered = (value: number) => String(value).padStart(2, "0");
 
   useGSAP(
     () => {
@@ -114,6 +114,9 @@ export function PaintedStory({
       );
       const pictures = Array.from(
         root.querySelectorAll<HTMLElement>(".ks-story__picture"),
+      );
+      const digits = Array.from(
+        root.querySelectorAll<HTMLElement>(".ks-story__counter-digit"),
       );
       const media = gsap.matchMedia();
 
@@ -145,14 +148,23 @@ export function PaintedStory({
             else delete text.dataset.active;
             text.inert = at !== index;
           });
-          root.style.setProperty("--ks-story-step", String(index));
+          count(index);
           active = index;
+        };
+        // The counter: which number shows.
+        const count = (index: number) => {
+          digits.forEach((digit, at) => {
+            if (at === index) digit.dataset.active = "true";
+            else delete digit.dataset.active;
+          });
+          root.style.setProperty("--ks-story-step", String(index));
         };
 
         // The first picture is painted when the section comes into view;
         // after that, scrolling chooses the step.
         texts[0]!.dataset.active = "true";
         texts.forEach((text, at) => (text.inert = at !== 0));
+        count(0);
         let started = false;
         const stopWatch = watchReveal(root, {
           threshold: 0.3,
@@ -162,37 +174,23 @@ export function PaintedStory({
             if (active < 0) show(0);
           },
         });
+        const follow = (self: ScrollTrigger) => {
+          if (!started) return;
+          show(Math.min(steps.length - 1, Math.floor(self.progress * total)));
+        };
         const trigger = ScrollTrigger.create({
           trigger: root,
           start: "top top",
           end: "bottom bottom",
-          onUpdate: (self) => {
-            if (!started) return;
-            show(Math.min(count - 1, Math.floor(self.progress * count)));
-          },
+          onUpdate: follow,
+          onRefresh: follow,
         });
-        const line = gsap.fromTo(
-          root.querySelector(".ks-story__line-fill"),
-          { scaleY: 0 },
-          {
-            scaleY: 1,
-            ease: "none",
-            scrollTrigger: {
-              trigger: root,
-              start: "top top",
-              end: "bottom bottom",
-              scrub: true,
-            },
-          },
-        );
 
         return () => {
           stopWatch();
           trigger.kill();
-          line.scrollTrigger?.kill();
-          line.kill();
           stops.forEach((stop) => stop());
-          for (const element of [...texts, ...pictures]) {
+          for (const element of [...texts, ...pictures, ...digits]) {
             delete element.dataset.active;
             delete element.dataset.shown;
             element.inert = false;
@@ -235,15 +233,29 @@ export function PaintedStory({
       ref={ref}
       id={id}
       className={cn("ks-story", className)}
-      style={{ "--ks-story-steps": count } as CSSProperties}
+      style={{ "--ks-story-steps": total } as CSSProperties}
     >
       <div className="ks-story__stage max-w-page px-gutter mx-auto">
         <div className="ks-story__intro grid gap-3">
           {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
           <EditorialHeading size="h3">{heading}</EditorialHeading>
         </div>
-        <div className="ks-story__line" aria-hidden="true">
-          <span className="ks-story__line-fill" />
+        {/* The pinned story's one counter (each step's own count, below,
+            is for the steps that follow one another). */}
+        <div className="ks-story__counter font-display" aria-hidden="true">
+          <span className="ks-story__counter-window">
+            <span className="ks-story__counter-reel">
+              {steps.map((_, index) => (
+                <span key={index} className="ks-story__counter-digit">
+                  {numbered(index + 1)}
+                </span>
+              ))}
+            </span>
+          </span>
+          <span className="ks-story__counter-total">
+            {"/ "}
+            {numbered(total)}
+          </span>
         </div>
         {steps.map((step, index) => (
           <div key={index} className="ks-story__step">
@@ -252,10 +264,10 @@ export function PaintedStory({
                 className="ks-story__count font-display text-pink-strong"
                 aria-hidden="true"
               >
-                {String(index + 1).padStart(2, "0")}
+                {numbered(index + 1)}
                 <span className="text-text-muted">
                   {" / "}
-                  {String(count).padStart(2, "0")}
+                  {numbered(total)}
                 </span>
               </p>
               <EditorialHeading as="h3" size="h2">

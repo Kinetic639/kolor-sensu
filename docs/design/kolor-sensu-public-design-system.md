@@ -555,8 +555,11 @@ Experience. Brought over from PR #12; to be reworked.
 
 - **Wide screens with motion** (from 64 rem): one screen stays pinned for
   as long as it takes to scroll through the steps. The text column changes
-  step by step (the others are inert), a thin `pink-strong` line fills as
-  the story goes on, and each step's picture is painted over the previous
+  step by step (the others are inert). One counter over the text says
+  where the story is ("01 / 03", the display face, the number in
+  `pink-strong`): when the step changes its number rolls, the old one
+  leaving upwards into mist, the new one coming up sharp (0.8 s). Each step's
+  picture is painted over the previous
   one with WatercolorImage's own brush (`watercolor-paint-matte.ts`).
   Scrolling back lifts the later pictures off again.
 - **Phones:** the steps follow one another, text then picture, each
