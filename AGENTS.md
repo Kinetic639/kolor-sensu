@@ -39,10 +39,12 @@ feature branch ──PR──▶ develop ──release PR──▶ staging ─�
 - A push to `develop` or `staging` runs `deploy.yml`: CI again, then the
   migrations and `supabase config push` for that environment; Vercel builds
   the three apps.
-- Vercel builds only `develop`, `staging` and `main` (each app's
-  `vercel.json` turns every other branch off, to stay within the plan's
-  build limit): a PR has no preview deployment and no Vercel checks. A
-  preview of one branch can be started by hand from the Vercel dashboard.
+- Vercel does not build working branches (each app's `vercel.json` turns
+  off `feat/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`, `feature/`
+  and `claude/`, to stay within the plan's build limit), so name branches
+  with one of these prefixes: a PR then has no preview deployment and no
+  Vercel checks. `develop`, `staging` and `main` build as before. A preview
+  of one branch can be started by hand from the Vercel dashboard.
 - A release is a PR from `develop` to `staging`. Once all three apps are live
   on STAGING, `e2e-staging.yml` runs the Playwright suite against it
   (`docs/architecture/end-to-end-tests.md`). A change to a flow the tests
