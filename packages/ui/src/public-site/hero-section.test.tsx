@@ -9,7 +9,7 @@ describe("HeroSection", () => {
   it("heads the page with one H1, its second line in brand green", () => {
     render(<HeroSection {...sampleHero} />);
     const heading = screen.getByRole("heading", { level: 1 });
-    expect(heading).toHaveTextContent("Więcej zrozumienia.Więcej sensu.");
+    expect(heading).toHaveTextContent("Więcej zrozumienia. Więcej sensu.");
     const accent = within(heading).getByText("Więcej sensu.");
     expect(accent).toHaveClass("text-primary");
     expect(accent).not.toHaveClass("text-pink");

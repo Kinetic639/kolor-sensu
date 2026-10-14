@@ -39,6 +39,8 @@ import { createScrollMatte } from "./first-steps-matte";
 import { stepsReached, WAVE_PATH } from "./first-steps-wave";
 import { matches, svgMasksSupported } from "./reveal-support";
 import { EditorialHeading, SectionEyebrow } from "./typography";
+import type { SectionHeaderContent } from "@repo/contracts/section-header";
+import { SectionHeader } from "./section-header";
 
 gsap.registerPlugin(useGSAP);
 
@@ -52,8 +54,14 @@ const FLOWING = "(max-width: 63.99rem)";
 const WAVE_SHARE = 0.82;
 
 export interface FirstStepsProps {
+  /**
+   * The header as the CMS edits it (words and colours; the markup stays
+   * this section's). When given, it replaces eyebrow, heading and
+   * description.
+   */
+  header?: SectionHeaderContent;
   eyebrow?: ReactNode;
-  heading: ReactNode;
+  heading?: ReactNode;
   description?: ReactNode;
   /** Four steps, first to last. */
   steps: readonly { title: string; text: string }[];
@@ -85,6 +93,7 @@ export function showProgress(root: HTMLElement, progress: number) {
 }
 
 export function FirstSteps({
+  header,
   eyebrow,
   heading,
   description,
@@ -305,15 +314,19 @@ export function FirstSteps({
           />
         </div>
         <div className="ks-steps__inner max-w-page px-gutter mx-auto">
-          <header className="grid content-start gap-3">
-            {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
-            <EditorialHeading id={headingId} size="h3">
-              {heading}
-            </EditorialHeading>
-            {description ? (
-              <p className="text-body text-text-muted">{description}</p>
-            ) : null}
-          </header>
+          {header ? (
+            <SectionHeader content={header} id={headingId} size="h3" />
+          ) : (
+            <header className="grid content-start gap-3">
+              {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
+              <EditorialHeading id={headingId} size="h3">
+                {heading}
+              </EditorialHeading>
+              {description ? (
+                <p className="text-body text-text-muted">{description}</p>
+              ) : null}
+            </header>
+          )}
           <div className="ks-steps__track">
             <svg
               className="ks-steps__wave"

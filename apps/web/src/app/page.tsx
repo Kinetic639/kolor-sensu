@@ -10,16 +10,16 @@ import {
   ThoughtsLens,
 } from "@repo/ui/public-site";
 import type { Metadata } from "next";
+import { plainHeader } from "@repo/contracts";
 import { ClosingCta } from "@/components/closing-cta";
+import { homeHeaders } from "@/content/home-headers";
 import {
   bookingCta,
   defaultSupportAreas,
   faq,
   hero,
   rooms,
-  specialistsCopy,
   story,
-  supportAreasCopy,
   thoughts,
 } from "@/content/site";
 import { withHomeContent } from "@/lib/home-content";
@@ -57,7 +57,7 @@ export default async function Home() {
       />
       <ThoughtsLens {...thoughts} />
       <SupportAreas
-        {...supportAreasCopy}
+        header={homeHeaders.supportAreas}
         areas={toSupportAreaItems(
           supportAreas,
           defaultSupportAreas,
@@ -67,9 +67,11 @@ export default async function Home() {
       />
       {firstSteps.visible ? (
         <FirstSteps
-          eyebrow={firstSteps.eyebrow || undefined}
-          heading={firstSteps.heading}
-          description={firstSteps.description || undefined}
+          header={plainHeader({
+            eyebrow: firstSteps.eyebrow,
+            title: firstSteps.heading,
+            description: firstSteps.description,
+          })}
           steps={firstSteps.steps}
         />
       ) : null}
@@ -82,27 +84,19 @@ export default async function Home() {
       ) : null}
       {sections.showSpecialists && specialists.length > 0 ? (
         <SpecialistsSection
-          {...specialistsCopy}
+          header={homeHeaders.specialists}
           specialists={specialists.slice(0, 3).map(toSpecialistCard)}
-          cta={{
-            href: "/specjalisci",
-            label: "Zobacz wszystkich specjalistów",
-          }}
           animationPreset="splash-reveal"
         />
       ) : null}
       <FeatureSection
-        {...rooms}
-        cta={{ href: "/gabinety", label: "Zobacz nasze gabinety" }}
+        header={homeHeaders.rooms}
+        image={rooms.image}
         imagePosition="left"
         animationPreset="watercolor-reveal"
       />
-      <PaintedStory {...story} />
-      <FaqSection
-        items={faq}
-        description="Najczęstsze pytania osób, które zastanawiają się nad pierwszą wizytą."
-        cta={{ href: "/kontakt", label: "Masz inne pytanie? Napisz do nas" }}
-      />
+      <PaintedStory header={homeHeaders.story} steps={story.steps} />
+      <FaqSection items={faq} header={homeHeaders.faq} />
       <ClosingCta />
     </>
   );

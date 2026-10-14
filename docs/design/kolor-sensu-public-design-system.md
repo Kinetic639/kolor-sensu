@@ -674,6 +674,33 @@ Only what the references repeat:
 
 Buttons accept `asChild` to render a `next/link` `<Link>`.
 
+### Section header
+
+Nearly every section opens the same way: an eyebrow, a title, a
+description, sometimes a call to action. `SectionHeader` draws that from one
+shared format (`@repo/contracts/section-header`, `sectionHeaderSchema`) that
+the CMS will edit: **words and colours only, never the markup.**
+
+- **The section decides the markup:** the title's heading level (`as`: one
+  `h1` per page, in the hero; section titles `h2`), its size, the header's
+  alignment and the heading's id. Nothing in the content can change them.
+- **Eyebrow:** a paragraph (it never enters the outline), in the default
+  muted colour, green (`primary-strong`) or pink (`pink-strong`).
+- **Title:** one or two lines; any words in either in green (`primary`) or
+  pink (`pink`), large enough for the light shades. Coloured words are spans
+  inside the one heading and the second line a line break after a space, so
+  a screen reader or a search engine reads one plain title.
+- **Description:** a paragraph, with at most one link anywhere in it, to a
+  page of the site (`SITE_PAGES`), in the default ink, green or pink (the
+  strong shades: it is small text). Underlined, so it is not told by colour
+  alone.
+- **Call to action** under the description, to a page of the site: the green
+  button, the outlined button or the arrow link.
+- Empty parts leave no element behind. The site's own headers are built with
+  `plainHeader` (every word in the default colour) until the CMS publishes
+  others.
+- **Storybook:** Section header (Full, Centred, Plain).
+
 ### Site layout (reference A's header and footer)
 
 `SiteLayout` frames every public page, in landmark order: `SkipLink`

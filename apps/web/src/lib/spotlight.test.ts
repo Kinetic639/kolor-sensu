@@ -1,4 +1,4 @@
-import { defaultHomeSections } from "@repo/contracts";
+import { defaultHomeSections, plainHeader } from "@repo/contracts";
 import { describe, expect, it } from "vitest";
 import type { SpecialistWithMedia } from "./public-data";
 import { toSpotlight } from "./spotlight";
@@ -53,9 +53,10 @@ describe("toSpotlight", () => {
       [other, anna],
     );
     expect(spotlight).toMatchObject({
-      eyebrow: "Poznaj nasz zespół",
-      heading: "Z kim porozmawiasz",
-      description: undefined,
+      header: plainHeader({
+        eyebrow: "Poznaj nasz zespół",
+        title: "Z kim porozmawiasz",
+      }),
       specialist: {
         name: "Anna Nowak",
         role: "Psychoterapeutka",
@@ -87,9 +88,11 @@ describe("toSpotlight", () => {
       [anna],
     );
     expect(spotlight).toMatchObject({
-      eyebrow: "Nasz zespół",
-      heading: "Poznaj Annę",
-      description: "Wprowadzenie.",
+      header: plainHeader({
+        eyebrow: "Nasz zespół",
+        title: "Poznaj Annę",
+        description: "Wprowadzenie.",
+      }),
       specialist: {
         portraitSrc: "https://cdn.test/site-media/spotlight/a.png",
         portraitAlt: "Anna w gabinecie",

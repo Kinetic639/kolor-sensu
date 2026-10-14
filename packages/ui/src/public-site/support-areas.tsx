@@ -19,6 +19,8 @@ import { cn } from "../lib/utils";
 import { ArrowLink } from "./actions";
 import { PageLink } from "./page-link";
 import { EditorialHeading, SectionEyebrow } from "./typography";
+import type { SectionHeaderContent } from "@repo/contracts/section-header";
+import { SectionHeader } from "./section-header";
 
 export interface SupportAreaItem {
   id: string;
@@ -30,8 +32,14 @@ export interface SupportAreaItem {
 }
 
 export interface SupportAreasProps {
+  /**
+   * The header as the CMS edits it (words and colours; the markup stays
+   * this section's). When given, it replaces eyebrow, heading and
+   * description.
+   */
+  header?: SectionHeaderContent;
   eyebrow?: ReactNode;
-  heading: ReactNode;
+  heading?: ReactNode;
   description?: ReactNode;
   areas: readonly SupportAreaItem[];
   cta?: { href: string; label: ReactNode };
@@ -59,6 +67,7 @@ export const SUPPORT_AREA_SLOTS = [
 ] as const;
 
 export function SupportAreas({
+  header,
   eyebrow,
   heading,
   description,
@@ -79,13 +88,22 @@ export function SupportAreas({
       className={cn("ks-areas py-section", className)}
     >
       <div className="max-w-page px-gutter mx-auto grid gap-10">
-        <header className="mx-auto grid max-w-2xl justify-items-center gap-3 text-center">
-          {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
-          <EditorialHeading id={headingId}>{heading}</EditorialHeading>
-          {description ? (
-            <p className="text-body text-text-muted">{description}</p>
-          ) : null}
-        </header>
+        {header ? (
+          <SectionHeader
+            content={header}
+            id={headingId}
+            align="center"
+            className="mx-auto max-w-2xl"
+          />
+        ) : (
+          <header className="mx-auto grid max-w-2xl justify-items-center gap-3 text-center">
+            {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
+            <EditorialHeading id={headingId}>{heading}</EditorialHeading>
+            {description ? (
+              <p className="text-body text-text-muted">{description}</p>
+            ) : null}
+          </header>
+        )}
 
         <div className="ks-areas__stage">
           <PageLink href={area.href} className="ks-areas__center">

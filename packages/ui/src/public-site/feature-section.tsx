@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { cn } from "../lib/utils";
 import { ArrowLink } from "./actions";
 import { EditorialHeading, SectionEyebrow } from "./typography";
+import type { SectionHeaderContent } from "@repo/contracts/section-header";
+import { SectionHeader } from "./section-header";
 import { WatercolorImage, type WatercolorImageProps } from "./watercolor-image";
 
 // Server-safe on purpose: no hooks, no browser APIs, no "use client". A
@@ -17,8 +19,14 @@ import { WatercolorImage, type WatercolorImageProps } from "./watercolor-image";
 // on wide screens. On phones the intro is above the picture either way.
 
 export interface FeatureSectionProps {
+  /**
+   * The header as the CMS edits it (words and colours; the markup stays
+   * this section's). When given, it replaces eyebrow, heading,
+   * description and cta (its own call to action takes cta's place).
+   */
+  header?: SectionHeaderContent;
   eyebrow?: ReactNode;
-  heading: ReactNode;
+  heading?: ReactNode;
   description?: ReactNode;
   cta?: { href: string; label: ReactNode };
   image: {
@@ -38,6 +46,7 @@ export interface FeatureSectionProps {
 }
 
 export function FeatureSection({
+  header,
   eyebrow,
   heading,
   description,
@@ -61,20 +70,31 @@ export function FeatureSection({
         className,
       )}
     >
-      <div className="grid gap-4">
-        {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
-        <EditorialHeading as={headingLevel} size="h2">
-          {heading}
-        </EditorialHeading>
-        {description ? (
-          <p className="max-w-copy text-body text-text-muted">{description}</p>
-        ) : null}
-        {cta ? (
-          <ArrowLink href={cta.href} className="justify-self-start">
-            {cta.label}
-          </ArrowLink>
-        ) : null}
-      </div>
+      {header ? (
+        <SectionHeader
+          content={header}
+          as={headingLevel}
+          size="h2"
+          className="gap-4"
+        />
+      ) : (
+        <div className="grid gap-4">
+          {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
+          <EditorialHeading as={headingLevel} size="h2">
+            {heading}
+          </EditorialHeading>
+          {description ? (
+            <p className="max-w-copy text-body text-text-muted">
+              {description}
+            </p>
+          ) : null}
+          {cta ? (
+            <ArrowLink href={cta.href} className="justify-self-start">
+              {cta.label}
+            </ArrowLink>
+          ) : null}
+        </div>
+      )}
       <WatercolorImage
         src={image.src}
         alt={image.alt}

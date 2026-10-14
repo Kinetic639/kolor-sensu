@@ -27,6 +27,8 @@ export type { CookieChoice, CookieConsentProps } from "./cookie-consent";
 export { FaqSection } from "./faq-section";
 export type { FaqItem, FaqSectionProps } from "./faq-section";
 export { FeatureSection } from "./feature-section";
+export { SectionHeader } from "./section-header";
+export type { SectionHeaderProps } from "./section-header";
 export { FirstSteps } from "./first-steps";
 export type { FirstStepsProps } from "./first-steps";
 export type { FeatureSectionProps } from "./feature-section";
