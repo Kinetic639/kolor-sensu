@@ -59,9 +59,7 @@ BEGIN
     'spotlight', jsonb_build_object(
       'visible', true,
       'specialistId', '6f1c2b9a-3c41-4e2b-9a55-0d3f2a7b8c10',
-      'eyebrow', 'Poznaj nasz zespół',
-      'heading', 'Z kim porozmawiasz',
-      'description', '', 'imagePath', NULL, 'imageAlt', ''
+      'imagePath', NULL, 'imageAlt', ''
     )
   )
   WHERE key = 'home_sections';

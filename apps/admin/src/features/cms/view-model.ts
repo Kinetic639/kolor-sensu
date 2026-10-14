@@ -1,6 +1,7 @@
 import type {
   FirstStepsContent,
   HomeContentAdmin,
+  HomeHeadersContent,
   HomeSectionsContent,
   RoomsPageContent,
   SiteContentAdmin,
@@ -10,6 +11,7 @@ import type { AdminSpecialistSummary } from "@repo/supabase";
 import type {
   FirstStepsViewModel,
   HomeContentViewModel,
+  HomeHeadersViewModel,
   HomeSectionsViewModel,
   RoomsPageViewModel,
   SupportAreasViewModel,
@@ -150,6 +152,22 @@ export function pageStatus(
     updatedAtLabel: formatDate(
       latest(sections.map((section) => section.updatedAt)),
     ),
+  };
+}
+
+export function mapHomeHeadersViewModel(
+  content: SiteContentAdmin<HomeHeadersContent>,
+): HomeHeadersViewModel {
+  const { draft, published } = content;
+  return {
+    headers: draft,
+    isPublished: published !== null,
+    hasUnpublishedChanges:
+      !published || JSON.stringify(published) !== JSON.stringify(draft),
+    publishedAtLabel: formatDate(content.publishedAt),
+    updatedAtLabel: formatDate(content.updatedAt) ?? "",
+    publishedAt: content.publishedAt,
+    updatedAt: content.updatedAt,
   };
 }
 

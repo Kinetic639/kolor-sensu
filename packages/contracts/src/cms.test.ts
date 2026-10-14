@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   defaultFirstSteps,
+  defaultHomeHeaders,
+  HOME_HEADER_SECTIONS,
+  homeHeadersContentSchema,
   defaultHomeSections,
   firstStepsContentSchema,
   homeSectionsContentSchema,
   SUPPORT_AREAS_MAX,
   supportAreasContentSchema,
 } from "./cms";
+import { headerTitleText } from "./section-header";
 
 const area = (overrides: Record<string, unknown> = {}) => ({
   id: "indywidualna",
@@ -115,14 +119,11 @@ describe("home sections", () => {
   const spotlight = {
     visible: true,
     specialistId: "6f1c2b9a-3c41-4e2b-9a55-0d3f2a7b8c10",
-    eyebrow: "Poznaj nasz zespół",
-    heading: "Z kim porozmawiasz",
-    description: "Krótkie wprowadzenie.",
     imagePath: "spotlight/a.webp",
     imageAlt: "Anna w gabinecie",
   };
 
-  it("switches the team and the spotlight, the spotlight with its own texts and photo", () => {
+  it("switches the team and the spotlight, the spotlight with its own photo", () => {
     expect(
       homeSectionsContentSchema.parse({ showSpecialists: false, spotlight }),
     ).toEqual({ showSpecialists: false, spotlight });
@@ -150,11 +151,10 @@ describe("home sections", () => {
     ).toBe(true);
   });
 
-  it("keeps the texts short and the specialist an id", () => {
+  it("keeps the specialist an id, and the header out (it is among the headers)", () => {
     for (const change of [
-      { heading: "x".repeat(101) },
-      { description: "x".repeat(301) },
       { specialistId: "anna" },
+      { heading: "Z kim porozmawiasz" },
     ]) {
       expect(
         homeSectionsContentSchema.safeParse({
@@ -206,20 +206,49 @@ describe("first steps", () => {
     expect(firstStepsContentSchema.safeParse(empty).success).toBe(false);
   });
 
-  it("needs a heading, keeps texts short and rejects unknown fields", () => {
-    expect(
-      firstStepsContentSchema.safeParse({ ...defaultFirstSteps, heading: "" })
-        .success,
-    ).toBe(false);
+  it("rejects unknown fields, the header among them (it is among the headers)", () => {
     expect(
       firstStepsContentSchema.safeParse({
         ...defaultFirstSteps,
-        description: "x".repeat(301),
+        heading: "Pierwszy krok",
       }).success,
     ).toBe(false);
     expect(
       firstStepsContentSchema.safeParse({ ...defaultFirstSteps, color: "red" })
         .success,
+    ).toBe(false);
+  });
+});
+
+describe("home headers", () => {
+  it("holds one header per homepage section, in the page's order", () => {
+    expect(Object.keys(defaultHomeHeaders)).toEqual(
+      HOME_HEADER_SECTIONS.map((section) => section.key),
+    );
+    expect(homeHeadersContentSchema.parse(defaultHomeHeaders)).toEqual(
+      defaultHomeHeaders,
+    );
+  });
+
+  it("starts with the site's own words, plain", () => {
+    expect(headerTitleText(defaultHomeHeaders.firstSteps)).toBe(
+      "Od pierwszego kontaktu do wsparcia na dłużej",
+    );
+    expect(defaultHomeHeaders.rooms.cta).toEqual({
+      label: "Zobacz nasze gabinety",
+      href: "/gabinety",
+      style: "arrow",
+    });
+  });
+
+  it("needs every section's header, and no others", () => {
+    const { faq: _faq, ...withoutFaq } = defaultHomeHeaders;
+    expect(homeHeadersContentSchema.safeParse(withoutFaq).success).toBe(false);
+    expect(
+      homeHeadersContentSchema.safeParse({
+        ...defaultHomeHeaders,
+        hero: defaultHomeHeaders.faq,
+      }).success,
     ).toBe(false);
   });
 });

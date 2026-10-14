@@ -10,9 +10,7 @@ import {
   ThoughtsLens,
 } from "@repo/ui/public-site";
 import type { Metadata } from "next";
-import { plainHeader } from "@repo/contracts";
 import { ClosingCta } from "@/components/closing-cta";
-import { homeHeaders } from "@/content/home-headers";
 import {
   bookingCta,
   defaultSupportAreas,
@@ -27,6 +25,7 @@ import { toSpecialistCard } from "@/lib/presentation";
 import {
   getFirstSteps,
   getHomeContent,
+  getHomeHeaders,
   getHomeSections,
   getSpecialists,
   getSupportAreas,
@@ -39,14 +38,21 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [homeContent, supportAreas, firstSteps, sections, specialists] =
-    await Promise.all([
-      getHomeContent(),
-      getSupportAreas(),
-      getFirstSteps(),
-      getHomeSections(),
-      getSpecialists(),
-    ]);
+  const [
+    homeContent,
+    headers,
+    supportAreas,
+    firstSteps,
+    sections,
+    specialists,
+  ] = await Promise.all([
+    getHomeContent(),
+    getHomeHeaders(),
+    getSupportAreas(),
+    getFirstSteps(),
+    getHomeSections(),
+    getSpecialists(),
+  ]);
   const spotlight = toSpotlight(sections, specialists);
 
   return (
@@ -57,7 +63,7 @@ export default async function Home() {
       />
       <ThoughtsLens {...thoughts} />
       <SupportAreas
-        header={homeHeaders.supportAreas}
+        header={headers.supportAreas}
         areas={toSupportAreaItems(
           supportAreas,
           defaultSupportAreas,
@@ -66,37 +72,31 @@ export default async function Home() {
         cta={{ href: "/oferta", label: "Zobacz całą ofertę" }}
       />
       {firstSteps.visible ? (
-        <FirstSteps
-          header={plainHeader({
-            eyebrow: firstSteps.eyebrow,
-            title: firstSteps.heading,
-            description: firstSteps.description,
-          })}
-          steps={firstSteps.steps}
-        />
+        <FirstSteps header={headers.firstSteps} steps={firstSteps.steps} />
       ) : null}
       {spotlight ? (
         <SpecialistSpotlight
           {...spotlight}
+          header={headers.spotlight}
           booking={bookingCta}
           animationPreset="splash-reveal"
         />
       ) : null}
       {sections.showSpecialists && specialists.length > 0 ? (
         <SpecialistsSection
-          header={homeHeaders.specialists}
+          header={headers.specialists}
           specialists={specialists.slice(0, 3).map(toSpecialistCard)}
           animationPreset="splash-reveal"
         />
       ) : null}
       <FeatureSection
-        header={homeHeaders.rooms}
+        header={headers.rooms}
         image={rooms.image}
         imagePosition="left"
         animationPreset="watercolor-reveal"
       />
-      <PaintedStory header={homeHeaders.story} steps={story.steps} />
-      <FaqSection items={faq} header={homeHeaders.faq} />
+      <PaintedStory header={headers.story} steps={story.steps} />
+      <FaqSection items={faq} header={headers.faq} />
       <ClosingCta />
     </>
   );

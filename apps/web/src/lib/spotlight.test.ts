@@ -1,4 +1,4 @@
-import { defaultHomeSections, plainHeader } from "@repo/contracts";
+import { defaultHomeSections } from "@repo/contracts";
 import { describe, expect, it } from "vitest";
 import type { SpecialistWithMedia } from "./public-data";
 import { toSpotlight } from "./spotlight";
@@ -47,16 +47,12 @@ describe("toSpotlight", () => {
     ).toBeNull();
   });
 
-  it("presents the chosen specialist with the site's own texts when the CMS leaves them empty", () => {
+  it("presents the chosen specialist", () => {
     const spotlight = toSpotlight(
       sections({ visible: true, specialistId: anna.specialistId }),
       [other, anna],
     );
     expect(spotlight).toMatchObject({
-      header: plainHeader({
-        eyebrow: "Poznaj nasz zespół",
-        title: "Z kim porozmawiasz",
-      }),
       specialist: {
         name: "Anna Nowak",
         role: "Psychoterapeutka",
@@ -72,15 +68,12 @@ describe("toSpotlight", () => {
     ]);
   });
 
-  it("uses the CMS's texts and its own photo when given", () => {
+  it("uses the CMS's own photo when given", () => {
     const spotlight = toSpotlight(
       {
         ...sections({
           visible: true,
           specialistId: anna.specialistId,
-          eyebrow: "Nasz zespół",
-          heading: "Poznaj Annę",
-          description: "Wprowadzenie.",
           imageAlt: "Anna w gabinecie",
         }),
         spotlightImage: "https://cdn.test/site-media/spotlight/a.png",
@@ -88,11 +81,6 @@ describe("toSpotlight", () => {
       [anna],
     );
     expect(spotlight).toMatchObject({
-      header: plainHeader({
-        eyebrow: "Nasz zespół",
-        title: "Poznaj Annę",
-        description: "Wprowadzenie.",
-      }),
       specialist: {
         portraitSrc: "https://cdn.test/site-media/spotlight/a.png",
         portraitAlt: "Anna w gabinecie",

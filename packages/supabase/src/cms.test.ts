@@ -1,5 +1,6 @@
 import {
   defaultFirstSteps,
+  defaultHomeHeaders,
   defaultHomeSections,
   defaultRoomsPageContent,
   homePageContentSchema,
@@ -8,14 +9,17 @@ import {
 import { describe, expect, it, vi } from "vitest";
 import {
   getPublishedFirstSteps,
+  getPublishedHomeHeaders,
   getPublishedHomeSections,
   getPublishedRoomsPageContent,
   getPublishedSupportAreas,
   publishFirstSteps,
+  publishHomeHeaders,
   publishHomeSections,
   publishRoomsPageContent,
   publishSupportAreas,
   updateFirstStepsDraft,
+  updateHomeHeadersDraft,
   updateHomeSectionsDraft,
   updateRoomsPageDraft,
   updateSupportAreasDraft,
@@ -292,9 +296,6 @@ describe("home sections", () => {
     spotlight: {
       visible: true,
       specialistId: "6f1c2b9a-3c41-4e2b-9a55-0d3f2a7b8c10",
-      eyebrow: "Poznaj nasz zespół",
-      heading: "Z kim porozmawiasz",
-      description: "",
       imagePath: "spotlight/a.webp",
       imageAlt: "Anna",
     },
@@ -355,7 +356,7 @@ describe("home sections", () => {
 });
 
 describe("first steps", () => {
-  const steps = { ...defaultFirstSteps, heading: "Jak zacząć" };
+  const steps = { ...defaultFirstSteps, visible: false };
 
   it("shows the site's own band until something is published", async () => {
     const eq = vi.fn(() => ({
@@ -379,6 +380,41 @@ describe("first steps", () => {
     expect(eq).toHaveBeenCalledWith("key", "first_steps");
     expect(rpc).toHaveBeenCalledWith("publish_site_content", {
       p_key: "first_steps",
+    });
+  });
+});
+
+describe("home headers", () => {
+  const headers = {
+    ...defaultHomeHeaders,
+    story: {
+      ...defaultHomeHeaders.story,
+      eyebrow: { text: "Jak zacząć", tone: "pink" as const },
+    },
+  };
+
+  it("shows the site's own headers until something is published", async () => {
+    const eq = vi.fn(() => ({
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+    }));
+    const client = { from: () => ({ select: () => ({ eq }) }) } as never;
+    expect(await getPublishedHomeHeaders(client)).toEqual(defaultHomeHeaders);
+    expect(eq).toHaveBeenCalledWith("key", "home_headers");
+  });
+
+  it("saves the draft and publishes under the home_headers key", async () => {
+    const single = vi
+      .fn()
+      .mockResolvedValue({ data: { draft_payload: headers }, error: null });
+    const eq = vi.fn(() => ({ select: () => ({ single }) }));
+    const rpc = vi.fn().mockResolvedValue({ error: null });
+    const client = { from: () => ({ update: () => ({ eq }) }), rpc } as never;
+
+    expect(await updateHomeHeadersDraft(client, headers)).toEqual(headers);
+    await publishHomeHeaders(client);
+    expect(eq).toHaveBeenCalledWith("key", "home_headers");
+    expect(rpc).toHaveBeenCalledWith("publish_site_content", {
+      p_key: "home_headers",
     });
   });
 });

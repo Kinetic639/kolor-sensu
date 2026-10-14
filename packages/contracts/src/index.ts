@@ -104,7 +104,10 @@ export {
 export type { OfferEntry, ServiceCatalog } from "@repo/contracts/offer-layout";
 export {
   defaultFirstSteps,
+  defaultHomeHeaders,
   defaultHomeSections,
+  HOME_HEADER_SECTIONS,
+  homeHeadersContentSchema,
   firstStepsContentSchema,
   defaultRoomsPageContent,
   homePageContentSchema,
@@ -118,6 +121,8 @@ export {
 export type {
   FirstStepsContent,
   HomeContentAdmin,
+  HomeHeaderSection,
+  HomeHeadersContent,
   HomePageContent,
   HomeSectionsContent,
   HomeSpotlight,

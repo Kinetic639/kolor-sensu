@@ -101,9 +101,6 @@ describe("mapHomeSectionsViewModel", () => {
     spotlight: {
       visible: true,
       specialistId: "6f1c2b9a-3c41-4e2b-9a55-0d3f2a7b8c10",
-      eyebrow: "Poznaj nasz zespół",
-      heading: "Z kim porozmawiasz",
-      description: "",
       imagePath: "spotlight/a.webp",
       imageAlt: "",
     },
@@ -220,9 +217,6 @@ describe("pageStatus", () => {
 describe("mapFirstStepsViewModel", () => {
   const steps = {
     visible: true,
-    eyebrow: "Pierwszy krok",
-    heading: "Jak zacząć",
-    description: "",
     steps: [1, 2, 3, 4].map((n) => ({ title: `Krok ${n}`, text: "Opis." })),
   };
   const content = {
@@ -235,7 +229,6 @@ describe("mapFirstStepsViewModel", () => {
   it("edits the draft and knows it is published as it stands", () => {
     const model = mapFirstStepsViewModel(content);
     expect(model.steps).toHaveLength(4);
-    expect(model.heading).toBe("Jak zacząć");
     expect(model.hasUnpublishedChanges).toBe(false);
   });
 

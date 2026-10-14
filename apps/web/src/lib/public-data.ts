@@ -6,6 +6,7 @@ import {
   getPublicCenterProfile,
   getPublicServiceBySlug,
   getPublishedFirstSteps,
+  getPublishedHomeHeaders,
   getPublishedHomeContent,
   getPublishedHomeSections,
   getPublishedRoomsPageContent,
@@ -27,6 +28,7 @@ import {
 import {
   arrangeOffer,
   defaultFirstSteps,
+  defaultHomeHeaders,
   defaultHomeSections,
   defaultRoomsPageContent,
   flattenOffer,
@@ -92,6 +94,14 @@ export const getHomeContent = cache(() =>
 /** Home → Obszary wsparcia, published from the admin's /cms; null until then. */
 export const getSupportAreas = cache(() =>
   load("support areas", getPublishedSupportAreas, null),
+);
+
+/**
+ * Home → the sections' headers (eyebrow, title, description, call to
+ * action), published from the admin's /cms (the site's own until then).
+ */
+export const getHomeHeaders = cache(() =>
+  load("home headers", getPublishedHomeHeaders, defaultHomeHeaders),
 );
 
 /** Home → "Pierwszy krok", published from the admin's /cms (the site's own until then). */
