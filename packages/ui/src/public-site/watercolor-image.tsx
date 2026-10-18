@@ -1,5 +1,6 @@
 import Image, { type ImageProps } from "next/image";
 import type { CSSProperties, ReactNode } from "react";
+import { preload } from "react-dom";
 import { cn } from "../lib/utils";
 import { CaptionMotion } from "./watercolor-caption-motion";
 import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
@@ -36,6 +37,9 @@ import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
 // composition.
 
 /** The approved painted backdrop: dusty pink left, sage green right. */
+/** The photo layer's dry-brush mask (public-site.css, .ks-wc__photo). */
+export const photoMaskSrc = "/watercolor/photo-mask.png";
+
 export const defaultWatercolorSrc = "/watercolor/watercolor-background.webp";
 
 export interface WatercolorImageProps {
@@ -111,6 +115,10 @@ export function WatercolorImage({
   imageClassName,
   style,
 }: WatercolorImageProps) {
+  // A masked layer paints only once its mask is in, and the stylesheet
+  // reveals the mask late: for the hero (the page's largest paint) it is
+  // fetched from the start.
+  if (priority) preload(photoMaskSrc, { as: "image", fetchPriority: "high" });
   const Root = caption ? "figure" : "div";
   const loading = priority ? undefined : "lazy";
   const rootProps = {

@@ -1,7 +1,7 @@
 "use client";
 
 import { ConsentCheckbox } from "@repo/ui/booking";
-import { PrimaryButton } from "@repo/ui/public-site";
+import { PrimaryButton } from "@repo/ui/public-site/actions";
 import { useActionState } from "react";
 import {
   payReservationAction,

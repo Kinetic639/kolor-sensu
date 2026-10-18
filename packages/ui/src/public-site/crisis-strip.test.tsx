@@ -41,6 +41,23 @@ describe("CrisisStrip", () => {
     expect(within(items[0]!).getByText(/gdy życie jest/)).toBeInTheDocument();
   });
 
+  it("links to the page about help in a crisis, when given", () => {
+    const more = {
+      href: "/pomoc-w-kryzysie",
+      label: "Więcej o pomocy w kryzysie",
+    };
+    const { rerender } = render(
+      <CrisisStrip heading="Pomoc" lines={lines} more={more} text="" />,
+    );
+    expect(
+      screen.getByRole("link", { name: /Więcej o pomocy w kryzysie/ }),
+    ).toHaveAttribute("href", "/pomoc-w-kryzysie");
+    rerender(<CrisisStrip heading="Pomoc" lines={lines} text="" />);
+    expect(
+      screen.queryByRole("link", { name: /Więcej o pomocy/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("leaves the sentence out when there is none", () => {
     const { container } = render(
       <CrisisStrip heading="Pomoc" lines={lines} text="" />,

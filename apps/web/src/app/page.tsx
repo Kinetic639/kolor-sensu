@@ -1,9 +1,9 @@
 import {
   CrisisStrip,
-  FeatureSection,
   FirstSteps,
   HeroSection,
   PaintedStory,
+  RoomsPeek,
   SpecialistSpotlight,
   SpecialistsSection,
   SupportAreas,
@@ -18,11 +18,9 @@ import {
   bookingCta,
   defaultSupportAreas,
   hero,
-  rooms,
-  story,
-  thoughts,
+  storyImages,
 } from "@/content/site";
-import { withHomeContent } from "@/lib/home-content";
+import { toStorySteps, withHomeContent } from "@/lib/home-content";
 import { toSpecialistCard } from "@/lib/presentation";
 import {
   getCrisisHelp,
@@ -31,12 +29,16 @@ import {
   getHomeHeaders,
   getHomeLocation,
   getHomeSections,
+  getHomeStory,
+  getHomeThoughts,
   getNewsletterBand,
+  getRoomsByLocation,
   getSpecialists,
   getSupportAreas,
   getWhyUs,
 } from "@/lib/public-data";
 import { getSiteFrame } from "@/lib/site-frame";
+import { toRoomsPeekPhotos } from "@/lib/rooms-peek";
 import { toSpotlight } from "@/lib/spotlight";
 import { toSupportAreaItems } from "@/lib/support-areas";
 
@@ -57,6 +59,9 @@ export default async function Home() {
     location,
     crisis,
     frame,
+    thoughts,
+    story,
+    roomGroups,
   ] = await Promise.all([
     getHomeContent(),
     getHomeHeaders(),
@@ -69,15 +74,18 @@ export default async function Home() {
     getHomeLocation(),
     getCrisisHelp(),
     getSiteFrame(),
+    getHomeThoughts(),
+    getHomeStory(),
+    getRoomsByLocation(),
   ]);
   const spotlight = toSpotlight(sections, specialists);
+  const roomPhotos = toRoomsPeekPhotos(roomGroups);
 
   return (
     <>
-      <HeroSection
-        {...withHomeContent(hero, homeContent)}
-        animationPreset="watercolor-reveal"
-      />
+      {/* No entrance animation: the hero picture is the page's largest
+          paint, and the reveal kept it hidden until the script ran. */}
+      <HeroSection {...withHomeContent(hero, homeContent)} />
       <ThoughtsLens {...thoughts} />
       <SupportAreas
         header={headers.supportAreas}
@@ -109,13 +117,13 @@ export default async function Home() {
           animationPreset="splash-reveal"
         />
       ) : null}
-      <FeatureSection
-        header={headers.rooms}
-        image={rooms.image}
-        imagePosition="left"
-        animationPreset="watercolor-reveal"
+      {roomPhotos.length > 0 ? (
+        <RoomsPeek header={headers.rooms} photos={roomPhotos} />
+      ) : null}
+      <PaintedStory
+        header={headers.story}
+        steps={toStorySteps(story, storyImages)}
       />
-      <PaintedStory header={headers.story} steps={story.steps} />
       {newsletter.visible ? (
         <NewsletterBand header={headers.newsletter} />
       ) : null}
@@ -123,6 +131,10 @@ export default async function Home() {
         heading={crisis.heading}
         text={crisis.text}
         lines={crisis.lines}
+        more={{
+          href: "/pomoc-w-kryzysie",
+          label: "Więcej o pomocy w kryzysie",
+        }}
       />
       {location.visible && frame.contact ? (
         <HomeLocation header={headers.location} contact={frame.contact} />

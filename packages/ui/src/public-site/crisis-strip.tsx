@@ -1,6 +1,7 @@
 import { Phone } from "lucide-react";
 import { useId } from "react";
 import { cn } from "../lib/utils";
+import { ArrowLink } from "./actions";
 
 // Server-safe: the crisis strip, where to call right now. Its heading, its
 // sentence and the lines are the CMS's (the admin approves them; the strip
@@ -23,6 +24,8 @@ export interface CrisisStripProps {
   heading: string;
   text: string;
   lines: readonly CrisisLine[];
+  /** A link to the page about help in a crisis, under the numbers. */
+  more?: { href: string; label: string };
   id?: string;
   className?: string;
 }
@@ -36,6 +39,7 @@ export function CrisisStrip({
   heading,
   text,
   lines,
+  more,
   id,
   className,
 }: CrisisStripProps) {
@@ -74,6 +78,11 @@ export function CrisisStrip({
             </li>
           ))}
         </ul>
+        {more ? (
+          <ArrowLink className="justify-self-start" href={more.href}>
+            {more.label}
+          </ArrowLink>
+        ) : null}
       </div>
     </aside>
   );

@@ -1,6 +1,12 @@
 import {
   crisisHelpContentSchema,
   defaultCrisisHelp,
+  defaultHomeStory,
+  defaultHomeThoughts,
+  homeStoryContentSchema,
+  homeThoughtsContentSchema,
+  type HomeStoryContent,
+  type HomeThoughtsContent,
   defaultHomeLocation,
   defaultNewsletterBand,
   defaultWhyUs,
@@ -48,6 +54,8 @@ const WHY_US_KEY = "why_us";
 const NEWSLETTER_BAND_KEY = "newsletter_band";
 const HOME_LOCATION_KEY = "home_location";
 const CRISIS_HELP_KEY = "crisis_help";
+const HOME_THOUGHTS_KEY = "home_thoughts";
+const HOME_STORY_KEY = "home_story";
 
 // The site's own photos: a public bucket only admins write to.
 const SITE_MEDIA_BUCKET = "site-media";
@@ -273,7 +281,7 @@ export function supportAreaImageUrl(
 export async function uploadSiteImage(
   client: SupabaseClient<Database>,
   file: File,
-  folder: "support-areas" | "spotlight",
+  folder: "support-areas" | "spotlight" | "hero" | "story",
 ): Promise<string> {
   const problem = validateSpecialistImage(file);
   if (problem) throw new Error(problem);
@@ -452,3 +460,25 @@ export const getCrisisHelpAdmin = crisisHelp.admin;
 export const updateCrisisHelpDraft = crisisHelp.update;
 export const publishCrisisHelp = crisisHelp.publish;
 export const getPublishedCrisisHelp = crisisHelp.published;
+
+/** Home → "Myśli, które się odmieniają": the site's thoughts until published. */
+const homeThoughts = contentSection<HomeThoughtsContent>(
+  HOME_THOUGHTS_KEY,
+  homeThoughtsContentSchema,
+  defaultHomeThoughts,
+);
+export const getHomeThoughtsAdmin = homeThoughts.admin;
+export const updateHomeThoughtsDraft = homeThoughts.update;
+export const publishHomeThoughts = homeThoughts.publish;
+export const getPublishedHomeThoughts = homeThoughts.published;
+
+/** Home → the story told while scrolling: the site's steps until published. */
+const homeStory = contentSection<HomeStoryContent>(
+  HOME_STORY_KEY,
+  homeStoryContentSchema,
+  defaultHomeStory,
+);
+export const getHomeStoryAdmin = homeStory.admin;
+export const updateHomeStoryDraft = homeStory.update;
+export const publishHomeStory = homeStory.publish;
+export const getPublishedHomeStory = homeStory.published;

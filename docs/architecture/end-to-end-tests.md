@@ -40,7 +40,10 @@ picked at random so runs do not all take the same hours.
 The home page test (`home.spec.ts`) needs nothing seeded: it checks what
 any published content must keep (one h1, the crisis strip, the closing
 invitation, links that resolve, no sideways scroll at 390 and 1280 px) and
-runs axe (`@axe-core/playwright`, WCAG 2.2 AA) at both widths.
+runs axe (`@axe-core/playwright`, WCAG 2.2 AA) at both widths; it also
+checks the shared-link picture (1200 × 630). `crisis-help.spec.ts` walks
+from Kontakt's footer to `/pomoc-w-kryzysie`: 112 first, every number
+dialling, axe on a phone.
 
 Tests that would leave lasting changes (a service in the catalogue, the
 home page's draft) carry the `@writes-data` tag and run only locally.

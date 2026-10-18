@@ -44,7 +44,7 @@ describe("WatercolorImage on the server", () => {
     }
   });
 
-  it("keeps client-only code to small islands: reveals, caption motion, intro motion, navigation, cookie notice, room gallery, cursor ring, first steps, painted story, support areas, thoughts lens", () => {
+  it("keeps client-only code to small islands: reveals, caption motion, intro motion, navigation, cookie notice, room gallery, rooms peek, cursor ring, first steps, painted story, support areas, thoughts lens", () => {
     const clientFiles = readdirSync(here)
       .filter(
         (file) => /\.tsx?$/.test(file) && !/\.(test|stories)\./.test(file),
@@ -62,6 +62,7 @@ describe("WatercolorImage on the server", () => {
       "offer-reveal.tsx",
       "painted-story.tsx",
       "room-gallery.tsx",
+      "rooms-peek.tsx",
       "site-mobile-nav.tsx",
       "site-navigation.tsx",
       "specialist-reveal.tsx",
@@ -94,5 +95,17 @@ describe("WatercolorImage on the server", () => {
     );
     expect(html).toContain("Przestrzeń dla ważnych rozmów");
     expect(html).not.toContain("data-paint");
+  });
+
+  it("preloads the photo's brush mask for the hero, which paints only once it is in", () => {
+    const preloadsMask = (html: string) =>
+      /<link rel="preload"[^>]*href="\/watercolor\/photo-mask\.png"/.test(html);
+    const props = { src: "/kolor-sensu/therapy-room-upload.png", alt: "" };
+    expect(
+      preloadsMask(renderToString(<WatercolorImage {...props} priority />)),
+    ).toBe(true);
+    expect(preloadsMask(renderToString(<WatercolorImage {...props} />))).toBe(
+      false,
+    );
   });
 });

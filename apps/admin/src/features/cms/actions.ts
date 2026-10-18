@@ -5,6 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/use-save";
 import {
   crisisHelpContentSchema,
+  homeStoryContentSchema,
+  homeThoughtsContentSchema,
+  type HomeStoryContent,
+  type HomeThoughtsContent,
   homeLocationContentSchema,
   newsletterBandContentSchema,
   whyUsContentSchema,
@@ -30,6 +34,10 @@ import {
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import {
   publishCrisisHelp,
+  publishHomeStory,
+  publishHomeThoughts,
+  updateHomeStoryDraft,
+  updateHomeThoughtsDraft,
   publishHomeLocation,
   publishNewsletterBand,
   publishWhyUs,
@@ -88,6 +96,16 @@ async function saveDraft<Content>(
 
 export async function updateHomeDraftAction(values: HomePageContent) {
   return saveDraft(homePageContentSchema, values, updateHomeDraft);
+}
+
+export async function updateHomeThoughtsDraftAction(
+  values: HomeThoughtsContent,
+) {
+  return saveDraft(homeThoughtsContentSchema, values, updateHomeThoughtsDraft);
+}
+
+export async function updateHomeStoryDraftAction(values: HomeStoryContent) {
+  return saveDraft(homeStoryContentSchema, values, updateHomeStoryDraft);
 }
 
 export async function updateSupportAreasDraftAction(
@@ -175,6 +193,7 @@ export async function publishHomePageAction() {
   return publishPage(
     [
       publishHomeContent,
+      publishHomeThoughts,
       publishSupportAreas,
       publishWhyUs,
       publishFirstSteps,
@@ -182,6 +201,7 @@ export async function publishHomePageAction() {
       publishNewsletterBand,
       publishCrisisHelp,
       publishHomeLocation,
+      publishHomeStory,
       publishHomeHeaders,
     ],
     "/",

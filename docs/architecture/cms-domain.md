@@ -43,7 +43,7 @@ separation" below.
 
 ```
 site_content
-  key                text PRIMARY KEY CHECK (key IN ('home', 'rooms', 'support_areas', 'home_sections', 'first_steps', 'home_headers'))
+  key                text PRIMARY KEY CHECK (key IN (...))  -- the list below
   draft_payload       jsonb NOT NULL
   published_payload   jsonb            -- null until first publish
   published_at        timestamptz
@@ -57,7 +57,8 @@ the homepage's areas of help, added in
 `20261013150000_support_areas.sql`, `home_sections` for which specialist
 sections the homepage shows, added in `20261013180000_home_sections.sql`,
 `first_steps` and `home_headers` for the homepage's sections' headers,
-added in `20261014090000_home_headers.sql`;
+added in `20261014090000_home_headers.sql`, and the keys added since
+(below);
 each key's payload shape is checked by
 `private.site_content_payload_is_valid`):
 `admin` has **no `INSERT` grant at all** on this table (each row
@@ -282,6 +283,32 @@ The database refuses each of them in the wrong shape
 (`private.site_content_payload_is_valid`), and reading the stored headers
 fills in the new sections' headers with the site's own words until the
 migration has added them.
+
+## Home → the words that moved from code (19.10)
+
+`20261019090000_home_texts.sql`; tests `supabase/tests/home_texts.sql`.
+
+- **`home`** (the hero) gains `eyebrow ≤80`, `accent ≤80` (the title's
+  green line), `secondaryLabel` ("Poznaj nas"), `points: 0..4 × { label
+≤40, icon }` (icon one of leaf, users, house, heart, shield, sparkles;
+  the heart is pink) and `imagePath`/`imageAlt` (a photo in the site-media
+  bucket, folder `hero`). Each defaults to the site's words, so a hero
+  saved before them reads and shows as it did; an empty eyebrow or accent
+  is not shown. The buttons' addresses stay in code.
+- **`home_thoughts`** ("Myśli, które się odmieniają"): `{ label ≤120,
+negative: 8..40 × ≤40, positive: 3..20 × ≤60 }`; the admin writes one
+  thought per line.
+- **`home_story`** ("Jak zacząć"): `{ steps: 1..4 × { heading ≤80,
+text ≤400, cta: { label, href (a path on the site) } | null, imagePath,
+imageAlt } }`; a step without its own photo takes one of the site's.
+
+Until published, the site shows the contracts' defaults
+(`defaultHomeThoughts`, `defaultHomeStory`, `defaultHeroPoints`).
+
+"Zajrzyj do środka" has no content of its own: it shows the rooms' photos
+from the Rooms domain (as /gabinety does) under the CMS's `rooms` header,
+and is left out while no room has a photo. The crisis strip's numbers also
+fill `/pomoc-w-kryzysie`, linked from every page's footer.
 
 ## Domain separation
 

@@ -65,6 +65,8 @@ export type { OfferPaint, OfferService, OfferTileProps } from "./offer-tile";
 export { JsonLd } from "./json-ld";
 export { RoomGallery } from "./room-gallery";
 export type { RoomGalleryPhoto, RoomGalleryProps } from "./room-gallery";
+export { RoomsPeek } from "./rooms-peek";
+export type { RoomsPeekPhoto, RoomsPeekProps } from "./rooms-peek";
 export { SiteBreadcrumbs } from "./site-breadcrumbs";
 export type { SiteBreadcrumbsProps } from "./site-breadcrumbs";
 export { SiteFooter } from "./site-footer";
