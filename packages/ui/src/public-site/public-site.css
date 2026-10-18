@@ -637,7 +637,9 @@
 
   .ks-intro__tagline {
     margin-top: 0.375rem;
-    color: var(--color-pink-strong);
+    /* Ink, not pink: small text over the sage wash (8.8:1; pink-strong is
+       3.4:1 there). */
+    color: var(--color-ink);
     font-family: var(--font-body);
     font-size: 0.8125rem;
     font-weight: 600;

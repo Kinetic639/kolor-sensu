@@ -126,6 +126,8 @@ describe("SiteLayout", () => {
       name: "Kolor Sensu, Centrum psychoterapii i rozwoju",
     });
     expect(home).toHaveAttribute("href", "/");
+    // Named by what it shows (WCAG 2.5.3), not by a label over it.
+    expect(home).not.toHaveAttribute("aria-label");
     expect(home.querySelector("img")).toHaveAttribute("alt", "");
     expect(home.querySelector("img")!.getAttribute("src")).toContain(
       "logo-mark.png",

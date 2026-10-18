@@ -4,14 +4,15 @@ import { useId } from "react";
 import { ContactCard } from "@/components/contact-details";
 
 // Home → "Gdzie jesteśmy": the CMS's header beside the company's address,
-// phone, e-mail, hours and "Pokaż na mapie" (the card Kontakt shows).
+// phone, e-mail, hours and "Pokaż na mapie" (the card Kontakt shows). The
+// page leaves it out while there are no details to show.
 
 export function HomeLocation({
   header,
   contact,
 }: {
   header: SectionHeaderContent;
-  contact: SiteContact | undefined;
+  contact: SiteContact;
 }) {
   const headingId = useId();
   return (

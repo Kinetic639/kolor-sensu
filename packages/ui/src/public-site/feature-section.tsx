@@ -103,7 +103,7 @@ export function FeatureSection({
         animationPreset={animationPreset}
         reducedMotionMode={reducedMotionMode}
         // The layers are about 1.17x the box (the watercolor overflows it).
-        sizes="(min-width: 1024px) 59vw, 117vw"
+        sizes="(min-width: 1024px) 59vw, calc(117vw - 3rem)"
         className={cn(imagePosition === "left" && "lg:order-first")}
       />
     </section>
