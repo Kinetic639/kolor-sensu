@@ -72,10 +72,12 @@ async function HomePage() {
     crisis,
     location,
   ].filter((one) => one !== null);
-  // A section's header block, when the headers loaded.
+  // A section's header block, when the headers loaded. Keyed: it is made
+  // here, on the server, and placed among a client section's children.
   const header = (section: HomeHeaderSection) =>
     headers ? (
       <HeaderBlock
+        key={section}
         header={headers.headers[section]}
         section={section}
         services={headers.services}
