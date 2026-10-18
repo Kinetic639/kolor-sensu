@@ -228,7 +228,8 @@ header's parts are code's, and no field of the payload can change them.
 
 - **Payload** (`homeHeadersContentSchema`): one header per section, in the
   page's order: `supportAreas`, `firstSteps`, `spotlight`, `specialists`,
-  `rooms`, `story`, `faq`. A header is `{ eyebrow: { text ≤60, tone },
+  `rooms`, `story` (the homepage has no questions and answers: they are on
+  Kontakt and Oferta). A header is `{ eyebrow: { text ≤60, tone },
 title: 1..2 lines × runs of { text, tone } (≤100 together), description:
 runs of { text, link | null } (≤300, at most one link), cta: { label ≤40,
 href, style } | null }`. Tones are `default | green | pink` (the theme's;

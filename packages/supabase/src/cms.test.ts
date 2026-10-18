@@ -402,6 +402,20 @@ describe("home headers", () => {
     expect(eq).toHaveBeenCalledWith("key", "home_headers");
   });
 
+  // Until the migration that drops it has run, the stored headers still
+  // carry the homepage's former questions-and-answers header.
+  it("reads headers that still carry the former faq header, without it", async () => {
+    const stored = { ...headers, faq: defaultHomeHeaders.story };
+    const eq = vi.fn(() => ({
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { key: "home_headers", published_payload: stored },
+        error: null,
+      }),
+    }));
+    const client = { from: () => ({ select: () => ({ eq }) }) } as never;
+    expect(await getPublishedHomeHeaders(client)).toEqual(headers);
+  });
+
   it("saves the draft and publishes under the home_headers key", async () => {
     const single = vi
       .fn()

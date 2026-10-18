@@ -93,12 +93,9 @@ async function HomePage() {
           >
             {header("story")}
           </CmsSection>
-          <CmsSection note="najczęstsze pytania" title="Zanim się zobaczymy">
-            {header("faq")}
-          </CmsSection>
         </>
       ) : (
-        <UnavailableSection title="Przestrzeń, która wspiera · Jak zacząć · Zanim się zobaczymy" />
+        <UnavailableSection title="Przestrzeń, która wspiera · Jak zacząć" />
       )}
       <FixedSection title="Zrób pierwszy krok">
         Końcowe zaproszenie do umówienia wizyty.

@@ -1,5 +1,4 @@
 import {
-  FaqSection,
   FeatureSection,
   FirstSteps,
   HeroSection,
@@ -14,7 +13,6 @@ import { ClosingCta } from "@/components/closing-cta";
 import {
   bookingCta,
   defaultSupportAreas,
-  faq,
   hero,
   rooms,
   story,
@@ -96,7 +94,6 @@ export default async function Home() {
         animationPreset="watercolor-reveal"
       />
       <PaintedStory header={headers.story} steps={story.steps} />
-      <FaqSection items={faq} header={headers.faq} />
       <ClosingCta />
     </>
   );

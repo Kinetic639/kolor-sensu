@@ -242,12 +242,14 @@ describe("home headers", () => {
   });
 
   it("needs every section's header, and no others", () => {
-    const { faq: _faq, ...withoutFaq } = defaultHomeHeaders;
-    expect(homeHeadersContentSchema.safeParse(withoutFaq).success).toBe(false);
+    const { story: _story, ...withoutStory } = defaultHomeHeaders;
+    expect(homeHeadersContentSchema.safeParse(withoutStory).success).toBe(
+      false,
+    );
     expect(
       homeHeadersContentSchema.safeParse({
         ...defaultHomeHeaders,
-        hero: defaultHomeHeaders.faq,
+        faq: defaultHomeHeaders.story,
       }).success,
     ).toBe(false);
   });

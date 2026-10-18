@@ -190,7 +190,6 @@ export const HOME_HEADER_SECTIONS = [
   { key: "specialists", label: "Poznaj nasz zespół" },
   { key: "rooms", label: "Przestrzeń, która wspiera" },
   { key: "story", label: "Jak zacząć" },
-  { key: "faq", label: "Zanim się zobaczymy" },
 ] as const;
 
 export type HomeHeaderSection = (typeof HOME_HEADER_SECTIONS)[number]["key"];
@@ -202,7 +201,6 @@ export const homeHeadersContentSchema = z.strictObject({
   specialists: sectionHeaderSchema,
   rooms: sectionHeaderSchema,
   story: sectionHeaderSchema,
-  faq: sectionHeaderSchema,
 });
 
 export type HomeHeadersContent = z.infer<typeof homeHeadersContentSchema>;
@@ -244,17 +242,6 @@ export const defaultHomeHeaders: HomeHeadersContent = {
   story: plainHeader({
     eyebrow: "Jak zacząć",
     title: "Twoja droga do lepszego samopoczucia",
-  }),
-  faq: plainHeader({
-    eyebrow: "Pytania i odpowiedzi",
-    title: "Zanim się zobaczymy",
-    description:
-      "Najczęstsze pytania osób, które zastanawiają się nad pierwszą wizytą.",
-    cta: {
-      label: "Masz inne pytanie? Napisz do nas",
-      href: "/kontakt",
-      style: "arrow",
-    },
   }),
 };
 
