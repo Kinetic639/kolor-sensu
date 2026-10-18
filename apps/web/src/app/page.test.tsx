@@ -22,6 +22,7 @@ import type { PublicSupportArea } from "@repo/supabase";
 import type { SiteContact } from "@repo/ui/public-site";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import type { HomeHero, HomeStory } from "@/lib/home-content";
+import type { RoomsPageLocation } from "@/lib/rooms-by-location";
 import type { HomeSections } from "@/lib/spotlight";
 import type { SpecialistWithMedia } from "@/lib/public-data";
 import {
@@ -55,6 +56,7 @@ const sitesOwn = () => ({
   specialists: [] as SpecialistWithMedia[],
   contact: contact as SiteContact | undefined,
   hero: null as HomeHero | null,
+  rooms: [] as RoomsPageLocation[],
   thoughts: defaultHomeThoughts as HomeThoughtsContent,
   story: {
     steps: defaultHomeStory.steps.map((step) => ({ ...step, imageUrl: null })),
@@ -64,6 +66,7 @@ let published = sitesOwn();
 
 vi.mock("@/lib/public-data", () => ({
   getHomeContent: async () => published.hero,
+  getRoomsByLocation: async () => published.rooms,
   getHomeThoughts: async () => published.thoughts,
   getHomeStory: async () => published.story,
   getHomeHeaders: async () => defaultHomeHeaders,
@@ -145,6 +148,16 @@ describe("the homepage", () => {
   it("shows its sections in the agreed order, every one switched on", async () => {
     published.whyUs = { ...defaultWhyUs, visible: true };
     published.newsletter = { visible: true };
+    published.rooms = [
+      {
+        rooms: [
+          {
+            displayName: "Gabinet",
+            photos: [{ url: "/g.webp", alt: "Gabinet" }],
+          },
+        ],
+      },
+    ] as RoomsPageLocation[];
     await renderHome();
     const headings = screen
       .getAllByRole("heading", { level: 2 })
@@ -208,6 +221,38 @@ describe("the words the admin publishes", () => {
     ).toBeGreaterThan(0);
     expect(title("Spokojny początek")).toBeInTheDocument();
     expect(title("Pierwsza rozmowa")).not.toBeInTheDocument();
+  });
+});
+
+describe("Zajrzyj do środka", () => {
+  it("shows the rooms' photos, linking to Gabinety", async () => {
+    published.rooms = [
+      {
+        rooms: [
+          {
+            displayName: "Gabinet Zielony",
+            photos: [{ url: "/zielony.webp", alt: "Gabinet Zielony, fotel" }],
+          },
+        ],
+      },
+    ] as RoomsPageLocation[];
+    await renderHome();
+    const section = screen.getByRole("region", {
+      name: "Przestrzeń, która wspiera",
+    });
+    expect(
+      within(section).getByRole("img", { name: "Gabinet Zielony, fotel" }),
+    ).toBeInTheDocument();
+    expect(
+      within(section).getByRole("link", { name: /Zobacz nasze gabinety/ }),
+    ).toHaveAttribute("href", "/gabinety");
+  });
+
+  it("is left out while no room has a photo", async () => {
+    await renderHome();
+    expect(
+      screen.queryByRole("list", { name: "Zdjęcia gabinetów" }),
+    ).not.toBeInTheDocument();
   });
 });
 

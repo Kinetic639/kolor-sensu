@@ -1927,6 +1927,84 @@
       scale: 1.07;
     }
   }
+
+  /* Home → "Zajrzyj do środka" (rooms-peek.tsx): a row of tilted prints,
+     scrolled sideways and snapping to each; its edges line up with the
+     page's gutter. */
+  .ks-peek__row {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--spacing-gutter);
+    scrollbar-width: none;
+    cursor: grab;
+    border-radius: 0.5rem;
+  }
+
+  .ks-peek__row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ks-peek__row[data-dragging] {
+    cursor: grabbing;
+    scroll-snap-type: none;
+    user-select: none;
+  }
+
+  .ks-peek__row:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 4px;
+  }
+
+  .ks-peek__list {
+    display: flex;
+    gap: clamp(1rem, 3vw, 2rem);
+    width: max-content;
+    padding: 1.5rem var(--spacing-gutter);
+  }
+
+  .ks-peek__item {
+    width: min(70vw, 18rem);
+    scroll-snap-align: start;
+  }
+
+  .ks-peek__print {
+    padding: 0.625rem 0.625rem 0.25rem;
+    background: var(--color-surface);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 30px -18px
+      color-mix(in oklab, var(--color-ink) 45%, transparent);
+    transition: rotate 0.4s ease;
+  }
+
+  .ks-peek__item:nth-child(3n + 1) .ks-peek__print {
+    rotate: -2.5deg;
+  }
+
+  .ks-peek__item:nth-child(3n + 2) .ks-peek__print {
+    rotate: 1.5deg;
+  }
+
+  .ks-peek__item:nth-child(3n) .ks-peek__print {
+    rotate: -1deg;
+  }
+
+  .ks-peek__item:hover .ks-peek__print {
+    rotate: 0deg;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-peek__row {
+      scroll-behavior: smooth;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ks-peek__item .ks-peek__print {
+      rotate: none;
+      transition: none;
+    }
+  }
 }
 
 /* The ring's size eases between states (the stretch, set every frame, must

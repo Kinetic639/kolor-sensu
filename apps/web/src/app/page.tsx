@@ -1,9 +1,9 @@
 import {
   CrisisStrip,
-  FeatureSection,
   FirstSteps,
   HeroSection,
   PaintedStory,
+  RoomsPeek,
   SpecialistSpotlight,
   SpecialistsSection,
   SupportAreas,
@@ -18,7 +18,6 @@ import {
   bookingCta,
   defaultSupportAreas,
   hero,
-  rooms,
   storyImages,
 } from "@/content/site";
 import { toStorySteps, withHomeContent } from "@/lib/home-content";
@@ -33,11 +32,13 @@ import {
   getHomeStory,
   getHomeThoughts,
   getNewsletterBand,
+  getRoomsByLocation,
   getSpecialists,
   getSupportAreas,
   getWhyUs,
 } from "@/lib/public-data";
 import { getSiteFrame } from "@/lib/site-frame";
+import { toRoomsPeekPhotos } from "@/lib/rooms-peek";
 import { toSpotlight } from "@/lib/spotlight";
 import { toSupportAreaItems } from "@/lib/support-areas";
 
@@ -60,6 +61,7 @@ export default async function Home() {
     frame,
     thoughts,
     story,
+    roomGroups,
   ] = await Promise.all([
     getHomeContent(),
     getHomeHeaders(),
@@ -74,8 +76,10 @@ export default async function Home() {
     getSiteFrame(),
     getHomeThoughts(),
     getHomeStory(),
+    getRoomsByLocation(),
   ]);
   const spotlight = toSpotlight(sections, specialists);
+  const roomPhotos = toRoomsPeekPhotos(roomGroups);
 
   return (
     <>
@@ -113,12 +117,9 @@ export default async function Home() {
           animationPreset="splash-reveal"
         />
       ) : null}
-      <FeatureSection
-        header={headers.rooms}
-        image={rooms.image}
-        imagePosition="left"
-        animationPreset="watercolor-reveal"
-      />
+      {roomPhotos.length > 0 ? (
+        <RoomsPeek header={headers.rooms} photos={roomPhotos} />
+      ) : null}
       <PaintedStory
         header={headers.story}
         steps={toStorySteps(story, storyImages)}
