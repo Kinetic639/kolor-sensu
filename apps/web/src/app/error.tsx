@@ -1,6 +1,6 @@
 "use client"; // Error boundaries must be Client Components
 
-import { PrimaryButton, SecondaryButton } from "@repo/ui/public-site";
+import { PrimaryButton, SecondaryButton } from "@repo/ui/public-site/actions";
 import Link from "next/link";
 import { useEffect } from "react";
 

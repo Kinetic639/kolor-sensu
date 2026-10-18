@@ -74,10 +74,9 @@ export default async function Home() {
 
   return (
     <>
-      <HeroSection
-        {...withHomeContent(hero, homeContent)}
-        animationPreset="watercolor-reveal"
-      />
+      {/* No entrance animation: the hero picture is the page's largest
+          paint, and the reveal kept it hidden until the script ran. */}
+      <HeroSection {...withHomeContent(hero, homeContent)} />
       <ThoughtsLens {...thoughts} />
       <SupportAreas
         header={headers.supportAreas}
