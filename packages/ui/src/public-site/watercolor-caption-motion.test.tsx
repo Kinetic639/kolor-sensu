@@ -1,11 +1,12 @@
 // CaptionMotion: the handwritten caption's own idle float and scroll
 // parallax, independent of WatercolorImage's entrance animation (which only
 // fades the caption in, via opacity, and may not even be in use).
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CaptionMotion } from "./watercolor-caption-motion";
+import { loadGsap } from "./lazy-gsap";
 
 // jsdom has no matchMedia; each test says which preferences the visitor has.
 // Omitting a call leaves window.matchMedia undefined, as in a browser where
@@ -27,10 +28,17 @@ function mockMedia({ reduce = false, scripting = true } = {}) {
   }));
 }
 
-function renderCaption() {
+/** GSAP has arrived and the animation has set itself up (useLazyGsap). */
+const gsapLoaded = () =>
+  act(async () => {
+    await loadGsap();
+  });
+
+async function renderCaption() {
   const { container, unmount } = render(
     <CaptionMotion>Przestrzeń dla ważnych rozmów</CaptionMotion>,
   );
+  await gsapLoaded();
   return {
     unmount,
     outer: container.querySelector<HTMLElement>(".ks-wc__caption")!,
@@ -44,32 +52,32 @@ afterEach(() => {
 });
 
 describe("CaptionMotion", () => {
-  it("renders the caption text in a figcaption, motion aside", () => {
-    const { outer, inner } = renderCaption();
+  it("renders the caption text in a figcaption, motion aside", async () => {
+    const { outer, inner } = await renderCaption();
     expect(outer.tagName).toBe("FIGCAPTION");
     expect(outer).toHaveClass("ks-wc__caption");
     expect(inner).toHaveTextContent("Przestrzeń dla ważnych rozmów");
   });
 
-  it("stays put when scripting can't be confirmed (no matchMedia at all)", () => {
-    const { outer, inner } = renderCaption();
+  it("stays put when scripting can't be confirmed (no matchMedia at all)", async () => {
+    const { outer, inner } = await renderCaption();
     expect(gsap.getTweensOf(inner)).toHaveLength(0);
     expect(gsap.getTweensOf(outer)).toHaveLength(0);
     expect(outer).not.toHaveAttribute("style");
     expect(inner).not.toHaveAttribute("style");
   });
 
-  it("stays put under prefers-reduced-motion", () => {
+  it("stays put under prefers-reduced-motion", async () => {
     mockMedia({ reduce: true });
-    const { outer, inner } = renderCaption();
+    const { outer, inner } = await renderCaption();
     expect(gsap.getTweensOf(inner)).toHaveLength(0);
     expect(gsap.getTweensOf(outer)).toHaveLength(0);
     expect(ScrollTrigger.getAll()).toHaveLength(0);
   });
 
-  it("floats gently and ties a tiny scroll parallax to itself, motion allowed", () => {
+  it("floats gently and ties a tiny scroll parallax to itself, motion allowed", async () => {
     mockMedia();
-    const { outer, inner } = renderCaption();
+    const { outer, inner } = await renderCaption();
 
     // The idle float: a slow, small, endless drift on the inner layer only.
     const [float] = gsap.getTweensOf(inner);
@@ -87,9 +95,9 @@ describe("CaptionMotion", () => {
     expect(ScrollTrigger.getAll()).toHaveLength(1);
   });
 
-  it("cleans up on unmount: no leftover tweens or ScrollTrigger", () => {
+  it("cleans up on unmount: no leftover tweens or ScrollTrigger", async () => {
     mockMedia();
-    const { outer, inner, unmount } = renderCaption();
+    const { outer, inner, unmount } = await renderCaption();
     expect(gsap.getTweensOf(inner).length).toBeGreaterThan(0);
 
     unmount();

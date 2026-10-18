@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { gsap } from "gsap";
 import { type ReactNode, StrictMode } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WatercolorImage } from "./watercolor-image";
+import { loadGsap } from "./lazy-gsap";
 import type { PaintMatte } from "./watercolor-paint-matte";
 import {
   revealProperties,
@@ -44,6 +45,10 @@ function mockIntersectionObserver() {
     targets: Element[];
     options?: IntersectionObserverInit;
   }> = [];
+  // As a real one: an observer made once the element is near (or on
+  // screen) reports it at once.
+  let near = false;
+  let visible = false;
   const report = (only: (typeof observers)[number][]) => {
     for (const observer of only) {
       observer.callback(
@@ -65,6 +70,9 @@ function mockIntersectionObserver() {
     }
     observe(target: Element) {
       this.targets.push(target);
+      if (visible || (near && this.options?.rootMargin)) {
+        queueMicrotask(() => report([this]));
+      }
     }
     unobserve() {}
     disconnect() {
@@ -77,9 +85,11 @@ function mockIntersectionObserver() {
   vi.stubGlobal("IntersectionObserver", Observer);
   return {
     comeNear() {
+      near = true;
       report(observers.filter((observer) => observer.options?.rootMargin));
     },
     scrollIntoView() {
+      near = visible = true;
       report(observers);
     },
   };
@@ -260,6 +270,10 @@ describe("WatercolorImage entrance animation", () => {
     });
 
     const { container: still } = render(<WatercolorImage {...base} />);
+    // Its caption floats too, once GSAP is in (lazy-gsap.ts).
+    await act(async () => {
+      await loadGsap();
+    });
     expect(layersOf(element)).toBe(layersOf(root(still)));
   });
 

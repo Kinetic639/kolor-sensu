@@ -1,4 +1,4 @@
-import { gsap } from "gsap";
+import type { GsapInstance } from "./lazy-gsap";
 import { paintMatte } from "./watercolor-paint-matte.data";
 import { watercolorSplash } from "./watercolor-splash-matte.data";
 
@@ -289,7 +289,11 @@ export function createPaintMatte(host: Element): PaintMatte {
 
 // One stroke: the brush sets down (its image becomes visible, with no
 // paint yet) and the paint front runs through its time map.
-function strokeTimeline(stroke: PaintStroke, timing: StrokeTiming) {
+function strokeTimeline(
+  gsap: GsapInstance,
+  stroke: PaintStroke,
+  timing: StrokeTiming,
+) {
   const [from, to] = frontRange(stroke.sharpness);
   // Not lazy, like the whole reveal (createPaintTimeline).
   const timeline = gsap.timeline({ defaults: { lazy: false } });
@@ -311,6 +315,8 @@ function strokeTimeline(stroke: PaintStroke, timing: StrokeTiming) {
 }
 
 export interface PaintTimelineOptions {
+  /** GSAP, loaded when the reveal is near (lazy-gsap.ts). */
+  gsap: GsapInstance;
   paused?: boolean;
   onComplete?: () => void;
   /** The handwritten caption, shown late with a short fade. */
@@ -320,7 +326,7 @@ export interface PaintTimelineOptions {
 /** The whole reveal as one GSAP timeline, about 1.15 s long. */
 export function createPaintTimeline(
   matte: PaintMatte,
-  { paused = false, onComplete, caption }: PaintTimelineOptions = {},
+  { gsap, paused = false, onComplete, caption }: PaintTimelineOptions,
 ) {
   // Not lazy: the unpainted start is written at once, not at the end of the
   // frame (nothing flashes, and it holds however busy the machine is).
@@ -331,7 +337,7 @@ export function createPaintTimeline(
   });
   for (const stroke of matte.backdrop.strokes) {
     const timing = strokeTiming(stroke.id);
-    timeline.add(strokeTimeline(stroke, timing), timing.at);
+    timeline.add(strokeTimeline(gsap, stroke, timing), timing.at);
   }
 
   const { sharpness } = watercolorSplash.photo.time;

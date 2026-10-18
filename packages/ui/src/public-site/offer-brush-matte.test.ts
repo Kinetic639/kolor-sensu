@@ -131,7 +131,12 @@ describe("offer brush matte", () => {
 describe("offer reveal timeline", () => {
   it("is quick: five strokes overlapping, content, then the arrow", () => {
     const { layers, matte } = build();
-    const timeline = createOfferTimeline({ ...layers, matte, paused: true });
+    const timeline = createOfferTimeline({
+      gsap,
+      ...layers,
+      matte,
+      paused: true,
+    });
     expect(timeline.duration()).toBeCloseTo(offerRevealLength, 5);
     expect(timeline.duration()).toBeLessThanOrEqual(1);
 
@@ -146,7 +151,12 @@ describe("offer reveal timeline", () => {
 
   it("paints the strokes in the variant's order", () => {
     const { layers, matte } = build("b");
-    const timeline = createOfferTimeline({ ...layers, matte, paused: true });
+    const timeline = createOfferTimeline({
+      gsap,
+      ...layers,
+      matte,
+      paused: true,
+    });
     const { at, gap } = offerRevealTiming.strokes;
     matte.strokes.forEach((stroke, index) => {
       timeline.time(at + index * gap + 0.01);
@@ -161,7 +171,12 @@ describe("offer reveal timeline", () => {
 
   it("only moves the stroke fronts and the three layers", () => {
     const { host, layers, matte } = build();
-    const timeline = createOfferTimeline({ ...layers, matte, paused: true });
+    const timeline = createOfferTimeline({
+      gsap,
+      ...layers,
+      matte,
+      paused: true,
+    });
     const allowed = new Set<Element>(Object.values(layers));
     for (const tween of timeline.getChildren(
       true,
@@ -178,7 +193,12 @@ describe("offer reveal timeline", () => {
 
   it("ends with every stroke fully painted and unfiltered", () => {
     const { layers, matte } = build();
-    const timeline = createOfferTimeline({ ...layers, matte, paused: true });
+    const timeline = createOfferTimeline({
+      gsap,
+      ...layers,
+      matte,
+      paused: true,
+    });
     timeline.progress(1);
     for (const stroke of matte.strokes) {
       expect(stroke.group).toHaveAttribute("visibility", "visible");
@@ -195,7 +215,7 @@ describe("offer reveal timeline", () => {
 
   it("fades the paint instead where there is no matte (WebKit)", () => {
     const { layers } = build();
-    const timeline = createOfferTimeline({ ...layers, paused: true });
+    const timeline = createOfferTimeline({ gsap, ...layers, paused: true });
     expect(layers.paint.style.opacity).toBe("0");
     timeline.progress(1);
     expect(layers.paint.style.opacity).toBe("1");

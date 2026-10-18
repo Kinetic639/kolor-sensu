@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { gsap } from "gsap";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -7,6 +7,7 @@ import { introRemaining, watchReveal } from "./reveal-support";
 import { introStorageKey, SiteIntro } from "./site-intro";
 import { SiteLayout } from "./site-layout";
 import { sampleContact, sampleNavigation } from "./site-samples";
+import { loadGsap } from "./lazy-gsap";
 
 // jsdom has no matchMedia.
 function mockMedia({ reduce = false } = {}) {
@@ -22,13 +23,20 @@ function mockMedia({ reduce = false } = {}) {
   }));
 }
 
+/** GSAP has arrived and the animation has set itself up (useLazyGsap). */
+const gsapLoaded = () =>
+  act(async () => {
+    await loadGsap();
+  });
+
 // React does not run the inline script when rendering on the client, so the
 // tests run it themselves, as the browser does while parsing the page.
-function load() {
+async function load() {
   const { container, unmount } = render(<SiteIntro />);
   const script = container.querySelector("script")!;
   new Function(script.textContent!)();
   const intro = container.querySelector<HTMLElement>(".ks-intro")!;
+  await gsapLoaded();
   return { intro, unmount };
 }
 
@@ -39,7 +47,7 @@ afterEach(() => {
 });
 
 describe("SiteIntro", () => {
-  it("is in the server HTML hidden, decorative, with its script right after it", () => {
+  it("is in the server HTML hidden, decorative, with its script right after it", async () => {
     const html = renderToString(<SiteIntro />);
     expect(html).toMatch(
       /^<div id="ks-intro" class="ks-intro" aria-hidden="true">.*<\/div><script>/,
@@ -48,7 +56,7 @@ describe("SiteIntro", () => {
     expect(html).toContain(introStorageKey);
   });
 
-  it("draws the closed bud and the greeting in the markup, for the first paint", () => {
+  it("draws the closed bud and the greeting in the markup, for the first paint", async () => {
     const { container } = render(<SiteIntro />);
     const intro = container.querySelector<HTMLElement>(".ks-intro")!;
     // The penguin and its bud: two top and two middle petals, turned in.
@@ -68,7 +76,7 @@ describe("SiteIntro", () => {
     expect(intro).not.toHaveAttribute("data-motion");
   });
 
-  it("comes first in the layout, before the skip link", () => {
+  it("comes first in the layout, before the skip link", async () => {
     const html = renderToString(
       <SiteLayout navigation={sampleNavigation} contact={sampleContact}>
         <h1>Strona</h1>
@@ -89,32 +97,32 @@ describe("SiteIntro", () => {
     expect(without).not.toContain("ks-intro");
   });
 
-  it("plays on the first visit only", () => {
+  it("plays on the first visit only", async () => {
     mockMedia();
-    const first = load();
+    const first = await load();
     expect(first.intro.dataset.intro).toBe("play");
     expect(Number(first.intro.dataset.introAt)).toBeGreaterThanOrEqual(0);
     expect(window.localStorage.getItem(introStorageKey)).toBe("1");
     first.unmount();
 
-    const again = load();
+    const again = await load();
     expect(again.intro.dataset.intro).toBeUndefined();
   });
 
-  it("does not play under reduced motion", () => {
+  it("does not play under reduced motion", async () => {
     mockMedia({ reduce: true });
-    expect(load().intro.dataset.intro).toBeUndefined();
+    expect((await load()).intro.dataset.intro).toBeUndefined();
   });
 
-  it("does not play where storage is blocked (it would play on every page)", () => {
+  it("does not play where storage is blocked (it would play on every page)", async () => {
     mockMedia();
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("blocked");
     });
-    expect(load().intro.dataset.intro).toBeUndefined();
+    expect((await load()).intro.dataset.intro).toBeUndefined();
   });
 
-  it("can be replayed for Storybook without a script", () => {
+  it("can be replayed for Storybook without a script", async () => {
     const { container } = render(<SiteIntro replay />);
     expect(container.querySelector(".ks-intro")).toHaveAttribute(
       "data-intro",
@@ -125,9 +133,10 @@ describe("SiteIntro", () => {
 });
 
 describe("IntroMotion", () => {
-  it("takes over a playing intro and records when its paper starts to fade", () => {
+  it("takes over a playing intro and records when its paper starts to fade", async () => {
     vi.spyOn(performance, "now").mockReturnValue(500);
     const { container, unmount } = render(<SiteIntro replay />);
+    await gsapLoaded();
     const intro = container.querySelector<HTMLElement>(".ks-intro")!;
     expect(intro.dataset.motion).toBe("on");
     expect(Number(intro.dataset.introEnd)).toBe(500 + INTRO_HANDOFF * 1000);
@@ -137,7 +146,7 @@ describe("IntroMotion", () => {
     unmount();
   });
 
-  it("leaves an intro that does not play alone", () => {
+  it("leaves an intro that does not play alone", async () => {
     const { container } = render(<SiteIntro />);
     const intro = container.querySelector<HTMLElement>(".ks-intro")!;
     expect(intro).not.toHaveAttribute("data-motion");
@@ -146,7 +155,7 @@ describe("IntroMotion", () => {
 });
 
 describe("reveals and the intro", () => {
-  it("hold a visible reveal back until the intro starts to fade", () => {
+  it("hold a visible reveal back until the intro starts to fade", async () => {
     vi.useFakeTimers();
     vi.spyOn(performance, "now").mockReturnValue(300);
     const { container } = render(<SiteIntro replay />);
@@ -167,7 +176,7 @@ describe("reveals and the intro", () => {
     vi.unstubAllGlobals();
   });
 
-  it("wait for the stylesheet's fallback fade while the motion has not started", () => {
+  it("wait for the stylesheet's fallback fade while the motion has not started", async () => {
     vi.spyOn(performance, "now").mockReturnValue(300);
     const { container } = render(<SiteIntro replay />);
     const intro = container.querySelector<HTMLElement>(".ks-intro")!;
@@ -177,7 +186,7 @@ describe("reveals and the intro", () => {
     expect(introRemaining()).toBe(3900);
   });
 
-  it("wait longer when the intro's end moves while they wait", () => {
+  it("wait longer when the intro's end moves while they wait", async () => {
     vi.useFakeTimers();
     vi.spyOn(performance, "now").mockReturnValue(0);
     const { container } = render(<SiteIntro replay />);
@@ -196,7 +205,7 @@ describe("reveals and the intro", () => {
     vi.unstubAllGlobals();
   });
 
-  it("start at once when there is no intro", () => {
+  it("start at once when there is no intro", async () => {
     expect(introRemaining()).toBe(0);
     vi.stubGlobal("IntersectionObserver", undefined);
     const visible = vi.fn();

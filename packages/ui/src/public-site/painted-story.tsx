@@ -15,11 +15,10 @@
 // when the step changes its number rolls, the old one leaving upwards
 // into mist, the new one coming up sharp.
 
-import { useGSAP } from "@gsap/react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import type { ScrollTrigger as ScrollTriggerInstance } from "gsap/ScrollTrigger";
 import type { ImageProps } from "next/image";
 import { type CSSProperties, type ReactNode, useRef } from "react";
+import { type GsapInstance, useLazyGsap } from "./lazy-gsap";
 import { cn } from "../lib/utils";
 import { ArrowLink } from "./actions";
 import { matches, svgMasksSupported, watchReveal } from "./reveal-support";
@@ -33,8 +32,6 @@ import {
   createPaintTimeline,
   type PaintMatte,
 } from "./watercolor-paint-matte";
-
-gsap.registerPlugin(useGSAP);
 
 export interface PaintedStoryStep {
   heading: ReactNode;
@@ -66,7 +63,7 @@ const FLOWING =
   "(max-width: 63.99rem) and (prefers-reduced-motion: no-preference)";
 
 /** Paints a picture's layers in with the brush; resolves the old state. */
-function paint(picture: HTMLElement, onDone?: () => void) {
+function paint(gsap: GsapInstance, picture: HTMLElement, onDone?: () => void) {
   const frame = picture.querySelector<HTMLElement>(".ks-wc");
   if (!frame || !svgMasksSupported()) {
     picture.dataset.shown = "true";
@@ -87,6 +84,7 @@ function paint(picture: HTMLElement, onDone?: () => void) {
     matte.svg.remove();
   };
   const timeline = createPaintTimeline(matte, {
+    gsap,
     onComplete: () => {
       clear();
       onDone?.();
@@ -110,8 +108,8 @@ export function PaintedStory({
   const total = steps.length;
   const numbered = (value: number) => String(value).padStart(2, "0");
 
-  useGSAP(
-    () => {
+  useLazyGsap(
+    ({ gsap, ScrollTrigger }) => {
       const root = ref.current;
       if (!root || !matches("(scripting: enabled)")) return;
       // Registered here, not at module scope: ScrollTrigger reaches for
@@ -144,7 +142,7 @@ export function PaintedStory({
               else
                 stops.set(
                   at,
-                  paint(picture, () => stops.delete(at)),
+                  paint(gsap, picture, () => stops.delete(at)),
                 );
             } else if (at > index && picture.dataset.shown === "true") {
               stops.get(at)?.();
@@ -183,7 +181,7 @@ export function PaintedStory({
             if (active < 0) show(0);
           },
         });
-        const follow = (self: ScrollTrigger) => {
+        const follow = (self: ScrollTriggerInstance) => {
           if (!started) return;
           show(Math.min(steps.length - 1, Math.floor(self.progress * total)));
         };
@@ -216,7 +214,7 @@ export function PaintedStory({
             threshold: 0.3,
             near: () => undefined,
             visible: () => {
-              stopPaint = paint(picture);
+              stopPaint = paint(gsap, picture);
             },
           });
           return () => {

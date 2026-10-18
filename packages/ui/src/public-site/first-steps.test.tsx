@@ -2,10 +2,11 @@
 // band, joined by a wave that draws itself with scroll; each step waits
 // grey and takes colour once the line reaches it. Without motion it is simply the
 // finished band.
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FirstSteps, showProgress } from "./first-steps";
 import { WAVE_PATH } from "./first-steps-wave";
+import { loadGsap } from "./lazy-gsap";
 
 function mockMedia({ reduce = false, wide = true } = {}) {
   window.matchMedia = vi.fn((query: string) => ({
@@ -33,7 +34,26 @@ const steps = [
   { title: "Rozpoczęcie pracy", text: "Zaczynamy w Twoim tempie." },
 ];
 
-function renderSteps() {
+/** GSAP has arrived and the animation has set itself up (useLazyGsap). */
+const gsapLoaded = () =>
+  act(async () => {
+    await loadGsap();
+  });
+
+async function renderSteps() {
+  // As on a page opened at its top: the band lies below the first screen
+  // (jsdom lays nothing out, so it would count as scrolled past).
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+    top: 2000,
+    bottom: 2800,
+    left: 0,
+    right: 1200,
+    width: 1200,
+    height: 800,
+    x: 0,
+    y: 2000,
+    toJSON: () => ({}),
+  } as DOMRect);
   render(
     <FirstSteps
       eyebrow="Pierwszy krok"
@@ -45,6 +65,7 @@ function renderSteps() {
   const region = screen.getByRole("region", {
     name: "Od pierwszego kontaktu do wsparcia na dłużej",
   });
+  await gsapLoaded();
   return {
     region,
     items: within(region).getAllByRole("listitem"),
@@ -52,13 +73,14 @@ function renderSteps() {
 }
 
 afterEach(() => {
+  vi.restoreAllMocks();
   // @ts-expect-error -- reset between tests; a real browser always has one.
   delete window.matchMedia;
 });
 
 describe("FirstSteps", () => {
-  it("is a section under its heading, the four steps an ordered list", () => {
-    const { region, items } = renderSteps();
+  it("is a section under its heading, the four steps an ordered list", async () => {
+    const { region, items } = await renderSteps();
     expect(region).toHaveTextContent("Pierwszy krok");
     expect(region).toHaveTextContent("Cztery proste kroki.");
     expect(within(region).getByRole("list").tagName).toBe("OL");
@@ -70,8 +92,8 @@ describe("FirstSteps", () => {
     expect(items[2]).toHaveTextContent("Proponujemy formy wsparcia.");
   });
 
-  it("draws the wave and the brush stroke as decoration only", () => {
-    const { region } = renderSteps();
+  it("draws the wave and the brush stroke as decoration only", async () => {
+    const { region } = await renderSteps();
     const wave = region.querySelector(".ks-steps__wave")!;
     expect(wave).toHaveAttribute("aria-hidden", "true");
     expect(wave.querySelector("path")).toHaveAttribute("d", WAVE_PATH);
@@ -83,20 +105,20 @@ describe("FirstSteps", () => {
     expect(within(region).queryAllByRole("img")).toHaveLength(0);
   });
 
-  it("is the finished band when scripting can't be confirmed", () => {
-    const { region } = renderSteps();
+  it("is the finished band when scripting can't be confirmed", async () => {
+    const { region } = await renderSteps();
     expect(region).not.toHaveAttribute("data-armed");
   });
 
-  it("is the finished band under reduced motion", () => {
+  it("is the finished band under reduced motion", async () => {
     mockMedia({ reduce: true });
-    const { region } = renderSteps();
+    const { region } = await renderSteps();
     expect(region).not.toHaveAttribute("data-armed");
   });
 
-  it("waits grey when motion is welcome, held in place on a wide screen", () => {
+  it("waits grey when motion is welcome, held in place on a wide screen", async () => {
     mockMedia();
-    const { region, items } = renderSteps();
+    const { region, items } = await renderSteps();
     expect(region).toHaveAttribute("data-armed", "true");
     expect(region).toHaveAttribute("data-held", "true");
     expect(items.every((item) => !item.hasAttribute("data-bloomed"))).toBe(
@@ -107,18 +129,18 @@ describe("FirstSteps", () => {
     expect(line.style.strokeDashoffset).toBe("1");
   });
 
-  it("is armed but not held on a narrow screen (steps colour as they come into view)", () => {
+  it("is armed but not held on a narrow screen (steps colour as they come into view)", async () => {
     mockMedia({ wide: false });
-    const { region } = renderSteps();
+    const { region } = await renderSteps();
     expect(region).toHaveAttribute("data-armed", "true");
     expect(region).not.toHaveAttribute("data-held");
   });
 });
 
 describe("showProgress", () => {
-  it("draws the wave so far and gives colour to the steps it has reached, for good", () => {
+  it("draws the wave so far and gives colour to the steps it has reached, for good", async () => {
     mockMedia();
-    const { region, items } = renderSteps();
+    const { region, items } = await renderSteps();
     const line = region.querySelector<SVGPathElement>(".ks-steps__wave-line")!;
 
     showProgress(region, 0.45);

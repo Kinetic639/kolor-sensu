@@ -1,9 +1,10 @@
 // PaintedStory: a short story told while scrolling. Wide screens with
 // motion pin it for its steps; phones let the steps follow one another,
 // painting each picture in; reduced motion and no script show it plainly.
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PaintedStory } from "./painted-story";
+import { loadGsap } from "./lazy-gsap";
 
 // jsdom has no matchMedia; each test says how wide the screen is and what
 // the visitor prefers. Queries are "a and b": each part must hold.
@@ -47,7 +48,13 @@ const steps = [
   },
 ];
 
-function renderStory() {
+/** GSAP has arrived and the animation has set itself up (useLazyGsap). */
+const gsapLoaded = () =>
+  act(async () => {
+    await loadGsap();
+  });
+
+async function renderStory() {
   const { container } = render(
     <PaintedStory
       eyebrow="Jak zacząć"
@@ -56,6 +63,7 @@ function renderStory() {
     />,
   );
   const root = container.querySelector<HTMLElement>(".ks-story")!;
+  await gsapLoaded();
   return {
     root,
     texts: Array.from(root.querySelectorAll<HTMLElement>(".ks-story__text")),
@@ -68,8 +76,8 @@ afterEach(() => {
 });
 
 describe("PaintedStory", () => {
-  it("tells its steps in order: a heading, a count, text, a link and a picture each", () => {
-    const { root } = renderStory();
+  it("tells its steps in order: a heading, a count, text, a link and a picture each", async () => {
+    const { root } = await renderStory();
     expect(
       screen.getByRole("heading", {
         level: 2,
@@ -92,32 +100,32 @@ describe("PaintedStory", () => {
     expect(root.style.getPropertyValue("--ks-story-steps")).toBe("3");
   });
 
-  it("stays plain when scripting can't be confirmed", () => {
-    const { root, texts } = renderStory();
+  it("stays plain when scripting can't be confirmed", async () => {
+    const { root, texts } = await renderStory();
     expect(root).not.toHaveAttribute("data-pinned");
     expect(root).not.toHaveAttribute("data-flowing");
     expect(texts.every((text) => !text.inert)).toBe(true);
   });
 
-  it("pins one screen on wide screens, the first step showing, the others out of reach", () => {
+  it("pins one screen on wide screens, the first step showing, the others out of reach", async () => {
     mockMedia({ wide: true });
-    const { root, texts } = renderStory();
+    const { root, texts } = await renderStory();
     expect(root).toHaveAttribute("data-pinned", "true");
     expect(texts[0]).toHaveAttribute("data-active", "true");
     expect(texts.map((text) => text.inert)).toEqual([false, true, true]);
   });
 
-  it("lets the steps follow one another on phones", () => {
+  it("lets the steps follow one another on phones", async () => {
     mockMedia({ wide: false });
-    const { root, texts } = renderStory();
+    const { root, texts } = await renderStory();
     expect(root).toHaveAttribute("data-flowing", "true");
     expect(root).not.toHaveAttribute("data-pinned");
     expect(texts.every((text) => !text.inert)).toBe(true);
   });
 
-  it("stays plain under reduced motion", () => {
+  it("stays plain under reduced motion", async () => {
     mockMedia({ wide: true, reduce: true });
-    const { root } = renderStory();
+    const { root } = await renderStory();
     expect(root).not.toHaveAttribute("data-pinned");
     expect(root).not.toHaveAttribute("data-flowing");
   });

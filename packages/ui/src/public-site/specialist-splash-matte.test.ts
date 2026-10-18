@@ -133,7 +133,12 @@ describe("splash matte", () => {
 describe("card reveal timeline", () => {
   it("lasts about a second: portrait, then blooms, the plate last", () => {
     const { layers, matte } = build();
-    const timeline = createSplashTimeline({ ...layers, matte, paused: true });
+    const timeline = createSplashTimeline({
+      gsap,
+      ...layers,
+      matte,
+      paused: true,
+    });
     expect(timeline.duration()).toBeCloseTo(splashRevealLength, 5);
     expect(timeline.duration()).toBeGreaterThanOrEqual(0.9);
     expect(timeline.duration()).toBeLessThanOrEqual(1.4);
@@ -151,7 +156,12 @@ describe("card reveal timeline", () => {
 
   it("keeps the portrait reveal small: a fade and a short lift", () => {
     const { layers, matte } = build();
-    const timeline = createSplashTimeline({ ...layers, matte, paused: true });
+    const timeline = createSplashTimeline({
+      gsap,
+      ...layers,
+      matte,
+      paused: true,
+    });
     expect(layers.portrait.style.opacity).toBe("0");
     const [tween] = gsap.getTweensOf(layers.portrait);
     expect(tween!.vars).toMatchObject({ opacity: 1, y: 0 });
@@ -164,7 +174,12 @@ describe("card reveal timeline", () => {
 
   it("moves only the bloom fronts inside the matte, and only the four layers", () => {
     const { host, layers, matte } = build();
-    const timeline = createSplashTimeline({ ...layers, matte, paused: true });
+    const timeline = createSplashTimeline({
+      gsap,
+      ...layers,
+      matte,
+      paused: true,
+    });
     const tweens = timeline.getChildren(true, true, false) as gsap.core.Tween[];
     const allowed = new Set<Element>(Object.values(layers));
     for (const tween of tweens) {
@@ -178,7 +193,12 @@ describe("card reveal timeline", () => {
 
   it("runs the threshold linearly through the time map (the blooms' timing is baked in)", () => {
     const { layers, matte } = build();
-    const timeline = createSplashTimeline({ ...layers, matte, paused: true });
+    const timeline = createSplashTimeline({
+      gsap,
+      ...layers,
+      matte,
+      paused: true,
+    });
     const tweens = gsap.getTweensOf(matte.front);
     expect(tweens).toHaveLength(1);
     expect(tweens[0]!.duration()).toBeCloseTo(splashMatte.time.duration, 5);
@@ -192,7 +212,12 @@ describe("card reveal timeline", () => {
 
   it("ends with the splash fully painted and unfiltered", () => {
     const { layers, matte } = build();
-    const timeline = createSplashTimeline({ ...layers, matte, paused: true });
+    const timeline = createSplashTimeline({
+      gsap,
+      ...layers,
+      matte,
+      paused: true,
+    });
     timeline.progress(1);
     expect(matte.group).toHaveAttribute("filter", "none");
     expect(frontOffset(matte.front) - BLOOM_SHARPNESS).toBeGreaterThanOrEqual(
@@ -206,7 +231,7 @@ describe("card reveal timeline", () => {
 
   it("fades the splash instead where there is no matte (WebKit)", () => {
     const { layers } = build();
-    const timeline = createSplashTimeline({ ...layers, paused: true });
+    const timeline = createSplashTimeline({ gsap, ...layers, paused: true });
     expect(layers.splash.style.opacity).toBe("0");
     timeline.progress(1);
     expect(layers.splash.style.opacity).toBe("1");
