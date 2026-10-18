@@ -228,7 +228,8 @@ header's parts are code's, and no field of the payload can change them.
 
 - **Payload** (`homeHeadersContentSchema`): one header per section, in the
   page's order: `supportAreas`, `firstSteps`, `spotlight`, `specialists`,
-  `rooms`, `story` (the homepage has no questions and answers: they are on
+  `rooms`, `story`, `newsletter`, `location`, with `whyUs` after
+  `supportAreas` (the homepage has no questions and answers: they are on
   Kontakt and Oferta). A header is `{ eyebrow: { text ≤60, tone },
 title: 1..2 lines × runs of { text, tone } (≤100 together), description:
 runs of { text, link | null } (≤300, at most one link), cta: { label ≤40,
@@ -256,6 +257,31 @@ outline | arrow`. The database checks the shape, the tones and styles,
   "Zapisz nagłówek", which saves that section's header into the draft. The
   page bar publishes them with the rest.
 - **Tests**: `supabase/tests/home_headers.sql`.
+
+## Home → the sections added on 18.10
+
+Four keys, each saved as a draft and published with the page:
+
+- **`why_us`** ("Dlaczego my", under the areas of help):
+  `{ visible, facts: 2..4 × { title ≤60, text ≤200 } }` (`whyUsContentSchema`).
+  Hidden until published, so the facts the centre stands by are approved first.
+- **`newsletter_band`** (the newsletter band, after "Jak zacząć"):
+  `{ visible }`; its words are its header. Hidden until signing up works;
+  the form joins once the newsletter tool is chosen.
+- **`home_location`** ("Gdzie jesteśmy", before the closing invitation):
+  `{ visible }`; its header is the CMS's, the address, phone, e-mail and
+  hours are the company details (the card Kontakt shows). Shown from the start.
+- **`crisis_help`** (the crisis strip, before "Gdzie jesteśmy"):
+  `{ heading ≤80, text ≤200, lines: 1..6 × { number, label ≤80, detail ≤80 } }`,
+  a number being digits and spaces with a plus only in front (checked by the
+  database too). Always shown: the admin approves the words and numbers but
+  cannot hide the strip; until published, the site shows 112 first, then the
+  support lines. Every number is a `tel:` link.
+
+The database refuses each of them in the wrong shape
+(`private.site_content_payload_is_valid`), and reading the stored headers
+fills in the new sections' headers with the site's own words until the
+migration has added them.
 
 ## Domain separation
 

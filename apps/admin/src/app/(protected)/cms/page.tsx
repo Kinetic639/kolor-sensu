@@ -1,9 +1,14 @@
 import { CmsSection } from "@/features/cms/cms-section";
+import { CrisisHelpSection } from "@/features/cms/crisis-help-section";
 import { FirstStepsSection } from "@/features/cms/first-steps-section";
 import { FixedSection, UnavailableSection } from "@/features/cms/fixed-section";
 import { HeaderBlock } from "@/features/cms/header-block";
 import { HeroSection } from "@/features/cms/hero-section";
 import {
+  loadCrisisHelp,
+  loadHomeLocation,
+  loadNewsletterBand,
+  loadWhyUs,
   loadFirstSteps,
   loadHomeContent,
   loadHomeHeaders,
@@ -17,6 +22,11 @@ import { RoomsPageSections } from "@/features/cms/rooms-page-sections";
 import { settle } from "@/features/cms/settle";
 import { SpecialistsSections } from "@/features/cms/specialists-sections";
 import { SupportAreasSection } from "@/features/cms/support-areas-section";
+import {
+  HomeLocationSection,
+  NewsletterBandSection,
+} from "@/features/cms/visibility-sections";
+import { WhyUsSection } from "@/features/cms/why-us-section";
 import { pageStatus } from "@/features/cms/view-model";
 import type { HomeHeaderSection } from "@repo/contracts";
 import { DetailTabs } from "@repo/ui/detail-page";
@@ -30,16 +40,38 @@ import { PageTitle } from "@repo/ui/portal-content";
 // whose settings cannot load says so; the rest keeps working.
 
 async function HomePage() {
-  const [hero, headers, areas, steps, sections] = await Promise.all([
+  const [
+    hero,
+    headers,
+    areas,
+    whyUs,
+    steps,
+    sections,
+    newsletter,
+    crisis,
+    location,
+  ] = await Promise.all([
     settle("hero", loadHomeContent),
     settle("nagłówki sekcji", loadHomeHeaders),
     settle("obszary wsparcia", loadSupportAreas),
+    settle("dlaczego my", loadWhyUs),
     settle("pierwszy krok", loadFirstSteps),
     settle("sekcje specjalistów", loadHomeSections),
+    settle("newsletter", loadNewsletterBand),
+    settle("pomoc w kryzysie", loadCrisisHelp),
+    settle("gdzie jesteśmy", loadHomeLocation),
   ]);
-  const loaded = [hero, headers, areas, steps, sections].filter(
-    (one) => one !== null,
-  );
+  const loaded = [
+    hero,
+    headers,
+    areas,
+    whyUs,
+    steps,
+    sections,
+    newsletter,
+    crisis,
+    location,
+  ].filter((one) => one !== null);
   // A section's header block, when the headers loaded.
   const header = (section: HomeHeaderSection) =>
     headers ? (
@@ -64,6 +96,11 @@ async function HomePage() {
         <SupportAreasSection content={areas} header={header("supportAreas")} />
       ) : (
         <UnavailableSection title="Obszary wsparcia" />
+      )}
+      {whyUs ? (
+        <WhyUsSection header={header("whyUs")} model={whyUs} />
+      ) : (
+        <UnavailableSection title="Dlaczego my" />
       )}
       {steps ? (
         <FirstStepsSection content={steps} header={header("firstSteps")} />
@@ -96,6 +133,24 @@ async function HomePage() {
         </>
       ) : (
         <UnavailableSection title="Przestrzeń, która wspiera · Jak zacząć" />
+      )}
+      {newsletter ? (
+        <NewsletterBandSection
+          header={header("newsletter")}
+          model={newsletter}
+        />
+      ) : (
+        <UnavailableSection title="Newsletter" />
+      )}
+      {crisis ? (
+        <CrisisHelpSection model={crisis} />
+      ) : (
+        <UnavailableSection title="Pomoc w kryzysie" />
+      )}
+      {location ? (
+        <HomeLocationSection header={header("location")} model={location} />
+      ) : (
+        <UnavailableSection title="Gdzie jesteśmy" />
       )}
       <FixedSection title="Zrób pierwszy krok">
         Końcowe zaproszenie do umówienia wizyty.

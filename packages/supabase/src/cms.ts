@@ -1,4 +1,16 @@
 import {
+  crisisHelpContentSchema,
+  defaultCrisisHelp,
+  defaultHomeLocation,
+  defaultNewsletterBand,
+  defaultWhyUs,
+  homeLocationContentSchema,
+  newsletterBandContentSchema,
+  whyUsContentSchema,
+  type CrisisHelpContent,
+  type HomeLocationContent,
+  type NewsletterBandContent,
+  type WhyUsContent,
   defaultFirstSteps,
   defaultHomeHeaders,
   defaultHomeSections,
@@ -32,6 +44,10 @@ const SUPPORT_AREAS_KEY = "support_areas";
 const HOME_SECTIONS_KEY = "home_sections";
 const FIRST_STEPS_KEY = "first_steps";
 const HOME_HEADERS_KEY = "home_headers";
+const WHY_US_KEY = "why_us";
+const NEWSLETTER_BAND_KEY = "newsletter_band";
+const HOME_LOCATION_KEY = "home_location";
+const CRISIS_HELP_KEY = "crisis_help";
 
 // The site's own photos: a public bucket only admins write to.
 const SITE_MEDIA_BUCKET = "site-media";
@@ -48,14 +64,16 @@ type PublicSiteContentQueryRow = Pick<
 >;
 type ContentSchema<Content> = z.ZodType<Content>;
 
-// The headers as stored: until the migration that drops it has run (and
-// while a deploy runs ahead of it), they still carry the homepage's former
-// questions-and-answers header, which is left out when read.
+// The headers as stored: until the migrations have run (and while a deploy
+// runs ahead of them), they may still carry the homepage's former
+// questions-and-answers header, which is left out when read, and lack the
+// headers of the sections added since, which read as the site's own words.
 const storedHomeHeadersSchema: ContentSchema<HomeHeadersContent> = z.preprocess(
   (payload) => {
     if (typeof payload !== "object" || payload === null) return payload;
     const { faq: _faq, ...headers } = payload as Record<string, unknown>;
-    return headers;
+    const { whyUs, newsletter, location } = defaultHomeHeaders;
+    return { whyUs, newsletter, location, ...headers };
   },
   homeHeadersContentSchema,
 );
@@ -372,3 +390,65 @@ export async function getPublishedHomeHeaders(
     defaultHomeHeaders
   );
 }
+
+// A section of plain content: its admin read, draft save, publication and
+// published read (the default until something is published).
+function contentSection<Content>(
+  key: string,
+  schema: ContentSchema<Content>,
+  fallback: Content,
+) {
+  return {
+    admin: (client: SupabaseClient<Database>) =>
+      getContentAdmin(client, key, schema),
+    update: (client: SupabaseClient<Database>, input: Content) =>
+      updateDraft(client, key, schema, input),
+    publish: (client: SupabaseClient<Database>) => publish(client, key),
+    published: async (client: SupabaseClient<Database>) =>
+      (await getPublished(client, key, schema)) ?? fallback,
+  };
+}
+
+/** Home → "Dlaczego my": hidden, with the site's facts, until published. */
+const whyUs = contentSection<WhyUsContent>(
+  WHY_US_KEY,
+  whyUsContentSchema,
+  defaultWhyUs,
+);
+export const getWhyUsAdmin = whyUs.admin;
+export const updateWhyUsDraft = whyUs.update;
+export const publishWhyUs = whyUs.publish;
+export const getPublishedWhyUs = whyUs.published;
+
+/** Home → the newsletter band: hidden until published. */
+const newsletterBand = contentSection<NewsletterBandContent>(
+  NEWSLETTER_BAND_KEY,
+  newsletterBandContentSchema,
+  defaultNewsletterBand,
+);
+export const getNewsletterBandAdmin = newsletterBand.admin;
+export const updateNewsletterBandDraft = newsletterBand.update;
+export const publishNewsletterBand = newsletterBand.publish;
+export const getPublishedNewsletterBand = newsletterBand.published;
+
+/** Home → "Gdzie jesteśmy": shown until published otherwise. */
+const homeLocation = contentSection<HomeLocationContent>(
+  HOME_LOCATION_KEY,
+  homeLocationContentSchema,
+  defaultHomeLocation,
+);
+export const getHomeLocationAdmin = homeLocation.admin;
+export const updateHomeLocationDraft = homeLocation.update;
+export const publishHomeLocation = homeLocation.publish;
+export const getPublishedHomeLocation = homeLocation.published;
+
+/** Home → the crisis strip: the site's numbers until published. */
+const crisisHelp = contentSection<CrisisHelpContent>(
+  CRISIS_HELP_KEY,
+  crisisHelpContentSchema,
+  defaultCrisisHelp,
+);
+export const getCrisisHelpAdmin = crisisHelp.admin;
+export const updateCrisisHelpDraft = crisisHelp.update;
+export const publishCrisisHelp = crisisHelp.publish;
+export const getPublishedCrisisHelp = crisisHelp.published;
