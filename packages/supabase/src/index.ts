@@ -89,6 +89,22 @@ export {
 } from "./services";
 export type { AdminServiceOfferSummary, AdminServiceSummary } from "./services";
 export {
+  getCrisisHelpAdmin,
+  getHomeLocationAdmin,
+  getNewsletterBandAdmin,
+  getPublishedCrisisHelp,
+  getPublishedHomeLocation,
+  getPublishedNewsletterBand,
+  getPublishedWhyUs,
+  getWhyUsAdmin,
+  publishCrisisHelp,
+  publishHomeLocation,
+  publishNewsletterBand,
+  publishWhyUs,
+  updateCrisisHelpDraft,
+  updateHomeLocationDraft,
+  updateNewsletterBandDraft,
+  updateWhyUsDraft,
   getFirstStepsAdmin,
   getHomeContentAdmin,
   getHomeHeadersAdmin,

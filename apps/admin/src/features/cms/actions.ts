@@ -4,6 +4,14 @@ import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/use-save";
 import {
+  crisisHelpContentSchema,
+  homeLocationContentSchema,
+  newsletterBandContentSchema,
+  whyUsContentSchema,
+  type CrisisHelpContent,
+  type HomeLocationContent,
+  type NewsletterBandContent,
+  type WhyUsContent,
   firstStepsContentSchema,
   HOME_HEADER_SECTIONS,
   homePageContentSchema,
@@ -21,6 +29,14 @@ import {
 } from "@repo/contracts";
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import {
+  publishCrisisHelp,
+  publishHomeLocation,
+  publishNewsletterBand,
+  publishWhyUs,
+  updateCrisisHelpDraft,
+  updateHomeLocationDraft,
+  updateNewsletterBandDraft,
+  updateWhyUsDraft,
   getHomeHeadersAdmin,
   publishFirstSteps,
   publishHomeContent,
@@ -90,6 +106,30 @@ export async function updateFirstStepsDraftAction(values: FirstStepsContent) {
   return saveDraft(firstStepsContentSchema, values, updateFirstStepsDraft);
 }
 
+export async function updateWhyUsDraftAction(values: WhyUsContent) {
+  return saveDraft(whyUsContentSchema, values, updateWhyUsDraft);
+}
+
+export async function updateNewsletterBandDraftAction(
+  values: NewsletterBandContent,
+) {
+  return saveDraft(
+    newsletterBandContentSchema,
+    values,
+    updateNewsletterBandDraft,
+  );
+}
+
+export async function updateHomeLocationDraftAction(
+  values: HomeLocationContent,
+) {
+  return saveDraft(homeLocationContentSchema, values, updateHomeLocationDraft);
+}
+
+export async function updateCrisisHelpDraftAction(values: CrisisHelpContent) {
+  return saveDraft(crisisHelpContentSchema, values, updateCrisisHelpDraft);
+}
+
 /**
  * One section's header into the draft of the homepage's headers (the
  * others as they are in it).
@@ -127,16 +167,21 @@ async function publishPage(
 }
 
 /**
- * The homepage: the hero, the areas of help, the first steps, the
- * specialist sections and the sections' headers.
+ * The homepage: the hero, the areas of help, "Dlaczego my", the first
+ * steps, the specialist sections, the newsletter band, the crisis strip,
+ * "Gdzie jesteśmy" and the sections' headers.
  */
 export async function publishHomePageAction() {
   return publishPage(
     [
       publishHomeContent,
       publishSupportAreas,
+      publishWhyUs,
       publishFirstSteps,
       publishHomeSections,
+      publishNewsletterBand,
+      publishCrisisHelp,
+      publishHomeLocation,
       publishHomeHeaders,
     ],
     "/",

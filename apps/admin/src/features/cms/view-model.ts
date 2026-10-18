@@ -10,6 +10,7 @@ import type {
 } from "@repo/contracts";
 import type { AdminSpecialistSummary } from "@repo/supabase";
 import type {
+  ContentViewModel,
   FirstStepsViewModel,
   HomeContentViewModel,
   HomeHeadersViewModel,
@@ -190,6 +191,27 @@ export function mapFirstStepsViewModel(
   const { draft, published } = content;
   return {
     ...draft,
+    isPublished: published !== null,
+    hasUnpublishedChanges:
+      !published || JSON.stringify(published) !== JSON.stringify(draft),
+    publishedAtLabel: formatDate(content.publishedAt),
+    updatedAtLabel: formatDate(content.updatedAt) ?? "",
+    publishedAt: content.publishedAt,
+    updatedAt: content.updatedAt,
+  };
+}
+
+/**
+ * A section whose draft the editor shows as it is ("Dlaczego my", the
+ * newsletter band, "Gdzie jesteśmy", the crisis strip), with whether it
+ * is published and differs from what is.
+ */
+export function mapContentViewModel<Content>(
+  content: SiteContentAdmin<Content>,
+): ContentViewModel<Content> {
+  const { draft, published } = content;
+  return {
+    content: draft,
     isPublished: published !== null,
     hasUnpublishedChanges:
       !published || JSON.stringify(published) !== JSON.stringify(draft),

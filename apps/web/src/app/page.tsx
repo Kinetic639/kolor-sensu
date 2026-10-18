@@ -1,4 +1,5 @@
 import {
+  CrisisStrip,
   FeatureSection,
   FirstSteps,
   HeroSection,
@@ -6,10 +7,13 @@ import {
   SpecialistSpotlight,
   SpecialistsSection,
   SupportAreas,
+  NewsletterBand,
   ThoughtsLens,
+  WhyUsSection,
 } from "@repo/ui/public-site";
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
+import { HomeLocation } from "@/components/home-location";
 import {
   bookingCta,
   defaultSupportAreas,
@@ -21,13 +25,18 @@ import {
 import { withHomeContent } from "@/lib/home-content";
 import { toSpecialistCard } from "@/lib/presentation";
 import {
+  getCrisisHelp,
   getFirstSteps,
   getHomeContent,
   getHomeHeaders,
+  getHomeLocation,
   getHomeSections,
+  getNewsletterBand,
   getSpecialists,
   getSupportAreas,
+  getWhyUs,
 } from "@/lib/public-data";
+import { getSiteFrame } from "@/lib/site-frame";
 import { toSpotlight } from "@/lib/spotlight";
 import { toSupportAreaItems } from "@/lib/support-areas";
 
@@ -43,6 +52,11 @@ export default async function Home() {
     firstSteps,
     sections,
     specialists,
+    whyUs,
+    newsletter,
+    location,
+    crisis,
+    frame,
   ] = await Promise.all([
     getHomeContent(),
     getHomeHeaders(),
@@ -50,6 +64,11 @@ export default async function Home() {
     getFirstSteps(),
     getHomeSections(),
     getSpecialists(),
+    getWhyUs(),
+    getNewsletterBand(),
+    getHomeLocation(),
+    getCrisisHelp(),
+    getSiteFrame(),
   ]);
   const spotlight = toSpotlight(sections, specialists);
 
@@ -69,6 +88,9 @@ export default async function Home() {
         )}
         cta={{ href: "/oferta", label: "Zobacz całą ofertę" }}
       />
+      {whyUs.visible ? (
+        <WhyUsSection header={headers.whyUs} facts={whyUs.facts} />
+      ) : null}
       {firstSteps.visible ? (
         <FirstSteps header={headers.firstSteps} steps={firstSteps.steps} />
       ) : null}
@@ -94,6 +116,17 @@ export default async function Home() {
         animationPreset="watercolor-reveal"
       />
       <PaintedStory header={headers.story} steps={story.steps} />
+      {newsletter.visible ? (
+        <NewsletterBand header={headers.newsletter} />
+      ) : null}
+      <CrisisStrip
+        heading={crisis.heading}
+        text={crisis.text}
+        lines={crisis.lines}
+      />
+      {location.visible ? (
+        <HomeLocation header={headers.location} contact={frame.contact} />
+      ) : null}
       <ClosingCta />
     </>
   );

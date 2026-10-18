@@ -179,28 +179,159 @@ export const defaultFirstSteps: FirstStepsContent = {
 };
 
 /**
+ * Home → "Dlaczego my", under the areas of help: two to four facts about
+ * the centre (supervision, confidentiality…), each a title and a sentence.
+ * Its header is among the homepage's headers. Hidden until the admin
+ * publishes facts the centre stands by.
+ */
+export const whyUsContentSchema = z.strictObject({
+  visible: z.boolean(),
+  facts: z
+    .array(
+      z.strictObject({
+        title: z.string().trim().min(1).max(60),
+        text: z.string().trim().min(1).max(200),
+      }),
+    )
+    .min(2)
+    .max(4),
+});
+
+export type WhyUsContent = z.infer<typeof whyUsContentSchema>;
+
+export const defaultWhyUs: WhyUsContent = {
+  visible: false,
+  facts: [
+    {
+      title: "Superwizja",
+      text: "Każdy specjalista pracuje pod regularną superwizją.",
+    },
+    {
+      title: "Poufność",
+      text: "To, o czym mówisz w gabinecie, zostaje między Tobą a specjalistą.",
+    },
+    {
+      title: "Doświadczenie",
+      text: "Zespół z wieloletnią praktyką, który stale się szkoli.",
+    },
+    {
+      title: "Kodeks etyczny",
+      text: "Pracujemy zgodnie z kodeksami etyki zawodowej.",
+    },
+  ],
+};
+
+/**
+ * Home → the newsletter band: its words are its header; the CMS sets only
+ * whether it shows. Hidden until signing up works.
+ */
+export const newsletterBandContentSchema = z.strictObject({
+  visible: z.boolean(),
+});
+
+export type NewsletterBandContent = z.infer<typeof newsletterBandContentSchema>;
+
+export const defaultNewsletterBand: NewsletterBandContent = { visible: false };
+
+/**
+ * Home → "Gdzie jesteśmy": its header is the CMS's, the address, phone,
+ * e-mail and hours are the company details; the CMS sets whether it shows.
+ */
+export const homeLocationContentSchema = z.strictObject({
+  visible: z.boolean(),
+});
+
+export type HomeLocationContent = z.infer<typeof homeLocationContentSchema>;
+
+export const defaultHomeLocation: HomeLocationContent = { visible: true };
+
+/** A phone number to call: digits and spaces, a plus only in front. */
+const phoneNumberSchema = z
+  .string()
+  .trim()
+  .min(3)
+  .max(20)
+  .regex(/^\+?[0-9][0-9 ]*$/);
+
+/**
+ * Home → the crisis strip: where to call right now, always shown (the
+ * admin approves the words and the numbers, never hides it). The numbers
+ * are dialled as written.
+ */
+export const crisisHelpContentSchema = z.strictObject({
+  heading: z.string().trim().min(1).max(80),
+  text: z.string().trim().max(200),
+  lines: z
+    .array(
+      z.strictObject({
+        number: phoneNumberSchema,
+        label: z.string().trim().min(1).max(80),
+        detail: z.string().trim().max(80),
+      }),
+    )
+    .min(1)
+    .max(6),
+});
+
+export type CrisisHelpContent = z.infer<typeof crisisHelpContentSchema>;
+
+/** Until anything is published: the emergency number first, then the lines. */
+export const defaultCrisisHelp: CrisisHelpContent = {
+  heading: "Potrzebujesz pomocy teraz?",
+  text: "Jeśli Twoje życie jest w zagrożeniu, dzwoń pod 112. Możesz też zadzwonić na bezpłatne linie wsparcia:",
+  lines: [
+    {
+      number: "112",
+      label: "Numer alarmowy",
+      detail: "gdy życie jest w bezpośrednim zagrożeniu",
+    },
+    {
+      number: "800 702 222",
+      label: "Centrum Wsparcia dla Osób w Stanie Kryzysu Psychicznego",
+      detail: "całodobowo, bezpłatnie",
+    },
+    {
+      number: "116 123",
+      label: "Kryzysowy Telefon Zaufania",
+      detail: "dla dorosłych",
+    },
+    {
+      number: "116 111",
+      label: "Telefon Zaufania dla Dzieci i Młodzieży",
+      detail: "całodobowo",
+    },
+  ],
+};
+
+/**
  * Home → the sections' headers (eyebrow, title, description, call to
  * action; @repo/contracts/section-header), one per section in the page's
  * order. Words and colours only: each section's markup is code's.
  */
 export const HOME_HEADER_SECTIONS = [
   { key: "supportAreas", label: "Obszary wsparcia" },
+  { key: "whyUs", label: "Dlaczego my" },
   { key: "firstSteps", label: "Pierwszy krok" },
   { key: "spotlight", label: "Z kim porozmawiasz" },
   { key: "specialists", label: "Poznaj nasz zespół" },
   { key: "rooms", label: "Przestrzeń, która wspiera" },
   { key: "story", label: "Jak zacząć" },
+  { key: "newsletter", label: "Newsletter" },
+  { key: "location", label: "Gdzie jesteśmy" },
 ] as const;
 
 export type HomeHeaderSection = (typeof HOME_HEADER_SECTIONS)[number]["key"];
 
 export const homeHeadersContentSchema = z.strictObject({
   supportAreas: sectionHeaderSchema,
+  whyUs: sectionHeaderSchema,
   firstSteps: sectionHeaderSchema,
   spotlight: sectionHeaderSchema,
   specialists: sectionHeaderSchema,
   rooms: sectionHeaderSchema,
   story: sectionHeaderSchema,
+  newsletter: sectionHeaderSchema,
+  location: sectionHeaderSchema,
 });
 
 export type HomeHeadersContent = z.infer<typeof homeHeadersContentSchema>;
@@ -212,6 +343,10 @@ export const defaultHomeHeaders: HomeHeadersContent = {
     title: "W czym możemy pomóc",
     description:
       "Wybierz koło, aby zobaczyć, czym zajmujemy się w każdym z obszarów.",
+  }),
+  whyUs: plainHeader({
+    eyebrow: "Dlaczego my",
+    title: "Bezpieczna przestrzeń i doświadczony zespół",
   }),
   firstSteps: plainHeader({
     eyebrow: "Pierwszy krok",
@@ -242,6 +377,16 @@ export const defaultHomeHeaders: HomeHeadersContent = {
   story: plainHeader({
     eyebrow: "Jak zacząć",
     title: "Twoja droga do lepszego samopoczucia",
+  }),
+  newsletter: plainHeader({
+    eyebrow: "Newsletter",
+    title: "Bądźmy w kontakcie",
+    description: "Artykuły, warsztaty i nowości z centrum, raz w miesiącu.",
+  }),
+  location: plainHeader({
+    eyebrow: "Gdzie jesteśmy",
+    title: "Odwiedź nas",
+    cta: { label: "Kontakt", href: "/kontakt", style: "arrow" },
   }),
 };
 

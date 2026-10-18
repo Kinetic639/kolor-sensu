@@ -5,7 +5,11 @@ import {
   getCurrentAnnouncement,
   getPublicCenterProfile,
   getPublicServiceBySlug,
+  getPublishedCrisisHelp,
   getPublishedFirstSteps,
+  getPublishedHomeLocation,
+  getPublishedNewsletterBand,
+  getPublishedWhyUs,
   getPublishedHomeHeaders,
   getPublishedHomeContent,
   getPublishedHomeSections,
@@ -27,6 +31,10 @@ import {
 } from "@repo/supabase";
 import {
   arrangeOffer,
+  defaultCrisisHelp,
+  defaultHomeLocation,
+  defaultNewsletterBand,
+  defaultWhyUs,
   defaultFirstSteps,
   defaultHomeHeaders,
   defaultHomeSections,
@@ -107,6 +115,30 @@ export const getHomeHeaders = cache(() =>
 /** Home → "Pierwszy krok", published from the admin's /cms (the site's own until then). */
 export const getFirstSteps = cache(() =>
   load("first steps", getPublishedFirstSteps, defaultFirstSteps),
+);
+
+/** Home → "Dlaczego my", published from the admin's /cms (hidden until then). */
+export const getWhyUs = cache(() =>
+  load("why us", getPublishedWhyUs, defaultWhyUs),
+);
+
+/** Home → whether the newsletter band shows (hidden until published). */
+export const getNewsletterBand = cache(() =>
+  load("newsletter band", getPublishedNewsletterBand, defaultNewsletterBand),
+);
+
+/** Home → whether "Gdzie jesteśmy" shows (shown until published otherwise). */
+export const getHomeLocation = cache(() =>
+  load("home location", getPublishedHomeLocation, defaultHomeLocation),
+);
+
+/**
+ * Home → the crisis strip's words and numbers, published from the admin's
+ * /cms (the site's own until then). Never empty: on any failure, the
+ * site's own numbers.
+ */
+export const getCrisisHelp = cache(() =>
+  load("crisis help", getPublishedCrisisHelp, defaultCrisisHelp),
 );
 
 /**

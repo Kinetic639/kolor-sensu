@@ -1,4 +1,4 @@
-import { ArrowLink, SoftCard } from "@repo/ui/public-site";
+import { ArrowLink, SoftCard, type SiteContact } from "@repo/ui/public-site";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import type { Route } from "next";
 import { getSiteFrame } from "@/lib/site-frame";
@@ -10,7 +10,17 @@ const iconStyle = "text-primary mt-1 size-5 shrink-0";
 
 export async function ContactDetails({ className }: { className?: string }) {
   const { contact } = await getSiteFrame();
+  return <ContactCard className={className} contact={contact} />;
+}
 
+/** The same card from details already loaded (the homepage loads them). */
+export function ContactCard({
+  contact,
+  className,
+}: {
+  contact: SiteContact | undefined;
+  className?: string;
+}) {
   if (!contact) {
     return (
       <SoftCard className={className}>

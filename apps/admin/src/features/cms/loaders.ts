@@ -2,6 +2,10 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import {
+  getCrisisHelpAdmin,
+  getHomeLocationAdmin,
+  getNewsletterBandAdmin,
+  getWhyUsAdmin,
   getFirstStepsAdmin,
   getHomeContentAdmin,
   getHomeHeadersAdmin,
@@ -13,6 +17,7 @@ import {
   supportAreaImageUrl,
 } from "@repo/supabase";
 import {
+  mapContentViewModel,
   mapFirstStepsViewModel,
   mapHomeContentViewModel,
   mapHomeHeadersViewModel,
@@ -62,4 +67,22 @@ export async function loadHomeHeaders() {
 
 export async function loadFirstSteps() {
   return mapFirstStepsViewModel(await getFirstStepsAdmin(await createClient()));
+}
+
+export async function loadWhyUs() {
+  return mapContentViewModel(await getWhyUsAdmin(await createClient()));
+}
+
+export async function loadNewsletterBand() {
+  return mapContentViewModel(
+    await getNewsletterBandAdmin(await createClient()),
+  );
+}
+
+export async function loadHomeLocation() {
+  return mapContentViewModel(await getHomeLocationAdmin(await createClient()));
+}
+
+export async function loadCrisisHelp() {
+  return mapContentViewModel(await getCrisisHelpAdmin(await createClient()));
 }

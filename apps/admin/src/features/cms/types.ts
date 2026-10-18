@@ -80,3 +80,14 @@ export interface HomeHeadersViewModel {
   publishedAt: string | null;
   updatedAt: string;
 }
+
+/** A section's draft as its editor shows it, with its publication. */
+export interface ContentViewModel<Content> {
+  content: Content;
+  isPublished: boolean;
+  hasUnpublishedChanges: boolean;
+  publishedAtLabel: string | null;
+  updatedAtLabel: string;
+  publishedAt: string | null;
+  updatedAt: string;
+}
