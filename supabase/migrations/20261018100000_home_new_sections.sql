@@ -19,7 +19,7 @@ ALTER TABLE public.site_content
 
 -- A header of plain words, every one in the default colour (as
 -- plainHeader in the contracts).
-CREATE FUNCTION pg_temp.plain_header(
+CREATE OR REPLACE FUNCTION pg_temp.plain_header(
   p_eyebrow text, p_title text, p_description text, p_cta jsonb
 )
 RETURNS jsonb
@@ -44,7 +44,7 @@ $$;
 -- The new headers, as defaultHomeHeaders has them, into the draft and the
 -- published headers alike (before the check requires them; extra keys
 -- pass the current one).
-CREATE FUNCTION pg_temp.new_headers()
+CREATE OR REPLACE FUNCTION pg_temp.new_headers()
 RETURNS jsonb
 LANGUAGE sql
 IMMUTABLE
