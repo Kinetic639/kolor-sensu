@@ -43,6 +43,25 @@ test("a first visit shows no brand intro (it is off for now)", async ({
   await expect(page.locator(".ks-intro")).toHaveCount(0);
 });
 
+test("a shared link shows the site's own 1200 × 630 picture", async ({
+  page,
+  request,
+}) => {
+  await openHome(page);
+  const og = page.locator('meta[property="og:image"]');
+  await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute(
+    "content",
+    "1200",
+  );
+  await expect(
+    page.locator('meta[property="og:image:height"]'),
+  ).toHaveAttribute("content", "630");
+  const src = new URL((await og.getAttribute("content"))!);
+  const image = await request.get(`${webUrl}${src.pathname}${src.search}`);
+  expect(image.ok()).toBe(true);
+  expect(image.headers()["content-type"]).toBe("image/png");
+});
+
 test("every link on the home page leads to a page", async ({
   page,
   request,

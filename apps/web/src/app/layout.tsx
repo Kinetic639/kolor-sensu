@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "pl_PL",
     siteName,
-    images: [{ url: "/images/gabinet.jpg", alt: "Gabinet Kolor Sensu" }],
+    // The picture: each page's opengraph-image.tsx (lib/og-image.tsx).
   },
 };
 
