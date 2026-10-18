@@ -28,12 +28,10 @@
 // draws everything. Under reduced motion, or with no script, it is simply
 // the finished band.
 
-import { useGSAP } from "@gsap/react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { FileText, Phone, Sprout, Users } from "lucide-react";
 import Image from "next/image";
 import { type ReactNode, useId, useRef } from "react";
+import { useLazyGsap } from "./lazy-gsap";
 import { cn } from "../lib/utils";
 import { createScrollMatte } from "./first-steps-matte";
 import { stepsReached, WAVE_PATH } from "./first-steps-wave";
@@ -41,8 +39,6 @@ import { matches, svgMasksSupported } from "./reveal-support";
 import { EditorialHeading, SectionEyebrow } from "./typography";
 import type { SectionHeaderContent } from "@repo/contracts/section-header";
 import { SectionHeader } from "./section-header";
-
-gsap.registerPlugin(useGSAP);
 
 export const firstStepsRibbonSrc = "/watercolor/first-steps-ribbon.webp";
 const ribbonTimeSrc = "/watercolor/first-steps-ribbon-time.png";
@@ -105,8 +101,8 @@ export function FirstSteps({
   const headingId = useId();
   const gradientId = useId();
 
-  useGSAP(
-    () => {
+  useLazyGsap(
+    ({ gsap, ScrollTrigger }) => {
       const root = ref.current;
       if (
         !root ||

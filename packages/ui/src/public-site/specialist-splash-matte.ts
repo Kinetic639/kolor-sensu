@@ -1,4 +1,4 @@
-import { gsap } from "gsap";
+import type { GsapInstance } from "./lazy-gsap";
 import { splashMatte } from "./specialist-splash-matte.data";
 
 // The splash matte of SpecialistWatercolorCard's entrance animation. The
@@ -157,6 +157,8 @@ export interface SplashTimelineOptions {
   stain?: Element | null;
   plate?: Element | null;
   /** Without a matte (WebKit), the splash fades in instead of blooming. */
+  /** GSAP, loaded when the reveal is near (lazy-gsap.ts). */
+  gsap: GsapInstance;
   matte?: SplashMatte;
   delay?: number;
   paused?: boolean;
@@ -165,6 +167,7 @@ export interface SplashTimelineOptions {
 
 /** The whole card reveal as one GSAP timeline, about 1.05 s long. */
 export function createSplashTimeline({
+  gsap,
   portrait,
   splash,
   stain,

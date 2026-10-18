@@ -1,10 +1,11 @@
 // CursorRing: a hairline ring trailing the mouse that stretches like a
 // spring (cursor-ring-motion.ts), steps aside over links and turns into a
 // "Zobacz" disc over cards. Only for a mouse, never under reduced motion.
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { gsap } from "gsap";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CursorRing } from "./cursor-ring";
+import { loadGsap } from "./lazy-gsap";
 
 // jsdom has no matchMedia; each test says what the visitor's device and
 // preferences are.
@@ -40,13 +41,23 @@ function point(
   target.dispatchEvent(event);
 }
 
-function renderRing(page: React.ReactNode = null) {
+/** GSAP has arrived and the animation has set itself up (useLazyGsap). */
+const gsapLoaded = () =>
+  act(async () => {
+    await loadGsap();
+  });
+
+async function renderRing(page: React.ReactNode = null) {
   const { container, unmount } = render(
     <>
       {page}
       <CursorRing />
     </>,
   );
+  // GSAP comes with the first mouse move (lazy-gsap.ts); the ring follows
+  // from the next one.
+  point(window, "pointermove", { x: 0, y: 0 });
+  await gsapLoaded();
   return {
     container,
     unmount,
@@ -75,8 +86,8 @@ afterEach(() => {
 });
 
 describe("CursorRing", () => {
-  it("is decoration only, hidden until the mouse moves", () => {
-    const { cursor } = renderRing();
+  it("is decoration only, hidden until the mouse moves", async () => {
+    const { cursor } = await renderRing();
     expect(cursor).toHaveAttribute("aria-hidden", "true");
     expect(cursor.dataset.state).toBe("away");
   });
@@ -84,32 +95,32 @@ describe("CursorRing", () => {
   it.each([
     ["the device has no mouse", { fine: false }],
     ["the visitor prefers reduced motion", { reduce: true }],
-  ])("stays away when %s", (_, media) => {
+  ])("stays away when %s", async (_, media) => {
     mockMedia(media);
-    const { cursor } = renderRing();
+    const { cursor } = await renderRing();
     point(window, "pointermove", { x: 10, y: 10 });
     expect(cursor.dataset.state).toBe("away");
     expect(gsap.ticker.add).not.toHaveBeenCalled();
   });
 
-  it("stays away when the media features can't be read at all", () => {
-    const { cursor } = renderRing();
+  it("stays away when the media features can't be read at all", async () => {
+    const { cursor } = await renderRing();
     point(window, "pointermove", { x: 10, y: 10 });
     expect(cursor.dataset.state).toBe("away");
   });
 
-  it("ignores touch, follows the mouse", () => {
+  it("ignores touch, follows the mouse", async () => {
     mockMedia();
-    const { cursor } = renderRing();
+    const { cursor } = await renderRing();
     point(window, "pointermove", { x: 10, y: 10, pointerType: "touch" });
     expect(cursor.dataset.state).toBe("away");
     point(window, "pointermove", { x: 10, y: 10 });
     expect(cursor.dataset.state).toBe("rest");
   });
 
-  it("trails the mouse, turned along the way and stretched like a spring", () => {
+  it("trails the mouse, turned along the way and stretched like a spring", async () => {
     mockMedia();
-    const { cursor, ring } = renderRing();
+    const { cursor, ring } = await renderRing();
     point(window, "pointermove", { x: 100, y: 100 });
     tick?.();
     expect(gsap.getProperty(cursor, "x")).toBe(100);
@@ -124,9 +135,9 @@ describe("CursorRing", () => {
     expect(ring.style.getPropertyValue("--ks-cursor-stretch")).toBe("40px");
   });
 
-  it("rests once it has caught up, until the mouse moves again", () => {
+  it("rests once it has caught up, until the mouse moves again", async () => {
     mockMedia();
-    const { cursor, ring } = renderRing();
+    const { cursor, ring } = await renderRing();
     point(window, "pointermove", { x: 100, y: 100 });
     tick?.();
     ring.style.setProperty("--ks-cursor-stretch", "untouched");
@@ -140,9 +151,9 @@ describe("CursorRing", () => {
     expect(ring.style.getPropertyValue("--ks-cursor-stretch")).toBe("40px");
   });
 
-  it("steps aside over links and buttons, unstretched", () => {
+  it("steps aside over links and buttons, unstretched", async () => {
     mockMedia();
-    const { container, cursor, ring } = renderRing(
+    const { container, cursor, ring } = await renderRing(
       <a href="/oferta">
         <span>Oferta</span>
       </a>,
@@ -155,9 +166,9 @@ describe("CursorRing", () => {
     expect(ring.style.getPropertyValue("--ks-cursor-stretch")).toBe("0px");
   });
 
-  it("says Zobacz over offer tiles and specialist cards", () => {
+  it("says Zobacz over offer tiles and specialist cards", async () => {
     mockMedia();
-    const { container, cursor, label } = renderRing(
+    const { container, cursor, label } = await renderRing(
       <div className="ks-sp">
         <a href="/specjalisci/anna">Anna</a>
       </div>,
@@ -167,9 +178,9 @@ describe("CursorRing", () => {
     expect(label).toHaveTextContent("Zobacz");
   });
 
-  it("takes its word from data-cursor-label", () => {
+  it("takes its word from data-cursor-label", async () => {
     mockMedia();
-    const { container, cursor, label } = renderRing(
+    const { container, cursor, label } = await renderRing(
       <div data-cursor-label="Przeciągnij">galeria</div>,
     );
     point(container.querySelector("[data-cursor-label]")!, "pointermove");
@@ -183,17 +194,17 @@ describe("CursorRing", () => {
     ).toBe("11");
   });
 
-  it("goes away when the mouse leaves the page", () => {
+  it("goes away when the mouse leaves the page", async () => {
     mockMedia();
-    const { cursor } = renderRing();
+    const { cursor } = await renderRing();
     point(window, "pointermove");
     point(document.documentElement, "pointerleave");
     expect(cursor.dataset.state).toBe("away");
   });
 
-  it("stops following once unmounted", () => {
+  it("stops following once unmounted", async () => {
     mockMedia();
-    const { unmount, cursor } = renderRing();
+    const { unmount, cursor } = await renderRing();
     unmount();
     expect(gsap.ticker.remove).toHaveBeenCalledWith(tick);
     point(window, "pointermove");

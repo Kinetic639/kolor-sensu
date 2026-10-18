@@ -15,20 +15,16 @@
 // off the server-rendered caption (no inline styles yet) is exactly the
 // static, non-floating result.
 
-import { useGSAP } from "@gsap/react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { type ReactNode, type RefObject, useRef } from "react";
+import { useLazyGsap } from "./lazy-gsap";
 import { matches } from "./reveal-support";
-
-gsap.registerPlugin(useGSAP);
 
 export function CaptionMotion({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
 
-  useGSAP(
-    () => {
+  useLazyGsap(
+    ({ gsap, ScrollTrigger }) => {
       const root = ref.current;
       const inner = innerRef.current;
       if (!root || !inner) return;
