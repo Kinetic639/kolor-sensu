@@ -85,6 +85,11 @@ export default async function RootLayout({
           company={company}
           siteUrl={siteUrl}
           year={new Date().getFullYear()}
+          // The first-visit intro is off for now: it covers the page for
+          // about 4.4 s, which made it the page's largest paint (mobile
+          // Lighthouse 54). It stays in @repo/ui (site-intro.tsx, Storybook)
+          // to come back shorter; set this to true to show it again.
+          intro={false}
         >
           <PageTransition>{children}</PageTransition>
         </SiteLayout>

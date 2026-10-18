@@ -35,6 +35,14 @@ test("the home page has one h1, the crisis strip and the closing invitation", as
   await expect(main.locator('a[href="/umow-wizyte"]').last()).toBeVisible();
 });
 
+test("a first visit shows no brand intro (it is off for now)", async ({
+  page,
+}) => {
+  const response = await page.goto(webUrl);
+  expect(response?.ok()).toBe(true);
+  await expect(page.locator(".ks-intro")).toHaveCount(0);
+});
+
 test("every link on the home page leads to a page", async ({
   page,
   request,
