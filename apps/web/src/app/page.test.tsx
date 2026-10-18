@@ -314,6 +314,16 @@ describe("the crisis strip", () => {
     ).toHaveAttribute("href", "tel:116123");
   });
 
+  it("links to the page about help in a crisis", async () => {
+    await renderHome();
+    const strip = screen.getByRole("complementary", {
+      name: defaultCrisisHelp.heading,
+    });
+    expect(
+      within(strip).getByRole("link", { name: /Więcej o pomocy w kryzysie/ }),
+    ).toHaveAttribute("href", "/pomoc-w-kryzysie");
+  });
+
   it("starts from 112 before anything is published", async () => {
     await renderHome();
     const strip = screen.getByRole("complementary", {

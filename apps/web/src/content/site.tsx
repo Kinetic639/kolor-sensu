@@ -41,7 +41,9 @@ export const openingHours = "Pn–Pt 8:00–20:00, sob. 9:00–14:00";
 
 export const bookingCta = { label: "Umów wizytę", href: "/umow-wizyte" };
 
+// The footer's bottom row, on every page; help in a crisis first.
 export const legalLinks = [
+  { label: "Pomoc w kryzysie", href: "/pomoc-w-kryzysie" },
   { label: "Polityka prywatności", href: "/polityka-prywatnosci" },
   { label: "Regulamin", href: "/regulamin" },
   { label: "Cookies", href: "/cookies" },

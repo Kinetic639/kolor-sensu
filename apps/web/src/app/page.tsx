@@ -131,6 +131,10 @@ export default async function Home() {
         heading={crisis.heading}
         text={crisis.text}
         lines={crisis.lines}
+        more={{
+          href: "/pomoc-w-kryzysie",
+          label: "Więcej o pomocy w kryzysie",
+        }}
       />
       {location.visible && frame.contact ? (
         <HomeLocation header={headers.location} contact={frame.contact} />

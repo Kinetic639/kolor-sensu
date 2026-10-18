@@ -30,6 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     page("/gabinety", 0.6),
     page("/warsztaty", 0.6),
     page("/edukacja", 0.6),
+    page("/pomoc-w-kryzysie", 0.5),
     ...services.map((service) => page(serviceHref(service.slug), 0.8)),
     ...specialists.map((specialist) =>
       page(specialistHref(specialist.publicSlug), 0.7),
