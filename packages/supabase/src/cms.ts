@@ -21,7 +21,7 @@ import {
 } from "@repo/contracts";
 import type { Database } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { z } from "zod";
+import { z } from "zod";
 import { validateSpecialistImage } from "./specialists";
 
 // Each CMS page is one site_content row, its content typed by the page's
@@ -47,6 +47,18 @@ type PublicSiteContentQueryRow = Pick<
   "key" | "published_payload" | "published_at"
 >;
 type ContentSchema<Content> = z.ZodType<Content>;
+
+// The headers as stored: until the migration that drops it has run (and
+// while a deploy runs ahead of it), they still carry the homepage's former
+// questions-and-answers header, which is left out when read.
+const storedHomeHeadersSchema: ContentSchema<HomeHeadersContent> = z.preprocess(
+  (payload) => {
+    if (typeof payload !== "object" || payload === null) return payload;
+    const { faq: _faq, ...headers } = payload as Record<string, unknown>;
+    return headers;
+  },
+  homeHeadersContentSchema,
+);
 
 async function getContentAdmin<Content>(
   client: SupabaseClient<Database>,
@@ -335,7 +347,7 @@ export async function getPublishedFirstSteps(
 export function getHomeHeadersAdmin(
   client: SupabaseClient<Database>,
 ): Promise<SiteContentAdmin<HomeHeadersContent>> {
-  return getContentAdmin(client, HOME_HEADERS_KEY, homeHeadersContentSchema);
+  return getContentAdmin(client, HOME_HEADERS_KEY, storedHomeHeadersSchema);
 }
 
 export function updateHomeHeadersDraft(
@@ -356,7 +368,7 @@ export async function getPublishedHomeHeaders(
   client: SupabaseClient<Database>,
 ): Promise<HomeHeadersContent> {
   return (
-    (await getPublished(client, HOME_HEADERS_KEY, homeHeadersContentSchema)) ??
+    (await getPublished(client, HOME_HEADERS_KEY, storedHomeHeadersSchema)) ??
     defaultHomeHeaders
   );
 }

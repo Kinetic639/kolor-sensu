@@ -3,7 +3,8 @@
 -- moved out of their own payloads; only admins edit and publish; visitors
 -- read only what is published; a header of the wrong shape (three lines,
 -- an empty line, a colour or style not on the list, two links, a section
--- missing) is refused by the database itself.
+-- missing) is refused by the database itself. The homepage has no
+-- questions and answers, so no header for them.
 
 BEGIN;
 
@@ -57,6 +58,14 @@ BEGIN
     WHERE key = 'home_sections' AND draft_payload -> 'spotlight' ? 'heading'
   ) THEN
     RAISE EXCEPTION 'M: the moved words stayed in their old places';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.site_content
+    WHERE key = 'home_headers'
+      AND (draft_payload ? 'faq' OR published_payload ? 'faq')
+  ) THEN
+    RAISE EXCEPTION 'M: the homepage kept a header for questions and answers';
   END IF;
 END;
 $$;
@@ -154,7 +163,7 @@ BEGIN
 
   BEGIN
     UPDATE public.site_content
-    SET draft_payload = headers - 'faq'
+    SET draft_payload = headers - 'story'
     WHERE key = 'home_headers';
     RAISE EXCEPTION 'V: headers without a section were accepted';
   EXCEPTION WHEN check_violation THEN NULL;
