@@ -100,7 +100,7 @@ export function WatercolorImage({
   aspectRatio,
   objectPosition = "50% 50%",
   // The layers are about 1.17x the box (the watercolor overflows it).
-  sizes = "(min-width: 1024px) 70vw, 117vw",
+  sizes = "(min-width: 1024px) 70vw, calc(117vw - 3rem)",
   priority = false,
   quality,
   caption,

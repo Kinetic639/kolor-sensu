@@ -124,7 +124,7 @@ export default async function Home() {
         text={crisis.text}
         lines={crisis.lines}
       />
-      {location.visible ? (
+      {location.visible && frame.contact ? (
         <HomeLocation header={headers.location} contact={frame.contact} />
       ) : null}
       <ClosingCta />

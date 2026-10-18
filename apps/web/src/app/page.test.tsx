@@ -9,11 +9,16 @@ import {
   defaultNewsletterBand,
   defaultWhyUs,
   type CrisisHelpContent,
+  type FirstStepsContent,
   type HomeLocationContent,
   type NewsletterBandContent,
   type WhyUsContent,
 } from "@repo/contracts";
+import type { PublicSupportArea } from "@repo/supabase";
+import type { SiteContact } from "@repo/ui/public-site";
 import { cleanup, render, screen, within } from "@testing-library/react";
+import type { HomeSections } from "@/lib/spotlight";
+import type { SpecialistWithMedia } from "@/lib/public-data";
 import {
   afterEach,
   beforeAll,
@@ -27,28 +32,33 @@ import {
 // The homepage as a visitor gets it, with what the CMS publishes stood in
 // for: each loader returns the site's own content (as before anything is
 // published) unless a test publishes something else.
-const published: {
-  whyUs: WhyUsContent;
-  newsletter: NewsletterBandContent;
-  location: HomeLocationContent;
-  crisis: CrisisHelpContent;
-} = {
-  whyUs: defaultWhyUs,
-  newsletter: defaultNewsletterBand,
-  location: defaultHomeLocation,
-  crisis: defaultCrisisHelp,
-};
+const contact: SiteContact = {
+  address: { street: "ul. Testowa 1", postalCode: "00-001", city: "Warszawa" },
+  phone: "+48 600 000 000",
+  email: "kontakt@example.invalid",
+  hours: "Pn–Pt 8:00–20:00",
+} as SiteContact;
+
+const sitesOwn = () => ({
+  whyUs: defaultWhyUs as WhyUsContent,
+  newsletter: defaultNewsletterBand as NewsletterBandContent,
+  location: defaultHomeLocation as HomeLocationContent,
+  crisis: defaultCrisisHelp as CrisisHelpContent,
+  supportAreas: null as PublicSupportArea[] | null,
+  firstSteps: defaultFirstSteps as FirstStepsContent,
+  sections: { ...defaultHomeSections, spotlightImage: null } as HomeSections,
+  specialists: [] as SpecialistWithMedia[],
+  contact: contact as SiteContact | undefined,
+});
+let published = sitesOwn();
 
 vi.mock("@/lib/public-data", () => ({
   getHomeContent: async () => null,
   getHomeHeaders: async () => defaultHomeHeaders,
-  getSupportAreas: async () => null,
-  getFirstSteps: async () => defaultFirstSteps,
-  getHomeSections: async () => ({
-    ...defaultHomeSections,
-    spotlightImage: null,
-  }),
-  getSpecialists: async () => [],
+  getSupportAreas: async () => published.supportAreas,
+  getFirstSteps: async () => published.firstSteps,
+  getHomeSections: async () => published.sections,
+  getSpecialists: async () => published.specialists,
   getWhyUs: async () => published.whyUs,
   getNewsletterBand: async () => published.newsletter,
   getHomeLocation: async () => published.location,
@@ -56,18 +66,7 @@ vi.mock("@/lib/public-data", () => ({
 }));
 
 vi.mock("@/lib/site-frame", () => ({
-  getSiteFrame: async () => ({
-    contact: {
-      address: {
-        street: "ul. Testowa 1",
-        postalCode: "00-001",
-        city: "Warszawa",
-      },
-      phone: "+48 600 000 000",
-      email: "kontakt@example.invalid",
-      hours: "Pn–Pt 8:00–20:00",
-    },
-  }),
+  getSiteFrame: async () => ({ contact: published.contact }),
 }));
 
 beforeAll(() => {
@@ -96,10 +95,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  published.whyUs = defaultWhyUs;
-  published.newsletter = defaultNewsletterBand;
-  published.location = defaultHomeLocation;
-  published.crisis = defaultCrisisHelp;
+  published = sitesOwn();
 });
 
 afterEach(cleanup);
@@ -238,5 +234,162 @@ describe("Gdzie jesteśmy", () => {
     published.location = { visible: false };
     await renderHome();
     expect(title("Odwiedź nas")).not.toBeInTheDocument();
+  });
+});
+
+const anna = {
+  specialistId: "6f1c2b9a-3c41-4e2b-9a55-0d3f2a7b8c10",
+  publicSlug: "anna-nowak",
+  displayName: "Anna Nowak",
+  professionalTitle: "Psychoterapeutka",
+  shortBio: "Pracuję z dorosłymi.",
+  specializations: ["lęk"],
+  clientGroups: ["adults"],
+  modalities: [],
+  portraitUrl: "https://cdn.test/anna.png",
+  photoUrl: null,
+} as unknown as SpecialistWithMedia;
+
+const team = ["Anna Nowak", "Basia Lis", "Celina Wróbel", "Dorota Sowa"].map(
+  (displayName, index) =>
+    ({
+      ...anna,
+      specialistId: `00000000-0000-4000-8000-00000000000${index}`,
+      publicSlug: `osoba-${index}`,
+      displayName,
+    }) as SpecialistWithMedia,
+);
+
+describe("Z czym przychodzisz", () => {
+  it("shows the published areas of help, each leading on", async () => {
+    published.supportAreas = [
+      {
+        id: "pary",
+        title: "Terapia par",
+        lead: "Dla dwojga.",
+        image: null,
+        link: { href: "/oferta", label: "Zobacz" },
+      },
+    ];
+    await renderHome();
+    const section = screen.getByRole("region", { name: "W czym możemy pomóc" });
+    expect(within(section).getAllByText("Terapia par").length).toBeGreaterThan(
+      0,
+    );
+    expect(
+      within(section).getByRole("link", { name: /Zobacz całą ofertę/ }),
+    ).toHaveAttribute("href", "/oferta");
+  });
+});
+
+describe("Pierwszy krok", () => {
+  it("shows the four published steps", async () => {
+    published.firstSteps = {
+      visible: true,
+      steps: ["Telefon", "Rozmowa", "Plan", "Praca"].map((title) => ({
+        title,
+        text: `${title}: opis.`,
+      })),
+    };
+    await renderHome();
+    expect(
+      screen.getByRole("heading", { name: "Rozmowa" }),
+    ).toBeInTheDocument();
+  });
+
+  it("is hidden when the CMS hides it", async () => {
+    published.firstSteps = { ...defaultFirstSteps, visible: false };
+    await renderHome();
+    expect(
+      title("Od pierwszego kontaktu do wsparcia na dłużej"),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("Z kim porozmawiasz", () => {
+  it("presents the specialist the CMS chose, leading to booking and the profile", async () => {
+    published.specialists = [anna];
+    published.sections = {
+      ...published.sections,
+      spotlight: {
+        ...published.sections.spotlight,
+        visible: true,
+        specialistId: anna.specialistId,
+      },
+    };
+    await renderHome();
+    const section = screen.getByRole("region", { name: "Z kim porozmawiasz" });
+    expect(within(section).getByText("Anna Nowak")).toBeInTheDocument();
+    expect(
+      within(section)
+        .getAllByRole("link")
+        .some(
+          (link) => link.getAttribute("href") === "/specjalisci/anna-nowak",
+        ),
+    ).toBe(true);
+  });
+
+  it("is hidden while the chosen specialist is not on the site", async () => {
+    published.specialists = [];
+    published.sections = {
+      ...published.sections,
+      spotlight: {
+        ...published.sections.spotlight,
+        visible: true,
+        specialistId: anna.specialistId,
+      },
+    };
+    await renderHome();
+    expect(title("Z kim porozmawiasz")).not.toBeInTheDocument();
+  });
+});
+
+describe("Nasi specjaliści", () => {
+  it("shows the first three specialists", async () => {
+    published.specialists = team;
+    published.sections = { ...published.sections, showSpecialists: true };
+    await renderHome();
+    const section = screen.getByRole("region", { name: "Poznaj nasz zespół" });
+    expect(within(section).getByText("Celina Wróbel")).toBeInTheDocument();
+    expect(within(section).queryByText("Dorota Sowa")).not.toBeInTheDocument();
+  });
+
+  it("is hidden when the CMS hides it or nobody is on the site", async () => {
+    published.specialists = team;
+    published.sections = { ...published.sections, showSpecialists: false };
+    await renderHome();
+    expect(title("Poznaj nasz zespół")).not.toBeInTheDocument();
+    cleanup();
+
+    published.specialists = [];
+    published.sections = { ...published.sections, showSpecialists: true };
+    await renderHome();
+    expect(title("Poznaj nasz zespół")).not.toBeInTheDocument();
+  });
+});
+
+describe("Gdzie jesteśmy without the company's details", () => {
+  it("is left out rather than promising them", async () => {
+    published.contact = undefined;
+    await renderHome();
+    expect(title("Odwiedź nas")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Dane kontaktowe pojawią się/),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("the closing invitation", () => {
+  it("leads to booking and to Kontakt", async () => {
+    await renderHome();
+    const heading = screen.getByRole("heading", {
+      name: "Zrób pierwszy krok do lepszego samopoczucia",
+    });
+    const band =
+      heading.closest("section") ?? heading.parentElement!.parentElement!;
+    const links = within(band as HTMLElement).getAllByRole("link");
+    expect(links.map((link) => link.getAttribute("href"))).toEqual(
+      expect.arrayContaining(["/umow-wizyte", "/kontakt"]),
+    );
   });
 });

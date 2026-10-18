@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 import { cn } from "../lib/utils";
 import { ArrowLink } from "./actions";
 import {
@@ -49,8 +49,10 @@ export function SpecialistsSection({
   id,
   className,
 }: SpecialistsSectionProps) {
+  const headingId = useId();
   return (
     <section
+      aria-labelledby={headingId}
       id={id}
       className={cn(
         "max-w-page px-gutter py-section-sm mx-auto grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,8fr)] lg:items-center lg:gap-8",
@@ -58,11 +60,11 @@ export function SpecialistsSection({
       )}
     >
       {header ? (
-        <SectionHeader content={header} className="gap-4" />
+        <SectionHeader content={header} className="gap-4" id={headingId} />
       ) : (
         <div className="grid content-start gap-4">
           <SectionEyebrow>{eyebrow}</SectionEyebrow>
-          <EditorialHeading>{heading}</EditorialHeading>
+          <EditorialHeading id={headingId}>{heading}</EditorialHeading>
           {description ? (
             <p className="max-w-copy text-body text-text-muted">
               {description}

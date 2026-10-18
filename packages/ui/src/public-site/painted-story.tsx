@@ -304,7 +304,7 @@ export function PaintedStory({
                 src={step.image.src}
                 alt={step.image.alt}
                 objectPosition={step.image.objectPosition}
-                sizes="(min-width: 1024px) 62vw, 117vw"
+                sizes="(min-width: 1024px) 62vw, calc(117vw - 3rem)"
               />
             </div>
           </div>

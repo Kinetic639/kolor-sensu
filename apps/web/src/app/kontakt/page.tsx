@@ -26,7 +26,7 @@ export default function ContactPage() {
           src={rooms.image.src}
           alt={rooms.image.alt}
           animationPreset="watercolor-reveal"
-          sizes="(min-width: 1024px) 60vw, 117vw"
+          sizes="(min-width: 1024px) 60vw, calc(117vw - 3rem)"
         />
       </section>
       <FaqSection items={faq} heading="Zanim zadzwonisz" />

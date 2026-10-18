@@ -37,6 +37,11 @@ Turnstile uses Cloudflare's always-pass test keys.
 Each run of the booking test leaves one confirmed test visit, in a week
 picked at random so runs do not all take the same hours.
 
+The home page test (`home.spec.ts`) needs nothing seeded: it checks what
+any published content must keep (one h1, the crisis strip, the closing
+invitation, links that resolve, no sideways scroll at 390 and 1280 px) and
+runs axe (`@axe-core/playwright`, WCAG 2.2 AA) at both widths.
+
 Tests that would leave lasting changes (a service in the catalogue, the
 home page's draft) carry the `@writes-data` tag and run only locally.
 
