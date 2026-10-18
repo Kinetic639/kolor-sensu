@@ -4,6 +4,8 @@ import { FirstStepsSection } from "@/features/cms/first-steps-section";
 import { FixedSection, UnavailableSection } from "@/features/cms/fixed-section";
 import { HeaderBlock } from "@/features/cms/header-block";
 import { HeroSection } from "@/features/cms/hero-section";
+import { StorySection } from "@/features/cms/story-section";
+import { ThoughtsSection } from "@/features/cms/thoughts-section";
 import {
   loadCrisisHelp,
   loadHomeLocation,
@@ -11,6 +13,8 @@ import {
   loadWhyUs,
   loadFirstSteps,
   loadHomeContent,
+  loadHomeStory,
+  loadHomeThoughts,
   loadHomeHeaders,
   loadHomeSections,
   loadRoomsPageContent,
@@ -50,6 +54,8 @@ async function HomePage() {
     newsletter,
     crisis,
     location,
+    thoughts,
+    story,
   ] = await Promise.all([
     settle("hero", loadHomeContent),
     settle("nagłówki sekcji", loadHomeHeaders),
@@ -60,6 +66,8 @@ async function HomePage() {
     settle("newsletter", loadNewsletterBand),
     settle("pomoc w kryzysie", loadCrisisHelp),
     settle("gdzie jesteśmy", loadHomeLocation),
+    settle("myśli", loadHomeThoughts),
+    settle("jak zacząć", loadHomeStory),
   ]);
   const loaded = [
     hero,
@@ -71,6 +79,8 @@ async function HomePage() {
     newsletter,
     crisis,
     location,
+    thoughts,
+    story,
   ].filter((one) => one !== null);
   // A section's header block, when the headers loaded. Keyed: it is made
   // here, on the server, and placed among a client section's children.
@@ -91,9 +101,11 @@ async function HomePage() {
       ) : (
         <UnavailableSection title="Hero" />
       )}
-      <FixedSection title="Myśli">
-        Pas trudnych myśli zamieniających się w dobre, pod hero.
-      </FixedSection>
+      {thoughts ? (
+        <ThoughtsSection model={thoughts} />
+      ) : (
+        <UnavailableSection title="Myśli" />
+      )}
       {areas ? (
         <SupportAreasSection content={areas} header={header("supportAreas")} />
       ) : (
@@ -126,15 +138,14 @@ async function HomePage() {
           >
             {header("rooms")}
           </CmsSection>
-          <CmsSection
-            note="historia malowana przy przewijaniu"
-            title="Jak zacząć"
-          >
-            {header("story")}
-          </CmsSection>
         </>
       ) : (
-        <UnavailableSection title="Przestrzeń, która wspiera · Jak zacząć" />
+        <UnavailableSection title="Przestrzeń, która wspiera" />
+      )}
+      {story ? (
+        <StorySection header={header("story")} model={story} />
+      ) : (
+        <UnavailableSection title="Jak zacząć" />
       )}
       {newsletter ? (
         <NewsletterBandSection

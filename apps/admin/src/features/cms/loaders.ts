@@ -3,6 +3,8 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import {
   getCrisisHelpAdmin,
+  getHomeStoryAdmin,
+  getHomeThoughtsAdmin,
   getHomeLocationAdmin,
   getNewsletterBandAdmin,
   getWhyUsAdmin,
@@ -22,13 +24,16 @@ import {
   mapHomeContentViewModel,
   mapHomeHeadersViewModel,
   mapHomeSectionsViewModel,
+  mapHomeStoryViewModel,
   mapRoomsPageViewModel,
   mapSupportAreasViewModel,
 } from "./view-model";
 
 export async function loadHomeContent() {
   const client = await createClient();
-  return mapHomeContentViewModel(await getHomeContentAdmin(client));
+  return mapHomeContentViewModel(await getHomeContentAdmin(client), (path) =>
+    supportAreaImageUrl(client, path),
+  );
 }
 
 export async function loadRoomsPageContent() {
@@ -85,4 +90,15 @@ export async function loadHomeLocation() {
 
 export async function loadCrisisHelp() {
   return mapContentViewModel(await getCrisisHelpAdmin(await createClient()));
+}
+
+export async function loadHomeThoughts() {
+  return mapContentViewModel(await getHomeThoughtsAdmin(await createClient()));
+}
+
+export async function loadHomeStory() {
+  const client = await createClient();
+  return mapHomeStoryViewModel(await getHomeStoryAdmin(client), (path) =>
+    supportAreaImageUrl(client, path),
+  );
 }

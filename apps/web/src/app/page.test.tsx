@@ -6,17 +6,22 @@ import {
   defaultHomeHeaders,
   defaultHomeLocation,
   defaultHomeSections,
+  defaultHomeStory,
+  defaultHomeThoughts,
+  homePageContentSchema,
   defaultNewsletterBand,
   defaultWhyUs,
   type CrisisHelpContent,
   type FirstStepsContent,
   type HomeLocationContent,
+  type HomeThoughtsContent,
   type NewsletterBandContent,
   type WhyUsContent,
 } from "@repo/contracts";
 import type { PublicSupportArea } from "@repo/supabase";
 import type { SiteContact } from "@repo/ui/public-site";
 import { cleanup, render, screen, within } from "@testing-library/react";
+import type { HomeHero, HomeStory } from "@/lib/home-content";
 import type { HomeSections } from "@/lib/spotlight";
 import type { SpecialistWithMedia } from "@/lib/public-data";
 import {
@@ -49,11 +54,18 @@ const sitesOwn = () => ({
   sections: { ...defaultHomeSections, spotlightImage: null } as HomeSections,
   specialists: [] as SpecialistWithMedia[],
   contact: contact as SiteContact | undefined,
+  hero: null as HomeHero | null,
+  thoughts: defaultHomeThoughts as HomeThoughtsContent,
+  story: {
+    steps: defaultHomeStory.steps.map((step) => ({ ...step, imageUrl: null })),
+  } as HomeStory,
 });
 let published = sitesOwn();
 
 vi.mock("@/lib/public-data", () => ({
-  getHomeContent: async () => null,
+  getHomeContent: async () => published.hero,
+  getHomeThoughts: async () => published.thoughts,
+  getHomeStory: async () => published.story,
   getHomeHeaders: async () => defaultHomeHeaders,
   getSupportAreas: async () => published.supportAreas,
   getFirstSteps: async () => published.firstSteps,
@@ -144,6 +156,51 @@ describe("the homepage", () => {
     ].map(position);
     expect(order.every((at) => at >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+});
+
+describe("the words the admin publishes", () => {
+  it("puts the hero's eyebrow, heading, accent and points on the page", async () => {
+    published.hero = {
+      ...homePageContentSchema.parse({
+        eyebrow: "Psychoterapia w Poznaniu",
+        heading: "Wsparcie, które ma sens.",
+        accent: "Krok po kroku.",
+        body: "Opis centrum.",
+        points: [{ label: "Bezpieczna przestrzeń", icon: "shield" }],
+      }),
+      imageUrl: null,
+    };
+    await renderHome();
+    const h1 = screen.getByRole("heading", { level: 1 });
+    expect(h1).toHaveTextContent("Wsparcie, które ma sens.");
+    expect(h1).toHaveTextContent("Krok po kroku.");
+    expect(screen.getByText("Psychoterapia w Poznaniu")).toBeInTheDocument();
+    expect(screen.getByText("Bezpieczna przestrzeń")).toBeInTheDocument();
+    expect(screen.queryByText("Przytulne gabinety")).not.toBeInTheDocument();
+  });
+
+  it("shows the published thoughts and the story's steps", async () => {
+    published.thoughts = {
+      ...defaultHomeThoughts,
+      positive: ["Jestem w dobrym miejscu", "To minie", "Krok po kroku"],
+    };
+    published.story = {
+      steps: [
+        {
+          ...defaultHomeStory.steps[0]!,
+          heading: "Spokojny początek",
+          cta: null,
+          imageUrl: null,
+        },
+      ],
+    };
+    await renderHome();
+    expect(
+      screen.getAllByText("Jestem w dobrym miejscu").length,
+    ).toBeGreaterThan(0);
+    expect(title("Spokojny początek")).toBeInTheDocument();
+    expect(title("Pierwsza rozmowa")).not.toBeInTheDocument();
   });
 });
 

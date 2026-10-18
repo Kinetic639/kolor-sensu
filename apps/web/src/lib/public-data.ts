@@ -12,6 +12,8 @@ import {
   getPublishedWhyUs,
   getPublishedHomeHeaders,
   getPublishedHomeContent,
+  getPublishedHomeStory,
+  getPublishedHomeThoughts,
   getPublishedHomeSections,
   getPublishedRoomsPageContent,
   getPublishedSupportAreas,
@@ -32,6 +34,8 @@ import {
 import {
   arrangeOffer,
   defaultCrisisHelp,
+  defaultHomeStory,
+  defaultHomeThoughts,
   defaultHomeLocation,
   defaultNewsletterBand,
   defaultWhyUs,
@@ -44,6 +48,7 @@ import {
 import { intakeServiceSlugs } from "@repo/supabase/intakes";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
+import type { HomeHero, HomeStory } from "@/lib/home-content";
 import type { HomeSections } from "@/lib/spotlight";
 import { groupRoomsByLocation } from "./rooms-by-location";
 
@@ -94,9 +99,57 @@ export const getLocations = cache(() =>
   load("locations", listPublicLocations, []),
 );
 
-/** The home hero's CMS fields, published from the admin's /cms. */
+/**
+ * The home hero's CMS fields, published from the admin's /cms (null until
+ * then: the site's own hero), with its photo as an address.
+ */
 export const getHomeContent = cache(() =>
-  load("home content", getPublishedHomeContent, null),
+  load<HomeHero | null>(
+    "home content",
+    async (client) => {
+      const content = await getPublishedHomeContent(client);
+      if (!content) return null;
+      return {
+        ...content,
+        imageUrl: content.imagePath
+          ? supportAreaImageUrl(client, content.imagePath)
+          : null,
+      };
+    },
+    null,
+  ),
+);
+
+/** Home → "Myśli, które się odmieniają", published (the site's until then). */
+export const getHomeThoughts = cache(() =>
+  load("home thoughts", getPublishedHomeThoughts, defaultHomeThoughts),
+);
+
+/**
+ * Home → the story's steps, published (the site's until then), each photo
+ * as an address.
+ */
+export const getHomeStory = cache(() =>
+  load<HomeStory>(
+    "home story",
+    async (client) => {
+      const story = await getPublishedHomeStory(client);
+      return {
+        steps: story.steps.map((step) => ({
+          ...step,
+          imageUrl: step.imagePath
+            ? supportAreaImageUrl(client, step.imagePath)
+            : null,
+        })),
+      };
+    },
+    {
+      steps: defaultHomeStory.steps.map((step) => ({
+        ...step,
+        imageUrl: null,
+      })),
+    },
+  ),
 );
 
 /** Home → Obszary wsparcia, published from the admin's /cms; null until then. */

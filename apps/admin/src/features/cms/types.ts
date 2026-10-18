@@ -1,14 +1,15 @@
 import type {
   FirstStepsContent,
   HomeHeadersContent,
+  HomePageContent,
+  HomeStoryStep,
   HomeSpotlight,
   SupportArea,
 } from "@repo/contracts";
 
-export interface HomeContentViewModel {
-  heading: string;
-  body: string;
-  buttonLabel: string | null;
+/** The hero's draft, every field, with its photo's address to preview. */
+export interface HomeContentViewModel extends HomePageContent {
+  imageUrl: string | null;
   isPublished: boolean;
   hasUnpublishedChanges: boolean;
   publishedAtLabel: string | null;
@@ -90,4 +91,9 @@ export interface ContentViewModel<Content> {
   updatedAtLabel: string;
   publishedAt: string | null;
   updatedAt: string;
+}
+
+/** A story step as its editor shows it: its photo's address to preview. */
+export interface HomeStoryStepRow extends HomeStoryStep {
+  imageUrl: string | null;
 }

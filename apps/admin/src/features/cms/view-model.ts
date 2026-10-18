@@ -4,6 +4,7 @@ import type {
   HomeHeadersContent,
   Service,
   HomeSectionsContent,
+  HomeStoryContent,
   RoomsPageContent,
   SiteContentAdmin,
   SupportAreasContent,
@@ -15,6 +16,7 @@ import type {
   HomeContentViewModel,
   HomeHeadersViewModel,
   HomeSectionsViewModel,
+  HomeStoryStepRow,
   RoomsPageViewModel,
   SupportAreasViewModel,
 } from "./types";
@@ -30,19 +32,15 @@ function formatDate(value: string | null) {
 
 export function mapHomeContentViewModel(
   content: HomeContentAdmin,
+  imageUrl: (path: string) => string,
 ): HomeContentViewModel {
-  const hasUnpublishedChanges =
-    !content.published ||
-    content.published.heading !== content.draft.heading ||
-    content.published.body !== content.draft.body ||
-    content.published.buttonLabel !== content.draft.buttonLabel;
-
+  const { draft, published } = content;
   return {
-    heading: content.draft.heading,
-    body: content.draft.body,
-    buttonLabel: content.draft.buttonLabel,
-    isPublished: content.published !== null,
-    hasUnpublishedChanges,
+    ...draft,
+    imageUrl: draft.imagePath ? imageUrl(draft.imagePath) : null,
+    isPublished: published !== null,
+    hasUnpublishedChanges:
+      !published || JSON.stringify(published) !== JSON.stringify(draft),
     publishedAtLabel: formatDate(content.publishedAt),
     updatedAtLabel: formatDate(content.updatedAt) ?? "",
     publishedAt: content.publishedAt,
@@ -219,5 +217,22 @@ export function mapContentViewModel<Content>(
     updatedAtLabel: formatDate(content.updatedAt) ?? "",
     publishedAt: content.publishedAt,
     updatedAt: content.updatedAt,
+  };
+}
+
+/** The story's steps, each with its photo's address to preview. */
+export function mapHomeStoryViewModel(
+  content: SiteContentAdmin<HomeStoryContent>,
+  imageUrl: (path: string) => string,
+): ContentViewModel<{ steps: HomeStoryStepRow[] }> {
+  const model = mapContentViewModel(content);
+  return {
+    ...model,
+    content: {
+      steps: content.draft.steps.map((step) => ({
+        ...step,
+        imageUrl: step.imagePath ? imageUrl(step.imagePath) : null,
+      })),
+    },
   };
 }

@@ -19,10 +19,9 @@ import {
   defaultSupportAreas,
   hero,
   rooms,
-  story,
-  thoughts,
+  storyImages,
 } from "@/content/site";
-import { withHomeContent } from "@/lib/home-content";
+import { toStorySteps, withHomeContent } from "@/lib/home-content";
 import { toSpecialistCard } from "@/lib/presentation";
 import {
   getCrisisHelp,
@@ -31,6 +30,8 @@ import {
   getHomeHeaders,
   getHomeLocation,
   getHomeSections,
+  getHomeStory,
+  getHomeThoughts,
   getNewsletterBand,
   getSpecialists,
   getSupportAreas,
@@ -57,6 +58,8 @@ export default async function Home() {
     location,
     crisis,
     frame,
+    thoughts,
+    story,
   ] = await Promise.all([
     getHomeContent(),
     getHomeHeaders(),
@@ -69,6 +72,8 @@ export default async function Home() {
     getHomeLocation(),
     getCrisisHelp(),
     getSiteFrame(),
+    getHomeThoughts(),
+    getHomeStory(),
   ]);
   const spotlight = toSpotlight(sections, specialists);
 
@@ -115,7 +120,10 @@ export default async function Home() {
         imagePosition="left"
         animationPreset="watercolor-reveal"
       />
-      <PaintedStory header={headers.story} steps={story.steps} />
+      <PaintedStory
+        header={headers.story}
+        steps={toStorySteps(story, storyImages)}
+      />
       {newsletter.visible ? (
         <NewsletterBand header={headers.newsletter} />
       ) : null}

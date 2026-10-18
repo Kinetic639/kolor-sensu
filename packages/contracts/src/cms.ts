@@ -11,10 +11,52 @@ import {
  * one typed content contract for the one page that currently has editable
  * CMS content (Home). Unknown fields are rejected, not silently stripped.
  */
+/** The icons a hero point may carry (the site draws each). */
+export const HERO_POINT_ICONS = [
+  "leaf",
+  "users",
+  "house",
+  "heart",
+  "shield",
+  "sparkles",
+] as const;
+export const HERO_POINTS_MAX = 4;
+
+export const heroPointSchema = z.strictObject({
+  label: z.string().trim().min(1).max(40),
+  icon: z.enum(HERO_POINT_ICONS),
+});
+
+export type HeroPoint = z.infer<typeof heroPointSchema>;
+
+export const defaultHeroPoints: HeroPoint[] = [
+  { label: "Doświadczeni specjaliści", icon: "leaf" },
+  { label: "Indywidualne podejście", icon: "users" },
+  { label: "Przytulne gabinety", icon: "house" },
+  { label: "Atmosfera zaufania", icon: "heart" },
+];
+
+/**
+ * Home → the hero. Fields added later default to the site's own words, so
+ * a hero saved before them still reads (and shows as it did). An empty
+ * eyebrow or accent is simply not shown.
+ */
 export const homePageContentSchema = z.strictObject({
+  eyebrow: z.string().trim().max(80).default("Centrum psychoterapii i rozwoju"),
   heading: z.string().trim().min(1).max(200),
+  /** The heading's second line, in brand green. */
+  accent: z.string().trim().max(80).default("Więcej sensu."),
   body: z.string().trim().min(1).max(2000),
   buttonLabel: z.string().trim().max(100).nullable().default(null),
+  /** "Poznaj nas" (to O nas); none: its default label. */
+  secondaryLabel: z.string().trim().max(40).nullable().default(null),
+  points: z
+    .array(heroPointSchema)
+    .max(HERO_POINTS_MAX)
+    .default(() => defaultHeroPoints.map((point) => ({ ...point }))),
+  /** The photo, a file in the public site-media bucket (none: the site's). */
+  imagePath: z.string().trim().min(1).max(300).nullable().default(null),
+  imageAlt: z.string().trim().max(200).default(""),
 });
 
 export type HomePageContent = z.infer<typeof homePageContentSchema>;
@@ -299,6 +341,123 @@ export const defaultCrisisHelp: CrisisHelpContent = {
       number: "116 111",
       label: "Telefon Zaufania dla Dzieci i Młodzieży",
       detail: "całodobowo",
+    },
+  ],
+};
+
+/**
+ * Home → "Myśli, które się odmieniają": a crowd of difficult thoughts (the
+ * band needs enough of them to fill its rows) and kinder ones found under
+ * them, with the band's name for assistive technology.
+ */
+export const homeThoughtsContentSchema = z.strictObject({
+  label: z.string().trim().min(1).max(120),
+  negative: z.array(z.string().trim().min(1).max(40)).min(8).max(40),
+  positive: z.array(z.string().trim().min(1).max(60)).min(3).max(20),
+});
+
+export type HomeThoughtsContent = z.infer<typeof homeThoughtsContentSchema>;
+
+export const defaultHomeThoughts: HomeThoughtsContent = {
+  label: "Pod natłokiem trudnych myśli kryją się inne",
+  negative: [
+    "nie dam rady",
+    "znowu to samo",
+    "co jeśli",
+    "nie mam siły",
+    "wstyd",
+    "lęk",
+    "a jeśli to moja wina",
+    "za mało",
+    "nikt mnie nie rozumie",
+    "pustka",
+    "nie zasługuję",
+    "muszę",
+    "co pomyślą inni",
+    "złość",
+    "napięcie",
+    "nie śpię",
+    "wszystko na mojej głowie",
+    "nie wiem, co dalej",
+    "bezsilność",
+    "smutek",
+    "znowu zawiodę",
+    "chaos",
+    "nie potrafię",
+    "porażka",
+    "nie umiem odpocząć",
+    "zawsze tak będzie",
+    "samotność",
+    "boję się",
+  ],
+  positive: [
+    "Mam prawo tak czuć",
+    "Krok po kroku",
+    "Mogę poprosić o pomoc",
+    "Wystarczy, że jestem",
+    "Zasługuję na spokój",
+    "To minie",
+    "Mogę odpocząć",
+    "Nie muszę dźwigać wszystkiego",
+    "To, co czuję, jest ważne",
+    "Oddech po oddechu",
+    "Mam w sobie siłę",
+    "Wolno mi się mylić",
+    "Jutro może być lżej",
+    "Mam na kogo liczyć",
+  ],
+};
+
+export const HOME_STORY_STEPS_MAX = 4;
+
+export const homeStoryStepSchema = z.strictObject({
+  heading: z.string().trim().min(1).max(80),
+  text: z.string().trim().min(1).max(400),
+  /** Where the step's button leads (none: no button). */
+  cta: z
+    .strictObject({
+      label: z.string().trim().min(1).max(40),
+      href: sitePathSchema,
+    })
+    .nullable()
+    .default(null),
+  /** The photo, a file in the public site-media bucket (none: the site's). */
+  imagePath: z.string().trim().min(1).max(300).nullable().default(null),
+  imageAlt: z.string().trim().max(200).default(""),
+});
+
+export type HomeStoryStep = z.infer<typeof homeStoryStepSchema>;
+
+/** Home → "Opowieść przy przewijaniu": one to four steps, in order. */
+export const homeStoryContentSchema = z.strictObject({
+  steps: z.array(homeStoryStepSchema).min(1).max(HOME_STORY_STEPS_MAX),
+});
+
+export type HomeStoryContent = z.infer<typeof homeStoryContentSchema>;
+
+/** Until anything is published: the site's steps, with the site's photos. */
+export const defaultHomeStory: HomeStoryContent = {
+  steps: [
+    {
+      heading: "Pierwsza rozmowa",
+      text: "Zaczynamy od konsultacji: rozmawiamy o tym, z czym przychodzisz i czego potrzebujesz. Nie musisz się do niej specjalnie przygotowywać.",
+      cta: { label: "Umów wizytę", href: "/umow-wizyte" },
+      imagePath: null,
+      imageAlt: "",
+    },
+    {
+      heading: "Przestrzeń, która wspiera",
+      text: "Jasne, przytulne gabinety stworzone z myślą o Twoim komforcie i poczuciu bezpieczeństwa.",
+      cta: { label: "Zobacz nasze gabinety", href: "/gabinety" },
+      imagePath: null,
+      imageAlt: "",
+    },
+    {
+      heading: "Wydarzenia, które inspirują",
+      text: "Warsztaty, grupy rozwojowe i spotkania tematyczne dla osób, które chcą lepiej siebie rozumieć.",
+      cta: { label: "Zobacz nadchodzące wydarzenia", href: "/warsztaty" },
+      imagePath: null,
+      imageAlt: "",
     },
   ],
 };
