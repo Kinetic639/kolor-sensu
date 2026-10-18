@@ -27,10 +27,13 @@ const figtree = Figtree({
   variable: "--font-figtree",
   display: "swap",
 });
+// Only short captions use it: not preloaded, so it does not hold back the
+// stylesheet and the hero picture on a slow phone.
 const dancingScript = Dancing_Script({
   subsets: ["latin", "latin-ext"],
   variable: "--font-dancing-script",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {

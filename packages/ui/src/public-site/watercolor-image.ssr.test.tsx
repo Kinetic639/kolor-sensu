@@ -95,4 +95,16 @@ describe("WatercolorImage on the server", () => {
     expect(html).toContain("Przestrzeń dla ważnych rozmów");
     expect(html).not.toContain("data-paint");
   });
+
+  it("preloads the photo's brush mask for the hero, which paints only once it is in", () => {
+    const preloadsMask = (html: string) =>
+      /<link rel="preload"[^>]*href="\/watercolor\/photo-mask\.png"/.test(html);
+    const props = { src: "/kolor-sensu/therapy-room-upload.png", alt: "" };
+    expect(
+      preloadsMask(renderToString(<WatercolorImage {...props} priority />)),
+    ).toBe(true);
+    expect(preloadsMask(renderToString(<WatercolorImage {...props} />))).toBe(
+      false,
+    );
+  });
 });

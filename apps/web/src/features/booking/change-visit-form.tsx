@@ -1,6 +1,6 @@
 "use client";
 
-import { PrimaryButton } from "@repo/ui/public-site";
+import { PrimaryButton } from "@repo/ui/public-site/actions";
 import { useActionState } from "react";
 import {
   cancelVisitAction,

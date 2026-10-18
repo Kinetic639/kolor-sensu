@@ -135,6 +135,13 @@ describe("the homepage", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("shows the hero picture at once: no entrance animation hides it", async () => {
+    const { container } = render(await Home());
+    const hero = container.querySelector("section .ks-wc");
+    expect(hero).not.toBeNull();
+    expect(hero).not.toHaveAttribute("data-animation");
+  });
+
   it("shows its sections in the agreed order, every one switched on", async () => {
     published.whyUs = { ...defaultWhyUs, visible: true };
     published.newsletter = { visible: true };
