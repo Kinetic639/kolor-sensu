@@ -17,7 +17,12 @@ export type {
   SoftCardProps,
   WatercolorSectionBackgroundProps,
 } from "./surfaces";
-export { CookieConsent } from "./cookie-consent";
+export {
+  COOKIE_CONSENT_EVENT,
+  COOKIE_CONSENT_KEY,
+  CookieConsent,
+  readCookieChoice,
+} from "./cookie-consent";
 export { CursorRing } from "./cursor-ring";
 export { SUPPORT_AREA_SLOTS, SupportAreas } from "./support-areas";
 export type { SupportAreaItem, SupportAreasProps } from "./support-areas";

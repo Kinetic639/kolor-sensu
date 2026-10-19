@@ -38,6 +38,7 @@
     "./full-bleed": "./src/full-bleed.tsx",
     "./public-site": "./src/public-site/index.ts",
     "./public-site/actions": "./src/public-site/actions.tsx",
+    "./public-site/cookie-consent": "./src/public-site/cookie-consent.tsx",
     "./public-site.css": "./src/public-site/public-site.css",
     "./navigation-menu": "./src/navigation-menu.tsx",
     "./notifications": "./src/notifications/index.ts",
