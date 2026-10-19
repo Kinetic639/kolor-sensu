@@ -14,7 +14,8 @@ import {
 import { emailSender, sendEmail } from "@/lib/email";
 import { getSiteFrame } from "@/lib/site-frame";
 import { createSecretClient } from "@/lib/supabase/secret";
-import { sendContactMessage, type ContactResult } from "./send-contact-message";
+import type { ContactResult } from "./contact-shared";
+import { sendContactMessage } from "./send-contact-message";
 
 // The contact form's Server Action (useActionState): the visitor's message,
 // with the database, Turnstile and Resend behind it (send-contact-message.ts).

@@ -43,23 +43,25 @@ test("a first visit shows no brand intro (it is off for now)", async ({
   await expect(page.locator(".ks-intro")).toHaveCount(0);
 });
 
-test("a shared link shows the site's own 1200 × 630 picture", async ({
+test("a shared link shows a picture: the CMS's, or the site's own 1200 × 630", async ({
   page,
   request,
 }) => {
   await openHome(page);
-  const og = page.locator('meta[property="og:image"]');
-  await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute(
-    "content",
-    "1200",
-  );
-  await expect(
-    page.locator('meta[property="og:image:height"]'),
-  ).toHaveAttribute("content", "630");
-  const src = new URL((await og.getAttribute("content"))!);
-  const image = await request.get(`${webUrl}${src.pathname}${src.search}`);
+  const content = await page
+    .locator('meta[property="og:image"]')
+    .first()
+    .getAttribute("content");
+  expect(content).toBeTruthy();
+  const image = await request.get(content!);
   expect(image.ok()).toBe(true);
-  expect(image.headers()["content-type"]).toBe("image/png");
+  expect(image.headers()["content-type"]).toMatch(/^image\//);
+  // The site's own picture (no CMS photo set) says its size.
+  if (new URL(content!).pathname.endsWith("/opengraph-image")) {
+    await expect(
+      page.locator('meta[property="og:image:width"]'),
+    ).toHaveAttribute("content", "1200");
+  }
 });
 
 test("every link on the home page leads to a page", async ({

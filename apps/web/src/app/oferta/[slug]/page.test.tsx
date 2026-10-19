@@ -23,8 +23,9 @@ const therapy = {
   shortDescription: "Dla par.",
   description: null,
   defaultDurationMinutes: 80,
-  bookingEnabled: true,
 };
+
+let bookable = true;
 
 let service: typeof therapy | null = therapy;
 let intake = new Set(["konsultacja-psychologiczna"]);
@@ -35,6 +36,10 @@ vi.mock("@/lib/public-data", () => ({
   getSpecialists: async () => [],
   getWatercolorLook: async () => ({}),
   getIntakeServiceSlugs: async () => intake,
+  getBookableCatalog: async () => ({
+    services: bookable && service ? [service] : [],
+    offers: [],
+  }),
 }));
 vi.mock("next/navigation", () => ({
   notFound: () => {
@@ -51,6 +56,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   service = therapy;
+  bookable = true;
   intake = new Set(["konsultacja-psychologiczna"]);
 });
 afterEach(cleanup);
@@ -75,7 +81,7 @@ describe("booking from a service's page", () => {
   });
 
   it("opens the wizard as it is for a service not booked online", async () => {
-    service = { ...therapy, bookingEnabled: false };
+    bookable = false;
     intake = new Set();
     await open();
     expect(screen.getByRole("link", { name: /Umów wizytę/ })).toHaveAttribute(

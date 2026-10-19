@@ -1,17 +1,19 @@
 "use client";
 
-import { BookingField, ConsentCheckbox } from "@repo/ui/booking";
+import { BookingField, ConsentCheckbox } from "@repo/ui/booking/fields";
 import { PrimaryButton } from "@repo/ui/public-site/actions";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { TurnstileWidget } from "@/features/booking/turnstile-widget";
 import { sendContactMessageAction } from "./actions";
-import { TRAP_FIELD, type ContactResult } from "./send-contact-message";
+import { TRAP_FIELD, type ContactResult } from "./contact-shared";
 
 // Kontakt → the form: name, e-mail, an optional phone and the message, with
 // who handles the data and why (a link to the privacy policy), a request
 // not to write about health, and where to get help at once. Turnstile
-// checks it is a person; a hidden field catches simple bots. Errors show at
+// checks it is a person (its script comes only once the form is near or in
+// use, so it does not weigh on the page's first load); a hidden field
+// catches simple bots. Errors show at
 // their fields, read out by screen readers; what was typed stays. Once
 // sent, the form gives way to a thank-you.
 
@@ -42,6 +44,25 @@ export function ContactForm({
     status: "idle",
   } as ContactResult);
   const [verified, setVerified] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [armed, setArmed] = useState(false);
+
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form || armed) return;
+    if (typeof IntersectionObserver !== "function") {
+      setArmed(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) setArmed(true);
+      },
+      { rootMargin: "300px 0px" },
+    );
+    observer.observe(form);
+    return () => observer.disconnect();
+  }, [armed]);
 
   if (result.status === "sent") {
     return (
@@ -66,7 +87,13 @@ export function ContactForm({
       <h2 className="font-display text-h3 text-ink" id="contact-form-heading">
         {heading}
       </h2>
-      <form action={send} className="grid gap-4" noValidate>
+      <form
+        action={send}
+        className="grid gap-4"
+        noValidate
+        onFocus={() => setArmed(true)}
+        ref={formRef}
+      >
         <BookingField
           autoComplete="name"
           defaultValue={values?.name}
@@ -127,12 +154,14 @@ export function ContactForm({
           </Link>
           .
         </p>
-        <TurnstileWidget
-          onError={() => setVerified(false)}
-          onExpire={() => setVerified(false)}
-          onVerify={() => setVerified(true)}
-          siteKey={turnstileSiteKey}
-        />
+        {armed ? (
+          <TurnstileWidget
+            onError={() => setVerified(false)}
+            onExpire={() => setVerified(false)}
+            onVerify={() => setVerified(true)}
+            siteKey={turnstileSiteKey}
+          />
+        ) : null}
         {failure ? (
           <p className="text-body text-ink" role="alert">
             {failure} {reach}

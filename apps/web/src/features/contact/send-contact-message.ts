@@ -6,6 +6,14 @@ import {
   type CentreContact,
   type ContactEmail,
 } from "./contact-email";
+import {
+  TRAP_FIELD,
+  type ContactField,
+  type ContactResult,
+  type ContactValues,
+} from "./contact-shared";
+
+export { TRAP_FIELD, type ContactResult } from "./contact-shared";
 
 // What happens when a visitor sends the contact form (kept apart from Next
 // so it can be tested): a filled hidden field means a bot (it is told
@@ -14,30 +22,6 @@ import {
 // a fourth within the hour; then the centre is told and the visitor gets a
 // copy. A failed e-mail is logged, the message stays saved and the visitor
 // is told it was sent (the centre sees it in the database).
-
-export const CONTACT_FIELDS = [
-  "name",
-  "email",
-  "phone",
-  "message",
-  "consent",
-] as const;
-
-export type ContactField = (typeof CONTACT_FIELDS)[number];
-
-export type ContactValues = Record<Exclude<ContactField, "consent">, string>;
-
-export type ContactResult =
-  | { status: "idle" }
-  | { status: "sent" }
-  | {
-      status: "invalid";
-      errors: Partial<Record<ContactField, string>>;
-      values: ContactValues;
-    }
-  | { status: "unverified"; values: ContactValues }
-  | { status: "limited"; values: ContactValues }
-  | { status: "failed"; values: ContactValues };
 
 export interface ContactDeps {
   verify: (token: string) => Promise<boolean>;
@@ -53,9 +37,6 @@ export interface ContactDeps {
   send: (email: ContactEmail, idempotencyKey: string) => Promise<void>;
   centre: CentreContact;
 }
-
-/** The hidden field a person never fills in. */
-export const TRAP_FIELD = "website";
 
 export async function sendContactMessage(
   form: FormData,

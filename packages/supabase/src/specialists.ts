@@ -200,7 +200,6 @@ const publicProfileSelection = `
   specialists!inner (
     id,
     active,
-    publicly_visible,
     public_slug,
     professional_title,
     joined_at
@@ -214,11 +213,10 @@ export async function listPublishedSpecialists(
     .from("specialist_public_profiles")
     .select(publicProfileSelection)
     .eq("publication_status", "published")
-    // "Widoczny na stronie" (also enforced for visitors by RLS; said here
-    // for reads with more rights, as the CMS preview). Shown whether or not
-    // they take new clients (#63): an inactive one is only not bookable
-    // (`active` on each profile says which).
-    .eq("specialists.publicly_visible", true)
+    // "Widoczny na stronie" is the database's rule for visitors (RLS:
+    // specialist_is_listed; anon may not even read the column). Shown
+    // whether or not they take new clients (#63): an inactive one is only
+    // not bookable (`active` on each profile says which).
     .order("published_at", { ascending: false });
 
   if (error) throw error;
@@ -234,7 +232,6 @@ export async function getPublishedSpecialistBySlug(
     .from("specialist_public_profiles")
     .select(publicProfileSelection)
     .eq("publication_status", "published")
-    .eq("specialists.publicly_visible", true)
     .eq("specialists.public_slug", publicSlug)
     .maybeSingle();
 

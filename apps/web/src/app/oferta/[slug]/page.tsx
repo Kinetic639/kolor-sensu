@@ -20,6 +20,7 @@ import {
   specialistHref,
 } from "@/lib/presentation";
 import {
+  getBookableCatalog,
   getIntakeServiceSlugs,
   getService,
   getServiceOffers,
@@ -54,18 +55,22 @@ export default async function ServicePage({
   params,
 }: PageProps<"/oferta/[slug]">) {
   const { slug } = await params;
-  const [service, offers, specialists, watercolor, intake] = await Promise.all([
-    getService(slug),
-    getServiceOffers(slug),
-    getSpecialists(),
-    getWatercolorLook(),
-    getIntakeServiceSlugs(),
-  ]);
+  const [service, offers, specialists, watercolor, intake, bookable] =
+    await Promise.all([
+      getService(slug),
+      getServiceOffers(slug),
+      getSpecialists(),
+      getWatercolorLook(),
+      getIntakeServiceSlugs(),
+      getBookableCatalog(),
+    ]);
   if (!service) notFound();
   // Into booking with this service chosen (#94), or as it is when it is
   // not booked online; the first meeting is the first-visit consultation
   // (the service that starts with the test).
-  const bookThis: Route = service.bookingEnabled
+  const bookThis: Route = bookable.services.some(
+    (one) => one.slug === service.slug,
+  )
     ? bookingHref({ usluga: service.slug })
     : "/umow-wizyte";
   const [firstVisit] = intake;

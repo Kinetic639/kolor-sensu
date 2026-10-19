@@ -8,7 +8,7 @@ import {
   screen,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ContactResult } from "./send-contact-message";
+import type { ContactResult } from "./contact-shared";
 
 // The contact form in the browser: its fields and what it says about the
 // data, errors at their fields, the thank-you, and another way to reach the

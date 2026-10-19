@@ -43,7 +43,10 @@ invitation, links that resolve, no sideways scroll at 390 and 1280 px) and
 runs axe (`@axe-core/playwright`, WCAG 2.2 AA) at both widths; it also
 checks the shared-link picture (1200 × 630). `crisis-help.spec.ts` walks
 from Kontakt's footer to `/pomoc-w-kryzysie`: 112 first, every number
-dialling, axe on a phone.
+dialling, axe on a phone. `about-pages.spec.ts` checks O nas, Specjaliści (and the first
+profile), Gabinety and Kontakt: one h1, links, 390 and 1280 px, axe; the
+map waiting for consent; the form's errors (skipped where Turnstile's real
+key cannot pass, as on localhost). It writes nothing.
 
 Tests that would leave lasting changes (a service in the catalogue, the
 home page's draft) carry the `@writes-data` tag and run only locally.

@@ -632,7 +632,6 @@ describe("published specialists on the site", () => {
     const { eq, client } = chain();
     await listPublishedSpecialists(client);
     expect(eq).toHaveBeenCalledWith("publication_status", "published");
-    expect(eq).toHaveBeenCalledWith("specialists.publicly_visible", true);
     expect(eq).not.toHaveBeenCalledWith("specialists.active", true);
   });
 
@@ -640,7 +639,6 @@ describe("published specialists on the site", () => {
     const { eq, client } = chain();
     await getPublishedSpecialistBySlug(client, "anna-nowak");
     expect(eq).toHaveBeenCalledWith("specialists.public_slug", "anna-nowak");
-    expect(eq).toHaveBeenCalledWith("specialists.publicly_visible", true);
     expect(eq).not.toHaveBeenCalledWith("specialists.active", true);
   });
 });
