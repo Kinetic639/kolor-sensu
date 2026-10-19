@@ -194,18 +194,6 @@ export const faq = [
 
 // --------------------------------------------------------------- pages
 
-export const roomsPage = {
-  heading: "Gabinety",
-  accent: "Przestrzeń dla ważnych rozmów.",
-  lead: "Nasze gabinety są jasne, ciche i przytulne. Zadbaliśmy o to, żeby już od progu łatwiej było odetchnąć i poczuć się bezpiecznie.",
-  points: [
-    "Wygodne fotele i spokojne, naturalne kolory",
-    "Dobra izolacja akustyczna: rozmowa zostaje w gabinecie",
-    "Poczekalnia z herbatą i wodą",
-    "Dogodny dojazd w centrum miasta",
-  ],
-};
-
 export const workshopsPage = {
   heading: "Warsztaty",
   accent: "Rozwój w dobrym towarzystwie.",
