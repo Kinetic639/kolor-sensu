@@ -164,6 +164,24 @@ export type {
   SupportAreasContent,
 } from "@repo/contracts/cms";
 export {
+  defaultPageSeo,
+  defaultSeoTitle,
+  pageSeoContentSchema,
+  resolvePageSeo,
+  SEO_DESCRIPTION_RECOMMENDED,
+  SEO_PAGES,
+  SEO_SITE_NAME,
+  SEO_TITLE_RECOMMENDED,
+  seoContentKey,
+  seoPageDefinition,
+} from "@repo/contracts/cms-seo";
+export type {
+  PageSeoContent,
+  ResolvedPageSeo,
+  SeoPage,
+  SeoPageDefinition,
+} from "@repo/contracts/cms-seo";
+export {
   emptyRichTextDocument,
   isRichTextEmpty,
   isSafeRichTextHref,

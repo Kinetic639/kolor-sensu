@@ -9,6 +9,7 @@ import {
 } from "@/content/site";
 import { PageTransition } from "@/components/page-transition";
 import { PreviewBar } from "@/components/preview-bar";
+import { baseOpenGraph } from "@/lib/page-metadata";
 import { getSiteFrame } from "@/lib/site-frame";
 import "./globals.css";
 
@@ -46,12 +47,9 @@ export const metadata: Metadata = {
   },
   description: siteDescription,
   applicationName: siteName,
-  openGraph: {
-    type: "website",
-    locale: "pl_PL",
-    siteName,
-    // The picture: each page's opengraph-image.tsx (lib/og-image.tsx).
-  },
+  // A page's own title, description and picture: lib/page-metadata.ts;
+  // the picture otherwise each page's opengraph-image.tsx (lib/og-image.tsx).
+  openGraph: baseOpenGraph,
 };
 
 export default async function RootLayout({

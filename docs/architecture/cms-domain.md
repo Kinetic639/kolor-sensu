@@ -371,6 +371,36 @@ from the Rooms domain (as /gabinety does) under the CMS's `rooms` header,
 and is left out while no room has a photo. The crisis strip's numbers also
 fill `/pomoc-w-kryzysie`, linked from every page's footer.
 
+## Every page → search and sharing (`seo_<page>`, 19.10)
+
+`20261019130000_page_seo.sql`; tests `supabase/tests/page_seo.sql`.
+
+- **Pages**: every static page with a tab in `/cms` (`SEO_PAGES`,
+  `packages/contracts/src/cms-seo.ts`): home, about (/o-nas), offer,
+  specialists, prices, rooms, workshops, education, contact, booking,
+  crisis_help, privacy, terms, cookies. Pages whose content is all code
+  (all but Strona główna and Gabinety) have a tab with only this section.
+- **Payload** (`pageSeoContentSchema`): `{ title ≤120, description ≤320,
+ogTitle ≤120, ogDescription ≤320, ogImagePath | null, ogImageAlt ≤200,
+noindex }`. Every text may be empty: the page's own (`SEO_PAGES`), the
+  share texts falling back to the search ones; a picture needs its alt
+  text. The title is whole (the site adds nothing to it). The database
+  checks every field's type and length (`private.page_seo_is_valid`).
+- **Site**: each page's `generateMetadata` is `pageMetadata(page)`
+  (`apps/web/src/lib/page-metadata.ts`), read through `getPageSeo` →
+  `getPublishedPageSeo` (the generic published read, so the draft preview
+  covers it). A picture (site-media, folder `seo`) replaces the page's
+  generated `opengraph-image` (Next adds the file's only when the page
+  sets no `openGraph.images`). `noindex` sets `robots: noindex` and leaves
+  the page out of `sitemap.xml`.
+- **Admin**: "Wyszukiwarka i udostępnianie" first in each tab: fields with
+  counters (Google shows ~60 characters of a title, ~160 of a
+  description), a Google result preview and a shared-link card preview.
+  Saved as a draft, published with the page (which also refreshes the
+  sitemap). Until published, every page keeps its own.
+- **Not here**: a service's and a specialist's page take their title and
+  description from their record.
+
 ## Domain separation
 
 `/specjalisci` reads **directly from the real Specialist Domain**

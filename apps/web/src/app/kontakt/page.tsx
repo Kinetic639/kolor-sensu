@@ -3,13 +3,12 @@ import type { Metadata } from "next";
 import { ContactDetails } from "@/components/contact-details";
 import { PageIntro } from "@/components/page-intro";
 import { faq, rooms } from "@/content/site";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Kontakt",
-  description:
-    "Adres, telefon, e-mail i godziny otwarcia Kolor Sensu. Zadzwoń lub napisz, a pomożemy dobrać specjalistę i termin.",
-  alternates: { canonical: "/kontakt" },
-};
+// Title, description and link preview: the CMS's over the page's own.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("contact");
+}
 
 export default function ContactPage() {
   return (

@@ -140,6 +140,10 @@ export {
   updateRoomsPageDraft,
   updateSupportAreasDraft,
   uploadSupportAreaImage,
+  getPageSeoAdmin,
+  getPublishedPageSeo,
+  publishPageSeo,
+  updatePageSeoDraft,
 } from "./cms";
 export type { PublicSupportArea } from "./cms";
 // The site's preview of the CMS drafts (Draft Mode).

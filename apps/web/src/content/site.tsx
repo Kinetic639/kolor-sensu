@@ -251,8 +251,6 @@ export const educationPage = {
   heading: "Edukacja",
   accent: "Wiedza, która pomaga zrozumieć.",
   lead: "Tu będziemy dzielić się wiedzą o zdrowiu psychicznym, emocjach i relacjach: przystępnie, rzetelnie i bez oceniania.",
-  description:
-    "Wiedza o zdrowiu psychicznym, emocjach i relacjach od specjalistów Kolor Sensu.",
   soonHeading: "Pierwsze materiały już wkrótce",
   soon: "Przygotowujemy artykuły i materiały edukacyjne. Jeśli masz pytanie, z którym chcesz przyjść już teraz, zadzwoń lub napisz do nas.",
 };
@@ -277,17 +275,15 @@ export const bookingPage = {
   ],
 };
 
+// Their titles and descriptions for search engines: @repo/contracts/cms-seo.
 export const legalPages = {
   "polityka-prywatnosci": {
     title: "Polityka prywatności",
-    description: "Jak Kolor Sensu przetwarza dane osobowe.",
   },
   regulamin: {
     title: "Regulamin",
-    description: "Zasady korzystania z usług Kolor Sensu.",
   },
   cookies: {
     title: "Pliki cookies",
-    description: "Jak strona Kolor Sensu używa plików cookies.",
   },
 } as const;

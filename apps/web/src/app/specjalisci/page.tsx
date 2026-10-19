@@ -5,13 +5,12 @@ import { PageIntro } from "@/components/page-intro";
 import { specialistsCopy } from "@/content/site";
 import { toSpecialistCard } from "@/lib/presentation";
 import { getSpecialists } from "@/lib/public-data";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Specjaliści",
-  description:
-    "Poznaj psychoterapeutów i psychologów Kolor Sensu: ich doświadczenie, podejście i formy pracy.",
-  alternates: { canonical: "/specjalisci" },
-};
+// Title, description and link preview: the CMS's over the page's own.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("specialists");
+}
 
 // Cards entering together, each a little after the one before; every other
 // one blooms mirrored (as in SpecialistsSection).

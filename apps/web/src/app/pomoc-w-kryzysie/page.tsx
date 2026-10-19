@@ -4,18 +4,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageIntro } from "@/components/page-intro";
 import { getCrisisHelp } from "@/lib/public-data";
+import { pageMetadata } from "@/lib/page-metadata";
 
 // Help in a crisis: what to do at once, 112 first, then the free lines of
 // support. The numbers are the crisis strip's, edited in one place in the
 // CMS ("Pomoc w kryzysie" on the home page's settings), so a change shows
 // everywhere at once. Linked from every page's footer and from the strip.
 
-export const metadata: Metadata = {
-  title: "Pomoc w kryzysie",
-  description:
-    "Gdy Twoje życie lub zdrowie jest w zagrożeniu, zadzwoń pod 112. Bezpłatne, całodobowe telefony wsparcia w kryzysie psychicznym.",
-  alternates: { canonical: "/pomoc-w-kryzysie" },
-};
+// Title, description and link preview: the CMS's over the page's own.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("crisis_help");
+}
 
 export default async function CrisisHelpPage() {
   const crisis = await getCrisisHelp();

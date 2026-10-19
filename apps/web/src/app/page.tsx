@@ -41,10 +41,12 @@ import { getSiteFrame } from "@/lib/site-frame";
 import { toRoomsPeekPhotos } from "@/lib/rooms-peek";
 import { toSpotlight } from "@/lib/spotlight";
 import { toSupportAreaItems } from "@/lib/support-areas";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  alternates: { canonical: "/" },
-};
+// Title, description and link preview: the CMS's over the page's own.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("home");
+}
 
 export default async function Home() {
   const [

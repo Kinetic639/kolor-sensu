@@ -19,8 +19,11 @@ import {
   listPublishedRoomPlacements,
   listRoomImages,
   supportAreaImageUrl,
+  getPageSeoAdmin,
 } from "@repo/supabase";
+import type { SeoPage } from "@repo/contracts";
 import { mapRoomsPeekModel } from "./rooms-peek";
+import { mapPageSeoViewModel } from "./seo-editor";
 import {
   mapContentViewModel,
   mapFirstStepsViewModel,
@@ -117,4 +120,11 @@ export async function loadRoomsPeek() {
     placements.map((placement) => listRoomImages(client, placement.roomId)),
   );
   return mapRoomsPeekModel(images.map((own) => own.length));
+}
+
+export async function loadPageSeo(page: SeoPage) {
+  const client = await createClient();
+  return mapPageSeoViewModel(await getPageSeoAdmin(client, page), (path) =>
+    supportAreaImageUrl(client, path),
+  );
 }

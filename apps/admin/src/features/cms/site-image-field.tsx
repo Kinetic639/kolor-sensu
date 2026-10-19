@@ -30,7 +30,7 @@ export function SiteImageField({
   onChange,
 }: {
   id: string;
-  folder: "hero" | "story";
+  folder: "hero" | "story" | "seo";
   label: string;
   hint: string;
   value: SiteImageValue;

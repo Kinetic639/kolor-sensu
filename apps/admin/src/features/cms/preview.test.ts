@@ -14,6 +14,7 @@ describe("CMS preview", () => {
     }
     expect(CMS_PAGE_SITE_PATHS.glowna).toBe("/");
     expect(CMS_PAGE_SITE_PATHS.gabinety).toBe("/gabinety");
+    expect(CMS_PAGE_SITE_PATHS["pomoc-w-kryzysie"]).toBe("/pomoc-w-kryzysie");
   });
 
   it("opens through the portal's /podglad", () => {

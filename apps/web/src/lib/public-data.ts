@@ -7,6 +7,7 @@ import {
   getPublicServiceBySlug,
   getPublishedCrisisHelp,
   getPublishedFirstSteps,
+  getPublishedPageSeo,
   getPublishedHomeLocation,
   getPublishedNewsletterBand,
   getPublishedWhyUs,
@@ -44,6 +45,9 @@ import {
   defaultHomeSections,
   defaultRoomsPageContent,
   flattenOffer,
+  defaultPageSeo,
+  type PageSeoContent,
+  type SeoPage,
 } from "@repo/contracts";
 import { intakeServiceSlugs } from "@repo/supabase/intakes";
 import { cache } from "react";
@@ -389,4 +393,27 @@ export const getCompany = cache(() => load("company", getCompanyDetails, null));
 /** The centre's time zone and booking horizon. */
 export const getBookingWindow = cache(() =>
   load("booking window", readBookingWindow, null),
+);
+
+/** A page's search and sharing settings, with its picture as an address. */
+export type PageSeo = PageSeoContent & { ogImageUrl: string | null };
+
+/**
+ * A page's search and sharing settings, published from the admin's /cms
+ * (every field empty, the page's own, until then).
+ */
+export const getPageSeo = cache((page: SeoPage) =>
+  load<PageSeo>(
+    `${page} seo`,
+    async (client) => {
+      const seo = await getPublishedPageSeo(client, page);
+      return {
+        ...seo,
+        ogImageUrl: seo.ogImagePath
+          ? supportAreaImageUrl(client, seo.ogImagePath)
+          : null,
+      };
+    },
+    { ...defaultPageSeo, ogImageUrl: null },
+  ),
 );
