@@ -16,8 +16,11 @@ import {
   listSpecialistSummariesForAdmin,
   getRoomsPageContentAdmin,
   getSupportAreasAdmin,
+  listPublishedRoomPlacements,
+  listRoomImages,
   supportAreaImageUrl,
 } from "@repo/supabase";
+import { mapRoomsPeekModel } from "./rooms-peek";
 import {
   mapContentViewModel,
   mapFirstStepsViewModel,
@@ -101,4 +104,17 @@ export async function loadHomeStory() {
   return mapHomeStoryViewModel(await getHomeStoryAdmin(client), (path) =>
     supportAreaImageUrl(client, path),
   );
+}
+
+/**
+ * Home → "Zajrzyj do środka": the photos of the rooms the site shows (the
+ * same published rooms and photos the site reads), counted for the CMS.
+ */
+export async function loadRoomsPeek() {
+  const client = await createClient();
+  const placements = await listPublishedRoomPlacements(client);
+  const images = await Promise.all(
+    placements.map((placement) => listRoomImages(client, placement.roomId)),
+  );
+  return mapRoomsPeekModel(images.map((own) => own.length));
 }
