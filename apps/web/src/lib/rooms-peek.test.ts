@@ -1,3 +1,4 @@
+import { roomsPeekPhotoCount } from "@repo/contracts/rooms-peek";
 import { describe, expect, it } from "vitest";
 import type { RoomsPageLocation } from "./rooms-by-location";
 import { toRoomsPeekPhotos } from "./rooms-peek";
@@ -32,6 +33,17 @@ describe("toRoomsPeekPhotos", () => {
         { rooms: [room("Zielony", 20)] },
       ] as RoomsPageLocation[]),
     ).toHaveLength(12);
+  });
+
+  it("shows as many photos as the admin's CMS counts", () => {
+    for (const counts of [[], [0], [2, 1], [5, 5, 5], [20]]) {
+      const groups = [
+        { rooms: counts.map((count, index) => room(`G${index}`, count)) },
+      ] as RoomsPageLocation[];
+      expect(toRoomsPeekPhotos(groups)).toHaveLength(
+        roomsPeekPhotoCount(counts),
+      );
+    }
   });
 
   it("is empty when no room has a photo", () => {

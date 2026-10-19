@@ -1,4 +1,3 @@
-import { CmsSection } from "@/features/cms/cms-section";
 import { CrisisHelpSection } from "@/features/cms/crisis-help-section";
 import { FirstStepsSection } from "@/features/cms/first-steps-section";
 import { FixedSection, UnavailableSection } from "@/features/cms/fixed-section";
@@ -18,11 +17,16 @@ import {
   loadHomeHeaders,
   loadHomeSections,
   loadRoomsPageContent,
+  loadRoomsPeek,
   loadSupportAreas,
 } from "@/features/cms/loaders";
 import { cmsTabs, loadCmsParams } from "@/features/cms/page-params";
 import { PagePublishBar } from "@/features/cms/page-publish-bar";
 import { RoomsPageSections } from "@/features/cms/rooms-page-sections";
+import {
+  ROOMS_PEEK_TITLE,
+  RoomsPeekSection,
+} from "@/features/cms/rooms-peek-section";
 import { settle } from "@/features/cms/settle";
 import { SpecialistsSections } from "@/features/cms/specialists-sections";
 import { SupportAreasSection } from "@/features/cms/support-areas-section";
@@ -56,6 +60,7 @@ async function HomePage() {
     location,
     thoughts,
     story,
+    roomsPeek,
   ] = await Promise.all([
     settle("hero", loadHomeContent),
     settle("nagłówki sekcji", loadHomeHeaders),
@@ -68,6 +73,8 @@ async function HomePage() {
     settle("gdzie jesteśmy", loadHomeLocation),
     settle("myśli", loadHomeThoughts),
     settle("jak zacząć", loadHomeStory),
+    // Not a section's content: how many room photos the site shows.
+    settle("zdjęcia gabinetów", loadRoomsPeek),
   ]);
   const loaded = [
     hero,
@@ -130,17 +137,10 @@ async function HomePage() {
       ) : (
         <UnavailableSection title="Z kim porozmawiasz · Poznaj nasz zespół" />
       )}
-      {headers ? (
-        <>
-          <CmsSection
-            note="zdjęcie gabinetu, link do strony Gabinety"
-            title="Przestrzeń, która wspiera"
-          >
-            {header("rooms")}
-          </CmsSection>
-        </>
+      {headers || roomsPeek ? (
+        <RoomsPeekSection header={header("rooms")} model={roomsPeek} />
       ) : (
-        <UnavailableSection title="Przestrzeń, która wspiera" />
+        <UnavailableSection title={ROOMS_PEEK_TITLE} />
       )}
       {story ? (
         <StorySection header={header("story")} model={story} />
