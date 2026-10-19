@@ -203,7 +203,9 @@ describe("the words the admin publishes", () => {
   it("shows the published thoughts and the story's steps", async () => {
     published.thoughts = {
       ...defaultHomeThoughts,
-      positive: ["Jestem w dobrym miejscu", "To minie", "Krok po kroku"],
+      pairs: defaultHomeThoughts.pairs.map((pair, index) =>
+        index === 0 ? { ...pair, positive: "Jestem w dobrym miejscu" } : pair,
+      ),
     };
     published.story = {
       steps: [

@@ -4,7 +4,7 @@ import {
   defaultHomeStory,
   defaultHomeThoughts,
   homeStoryContentSchema,
-  homeThoughtsContentSchema,
+  storedHomeThoughtsContentSchema,
   type HomeStoryContent,
   type HomeThoughtsContent,
   defaultHomeLocation,
@@ -461,10 +461,13 @@ export const updateCrisisHelpDraft = crisisHelp.update;
 export const publishCrisisHelp = crisisHelp.publish;
 export const getPublishedCrisisHelp = crisisHelp.published;
 
-/** Home → "Myśli, które się odmieniają": the site's thoughts until published. */
+/**
+ * Home → "Myśli, które się odmieniają": the site's thoughts until published.
+ * Read through the stored shape: a row saved before the pairs reads as pairs.
+ */
 const homeThoughts = contentSection<HomeThoughtsContent>(
   HOME_THOUGHTS_KEY,
-  homeThoughtsContentSchema,
+  storedHomeThoughtsContentSchema,
   defaultHomeThoughts,
 );
 export const getHomeThoughtsAdmin = homeThoughts.admin;

@@ -345,66 +345,105 @@ export const defaultCrisisHelp: CrisisHelpContent = {
   ],
 };
 
+/** How few pairs fill the crowd's rows, and how many it takes. */
+export const HOME_THOUGHT_PAIRS_MIN = 8;
+export const HOME_THOUGHT_PAIRS_MAX = 40;
+
+/** A difficult thought and the kinder one it turns into when pointed at. */
+export const homeThoughtPairSchema = z.strictObject({
+  negative: z.string().trim().min(1).max(40),
+  positive: z.string().trim().min(1).max(60),
+});
+
+export type HomeThoughtPair = z.infer<typeof homeThoughtPairSchema>;
+
 /**
  * Home → "Myśli, które się odmieniają": a crowd of difficult thoughts (the
- * band needs enough of them to fill its rows) and kinder ones found under
- * them, with the band's name for assistive technology.
+ * band needs enough of them to fill its rows), each paired with the kinder
+ * one it turns into, with the band's name for assistive technology.
  */
 export const homeThoughtsContentSchema = z.strictObject({
   label: z.string().trim().min(1).max(120),
-  negative: z.array(z.string().trim().min(1).max(40)).min(8).max(40),
-  positive: z.array(z.string().trim().min(1).max(60)).min(3).max(20),
+  pairs: z
+    .array(homeThoughtPairSchema)
+    .min(HOME_THOUGHT_PAIRS_MIN)
+    .max(HOME_THOUGHT_PAIRS_MAX),
 });
 
 export type HomeThoughtsContent = z.infer<typeof homeThoughtsContentSchema>;
 
+/**
+ * Pairs the thoughts as saved before 19.10 (two lists) the way the site
+ * showed them then: the difficult ones dealt into two rows, each row three
+ * times over, a kinder one under every word in turn, counted across the
+ * band. Each difficult thought keeps the kinder one its first showing had.
+ * The database converts its rows the same way
+ * (supabase/migrations/20261019110000_home_thought_pairs.sql).
+ */
+export function pairLegacyThoughts(
+  negative: readonly string[],
+  positive: readonly string[],
+): HomeThoughtPair[] {
+  if (positive.length === 0) return [];
+  const firstRow = Math.ceil(negative.length / 2);
+  return negative.map((thought, index) => {
+    const shown = index % 2 === 0 ? index / 2 : 3 * firstRow + (index - 1) / 2;
+    return { negative: thought, positive: positive[shown % positive.length]! };
+  });
+}
+
+/**
+ * The thoughts as stored: until the migration has run (and while a deploy
+ * runs ahead of it), a row may still hold the two lists, which read as
+ * pairs (pairLegacyThoughts).
+ */
+export const storedHomeThoughtsContentSchema: z.ZodType<HomeThoughtsContent> =
+  z.preprocess((payload) => {
+    if (typeof payload !== "object" || payload === null) return payload;
+    const { negative, positive, ...rest } = payload as Record<string, unknown>;
+    if (!Array.isArray(negative) || !Array.isArray(positive)) return payload;
+    const strings = (list: unknown[]) =>
+      list.map((item) => (typeof item === "string" ? item.trim() : ""));
+    return {
+      ...rest,
+      pairs: pairLegacyThoughts(strings(negative), strings(positive)),
+    };
+  }, homeThoughtsContentSchema);
+
 export const defaultHomeThoughts: HomeThoughtsContent = {
   label: "Pod natłokiem trudnych myśli kryją się inne",
-  negative: [
-    "nie dam rady",
-    "znowu to samo",
-    "co jeśli",
-    "nie mam siły",
-    "wstyd",
-    "lęk",
-    "a jeśli to moja wina",
-    "za mało",
-    "nikt mnie nie rozumie",
-    "pustka",
-    "nie zasługuję",
-    "muszę",
-    "co pomyślą inni",
-    "złość",
-    "napięcie",
-    "nie śpię",
-    "wszystko na mojej głowie",
-    "nie wiem, co dalej",
-    "bezsilność",
-    "smutek",
-    "znowu zawiodę",
-    "chaos",
-    "nie potrafię",
-    "porażka",
-    "nie umiem odpocząć",
-    "zawsze tak będzie",
-    "samotność",
-    "boję się",
-  ],
-  positive: [
-    "Mam prawo tak czuć",
-    "Krok po kroku",
-    "Mogę poprosić o pomoc",
-    "Wystarczy, że jestem",
-    "Zasługuję na spokój",
-    "To minie",
-    "Mogę odpocząć",
-    "Nie muszę dźwigać wszystkiego",
-    "To, co czuję, jest ważne",
-    "Oddech po oddechu",
-    "Mam w sobie siłę",
-    "Wolno mi się mylić",
-    "Jutro może być lżej",
-    "Mam na kogo liczyć",
+  pairs: [
+    { negative: "nie dam rady", positive: "Mam prawo tak czuć" },
+    { negative: "znowu to samo", positive: "Mam prawo tak czuć" },
+    { negative: "co jeśli", positive: "Krok po kroku" },
+    { negative: "nie mam siły", positive: "Krok po kroku" },
+    { negative: "wstyd", positive: "Mogę poprosić o pomoc" },
+    { negative: "lęk", positive: "Mogę poprosić o pomoc" },
+    { negative: "a jeśli to moja wina", positive: "Wystarczy, że jestem" },
+    { negative: "za mało", positive: "Wystarczy, że jestem" },
+    { negative: "nikt mnie nie rozumie", positive: "Zasługuję na spokój" },
+    { negative: "pustka", positive: "Zasługuję na spokój" },
+    { negative: "nie zasługuję", positive: "To minie" },
+    { negative: "muszę", positive: "To minie" },
+    { negative: "co pomyślą inni", positive: "Mogę odpocząć" },
+    { negative: "złość", positive: "Mogę odpocząć" },
+    { negative: "napięcie", positive: "Nie muszę dźwigać wszystkiego" },
+    { negative: "nie śpię", positive: "Nie muszę dźwigać wszystkiego" },
+    {
+      negative: "wszystko na mojej głowie",
+      positive: "To, co czuję, jest ważne",
+    },
+    { negative: "nie wiem, co dalej", positive: "To, co czuję, jest ważne" },
+    { negative: "bezsilność", positive: "Oddech po oddechu" },
+    { negative: "smutek", positive: "Oddech po oddechu" },
+    { negative: "znowu zawiodę", positive: "Mam w sobie siłę" },
+    { negative: "chaos", positive: "Mam w sobie siłę" },
+    { negative: "nie potrafię", positive: "Wolno mi się mylić" },
+    { negative: "porażka", positive: "Wolno mi się mylić" },
+    { negative: "nie umiem odpocząć", positive: "Jutro może być lżej" },
+    { negative: "zawsze tak będzie", positive: "Jutro może być lżej" },
+    { negative: "samotność", positive: "Mam na kogo liczyć" },
+    { negative: "boję się", positive: "Mam na kogo liczyć" },
   ],
 };
 
