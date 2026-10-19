@@ -7,13 +7,12 @@ import { faq, offerCopy } from "@/content/site";
 import { toOfferTile } from "@/lib/presentation";
 import { getOffer, type PublicService } from "@/lib/public-data";
 import { offerBlocks } from "./offer-blocks";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Oferta",
-  description:
-    "Psychoterapia indywidualna, terapia par, wsparcie dzieci i młodzieży oraz konsultacje psychologiczne w Kolor Sensu.",
-  alternates: { canonical: "/oferta" },
-};
+// Title, description and link preview: the CMS's over the page's own.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("offer");
+}
 
 const STAGGER = 0.1;
 

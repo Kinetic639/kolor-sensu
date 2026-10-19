@@ -16,8 +16,14 @@ import {
   listSpecialistSummariesForAdmin,
   getRoomsPageContentAdmin,
   getSupportAreasAdmin,
+  listPublishedRoomPlacements,
+  listRoomImages,
   supportAreaImageUrl,
+  getPageSeoAdmin,
 } from "@repo/supabase";
+import type { SeoPage } from "@repo/contracts";
+import { mapRoomsPeekModel } from "./rooms-peek";
+import { mapPageSeoViewModel } from "./seo-editor";
 import {
   mapContentViewModel,
   mapFirstStepsViewModel,
@@ -99,6 +105,26 @@ export async function loadHomeThoughts() {
 export async function loadHomeStory() {
   const client = await createClient();
   return mapHomeStoryViewModel(await getHomeStoryAdmin(client), (path) =>
+    supportAreaImageUrl(client, path),
+  );
+}
+
+/**
+ * Home → "Zajrzyj do środka": the photos of the rooms the site shows (the
+ * same published rooms and photos the site reads), counted for the CMS.
+ */
+export async function loadRoomsPeek() {
+  const client = await createClient();
+  const placements = await listPublishedRoomPlacements(client);
+  const images = await Promise.all(
+    placements.map((placement) => listRoomImages(client, placement.roomId)),
+  );
+  return mapRoomsPeekModel(images.map((own) => own.length));
+}
+
+export async function loadPageSeo(page: SeoPage) {
+  const client = await createClient();
+  return mapPageSeoViewModel(await getPageSeoAdmin(client, page), (path) =>
     supportAreaImageUrl(client, path),
   );
 }

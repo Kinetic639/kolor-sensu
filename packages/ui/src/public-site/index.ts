@@ -22,7 +22,7 @@ export { CursorRing } from "./cursor-ring";
 export { SUPPORT_AREA_SLOTS, SupportAreas } from "./support-areas";
 export type { SupportAreaItem, SupportAreasProps } from "./support-areas";
 export { ThoughtsLens } from "./thoughts-lens";
-export type { ThoughtsLensProps } from "./thoughts-lens";
+export type { ThoughtPair, ThoughtsLensProps } from "./thoughts-lens";
 export type { CookieChoice, CookieConsentProps } from "./cookie-consent";
 export { FaqSection } from "./faq-section";
 export type { FaqItem, FaqSectionProps } from "./faq-section";

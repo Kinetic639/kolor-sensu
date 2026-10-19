@@ -42,14 +42,17 @@ const nextConfig = {
   transpilePackages: ["@repo/app-runtime", "@repo/ui"],
   typedRoutes: true,
   async headers() {
+    const noindex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
     return indexable
-      ? []
-      : [
+      ? [
+          // The CMS preview (Draft Mode's cookie) is never indexed either.
           {
             source: "/:path*",
-            headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+            has: [{ type: "cookie", key: "__prerender_bypass" }],
+            headers: noindex,
           },
-        ];
+        ]
+      : [{ source: "/:path*", headers: noindex }];
   },
   images: {
     // AVIF first (about 20% smaller than WebP; slower only on the first,

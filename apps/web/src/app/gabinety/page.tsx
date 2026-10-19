@@ -12,13 +12,12 @@ import {
   getRoomsPageContent,
 } from "@/lib/public-data";
 import type { RoomsPageRoom } from "@/lib/rooms-by-location";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Gabinety",
-  description:
-    "Jasne, ciche i przytulne gabinety Kolor Sensu, stworzone z myślą o komforcie i poczuciu bezpieczeństwa.",
-  alternates: { canonical: "/gabinety" },
-};
+// Title, description and link preview: the CMS's over the page's own.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("rooms");
+}
 
 function formatAddress(location: PublicLocation) {
   return [

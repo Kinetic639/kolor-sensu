@@ -7,6 +7,7 @@ import {
   getPublicServiceBySlug,
   getPublishedCrisisHelp,
   getPublishedFirstSteps,
+  getPublishedPageSeo,
   getPublishedHomeLocation,
   getPublishedNewsletterBand,
   getPublishedWhyUs,
@@ -44,10 +45,14 @@ import {
   defaultHomeSections,
   defaultRoomsPageContent,
   flattenOffer,
+  defaultPageSeo,
+  type PageSeoContent,
+  type SeoPage,
 } from "@repo/contracts";
 import { intakeServiceSlugs } from "@repo/supabase/intakes";
 import { cache } from "react";
-import { createPublicClient } from "@/lib/supabase/public";
+import { createReadClient } from "@/lib/preview";
+import type { createPublicClient } from "@/lib/supabase/public";
 import type { HomeHero, HomeStory } from "@/lib/home-content";
 import type { HomeSections } from "@/lib/spotlight";
 import { groupRoomsByLocation } from "./rooms-by-location";
@@ -58,7 +63,8 @@ import { groupRoomsByLocation } from "./rooms-by-location";
 // it logs the error and returns an empty result, so the site still renders
 // (with its own content) instead of failing. Pages are prerendered and
 // revalidated (see app/layout.tsx), and /api/revalidate refreshes a path on
-// demand when the CMS publishes.
+// demand when the CMS publishes. In the CMS preview (Draft Mode, lib/preview.ts)
+// the same loaders read the CMS drafts instead, on every request.
 
 export type PublicService = Awaited<
   ReturnType<typeof listPublicServices>
@@ -84,7 +90,7 @@ async function load<T>(
   fallback: T,
 ): Promise<T> {
   try {
-    return await query(createPublicClient());
+    return await query(await createReadClient());
   } catch (error) {
     console.error(`[public-data] ${what} failed:`, error);
     return fallback;
@@ -387,4 +393,27 @@ export const getCompany = cache(() => load("company", getCompanyDetails, null));
 /** The centre's time zone and booking horizon. */
 export const getBookingWindow = cache(() =>
   load("booking window", readBookingWindow, null),
+);
+
+/** A page's search and sharing settings, with its picture as an address. */
+export type PageSeo = PageSeoContent & { ogImageUrl: string | null };
+
+/**
+ * A page's search and sharing settings, published from the admin's /cms
+ * (every field empty, the page's own, until then).
+ */
+export const getPageSeo = cache((page: SeoPage) =>
+  load<PageSeo>(
+    `${page} seo`,
+    async (client) => {
+      const seo = await getPublishedPageSeo(client, page);
+      return {
+        ...seo,
+        ogImageUrl: seo.ogImagePath
+          ? supportAreaImageUrl(client, seo.ogImagePath)
+          : null,
+      };
+    },
+    { ...defaultPageSeo, ogImageUrl: null },
+  ),
 );

@@ -11,13 +11,12 @@ import {
 } from "@/lib/presentation";
 import { getPriceList, getSpecialists } from "@/lib/public-data";
 import { serviceHref, serviceTitle } from "@/lib/site-frame";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Cennik",
-  description:
-    "Ceny konsultacji, psychoterapii i terapii par w Kolor Sensu, u każdego ze specjalistów.",
-  alternates: { canonical: "/cennik" },
-};
+// Title, description and link preview: the CMS's over the page's own.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("prices");
+}
 
 export default async function PricesPage() {
   const [priceList, specialists] = await Promise.all([

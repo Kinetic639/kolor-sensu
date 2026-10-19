@@ -130,6 +130,62 @@ guard already applied to every route under `(protected)/`. It renders the
 site uses for the published content, so preview and production rendering
 never drift.
 
+## Preview on the site (issue #109)
+
+"Podgląd" in each CMS page's bar (`features/cms/page-publish-bar.tsx`)
+opens that page of the site in a new tab, showing the **saved drafts** of
+every CMS section, the page's metadata (title, description) included, as
+the page will look once published. Editing a section and saving it
+refreshes the open preview within a few seconds.
+
+- **Way in**: the link goes to the portal's `/podglad?strona=<page>`
+  (`apps/admin/src/app/podglad/route.ts`, admins only: it checks the role
+  itself, a route handler having no layout). It signs a token for the
+  page's path on the site (`features/cms/preview.ts`: `glowna` → `/`,
+  `gabinety` → `/gabinety`) and redirects to the site's
+  `/api/preview?token=…`. The token (`@repo/app-runtime/cms-preview`) is
+  `v1.<payload>.<signature>`: the payload `{ path, exp }`, the signature an
+  HMAC-SHA256 with `CMS_PREVIEW_SECRET`, shared by web and admin,
+  server-only. It lives 2 minutes (made on the click). The site checks the
+  signature (in constant time), the expiry and the path (a path on the site
+  only: no scheme, host, `//`, backslash or spaces, so no open redirect),
+  turns on Next's **Draft Mode** and redirects to the path. A bad or
+  expired token changes nothing (401).
+- **Drafts are read on the site's server only.** In Draft Mode the loaders
+  of `apps/web/src/lib/public-data.ts` read with `createReadClient()`
+  (`lib/preview.ts`): the usual public client, registered with
+  `withSiteContentDrafts(client, reader)` (`packages/supabase/src/cms.ts`).
+  `getPublished` (behind every `getPublished*` and every
+  `contentSection(...).published`) then returns the section's draft, read by
+  `readSiteContentDraft` through `get_site_content_draft(key)` with the
+  service-role key (`SUPABASE_SECRET_KEY`), validated by the same schema;
+  every other read stays on the public client, under RLS. A new section or
+  page metadata stored in `site_content` and read through `getPublished`
+  and a `load(...)` loader gets the preview without more code.
+- **Database**: `20261019120000_site_content_drafts_preview.sql` adds
+  `get_site_content_draft(key)` (the draft, or null) and
+  `get_site_content_draft_version()` (the latest `updated_at`), both
+  executable **only by `service_role`**: never `anon`, never
+  `authenticated` (an admin's portal reads drafts through the table, as
+  before). Tests: `supabase/tests/site_content_drafts.sql`.
+- **Visitors are unaffected**: `draftMode()` reads as off while pages are
+  prerendered, so they stay prerendered and revalidated as before. A Draft
+  Mode request is rendered afresh (Next skips its caches, `Cache-Control:
+private, no-store`), carries `noindex` (a meta tag from the preview bar,
+  and `X-Robots-Tag` on production for requests with Draft Mode's cookie)
+  and shows a fixed bar "Podgląd szkicu — zmiany nie są opublikowane" with
+  "Zakończ podgląd" (a form posting to `/api/preview/exit`, which turns
+  Draft Mode off and returns to the same page, as published).
+- **Live refresh**: the bar (`components/preview-bar-view.tsx`) asks
+  `/api/preview/version` every 3 seconds (only in Draft Mode; paused while
+  the tab is hidden) and calls `router.refresh()` when the version moves.
+  Polling is the simplest thing that works across the portal's and the
+  site's domains with nothing new to install; a Realtime subscription would
+  need the drafts' table exposed to the browser.
+
+The older portal page `/cms/preview` ("Preview" above) renders only the
+first test content and predates this.
+
 ## Admin CMS UI
 
 `/cms` has one tab per page of the public site, in the address
@@ -296,8 +352,13 @@ migration has added them.
   saved before them reads and shows as it did; an empty eyebrow or accent
   is not shown. The buttons' addresses stay in code.
 - **`home_thoughts`** ("Myśli, które się odmieniają"): `{ label ≤120,
-negative: 8..40 × ≤40, positive: 3..20 × ≤60 }`; the admin writes one
-  thought per line.
+pairs: 8..40 × { negative ≤40, positive ≤60 } }`: each difficult thought
+  with the kinder one it turns into when pointed at; the admin edits one
+  row per pair. Until 19.10 it was two lists (`negative`, `positive`)
+  dealt out in turn; `20261019110000_home_thought_pairs.sql` converted the
+  rows, pairing them as the site showed them (`pairLegacyThoughts`), and a
+  row still in the old shape reads as pairs
+  (`storedHomeThoughtsContentSchema`).
 - **`home_story`** ("Jak zacząć"): `{ steps: 1..4 × { heading ≤80,
 text ≤400, cta: { label, href (a path on the site) } | null, imagePath,
 imageAlt } }`; a step without its own photo takes one of the site's.
@@ -309,6 +370,36 @@ Until published, the site shows the contracts' defaults
 from the Rooms domain (as /gabinety does) under the CMS's `rooms` header,
 and is left out while no room has a photo. The crisis strip's numbers also
 fill `/pomoc-w-kryzysie`, linked from every page's footer.
+
+## Every page → search and sharing (`seo_<page>`, 19.10)
+
+`20261019130000_page_seo.sql`; tests `supabase/tests/page_seo.sql`.
+
+- **Pages**: every static page with a tab in `/cms` (`SEO_PAGES`,
+  `packages/contracts/src/cms-seo.ts`): home, about (/o-nas), offer,
+  specialists, prices, rooms, workshops, education, contact, booking,
+  crisis_help, privacy, terms, cookies. Pages whose content is all code
+  (all but Strona główna and Gabinety) have a tab with only this section.
+- **Payload** (`pageSeoContentSchema`): `{ title ≤120, description ≤320,
+ogTitle ≤120, ogDescription ≤320, ogImagePath | null, ogImageAlt ≤200,
+noindex }`. Every text may be empty: the page's own (`SEO_PAGES`), the
+  share texts falling back to the search ones; a picture needs its alt
+  text. The title is whole (the site adds nothing to it). The database
+  checks every field's type and length (`private.page_seo_is_valid`).
+- **Site**: each page's `generateMetadata` is `pageMetadata(page)`
+  (`apps/web/src/lib/page-metadata.ts`), read through `getPageSeo` →
+  `getPublishedPageSeo` (the generic published read, so the draft preview
+  covers it). A picture (site-media, folder `seo`) replaces the page's
+  generated `opengraph-image` (Next adds the file's only when the page
+  sets no `openGraph.images`). `noindex` sets `robots: noindex` and leaves
+  the page out of `sitemap.xml`.
+- **Admin**: "Wyszukiwarka i udostępnianie" first in each tab: fields with
+  counters (Google shows ~60 characters of a title, ~160 of a
+  description), a Google result preview and a shared-link card preview.
+  Saved as a draft, published with the page (which also refreshes the
+  sitemap). Until published, every page keeps its own.
+- **Not here**: a service's and a specialist's page take their title and
+  description from their record.
 
 ## Domain separation
 

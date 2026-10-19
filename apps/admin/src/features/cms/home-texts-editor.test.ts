@@ -1,18 +1,37 @@
-import { defaultHomeStory } from "@repo/contracts";
+import { defaultHomeStory, defaultHomeThoughts } from "@repo/contracts";
 import { describe, expect, it } from "vitest";
-import { linesToList, listToLines, toStoryContent } from "./home-texts-editor";
+import { thoughtsProblemsOf, toStoryContent } from "./home-texts-editor";
 
-describe("the thoughts, one per line", () => {
-  it("keeps each line's words, dropping blank lines and spaces around", () => {
-    expect(linesToList("  lęk \n\nwstyd\n  \nnie dam rady  ")).toEqual([
-      "lęk",
-      "wstyd",
-      "nie dam rady",
-    ]);
+describe("thoughtsProblemsOf", () => {
+  const pairs = defaultHomeThoughts.pairs.slice(0, 8);
+
+  it("finds nothing wrong with the site's thoughts", () => {
+    expect(thoughtsProblemsOf(defaultHomeThoughts)).toEqual({});
   });
 
-  it("writes a list back one per line", () => {
-    expect(listToLines(["lęk", "wstyd"])).toBe("lęk\nwstyd");
+  it("names each side of a pair left empty, in Polish", () => {
+    const problems = thoughtsProblemsOf({
+      label: " ",
+      pairs: pairs.map((pair, index) =>
+        index === 2
+          ? { negative: "", positive: "  " }
+          : index === 5
+            ? { ...pair, positive: "" }
+            : pair,
+      ),
+    });
+    expect(problems).toEqual({
+      label: "Wpisz nazwę pasa (do 120 znaków).",
+      "2.negative": "Wpisz trudną myśl (do 40 znaków).",
+      "2.positive": "Wpisz myśl, w którą się zamienia (do 60 znaków).",
+      "5.positive": "Wpisz myśl, w którą się zamienia (do 60 znaków).",
+    });
+  });
+
+  it("says how many pairs the band needs", () => {
+    expect(
+      thoughtsProblemsOf({ label: "Myśli", pairs: pairs.slice(0, 3) }),
+    ).toEqual({ list: "Potrzeba od 8 do 40 par, żeby wypełnić pas." });
   });
 });
 

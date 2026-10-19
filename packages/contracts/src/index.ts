@@ -128,7 +128,12 @@ export {
   homePageContentSchema,
   homeStoryContentSchema,
   homeStoryStepSchema,
+  HOME_THOUGHT_PAIRS_MAX,
+  HOME_THOUGHT_PAIRS_MIN,
+  homeThoughtPairSchema,
   homeThoughtsContentSchema,
+  pairLegacyThoughts,
+  storedHomeThoughtsContentSchema,
   homeSectionsContentSchema,
   homeSpotlightSchema,
   roomsPageContentSchema,
@@ -149,6 +154,7 @@ export type {
   HomePageContent,
   HomeStoryContent,
   HomeStoryStep,
+  HomeThoughtPair,
   HomeThoughtsContent,
   HomeSectionsContent,
   HomeSpotlight,
@@ -157,6 +163,24 @@ export type {
   SupportArea,
   SupportAreasContent,
 } from "@repo/contracts/cms";
+export {
+  defaultPageSeo,
+  defaultSeoTitle,
+  pageSeoContentSchema,
+  resolvePageSeo,
+  SEO_DESCRIPTION_RECOMMENDED,
+  SEO_PAGES,
+  SEO_SITE_NAME,
+  SEO_TITLE_RECOMMENDED,
+  seoContentKey,
+  seoPageDefinition,
+} from "@repo/contracts/cms-seo";
+export type {
+  PageSeoContent,
+  ResolvedPageSeo,
+  SeoPage,
+  SeoPageDefinition,
+} from "@repo/contracts/cms-seo";
 export {
   emptyRichTextDocument,
   isRichTextEmpty,

@@ -7,7 +7,8 @@
     "./query-provider": "./src/query-provider.tsx",
     "./create-disclosure-store": "./src/create-disclosure-store.ts",
     "./refresh-on-return": "./src/refresh-on-return.ts",
-    "./revalidate-web": "./src/revalidate-web.ts"
+    "./revalidate-web": "./src/revalidate-web.ts",
+    "./cms-preview": "./src/cms-preview.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

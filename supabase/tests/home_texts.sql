@@ -4,6 +4,7 @@
 -- admins edit and publish; visitors read only what is published; content
 -- of the wrong shape (five points or an unknown icon, too few thoughts, a
 -- story without steps or with five) is refused by the database itself.
+-- The thoughts are pairs since 19.10 (home_thoughts_pairs.sql).
 
 BEGIN;
 
@@ -36,7 +37,7 @@ VALUES
 DO $$
 BEGIN
   IF (
-    SELECT jsonb_array_length(draft_payload -> 'negative')
+    SELECT jsonb_array_length(draft_payload -> 'pairs')
     FROM public.site_content WHERE key = 'home_thoughts'
   ) IS DISTINCT FROM 28 THEN
     RAISE EXCEPTION 'M: the thoughts were not seeded with the site''s 28';
@@ -114,7 +115,10 @@ BEGIN
 
   BEGIN
     UPDATE public.site_content
-    SET draft_payload = thoughts || '{"negative": ["lęk", "wstyd"]}'::jsonb
+    SET draft_payload = thoughts || '{"pairs": [
+      {"negative": "lęk", "positive": "To minie"},
+      {"negative": "wstyd", "positive": "Krok po kroku"}
+    ]}'::jsonb
     WHERE key = 'home_thoughts';
     RAISE EXCEPTION 'V: too few difficult thoughts were accepted';
   EXCEPTION WHEN check_violation THEN NULL;

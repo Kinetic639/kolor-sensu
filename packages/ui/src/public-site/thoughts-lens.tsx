@@ -1,9 +1,9 @@
 "use client";
 
 // A crowd of outlined negative thoughts in pink, rows drifting apart as the
-// band scrolls by (after #12's DriftingWords, pure CSS). Each one hides a
-// positive thought. Point at a negative thought (or tap it) and it
-// dissolves like mist, its letters drifting apart (letterDrift), while the
+// band scrolls by (after #12's DriftingWords, pure CSS). Each one hides its
+// own positive thought (the CMS keeps them in pairs). Point at a negative
+// thought (or tap it) and it dissolves like mist, its letters drifting apart (letterDrift), while the
 // positive one condenses in its place, in pastel green; the crowd around
 // gently makes room for it. A thought once turned stays so until the page
 // is loaded again.
@@ -14,17 +14,25 @@
 // turn is instant.
 //
 // The pictures of words are hidden from assistive tech; the band is a
-// region named by `label`, and the positive thoughts are read as a list.
+// region named by `label`, and the positive thoughts are read as a list
+// (each once).
 
 import { useEffect, useRef } from "react";
 import { cn } from "../lib/utils";
 import { letterDrift } from "./thoughts-mist";
 
+/** A negative thought and the positive one it turns into. */
+export interface ThoughtPair {
+  negative: string;
+  positive: string;
+}
+
 export interface ThoughtsLensProps {
-  /** Negative thoughts and feelings: short, many (they make the crowd). */
-  negative: readonly string[];
-  /** Positive thoughts, one under each negative one, in turn. */
-  positive: readonly string[];
+  /**
+   * The crowd: negative thoughts and feelings, short and many, each with
+   * the positive thought it turns into.
+   */
+  pairs: readonly ThoughtPair[];
   /** The band's name for assistive tech. */
   label: string;
   /** How many rows the crowd takes. */
@@ -33,8 +41,11 @@ export interface ThoughtsLensProps {
 }
 
 /** Deals the thoughts into `count` rows, one by one. */
-export function splitRows(thoughts: readonly string[], count: number) {
-  const rows: string[][] = Array.from({ length: count }, () => []);
+export function splitRows<Thought>(
+  thoughts: readonly Thought[],
+  count: number,
+) {
+  const rows: Thought[][] = Array.from({ length: count }, () => []);
   thoughts.forEach((thought, index) => rows[index % count]!.push(thought));
   return rows;
 }
@@ -52,8 +63,7 @@ export function turn(word: HTMLElement) {
 }
 
 export function ThoughtsLens({
-  negative,
-  positive,
+  pairs,
   label,
   rows = 2,
   className,
@@ -74,8 +84,8 @@ export function ThoughtsLens({
   }, []);
 
   // Every letter of the crowd gets its own way to drift (thoughts-mist.ts),
-  // and every word its own positive thought, both counted across the whole
-  // band, so neighbours differ.
+  // counted across the whole band, so neighbours differ; every word shows
+  // its own pair's positive thought.
   let letter = 0;
   let word = 0;
   const lettersOf = (thought: string) =>
@@ -105,22 +115,22 @@ export function ThoughtsLens({
       className={cn("ks-thoughts", className)}
     >
       <ul className="sr-only">
-        {positive.map((thought) => (
+        {[...new Set(pairs.map((pair) => pair.positive))].map((thought) => (
           <li key={thought}>{thought}</li>
         ))}
       </ul>
       <div className="ks-thoughts__noise" aria-hidden="true">
-        {splitRows(negative, rows).map((row, index) => (
+        {splitRows(pairs, rows).map((row, index) => (
           <p key={index} className="ks-thoughts__row">
             {/* Three times over, so a row never runs out while it drifts,
                 even on wide screens. */}
             {[0, 1, 2].map((copy) => (
               <span key={copy} className="ks-thoughts__run">
-                {row.map((thought) => {
+                {row.map((pair, at) => {
                   const index = word++;
                   return (
                     <span
-                      key={thought}
+                      key={at}
                       // Every other word is filled instead of outlined,
                       // so neighbours read apart (its positive thought
                       // the other way round).
@@ -130,11 +140,9 @@ export function ThoughtsLens({
                       )}
                     >
                       <span className="ks-thoughts__fear">
-                        {lettersOf(thought)}
+                        {lettersOf(pair.negative)}
                       </span>
-                      <span className="ks-thoughts__hope">
-                        {positive[index % positive.length]}
-                      </span>
+                      <span className="ks-thoughts__hope">{pair.positive}</span>
                     </span>
                   );
                 })}

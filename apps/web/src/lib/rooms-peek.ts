@@ -1,12 +1,12 @@
+import { ROOMS_PEEK_PHOTOS_MAX } from "@repo/contracts/rooms-peek";
 import type { RoomsPeekPhoto } from "@repo/ui/public-site";
 import type { RoomsPageLocation } from "./rooms-by-location";
-
-const MAX_PHOTOS = 12;
 
 /**
  * Home → "Zajrzyj do środka": the rooms' photos, as Gabinety shows them.
  * Every room's main photo comes first, then each room's next one, and so
- * on, so the row shows all the rooms before any one twice.
+ * on, so the row shows all the rooms before any one twice. At most
+ * ROOMS_PEEK_PHOTOS_MAX (shared with the admin's CMS, which counts them).
  */
 export function toRoomsPeekPhotos(
   groups: readonly Pick<RoomsPageLocation, "rooms">[],
@@ -20,5 +20,5 @@ export function toRoomsPeekPhotos(
       if (photo) photos.push({ ...photo, room: room.displayName });
     }
   }
-  return photos.slice(0, MAX_PHOTOS);
+  return photos.slice(0, ROOMS_PEEK_PHOTOS_MAX);
 }

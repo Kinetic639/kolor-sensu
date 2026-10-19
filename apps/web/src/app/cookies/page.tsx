@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
 import { legalPages } from "@/content/site";
+import { pageMetadata } from "@/lib/page-metadata";
 
 const page = legalPages.cookies;
 
-export const metadata: Metadata = {
-  title: page.title,
-  description: page.description,
-  alternates: { canonical: "/cookies" },
-};
+// Title, description and link preview: the CMS's over the page's own.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("cookies");
+}
 
 export default function CookiesPage() {
   return (

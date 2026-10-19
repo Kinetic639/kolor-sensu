@@ -3,19 +3,32 @@
 import { useSave } from "@/lib/use-save";
 import { DETAIL_BUTTON, ROW_LINE } from "@repo/ui/detail-page";
 import { cn } from "@repo/ui/lib/utils";
-import { Upload } from "lucide-react";
-import { publishHomePageAction, publishRoomsPageAction } from "./actions";
-import type { CmsPage } from "./page-params";
+import { Eye, Upload } from "lucide-react";
+import {
+  publishHomePageAction,
+  publishRoomsPageAction,
+  publishSeoPageAction,
+} from "./actions";
+import { CMS_PAGE_SEO, type CmsPage } from "./page-params";
+import { cmsPreviewHref } from "./preview";
 import type { PageStatus } from "./view-model";
 
 // A page's status and its one "Publikuj stronę", over its sections: the
-// sections save drafts, this publishes all of them at once.
+// sections save drafts, this publishes all of them at once. A page whose
+// only settings are its search and sharing ones publishes those. "Podgląd"
+// opens the page on the site in a new tab with the saved drafts, as it will
+// look once published, and refreshes itself as sections are saved
+// (preview.ts).
 
-const publish: Record<CmsPage, () => ReturnType<typeof publishHomePageAction>> =
-  {
-    glowna: publishHomePageAction,
-    gabinety: publishRoomsPageAction,
-  };
+type Publish = () => ReturnType<typeof publishHomePageAction>;
+
+const pagePublish: Partial<Record<CmsPage, Publish>> = {
+  glowna: publishHomePageAction,
+  gabinety: publishRoomsPageAction,
+};
+
+const publish = (page: CmsPage): Publish =>
+  pagePublish[page] ?? (() => publishSeoPageAction(CMS_PAGE_SEO[page]));
 
 const TAG =
   "inline-flex h-5 items-center rounded-[4px] px-1.5 text-[0.75rem] font-medium whitespace-nowrap";
@@ -62,10 +75,20 @@ export function PagePublishBar({
           : "Jeszcze nie publikowana: strona pokazuje swoje domyślne treści"}
         {status.updatedAtLabel ? ` · zmiany ${status.updatedAtLabel}` : ""}
       </span>
-      <button
+      <a
         className={cn(DETAIL_BUTTON, "ml-auto")}
+        href={cmsPreviewHref(page)}
+        rel="noopener"
+        target="_blank"
+        title="Otwiera stronę z zapisanymi, jeszcze nieopublikowanymi zmianami, w nowej karcie"
+      >
+        <Eye aria-hidden="true" />
+        Podgląd
+      </a>
+      <button
+        className={DETAIL_BUTTON}
         disabled={!canPublish || isPending}
-        onClick={() => run(publish[page], "Strona opublikowana")}
+        onClick={() => run(publish(page), "Strona opublikowana")}
         title={
           canPublish
             ? "Publikuje wszystkie zapisane sekcje tej strony"

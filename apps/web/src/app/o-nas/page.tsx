@@ -10,13 +10,12 @@ import { PageIntro } from "@/components/page-intro";
 import { about, hero, rooms, specialistsCopy } from "@/content/site";
 import { toSpecialistCard } from "@/lib/presentation";
 import { getCenter, getSpecialists } from "@/lib/public-data";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  title: "O nas",
-  description:
-    "Kolor Sensu to zespół psychoterapeutów i psychologów, którzy pracują z dorosłymi, parami, dziećmi i młodzieżą.",
-  alternates: { canonical: "/o-nas" },
-};
+// Title, description and link preview: the CMS's over the page's own.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("about");
+}
 
 const valueIcons = [
   <ShieldCheck key="0" />,

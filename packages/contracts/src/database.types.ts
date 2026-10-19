@@ -2282,6 +2282,11 @@ export type Database = {
         }[];
       };
       publish_site_content: { Args: { p_key: string }; Returns: undefined };
+      get_site_content_draft: { Args: { p_key: string }; Returns: Json };
+      get_site_content_draft_version: {
+        Args: never;
+        Returns: string | null;
+      };
       record_refund: {
         Args: { p_payment_intent_id: string; p_refunded_minor: number };
         Returns: boolean;

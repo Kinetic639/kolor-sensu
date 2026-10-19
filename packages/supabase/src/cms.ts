@@ -4,7 +4,7 @@ import {
   defaultHomeStory,
   defaultHomeThoughts,
   homeStoryContentSchema,
-  homeThoughtsContentSchema,
+  storedHomeThoughtsContentSchema,
   type HomeStoryContent,
   type HomeThoughtsContent,
   defaultHomeLocation,
@@ -36,6 +36,11 @@ import {
   type SiteContentAdmin,
   type SupportArea,
   type SupportAreasContent,
+  defaultPageSeo,
+  pageSeoContentSchema,
+  seoContentKey,
+  type PageSeoContent,
+  type SeoPage,
 } from "@repo/contracts";
 import type { Database } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -135,11 +140,65 @@ async function publish(
   if (error) throw error;
 }
 
+// The site's preview (Draft Mode, docs/architecture/cms-domain.md "Preview
+// on the site"): a client registered here reads each section's draft, by
+// its reader, wherever the site reads the published content.
+
+/** Reads one section's draft (null when it has none). */
+export type SiteContentDraftReader = (key: string) => Promise<unknown>;
+
+const draftReaders = new WeakMap<object, SiteContentDraftReader>();
+
+/**
+ * Makes every read of published content through `client` (getPublished:
+ * each getPublished* and every section's `published`) return the section's
+ * draft instead, read by `readDraft`, validated by the same schema. Its
+ * other reads are unchanged. Only for a client made for one preview
+ * request: never a client a visitor's request could reuse.
+ */
+export function withSiteContentDrafts<Client extends object>(
+  client: Client,
+  readDraft: SiteContentDraftReader,
+): Client {
+  draftReaders.set(client, readDraft);
+  return client;
+}
+
+/**
+ * One section's draft, through the function only service_role may execute:
+ * `client` is the site's service-role client, on its server.
+ */
+export async function readSiteContentDraft(
+  client: SupabaseClient<Database>,
+  key: string,
+): Promise<unknown> {
+  const { data, error } = await client.rpc("get_site_content_draft", {
+    p_key: key,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/** When any section last changed (service-role client only). */
+export async function getSiteContentDraftVersion(
+  client: SupabaseClient<Database>,
+): Promise<string | null> {
+  const { data, error } = await client.rpc("get_site_content_draft_version");
+  if (error) throw error;
+  return data;
+}
+
 async function getPublished<Content>(
   client: SupabaseClient<Database>,
   key: string,
   schema: ContentSchema<Content>,
 ): Promise<Content | null> {
+  const readDraft = draftReaders.get(client);
+  if (readDraft) {
+    const draft = await readDraft(key);
+    return draft == null ? null : schema.parse(draft);
+  }
+
   const { data, error } = await client
     .from("site_content")
     .select("key, published_payload, published_at")
@@ -281,7 +340,7 @@ export function supportAreaImageUrl(
 export async function uploadSiteImage(
   client: SupabaseClient<Database>,
   file: File,
-  folder: "support-areas" | "spotlight" | "hero" | "story",
+  folder: "support-areas" | "spotlight" | "hero" | "story" | "seo",
 ): Promise<string> {
   const problem = validateSpecialistImage(file);
   if (problem) throw new Error(problem);
@@ -461,10 +520,13 @@ export const updateCrisisHelpDraft = crisisHelp.update;
 export const publishCrisisHelp = crisisHelp.publish;
 export const getPublishedCrisisHelp = crisisHelp.published;
 
-/** Home → "Myśli, które się odmieniają": the site's thoughts until published. */
+/**
+ * Home → "Myśli, które się odmieniają": the site's thoughts until published.
+ * Read through the stored shape: a row saved before the pairs reads as pairs.
+ */
 const homeThoughts = contentSection<HomeThoughtsContent>(
   HOME_THOUGHTS_KEY,
-  homeThoughtsContentSchema,
+  storedHomeThoughtsContentSchema,
   defaultHomeThoughts,
 );
 export const getHomeThoughtsAdmin = homeThoughts.admin;
@@ -482,3 +544,44 @@ export const getHomeStoryAdmin = homeStory.admin;
 export const updateHomeStoryDraft = homeStory.update;
 export const publishHomeStory = homeStory.publish;
 export const getPublishedHomeStory = homeStory.published;
+
+/**
+ * A page's search and sharing settings (`seo_<page>`): every field empty,
+ * the page's own, until published.
+ */
+function pageSeo(page: SeoPage) {
+  return contentSection<PageSeoContent>(
+    seoContentKey(page),
+    pageSeoContentSchema,
+    defaultPageSeo,
+  );
+}
+
+export function getPageSeoAdmin(
+  client: SupabaseClient<Database>,
+  page: SeoPage,
+): Promise<SiteContentAdmin<PageSeoContent>> {
+  return pageSeo(page).admin(client);
+}
+
+export function updatePageSeoDraft(
+  client: SupabaseClient<Database>,
+  page: SeoPage,
+  input: PageSeoContent,
+): Promise<PageSeoContent> {
+  return pageSeo(page).update(client, input);
+}
+
+export function publishPageSeo(
+  client: SupabaseClient<Database>,
+  page: SeoPage,
+): Promise<void> {
+  return pageSeo(page).publish(client);
+}
+
+export function getPublishedPageSeo(
+  client: SupabaseClient<Database>,
+  page: SeoPage,
+): Promise<PageSeoContent> {
+  return pageSeo(page).published(client);
+}
