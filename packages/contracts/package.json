@@ -17,6 +17,7 @@
     "./intake": "./src/intake.ts",
     "./clients": "./src/clients.ts",
     "./cms": "./src/cms.ts",
+    "./cms-seo": "./src/cms-seo.ts",
     "./colors": "./src/colors.ts",
     "./database": "./src/database.types.ts",
     "./partial-update": "./src/partial-update.ts",

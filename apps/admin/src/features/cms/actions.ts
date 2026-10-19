@@ -30,6 +30,11 @@ import {
   type HomeSectionsContent,
   type RoomsPageContent,
   type SupportAreasContent,
+  pageSeoContentSchema,
+  seoPageDefinition,
+  SEO_PAGES,
+  type PageSeoContent,
+  type SeoPage,
 } from "@repo/contracts";
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import {
@@ -58,6 +63,8 @@ import {
   updateHomeSectionsDraft,
   updateRoomsPageDraft,
   updateSupportAreasDraft,
+  publishPageSeo,
+  updatePageSeoDraft,
 } from "@repo/supabase";
 import { revalidatePath } from "next/cache";
 import type { z } from "zod";
@@ -176,7 +183,8 @@ async function publishPage(
   try {
     const client = await createClient();
     for (const section of publish) await section(client);
-    await revalidateWeb([{ path }]);
+    // The sitemap too: it leaves out the pages kept out of search engines.
+    await revalidateWeb([{ path }, { path: "/sitemap.xml" }]);
     revalidatePath("/cms");
     return { ok: true };
   } catch (error) {
@@ -187,7 +195,8 @@ async function publishPage(
 /**
  * The homepage: the hero, the areas of help, "Dlaczego my", the first
  * steps, the specialist sections, the newsletter band, the crisis strip,
- * "Gdzie jesteśmy" and the sections' headers.
+ * "Gdzie jesteśmy", the sections' headers and its search and sharing
+ * settings.
  */
 export async function publishHomePageAction() {
   return publishPage(
@@ -203,11 +212,43 @@ export async function publishHomePageAction() {
       publishHomeLocation,
       publishHomeStory,
       publishHomeHeaders,
+      (client) => publishPageSeo(client, "home"),
     ],
     "/",
   );
 }
 
 export async function publishRoomsPageAction() {
-  return publishPage([publishRoomsPageContent], "/gabinety");
+  return publishPage(
+    [publishRoomsPageContent, (client) => publishPageSeo(client, "rooms")],
+    "/gabinety",
+  );
+}
+
+const isSeoPage = (page: string): page is SeoPage =>
+  SEO_PAGES.some((one) => one.page === page);
+
+/** A page's search and sharing settings into its draft. */
+export async function updatePageSeoDraftAction(
+  page: SeoPage,
+  values: PageSeoContent,
+): Promise<ActionResult> {
+  if (!isSeoPage(page)) return { ok: false, message: "Nieznana strona." };
+  return saveDraft(pageSeoContentSchema, values, (client, content) =>
+    updatePageSeoDraft(client, page, content),
+  );
+}
+
+/**
+ * A page whose only settings are its search and sharing ones (its content
+ * is the site's code): publishes them and refreshes the page.
+ */
+export async function publishSeoPageAction(
+  page: SeoPage,
+): Promise<ActionResult> {
+  if (!isSeoPage(page)) return { ok: false, message: "Nieznana strona." };
+  return publishPage(
+    [(client) => publishPageSeo(client, page)],
+    seoPageDefinition(page).path,
+  );
 }

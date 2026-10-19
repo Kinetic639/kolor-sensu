@@ -3,16 +3,16 @@ import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
 import { PageIntro } from "@/components/page-intro";
 import { educationPage } from "@/content/site";
+import { pageMetadata } from "@/lib/page-metadata";
 
 // Edukacja: the place for what the centre teaches (articles first, other
 // kinds later, each under its own path, e.g. /edukacja/artykuly/[slug]).
 // For now its introduction and a word that the content is coming.
 
-export const metadata: Metadata = {
-  title: "Edukacja",
-  description: educationPage.description,
-  alternates: { canonical: "/edukacja" },
-};
+// Title, description and link preview: the CMS's over the page's own.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("education");
+}
 
 export default function EducationPage() {
   return (

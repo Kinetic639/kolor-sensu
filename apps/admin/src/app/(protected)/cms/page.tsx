@@ -17,12 +17,19 @@ import {
   loadHomeThoughts,
   loadHomeHeaders,
   loadHomeSections,
+  loadPageSeo,
   loadRoomsPageContent,
   loadSupportAreas,
 } from "@/features/cms/loaders";
-import { cmsTabs, loadCmsParams } from "@/features/cms/page-params";
+import {
+  CMS_PAGE_SEO,
+  cmsTabs,
+  loadCmsParams,
+  type CmsPage,
+} from "@/features/cms/page-params";
 import { PagePublishBar } from "@/features/cms/page-publish-bar";
 import { RoomsPageSections } from "@/features/cms/rooms-page-sections";
+import { SeoSection } from "@/features/cms/seo-section";
 import { settle } from "@/features/cms/settle";
 import { SpecialistsSections } from "@/features/cms/specialists-sections";
 import { SupportAreasSection } from "@/features/cms/support-areas-section";
@@ -42,6 +49,27 @@ import { PageTitle } from "@repo/ui/portal-content";
 // page's status and its one "Publikuj stronę". Sections whose content lives
 // in the site's code are listed in their place as "treść stała". A section
 // whose settings cannot load says so; the rest keeps working.
+// Every page has its search and sharing settings first ("Wyszukiwarka i
+// udostępnianie"), published with the page.
+
+const SEO_TITLE = "Wyszukiwarka i udostępnianie";
+
+const loadSeo = (page: CmsPage) =>
+  settle("wyszukiwarka i udostępnianie", () => loadPageSeo(CMS_PAGE_SEO[page]));
+
+function Seo({
+  page,
+  model,
+}: {
+  page: CmsPage;
+  model: Awaited<ReturnType<typeof loadSeo>>;
+}) {
+  return model ? (
+    <SeoSection model={model} page={CMS_PAGE_SEO[page]} />
+  ) : (
+    <UnavailableSection title={SEO_TITLE} />
+  );
+}
 
 async function HomePage() {
   const [
@@ -56,6 +84,7 @@ async function HomePage() {
     location,
     thoughts,
     story,
+    seo,
   ] = await Promise.all([
     settle("hero", loadHomeContent),
     settle("nagłówki sekcji", loadHomeHeaders),
@@ -68,6 +97,7 @@ async function HomePage() {
     settle("gdzie jesteśmy", loadHomeLocation),
     settle("myśli", loadHomeThoughts),
     settle("jak zacząć", loadHomeStory),
+    loadSeo("glowna"),
   ]);
   const loaded = [
     hero,
@@ -81,6 +111,7 @@ async function HomePage() {
     location,
     thoughts,
     story,
+    seo,
   ].filter((one) => one !== null);
   // A section's header block, when the headers loaded. Keyed: it is made
   // here, on the server, and placed among a client section's children.
@@ -96,6 +127,7 @@ async function HomePage() {
   return (
     <>
       <PagePublishBar page="glowna" status={pageStatus(loaded)} />
+      <Seo model={seo} page="glowna" />
       {hero ? (
         <HeroSection content={hero} />
       ) : (
@@ -173,13 +205,17 @@ async function HomePage() {
 }
 
 async function RoomsPage() {
-  const rooms = await settle("gabinety", loadRoomsPageContent);
+  const [rooms, seo] = await Promise.all([
+    settle("gabinety", loadRoomsPageContent),
+    loadSeo("gabinety"),
+  ]);
   return (
     <>
       <PagePublishBar
         page="gabinety"
-        status={pageStatus(rooms ? [rooms] : [])}
+        status={pageStatus([rooms, seo].filter((one) => one !== null))}
       />
+      <Seo model={seo} page="gabinety" />
       <FixedSection title="Tytuł strony">
         Nagłówek strony Gabinety.
       </FixedSection>
@@ -195,13 +231,34 @@ async function RoomsPage() {
   );
 }
 
+/** A page whose content is all the site's code: its search settings only. */
+async function SeoOnlyPage({ page }: { page: CmsPage }) {
+  const seo = await loadSeo(page);
+  return (
+    <>
+      <PagePublishBar page={page} status={pageStatus(seo ? [seo] : [])} />
+      <Seo model={seo} page={page} />
+      <FixedSection title="Treść strony">
+        Teksty tej strony są w kodzie strony; tu ustawiasz, jak wygląda w Google
+        i przy udostępnianiu.
+      </FixedSection>
+    </>
+  );
+}
+
 export default async function CmsPage({ searchParams }: PageProps<"/cms">) {
   const { strona } = loadCmsParams(await searchParams);
   return (
     <FullBleed>
       <PageTitle>CMS</PageTitle>
       <DetailTabs active={strona} label="Strony serwisu" tabs={cmsTabs()} />
-      {strona === "gabinety" ? <RoomsPage /> : <HomePage />}
+      {strona === "glowna" ? (
+        <HomePage />
+      ) : strona === "gabinety" ? (
+        <RoomsPage />
+      ) : (
+        <SeoOnlyPage key={strona} page={strona} />
+      )}
     </FullBleed>
   );
 }

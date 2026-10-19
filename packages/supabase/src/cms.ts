@@ -36,6 +36,11 @@ import {
   type SiteContentAdmin,
   type SupportArea,
   type SupportAreasContent,
+  defaultPageSeo,
+  pageSeoContentSchema,
+  seoContentKey,
+  type PageSeoContent,
+  type SeoPage,
 } from "@repo/contracts";
 import type { Database } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -281,7 +286,7 @@ export function supportAreaImageUrl(
 export async function uploadSiteImage(
   client: SupabaseClient<Database>,
   file: File,
-  folder: "support-areas" | "spotlight" | "hero" | "story",
+  folder: "support-areas" | "spotlight" | "hero" | "story" | "seo",
 ): Promise<string> {
   const problem = validateSpecialistImage(file);
   if (problem) throw new Error(problem);
@@ -482,3 +487,44 @@ export const getHomeStoryAdmin = homeStory.admin;
 export const updateHomeStoryDraft = homeStory.update;
 export const publishHomeStory = homeStory.publish;
 export const getPublishedHomeStory = homeStory.published;
+
+/**
+ * A page's search and sharing settings (`seo_<page>`): every field empty,
+ * the page's own, until published.
+ */
+function pageSeo(page: SeoPage) {
+  return contentSection<PageSeoContent>(
+    seoContentKey(page),
+    pageSeoContentSchema,
+    defaultPageSeo,
+  );
+}
+
+export function getPageSeoAdmin(
+  client: SupabaseClient<Database>,
+  page: SeoPage,
+): Promise<SiteContentAdmin<PageSeoContent>> {
+  return pageSeo(page).admin(client);
+}
+
+export function updatePageSeoDraft(
+  client: SupabaseClient<Database>,
+  page: SeoPage,
+  input: PageSeoContent,
+): Promise<PageSeoContent> {
+  return pageSeo(page).update(client, input);
+}
+
+export function publishPageSeo(
+  client: SupabaseClient<Database>,
+  page: SeoPage,
+): Promise<void> {
+  return pageSeo(page).publish(client);
+}
+
+export function getPublishedPageSeo(
+  client: SupabaseClient<Database>,
+  page: SeoPage,
+): Promise<PageSeoContent> {
+  return pageSeo(page).published(client);
+}

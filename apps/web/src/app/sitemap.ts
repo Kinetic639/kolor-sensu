@@ -1,14 +1,17 @@
+import { SEO_PAGES } from "@repo/contracts";
 import type { MetadataRoute } from "next";
 import { siteUrl } from "@/content/site";
 import { specialistHref } from "@/lib/presentation";
-import { getServices, getSpecialists } from "@/lib/public-data";
+import { getPageSeo, getServices, getSpecialists } from "@/lib/public-data";
 import { serviceHref } from "@/lib/site-frame";
 
-// Every public page, including each published service and specialist.
+// Every public page, including each published service and specialist,
+// but those the CMS keeps out of search engines ("noindex").
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [services, specialists] = await Promise.all([
+  const [services, specialists, hidden] = await Promise.all([
     getServices(),
     getSpecialists(),
+    hiddenPaths(),
   ]);
   const page = (
     path: string,
@@ -19,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority,
   });
 
-  return [
+  const pages = [
     page("/", 1),
     page("/oferta", 0.9),
     page("/specjalisci", 0.9),
@@ -39,4 +42,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     page("/regulamin", 0.2),
     page("/cookies", 0.2),
   ];
+  return pages.filter((entry) => !hidden.has(entry.url));
+}
+
+/** The static pages' addresses the CMS keeps out of search engines. */
+async function hiddenPaths(): Promise<Set<string>> {
+  const settings = await Promise.all(
+    SEO_PAGES.map(async ({ page, path }) => ({
+      path,
+      seo: await getPageSeo(page),
+    })),
+  );
+  return new Set(
+    settings
+      .filter(({ seo }) => seo.noindex)
+      .map(({ path }) => `${siteUrl}${path}`),
+  );
 }
