@@ -130,6 +130,62 @@ guard already applied to every route under `(protected)/`. It renders the
 site uses for the published content, so preview and production rendering
 never drift.
 
+## Preview on the site (issue #109)
+
+"Podgląd" in each CMS page's bar (`features/cms/page-publish-bar.tsx`)
+opens that page of the site in a new tab, showing the **saved drafts** of
+every CMS section, the page's metadata (title, description) included, as
+the page will look once published. Editing a section and saving it
+refreshes the open preview within a few seconds.
+
+- **Way in**: the link goes to the portal's `/podglad?strona=<page>`
+  (`apps/admin/src/app/podglad/route.ts`, admins only: it checks the role
+  itself, a route handler having no layout). It signs a token for the
+  page's path on the site (`features/cms/preview.ts`: `glowna` → `/`,
+  `gabinety` → `/gabinety`) and redirects to the site's
+  `/api/preview?token=…`. The token (`@repo/app-runtime/cms-preview`) is
+  `v1.<payload>.<signature>`: the payload `{ path, exp }`, the signature an
+  HMAC-SHA256 with `CMS_PREVIEW_SECRET`, shared by web and admin,
+  server-only. It lives 2 minutes (made on the click). The site checks the
+  signature (in constant time), the expiry and the path (a path on the site
+  only: no scheme, host, `//`, backslash or spaces, so no open redirect),
+  turns on Next's **Draft Mode** and redirects to the path. A bad or
+  expired token changes nothing (401).
+- **Drafts are read on the site's server only.** In Draft Mode the loaders
+  of `apps/web/src/lib/public-data.ts` read with `createReadClient()`
+  (`lib/preview.ts`): the usual public client, registered with
+  `withSiteContentDrafts(client, reader)` (`packages/supabase/src/cms.ts`).
+  `getPublished` (behind every `getPublished*` and every
+  `contentSection(...).published`) then returns the section's draft, read by
+  `readSiteContentDraft` through `get_site_content_draft(key)` with the
+  service-role key (`SUPABASE_SECRET_KEY`), validated by the same schema;
+  every other read stays on the public client, under RLS. A new section or
+  page metadata stored in `site_content` and read through `getPublished`
+  and a `load(...)` loader gets the preview without more code.
+- **Database**: `20261019120000_site_content_drafts_preview.sql` adds
+  `get_site_content_draft(key)` (the draft, or null) and
+  `get_site_content_draft_version()` (the latest `updated_at`), both
+  executable **only by `service_role`**: never `anon`, never
+  `authenticated` (an admin's portal reads drafts through the table, as
+  before). Tests: `supabase/tests/site_content_drafts.sql`.
+- **Visitors are unaffected**: `draftMode()` reads as off while pages are
+  prerendered, so they stay prerendered and revalidated as before. A Draft
+  Mode request is rendered afresh (Next skips its caches, `Cache-Control:
+private, no-store`), carries `noindex` (a meta tag from the preview bar,
+  and `X-Robots-Tag` on production for requests with Draft Mode's cookie)
+  and shows a fixed bar "Podgląd szkicu — zmiany nie są opublikowane" with
+  "Zakończ podgląd" (a form posting to `/api/preview/exit`, which turns
+  Draft Mode off and returns to the same page, as published).
+- **Live refresh**: the bar (`components/preview-bar-view.tsx`) asks
+  `/api/preview/version` every 3 seconds (only in Draft Mode; paused while
+  the tab is hidden) and calls `router.refresh()` when the version moves.
+  Polling is the simplest thing that works across the portal's and the
+  site's domains with nothing new to install; a Realtime subscription would
+  need the drafts' table exposed to the browser.
+
+The older portal page `/cms/preview` ("Preview" above) renders only the
+first test content and predates this.
+
 ## Admin CMS UI
 
 `/cms` has one tab per page of the public site, in the address

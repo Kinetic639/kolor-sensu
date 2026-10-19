@@ -47,7 +47,8 @@ import {
 } from "@repo/contracts";
 import { intakeServiceSlugs } from "@repo/supabase/intakes";
 import { cache } from "react";
-import { createPublicClient } from "@/lib/supabase/public";
+import { createReadClient } from "@/lib/preview";
+import type { createPublicClient } from "@/lib/supabase/public";
 import type { HomeHero, HomeStory } from "@/lib/home-content";
 import type { HomeSections } from "@/lib/spotlight";
 import { groupRoomsByLocation } from "./rooms-by-location";
@@ -58,7 +59,8 @@ import { groupRoomsByLocation } from "./rooms-by-location";
 // it logs the error and returns an empty result, so the site still renders
 // (with its own content) instead of failing. Pages are prerendered and
 // revalidated (see app/layout.tsx), and /api/revalidate refreshes a path on
-// demand when the CMS publishes.
+// demand when the CMS publishes. In the CMS preview (Draft Mode, lib/preview.ts)
+// the same loaders read the CMS drafts instead, on every request.
 
 export type PublicService = Awaited<
   ReturnType<typeof listPublicServices>
@@ -84,7 +86,7 @@ async function load<T>(
   fallback: T,
 ): Promise<T> {
   try {
-    return await query(createPublicClient());
+    return await query(await createReadClient());
   } catch (error) {
     console.error(`[public-data] ${what} failed:`, error);
     return fallback;

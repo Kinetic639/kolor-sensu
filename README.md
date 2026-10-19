@@ -27,7 +27,10 @@ pnpm supabase:types
 ```
 
 Copy `.env.example` to an app-local `.env.local` only when a feature needs
-environment variables. Never commit secrets.
+environment variables. Never commit secrets. `.env.example` lists every
+variable, which app needs it and where it comes from (e.g. the CMS's
+shared `CMS_REVALIDATE_SECRET` and `CMS_PREVIEW_SECRET`, set in both web
+and admin).
 
 See `docs/architecture/monorepo.md` for ownership and dependency rules.
 See `docs/architecture/supabase-foundation.md` for database workflows, secrets,

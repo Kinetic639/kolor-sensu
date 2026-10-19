@@ -8,11 +8,13 @@ import {
   siteUrl,
 } from "@/content/site";
 import { PageTransition } from "@/components/page-transition";
+import { PreviewBar } from "@/components/preview-bar";
 import { getSiteFrame } from "@/lib/site-frame";
 import "./globals.css";
 
 // Every page is prerendered with its data and refreshed in the background
-// at most every 5 minutes; /api/revalidate refreshes a path at once.
+// at most every 5 minutes; /api/revalidate refreshes a path at once. The
+// CMS preview (Draft Mode) renders each request afresh, with the drafts.
 export const revalidate = 300;
 
 // The public theme reads these variables (public-theme.css: display serif,
@@ -97,6 +99,8 @@ export default async function RootLayout({
           <PageTransition>{children}</PageTransition>
         </SiteLayout>
         <CookieConsent />
+        {/* The CMS preview's bar (Draft Mode only; nothing for visitors). */}
+        <PreviewBar />
       </body>
     </html>
   );
