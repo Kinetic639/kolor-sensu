@@ -135,11 +135,65 @@ async function publish(
   if (error) throw error;
 }
 
+// The site's preview (Draft Mode, docs/architecture/cms-domain.md "Preview
+// on the site"): a client registered here reads each section's draft, by
+// its reader, wherever the site reads the published content.
+
+/** Reads one section's draft (null when it has none). */
+export type SiteContentDraftReader = (key: string) => Promise<unknown>;
+
+const draftReaders = new WeakMap<object, SiteContentDraftReader>();
+
+/**
+ * Makes every read of published content through `client` (getPublished:
+ * each getPublished* and every section's `published`) return the section's
+ * draft instead, read by `readDraft`, validated by the same schema. Its
+ * other reads are unchanged. Only for a client made for one preview
+ * request: never a client a visitor's request could reuse.
+ */
+export function withSiteContentDrafts<Client extends object>(
+  client: Client,
+  readDraft: SiteContentDraftReader,
+): Client {
+  draftReaders.set(client, readDraft);
+  return client;
+}
+
+/**
+ * One section's draft, through the function only service_role may execute:
+ * `client` is the site's service-role client, on its server.
+ */
+export async function readSiteContentDraft(
+  client: SupabaseClient<Database>,
+  key: string,
+): Promise<unknown> {
+  const { data, error } = await client.rpc("get_site_content_draft", {
+    p_key: key,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/** When any section last changed (service-role client only). */
+export async function getSiteContentDraftVersion(
+  client: SupabaseClient<Database>,
+): Promise<string | null> {
+  const { data, error } = await client.rpc("get_site_content_draft_version");
+  if (error) throw error;
+  return data;
+}
+
 async function getPublished<Content>(
   client: SupabaseClient<Database>,
   key: string,
   schema: ContentSchema<Content>,
 ): Promise<Content | null> {
+  const readDraft = draftReaders.get(client);
+  if (readDraft) {
+    const draft = await readDraft(key);
+    return draft == null ? null : schema.parse(draft);
+  }
+
   const { data, error } = await client
     .from("site_content")
     .select("key, published_payload, published_at")
