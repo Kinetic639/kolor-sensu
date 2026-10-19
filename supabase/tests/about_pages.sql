@@ -219,8 +219,9 @@ BEGIN
     RAISE EXCEPTION 'F: the message was not saved tidied';
   END IF;
 
-  PERFORM public.submit_contact_message('Ola', 'ola@example.invalid', NULL, 'Dwa', repeat('c', 32));
-  PERFORM public.submit_contact_message('Ola', 'inna@example.invalid', NULL, 'Trzy', repeat('b', 32));
+  -- Three in all, from one visitor (key b) and one address (ola@).
+  PERFORM public.submit_contact_message('Ola', 'ola@example.invalid', NULL, 'Dwa', repeat('b', 32));
+  PERFORM public.submit_contact_message('Ola', 'ola@example.invalid', NULL, 'Trzy', repeat('b', 32));
 
   BEGIN
     PERFORM public.submit_contact_message('Ola', 'ola@example.invalid', NULL, 'Cztery', repeat('d', 32));
