@@ -28,13 +28,18 @@ export function specialistRole(specialist: SpecialistWithMedia) {
   return specialist.professionalTitle ?? "Specjalista";
 }
 
+/** On the profile and the cards of a specialist taking no new clients (#63). */
+export const NOT_TAKING_CLIENTS = "nie przyjmuje nowych osób";
+
 export function toSpecialistCard(
   specialist: SpecialistWithMedia,
   index: number,
 ): Specialist {
   return {
     name: specialist.displayName,
-    role: specialistRole(specialist),
+    role: specialist.active
+      ? specialistRole(specialist)
+      : `${specialistRole(specialist)} · ${NOT_TAKING_CLIENTS}`,
     href: specialistHref(specialist.publicSlug),
     portraitSrc:
       specialist.portraitUrl ?? specialist.photoUrl ?? portraitPlaceholder,

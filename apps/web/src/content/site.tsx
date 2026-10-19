@@ -133,13 +133,6 @@ export const offerCopy = {
     "Oferujemy terapię, konsultacje i warsztaty dopasowane do Twoich potrzeb.",
 };
 
-export const specialistsCopy = {
-  eyebrow: "Nasi specjaliści",
-  heading: "Poznaj nasz zespół",
-  description:
-    "Doświadczony zespół specjalistów, którzy z empatią i zaangażowaniem towarzyszą w drodze do lepszego samopoczucia.",
-};
-
 export const rooms = {
   eyebrow: "Nasze gabinety",
   heading: "Przestrzeń, która wspiera",
