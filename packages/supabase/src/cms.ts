@@ -1,4 +1,24 @@
 import {
+  aboutHeadersContentSchema,
+  aboutPageContentSchema,
+  closingCtaContentSchema,
+  contactPageContentSchema,
+  defaultAboutHeaders,
+  defaultAboutPage,
+  defaultClosingCta,
+  defaultContactPage,
+  defaultSiteContact,
+  defaultSpecialistsPage,
+  siteContactContentSchema,
+  specialistsPageContentSchema,
+  type AboutHeadersContent,
+  type AboutPageContent,
+  type ClosingCtaContent,
+  type ContactPageContent,
+  type SiteContactContent,
+  type SpecialistsPageContent,
+} from "@repo/contracts/cms-pages";
+import {
   crisisHelpContentSchema,
   defaultCrisisHelp,
   defaultHomeStory,
@@ -345,7 +365,13 @@ export async function uploadSiteImage(
   client: SupabaseClient<Database>,
   file: File,
   folder:
-    "support-areas" | "spotlight" | "hero" | "story" | "seo" | "appearance",
+    | "support-areas"
+    | "spotlight"
+    | "hero"
+    | "story"
+    | "seo"
+    | "appearance"
+    | "about",
 ): Promise<string> {
   const problem = validateSpecialistImage(file);
   if (problem) throw new Error(problem);
@@ -604,3 +630,69 @@ export const getSiteAppearanceAdmin = siteAppearance.admin;
 export const updateSiteAppearanceDraft = siteAppearance.update;
 export const publishSiteAppearance = siteAppearance.publish;
 export const getPublishedSiteAppearance = siteAppearance.published;
+
+/** O nas: its top, value cards and optional parts (the site's until published). */
+const aboutPage = contentSection<AboutPageContent>(
+  "about_page",
+  aboutPageContentSchema,
+  defaultAboutPage,
+);
+export const getAboutPageAdmin = aboutPage.admin;
+export const updateAboutPageDraft = aboutPage.update;
+export const publishAboutPage = aboutPage.publish;
+export const getPublishedAboutPage = aboutPage.published;
+
+/** O nas: its sections' headers. */
+const aboutHeaders = contentSection<AboutHeadersContent>(
+  "about_headers",
+  aboutHeadersContentSchema,
+  defaultAboutHeaders,
+);
+export const getAboutHeadersAdmin = aboutHeaders.admin;
+export const updateAboutHeadersDraft = aboutHeaders.update;
+export const publishAboutHeaders = aboutHeaders.publish;
+export const getPublishedAboutHeaders = aboutHeaders.published;
+
+/** /specjalisci: its words. */
+const specialistsPage = contentSection<SpecialistsPageContent>(
+  "specialists_page",
+  specialistsPageContentSchema,
+  defaultSpecialistsPage,
+);
+export const getSpecialistsPageAdmin = specialistsPage.admin;
+export const updateSpecialistsPageDraft = specialistsPage.update;
+export const publishSpecialistsPage = specialistsPage.publish;
+export const getPublishedSpecialistsPage = specialistsPage.published;
+
+/** /kontakt: its words, travel description and questions. */
+const contactPage = contentSection<ContactPageContent>(
+  "contact_page",
+  contactPageContentSchema,
+  defaultContactPage,
+);
+export const getContactPageAdmin = contactPage.admin;
+export const updateContactPageDraft = contactPage.update;
+export const publishContactPage = contactPage.publish;
+export const getPublishedContactPage = contactPage.published;
+
+/** Ustawienia wspólne: the closing banner on many pages. */
+const closingCta = contentSection<ClosingCtaContent>(
+  "closing_cta",
+  closingCtaContentSchema,
+  defaultClosingCta,
+);
+export const getClosingCtaAdmin = closingCta.admin;
+export const updateClosingCtaDraft = closingCta.update;
+export const publishClosingCta = closingCta.publish;
+export const getPublishedClosingCta = closingCta.published;
+
+/** Ustawienia wspólne: the contact hours (footer, Kontakt, Gdzie jesteśmy). */
+const siteContact = contentSection<SiteContactContent>(
+  "site_contact",
+  siteContactContentSchema,
+  defaultSiteContact,
+);
+export const getSiteContactAdmin = siteContact.admin;
+export const updateSiteContactDraft = siteContact.update;
+export const publishSiteContact = siteContact.publish;
+export const getPublishedSiteContact = siteContact.published;

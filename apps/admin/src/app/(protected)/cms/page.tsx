@@ -1,4 +1,7 @@
+import { AboutPageSection } from "@/features/cms/about-page-section";
+import { CmsSection } from "@/features/cms/cms-section";
 import { AppearanceSection } from "@/features/cms/appearance-section";
+import { ContactPageSection } from "@/features/cms/contact-page-section";
 import { CrisisHelpSection } from "@/features/cms/crisis-help-section";
 import { FirstStepsSection } from "@/features/cms/first-steps-section";
 import { FixedSection, UnavailableSection } from "@/features/cms/fixed-section";
@@ -7,6 +10,12 @@ import { HeroSection } from "@/features/cms/hero-section";
 import { StorySection } from "@/features/cms/story-section";
 import { ThoughtsSection } from "@/features/cms/thoughts-section";
 import {
+  loadAboutHeaders,
+  loadAboutPage,
+  loadClosingCta,
+  loadContactPage,
+  loadSiteContact,
+  loadSpecialistsPage,
   loadCrisisHelp,
   loadHomeLocation,
   loadNewsletterBand,
@@ -37,7 +46,12 @@ import {
 } from "@/features/cms/rooms-peek-section";
 import { SeoSection } from "@/features/cms/seo-section";
 import { settle } from "@/features/cms/settle";
+import { SpecialistsPageSection } from "@/features/cms/specialists-page-section";
 import { SpecialistsSections } from "@/features/cms/specialists-sections";
+import {
+  ClosingCtaSection,
+  SiteContactSection,
+} from "@/features/cms/shared-texts-section";
 import { SupportAreasSection } from "@/features/cms/support-areas-section";
 import {
   HomeLocationSection,
@@ -45,7 +59,7 @@ import {
 } from "@/features/cms/visibility-sections";
 import { WhyUsSection } from "@/features/cms/why-us-section";
 import { pageStatus } from "@/features/cms/view-model";
-import type { HomeHeaderSection } from "@repo/contracts";
+import type { AboutHeaderSection, HomeHeaderSection } from "@repo/contracts";
 import { DetailTabs } from "@repo/ui/detail-page";
 import { FullBleed } from "@repo/ui/full-bleed";
 import { PageTitle } from "@repo/ui/portal-content";
@@ -219,9 +233,6 @@ async function RoomsPage() {
         status={pageStatus([rooms, seo].filter((one) => one !== null))}
       />
       <Seo model={seo} page="gabinety" />
-      <FixedSection title="Tytuł strony">
-        Nagłówek strony Gabinety.
-      </FixedSection>
       {rooms ? (
         <RoomsPageSections content={rooms} />
       ) : (
@@ -230,6 +241,115 @@ async function RoomsPage() {
       <FixedSection title="Gabinety">
         Zdjęcia i opisy gabinetów edytujesz w Gabinety, przy każdym gabinecie.
       </FixedSection>
+    </>
+  );
+}
+
+/**
+ * O nas: its search settings, its words (the top, the history, the values
+ * and their facts, "Z kim pracujemy") and every section's header.
+ */
+async function AboutPage() {
+  const [about, headers, home, seo] = await Promise.all([
+    settle("o nas", loadAboutPage),
+    settle("nagłówki sekcji", loadAboutHeaders),
+    settle("usługi do linków", loadHomeHeaders),
+    loadSeo("o-nas"),
+  ]);
+  const services = home?.services ?? [];
+  const header = (section: AboutHeaderSection) =>
+    headers ? (
+      <HeaderBlock
+        header={headers.content[section]}
+        key={section}
+        page="about"
+        section={section}
+        services={services}
+      />
+    ) : null;
+  return (
+    <>
+      <PagePublishBar
+        page="o-nas"
+        status={pageStatus([about, headers, seo].filter((one) => one !== null))}
+      />
+      <Seo model={seo} page="o-nas" />
+      {about ? (
+        <AboutPageSection
+          audiencesHeader={header("audiences")}
+          model={about}
+          storyHeader={header("story")}
+        />
+      ) : (
+        <UnavailableSection title="Tytuł strony · Historia · Wartości · Z kim pracujemy" />
+      )}
+      <CmsSection note="pierwsze trzy osoby" title="Nasi specjaliści">
+        {header("specialists")}
+      </CmsSection>
+      <CmsSection note="zdjęcie i link do Gabinetów" title="Gabinety">
+        {header("rooms")}
+      </CmsSection>
+      <CmsSection
+        note="adres, telefon, e-mail z Ustawień; znika bez nich"
+        title="Kontakt"
+      >
+        {header("contact")}
+      </CmsSection>
+      <FixedSection title="Zrób pierwszy krok">
+        Baner na końcu strony: jego teksty są w Ustawieniach wspólnych.
+      </FixedSection>
+    </>
+  );
+}
+
+/** Specjaliści: its search settings and its words. */
+async function SpecialistsPage() {
+  const [page, seo] = await Promise.all([
+    settle("specjaliści", loadSpecialistsPage),
+    loadSeo("specjalisci"),
+  ]);
+  return (
+    <>
+      <PagePublishBar
+        page="specjalisci"
+        status={pageStatus([page, seo].filter((one) => one !== null))}
+      />
+      <Seo model={seo} page="specjalisci" />
+      {page ? (
+        <SpecialistsPageSection model={page} />
+      ) : (
+        <UnavailableSection title="Tytuł strony · Pusta lista · Pomożemy wybrać" />
+      )}
+      <FixedSection title="Karty specjalistów">
+        Zdjęcia i opisy są z profili specjalistów (Specjaliści, w portalu).
+      </FixedSection>
+    </>
+  );
+}
+
+/** Kontakt: its search settings and its words. */
+async function ContactPage() {
+  const [page, seo] = await Promise.all([
+    settle("kontakt", loadContactPage),
+    loadSeo("kontakt"),
+  ]);
+  return (
+    <>
+      <PagePublishBar
+        page="kontakt"
+        status={pageStatus([page, seo].filter((one) => one !== null))}
+      />
+      <Seo model={seo} page="kontakt" />
+      <FixedSection title="Dane kontaktowe i mapa">
+        Adres, telefon i e-mail są w Ustawieniach (Centrum), godziny w
+        Ustawieniach wspólnych. Mapa Google pokazuje się po zgodzie na pliki
+        cookies.
+      </FixedSection>
+      {page ? (
+        <ContactPageSection model={page} />
+      ) : (
+        <UnavailableSection title="Tytuł strony · Dojazd · Formularz · FAQ" />
+      )}
     </>
   );
 }
@@ -251,13 +371,29 @@ async function SeoOnlyPage({ page }: { page: CmsPage }) {
 
 /** The settings every page shares: how the components look. */
 async function SharedSettingsPage() {
-  const appearance = await settle("ustawienia wspólne", loadSiteAppearance);
+  const [appearance, closing, contact] = await Promise.all([
+    settle("ustawienia wspólne", loadSiteAppearance),
+    settle("baner na końcu strony", loadClosingCta),
+    settle("godziny kontaktu", loadSiteContact),
+  ]);
   return (
     <>
       <PagePublishBar
         page="wspolne"
-        status={pageStatus(appearance ? [appearance] : [])}
+        status={pageStatus(
+          [appearance, closing, contact].filter((one) => one !== null),
+        )}
       />
+      {closing ? (
+        <ClosingCtaSection model={closing} />
+      ) : (
+        <UnavailableSection title="Baner „Zrób pierwszy krok”" />
+      )}
+      {contact ? (
+        <SiteContactSection model={contact} />
+      ) : (
+        <UnavailableSection title="Godziny kontaktu" />
+      )}
       {appearance ? (
         <AppearanceSection model={appearance} />
       ) : (
@@ -275,6 +411,12 @@ export default async function CmsPage({ searchParams }: PageProps<"/cms">) {
       <DetailTabs active={strona} label="Strony serwisu" tabs={cmsTabs()} />
       {strona === "glowna" ? (
         <HomePage />
+      ) : strona === "o-nas" ? (
+        <AboutPage />
+      ) : strona === "specjalisci" ? (
+        <SpecialistsPage />
+      ) : strona === "kontakt" ? (
+        <ContactPage />
       ) : strona === "gabinety" ? (
         <RoomsPage />
       ) : strona === "wspolne" ? (

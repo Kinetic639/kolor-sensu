@@ -5,7 +5,10 @@ import { DETAIL_BUTTON, ROW_LINE } from "@repo/ui/detail-page";
 import { cn } from "@repo/ui/lib/utils";
 import { Eye, Upload } from "lucide-react";
 import {
+  publishAboutPageAction,
+  publishContactPageAction,
   publishHomePageAction,
+  publishSpecialistsPageAction,
   publishRoomsPageAction,
   publishSeoPageAction,
   publishSiteAppearanceAction,
@@ -31,7 +34,10 @@ type Publish = () => ReturnType<typeof publishHomePageAction>;
 
 const pagePublish: Partial<Record<CmsPage, Publish>> = {
   glowna: publishHomePageAction,
+  "o-nas": publishAboutPageAction,
+  specjalisci: publishSpecialistsPageAction,
   gabinety: publishRoomsPageAction,
+  kontakt: publishContactPageAction,
 };
 
 const publish = (page: CmsTab): Publish =>

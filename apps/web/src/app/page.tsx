@@ -37,6 +37,7 @@ import {
   getSupportAreas,
   getWatercolorLook,
   getWhyUs,
+  getClosingCta,
 } from "@/lib/public-data";
 import { getSiteFrame } from "@/lib/site-frame";
 import { toRoomsPeekPhotos } from "@/lib/rooms-peek";
@@ -66,6 +67,7 @@ export default async function Home() {
     story,
     roomGroups,
     watercolor,
+    closing,
   ] = await Promise.all([
     getHomeContent(),
     getHomeHeaders(),
@@ -82,6 +84,7 @@ export default async function Home() {
     getHomeStory(),
     getRoomsByLocation(),
     getWatercolorLook(),
+    getClosingCta(),
   ]);
   const spotlight = toSpotlight(sections, specialists);
   const roomPhotos = toRoomsPeekPhotos(roomGroups);
@@ -148,7 +151,7 @@ export default async function Home() {
       {location.visible && frame.contact ? (
         <HomeLocation header={headers.location} contact={frame.contact} />
       ) : null}
-      <ClosingCta />
+      <ClosingCta words={closing} />
     </>
   );
 }

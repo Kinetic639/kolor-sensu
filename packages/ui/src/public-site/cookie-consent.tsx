@@ -14,6 +14,22 @@ import { PrimaryButton, SecondaryButton } from "./actions";
 
 export type CookieChoice = "all" | "necessary";
 
+/** Where the choice is kept, and the event that tells the page it changed. */
+export const COOKIE_CONSENT_KEY = "ks-cookie-consent";
+export const COOKIE_CONSENT_EVENT = "ks-cookie-consent";
+
+/** The visitor's stored choice, if any (null where storage is blocked). */
+export function readCookieChoice(
+  key = COOKIE_CONSENT_KEY,
+): CookieChoice | null {
+  try {
+    const value = window.localStorage.getItem(key);
+    return value === "all" || value === "necessary" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 export interface CookieConsentProps {
   policyHref?: string;
   storageKey?: string;
@@ -23,17 +39,9 @@ export interface CookieConsentProps {
   className?: string;
 }
 
-function readChoice(key: string) {
-  try {
-    return window.localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
 export function CookieConsent({
   policyHref = "/cookies",
-  storageKey = "ks-cookie-consent",
+  storageKey = COOKIE_CONSENT_KEY,
   forceOpen = false,
   onChoice,
   className,
@@ -41,7 +49,7 @@ export function CookieConsent({
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (forceOpen || !readChoice(storageKey)) setOpen(true);
+    if (forceOpen || !readCookieChoice(storageKey)) setOpen(true);
   }, [forceOpen, storageKey]);
 
   if (!open) return null;
@@ -53,6 +61,10 @@ export function CookieConsent({
       // Private mode: the choice holds for this visit only.
     }
     onChoice?.(choice);
+    // What waits for consent (the map on Kontakt) hears it at once.
+    window.dispatchEvent(
+      new CustomEvent<CookieChoice>(COOKIE_CONSENT_EVENT, { detail: choice }),
+    );
     setOpen(false);
   };
 
@@ -74,7 +86,8 @@ export function CookieConsent({
           <h2 className="text-title text-ink">Szanujemy Twoją prywatność</h2>
           <p className="text-small text-text-muted">
             Używamy niezbędnych plików cookies, a za Twoją zgodą także
-            analitycznych, by lepiej rozumieć, jak korzystasz ze strony.{" "}
+            analitycznych, by lepiej rozumieć, jak korzystasz ze strony, oraz
+            mapy Google na stronie Kontakt.{" "}
             <Link
               href={policyHref}
               className="text-ink underline underline-offset-4 hover:no-underline"

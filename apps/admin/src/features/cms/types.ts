@@ -1,4 +1,5 @@
 import type {
+  RoomsPageContent,
   FirstStepsContent,
   HomeHeadersContent,
   HomePageContent,
@@ -19,9 +20,7 @@ export interface HomeContentViewModel extends HomePageContent {
   updatedAt: string;
 }
 
-export interface RoomsPageViewModel {
-  showAmenitiesSection: boolean;
-  showLocationDetails: boolean;
+export interface RoomsPageViewModel extends RoomsPageContent {
   isPublished: boolean;
   hasUnpublishedChanges: boolean;
   publishedAtLabel: string | null;

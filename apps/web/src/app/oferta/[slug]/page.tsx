@@ -6,10 +6,11 @@ import {
   ServicePageView,
   serviceParagraphs,
 } from "@repo/ui/public-site";
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageIntro } from "@/components/page-intro";
+import { bookingHref } from "@/features/booking/search-params";
 import { bookingCta, rooms, siteUrl } from "@/content/site";
 import {
   formatDuration,
@@ -19,6 +20,8 @@ import {
   specialistHref,
 } from "@/lib/presentation";
 import {
+  getBookableCatalog,
+  getIntakeServiceSlugs,
   getService,
   getServiceOffers,
   getServices,
@@ -52,13 +55,28 @@ export default async function ServicePage({
   params,
 }: PageProps<"/oferta/[slug]">) {
   const { slug } = await params;
-  const [service, offers, specialists, watercolor] = await Promise.all([
-    getService(slug),
-    getServiceOffers(slug),
-    getSpecialists(),
-    getWatercolorLook(),
-  ]);
+  const [service, offers, specialists, watercolor, intake, bookable] =
+    await Promise.all([
+      getService(slug),
+      getServiceOffers(slug),
+      getSpecialists(),
+      getWatercolorLook(),
+      getIntakeServiceSlugs(),
+      getBookableCatalog(),
+    ]);
   if (!service) notFound();
+  // Into booking with this service chosen (#94), or as it is when it is
+  // not booked online; the first meeting is the first-visit consultation
+  // (the service that starts with the test).
+  const bookThis: Route = bookable.services.some(
+    (one) => one.slug === service.slug,
+  )
+    ? bookingHref({ usluga: service.slug })
+    : "/umow-wizyte";
+  const [firstVisit] = intake;
+  const bookFirst: Route = firstVisit
+    ? bookingHref({ usluga: firstVisit })
+    : "/umow-wizyte";
 
   const title = serviceTitle(service);
   const paragraphs = serviceParagraphs(service.description);
@@ -87,7 +105,7 @@ export default async function ServicePage({
       <ServicePageView
         action={
           <PrimaryButton asChild arrow>
-            <Link href="/umow-wizyte">{bookingCta.label}</Link>
+            <Link href={bookThis}>{bookingCta.label}</Link>
           </PrimaryButton>
         }
         className="max-w-page px-gutter pb-section-sm mx-auto"
@@ -111,7 +129,7 @@ export default async function ServicePage({
         eyebrow="Jak pracujemy"
         heading="Spokojna rozmowa, bez oceniania"
         description="Na pierwszym spotkaniu poznajemy Twoją historię i to, co chcesz zmienić. Razem ustalamy cel i rytm spotkań."
-        cta={{ href: "/umow-wizyte", label: "Umów pierwsze spotkanie" }}
+        cta={{ href: bookFirst, label: "Umów pierwsze spotkanie" }}
         imagePosition="left"
         animationPreset="watercolor-reveal"
         watercolor={watercolor}

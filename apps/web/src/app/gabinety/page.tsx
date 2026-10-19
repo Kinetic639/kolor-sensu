@@ -5,8 +5,8 @@ import { Accessibility, Check, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
 import { PageIntro } from "@/components/page-intro";
-import { rooms, roomsPage } from "@/content/site";
 import {
+  getClosingCta,
   getLocations,
   getRoomsByLocation,
   getRoomsPageContent,
@@ -112,28 +112,35 @@ function RoomCard({
 }
 
 export default async function RoomsPage() {
-  const [groups, locations, content] = await Promise.all([
+  const [groups, locations, content, closing] = await Promise.all([
     getRoomsByLocation(),
     getLocations(),
     getRoomsPageContent(),
+    getClosingCta(),
   ]);
+  const { intro } = content;
+  // No room yet: the locations stand in (when their details show), and a
+  // line says the rooms are coming; never an empty page.
+  const noRooms = groups.length === 0;
+  const showLocationsAlone =
+    noRooms && content.showLocationDetails && locations.length > 0;
 
   return (
     <>
       <PageIntro
-        eyebrow={rooms.eyebrow}
-        heading={roomsPage.heading}
-        accent={roomsPage.accent}
-        lead={roomsPage.lead}
+        eyebrow={intro.eyebrow || undefined}
+        heading={intro.heading}
+        accent={intro.accent || undefined}
+        lead={intro.lead || undefined}
       />
-      {content.showAmenitiesSection ? (
+      {content.showAmenitiesSection && content.amenities.length > 0 ? (
         <section className="max-w-page px-gutter pb-section-sm mx-auto">
           <SoftCard className="grid gap-4 p-6 lg:p-8">
             <h2 className="font-display text-h3 text-ink">
-              Co u nas znajdziesz
+              {content.amenitiesHeading}
             </h2>
             <ul className="text-body grid gap-2.5 sm:grid-cols-2">
-              {roomsPage.points.map((point) => (
+              {content.amenities.map((point) => (
                 <li key={point} className="flex gap-3">
                   <Check
                     className="text-primary mt-1 size-4 shrink-0"
@@ -178,9 +185,14 @@ export default async function RoomsPage() {
         </section>
       ))}
 
-      {content.showLocationDetails &&
-      groups.length === 0 &&
-      locations.length > 0 ? (
+      {noRooms ? (
+        <section className="max-w-page px-gutter pb-section-sm mx-auto">
+          <p className="text-body text-text-muted max-w-copy">
+            {content.emptyText}
+          </p>
+        </section>
+      ) : null}
+      {showLocationsAlone ? (
         <section className="max-w-page px-gutter pb-section-sm mx-auto grid gap-6 md:grid-cols-2">
           {locations.map((location) => (
             <SoftCard key={location.id} className="grid gap-4 p-6">
@@ -190,7 +202,7 @@ export default async function RoomsPage() {
           ))}
         </section>
       ) : null}
-      <ClosingCta />
+      <ClosingCta words={closing} />
     </>
   );
 }

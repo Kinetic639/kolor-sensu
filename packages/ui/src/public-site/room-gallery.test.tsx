@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { RoomGallery } from "./room-gallery";
@@ -50,13 +50,17 @@ describe("RoomGallery", () => {
     expect(shown()).toBe("Gabinet Zielony: fotele");
   });
 
-  it("shows a single photo without controls", () => {
+  it("shows a single photo without switching, only to enlarge it", () => {
     render(
       <RoomGallery label="Zdjęcia: Gabinet Zielony" photos={[photos[0]!]} />,
     );
 
     expect(shown()).toBe("Gabinet Zielony: fotele");
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(
+      screen
+        .getAllByRole("button")
+        .map((button) => button.getAttribute("aria-label")),
+    ).toEqual(["Powiększ zdjęcie"]);
   });
 
   it("renders nothing without photos", () => {
@@ -64,5 +68,48 @@ describe("RoomGallery", () => {
       <RoomGallery label="Zdjęcia: Gabinet Zielony" photos={[]} />,
     );
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("RoomGallery, enlarged", () => {
+  it("opens the photo large, steps with the arrow keys and closes with Esc", async () => {
+    const user = userEvent.setup();
+    render(<RoomGallery label="Zdjęcia: Gabinet Zielony" photos={photos} />);
+    const enlarge = screen.getByRole("button", { name: "Powiększ zdjęcie" });
+    await user.click(enlarge);
+
+    const dialog = screen.getByRole("dialog", {
+      name: "Zdjęcia: Gabinet Zielony",
+    });
+    expect(
+      within(dialog).getByRole("img", { name: photos[0]!.alt }),
+    ).toBeInTheDocument();
+    await user.keyboard("{ArrowRight}");
+    expect(
+      within(dialog).getByRole("img", { name: photos[1]!.alt }),
+    ).toBeInTheDocument();
+    await user.keyboard("{ArrowLeft}");
+    expect(
+      within(dialog).getByRole("img", { name: photos[0]!.alt }),
+    ).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(enlarge).toHaveFocus();
+  });
+
+  it("has a close button and its own previous and next", async () => {
+    const user = userEvent.setup();
+    render(<RoomGallery label="Zdjęcia: Gabinet Zielony" photos={photos} />);
+    await user.click(screen.getByRole("button", { name: "Powiększ zdjęcie" }));
+    const dialog = screen.getByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: "Następne zdjęcie" }),
+    );
+    expect(
+      within(dialog).getByRole("img", { name: photos[1]!.alt }),
+    ).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Zamknij" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

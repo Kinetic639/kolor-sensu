@@ -26,6 +26,8 @@ export interface EmailMessage {
   subject: string;
   html: string;
   text: string;
+  /** Where a reply goes (the visitor, for the contact form's notice). */
+  replyTo?: string;
   attachments?: { filename: string; contentType: string; content: string }[];
 }
 

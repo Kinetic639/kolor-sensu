@@ -5,7 +5,13 @@ import {
   getCurrentAnnouncement,
   getPublicCenterProfile,
   getPublicServiceBySlug,
+  getPublishedAboutHeaders,
+  getPublishedAboutPage,
+  getPublishedClosingCta,
+  getPublishedContactPage,
   getPublishedCrisisHelp,
+  getPublishedSiteContact,
+  getPublishedSpecialistsPage,
   getPublishedFirstSteps,
   getPublishedPageSeo,
   getPublishedSiteAppearance,
@@ -35,7 +41,14 @@ import {
 } from "@repo/supabase";
 import {
   arrangeOffer,
+  defaultAboutHeaders,
+  defaultAboutPage,
+  defaultClosingCta,
+  defaultContactPage,
   defaultCrisisHelp,
+  defaultSiteContact,
+  defaultSpecialistsPage,
+  type AboutPageContent,
   defaultHomeStory,
   defaultHomeThoughts,
   defaultHomeLocation,
@@ -191,6 +204,47 @@ export const getNewsletterBand = cache(() =>
 /** Home → whether "Gdzie jesteśmy" shows (shown until published otherwise). */
 export const getHomeLocation = cache(() =>
   load("home location", getPublishedHomeLocation, defaultHomeLocation),
+);
+
+/** O nas, its words, with the story's photo as an address. */
+export const getAboutPage = cache(() =>
+  load<AboutPageContent & { storyImageUrl: string | null }>(
+    "about page",
+    async (client) => {
+      const about = await getPublishedAboutPage(client);
+      const path = about.story.imagePath;
+      return {
+        ...about,
+        storyImageUrl: path ? supportAreaImageUrl(client, path) : null,
+      };
+    },
+    { ...defaultAboutPage, storyImageUrl: null },
+  ),
+);
+
+/** O nas → its sections' headers. */
+export const getAboutHeaders = cache(() =>
+  load("about headers", getPublishedAboutHeaders, defaultAboutHeaders),
+);
+
+/** /specjalisci, its words. */
+export const getSpecialistsPage = cache(() =>
+  load("specialists page", getPublishedSpecialistsPage, defaultSpecialistsPage),
+);
+
+/** /kontakt, its words, travel description and questions. */
+export const getContactPage = cache(() =>
+  load("contact page", getPublishedContactPage, defaultContactPage),
+);
+
+/** The closing banner's words (Ustawienia wspólne). */
+export const getClosingCta = cache(() =>
+  load("closing banner", getPublishedClosingCta, defaultClosingCta),
+);
+
+/** The contact hours (Ustawienia wspólne). */
+export const getSiteContact = cache(() =>
+  load("site contact", getPublishedSiteContact, defaultSiteContact),
 );
 
 /**

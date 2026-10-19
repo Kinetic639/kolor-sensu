@@ -4,7 +4,7 @@ import { ClosingCta } from "@/components/closing-cta";
 import { PageIntro } from "@/components/page-intro";
 import { workshops, workshopsPage } from "@/content/site";
 import { pageMetadata } from "@/lib/page-metadata";
-import { getWatercolorLook } from "@/lib/public-data";
+import { getWatercolorLook, getClosingCta } from "@/lib/public-data";
 
 // Title, description and link preview: the CMS's over the page's own.
 export function generateMetadata(): Promise<Metadata> {
@@ -12,7 +12,10 @@ export function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function WorkshopsPage() {
-  const watercolor = await getWatercolorLook();
+  const [watercolor, closing] = await Promise.all([
+    getWatercolorLook(),
+    getClosingCta(),
+  ]);
   return (
     <>
       <PageIntro
@@ -39,7 +42,7 @@ export default async function WorkshopsPage() {
         animationPreset="watercolor-reveal"
         watercolor={watercolor}
       />
-      <ClosingCta />
+      <ClosingCta words={closing} />
     </>
   );
 }

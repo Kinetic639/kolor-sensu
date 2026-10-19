@@ -117,6 +117,8 @@ export {
   HOME_HEADER_SECTIONS,
   homeHeadersContentSchema,
   firstStepsContentSchema,
+  defaultRoomsAmenities,
+  defaultRoomsIntro,
   defaultRoomsPageContent,
   defaultHeroPoints,
   defaultHomeStory,
@@ -285,3 +287,44 @@ export type {
   HeaderHref,
   ServiceBookingHref,
 } from "@repo/contracts/section-header";
+export { pageIntroSchema, sitePathSchema } from "@repo/contracts/cms-shared";
+export type { PageIntroContent } from "@repo/contracts/cms-shared";
+export {
+  ABOUT_AUDIENCES_MAX,
+  ABOUT_HEADER_SECTIONS,
+  ABOUT_PROFESSIONALISM_MAX,
+  ABOUT_VALUES_COUNT,
+  aboutHeadersContentSchema,
+  aboutPageContentSchema,
+  CONTACT_FAQ_MAX,
+  closingCtaContentSchema,
+  contactPageContentSchema,
+  defaultAboutAudiences,
+  defaultAboutHeaders,
+  defaultAboutIntro,
+  defaultAboutPage,
+  defaultAboutValues,
+  defaultClosingCta,
+  defaultContactFaq,
+  defaultContactPage,
+  defaultSiteContact,
+  defaultSpecialistsPage,
+  siteContactContentSchema,
+  specialistsPageContentSchema,
+} from "@repo/contracts/cms-pages";
+export type {
+  AboutAudience,
+  AboutHeaderSection,
+  AboutHeadersContent,
+  AboutPageContent,
+  ClosingCtaContent,
+  ContactFaqItem,
+  ContactPageContent,
+  SiteContactContent,
+  SpecialistsPageContent,
+} from "@repo/contracts/cms-pages";
+export {
+  CONTACT_MESSAGE_MAX,
+  contactMessageInputSchema,
+} from "@repo/contracts/contact";
+export type { ContactMessageInput } from "@repo/contracts/contact";

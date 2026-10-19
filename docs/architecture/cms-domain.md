@@ -431,6 +431,43 @@ null, watercolorParallaxPath | null }`, each ≤300 characters, images in
   draft; the tab's "Publikuj stronę" publishes it and refreshes every page
   (layout revalidation of `/`); "Podgląd" opens the homepage.
 
+## The "O nas" pages (19.10)
+
+`20261019150000_about_pages.sql`; tests `supabase/tests/about_pages.sql`;
+contracts `packages/contracts/src/cms-pages.ts` (and `cms-shared.ts`: a
+page's top, `pageIntroSchema`, and `sitePathSchema`). Each key defaults to
+the site's own words; fields added later default too.
+
+- **`about_page`** (O nas): the top (an empty lead shows the centre's short
+  description from Ustawienia), three value cards, and three parts off
+  until the admin switches them on: `showStory` + `story` (text, a photo in
+  site-media/about), `showProfessionalism` + `professionalism` (up to 8
+  facts under the last card), `showAudiences` + `audiences` (1..6 cards,
+  each to a page of the site) and `audiencesNote`.
+- **`about_headers`**: O nas's sections' headers (story, audiences,
+  specialists, rooms, contact), edited with the homepage's header block.
+  "Kontakt" on O nas shows only with the company's details.
+- **`specialists_page`**: /specjalisci's top, its empty-list line and its
+  closing banner's line.
+- **`rooms`** (Gabinety) gains its top, "Co u nas znajdziesz" (heading, up
+  to 8 points) and the line shown while no room is published.
+- **`contact_page`**: /kontakt's top, how to get there, the form's heading
+  and up to 12 questions and answers.
+- **`closing_cta`** and **`site_contact`** (Ustawienia wspólne): the
+  closing banner's words (every page with it) and the contact hours (the
+  footer, Kontakt, "Gdzie jesteśmy").
+
+**The contact form** (/kontakt, decided 19.10): `contact_messages` keeps
+every message, written only by the site's server through
+`submit_contact_message` (service role), which refuses a fourth within an
+hour from one visitor (a keyed hash of the IP) or one address; only admins
+read them. After saving, the centre gets a notice at its e-mail from
+Ustawienia (Reply-To: the visitor; "Odpowiedz w Gmailu" and "Odpowiedz w
+programie pocztowym" open a reply with a template) and the visitor a copy;
+`notified_at` records the notice. Turnstile and a hidden field keep bots
+out. The embedded Google map loads only after consent to all cookies (or
+"Pokaż mapę").
+
 ## Domain separation
 
 `/specjalisci` reads **directly from the real Specialist Domain**

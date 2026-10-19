@@ -1,6 +1,6 @@
 "use client";
 
-import { BookingField, ConsentCheckbox } from "@repo/ui/booking";
+import { BookingField, ConsentCheckbox } from "@repo/ui/booking/fields";
 import { PrimaryButton, SecondaryButton } from "@repo/ui/public-site/actions";
 import { useActionState } from "react";
 import { saveDetailsAction, type DetailsFormState } from "./actions";

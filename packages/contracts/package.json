@@ -17,6 +17,8 @@
     "./intake": "./src/intake.ts",
     "./clients": "./src/clients.ts",
     "./cms": "./src/cms.ts",
+    "./cms-shared": "./src/cms-shared.ts",
+    "./cms-pages": "./src/cms-pages.ts",
     "./cms-appearance": "./src/cms-appearance.ts",
     "./cms-seo": "./src/cms-seo.ts",
     "./colors": "./src/colors.ts",
@@ -28,7 +30,8 @@
     "./section-header": "./src/section-header.ts",
     "./services": "./src/services.ts",
     "./offer-layout": "./src/offer-layout.ts",
-    "./specialist": "./src/specialist.ts"
+    "./specialist": "./src/specialist.ts",
+    "./contact": "./src/contact.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

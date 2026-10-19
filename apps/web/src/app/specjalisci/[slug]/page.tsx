@@ -16,6 +16,7 @@ import { serviceHref } from "@/lib/site-frame";
 import {
   formatDuration,
   formatPrice,
+  NOT_TAKING_CLIENTS,
   offerModes,
   portraitPlaceholder,
   specialistHref,
@@ -80,11 +81,20 @@ export default async function SpecialistPage({
       <SpecialistProfileView
         actions={
           <>
-            <PrimaryButton asChild arrow>
-              <Link href={bookingHref({ specjalista: specialist.publicSlug })}>
-                {bookingCta.label}
-              </Link>
-            </PrimaryButton>
+            {specialist.active ? (
+              <PrimaryButton asChild arrow>
+                <Link
+                  href={bookingHref({ specjalista: specialist.publicSlug })}
+                >
+                  {bookingCta.label}
+                </Link>
+              </PrimaryButton>
+            ) : (
+              // Visible but not taking new clients (#63): no booking.
+              <p className="text-body text-text-muted">
+                {`Obecnie ${NOT_TAKING_CLIENTS}.`}
+              </p>
+            )}
             <SecondaryButton asChild>
               <Link href="/specjalisci">Wszyscy specjaliści</Link>
             </SecondaryButton>
@@ -127,6 +137,11 @@ export default async function SpecialistPage({
           jobTitle: role,
           description: specialist.shortBio ?? undefined,
           url: `${siteUrl}${specialistHref(specialist.publicSlug)}`,
+          // A lasting address (zdjecie/route.ts), not the expiring one.
+          image:
+            specialist.photoUrl || specialist.portraitUrl
+              ? `${siteUrl}${specialistHref(specialist.publicSlug)}/zdjecie`
+              : undefined,
           worksFor: { "@type": "MedicalBusiness", name: "Kolor Sensu" },
           knowsLanguage: specialist.languages,
         }}

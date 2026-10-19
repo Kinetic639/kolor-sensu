@@ -5,7 +5,7 @@ import { ClosingCta } from "@/components/closing-cta";
 import { PageIntro } from "@/components/page-intro";
 import { faq, offerCopy } from "@/content/site";
 import { toOfferTile } from "@/lib/presentation";
-import { getOffer, type PublicService } from "@/lib/public-data";
+import { getOffer, type PublicService, getClosingCta } from "@/lib/public-data";
 import { offerBlocks } from "./offer-blocks";
 import { pageMetadata } from "@/lib/page-metadata";
 
@@ -49,7 +49,7 @@ function Tiles({
 }
 
 export default async function OfferPage() {
-  const offer = await getOffer();
+  const [offer, closing] = await Promise.all([getOffer(), getClosingCta()]);
   const blocks = offerBlocks(offer);
 
   return (
@@ -101,7 +101,7 @@ export default async function OfferPage() {
         )}
       </div>
       <FaqSection items={faq.slice(0, 3)} heading="Zanim się zapiszesz" />
-      <ClosingCta />
+      <ClosingCta words={closing} />
     </>
   );
 }

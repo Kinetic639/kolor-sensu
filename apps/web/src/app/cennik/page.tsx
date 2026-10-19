@@ -9,7 +9,7 @@ import {
   offerModes,
   specialistHref,
 } from "@/lib/presentation";
-import { getPriceList, getSpecialists } from "@/lib/public-data";
+import { getPriceList, getSpecialists, getClosingCta } from "@/lib/public-data";
 import { serviceHref, serviceTitle } from "@/lib/site-frame";
 import { pageMetadata } from "@/lib/page-metadata";
 
@@ -19,9 +19,10 @@ export function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PricesPage() {
-  const [priceList, specialists] = await Promise.all([
+  const [priceList, specialists, closing] = await Promise.all([
     getPriceList(),
     getSpecialists(),
+    getClosingCta(),
   ]);
   const name = (slug: string) =>
     specialists.find((one) => one.publicSlug === slug)?.displayName;
@@ -120,7 +121,7 @@ export default async function PricesPage() {
           })
         )}
       </section>
-      <ClosingCta />
+      <ClosingCta words={closing} />
     </>
   );
 }

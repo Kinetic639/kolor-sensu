@@ -7,12 +7,7 @@ import {
   type SiteSocial,
 } from "@repo/ui/public-site";
 import { cache } from "react";
-import {
-  bookingCta,
-  footerAbout,
-  legalLinks,
-  openingHours,
-} from "@/content/site";
+import { bookingCta, footerAbout, legalLinks } from "@/content/site";
 import {
   getAnnouncement,
   getCenter,
@@ -20,6 +15,7 @@ import {
   getLocations,
   getOffer,
   getServices,
+  getSiteContact,
   type PublicOfferEntry,
   type PublicService,
 } from "@/lib/public-data";
@@ -87,7 +83,7 @@ function navigation(offer: PublicOfferEntry[]): SiteNavItem[] {
 const dialled = (phone: string) => phone.replace(/[^\d+]/g, "");
 
 export const getSiteFrame = cache(async () => {
-  const [center, locations, services, offer, announcement, company] =
+  const [center, locations, services, offer, announcement, company, hours] =
     await Promise.all([
       getCenter(),
       getLocations(),
@@ -95,6 +91,8 @@ export const getSiteFrame = cache(async () => {
       getOffer(),
       getAnnouncement(),
       getCompany(),
+      // The contact hours: Ustawienia wspólne in the CMS (#23).
+      getSiteContact().then((details) => details.hours),
     ]);
   // The first location with a usable address.
   const location = locations.find((one) => one.addressLine1 && one.city);
@@ -113,7 +111,7 @@ export const getSiteFrame = cache(async () => {
           phoneLabel: center.publicPhone,
         }),
         ...(center?.publicEmail && { email: center.publicEmail }),
-        hours: openingHours,
+        ...(hours && { hours }),
       }
     : undefined;
 
