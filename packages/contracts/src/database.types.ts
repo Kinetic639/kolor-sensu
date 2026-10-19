@@ -267,6 +267,39 @@ export type Database = {
           },
         ];
       };
+      contact_messages: {
+        Row: {
+          created_at: string;
+          email: string;
+          id: string;
+          message: string;
+          name: string;
+          notified_at: string | null;
+          phone: string | null;
+          sender_key: string;
+        };
+        Insert: {
+          created_at?: string;
+          email: string;
+          id?: string;
+          message: string;
+          name: string;
+          notified_at?: string | null;
+          phone?: string | null;
+          sender_key: string;
+        };
+        Update: {
+          created_at?: string;
+          email?: string;
+          id?: string;
+          message?: string;
+          name?: string;
+          notified_at?: string | null;
+          phone?: string | null;
+          sender_key?: string;
+        };
+        Relationships: [];
+      };
       center_public_profile: {
         Row: {
           created_at: string;
@@ -2282,6 +2315,20 @@ export type Database = {
         }[];
       };
       publish_site_content: { Args: { p_key: string }; Returns: undefined };
+      submit_contact_message: {
+        Args: {
+          p_email: string;
+          p_message: string;
+          p_name: string;
+          p_phone: string | null;
+          p_sender_key: string;
+        };
+        Returns: string;
+      };
+      mark_contact_message_notified: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
       get_site_content_draft: { Args: { p_key: string }; Returns: Json };
       get_site_content_draft_version: {
         Args: never;

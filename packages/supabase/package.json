@@ -12,7 +12,8 @@
     "./intakes": "./src/intakes.ts",
     "./public": "./src/public.ts",
     "./secret": "./src/secret.ts",
-    "./server": "./src/server.ts"
+    "./server": "./src/server.ts",
+    "./contact": "./src/contact.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

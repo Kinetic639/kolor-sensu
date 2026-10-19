@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import {
+  defaultClosingCta,
   defaultCrisisHelp,
   defaultFirstSteps,
   defaultHomeHeaders,
@@ -67,6 +68,7 @@ let published = sitesOwn();
 
 vi.mock("@/lib/public-data", () => ({
   getHomeContent: async () => published.hero,
+  getClosingCta: async () => defaultClosingCta,
   getRoomsByLocation: async () => published.rooms,
   getHomeThoughts: async () => published.thoughts,
   getHomeStory: async () => published.story,

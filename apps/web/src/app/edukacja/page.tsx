@@ -1,6 +1,7 @@
 import { SoftCard } from "@repo/ui/public-site";
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
+import { getClosingCta } from "@/lib/public-data";
 import { PageIntro } from "@/components/page-intro";
 import { educationPage } from "@/content/site";
 import { pageMetadata } from "@/lib/page-metadata";
@@ -14,7 +15,8 @@ export function generateMetadata(): Promise<Metadata> {
   return pageMetadata("education");
 }
 
-export default function EducationPage() {
+export default async function EducationPage() {
+  const closing = await getClosingCta();
   return (
     <>
       <PageIntro
@@ -33,7 +35,7 @@ export default function EducationPage() {
           </p>
         </SoftCard>
       </section>
-      <ClosingCta />
+      <ClosingCta words={closing} />
     </>
   );
 }

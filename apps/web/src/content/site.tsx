@@ -36,9 +36,6 @@ export const siteDescription =
 export const footerAbout =
   "Centrum psychoterapii i rozwoju. Psychoterapia indywidualna, par, dzieci i młodzieży w spokojnej, bezpiecznej przestrzeni.";
 
-/** Opening hours as shown in the footer and on the contact page. */
-export const openingHours = "Pn–Pt 8:00–20:00, sob. 9:00–14:00";
-
 export const bookingCta = { label: "Umów wizytę", href: "/umow-wizyte" };
 
 // The footer's bottom row, on every page; help in a crisis first.
@@ -174,8 +171,6 @@ export const storyImages = [
   workshops.image,
 ] satisfies PaintedStoryStep["image"][];
 
-export const closingCta = "Zrób pierwszy krok do lepszego samopoczucia";
-
 export const faq = [
   {
     question: "Jak wygląda pierwsza wizyta?",
@@ -205,26 +200,6 @@ export const faq = [
 ] satisfies FaqItem[];
 
 // --------------------------------------------------------------- pages
-
-export const about = {
-  heading: "O nas",
-  accent: "Spokojnie, uważnie, z sensem.",
-  lead: "Kolor Sensu to miejsce, w którym można zatrzymać się, poukładać myśli i znaleźć wsparcie. Tworzymy zespół psychoterapeutów i psychologów, którzy pracują z dorosłymi, parami, dziećmi i młodzieżą.",
-  values: [
-    {
-      title: "Bezpieczeństwo",
-      text: "Rozmawiamy bez oceniania, w poufności i we własnym tempie.",
-    },
-    {
-      title: "Indywidualne podejście",
-      text: "Każdą współpracę zaczynamy od zrozumienia Twojej sytuacji i potrzeb.",
-    },
-    {
-      title: "Profesjonalizm",
-      text: "Nasi specjaliści stale się szkolą i pracują pod regularną superwizją.",
-    },
-  ],
-};
 
 export const roomsPage = {
   heading: "Gabinety",

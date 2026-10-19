@@ -100,13 +100,13 @@ describe("rooms page content", () => {
     expect(await getPublishedRoomsPageContent(client)).toEqual(
       defaultRoomsPageContent,
     );
-    expect(defaultRoomsPageContent).toEqual({
+    expect(defaultRoomsPageContent).toMatchObject({
       showAmenitiesSection: true,
       showLocationDetails: true,
     });
   });
 
-  it("reads the published switches", async () => {
+  it("reads the published switches, with the site's words saved before them", async () => {
     const eq = vi.fn(() => ({
       maybeSingle: vi.fn().mockResolvedValue({
         data: {
@@ -123,6 +123,7 @@ describe("rooms page content", () => {
     const client = { from: () => ({ select: () => ({ eq }) }) } as never;
 
     expect(await getPublishedRoomsPageContent(client)).toEqual({
+      ...defaultRoomsPageContent,
       showAmenitiesSection: false,
       showLocationDetails: false,
     });
@@ -144,15 +145,11 @@ describe("rooms page content", () => {
     const rpc = vi.fn().mockResolvedValue({ error: null });
     const client = { from: () => ({ update }), rpc } as never;
 
-    await updateRoomsPageDraft(client, {
-      showAmenitiesSection: false,
-      showLocationDetails: true,
-    });
+    const rooms = { ...defaultRoomsPageContent, showAmenitiesSection: false };
+    await updateRoomsPageDraft(client, rooms);
     await publishRoomsPageContent(client);
 
-    expect(update).toHaveBeenCalledWith({
-      draft_payload: { showAmenitiesSection: false, showLocationDetails: true },
-    });
+    expect(update).toHaveBeenCalledWith({ draft_payload: rooms });
     expect(eq).toHaveBeenCalledWith("key", "rooms");
     expect(rpc).toHaveBeenCalledWith("publish_site_content", {
       p_key: "rooms",

@@ -3,6 +3,7 @@ import {
   plainHeader,
   sectionHeaderSchema,
 } from "@repo/contracts/section-header";
+import { pageIntroSchema, sitePathSchema } from "@repo/contracts/cms-shared";
 
 /**
  * The public website's routes/layout/structure are code-owned in Next.js.
@@ -67,19 +68,57 @@ export type HomeContentAdmin = SiteContentAdmin<HomePageContent>;
  * /gabinety: the page's structure (title, rooms per location) is code-owned;
  * the CMS only switches its optional sections on and off.
  */
+/** /gabinety's own words until the CMS has others (the site's until 19.10). */
+export const defaultRoomsIntro = {
+  eyebrow: "Nasze gabinety",
+  heading: "Gabinety",
+  accent: "Przestrzeń dla ważnych rozmów.",
+  lead: "Nasze gabinety są jasne, ciche i przytulne. Zadbaliśmy o to, żeby już od progu łatwiej było odetchnąć i poczuć się bezpiecznie.",
+};
+
+export const defaultRoomsAmenities = [
+  "Wygodne fotele i spokojne, naturalne kolory",
+  "Dobra izolacja akustyczna: rozmowa zostaje w gabinecie",
+  "Poczekalnia z herbatą i wodą",
+  "Dogodny dojazd w centrum miasta",
+];
+
+/**
+ * /gabinety: its switches, and (since 19.10) its words. Fields added later
+ * default to the site's own, so content saved before them still reads.
+ */
 export const roomsPageContentSchema = z.strictObject({
   /** "Co u nas znajdziesz" under the title. */
   showAmenitiesSection: z.boolean(),
   /** Each location's address, description and amenities above its rooms. */
   showLocationDetails: z.boolean(),
+  intro: pageIntroSchema.default(() => ({ ...defaultRoomsIntro })),
+  amenitiesHeading: z
+    .string()
+    .trim()
+    .min(1)
+    .max(80)
+    .default("Co u nas znajdziesz"),
+  amenities: z
+    .array(z.string().trim().min(1).max(120))
+    .max(8)
+    .default(() => [...defaultRoomsAmenities]),
+  /** Shown while no room has been published yet. */
+  emptyText: z
+    .string()
+    .trim()
+    .min(1)
+    .max(300)
+    .default("Zdjęcia i opisy gabinetów pojawią się tu wkrótce."),
 });
 
 export type RoomsPageContent = z.infer<typeof roomsPageContentSchema>;
 
-export const defaultRoomsPageContent: RoomsPageContent = {
-  showAmenitiesSection: true,
-  showLocationDetails: true,
-};
+export const defaultRoomsPageContent: RoomsPageContent =
+  roomsPageContentSchema.parse({
+    showAmenitiesSection: true,
+    showLocationDetails: true,
+  });
 
 /**
  * Home → the areas of help ("Obszary wsparcia"): small circles around a large
@@ -87,17 +126,6 @@ export const defaultRoomsPageContent: RoomsPageContent = {
  * code-owned; the CMS edits the list of areas only.
  */
 export const SUPPORT_AREAS_MAX = 10;
-
-/** A path within the public site ("/oferta", "/umow-wizyte#termin"). */
-const sitePathSchema = z
-  .string()
-  .trim()
-  .max(200)
-  .refine(
-    (href) =>
-      href.startsWith("/") && !href.startsWith("//") && !/\s/.test(href),
-    "Podaj adres na stronie, zaczynający się od /",
-  );
 
 export const supportAreaSchema = z.strictObject({
   /** Stable while the area is edited or moved (also the key on the site). */
