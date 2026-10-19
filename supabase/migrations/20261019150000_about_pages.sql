@@ -58,7 +58,6 @@ AS $$
   );
 $$;
 
-REVOKE ALL ON FUNCTION private.page_intro_is_valid(jsonb) FROM PUBLIC;
 
 -- The payload check, its whole body: the new keys, and /gabinety's words.
 CREATE OR REPLACE FUNCTION private.site_content_payload_is_valid(p_key text, p_payload jsonb)
