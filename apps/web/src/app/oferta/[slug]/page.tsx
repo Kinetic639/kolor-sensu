@@ -23,6 +23,7 @@ import {
   getServiceOffers,
   getServices,
   getSpecialists,
+  getWatercolorLook,
 } from "@/lib/public-data";
 import { serviceHref, serviceTitle } from "@/lib/site-frame";
 
@@ -51,10 +52,11 @@ export default async function ServicePage({
   params,
 }: PageProps<"/oferta/[slug]">) {
   const { slug } = await params;
-  const [service, offers, specialists] = await Promise.all([
+  const [service, offers, specialists, watercolor] = await Promise.all([
     getService(slug),
     getServiceOffers(slug),
     getSpecialists(),
+    getWatercolorLook(),
   ]);
   if (!service) notFound();
 
@@ -112,6 +114,7 @@ export default async function ServicePage({
         cta={{ href: "/umow-wizyte", label: "Umów pierwsze spotkanie" }}
         imagePosition="left"
         animationPreset="watercolor-reveal"
+        watercolor={watercolor}
       />
 
       <JsonLd

@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { preload } from "react-dom";
 import { cn } from "../lib/utils";
 import { CaptionMotion } from "./watercolor-caption-motion";
+import { ParallaxLayer } from "./watercolor-parallax";
 import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
 
 // Server-safe on purpose: no hooks, no browser APIs, no "use client" here.
@@ -17,6 +18,12 @@ import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
 //   │                         ancestor, as the page's <main> is
 //   ├── .ks-wc__photo         the uploaded photo, cropped with object-fit:
 //   │                         cover and cut by the dry-brush photo mask
+//   ├── .ks-wc__parallax      optional second decorative image in the
+//   │                         backdrop's frame, over the photo's edges (e.g.
+//   │                         drops of paint around it), drifting on scroll:
+//   │                         its own tiny client island (ParallaxLayer:
+//   │                         watercolor-parallax.tsx), still under reduced
+//   │                         motion; painted in with the backdrop
 //   ├── .ks-wc__caption       optional handwritten overlay (real text),
 //   │                         its own tiny client island (CaptionMotion:
 //   │                         watercolor-caption-motion.tsx) for a discreet
@@ -53,8 +60,17 @@ export interface WatercolorImageProps {
    * decorative (the surrounding text already says everything).
    */
   alt: string;
-  /** Painted backdrop behind the photo. `null` leaves it out. */
+  /**
+   * Painted backdrop behind the photo. `null` leaves it out. It fills the
+   * backdrop's frame (16 : 10): another shape is stretched to it.
+   */
   watercolorSrc?: ImageProps["src"] | null;
+  /**
+   * Optional transparent image in the backdrop's frame, over the photo's
+   * edges, that drifts on scroll (parallax), e.g. drops of paint around
+   * the photo.
+   */
+  parallaxSrc?: ImageProps["src"] | null;
   /**
    * Ratio of the component's box (the photo; the watercolor overflows it).
    * The mask and the backdrop are drawn for 3 / 2 (the default); ratios up
@@ -97,10 +113,20 @@ export interface WatercolorImageProps {
   style?: CSSProperties;
 }
 
+/**
+ * The painted photo's look, as the site's shared settings set it (the CMS's
+ * "Ustawienia wspólne"): passed on by the sections that show the photo.
+ */
+export type WatercolorLook = Pick<
+  WatercolorImageProps,
+  "watercolorSrc" | "parallaxSrc"
+>;
+
 export function WatercolorImage({
   src,
   alt,
   watercolorSrc = defaultWatercolorSrc,
+  parallaxSrc = null,
   aspectRatio,
   objectPosition = "50% 50%",
   // The layers are about 1.17x the box (the watercolor overflows it).
@@ -155,6 +181,17 @@ export function WatercolorImage({
           style={{ objectPosition }}
         />
       </div>
+      {parallaxSrc ? (
+        <ParallaxLayer>
+          <Image
+            src={parallaxSrc}
+            alt=""
+            fill
+            sizes={sizes}
+            loading={priority ? "eager" : "lazy"}
+          />
+        </ParallaxLayer>
+      ) : null}
       {caption ? (
         <CaptionMotion>
           {caption}

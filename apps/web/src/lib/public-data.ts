@@ -8,6 +8,7 @@ import {
   getPublishedCrisisHelp,
   getPublishedFirstSteps,
   getPublishedPageSeo,
+  getPublishedSiteAppearance,
   getPublishedHomeLocation,
   getPublishedNewsletterBand,
   getPublishedWhyUs,
@@ -50,6 +51,7 @@ import {
   type SeoPage,
 } from "@repo/contracts";
 import { intakeServiceSlugs } from "@repo/supabase/intakes";
+import type { WatercolorLook } from "@repo/ui/public-site";
 import { cache } from "react";
 import { createReadClient } from "@/lib/preview";
 import type { createPublicClient } from "@/lib/supabase/public";
@@ -415,5 +417,31 @@ export const getPageSeo = cache((page: SeoPage) =>
       };
     },
     { ...defaultPageSeo, ogImageUrl: null },
+  ),
+);
+
+/**
+ * The painted photo's look, from the site's shared settings published in
+ * the admin's /cms: its backdrop (the site's own until one is chosen) and
+ * its optional parallax layer, as addresses.
+ */
+export const getWatercolorLook = cache(() =>
+  load<WatercolorLook>(
+    "watercolor look",
+    async (client) => {
+      const look = await getPublishedSiteAppearance(client);
+      return {
+        ...(look.watercolorBackdropPath && {
+          watercolorSrc: supportAreaImageUrl(
+            client,
+            look.watercolorBackdropPath,
+          ),
+        }),
+        parallaxSrc: look.watercolorParallaxPath
+          ? supportAreaImageUrl(client, look.watercolorParallaxPath)
+          : null,
+      };
+    },
+    {},
   ),
 );

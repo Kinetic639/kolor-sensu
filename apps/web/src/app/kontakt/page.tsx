@@ -4,13 +4,15 @@ import { ContactDetails } from "@/components/contact-details";
 import { PageIntro } from "@/components/page-intro";
 import { faq, rooms } from "@/content/site";
 import { pageMetadata } from "@/lib/page-metadata";
+import { getWatercolorLook } from "@/lib/public-data";
 
 // Title, description and link preview: the CMS's over the page's own.
 export function generateMetadata(): Promise<Metadata> {
   return pageMetadata("contact");
 }
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const watercolor = await getWatercolorLook();
   return (
     <>
       <PageIntro
@@ -25,6 +27,7 @@ export default function ContactPage() {
           src={rooms.image.src}
           alt={rooms.image.alt}
           animationPreset="watercolor-reveal"
+          {...watercolor}
           sizes="(min-width: 1024px) 60vw, calc(117vw - 3rem)"
         />
       </section>

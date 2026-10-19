@@ -9,7 +9,7 @@ import {
 } from "./page-params";
 
 describe("CMS page tabs", () => {
-  it("has one tab per page of the site, the homepage first", () => {
+  it("has one tab per page of the site, the homepage first, then the shared settings", () => {
     const tabs = cmsTabs();
     expect(tabs[0]).toEqual({
       key: "glowna",
@@ -36,7 +36,13 @@ describe("CMS page tabs", () => {
       "Polityka prywatności",
       "Regulamin",
       "Pliki cookies",
+      "Ustawienia wspólne",
     ]);
+    expect(tabs.at(-1)).toEqual({
+      key: "wspolne",
+      label: "Ustawienia wspólne",
+      href: "/cms?strona=wspolne",
+    });
   });
 
   it("gives every page of the search settings its tab, once", () => {
@@ -50,6 +56,7 @@ describe("CMS page tabs", () => {
     expect(loadCmsParams({}).strona).toBe("glowna");
     expect(loadCmsParams({ strona: "nic" }).strona).toBe("glowna");
     expect(loadCmsParams({ strona: "o-nas" }).strona).toBe("o-nas");
+    expect(loadCmsParams({ strona: "wspolne" }).strona).toBe("wspolne");
     expect(cmsHref("glowna")).toBe("/cms");
   });
 });

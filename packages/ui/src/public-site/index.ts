@@ -116,4 +116,4 @@ export type { SpecialistSpotlightProps } from "./specialist-spotlight";
 export { SpecialistsSection } from "./specialists-section";
 export type { SpecialistsSectionProps } from "./specialists-section";
 export { defaultWatercolorSrc, WatercolorImage } from "./watercolor-image";
-export type { WatercolorImageProps } from "./watercolor-image";
+export type { WatercolorImageProps, WatercolorLook } from "./watercolor-image";

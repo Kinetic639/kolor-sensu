@@ -35,6 +35,7 @@ import {
   getRoomsByLocation,
   getSpecialists,
   getSupportAreas,
+  getWatercolorLook,
   getWhyUs,
 } from "@/lib/public-data";
 import { getSiteFrame } from "@/lib/site-frame";
@@ -64,6 +65,7 @@ export default async function Home() {
     thoughts,
     story,
     roomGroups,
+    watercolor,
   ] = await Promise.all([
     getHomeContent(),
     getHomeHeaders(),
@@ -79,6 +81,7 @@ export default async function Home() {
     getHomeThoughts(),
     getHomeStory(),
     getRoomsByLocation(),
+    getWatercolorLook(),
   ]);
   const spotlight = toSpotlight(sections, specialists);
   const roomPhotos = toRoomsPeekPhotos(roomGroups);
@@ -87,7 +90,10 @@ export default async function Home() {
     <>
       {/* No entrance animation: the hero picture is the page's largest
           paint, and the reveal kept it hidden until the script ran. */}
-      <HeroSection {...withHomeContent(hero, homeContent)} />
+      <HeroSection
+        {...withHomeContent(hero, homeContent)}
+        watercolor={watercolor}
+      />
       <ThoughtsLens {...thoughts} />
       <SupportAreas
         header={headers.supportAreas}
@@ -125,6 +131,7 @@ export default async function Home() {
       <PaintedStory
         header={headers.story}
         steps={toStorySteps(story, storyImages)}
+        watercolor={watercolor}
       />
       {newsletter.visible ? (
         <NewsletterBand header={headers.newsletter} />

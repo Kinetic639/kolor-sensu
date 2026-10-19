@@ -507,6 +507,27 @@ export const AnimatedPaintReveal: Story = {
   render: (args) => <Replay>{() => <WatercolorImage {...args} />}</Replay>,
 };
 
+/**
+ * A backdrop chosen in the CMS ("Ustawienia wspólne" → "Tło akwareli") with
+ * the optional parallax layer (`parallaxSrc`, here drops of paint around
+ * the photo): painted in with the backdrop, then drifting against the page
+ * while scrolling (scroll the canvas). Still under reduced motion.
+ */
+export const CustomBackdropWithParallax: Story = {
+  name: "Custom Backdrop With Parallax",
+  args: {
+    caption,
+    animationPreset: "watercolor-reveal",
+    watercolorSrc: "/kolor-sensu/watercolor-backdrop-cms-sample.webp",
+    parallaxSrc: "/kolor-sensu/watercolor-parallax-drops-sample.webp",
+  },
+  render: (args) => (
+    <div className="grid gap-[60vh] py-[40vh]">
+      <Replay>{() => <WatercolorImage {...args} />}</Replay>
+    </div>
+  ),
+};
+
 function SlowMotion({ args }: { args: WatercolorImageProps }) {
   const [reveal, setReveal] = useState<{
     timeline: gsap.core.Timeline;

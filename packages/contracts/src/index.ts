@@ -164,6 +164,12 @@ export type {
   SupportAreasContent,
 } from "@repo/contracts/cms";
 export {
+  defaultSiteAppearance,
+  SITE_APPEARANCE_KEY,
+  siteAppearanceContentSchema,
+} from "@repo/contracts/cms-appearance";
+export type { SiteAppearanceContent } from "@repo/contracts/cms-appearance";
+export {
   defaultPageSeo,
   defaultSeoTitle,
   pageSeoContentSchema,

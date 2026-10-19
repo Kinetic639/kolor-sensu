@@ -19,7 +19,7 @@ import {
   type WhyUsContent,
 } from "@repo/contracts";
 import type { PublicSupportArea } from "@repo/supabase";
-import type { SiteContact } from "@repo/ui/public-site";
+import type { SiteContact, WatercolorLook } from "@repo/ui/public-site";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import type { HomeHero, HomeStory } from "@/lib/home-content";
 import type { RoomsPageLocation } from "@/lib/rooms-by-location";
@@ -61,6 +61,7 @@ const sitesOwn = () => ({
   story: {
     steps: defaultHomeStory.steps.map((step) => ({ ...step, imageUrl: null })),
   } as HomeStory,
+  watercolor: {} as WatercolorLook,
 });
 let published = sitesOwn();
 
@@ -78,6 +79,7 @@ vi.mock("@/lib/public-data", () => ({
   getNewsletterBand: async () => published.newsletter,
   getHomeLocation: async () => published.location,
   getCrisisHelp: async () => published.crisis,
+  getWatercolorLook: async () => published.watercolor,
 }));
 
 vi.mock("@/lib/site-frame", () => ({
@@ -143,6 +145,24 @@ describe("the homepage", () => {
     const hero = container.querySelector("section .ks-wc");
     expect(hero).not.toBeNull();
     expect(hero).not.toHaveAttribute("data-animation");
+  });
+
+  it("paints its pictures with the backdrop and parallax layer the admin chose", async () => {
+    published.watercolor = {
+      watercolorSrc: "/media/backdrop.webp",
+      parallaxSrc: "/media/drops.png",
+    };
+    const { container } = render(await Home());
+    const pictures = container.querySelectorAll(".ks-wc");
+    expect(pictures.length).toBeGreaterThan(1);
+    for (const picture of pictures) {
+      expect(
+        picture.querySelector(".ks-wc__backdrop img")?.getAttribute("src"),
+      ).toContain("backdrop.webp");
+      expect(
+        picture.querySelector(".ks-wc__parallax img")?.getAttribute("src"),
+      ).toContain("drops.png");
+    }
   });
 
   it("shows its sections in the agreed order, every one switched on", async () => {

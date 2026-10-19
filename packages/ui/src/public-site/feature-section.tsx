@@ -5,7 +5,11 @@ import { ArrowLink } from "./actions";
 import { EditorialHeading, SectionEyebrow } from "./typography";
 import type { SectionHeaderContent } from "@repo/contracts/section-header";
 import { SectionHeader } from "./section-header";
-import { WatercolorImage, type WatercolorImageProps } from "./watercolor-image";
+import {
+  WatercolorImage,
+  type WatercolorImageProps,
+  type WatercolorLook,
+} from "./watercolor-image";
 
 // Server-safe on purpose: no hooks, no browser APIs, no "use client". A
 // painted picture beside a short intro (reference A: "Nasze gabinety",
@@ -40,6 +44,8 @@ export interface FeatureSectionProps {
   /** The picture's entrance animation (WatercolorImage). */
   animationPreset?: WatercolorImageProps["animationPreset"];
   reducedMotionMode?: WatercolorImageProps["reducedMotionMode"];
+  /** The painted photo's backdrop and parallax layer (WatercolorImage). */
+  watercolor?: WatercolorLook;
   headingLevel?: "h2" | "h3";
   id?: string;
   className?: string;
@@ -55,6 +61,7 @@ export function FeatureSection({
   imagePosition = "left",
   animationPreset = "none",
   reducedMotionMode,
+  watercolor,
   headingLevel = "h2",
   id,
   className,
@@ -102,6 +109,7 @@ export function FeatureSection({
         objectPosition={image.objectPosition}
         animationPreset={animationPreset}
         reducedMotionMode={reducedMotionMode}
+        {...watercolor}
         // The layers are about 1.17x the box (the watercolor overflows it).
         sizes="(min-width: 1024px) 59vw, calc(117vw - 3rem)"
         className={cn(imagePosition === "left" && "lg:order-first")}

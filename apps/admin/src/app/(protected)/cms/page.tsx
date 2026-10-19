@@ -1,3 +1,4 @@
+import { AppearanceSection } from "@/features/cms/appearance-section";
 import { CrisisHelpSection } from "@/features/cms/crisis-help-section";
 import { FirstStepsSection } from "@/features/cms/first-steps-section";
 import { FixedSection, UnavailableSection } from "@/features/cms/fixed-section";
@@ -20,6 +21,7 @@ import {
   loadRoomsPageContent,
   loadRoomsPeek,
   loadSupportAreas,
+  loadSiteAppearance,
 } from "@/features/cms/loaders";
 import {
   CMS_PAGE_SEO,
@@ -54,7 +56,8 @@ import { PageTitle } from "@repo/ui/portal-content";
 // in the site's code are listed in their place as "treść stała". A section
 // whose settings cannot load says so; the rest keeps working.
 // Every page has its search and sharing settings first ("Wyszukiwarka i
-// udostępnianie"), published with the page.
+// udostępnianie"), published with the page. After the pages, "Ustawienia
+// wspólne": what every page shares (how components look), published for all.
 
 const SEO_TITLE = "Wyszukiwarka i udostępnianie";
 
@@ -246,6 +249,24 @@ async function SeoOnlyPage({ page }: { page: CmsPage }) {
   );
 }
 
+/** The settings every page shares: how the components look. */
+async function SharedSettingsPage() {
+  const appearance = await settle("ustawienia wspólne", loadSiteAppearance);
+  return (
+    <>
+      <PagePublishBar
+        page="wspolne"
+        status={pageStatus(appearance ? [appearance] : [])}
+      />
+      {appearance ? (
+        <AppearanceSection model={appearance} />
+      ) : (
+        <UnavailableSection title="Wygląd komponentów · Zdjęcie z akwarelą" />
+      )}
+    </>
+  );
+}
+
 export default async function CmsPage({ searchParams }: PageProps<"/cms">) {
   const { strona } = loadCmsParams(await searchParams);
   return (
@@ -256,6 +277,8 @@ export default async function CmsPage({ searchParams }: PageProps<"/cms">) {
         <HomePage />
       ) : strona === "gabinety" ? (
         <RoomsPage />
+      ) : strona === "wspolne" ? (
+        <SharedSettingsPage />
       ) : (
         <SeoOnlyPage key={strona} page={strona} />
       )}
