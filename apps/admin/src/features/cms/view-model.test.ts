@@ -1,4 +1,8 @@
-import { defaultHomeHeaders, type Service } from "@repo/contracts";
+import {
+  defaultHomeHeaders,
+  defaultRoomsPageContent,
+  type Service,
+} from "@repo/contracts";
 import { describe, expect, it } from "vitest";
 import {
   mapFirstStepsViewModel,
@@ -10,8 +14,8 @@ import {
 } from "./view-model";
 
 const base = {
-  draft: { showAmenitiesSection: true, showLocationDetails: false },
-  published: { showAmenitiesSection: true, showLocationDetails: true },
+  draft: { ...defaultRoomsPageContent, showLocationDetails: false },
+  published: { ...defaultRoomsPageContent, showLocationDetails: true },
   publishedAt: "2026-09-27T10:00:00Z",
   updatedAt: "2026-09-27T11:00:00Z",
 };
@@ -26,6 +30,15 @@ describe("mapRoomsPageViewModel", () => {
       hasUnpublishedChanges: true,
     });
     expect(model.publishedAtLabel).not.toBeNull();
+  });
+
+  it("notices changed words too", () => {
+    expect(
+      mapRoomsPageViewModel({
+        ...base,
+        draft: { ...base.published, amenitiesHeading: "Na miejscu" },
+      }).hasUnpublishedChanges,
+    ).toBe(true);
   });
 
   it("has nothing to publish when the draft matches", () => {

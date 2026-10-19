@@ -14,6 +14,7 @@ import {
   type SectionHeaderContent,
   serviceBookingHref,
 } from "@repo/contracts";
+import type { AboutHeaderSection } from "@repo/contracts/cms-pages";
 import { Button } from "@repo/ui/button";
 import { DETAIL_BUTTON } from "@repo/ui/detail-page";
 import { Input } from "@repo/ui/input";
@@ -32,7 +33,10 @@ import { Switch } from "@repo/ui/switch";
 import { Textarea } from "@repo/ui/textarea";
 import { Link2, Plus, X } from "lucide-react";
 import { createContext, useContext, useId, useState } from "react";
-import { updateHomeHeaderDraftAction } from "./actions";
+import {
+  updateAboutHeaderDraftAction,
+  updateHomeHeaderDraftAction,
+} from "./actions";
 import {
   draftToHeader,
   headerToDraft,
@@ -96,11 +100,14 @@ function useHrefLabel() {
 }
 
 export function HeaderBlock({
+  page = "home",
   section,
   header,
   services,
 }: {
-  section: HomeHeaderSection;
+  /** Whose headers it saves into: the homepage's or O nas's. */
+  page?: "home" | "about";
+  section: HomeHeaderSection | AboutHeaderSection;
   header: SectionHeaderContent;
   /** What a link or the call to action may book. */
   services: readonly BookableService[];
@@ -125,7 +132,16 @@ export function HeaderBlock({
       return;
     }
     run(
-      () => updateHomeHeaderDraftAction(section, result.data),
+      () =>
+        page === "about"
+          ? updateAboutHeaderDraftAction(
+              section as AboutHeaderSection,
+              result.data,
+            )
+          : updateHomeHeaderDraftAction(
+              section as HomeHeaderSection,
+              result.data,
+            ),
       "Zapisano szkic nagłówka",
       () => setSaved(JSON.stringify(result.data)),
     );

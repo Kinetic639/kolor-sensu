@@ -2,6 +2,12 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import {
+  getAboutHeadersAdmin,
+  getAboutPageAdmin,
+  getClosingCtaAdmin,
+  getContactPageAdmin,
+  getSiteContactAdmin,
+  getSpecialistsPageAdmin,
   getCrisisHelpAdmin,
   getHomeStoryAdmin,
   getHomeThoughtsAdmin,
@@ -138,4 +144,37 @@ export async function loadSiteAppearance() {
     await getSiteAppearanceAdmin(client),
     (path) => supportAreaImageUrl(client, path),
   );
+}
+
+/** O nas: its words, with the story's photo address to preview. */
+export async function loadAboutPage() {
+  const client = await createClient();
+  const model = mapContentViewModel(await getAboutPageAdmin(client));
+  const path = model.content.story.imagePath;
+  return {
+    ...model,
+    storyImageUrl: path ? supportAreaImageUrl(client, path) : null,
+  };
+}
+
+export async function loadAboutHeaders() {
+  return mapContentViewModel(await getAboutHeadersAdmin(await createClient()));
+}
+
+export async function loadSpecialistsPage() {
+  return mapContentViewModel(
+    await getSpecialistsPageAdmin(await createClient()),
+  );
+}
+
+export async function loadContactPage() {
+  return mapContentViewModel(await getContactPageAdmin(await createClient()));
+}
+
+export async function loadClosingCta() {
+  return mapContentViewModel(await getClosingCtaAdmin(await createClient()));
+}
+
+export async function loadSiteContact() {
+  return mapContentViewModel(await getSiteContactAdmin(await createClient()));
 }

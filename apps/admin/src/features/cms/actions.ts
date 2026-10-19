@@ -73,6 +73,35 @@ import {
   publishSiteAppearance,
   updateSiteAppearanceDraft,
 } from "@repo/supabase";
+import {
+  ABOUT_HEADER_SECTIONS,
+  aboutPageContentSchema,
+  closingCtaContentSchema,
+  contactPageContentSchema,
+  siteContactContentSchema,
+  specialistsPageContentSchema,
+  type AboutHeaderSection,
+  type AboutPageContent,
+  type ClosingCtaContent,
+  type ContactPageContent,
+  type SiteContactContent,
+  type SpecialistsPageContent,
+} from "@repo/contracts/cms-pages";
+import {
+  getAboutHeadersAdmin,
+  publishAboutHeaders,
+  publishAboutPage,
+  publishClosingCta,
+  publishContactPage,
+  publishSiteContact,
+  publishSpecialistsPage,
+  updateAboutHeadersDraft,
+  updateAboutPageDraft,
+  updateClosingCtaDraft,
+  updateContactPageDraft,
+  updateSiteContactDraft,
+  updateSpecialistsPageDraft,
+} from "@repo/supabase";
 import { revalidatePath } from "next/cache";
 import type { z } from "zod";
 
@@ -279,5 +308,79 @@ export async function updateSiteAppearanceDraftAction(
  * painted photo is on many of them).
  */
 export async function publishSiteAppearanceAction(): Promise<ActionResult> {
-  return publishPage([publishSiteAppearance], { path: "/", type: "layout" });
+  return publishPage(
+    [publishSiteAppearance, publishClosingCta, publishSiteContact],
+    { path: "/", type: "layout" },
+  );
+}
+
+// ------------------------------------------------------- the O nas pages
+
+export async function updateAboutPageDraftAction(values: AboutPageContent) {
+  return saveDraft(aboutPageContentSchema, values, updateAboutPageDraft);
+}
+
+/** One of O nas's section headers into the draft of its headers. */
+export async function updateAboutHeaderDraftAction(
+  section: AboutHeaderSection,
+  values: SectionHeaderContent,
+): Promise<ActionResult> {
+  if (!ABOUT_HEADER_SECTIONS.some((one) => one.key === section))
+    return { ok: false, message: "Nieznana sekcja." };
+  return saveDraft(sectionHeaderSchema, values, async (client, header) => {
+    const { draft } = await getAboutHeadersAdmin(client);
+    await updateAboutHeadersDraft(client, { ...draft, [section]: header });
+  });
+}
+
+export async function updateSpecialistsPageDraftAction(
+  values: SpecialistsPageContent,
+) {
+  return saveDraft(
+    specialistsPageContentSchema,
+    values,
+    updateSpecialistsPageDraft,
+  );
+}
+
+export async function updateContactPageDraftAction(values: ContactPageContent) {
+  return saveDraft(contactPageContentSchema, values, updateContactPageDraft);
+}
+
+/** Ustawienia wspólne → the closing banner. */
+export async function updateClosingCtaDraftAction(values: ClosingCtaContent) {
+  return saveDraft(closingCtaContentSchema, values, updateClosingCtaDraft);
+}
+
+/** Ustawienia wspólne → the contact hours. */
+export async function updateSiteContactDraftAction(values: SiteContactContent) {
+  return saveDraft(siteContactContentSchema, values, updateSiteContactDraft);
+}
+
+/** O nas: its words, its sections' headers and its search settings. */
+export async function publishAboutPageAction() {
+  return publishPage(
+    [
+      publishAboutPage,
+      publishAboutHeaders,
+      (client) => publishPageSeo(client, "about"),
+    ],
+    "/o-nas",
+  );
+}
+
+/** Specjaliści: its words and its search settings. */
+export async function publishSpecialistsPageAction() {
+  return publishPage(
+    [publishSpecialistsPage, (client) => publishPageSeo(client, "specialists")],
+    "/specjalisci",
+  );
+}
+
+/** Kontakt: its words and its search settings. */
+export async function publishContactPageAction() {
+  return publishPage(
+    [publishContactPage, (client) => publishPageSeo(client, "contact")],
+    "/kontakt",
+  );
 }

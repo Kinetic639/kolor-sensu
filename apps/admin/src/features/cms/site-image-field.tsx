@@ -34,7 +34,7 @@ export function SiteImageField({
   removeLabel = "Usuń",
 }: {
   id: string;
-  folder: "hero" | "story" | "seo" | "appearance";
+  folder: "hero" | "story" | "seo" | "appearance" | "about";
   label: string;
   hint: string;
   value: SiteImageValue;

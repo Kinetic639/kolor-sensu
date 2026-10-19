@@ -56,9 +56,7 @@ export function mapRoomsPageViewModel(
     ...draft,
     isPublished: published !== null,
     hasUnpublishedChanges:
-      !published ||
-      published.showAmenitiesSection !== draft.showAmenitiesSection ||
-      published.showLocationDetails !== draft.showLocationDetails,
+      !published || JSON.stringify(published) !== JSON.stringify(draft),
     publishedAtLabel: formatDate(content.publishedAt),
     updatedAtLabel: formatDate(content.updatedAt) ?? "",
     publishedAt: content.publishedAt,
