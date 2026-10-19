@@ -1,27 +1,23 @@
-// ThoughtsLens: a crowd of outlined negative thoughts, each hiding a
+// ThoughtsLens: a crowd of outlined negative thoughts, each hiding its own
 // positive one. Point at a negative thought (or tap it) and it turns into
 // its positive one, for good, until the page is loaded again.
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { splitRows, ThoughtsLens } from "./thoughts-lens";
 
-const negative = [
-  "nie dam rady",
-  "wstyd",
-  "co jeśli",
-  "jestem do niczego",
-  "lęk",
-  "znowu to samo",
+const pairs = [
+  { negative: "nie dam rady", positive: "Krok po kroku" },
+  { negative: "wstyd", positive: "Mam prawo czuć" },
+  { negative: "co jeśli", positive: "To minie" },
+  { negative: "jestem do niczego", positive: "Mam prawo czuć" },
+  { negative: "lęk", positive: "Oddech po oddechu" },
+  { negative: "znowu to samo", positive: "To minie" },
 ];
-const positive = ["Mam prawo czuć", "Krok po kroku", "To minie"];
+const negative = pairs.map((pair) => pair.negative);
 
 function renderLens() {
   const { container } = render(
-    <ThoughtsLens
-      negative={negative}
-      positive={positive}
-      label="Pod natłokiem myśli kryją się inne"
-    />,
+    <ThoughtsLens pairs={pairs} label="Pod natłokiem myśli kryją się inne" />,
   );
   const root = container.querySelector<HTMLElement>(".ks-thoughts")!;
   return {
@@ -58,6 +54,7 @@ describe("splitRows", () => {
 
 describe("ThoughtsLens", () => {
   it("says what it shows to assistive tech, the pictures of words hidden", () => {
+    // Each positive thought once, in the order of the pairs.
     const { root } = renderLens();
     expect(
       screen.getByRole("region", {
@@ -66,7 +63,12 @@ describe("ThoughtsLens", () => {
     ).toBe(root);
     expect(
       screen.getAllByRole("listitem").map((item) => item.textContent),
-    ).toEqual(positive);
+    ).toEqual([
+      "Krok po kroku",
+      "Mam prawo czuć",
+      "To minie",
+      "Oddech po oddechu",
+    ]);
     expect(root.querySelector(".ks-thoughts__noise")).toHaveAttribute(
       "aria-hidden",
       "true",
@@ -98,17 +100,17 @@ describe("ThoughtsLens", () => {
     );
   });
 
-  it("hides a positive thought under every negative one, in turn", () => {
+  it("hides under every negative thought its own pair's positive one", () => {
     const { words } = renderLens();
-    const hopes = words.map(
-      (word) => word.querySelector(".ks-thoughts__hope")!.textContent,
-    );
-    expect(hopes.slice(0, 4)).toEqual([
-      "Mam prawo czuć",
-      "Krok po kroku",
-      "To minie",
-      "Mam prawo czuć",
-    ]);
+    // Every showing of a thought, in every row and every repeat.
+    expect(words).toHaveLength(pairs.length * 3);
+    for (const word of words) {
+      const fear = word.querySelector(".ks-thoughts__fear")!.textContent;
+      const pair = pairs.find((one) => one.negative === fear);
+      expect(word.querySelector(".ks-thoughts__hope")).toHaveTextContent(
+        pair!.positive,
+      );
+    }
   });
 
   it("fills every other word, so neighbours read apart", () => {

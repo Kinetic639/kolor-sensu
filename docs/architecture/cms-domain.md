@@ -296,8 +296,13 @@ migration has added them.
   saved before them reads and shows as it did; an empty eyebrow or accent
   is not shown. The buttons' addresses stay in code.
 - **`home_thoughts`** ("Myśli, które się odmieniają"): `{ label ≤120,
-negative: 8..40 × ≤40, positive: 3..20 × ≤60 }`; the admin writes one
-  thought per line.
+pairs: 8..40 × { negative ≤40, positive ≤60 } }`: each difficult thought
+  with the kinder one it turns into when pointed at; the admin edits one
+  row per pair. Until 19.10 it was two lists (`negative`, `positive`)
+  dealt out in turn; `20261019110000_home_thought_pairs.sql` converted the
+  rows, pairing them as the site showed them (`pairLegacyThoughts`), and a
+  row still in the old shape reads as pairs
+  (`storedHomeThoughtsContentSchema`).
 - **`home_story`** ("Jak zacząć"): `{ steps: 1..4 × { heading ≤80,
 text ≤400, cta: { label, href (a path on the site) } | null, imagePath,
 imageAlt } }`; a step without its own photo takes one of the site's.

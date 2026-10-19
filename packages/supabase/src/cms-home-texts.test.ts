@@ -54,6 +54,21 @@ describe("before anything is published", () => {
   });
 });
 
+describe("thoughts published before the pairs", () => {
+  it("read as pairs, each difficult thought with a kinder one", async () => {
+    const { client } = reading({
+      label: "Myśli",
+      negative: ["a", "b", "c", "d", "e", "f", "g", "h"],
+      positive: ["Spokój", "Oddech"],
+    });
+    const thoughts = await getPublishedHomeThoughts(client);
+    expect(thoughts.label).toBe("Myśli");
+    expect(thoughts.pairs).toHaveLength(8);
+    expect(thoughts.pairs[0]).toEqual({ negative: "a", positive: "Spokój" });
+    expect(thoughts.pairs.every((pair) => pair.positive)).toBe(true);
+  });
+});
+
 describe("a hero published before its new fields", () => {
   it("reads with the site's eyebrow, accent and points", async () => {
     const { client } = reading({
