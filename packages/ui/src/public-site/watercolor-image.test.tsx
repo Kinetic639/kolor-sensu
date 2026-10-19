@@ -107,6 +107,33 @@ describe("WatercolorImage", () => {
     expect(screen.getByRole("img")).toBeInTheDocument();
   });
 
+  it("adds the optional parallax layer over the photo's edges, under the caption", () => {
+    const { container, rerender } = render(<WatercolorImage {...base} />);
+    expect(container.querySelector(".ks-wc__parallax")).toBeNull();
+
+    rerender(
+      <WatercolorImage
+        {...base}
+        caption="Przestrzeń"
+        parallaxSrc="/watercolor/drops.png"
+      />,
+    );
+    const layer = container.querySelector(".ks-wc__parallax");
+    expect(layer).toHaveAttribute("aria-hidden", "true");
+    expect(layer?.querySelector("img")).toHaveAttribute("alt", "");
+    expect(layer?.querySelector("img")).toHaveAttribute(
+      "src",
+      expect.stringContaining("drops.png"),
+    );
+    expect(layer?.previousElementSibling).toHaveClass("ks-wc__photo");
+    expect(layer?.nextElementSibling).toHaveClass("ks-wc__caption");
+    // Still one image to assistive technology: the photo.
+    expect(screen.getAllByRole("img")).toHaveLength(1);
+    // In the backdrop's frame, so the two line up.
+    const inset = (selector: string) => /inset:[^;]+/.exec(rule(selector))?.[0];
+    expect(inset(".ks-wc__parallax")).toBe(inset(".ks-wc__backdrop"));
+  });
+
   it("cuts the photo with the dry-brush alpha mask, not a geometric shape", () => {
     render(<WatercolorImage {...base} />);
 
@@ -270,6 +297,7 @@ describe("WatercolorImage reveal styles", () => {
     for (const layer of [
       '.ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])',
       ".ks-wc__backdrop",
+      ".ks-wc__parallax",
       ".ks-wc__img",
       ".ks-wc__caption",
       ".ks-wc__mark",
@@ -288,6 +316,10 @@ describe("WatercolorImage reveal styles", () => {
       ).body,
     ).toBe("--ks-reveal-hidden: linear-gradient(transparent, transparent);");
     expect(paintingRule(".ks-wc__backdrop").body).toBe(
+      "mask-image: var(--ks-reveal-backdrop, var(--ks-reveal-hidden));",
+    );
+    // The parallax layer, in the backdrop's frame, is painted in with it.
+    expect(paintingRule(".ks-wc__parallax").body).toBe(
       "mask-image: var(--ks-reveal-backdrop, var(--ks-reveal-hidden));",
     );
     expect(paintingRule(".ks-wc__img").body).toBe(

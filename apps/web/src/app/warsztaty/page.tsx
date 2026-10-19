@@ -4,13 +4,15 @@ import { ClosingCta } from "@/components/closing-cta";
 import { PageIntro } from "@/components/page-intro";
 import { workshops, workshopsPage } from "@/content/site";
 import { pageMetadata } from "@/lib/page-metadata";
+import { getWatercolorLook } from "@/lib/public-data";
 
 // Title, description and link preview: the CMS's over the page's own.
 export function generateMetadata(): Promise<Metadata> {
   return pageMetadata("workshops");
 }
 
-export default function WorkshopsPage() {
+export default async function WorkshopsPage() {
+  const watercolor = await getWatercolorLook();
   return (
     <>
       <PageIntro
@@ -35,6 +37,7 @@ export default function WorkshopsPage() {
         cta={{ href: "/kontakt", label: "Zapytaj o najbliższe terminy" }}
         imagePosition="left"
         animationPreset="watercolor-reveal"
+        watercolor={watercolor}
       />
       <ClosingCta />
     </>

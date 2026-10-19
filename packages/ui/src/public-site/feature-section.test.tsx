@@ -31,6 +31,24 @@ describe("FeatureSection", () => {
     ).toBeInTheDocument();
   });
 
+  it("uses the site's chosen backdrop and parallax layer", () => {
+    const { container } = render(
+      <FeatureSection
+        {...sampleRooms}
+        watercolor={{
+          watercolorSrc: "/media/backdrop.webp",
+          parallaxSrc: "/media/drops.png",
+        }}
+      />,
+    );
+    expect(
+      container.querySelector(".ks-wc__backdrop img")?.getAttribute("src"),
+    ).toContain("backdrop.webp");
+    expect(
+      container.querySelector(".ks-wc__parallax img")?.getAttribute("src"),
+    ).toContain("drops.png");
+  });
+
   it("puts the picture on the left or the right on wide screens", () => {
     const { container, rerender } = render(<FeatureSection {...sampleRooms} />);
     const section = () => container.querySelector("section")!;

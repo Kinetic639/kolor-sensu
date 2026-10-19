@@ -5,7 +5,11 @@ import { cn } from "../lib/utils";
 import { PrimaryButton, SecondaryButton } from "./actions";
 import { type HeroPoint, HeroPoints } from "./hero-points";
 import { EditorialHeading, SectionEyebrow } from "./typography";
-import { WatercolorImage, type WatercolorImageProps } from "./watercolor-image";
+import {
+  WatercolorImage,
+  type WatercolorImageProps,
+  type WatercolorLook,
+} from "./watercolor-image";
 
 // Server-safe on purpose: no hooks, no browser APIs, no "use client". The
 // first screen of the homepage (reference A):
@@ -46,6 +50,8 @@ export interface HeroSectionProps {
   /** The picture's entrance animation (WatercolorImage). */
   animationPreset?: WatercolorImageProps["animationPreset"];
   reducedMotionMode?: WatercolorImageProps["reducedMotionMode"];
+  /** The painted photo's backdrop and parallax layer (WatercolorImage). */
+  watercolor?: WatercolorLook;
   id?: string;
   className?: string;
 }
@@ -61,6 +67,7 @@ export function HeroSection({
   image,
   animationPreset = "none",
   reducedMotionMode,
+  watercolor,
   id,
   className,
 }: HeroSectionProps) {
@@ -111,6 +118,7 @@ export function HeroSection({
         objectPosition={image.objectPosition}
         animationPreset={animationPreset}
         reducedMotionMode={reducedMotionMode}
+        {...watercolor}
         priority
         // The layers are about 1.17x the box (the watercolor overflows it);
         // on a phone the box is the viewport less the two gutters.

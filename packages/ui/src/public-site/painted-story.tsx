@@ -26,7 +26,7 @@ import { EditorialHeading, SectionEyebrow } from "./typography";
 import type { SectionHeaderContent } from "@repo/contracts/section-header";
 import { SectionHeader } from "./section-header";
 import { revealProperties } from "./watercolor-reveal";
-import { WatercolorImage } from "./watercolor-image";
+import { WatercolorImage, type WatercolorLook } from "./watercolor-image";
 import {
   createPaintMatte,
   createPaintTimeline,
@@ -54,6 +54,8 @@ export interface PaintedStoryProps {
   eyebrow?: ReactNode;
   heading?: ReactNode;
   steps: readonly PaintedStoryStep[];
+  /** The painted photo's backdrop and parallax layer (WatercolorImage). */
+  watercolor?: WatercolorLook;
   id?: string;
   className?: string;
 }
@@ -101,6 +103,7 @@ export function PaintedStory({
   eyebrow,
   heading,
   steps,
+  watercolor,
   id,
   className,
 }: PaintedStoryProps) {
@@ -302,6 +305,7 @@ export function PaintedStory({
                 src={step.image.src}
                 alt={step.image.alt}
                 objectPosition={step.image.objectPosition}
+                {...watercolor}
                 sizes="(min-width: 1024px) 62vw, calc(117vw - 3rem)"
               />
             </div>

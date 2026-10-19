@@ -144,6 +144,10 @@ export {
   getPublishedPageSeo,
   publishPageSeo,
   updatePageSeoDraft,
+  getPublishedSiteAppearance,
+  getSiteAppearanceAdmin,
+  publishSiteAppearance,
+  updateSiteAppearanceDraft,
 } from "./cms";
 export type { PublicSupportArea } from "./cms";
 // The site's preview of the CMS drafts (Draft Mode).

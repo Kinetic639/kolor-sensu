@@ -401,6 +401,36 @@ noindex }`. Every text may be empty: the page's own (`SEO_PAGES`), the
 - **Not here**: a service's and a specialist's page take their title and
   description from their record.
 
+## Every page → shared settings (`site_appearance`, issue #111, 19.10)
+
+`20261019140000_site_appearance.sql`; tests `supabase/tests/site_appearance.sql`.
+
+- **What**: how components used on many pages look, in its own `/cms` tab,
+  "Ustawienia wspólne" (`?strona=wspolne`, after the pages). For now one
+  group, "Wygląd komponentów · Zdjęcie z akwarelą": the painted photo
+  (`WatercolorImage`) on the homepage (hero, the scroll story), /o-nas,
+  /oferta/[slug], /warsztaty and /kontakt.
+- **Payload** (`siteAppearanceContentSchema`,
+  `packages/contracts/src/cms-appearance.ts`): `{ watercolorBackdropPath |
+null, watercolorParallaxPath | null }`, each ≤300 characters, images in
+  site-media (folder `appearance`). No backdrop is the site's own
+  (`/watercolor/watercolor-background.webp`); no parallax layer, none.
+- **Site**: `getWatercolorLook` (`apps/web/src/lib/public-data.ts`) reads
+  `getPublishedSiteAppearance` (the generic published read, so the draft
+  preview covers it) and passes `{ watercolorSrc, parallaxSrc }` as the
+  `watercolor` prop of `HeroSection`, `FeatureSection` and `PaintedStory`,
+  or straight to `WatercolorImage`. Both images fill the backdrop's 16 : 10
+  frame (another shape is stretched). The parallax layer lies over the
+  photo's edges, under the caption, is painted in with the backdrop and
+  drifts on scroll (`watercolor-parallax.tsx`), not under reduced motion.
+  The shared images are not used by the generated share pictures
+  (`og-image.tsx`), which keep the site's own backdrop.
+- **Admin**: two decorative image fields (PNG or WebP, no alt text):
+  "Tło akwareli" ("Przywróć domyślne" returns to the site's own) and
+  "Warstwa parallaxy", with a preview around the photo's place. Saved as a
+  draft; the tab's "Publikuj stronę" publishes it and refreshes every page
+  (layout revalidation of `/`); "Podgląd" opens the homepage.
+
 ## Domain separation
 
 `/specjalisci` reads **directly from the real Specialist Domain**

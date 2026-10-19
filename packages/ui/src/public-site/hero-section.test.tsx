@@ -58,6 +58,24 @@ describe("HeroSection", () => {
     );
   });
 
+  it("uses the site's chosen backdrop and parallax layer", () => {
+    const { container } = render(
+      <HeroSection
+        {...sampleHero}
+        watercolor={{
+          watercolorSrc: "/media/backdrop.webp",
+          parallaxSrc: "/media/drops.png",
+        }}
+      />,
+    );
+    expect(
+      container.querySelector(".ks-wc__backdrop img")?.getAttribute("src"),
+    ).toContain("backdrop.webp");
+    expect(
+      container.querySelector(".ks-wc__parallax img")?.getAttribute("src"),
+    ).toContain("drops.png");
+  });
+
   it("paints the picture in with WatercolorImage's brush strokes when animated", () => {
     const html = renderToString(
       <HeroSection {...sampleHero} animationPreset="watercolor-reveal" />,

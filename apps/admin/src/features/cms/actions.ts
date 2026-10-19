@@ -35,8 +35,13 @@ import {
   SEO_PAGES,
   type PageSeoContent,
   type SeoPage,
+  siteAppearanceContentSchema,
+  type SiteAppearanceContent,
 } from "@repo/contracts";
-import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
+import {
+  revalidateWeb,
+  type WebRevalidationTarget,
+} from "@repo/app-runtime/revalidate-web";
 import {
   publishCrisisHelp,
   publishHomeStory,
@@ -65,6 +70,8 @@ import {
   updateSupportAreasDraft,
   publishPageSeo,
   updatePageSeoDraft,
+  publishSiteAppearance,
+  updateSiteAppearanceDraft,
 } from "@repo/supabase";
 import { revalidatePath } from "next/cache";
 import type { z } from "zod";
@@ -177,14 +184,17 @@ export async function updateRoomsPageDraftAction(values: RoomsPageContent) {
 
 async function publishPage(
   publish: readonly ((client: Client) => Promise<void>)[],
-  path: string,
+  path: string | WebRevalidationTarget,
 ): Promise<ActionResult> {
   await requirePortalRole();
   try {
     const client = await createClient();
     for (const section of publish) await section(client);
     // The sitemap too: it leaves out the pages kept out of search engines.
-    await revalidateWeb([{ path }, { path: "/sitemap.xml" }]);
+    await revalidateWeb([
+      typeof path === "string" ? { path } : path,
+      { path: "/sitemap.xml" },
+    ]);
     revalidatePath("/cms");
     return { ok: true };
   } catch (error) {
@@ -251,4 +261,23 @@ export async function publishSeoPageAction(
     [(client) => publishPageSeo(client, page)],
     seoPageDefinition(page).path,
   );
+}
+
+/** The site's shared settings (how components look) into their draft. */
+export async function updateSiteAppearanceDraftAction(
+  values: SiteAppearanceContent,
+): Promise<ActionResult> {
+  return saveDraft(
+    siteAppearanceContentSchema,
+    values,
+    updateSiteAppearanceDraft,
+  );
+}
+
+/**
+ * The site's shared settings: published, then every page refreshed (the
+ * painted photo is on many of them).
+ */
+export async function publishSiteAppearanceAction(): Promise<ActionResult> {
+  return publishPage([publishSiteAppearance], { path: "/", type: "layout" });
 }

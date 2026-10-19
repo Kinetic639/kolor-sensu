@@ -44,7 +44,7 @@ describe("WatercolorImage on the server", () => {
     }
   });
 
-  it("keeps client-only code to small islands: reveals, caption motion, intro motion, navigation, cookie notice, room gallery, rooms peek, cursor ring, first steps, painted story, support areas, thoughts lens", () => {
+  it("keeps client-only code to small islands: reveals, caption motion, parallax layer, intro motion, navigation, cookie notice, room gallery, rooms peek, cursor ring, first steps, painted story, support areas, thoughts lens", () => {
     const clientFiles = readdirSync(here)
       .filter(
         (file) => /\.tsx?$/.test(file) && !/\.(test|stories)\./.test(file),
@@ -69,6 +69,7 @@ describe("WatercolorImage on the server", () => {
       "support-areas.tsx",
       "thoughts-lens.tsx",
       "watercolor-caption-motion.tsx",
+      "watercolor-parallax.tsx",
       "watercolor-reveal.tsx",
     ]);
   });

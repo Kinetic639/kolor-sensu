@@ -8,8 +8,14 @@ import {
   publishHomePageAction,
   publishRoomsPageAction,
   publishSeoPageAction,
+  publishSiteAppearanceAction,
 } from "./actions";
-import { CMS_PAGE_SEO, type CmsPage } from "./page-params";
+import {
+  CMS_PAGE_SEO,
+  isCmsPage,
+  type CmsPage,
+  type CmsTab,
+} from "./page-params";
 import { cmsPreviewHref } from "./preview";
 import type { PageStatus } from "./view-model";
 
@@ -18,7 +24,8 @@ import type { PageStatus } from "./view-model";
 // only settings are its search and sharing ones publishes those. "Podgląd"
 // opens the page on the site in a new tab with the saved drafts, as it will
 // look once published, and refreshes itself as sections are saved
-// (preview.ts).
+// (preview.ts). The shared settings' tab has the same bar: it publishes
+// them for every page.
 
 type Publish = () => ReturnType<typeof publishHomePageAction>;
 
@@ -27,8 +34,10 @@ const pagePublish: Partial<Record<CmsPage, Publish>> = {
   gabinety: publishRoomsPageAction,
 };
 
-const publish = (page: CmsPage): Publish =>
-  pagePublish[page] ?? (() => publishSeoPageAction(CMS_PAGE_SEO[page]));
+const publish = (page: CmsTab): Publish =>
+  isCmsPage(page)
+    ? (pagePublish[page] ?? (() => publishSeoPageAction(CMS_PAGE_SEO[page])))
+    : publishSiteAppearanceAction;
 
 const TAG =
   "inline-flex h-5 items-center rounded-[4px] px-1.5 text-[0.75rem] font-medium whitespace-nowrap";
@@ -37,7 +46,7 @@ export function PagePublishBar({
   page,
   status,
 }: {
-  page: CmsPage;
+  page: CmsTab;
   status: PageStatus;
 }) {
   const { isPending, run } = useSave();

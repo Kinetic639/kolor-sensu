@@ -20,9 +20,11 @@ import {
   listRoomImages,
   supportAreaImageUrl,
   getPageSeoAdmin,
+  getSiteAppearanceAdmin,
 } from "@repo/supabase";
 import type { SeoPage } from "@repo/contracts";
 import { mapRoomsPeekModel } from "./rooms-peek";
+import { mapSiteAppearanceViewModel } from "./appearance-editor";
 import { mapPageSeoViewModel } from "./seo-editor";
 import {
   mapContentViewModel,
@@ -126,5 +128,14 @@ export async function loadPageSeo(page: SeoPage) {
   const client = await createClient();
   return mapPageSeoViewModel(await getPageSeoAdmin(client, page), (path) =>
     supportAreaImageUrl(client, path),
+  );
+}
+
+/** The site's shared settings, with each image's address to preview. */
+export async function loadSiteAppearance() {
+  const client = await createClient();
+  return mapSiteAppearanceViewModel(
+    await getSiteAppearanceAdmin(client),
+    (path) => supportAreaImageUrl(client, path),
   );
 }

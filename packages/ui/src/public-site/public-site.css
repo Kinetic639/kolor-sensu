@@ -63,6 +63,17 @@
     mask-repeat: no-repeat;
   }
 
+  /* Layer 2b (optional, WatercolorImage `parallaxSrc`): a second decorative
+     image in the backdrop's frame, over the photo's edges (under the
+     caption and the mark), which ParallaxLayer (watercolor-parallax.tsx)
+     drifts on scroll. */
+  .ks-wc__parallax {
+    position: absolute;
+    inset: -4.52% -8.77% -5.64% -8.64%;
+    pointer-events: none;
+    will-change: transform;
+  }
+
   /* The component does the crop: any rectangular upload covers the frame,
      and object-position (set per image) picks what stays in view. */
   .ks-wc__img {
@@ -154,6 +165,12 @@
 
       .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])
         .ks-wc__backdrop {
+        mask-image: var(--ks-reveal-backdrop, var(--ks-reveal-hidden));
+      }
+
+      /* The parallax layer shares the backdrop's frame: painted in with it. */
+      .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])
+        .ks-wc__parallax {
         mask-image: var(--ks-reveal-backdrop, var(--ks-reveal-hidden));
       }
 

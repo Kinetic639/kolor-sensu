@@ -13,7 +13,8 @@ import { useState } from "react";
 // One of the site's own photos in a CMS section: a preview, "Dodaj" or
 // "Zmień" (uploaded at once into the public site-media bucket, under a new
 // name), "Usuń", and the description for screen readers once there is a
-// photo. The draft keeps its path; saving the section saves it.
+// photo. The draft keeps its path; saving the section saves it. A
+// decorative image (e.g. the painted photo's backdrop) has no description.
 
 export interface SiteImageValue {
   imagePath: string | null;
@@ -28,13 +29,20 @@ export function SiteImageField({
   hint,
   value,
   onChange,
+  decorative = false,
+  accept = "image/jpeg,image/png,image/webp",
+  removeLabel = "Usuń",
 }: {
   id: string;
-  folder: "hero" | "story" | "seo";
+  folder: "hero" | "story" | "seo" | "appearance";
   label: string;
   hint: string;
   value: SiteImageValue;
   onChange: (patch: Partial<SiteImageValue>) => void;
+  /** Purely decorative: no description for screen readers. */
+  decorative?: boolean;
+  accept?: string;
+  removeLabel?: string;
 }) {
   const [uploading, setUploading] = useState(false);
 
@@ -74,7 +82,7 @@ export function SiteImageField({
           <ImagePlus aria-hidden="true" />
           {uploading ? "Wgrywanie…" : value.imagePath ? "Zmień" : "Dodaj"}
           <input
-            accept="image/jpeg,image/png,image/webp"
+            accept={accept}
             aria-label={label}
             className="sr-only"
             disabled={uploading}
@@ -92,12 +100,12 @@ export function SiteImageField({
             onClick={() => onChange({ imagePath: null, imageUrl: null })}
             type="button"
           >
-            Usuń
+            {removeLabel}
           </button>
         ) : null}
         <span className="text-[0.75rem] text-[var(--text-muted)]">{hint}</span>
       </div>
-      {value.imagePath ? (
+      {value.imagePath && !decorative ? (
         <>
           <Label htmlFor={`${id}-alt`}>Opis zdjęcia dla czytników ekranu</Label>
           <Input

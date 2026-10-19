@@ -9,7 +9,11 @@ import { ClosingCta } from "@/components/closing-cta";
 import { PageIntro } from "@/components/page-intro";
 import { about, hero, rooms, specialistsCopy } from "@/content/site";
 import { toSpecialistCard } from "@/lib/presentation";
-import { getCenter, getSpecialists } from "@/lib/public-data";
+import {
+  getCenter,
+  getSpecialists,
+  getWatercolorLook,
+} from "@/lib/public-data";
 import { pageMetadata } from "@/lib/page-metadata";
 
 // Title, description and link preview: the CMS's over the page's own.
@@ -25,9 +29,10 @@ const valueIcons = [
 const valueTones = ["sage", "blush", "cream"] as const;
 
 export default async function AboutPage() {
-  const [center, specialists] = await Promise.all([
+  const [center, specialists, watercolor] = await Promise.all([
     getCenter(),
     getSpecialists(),
+    getWatercolorLook(),
   ]);
 
   return (
@@ -58,6 +63,7 @@ export default async function AboutPage() {
         cta={{ href: "/gabinety", label: "Zobacz nasze gabinety" }}
         imagePosition="left"
         animationPreset="watercolor-reveal"
+        watercolor={watercolor}
       />
       {specialists.length > 0 ? (
         <SpecialistsSection

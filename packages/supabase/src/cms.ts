@@ -41,6 +41,10 @@ import {
   seoContentKey,
   type PageSeoContent,
   type SeoPage,
+  defaultSiteAppearance,
+  SITE_APPEARANCE_KEY,
+  siteAppearanceContentSchema,
+  type SiteAppearanceContent,
 } from "@repo/contracts";
 import type { Database } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -340,7 +344,8 @@ export function supportAreaImageUrl(
 export async function uploadSiteImage(
   client: SupabaseClient<Database>,
   file: File,
-  folder: "support-areas" | "spotlight" | "hero" | "story" | "seo",
+  folder:
+    "support-areas" | "spotlight" | "hero" | "story" | "seo" | "appearance",
 ): Promise<string> {
   const problem = validateSpecialistImage(file);
   if (problem) throw new Error(problem);
@@ -585,3 +590,17 @@ export function getPublishedPageSeo(
 ): Promise<PageSeoContent> {
   return pageSeo(page).published(client);
 }
+
+/**
+ * The site's shared settings: how components used on many pages look (the
+ * site's own until published).
+ */
+const siteAppearance = contentSection<SiteAppearanceContent>(
+  SITE_APPEARANCE_KEY,
+  siteAppearanceContentSchema,
+  defaultSiteAppearance,
+);
+export const getSiteAppearanceAdmin = siteAppearance.admin;
+export const updateSiteAppearanceDraft = siteAppearance.update;
+export const publishSiteAppearance = siteAppearance.publish;
+export const getPublishedSiteAppearance = siteAppearance.published;
