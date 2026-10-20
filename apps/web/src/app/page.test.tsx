@@ -142,11 +142,11 @@ describe("the homepage", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("shows the hero picture at once: no entrance animation hides it", async () => {
+  it("paints the hero picture in, its photo shown at once on a phone", async () => {
     const { container } = render(await Home());
     const hero = container.querySelector("section .ks-wc");
-    expect(hero).not.toBeNull();
-    expect(hero).not.toHaveAttribute("data-animation");
+    expect(hero).toHaveAttribute("data-animation", "watercolor-reveal");
+    expect(hero).toHaveAttribute("data-photo-at-once", "narrow");
   });
 
   it("paints its pictures with the backdrop and parallax layer the admin chose", async () => {

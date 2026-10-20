@@ -321,12 +321,20 @@ export interface PaintTimelineOptions {
   onComplete?: () => void;
   /** The handwritten caption, shown late with a short fade. */
   caption?: Element | null;
+  /** false: the photo is already showing; only the backdrop is painted. */
+  photo?: boolean;
 }
 
 /** The whole reveal as one GSAP timeline, about 1.15 s long. */
 export function createPaintTimeline(
   matte: PaintMatte,
-  { gsap, paused = false, onComplete, caption }: PaintTimelineOptions,
+  {
+    gsap,
+    paused = false,
+    onComplete,
+    caption,
+    photo = true,
+  }: PaintTimelineOptions,
 ) {
   // Not lazy: the unpainted start is written at once, not at the end of the
   // frame (nothing flashes, and it holds however busy the machine is).
@@ -340,18 +348,24 @@ export function createPaintTimeline(
     timeline.add(strokeTimeline(gsap, stroke, timing), timing.at);
   }
 
-  const { sharpness } = watercolorSplash.photo.time;
-  const [from, to] = frontRange(sharpness);
-  const { at, duration } = photoSplashTiming;
-  timeline.fromTo(
-    matte.photo.front,
-    { attr: { values: paintFront(sharpness, from!) } },
-    // Linear: each bloom's start and ease are in the time map.
-    { attr: { values: paintFront(sharpness, to!) }, duration, ease: "none" },
-    at,
-  );
-  // Once spread, the map is simply opaque: drop the filter.
-  timeline.set(matte.photo.group, { attr: { filter: "none" } }, at + duration);
+  if (photo) {
+    const { sharpness } = watercolorSplash.photo.time;
+    const [from, to] = frontRange(sharpness);
+    const { at, duration } = photoSplashTiming;
+    timeline.fromTo(
+      matte.photo.front,
+      { attr: { values: paintFront(sharpness, from!) } },
+      // Linear: each bloom's start and ease are in the time map.
+      { attr: { values: paintFront(sharpness, to!) }, duration, ease: "none" },
+      at,
+    );
+    // Once spread, the map is simply opaque: drop the filter.
+    timeline.set(
+      matte.photo.group,
+      { attr: { filter: "none" } },
+      at + duration,
+    );
+  }
 
   if (caption) {
     timeline.fromTo(

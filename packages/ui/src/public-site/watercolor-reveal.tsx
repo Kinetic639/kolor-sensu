@@ -12,7 +12,9 @@
 //   waiting         mounted; waits until the image is in view and loaded.
 //   playing         the paint matte (watercolor-paint-matte.ts) masks the
 //                   backdrop and the photo, and GSAP paints it stroke by
-//                   stroke.
+//                   stroke. With photoAtOnceOnPhones (the hero), a screen
+//                   narrower than 64rem shows the photo throughout and only
+//                   the backdrop is painted.
 //   fading          reduced motion, "simple-fade": a short fade instead.
 //   done            the matte is removed and the reveal styles no longer
 //                   apply: this is exactly the static composition, and
@@ -76,10 +78,18 @@ export const WatercolorRevealDebugContext =
 export interface WatercolorRevealProps {
   as: "div" | "figure";
   reducedMotionMode: ReducedMotionMode;
+  /**
+   * The page's largest paint (the hero): below 64rem the photo shows at
+   * once, unmasked, so a phone does not wait for the script to see it.
+   */
+  photoAtOnceOnPhones?: boolean;
   className?: string;
   style?: CSSProperties;
   children: ReactNode;
 }
+
+/** Wide enough for the full reveal of a photoAtOnceOnPhones picture. */
+export const FULL_REVEAL_QUERY = "(min-width: 64rem)";
 
 /** Whether the picture shows as it is, with no reveal. */
 function staysStill(root: HTMLElement, reducedMotionMode: ReducedMotionMode) {
@@ -99,6 +109,7 @@ const LOAD_TIMEOUT = 1500;
 export function WatercolorReveal({
   as: Root,
   reducedMotionMode,
+  photoAtOnceOnPhones = false,
   className,
   style,
   children,
@@ -126,6 +137,9 @@ export function WatercolorReveal({
         root.dataset.reveal = state;
       };
       const reduce = matches("(prefers-reduced-motion: reduce)");
+      // The photo is painted in too, unless it is already showing.
+      const paintsPhoto =
+        root.dataset.photoAtOnce === undefined || matches(FULL_REVEAL_QUERY);
 
       let cancelled = false;
       let timer: ReturnType<typeof setTimeout> | undefined;
@@ -180,6 +194,7 @@ export function WatercolorReveal({
         timeline = createPaintTimeline(matte, {
           gsap,
           caption,
+          photo: paintsPhoto,
           paused: true,
           onComplete: finish,
         });
@@ -189,7 +204,9 @@ export function WatercolorReveal({
       const paint = contextSafe(() => {
         if (!matte || !timeline) build();
         root.style.setProperty(revealProperties.backdrop, matte!.backdrop.url);
-        root.style.setProperty(revealProperties.photo, matte!.photo.url);
+        if (paintsPhoto) {
+          root.style.setProperty(revealProperties.photo, matte!.photo.url);
+        }
         setState("playing");
         debug?.onReveal?.({ matte: matte!, timeline: timeline! });
         const frozen = debug?.freezeAt;
@@ -256,6 +273,7 @@ export function WatercolorReveal({
       style={style}
       data-animation="watercolor-reveal"
       data-reduced-motion={reducedMotionMode}
+      data-photo-at-once={photoAtOnceOnPhones ? "narrow" : undefined}
     >
       {children}
     </Root>
