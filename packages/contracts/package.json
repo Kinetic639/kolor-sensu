@@ -19,6 +19,7 @@
     "./cms": "./src/cms.ts",
     "./cms-shared": "./src/cms-shared.ts",
     "./cms-pages": "./src/cms-pages.ts",
+    "./cms-offer": "./src/cms-offer.ts",
     "./cms-appearance": "./src/cms-appearance.ts",
     "./cms-seo": "./src/cms-seo.ts",
     "./colors": "./src/colors.ts",

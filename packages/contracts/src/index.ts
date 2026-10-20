@@ -324,6 +324,21 @@ export type {
   SpecialistsPageContent,
 } from "@repo/contracts/cms-pages";
 export {
+  defaultOfferPage,
+  defaultPricesPage,
+  defaultServicePage,
+  offerPageContentSchema,
+  PRICE_RULES_MAX,
+  pricesPageContentSchema,
+  servicePageContentSchema,
+} from "@repo/contracts/cms-offer";
+export type {
+  OfferPageContent,
+  PriceRule,
+  PricesPageContent,
+  ServicePageContent,
+} from "@repo/contracts/cms-offer";
+export {
   CONTACT_MESSAGE_MAX,
   contactMessageInputSchema,
 } from "@repo/contracts/contact";

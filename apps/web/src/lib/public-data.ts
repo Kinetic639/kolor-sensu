@@ -9,6 +9,9 @@ import {
   getPublishedAboutPage,
   getPublishedClosingCta,
   getPublishedContactPage,
+  getPublishedOfferPage,
+  getPublishedPricesPage,
+  getPublishedServicePage,
   getPublishedCrisisHelp,
   getPublishedSiteContact,
   getPublishedSpecialistsPage,
@@ -45,6 +48,9 @@ import {
   defaultAboutPage,
   defaultClosingCta,
   defaultContactPage,
+  defaultOfferPage,
+  defaultPricesPage,
+  defaultServicePage,
   defaultCrisisHelp,
   defaultSiteContact,
   defaultSpecialistsPage,
@@ -235,6 +241,21 @@ export const getSpecialistsPage = cache(() =>
 /** /kontakt, its words, travel description and questions. */
 export const getContactPage = cache(() =>
   load("contact page", getPublishedContactPage, defaultContactPage),
+);
+
+/** /oferta's words. */
+export const getOfferPage = cache(() =>
+  load("offer page", getPublishedOfferPage, defaultOfferPage),
+);
+
+/** The words every service's page shares. */
+export const getServicePage = cache(() =>
+  load("service page", getPublishedServicePage, defaultServicePage),
+);
+
+/** /cennik's words and rules. */
+export const getPricesPage = cache(() =>
+  load("prices page", getPublishedPricesPage, defaultPricesPage),
 );
 
 /** The closing banner's words (Ustawienia wspólne). */

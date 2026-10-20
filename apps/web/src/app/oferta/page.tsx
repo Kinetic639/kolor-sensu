@@ -1,11 +1,15 @@
 import { catalogAnchor } from "@repo/contracts";
-import { EditorialHeading, FaqSection, OfferTile } from "@repo/ui/public-site";
+import { EditorialHeading, OfferTile } from "@repo/ui/public-site";
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
 import { PageIntro } from "@/components/page-intro";
-import { faq, offerCopy } from "@/content/site";
 import { toOfferTile } from "@/lib/presentation";
-import { getOffer, type PublicService, getClosingCta } from "@/lib/public-data";
+import {
+  getClosingCta,
+  getOffer,
+  getOfferPage,
+  type PublicService,
+} from "@/lib/public-data";
 import { offerBlocks } from "./offer-blocks";
 import { pageMetadata } from "@/lib/page-metadata";
 
@@ -49,22 +53,21 @@ function Tiles({
 }
 
 export default async function OfferPage() {
-  const [offer, closing] = await Promise.all([getOffer(), getClosingCta()]);
+  const [offer, words, closing] = await Promise.all([
+    getOffer(),
+    getOfferPage(),
+    getClosingCta(),
+  ]);
   const blocks = offerBlocks(offer);
 
   return (
     <>
-      <PageIntro
-        eyebrow={offerCopy.eyebrow}
-        heading="Oferta"
-        accent={offerCopy.heading}
-        lead={offerCopy.description}
-      />
+      {/* Its questions are on Kontakt, next to the form. */}
+      <PageIntro {...words.intro} />
       <div className="max-w-page px-gutter pb-section-sm mx-auto grid gap-14">
         {blocks.length === 0 ? (
           <p className="text-body text-text-muted max-w-copy">
-            Opis naszej oferty pojawi się tu wkrótce. Zadzwoń lub napisz do nas,
-            a opowiemy, w czym możemy pomóc.
+            {words.emptyText}
           </p>
         ) : (
           blocks.map((block) =>
@@ -100,7 +103,6 @@ export default async function OfferPage() {
           )
         )}
       </div>
-      <FaqSection items={faq.slice(0, 3)} heading="Zanim się zapiszesz" />
       <ClosingCta words={closing} />
     </>
   );

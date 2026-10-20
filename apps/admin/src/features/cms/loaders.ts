@@ -6,6 +6,9 @@ import {
   getAboutPageAdmin,
   getClosingCtaAdmin,
   getContactPageAdmin,
+  getOfferPageAdmin,
+  getPricesPageAdmin,
+  getServicePageAdmin,
   getSiteContactAdmin,
   getSpecialistsPageAdmin,
   getCrisisHelpAdmin,
@@ -165,6 +168,18 @@ export async function loadSpecialistsPage() {
   return mapContentViewModel(
     await getSpecialistsPageAdmin(await createClient()),
   );
+}
+
+export async function loadOfferPage() {
+  return mapContentViewModel(await getOfferPageAdmin(await createClient()));
+}
+
+export async function loadServicePage() {
+  return mapContentViewModel(await getServicePageAdmin(await createClient()));
+}
+
+export async function loadPricesPage() {
+  return mapContentViewModel(await getPricesPageAdmin(await createClient()));
 }
 
 export async function loadContactPage() {
