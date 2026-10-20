@@ -3,6 +3,7 @@ import type {
   HeaderCta,
   HeaderTone,
   HeaderHref,
+  PageHeaderContent,
   SectionHeaderContent,
   TitleSegment,
 } from "@repo/contracts";
@@ -193,5 +194,30 @@ export function draftToHeader(draft: HeaderDraft): SectionHeaderContent {
     title: draft.lines.map(draftToLine),
     description: draftToDescription(draft.description),
     cta: draft.cta,
+  };
+}
+
+const EMPTY_LINE: TitleLineDraft = { text: "", tones: [] };
+
+/** A page's header in the editor: always its two title lines. */
+export function pageHeaderToDraft(header: SectionHeaderContent): HeaderDraft {
+  const draft = headerToDraft(header);
+  return {
+    ...draft,
+    lines: [draft.lines[0] ?? EMPTY_LINE, draft.lines[1] ?? EMPTY_LINE],
+    cta: null,
+  };
+}
+
+/**
+ * A page's header to store (validate it with pageHeaderSchema): an empty
+ * second line left out, and no call to action.
+ */
+export function draftToPageHeader(draft: HeaderDraft): PageHeaderContent {
+  const header = draftToHeader(draft);
+  return {
+    ...header,
+    title: header.title.filter((line, at) => at === 0 || line.length > 0),
+    cta: null,
   };
 }

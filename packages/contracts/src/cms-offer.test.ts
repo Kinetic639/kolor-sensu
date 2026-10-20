@@ -20,15 +20,18 @@ describe("the offer pages' words", () => {
     expect(pricesPageContentSchema.parse(defaultPricesPage)).toEqual(
       defaultPricesPage,
     );
-    expect(defaultOfferPage.intro.heading).toBe("Oferta");
-    expect(defaultPricesPage.intro.heading).toBe("Cennik");
+    expect(defaultOfferPage.intro.title[0]![0]!.text).toBe("Oferta");
+    expect(defaultPricesPage.intro.title[0]![0]!.text).toBe("Cennik");
   });
 
   it("refuse a page without its title", () => {
     expect(
       offerPageContentSchema.safeParse({
         ...defaultOfferPage,
-        intro: { ...defaultOfferPage.intro, heading: " " },
+        intro: {
+          ...defaultOfferPage.intro,
+          title: [[{ text: " ", tone: "default" }]],
+        },
       }).success,
     ).toBe(false);
   });

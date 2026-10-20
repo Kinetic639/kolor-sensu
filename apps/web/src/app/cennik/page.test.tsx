@@ -104,7 +104,10 @@ describe("the price list", () => {
   it("has the CMS's title", async () => {
     words = {
       ...defaultPricesPage,
-      intro: { ...defaultPricesPage.intro, heading: "Ceny wizyt" },
+      intro: {
+        ...defaultPricesPage.intro,
+        title: [[{ text: "Ceny wizyt", tone: "default" }]],
+      },
     };
     await open();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(

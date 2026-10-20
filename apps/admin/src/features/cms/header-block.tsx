@@ -5,12 +5,14 @@ import {
   bookedService,
   CTA_STYLES,
   HEADER_LIMITS,
+  PAGE_HEADER_LIMITS,
   sectionHeaderSchema,
   SITE_PAGES,
   type CtaStyle,
   type HeaderHref,
   type HeaderTone,
   type HomeHeaderSection,
+  type PageHeaderContent,
   type SectionHeaderContent,
   serviceBookingHref,
 } from "@repo/contracts";
@@ -39,7 +41,9 @@ import {
 } from "./actions";
 import {
   draftToHeader,
+  draftToPageHeader,
   headerToDraft,
+  pageHeaderToDraft,
   linkOver,
   moveLink,
   NEXT_TONE,
@@ -204,6 +208,69 @@ export function HeaderBlock({
   );
 }
 
+/**
+ * A page's header (its top: the h1) as the sections' headers are edited:
+ * the eyebrow and its colour, the title's two lines (the second optional;
+ * a click on a word changes its colour) and the description with one link,
+ * with a preview. No call to action. Part of the page's form: it reports
+ * every change; the form saves the draft.
+ */
+export function PageHeaderFields({
+  id,
+  value,
+  onChange,
+  problem,
+  leadHint,
+}: {
+  id: string;
+  value: PageHeaderContent;
+  onChange: (header: PageHeaderContent) => void;
+  /** What the page's check found wrong with the header, if anything. */
+  problem?: string | null;
+  leadHint?: string;
+}) {
+  const [draft, setDraft] = useState<HeaderDraft>(() =>
+    pageHeaderToDraft(value),
+  );
+  function change(patch: Partial<HeaderDraft>) {
+    const next = { ...draft, ...patch };
+    setDraft(next);
+    onChange(draftToPageHeader(next));
+  }
+  return (
+    <BookableServices.Provider value={[]}>
+      <div className="grid gap-3.5 px-3.5 py-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+        <div className="grid content-start gap-3.5">
+          <EyebrowField
+            id={`${id}-eyebrow`}
+            onChange={(eyebrow) => change({ eyebrow })}
+            value={draft.eyebrow}
+          />
+          <TitleField
+            id={`${id}-title`}
+            lines={draft.lines}
+            onChange={(lines) => change({ lines })}
+            page
+          />
+          <DescriptionField
+            hint={leadHint}
+            id={`${id}-description`}
+            maxLength={PAGE_HEADER_LIMITS.description}
+            onChange={(description) => change({ description })}
+            value={draft.description}
+          />
+          {problem ? (
+            <p className="m-0 text-[0.75rem] text-[var(--danger)]" role="alert">
+              {problem}
+            </p>
+          ) : null}
+        </div>
+        <Preview header={draftToPageHeader(draft)} />
+      </div>
+    </BookableServices.Provider>
+  );
+}
+
 function ToneChoice({
   label,
   value,
@@ -274,10 +341,13 @@ function TitleField({
   id,
   lines,
   onChange,
+  page = false,
 }: {
   id: string;
   lines: HeaderDraft["lines"];
   onChange: (lines: HeaderDraft["lines"]) => void;
+  /** A page's title: always two lines (the second optional), none added. */
+  page?: boolean;
 }) {
   const setLine = (index: number, line: HeaderDraft["lines"][number]) =>
     onChange(lines.map((one, at) => (at === index ? line : one)));
@@ -290,8 +360,9 @@ function TitleField({
             <div className="flex items-center justify-between gap-2">
               <Label htmlFor={`${id}-${index}`}>
                 {lines.length > 1 ? `Tytuł, wiersz ${index + 1}` : "Tytuł"}
+                {page && index > 0 ? " (opcjonalnie)" : ""}
               </Label>
-              {index > 0 ? (
+              {index > 0 && !page ? (
                 <button
                   className={DETAIL_BUTTON}
                   onClick={() => onChange(lines.slice(0, 1))}
@@ -304,7 +375,7 @@ function TitleField({
             </div>
             <Input
               id={`${id}-${index}`}
-              maxLength={HEADER_LIMITS.title}
+              maxLength={page ? PAGE_HEADER_LIMITS.title : HEADER_LIMITS.title}
               onChange={(event) =>
                 setLine(index, retone(line, event.target.value))
               }
@@ -346,7 +417,7 @@ function TitleField({
         );
       })}
       <div className="flex flex-wrap items-center gap-2">
-        {lines.length < 2 ? (
+        {lines.length < 2 && !page ? (
           <button
             className={DETAIL_BUTTON}
             onClick={() => onChange([...lines, { text: "", tones: [] }])}
@@ -368,10 +439,14 @@ function DescriptionField({
   id,
   value,
   onChange,
+  maxLength = HEADER_LIMITS.description,
+  hint,
 }: {
   id: string;
   value: HeaderDraft["description"];
   onChange: (description: HeaderDraft["description"]) => void;
+  maxLength?: number;
+  hint?: string;
 }) {
   const [selection, setSelection] = useState<[number, number] | null>(null);
   const link = value.link;
@@ -380,9 +455,18 @@ function DescriptionField({
   return (
     <div className="grid gap-1.5">
       <Label htmlFor={id}>Opis pod tytułem (opcjonalnie)</Label>
+      {hint ? (
+        <p
+          className="m-0 text-[0.75rem] text-[var(--text-muted)]"
+          id={`${id}-hint`}
+        >
+          {hint}
+        </p>
+      ) : null}
       <Textarea
+        aria-describedby={hint ? `${id}-hint` : undefined}
         id={id}
-        maxLength={HEADER_LIMITS.description}
+        maxLength={maxLength}
         onChange={(event) =>
           onChange({
             text: event.target.value,

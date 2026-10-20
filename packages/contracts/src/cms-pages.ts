@@ -4,9 +4,10 @@ import {
   sectionHeaderSchema,
 } from "@repo/contracts/section-header";
 import {
-  pageIntroSchema,
+  pageHeader,
+  pageHeaderSchema,
   sitePathSchema,
-  type PageIntroContent,
+  type PageHeaderContent,
 } from "@repo/contracts/cms-shared";
 
 // The CMS's words for the "O nas" pages (docs/architecture/cms-domain.md):
@@ -37,12 +38,12 @@ const audienceSchema = z.strictObject({
 
 export type AboutAudience = z.infer<typeof audienceSchema>;
 
-export const defaultAboutIntro: PageIntroContent = {
+export const defaultAboutIntro: PageHeaderContent = pageHeader({
   eyebrow: "Centrum psychoterapii i rozwoju",
-  heading: "O nas",
+  title: "O nas",
   accent: "Spokojnie, uważnie, z sensem.",
   lead: "",
-};
+});
 
 export const defaultAboutValues = [
   {
@@ -85,7 +86,7 @@ export const defaultAboutAudiences: AboutAudience[] = [
  * else the site's own.
  */
 export const aboutPageContentSchema = z.strictObject({
-  intro: pageIntroSchema.default(() => ({ ...defaultAboutIntro })),
+  intro: pageHeaderSchema.default(() => structuredClone(defaultAboutIntro)),
   values: z
     .array(valueSchema)
     .length(ABOUT_VALUES_COUNT)
@@ -184,7 +185,7 @@ export const defaultAboutHeaders: AboutHeadersContent = {
 
 /** /specjalisci: its top, the line for an empty list, the closing banner. */
 export const specialistsPageContentSchema = z.strictObject({
-  intro: pageIntroSchema,
+  intro: pageHeaderSchema,
   emptyText: z.string().trim().min(1).max(400),
   helpHeading: z.string().trim().min(1).max(120),
 });
@@ -194,12 +195,12 @@ export type SpecialistsPageContent = z.infer<
 >;
 
 export const defaultSpecialistsPage: SpecialistsPageContent = {
-  intro: {
+  intro: pageHeader({
     eyebrow: "Nasi specjaliści",
-    heading: "Specjaliści",
+    title: "Specjaliści",
     accent: "Ludzie, którzy słuchają.",
     lead: "Doświadczony zespół specjalistów, którzy z empatią i zaangażowaniem towarzyszą w drodze do lepszego samopoczucia.",
-  },
+  }),
   emptyText:
     "Profile naszych specjalistów pojawią się tu wkrótce. Zadzwoń lub napisz do nas, a pomożemy dobrać osobę i termin.",
   helpHeading: "Nie wiesz, do kogo się zapisać? Pomożemy wybrać.",
@@ -249,7 +250,7 @@ export const defaultContactFaq: ContactFaqItem[] = [
  * entrance), the form's heading and its questions and answers.
  */
 export const contactPageContentSchema = z.strictObject({
-  intro: pageIntroSchema,
+  intro: pageHeaderSchema,
   travel: z.string().trim().max(1000),
   formHeading: z.string().trim().min(1).max(120),
   faqHeading: z.string().trim().min(1).max(120),
@@ -259,12 +260,12 @@ export const contactPageContentSchema = z.strictObject({
 export type ContactPageContent = z.infer<typeof contactPageContentSchema>;
 
 export const defaultContactPage: ContactPageContent = {
-  intro: {
+  intro: pageHeader({
     eyebrow: "Kontakt",
-    heading: "Kontakt",
+    title: "Kontakt",
     accent: "Jesteśmy tu dla Ciebie.",
     lead: "Zadzwoń lub napisz. Odpowiemy na pytania, pomożemy dobrać specjalistę i znaleźć termin.",
-  },
+  }),
   travel: "",
   formHeading: "Napisz do nas",
   faqHeading: "Zanim zadzwonisz",

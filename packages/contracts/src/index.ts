@@ -287,8 +287,13 @@ export type {
   HeaderHref,
   ServiceBookingHref,
 } from "@repo/contracts/section-header";
-export { pageIntroSchema, sitePathSchema } from "@repo/contracts/cms-shared";
-export type { PageIntroContent } from "@repo/contracts/cms-shared";
+export {
+  PAGE_HEADER_LIMITS,
+  pageHeader,
+  pageHeaderSchema,
+  sitePathSchema,
+} from "@repo/contracts/cms-shared";
+export type { PageHeaderContent } from "@repo/contracts/cms-shared";
 export {
   ABOUT_AUDIENCES_MAX,
   ABOUT_HEADER_SECTIONS,

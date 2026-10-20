@@ -127,12 +127,7 @@ export default async function RoomsPage() {
 
   return (
     <>
-      <PageIntro
-        eyebrow={intro.eyebrow || undefined}
-        heading={intro.heading}
-        accent={intro.accent || undefined}
-        lead={intro.lead || undefined}
-      />
+      <PageIntro header={intro} />
       {content.showAmenitiesSection && content.amenities.length > 0 ? (
         <section className="max-w-page px-gutter pb-section-sm mx-auto">
           <SoftCard className="grid gap-4 p-6 lg:p-8">

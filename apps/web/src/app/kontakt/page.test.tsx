@@ -56,7 +56,10 @@ describe("Kontakt", () => {
   it("has the CMS's title as its one h1", async () => {
     page = {
       ...defaultContactPage,
-      intro: { ...defaultContactPage.intro, heading: "Napisz albo zadzwoń" },
+      intro: {
+        ...defaultContactPage.intro,
+        title: [[{ text: "Napisz albo zadzwoń", tone: "default" }]],
+      },
     };
     render(await Contact());
     expect(

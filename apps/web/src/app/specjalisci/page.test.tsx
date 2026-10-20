@@ -55,7 +55,10 @@ describe("the specialists' list", () => {
   it("has the CMS's title as its one h1", async () => {
     page = {
       ...defaultSpecialistsPage,
-      intro: { ...defaultSpecialistsPage.intro, heading: "Nasz zespół" },
+      intro: {
+        ...defaultSpecialistsPage.intro,
+        title: [[{ text: "Nasz zespół", tone: "default" }]],
+      },
     };
     render(await List());
     expect(

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { pageIntroSchema } from "@repo/contracts/cms-shared";
+import { pageHeader, pageHeaderSchema } from "@repo/contracts/cms-shared";
 
 // The CMS's words for the offer pages (docs/architecture/cms-domain.md):
 // Oferta, every service's page (one pattern: its words shared by all, the
@@ -11,19 +11,19 @@ import { pageIntroSchema } from "@repo/contracts/cms-shared";
 
 /** /oferta: its top and the line while no service is published. */
 export const offerPageContentSchema = z.strictObject({
-  intro: pageIntroSchema,
+  intro: pageHeaderSchema,
   emptyText: z.string().trim().min(1).max(400),
 });
 
 export type OfferPageContent = z.infer<typeof offerPageContentSchema>;
 
 export const defaultOfferPage: OfferPageContent = {
-  intro: {
+  intro: pageHeader({
     eyebrow: "Nasza oferta",
-    heading: "Oferta",
+    title: "Oferta",
     accent: "Wsparcie w różnych obszarach życia",
     lead: "Oferujemy terapię, konsultacje i warsztaty dopasowane do Twoich potrzeb.",
-  },
+  }),
   emptyText:
     "Opis naszej oferty pojawi się tu wkrótce. Zadzwoń lub napisz do nas, a opowiemy, w czym możemy pomóc.",
 };
@@ -82,7 +82,7 @@ export type PriceRule = z.infer<typeof priceRuleSchema>;
  * the rules here say the rest.
  */
 export const pricesPageContentSchema = z.strictObject({
-  intro: pageIntroSchema,
+  intro: pageHeaderSchema,
   emptyText: z.string().trim().min(1).max(400),
   noPriceText: z.string().trim().min(1).max(200),
   rulesHeading: z.string().trim().min(1).max(120),
@@ -92,12 +92,12 @@ export const pricesPageContentSchema = z.strictObject({
 export type PricesPageContent = z.infer<typeof pricesPageContentSchema>;
 
 export const defaultPricesPage: PricesPageContent = {
-  intro: {
+  intro: pageHeader({
     eyebrow: "Cennik",
-    heading: "Cennik",
+    title: "Cennik",
     accent: "Jasno i bez niespodzianek.",
     lead: "Cena zależy od formy wsparcia i specjalisty. Poniżej znajdziesz aktualne ceny wszystkich usług.",
-  },
+  }),
   emptyText:
     "Cennik pojawi się tu wkrótce. Zapytaj nas o ceny telefonicznie lub mailowo.",
   noPriceText: "Cena ustalana indywidualnie. Zapytaj nas o szczegóły.",

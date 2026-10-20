@@ -17,7 +17,7 @@ import { defaultRoomsPageContent, roomsPageContentSchema } from "./cms";
 
 describe("O nas", () => {
   it("starts from the site's words, its optional parts off", () => {
-    expect(defaultAboutPage.intro.heading).toBe("O nas");
+    expect(defaultAboutPage.intro.title[0]![0]!.text).toBe("O nas");
     expect(defaultAboutPage.values).toHaveLength(3);
     expect(defaultAboutPage).toMatchObject({
       showStory: false,
@@ -60,7 +60,7 @@ describe("Gabinety", () => {
       showAmenitiesSection: false,
       showLocationDetails: true,
     });
-    expect(rooms.intro.heading).toBe("Gabinety");
+    expect(rooms.intro.title[0]![0]!.text).toBe("Gabinety");
     expect(rooms.amenities).toEqual(defaultRoomsPageContent.amenities);
     expect(rooms.showAmenitiesSection).toBe(false);
   });
@@ -86,7 +86,7 @@ describe("the other pages and the shared settings", () => {
     expect(
       contactPageContentSchema.safeParse({
         ...defaultContactPage,
-        intro: { ...defaultContactPage.intro, heading: " " },
+        intro: { ...defaultContactPage.intro, title: [] },
       }).success,
     ).toBe(false);
   });

@@ -72,12 +72,36 @@ describe("the offer page", () => {
   it("has the CMS's words at its top", async () => {
     words = {
       ...defaultOfferPage,
-      intro: { ...defaultOfferPage.intro, heading: "Jak pomagamy" },
+      intro: {
+        ...defaultOfferPage.intro,
+        title: [[{ text: "Jak pomagamy", tone: "default" }]],
+      },
     };
     await open();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       "Jak pomagamy",
     );
+  });
+
+  it("colours the title's words as the CMS set them, on two lines", async () => {
+    words = {
+      ...defaultOfferPage,
+      intro: {
+        ...defaultOfferPage.intro,
+        title: [
+          [{ text: "Oferta", tone: "default" }],
+          [
+            { text: "Wsparcie ", tone: "default" },
+            { text: "dla Ciebie", tone: "pink" },
+          ],
+        ],
+      },
+    };
+    await open();
+    const h1 = screen.getByRole("heading", { level: 1 });
+    expect(h1).toHaveTextContent("Oferta Wsparcie dla Ciebie");
+    expect(within(h1).getByText("dla Ciebie")).toHaveClass("text-pink");
+    expect(h1.querySelector("br")).not.toBeNull();
   });
 
   it("shows each catalogue as its own section, at the menu's anchor", async () => {

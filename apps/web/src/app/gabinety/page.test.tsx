@@ -80,7 +80,10 @@ describe("the page's words", () => {
   it("are the CMS's: the title, and the points of Co u nas znajdziesz", async () => {
     content = {
       ...defaultRoomsPageContent,
-      intro: { ...defaultRoomsPageContent.intro, heading: "Nasze gabinety" },
+      intro: {
+        ...defaultRoomsPageContent.intro,
+        title: [[{ text: "Nasze gabinety", tone: "default" }]],
+      },
       amenitiesHeading: "Na miejscu",
       amenities: ["Herbata i woda"],
     };

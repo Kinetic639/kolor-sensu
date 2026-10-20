@@ -63,7 +63,7 @@ export default async function OfferPage() {
   return (
     <>
       {/* Its questions are on Kontakt, next to the form. */}
-      <PageIntro {...words.intro} />
+      <PageIntro header={words.intro} />
       <div className="max-w-page px-gutter pb-section-sm mx-auto grid gap-14">
         {blocks.length === 0 ? (
           <p className="text-body text-text-muted max-w-copy">
