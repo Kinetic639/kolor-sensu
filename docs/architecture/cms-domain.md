@@ -435,7 +435,7 @@ null, watercolorParallaxPath | null }`, each ≤300 characters, images in
 
 `20261019150000_about_pages.sql`; tests `supabase/tests/about_pages.sql`;
 contracts `packages/contracts/src/cms-pages.ts` (and `cms-shared.ts`: a
-page's top, `pageIntroSchema`, and `sitePathSchema`). Each key defaults to
+page's top, `pageHeaderSchema`, and `sitePathSchema`). Each key defaults to
 the site's own words; fields added later default too.
 
 - **`about_page`** (O nas): the top (an empty lead shows the centre's short
@@ -491,6 +491,20 @@ site's words; the services, catalogues and prices stay the portal's.
 
 A wrong or hidden service's address shows `/oferta/[slug]/not-found`,
 with a way back to Oferta.
+
+## A page's header (20.10)
+
+`20261020170000_page_headers.sql`; tests `supabase/tests/page_headers.sql`.
+A page's top (`intro` on about_page, specialists_page, contact_page, rooms,
+offer_page, prices_page) has a section's header's shape
+(`pageHeaderSchema` in `cms-shared.ts`): the eyebrow and its colour, the
+title in one or two lines of coloured words (the page's h1), the description
+(the lead) with at most one link, and no call to action. The CMS edits it
+with the sections' header editor (`PageHeaderFields`), always showing the
+title's two lines; the site draws it with `SectionHeader` (`variant="page"`).
+The migration rewrote every page's four words (eyebrow, heading, accent,
+lead) into it, keeping the look: the eyebrow pink, the accent the title's
+second line in green.
 
 ## Domain separation
 

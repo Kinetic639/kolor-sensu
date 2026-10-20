@@ -31,12 +31,7 @@ export default async function SpecialistsPage() {
 
   return (
     <>
-      <PageIntro
-        eyebrow={intro.eyebrow || undefined}
-        heading={intro.heading}
-        accent={intro.accent || undefined}
-        lead={intro.lead || undefined}
-      />
+      <PageIntro header={intro} />
       <section className="max-w-page px-gutter pb-section-sm mx-auto">
         {specialists.length === 0 ? (
           <p className="text-body text-text-muted max-w-copy">

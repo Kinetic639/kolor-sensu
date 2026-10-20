@@ -190,7 +190,7 @@ export default async function PricesPage() {
 
   return (
     <>
-      <PageIntro {...words.intro} />
+      <PageIntro header={words.intro} />
       <div className="max-w-page px-gutter pb-section-sm mx-auto grid gap-14">
         {blocks.length === 0 ? (
           <p className="text-body text-text-muted max-w-copy">

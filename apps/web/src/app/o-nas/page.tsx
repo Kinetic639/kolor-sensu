@@ -64,10 +64,19 @@ export default async function AboutPage() {
   return (
     <>
       <PageIntro
-        eyebrow={intro.eyebrow || undefined}
-        heading={intro.heading}
-        accent={intro.accent || undefined}
-        lead={intro.lead || center?.shortDescription || DEFAULT_LEAD}
+        header={
+          intro.description.length > 0
+            ? intro
+            : {
+                ...intro,
+                description: [
+                  {
+                    text: center?.shortDescription || DEFAULT_LEAD,
+                    link: null,
+                  },
+                ],
+              }
+        }
       />
       {about.showStory && story ? (
         <AboutStory

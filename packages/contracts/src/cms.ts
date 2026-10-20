@@ -3,7 +3,11 @@ import {
   plainHeader,
   sectionHeaderSchema,
 } from "@repo/contracts/section-header";
-import { pageIntroSchema, sitePathSchema } from "@repo/contracts/cms-shared";
+import {
+  pageHeader,
+  pageHeaderSchema,
+  sitePathSchema,
+} from "@repo/contracts/cms-shared";
 
 /**
  * The public website's routes/layout/structure are code-owned in Next.js.
@@ -69,12 +73,12 @@ export type HomeContentAdmin = SiteContentAdmin<HomePageContent>;
  * the CMS only switches its optional sections on and off.
  */
 /** /gabinety's own words until the CMS has others (the site's until 19.10). */
-export const defaultRoomsIntro = {
+export const defaultRoomsIntro = pageHeader({
   eyebrow: "Nasze gabinety",
-  heading: "Gabinety",
+  title: "Gabinety",
   accent: "Przestrzeń dla ważnych rozmów.",
   lead: "Nasze gabinety są jasne, ciche i przytulne. Zadbaliśmy o to, żeby już od progu łatwiej było odetchnąć i poczuć się bezpiecznie.",
-};
+});
 
 export const defaultRoomsAmenities = [
   "Wygodne fotele i spokojne, naturalne kolory",
@@ -92,7 +96,7 @@ export const roomsPageContentSchema = z.strictObject({
   showAmenitiesSection: z.boolean(),
   /** Each location's address, description and amenities above its rooms. */
   showLocationDetails: z.boolean(),
-  intro: pageIntroSchema.default(() => ({ ...defaultRoomsIntro })),
+  intro: pageHeaderSchema.default(() => structuredClone(defaultRoomsIntro)),
   amenitiesHeading: z
     .string()
     .trim()

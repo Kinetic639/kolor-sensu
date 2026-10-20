@@ -98,7 +98,7 @@ BEGIN
 
   BEGIN
     UPDATE public.site_content
-    SET draft_payload = jsonb_set(draft_payload, '{intro,heading}', '" "')
+    SET draft_payload = jsonb_set(draft_payload, '{intro,title}', '[[{"text": " ", "tone": "default"}]]')
     WHERE key = 'contact_page';
     RAISE EXCEPTION 'V: Kontakt without its title was accepted';
   EXCEPTION WHEN check_violation THEN NULL;

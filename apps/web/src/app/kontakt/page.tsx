@@ -39,12 +39,7 @@ export default async function ContactPage() {
 
   return (
     <>
-      <PageIntro
-        eyebrow={intro.eyebrow || undefined}
-        heading={intro.heading}
-        accent={intro.accent || undefined}
-        lead={intro.lead || undefined}
-      />
+      <PageIntro header={intro} />
       <section className="max-w-page px-gutter pb-section-sm mx-auto grid items-start gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-16">
         <div className="grid content-start gap-6">
           <ContactCard contact={contact} />

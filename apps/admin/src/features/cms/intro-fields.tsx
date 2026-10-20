@@ -1,11 +1,11 @@
 "use client";
 
-import type { PageIntroContent } from "@repo/contracts";
-import { TextField } from "./text-field";
+import type { PageHeaderContent } from "@repo/contracts";
+import { PageHeaderFields } from "./header-block";
 
-// A page's top in the CMS (PageIntro): the small eyebrow, the title (the
-// page's h1), its green second line and the lead. Marked invalid where the
-// draft's check flags `intro.<field>`.
+// A page's top in the CMS: its header, edited as the sections' headers are
+// (header-block.tsx), with the title's two lines. Shows what the draft's
+// check flags under `intro`.
 
 export function IntroFields({
   id,
@@ -15,52 +15,28 @@ export function IntroFields({
   leadHint,
 }: {
   id: string;
-  value: PageIntroContent;
-  onChange: (intro: PageIntroContent) => void;
+  value: PageHeaderContent;
+  onChange: (intro: PageHeaderContent) => void;
   problems?: Record<string, true>;
   leadHint?: string;
 }) {
-  const set = (patch: Partial<PageIntroContent>) =>
-    onChange({ ...value, ...patch });
+  const flagged = Object.keys(problems).filter((path) =>
+    path.startsWith("intro"),
+  );
+  const problem =
+    flagged.length === 0
+      ? null
+      : flagged.some((path) => path.startsWith("intro.title"))
+        ? "Wpisz tytuł strony (pierwszy wiersz)."
+        : "Popraw nagłówek strony.";
   return (
-    <div className="grid gap-3.5 px-3.5 py-3 sm:grid-cols-2">
-      <TextField
-        className="sm:col-span-2"
-        hint="Mały napis nad tytułem. Puste: bez napisu."
-        id={`${id}-eyebrow`}
-        label="Nadtytuł"
-        maxLength={80}
-        onChange={(eyebrow) => set({ eyebrow })}
-        value={value.eyebrow}
-      />
-      <TextField
-        id={`${id}-heading`}
-        invalid={problems["intro.heading"]}
-        label="Tytuł strony"
-        maxLength={120}
-        onChange={(heading) => set({ heading })}
-        value={value.heading}
-      />
-      <TextField
-        hint="Druga linia tytułu, na zielono. Puste: bez niej."
-        id={`${id}-accent`}
-        label="Akcent"
-        maxLength={120}
-        onChange={(accent) => set({ accent })}
-        value={value.accent}
-      />
-      <TextField
-        className="sm:col-span-2"
-        hint={leadHint ?? "Puste: bez opisu."}
-        id={`${id}-lead`}
-        label="Opis pod tytułem"
-        maxLength={600}
-        multiline
-        onChange={(lead) => set({ lead })}
-        rows={3}
-        value={value.lead}
-      />
-    </div>
+    <PageHeaderFields
+      id={id}
+      leadHint={leadHint}
+      onChange={onChange}
+      problem={problem}
+      value={value}
+    />
   );
 }
 

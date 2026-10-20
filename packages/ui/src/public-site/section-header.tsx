@@ -57,6 +57,11 @@ export interface SectionHeaderProps {
   /** The heading's id, for the section's aria-labelledby. */
   id?: string;
   align?: "start" | "center";
+  /**
+   * "page": the top of a page (its h1): more room, and the description is
+   * the page's lead, in the lead's size.
+   */
+  variant?: "section" | "page";
   className?: string;
 }
 
@@ -66,6 +71,7 @@ export function SectionHeader({
   size,
   id,
   align = "start",
+  variant = "section",
   className,
 }: SectionHeaderProps) {
   const { eyebrow, title, description, cta } = content;
@@ -73,7 +79,8 @@ export function SectionHeader({
   return (
     <header
       className={cn(
-        "grid content-start gap-3",
+        "grid content-start",
+        variant === "page" ? "gap-5" : "gap-3",
         centred && "justify-items-center text-center",
         className,
       )}
@@ -108,7 +115,12 @@ export function SectionHeader({
         ))}
       </EditorialHeading>
       {description.length > 0 ? (
-        <p className="max-w-copy text-body text-text-muted">
+        <p
+          className={cn(
+            "max-w-copy text-text-muted",
+            variant === "page" ? "text-lead" : "text-body",
+          )}
+        >
           {description.map((part, at) => (
             <DescriptionRun key={at} part={part} />
           ))}

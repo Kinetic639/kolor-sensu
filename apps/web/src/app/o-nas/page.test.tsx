@@ -84,7 +84,10 @@ describe("the top", () => {
   it("is the page's one h1, with the CMS's words", async () => {
     published.about = {
       ...published.about,
-      intro: { ...defaultAboutPage.intro, heading: "Kim jesteśmy" },
+      intro: {
+        ...defaultAboutPage.intro,
+        title: [[{ text: "Kim jesteśmy", tone: "default" }]],
+      },
     };
     await renderAbout();
     expect(
@@ -102,7 +105,10 @@ describe("the top", () => {
 
     published.about = {
       ...published.about,
-      intro: { ...defaultAboutPage.intro, lead: "Opis z CMS." },
+      intro: {
+        ...defaultAboutPage.intro,
+        description: [{ text: "Opis z CMS.", link: null }],
+      },
     };
     await renderAbout();
     expect(screen.getByText("Opis z CMS.")).toBeInTheDocument();

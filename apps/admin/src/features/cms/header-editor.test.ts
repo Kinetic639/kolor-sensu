@@ -1,15 +1,22 @@
-import { plainHeader, sectionHeaderSchema } from "@repo/contracts";
+import {
+  pageHeader,
+  pageHeaderSchema,
+  plainHeader,
+  sectionHeaderSchema,
+} from "@repo/contracts";
 import { describe, expect, it } from "vitest";
 import {
   descriptionToDraft,
   draftToDescription,
   draftToHeader,
   draftToLine,
+  draftToPageHeader,
   headerToDraft,
   lineToDraft,
   linkOver,
   moveLink,
   NEXT_TONE,
+  pageHeaderToDraft,
   retone,
 } from "./header-editor";
 
@@ -161,5 +168,49 @@ describe("a whole header", () => {
   it("keeps a plain header plain", () => {
     const header = plainHeader({ eyebrow: "O nas", title: "Kim jesteśmy" });
     expect(draftToHeader(headerToDraft(header))).toEqual(header);
+  });
+});
+
+describe("a page's header", () => {
+  it("always shows the title's two lines, the second empty if unused", () => {
+    const draft = pageHeaderToDraft(pageHeader({ title: "Kontakt" }));
+    expect(draft.lines).toEqual([
+      { text: "Kontakt", tones: ["default"] },
+      { text: "", tones: [] },
+    ]);
+    expect(draft.cta).toBeNull();
+  });
+
+  it("stores an empty second line as no line, and never a call to action", () => {
+    const draft = pageHeaderToDraft(pageHeader({ title: "Kontakt" }));
+    const header = draftToPageHeader({
+      ...draft,
+      cta: { label: "Umów", href: "/umow-wizyte", style: "button" },
+    });
+    expect(header.title).toEqual([[{ text: "Kontakt", tone: "default" }]]);
+    expect(header.cta).toBeNull();
+    expect(pageHeaderSchema.safeParse(header).success).toBe(true);
+  });
+
+  it("keeps the site's two-line header as it is", () => {
+    const header = pageHeader({
+      eyebrow: "Nasza oferta",
+      title: "Oferta",
+      accent: "Wsparcie w różnych obszarach życia",
+      lead: "Terapia i konsultacje.",
+    });
+    expect(draftToPageHeader(pageHeaderToDraft(header))).toEqual(header);
+  });
+
+  it("leaves the first line empty for the check to flag", () => {
+    const draft = pageHeaderToDraft(pageHeader({ title: "Oferta" }));
+    const header = draftToPageHeader({
+      ...draft,
+      lines: [
+        { text: "", tones: [] },
+        { text: "Drugi", tones: ["green"] },
+      ],
+    });
+    expect(pageHeaderSchema.safeParse(header).success).toBe(false);
   });
 });
