@@ -328,6 +328,8 @@ export type {
   SiteContactContent,
   SpecialistsPageContent,
 } from "@repo/contracts/cms-pages";
+export { LEGAL_PAGES, legalPageContentSchema } from "@repo/contracts/cms-legal";
+export type { LegalPageContent, LegalPageKey } from "@repo/contracts/cms-legal";
 export {
   defaultOfferPage,
   defaultPricesPage,

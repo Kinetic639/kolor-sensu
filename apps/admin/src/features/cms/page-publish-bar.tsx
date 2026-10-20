@@ -8,6 +8,7 @@ import {
   publishAboutPageAction,
   publishContactPageAction,
   publishHomePageAction,
+  publishLegalPageAction,
   publishOfferPageAction,
   publishPricesPageAction,
   publishSpecialistsPageAction,
@@ -40,6 +41,9 @@ const pagePublish: Partial<Record<CmsPage, Publish>> = {
   oferta: publishOfferPageAction,
   specjalisci: publishSpecialistsPageAction,
   cennik: publishPricesPageAction,
+  regulamin: () => publishLegalPageAction("legal_terms"),
+  "polityka-prywatnosci": () => publishLegalPageAction("legal_privacy"),
+  cookies: () => publishLegalPageAction("legal_cookies"),
   gabinety: publishRoomsPageAction,
   kontakt: publishContactPageAction,
 };

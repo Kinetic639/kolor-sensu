@@ -30,6 +30,13 @@ import {
   type ServicePageContent,
 } from "@repo/contracts/cms-offer";
 import {
+  LEGAL_PAGES,
+  legalPageContentSchema,
+  type LegalPageContent,
+  type LegalPageKey,
+} from "@repo/contracts/cms-legal";
+import { defaultLegalPages } from "@repo/contracts/cms-legal-content";
+import {
   crisisHelpContentSchema,
   defaultCrisisHelp,
   defaultHomeStory,
@@ -740,3 +747,34 @@ export const getPricesPageAdmin = pricesPage.admin;
 export const updatePricesPageDraft = pricesPage.update;
 export const publishPricesPage = pricesPage.publish;
 export const getPublishedPricesPage = pricesPage.published;
+
+/** The legal documents (Regulamin, Polityka prywatności, Pliki cookies). */
+const legalPages = Object.fromEntries(
+  LEGAL_PAGES.map(({ key }) => [
+    key,
+    contentSection<LegalPageContent>(
+      key,
+      legalPageContentSchema,
+      defaultLegalPages[key],
+    ),
+  ]),
+) as Record<LegalPageKey, ReturnType<typeof contentSection<LegalPageContent>>>;
+
+export const getLegalPageAdmin = (
+  client: SupabaseClient<Database>,
+  key: LegalPageKey,
+) => legalPages[key].admin(client);
+export const updateLegalPageDraft = (
+  client: SupabaseClient<Database>,
+  key: LegalPageKey,
+  content: LegalPageContent,
+) => legalPages[key].update(client, content);
+export const publishLegalPage = (
+  client: SupabaseClient<Database>,
+  key: LegalPageKey,
+) => legalPages[key].publish(client);
+/** A legal page's published document; the site's sample until then. */
+export const getPublishedLegalPage = (
+  client: SupabaseClient<Database>,
+  key: LegalPageKey,
+) => legalPages[key].published(client);

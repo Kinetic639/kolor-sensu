@@ -96,11 +96,18 @@ import {
   type ServicePageContent,
 } from "@repo/contracts/cms-offer";
 import {
+  LEGAL_PAGES,
+  legalPageContentSchema,
+  type LegalPageContent,
+  type LegalPageKey,
+} from "@repo/contracts/cms-legal";
+import {
   getAboutHeadersAdmin,
   publishAboutHeaders,
   publishAboutPage,
   publishClosingCta,
   publishContactPage,
+  publishLegalPage,
   publishOfferPage,
   publishPricesPage,
   publishServicePage,
@@ -110,6 +117,7 @@ import {
   updateAboutPageDraft,
   updateClosingCtaDraft,
   updateContactPageDraft,
+  updateLegalPageDraft,
   updateOfferPageDraft,
   updatePricesPageDraft,
   updateServicePageDraft,
@@ -374,6 +382,18 @@ export async function updatePricesPageDraftAction(values: PricesPageContent) {
   return saveDraft(pricesPageContentSchema, values, updatePricesPageDraft);
 }
 
+/** A legal document (Regulamin, Polityka prywatności, Pliki cookies). */
+export async function updateLegalPageDraftAction(
+  page: LegalPageKey,
+  values: LegalPageContent,
+): Promise<ActionResult> {
+  if (!LEGAL_PAGES.some((one) => one.key === page))
+    return { ok: false, message: "Nieznany dokument." };
+  return saveDraft(legalPageContentSchema, values, (client, content) =>
+    updateLegalPageDraft(client, page, content),
+  );
+}
+
 /** Ustawienia wspólne → the closing banner. */
 export async function updateClosingCtaDraftAction(values: ClosingCtaContent) {
   return saveDraft(closingCtaContentSchema, values, updateClosingCtaDraft);
@@ -424,6 +444,26 @@ export async function publishPricesPageAction() {
   return publishPage(
     [publishPricesPage, (client) => publishPageSeo(client, "prices")],
     "/cennik",
+  );
+}
+
+/** A legal document's page: the document and its search settings. */
+export async function publishLegalPageAction(page: LegalPageKey) {
+  const legal = LEGAL_PAGES.find((one) => one.key === page);
+  if (!legal) return { ok: false as const, message: "Nieznany dokument." };
+  const seo = (
+    {
+      legal_terms: "terms",
+      legal_privacy: "privacy",
+      legal_cookies: "cookies",
+    } as const
+  )[page];
+  return publishPage(
+    [
+      (client) => publishLegalPage(client, page),
+      (client) => publishPageSeo(client, seo),
+    ],
+    legal.path,
   );
 }
 

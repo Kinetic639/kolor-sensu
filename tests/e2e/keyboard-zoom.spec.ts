@@ -17,6 +17,9 @@ const PAGES = [
   "/kontakt",
   "/oferta",
   "/cennik",
+  "/regulamin",
+  "/polityka-prywatnosci",
+  "/cookies",
 ];
 
 async function open(page: Page, path: string) {

@@ -7,6 +7,8 @@ import {
   ServicePageSection,
 } from "@/features/cms/offer-page-section";
 import { PricesPageSection } from "@/features/cms/prices-page-section";
+import { LegalPageSection } from "@/features/cms/legal-page-section";
+import type { LegalPageKey } from "@repo/contracts/cms-legal";
 import { CrisisHelpSection } from "@/features/cms/crisis-help-section";
 import { FirstStepsSection } from "@/features/cms/first-steps-section";
 import { FixedSection, UnavailableSection } from "@/features/cms/fixed-section";
@@ -19,6 +21,7 @@ import {
   loadAboutPage,
   loadClosingCta,
   loadContactPage,
+  loadLegalPage,
   loadOfferPage,
   loadPricesPage,
   loadServicePage,
@@ -389,6 +392,34 @@ async function PricesPage() {
   );
 }
 
+/** A legal document: its search settings and the document. */
+async function LegalDocumentPage({
+  page,
+  tab,
+}: {
+  page: LegalPageKey;
+  tab: "regulamin" | "polityka-prywatnosci" | "cookies";
+}) {
+  const [document, seo] = await Promise.all([
+    settle("dokument", () => loadLegalPage(page)),
+    loadSeo(tab),
+  ]);
+  return (
+    <>
+      <PagePublishBar
+        page={tab}
+        status={pageStatus([document, seo].filter((one) => one !== null))}
+      />
+      <Seo model={seo} page={tab} />
+      {document ? (
+        <LegalPageSection model={document} page={page} />
+      ) : (
+        <UnavailableSection title="Tytuł strony · Dokument" />
+      )}
+    </>
+  );
+}
+
 /** Kontakt: its search settings and its words. */
 async function ContactPage() {
   const [page, seo] = await Promise.all([
@@ -485,6 +516,12 @@ export default async function CmsPage({ searchParams }: PageProps<"/cms">) {
         <ContactPage />
       ) : strona === "gabinety" ? (
         <RoomsPage />
+      ) : strona === "regulamin" ? (
+        <LegalDocumentPage page="legal_terms" tab="regulamin" />
+      ) : strona === "polityka-prywatnosci" ? (
+        <LegalDocumentPage page="legal_privacy" tab="polityka-prywatnosci" />
+      ) : strona === "cookies" ? (
+        <LegalDocumentPage page="legal_cookies" tab="cookies" />
       ) : strona === "wspolne" ? (
         <SharedSettingsPage />
       ) : (

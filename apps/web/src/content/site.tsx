@@ -196,14 +196,3 @@ export const bookingPage = {
 };
 
 // Their titles and descriptions for search engines: @repo/contracts/cms-seo.
-export const legalPages = {
-  "polityka-prywatnosci": {
-    title: "Polityka prywatności",
-  },
-  regulamin: {
-    title: "Regulamin",
-  },
-  cookies: {
-    title: "Pliki cookies",
-  },
-} as const;

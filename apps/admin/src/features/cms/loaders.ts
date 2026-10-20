@@ -1,4 +1,5 @@
 import "server-only";
+import type { LegalPageKey } from "@repo/contracts/cms-legal";
 
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -6,6 +7,7 @@ import {
   getAboutPageAdmin,
   getClosingCtaAdmin,
   getContactPageAdmin,
+  getLegalPageAdmin,
   getOfferPageAdmin,
   getPricesPageAdmin,
   getServicePageAdmin,
@@ -180,6 +182,12 @@ export async function loadServicePage() {
 
 export async function loadPricesPage() {
   return mapContentViewModel(await getPricesPageAdmin(await createClient()));
+}
+
+export async function loadLegalPage(page: LegalPageKey) {
+  return mapContentViewModel(
+    await getLegalPageAdmin(await createClient(), page),
+  );
 }
 
 export async function loadContactPage() {

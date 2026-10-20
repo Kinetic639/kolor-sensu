@@ -506,6 +506,22 @@ The migration rewrote every page's four words (eyebrow, heading, accent,
 lead) into it, keeping the look: the eyebrow pink, the accent the title's
 second line in green.
 
+## The legal documents (20.10)
+
+`20261020180000_legal_pages.sql`; tests `supabase/tests/legal_pages.sql`;
+contracts `packages/contracts/src/cms-legal.ts` (the sample documents in
+`cms-legal-content.ts`, kept out of the portals' client code).
+
+- **`legal_terms`** (/regulamin), **`legal_privacy`** (/polityka-prywatnosci),
+  **`legal_cookies`** (/cookies): the page's header, the document as rich
+  text (the portals' editor: h2 and h3, paragraphs, lists, links; checked
+  in full by the contracts on save, in outline by the database) and the date
+  it applies from (`effectiveFrom`, shown as "Obowiązuje od").
+- Seeded as drafts with sample documents that say they are samples and
+  describe what the site really does; the site shows them until the centre
+  publishes its own. Each CMS tab publishes its document with its search
+  settings.
+
 ## Domain separation
 
 `/specjalisci` reads **directly from the real Specialist Domain**
