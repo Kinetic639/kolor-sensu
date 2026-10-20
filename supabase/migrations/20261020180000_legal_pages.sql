@@ -36,6 +36,25 @@ ALTER TABLE public.site_content
     'legal_terms'::text, 'legal_privacy'::text, 'legal_cookies'::text
   ]));
 
+-- A legal page: its header, the document's outline (a rich text "doc"
+-- with at least one block) and the date field.
+CREATE OR REPLACE FUNCTION private.legal_page_is_valid(p_payload jsonb)
+RETURNS boolean
+LANGUAGE sql
+IMMUTABLE
+SET search_path TO ''
+AS $
+  SELECT COALESCE(
+    private.page_intro_is_valid(p_payload -> 'intro')
+    AND jsonb_typeof(p_payload -> 'body') = 'object'
+    AND p_payload #>> '{body,type}' = 'doc'
+    AND jsonb_typeof(p_payload #> '{body,content}') = 'array'
+    AND jsonb_array_length(p_payload #> '{body,content}') >= 1
+    AND jsonb_typeof(p_payload -> 'effectiveFrom') = 'string',
+    false
+  );
+$;
+
 -- The payload check, its whole body: the legal keys.
 CREATE OR REPLACE FUNCTION private.site_content_payload_is_valid(p_key text, p_payload jsonb)
 RETURNS boolean
@@ -247,13 +266,9 @@ AS $$
           OR coalesce(btrim(rule ->> 'title'), '') = ''
           OR coalesce(btrim(rule ->> 'text'), '') = ''
       )
-    WHEN 'legal_terms', 'legal_privacy', 'legal_cookies' THEN
-      private.page_intro_is_valid(p_payload -> 'intro')
-      AND jsonb_typeof(p_payload -> 'body') = 'object'
-      AND p_payload #>> '{body,type}' = 'doc'
-      AND jsonb_typeof(p_payload #> '{body,content}') = 'array'
-      AND jsonb_array_length(p_payload #> '{body,content}') >= 1
-      AND jsonb_typeof(p_payload -> 'effectiveFrom') = 'string'
+    WHEN 'legal_terms' THEN private.legal_page_is_valid(p_payload)
+    WHEN 'legal_privacy' THEN private.legal_page_is_valid(p_payload)
+    WHEN 'legal_cookies' THEN private.legal_page_is_valid(p_payload)
     ELSE
       -- Every page's search and sharing settings ('seo_<page>').
       p_key LIKE 'seo\_%' AND private.page_seo_is_valid(p_payload)
