@@ -2,7 +2,7 @@
 
 import { Cookie } from "lucide-react";
 import { PageLink as Link } from "./page-link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "../lib/utils";
 import { PrimaryButton, SecondaryButton } from "./actions";
 
@@ -10,7 +10,8 @@ import { PrimaryButton, SecondaryButton } from "./actions";
 // page. It only renders on the client and only until the visitor chooses,
 // so it never shifts the layout or blocks the first paint. The choice is
 // kept in localStorage; the app reads it (onChoice) before loading any
-// analytics.
+// analytics. While it shows, the page keeps what the keyboard focuses
+// clear of it (scroll-padding-bottom: WCAG 2.4.11, focus not obscured).
 
 export type CookieChoice = "all" | "necessary";
 
@@ -47,10 +48,32 @@ export function CookieConsent({
   className,
 }: CookieConsentProps) {
   const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (forceOpen || !readCookieChoice(storageKey)) setOpen(true);
   }, [forceOpen, storageKey]);
+
+  // A focused element is scrolled above the notice, never under it.
+  useEffect(() => {
+    const notice = ref.current;
+    if (!open || !notice) return;
+    const root = document.documentElement;
+    const keepClear = () => {
+      root.style.scrollPaddingBottom = `${notice.offsetHeight + 24}px`;
+    };
+    keepClear();
+    const observer =
+      typeof ResizeObserver === "function"
+        ? new ResizeObserver(keepClear)
+        : null;
+    observer?.observe(notice);
+    return () => {
+      observer?.disconnect();
+      root.style.removeProperty("scroll-padding-bottom");
+      if (root.getAttribute("style") === "") root.removeAttribute("style");
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -70,6 +93,7 @@ export function CookieConsent({
 
   return (
     <section
+      ref={ref}
       aria-label="Pliki cookies"
       className={cn(
         "rounded-card-lg border-border/70 bg-surface shadow-card-hover fixed inset-x-3 bottom-3 z-50 grid gap-4 border p-5 sm:right-auto sm:bottom-5 sm:left-5 sm:max-w-sm",

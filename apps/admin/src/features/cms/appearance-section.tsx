@@ -79,7 +79,7 @@ export function AppearanceSection({
             accept={TRANSPARENT}
             decorative
             folder="appearance"
-            hint="PNG lub WebP z przezroczystym tłem, przycięty do krawędzi farby, poziomy: najlepiej 16 : 10 (np. 1600 × 1000 px), inny kształt zostanie rozciągnięty. Do 5 MB. Bez niego: tło strony."
+            hint="PNG lub WebP z przezroczystym tłem, przycięty do krawędzi farby, poziomy: najlepiej 16 : 10 (np. 1600 × 1000 px), inny kształt zostanie przycięty. Do 5 MB. Bez niego: tło strony."
             id="cms-appearance-backdrop"
             label="Tło akwareli"
             onChange={(patch) =>

@@ -63,7 +63,7 @@ export interface WatercolorImageProps {
   alt: string;
   /**
    * Painted backdrop behind the photo. `null` leaves it out. It fills the
-   * backdrop's frame (16 : 10): another shape is stretched to it.
+   * backdrop's frame (16 : 10): another shape is cropped to it.
    */
   watercolorSrc?: ImageProps["src"] | null;
   /**
