@@ -57,6 +57,8 @@ SELECT set_config(
 SET LOCAL ROLE authenticated;
 
 DO $$
+DECLARE
+  nine_rules jsonb;
 BEGIN
   UPDATE public.site_content
   SET draft_payload = jsonb_set(draft_payload, '{emptyText}', '"Wkrótce."')
@@ -86,12 +88,13 @@ BEGIN
   EXCEPTION WHEN check_violation THEN NULL;
   END;
 
+  SELECT jsonb_agg(draft_payload -> 'rules' -> 0) INTO nine_rules
+  FROM public.site_content, generate_series(1, 9)
+  WHERE key = 'prices_page';
+
   BEGIN
     UPDATE public.site_content
-    SET draft_payload = jsonb_set(
-      draft_payload, '{rules}',
-      (SELECT jsonb_agg(draft_payload -> 'rules' -> 0) FROM generate_series(1, 9))
-    )
+    SET draft_payload = jsonb_set(draft_payload, '{rules}', nine_rules)
     WHERE key = 'prices_page';
     RAISE EXCEPTION 'V: nine price rules were accepted';
   EXCEPTION WHEN check_violation THEN NULL;
