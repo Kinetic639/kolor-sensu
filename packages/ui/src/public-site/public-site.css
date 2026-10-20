@@ -74,6 +74,14 @@
     will-change: transform;
   }
 
+  /* An uploaded backdrop or parallax image of another shape than the frame
+     (16 : 10) is cropped to it, never stretched (#114); the site's own are
+     16 : 10 and show whole. */
+  .ks-wc__backdrop img,
+  .ks-wc__parallax img {
+    object-fit: cover;
+  }
+
   /* The component does the crop: any rectangular upload covers the frame,
      and object-position (set per image) picks what stays in view. */
   .ks-wc__img {
@@ -441,6 +449,12 @@
 
   .ks-of__paint-frame {
     position: absolute;
+  }
+
+  /* A tile grown by a long title (taller than 5 : 8) keeps the patch's
+     proportions instead of stretching its brushwork (#118). */
+  .ks-of__paint-frame img {
+    object-fit: contain;
   }
 
   .ks-of__content,

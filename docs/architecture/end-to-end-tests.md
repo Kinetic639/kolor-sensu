@@ -50,7 +50,10 @@ key cannot pass, as on localhost). It writes nothing. `offer-pages.spec.ts`
 does the same for Oferta, Cennik and the first service's page (one h1,
 links, 390 and 1280 px, axe), and checks that Oferta has no questions,
 Cennik its rules, a service's page its way to book or to ask and its data
-for Google, and that a wrong address under /oferta leads back to it.
+for Google, and that a wrong address under /oferta leads back to it. `keyboard-zoom.spec.ts` walks the public pages (and the first service) with
+a keyboard: the first Tab is "Przejdź do treści" and leads into the page,
+nothing focused hides under the cookie notice (WCAG 2.4.11), and at 200 %
+(640 px) no page scrolls sideways.
 
 Tests that would leave lasting changes (a service in the catalogue, the
 home page's draft) carry the `@writes-data` tag and run only locally.
