@@ -174,9 +174,22 @@
         mask-image: var(--ks-reveal-backdrop, var(--ks-reveal-hidden));
       }
 
-      .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"])
+      .ks-wc[data-animation="watercolor-reveal"]:not([data-reveal="done"]):not(
+          [data-photo-at-once]
+        )
         .ks-wc__img {
         mask-image: var(--ks-reveal-photo, var(--ks-reveal-hidden));
+      }
+
+      /* The hero (data-photo-at-once="narrow"): on a phone its photo, the
+         page's largest paint, shows at once; only wider screens paint it. */
+      @media (min-width: 64rem) {
+        .ks-wc[data-animation="watercolor-reveal"][data-photo-at-once]:not(
+            [data-reveal="done"]
+          )
+          .ks-wc__img {
+          mask-image: var(--ks-reveal-photo, var(--ks-reveal-hidden));
+        }
       }
 
       /* The caption is not painted: the script shows it late, briefly

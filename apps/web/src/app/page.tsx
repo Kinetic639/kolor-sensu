@@ -91,11 +91,12 @@ export default async function Home() {
 
   return (
     <>
-      {/* No entrance animation: the hero picture is the page's largest
-          paint, and the reveal kept it hidden until the script ran. */}
+      {/* Painted in on a computer; on a phone only the backdrop is, and
+          the photo (the page's largest paint) shows at once. */}
       <HeroSection
         {...withHomeContent(hero, homeContent)}
         watercolor={watercolor}
+        animationPreset="watercolor-reveal"
       />
       <ThoughtsLens {...thoughts} />
       <SupportAreas

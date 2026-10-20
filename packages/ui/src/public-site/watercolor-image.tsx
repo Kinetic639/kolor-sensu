@@ -41,7 +41,8 @@ import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
 // reveals them through a matte: the backdrop painted in with brush strokes
 // from both sides, the photo spreading in blooms from its middle while the
 // backdrop is still being painted. It ends on exactly this static
-// composition.
+// composition. For the hero (`priority`), the page's largest paint, a phone
+// shows the photo at once and paints only the backdrop around it.
 
 /** The approved painted backdrop: dusty pink left, sage green right. */
 /** The photo layer's dry-brush mask (public-site.css, .ks-wc__photo). */
@@ -99,7 +100,9 @@ export interface WatercolorImageProps {
    * backdrop is painted in with brush strokes from both sides, the photo
    * spreads in blooms from its middle outward, then the caption appears
    * (about 1.15 s). "none"
-   * (default) renders the static composition only.
+   * (default) renders the static composition only. With `priority`, a
+   * screen narrower than 64rem shows the photo at once (it is the page's
+   * largest paint) and paints only the backdrop and the caption.
    */
   animationPreset?: "none" | "watercolor-reveal";
   /**
@@ -143,8 +146,15 @@ export function WatercolorImage({
 }: WatercolorImageProps) {
   // A masked layer paints only once its mask is in, and the stylesheet
   // reveals the mask late: for the hero (the page's largest paint) it is
-  // fetched from the start.
-  if (priority) preload(photoMaskSrc, { as: "image", fetchPriority: "high" });
+  // fetched from the start. CSS masks are fetched in CORS mode: the preload
+  // must be too, or the browser fetches the mask a second time.
+  if (priority) {
+    preload(photoMaskSrc, {
+      as: "image",
+      fetchPriority: "high",
+      crossOrigin: "anonymous",
+    });
+  }
   const Root = caption ? "figure" : "div";
   const loading = priority ? undefined : "lazy";
   const rootProps = {
@@ -210,6 +220,7 @@ export function WatercolorImage({
     <WatercolorReveal
       as={Root}
       reducedMotionMode={reducedMotionMode}
+      photoAtOnceOnPhones={priority}
       {...rootProps}
     >
       {layers}

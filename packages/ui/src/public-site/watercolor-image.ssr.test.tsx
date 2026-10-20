@@ -109,4 +109,17 @@ describe("WatercolorImage on the server", () => {
       false,
     );
   });
+
+  it("preloads the mask in CORS mode, as the stylesheet fetches it", () => {
+    const html = renderToString(
+      <WatercolorImage
+        src="/kolor-sensu/therapy-room-upload.png"
+        alt=""
+        priority
+      />,
+    );
+    const link = html.match(/<link[^>]*photo-mask\.png[^>]*>/)?.[0];
+    // An empty crossorigin is "anonymous".
+    expect(link).toMatch(/crossorigin="(anonymous)?"/);
+  });
 });
