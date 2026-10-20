@@ -468,6 +468,30 @@ programie pocztowym" open a reply with a template) and the visitor a copy;
 out. The embedded Google map loads only after consent to all cookies (or
 "Pokaż mapę").
 
+## The offer pages (20.10)
+
+`20261020150000_offer_pages.sql`; tests `supabase/tests/offer_pages.sql`;
+contracts `packages/contracts/src/cms-offer.ts`. Seeded as drafts with the
+site's words; the services, catalogues and prices stay the portal's.
+
+- **`offer_page`** (Oferta): its top and the line while no service is
+  published. Its questions moved to Kontakt.
+- **`service_page`** (every service's page, edited under Oferta and
+  published with it, refreshing the whole site): "Jak pracujemy" (eyebrow,
+  title, description, the button to the first-visit consultation) and,
+  for a service not booked online (no specialist offers it, or it is not
+  in the bookable catalogue), the line instead of its price and the
+  button to Kontakt instead of "Umów".
+- **`prices_page`** (Cennik): its top, the lines for no services and for a
+  service without a price, and up to 8 rules of payment and cancelling
+  (seeded as a draft for the centre to confirm). How long before a visit
+  it is cancelled with a refund is `cancellation_window_hours` from
+  Ustawienia → Rezerwacje online (`booking_window()`), shown first. The
+  cards stand in Oferta's catalogues and order.
+
+A wrong or hidden service's address shows `/oferta/[slug]/not-found`,
+with a way back to Oferta.
+
 ## Domain separation
 
 `/specjalisci` reads **directly from the real Specialist Domain**

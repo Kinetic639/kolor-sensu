@@ -88,17 +88,31 @@ import {
   type SpecialistsPageContent,
 } from "@repo/contracts/cms-pages";
 import {
+  offerPageContentSchema,
+  pricesPageContentSchema,
+  servicePageContentSchema,
+  type OfferPageContent,
+  type PricesPageContent,
+  type ServicePageContent,
+} from "@repo/contracts/cms-offer";
+import {
   getAboutHeadersAdmin,
   publishAboutHeaders,
   publishAboutPage,
   publishClosingCta,
   publishContactPage,
+  publishOfferPage,
+  publishPricesPage,
+  publishServicePage,
   publishSiteContact,
   publishSpecialistsPage,
   updateAboutHeadersDraft,
   updateAboutPageDraft,
   updateClosingCtaDraft,
   updateContactPageDraft,
+  updateOfferPageDraft,
+  updatePricesPageDraft,
+  updateServicePageDraft,
   updateSiteContactDraft,
   updateSpecialistsPageDraft,
 } from "@repo/supabase";
@@ -347,6 +361,19 @@ export async function updateContactPageDraftAction(values: ContactPageContent) {
   return saveDraft(contactPageContentSchema, values, updateContactPageDraft);
 }
 
+export async function updateOfferPageDraftAction(values: OfferPageContent) {
+  return saveDraft(offerPageContentSchema, values, updateOfferPageDraft);
+}
+
+/** The words every service's page shares (edited under Oferta). */
+export async function updateServicePageDraftAction(values: ServicePageContent) {
+  return saveDraft(servicePageContentSchema, values, updateServicePageDraft);
+}
+
+export async function updatePricesPageDraftAction(values: PricesPageContent) {
+  return saveDraft(pricesPageContentSchema, values, updatePricesPageDraft);
+}
+
 /** Ustawienia wspólne → the closing banner. */
 export async function updateClosingCtaDraftAction(values: ClosingCtaContent) {
   return saveDraft(closingCtaContentSchema, values, updateClosingCtaDraft);
@@ -374,6 +401,29 @@ export async function publishSpecialistsPageAction() {
   return publishPage(
     [publishSpecialistsPage, (client) => publishPageSeo(client, "specialists")],
     "/specjalisci",
+  );
+}
+
+/**
+ * Oferta: its words, the words every service's page shares and its search
+ * settings. The whole site refreshes: every service's page and the menu.
+ */
+export async function publishOfferPageAction() {
+  return publishPage(
+    [
+      publishOfferPage,
+      publishServicePage,
+      (client) => publishPageSeo(client, "offer"),
+    ],
+    { path: "/", type: "layout" },
+  );
+}
+
+/** Cennik: its words and rules and its search settings. */
+export async function publishPricesPageAction() {
+  return publishPage(
+    [publishPricesPage, (client) => publishPageSeo(client, "prices")],
+    "/cennik",
   );
 }
 

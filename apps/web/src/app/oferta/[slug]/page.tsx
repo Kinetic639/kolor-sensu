@@ -2,6 +2,7 @@ import {
   FeatureSection,
   JsonLd,
   PrimaryButton,
+  SecondaryButton,
   ServiceFacts,
   ServicePageView,
   serviceParagraphs,
@@ -24,6 +25,7 @@ import {
   getIntakeServiceSlugs,
   getService,
   getServiceOffers,
+  getServicePage,
   getServices,
   getSpecialists,
   getWatercolorLook,
@@ -55,7 +57,7 @@ export default async function ServicePage({
   params,
 }: PageProps<"/oferta/[slug]">) {
   const { slug } = await params;
-  const [service, offers, specialists, watercolor, intake, bookable] =
+  const [service, offers, specialists, watercolor, intake, bookable, words] =
     await Promise.all([
       getService(slug),
       getServiceOffers(slug),
@@ -63,16 +65,9 @@ export default async function ServicePage({
       getWatercolorLook(),
       getIntakeServiceSlugs(),
       getBookableCatalog(),
+      getServicePage(),
     ]);
   if (!service) notFound();
-  // Into booking with this service chosen (#94), or as it is when it is
-  // not booked online; the first meeting is the first-visit consultation
-  // (the service that starts with the test).
-  const bookThis: Route = bookable.services.some(
-    (one) => one.slug === service.slug,
-  )
-    ? bookingHref({ usluga: service.slug })
-    : "/umow-wizyte";
   const [firstVisit] = intake;
   const bookFirst: Route = firstVisit
     ? bookingHref({ usluga: firstVisit })
@@ -87,7 +82,15 @@ export default async function ServicePage({
     );
     return specialist ? [{ offer, specialist }] : [];
   });
-  const price = priceRange(byTeam.map(({ offer }) => offer));
+  // Booked online: "Umów" opens booking with this service chosen (#94)
+  // and the prices show. Otherwise (no specialist offers it, or its online
+  // booking is off) the price is agreed and the visitor calls or writes.
+  const online =
+    byTeam.length > 0 &&
+    bookable.services.some((one) => one.slug === service.slug);
+  const price = online
+    ? priceRange(byTeam.map(({ offer }) => offer))
+    : words.unbooked.priceText;
 
   return (
     <>
@@ -104,9 +107,17 @@ export default async function ServicePage({
 
       <ServicePageView
         action={
-          <PrimaryButton asChild arrow>
-            <Link href={bookThis}>{bookingCta.label}</Link>
-          </PrimaryButton>
+          online ? (
+            <PrimaryButton asChild arrow>
+              <Link href={bookingHref({ usluga: service.slug })}>
+                {bookingCta.label}
+              </Link>
+            </PrimaryButton>
+          ) : (
+            <SecondaryButton asChild arrow>
+              <Link href="/kontakt">{words.unbooked.contactLabel}</Link>
+            </SecondaryButton>
+          )
         }
         className="max-w-page px-gutter pb-section-sm mx-auto"
         paragraphs={paragraphs}
@@ -115,7 +126,7 @@ export default async function ServicePage({
           name: specialist.displayName,
           href: specialistHref(specialist.publicSlug),
           meta: [
-            formatPrice(offer),
+            online ? formatPrice(offer) : null,
             formatDuration(offer.effectiveDurationMinutes),
             offerModes(offer),
           ]
@@ -126,10 +137,10 @@ export default async function ServicePage({
 
       <FeatureSection
         {...rooms}
-        eyebrow="Jak pracujemy"
-        heading="Spokojna rozmowa, bez oceniania"
-        description="Na pierwszym spotkaniu poznajemy Twoją historię i to, co chcesz zmienić. Razem ustalamy cel i rytm spotkań."
-        cta={{ href: bookFirst, label: "Umów pierwsze spotkanie" }}
+        eyebrow={words.howWeWork.eyebrow || undefined}
+        heading={words.howWeWork.heading}
+        description={words.howWeWork.description || undefined}
+        cta={{ href: bookFirst, label: words.howWeWork.ctaLabel }}
         imagePosition="left"
         animationPreset="watercolor-reveal"
         watercolor={watercolor}
@@ -143,7 +154,7 @@ export default async function ServicePage({
           description: service.shortDescription ?? paragraphs[0],
           url: `${siteUrl}${serviceHref(service.slug)}`,
           provider: { "@type": "MedicalBusiness", name: "Kolor Sensu" },
-          ...(byTeam.length > 0 && {
+          ...(online && {
             offers: byTeam.map(({ offer }) => ({
               "@type": "Offer",
               price: offer.priceMinor / 100,

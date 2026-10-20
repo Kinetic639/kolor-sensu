@@ -19,6 +19,17 @@ import {
   type SpecialistsPageContent,
 } from "@repo/contracts/cms-pages";
 import {
+  defaultOfferPage,
+  defaultPricesPage,
+  defaultServicePage,
+  offerPageContentSchema,
+  type OfferPageContent,
+  pricesPageContentSchema,
+  type PricesPageContent,
+  servicePageContentSchema,
+  type ServicePageContent,
+} from "@repo/contracts/cms-offer";
+import {
   crisisHelpContentSchema,
   defaultCrisisHelp,
   defaultHomeStory,
@@ -696,3 +707,36 @@ export const getSiteContactAdmin = siteContact.admin;
 export const updateSiteContactDraft = siteContact.update;
 export const publishSiteContact = siteContact.publish;
 export const getPublishedSiteContact = siteContact.published;
+
+/** /oferta: its words. */
+const offerPage = contentSection<OfferPageContent>(
+  "offer_page",
+  offerPageContentSchema,
+  defaultOfferPage,
+);
+export const getOfferPageAdmin = offerPage.admin;
+export const updateOfferPageDraft = offerPage.update;
+export const publishOfferPage = offerPage.publish;
+export const getPublishedOfferPage = offerPage.published;
+
+/** Every service's page: "Jak pracujemy" and the line for no booking. */
+const servicePage = contentSection<ServicePageContent>(
+  "service_page",
+  servicePageContentSchema,
+  defaultServicePage,
+);
+export const getServicePageAdmin = servicePage.admin;
+export const updateServicePageDraft = servicePage.update;
+export const publishServicePage = servicePage.publish;
+export const getPublishedServicePage = servicePage.published;
+
+/** /cennik: its words and the rules of payment and cancelling. */
+const pricesPage = contentSection<PricesPageContent>(
+  "prices_page",
+  pricesPageContentSchema,
+  defaultPricesPage,
+);
+export const getPricesPageAdmin = pricesPage.admin;
+export const updatePricesPageDraft = pricesPage.update;
+export const publishPricesPage = pricesPage.publish;
+export const getPublishedPricesPage = pricesPage.published;

@@ -8,6 +8,8 @@ import {
   publishAboutPageAction,
   publishContactPageAction,
   publishHomePageAction,
+  publishOfferPageAction,
+  publishPricesPageAction,
   publishSpecialistsPageAction,
   publishRoomsPageAction,
   publishSeoPageAction,
@@ -35,7 +37,9 @@ type Publish = () => ReturnType<typeof publishHomePageAction>;
 const pagePublish: Partial<Record<CmsPage, Publish>> = {
   glowna: publishHomePageAction,
   "o-nas": publishAboutPageAction,
+  oferta: publishOfferPageAction,
   specjalisci: publishSpecialistsPageAction,
+  cennik: publishPricesPageAction,
   gabinety: publishRoomsPageAction,
   kontakt: publishContactPageAction,
 };

@@ -46,7 +46,11 @@ from Kontakt's footer to `/pomoc-w-kryzysie`: 112 first, every number
 dialling, axe on a phone. `about-pages.spec.ts` checks O nas, Specjaliści (and the first
 profile), Gabinety and Kontakt: one h1, links, 390 and 1280 px, axe; the
 map waiting for consent; the form's errors (skipped where Turnstile's real
-key cannot pass, as on localhost). It writes nothing.
+key cannot pass, as on localhost). It writes nothing. `offer-pages.spec.ts`
+does the same for Oferta, Cennik and the first service's page (one h1,
+links, 390 and 1280 px, axe), and checks that Oferta has no questions,
+Cennik its rules, a service's page its way to book or to ask and its data
+for Google, and that a wrong address under /oferta leads back to it.
 
 Tests that would leave lasting changes (a service in the catalogue, the
 home page's draft) carry the `@writes-data` tag and run only locally.

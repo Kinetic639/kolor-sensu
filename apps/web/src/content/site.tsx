@@ -1,5 +1,4 @@
 import {
-  type FaqItem,
   type HeroSectionProps,
   type PaintedStoryStep,
   PenguinLoader,
@@ -126,13 +125,6 @@ export const defaultSupportAreas = [
   },
 ] satisfies PublicSupportArea[];
 
-export const offerCopy = {
-  eyebrow: "Nasza oferta",
-  heading: "Wsparcie w różnych obszarach życia",
-  description:
-    "Oferujemy terapię, konsultacje i warsztaty dopasowane do Twoich potrzeb.",
-};
-
 export const rooms = {
   eyebrow: "Nasze gabinety",
   heading: "Przestrzeń, która wspiera",
@@ -163,34 +155,6 @@ export const storyImages = [
   hero.image,
   workshops.image,
 ] satisfies PaintedStoryStep["image"][];
-
-export const faq = [
-  {
-    question: "Jak wygląda pierwsza wizyta?",
-    answer:
-      "Pierwsze spotkanie to konsultacja: rozmawiamy o tym, z czym przychodzisz, czego potrzebujesz i jaka forma pomocy będzie najlepsza. Nie musisz się do niej specjalnie przygotowywać.",
-  },
-  {
-    question: "Ile trwa sesja i jak często się spotykamy?",
-    answer:
-      "Sesja trwa zwykle 50 minut. Najczęściej spotykamy się raz w tygodniu, ale częstotliwość ustalamy wspólnie z terapeutą.",
-  },
-  {
-    question: "Czy potrzebuję skierowania?",
-    answer:
-      "Nie. Na psychoterapię i konsultacje psychologiczne możesz umówić się bez skierowania.",
-  },
-  {
-    question: "Czy możliwe są spotkania online?",
-    answer:
-      "Tak. Część specjalistów prowadzi sesje online; informację znajdziesz w opisie usługi i przy każdym specjaliście.",
-  },
-  {
-    question: "Jak mogę odwołać lub przełożyć wizytę?",
-    answer:
-      "Najpóźniej 24 godziny przed spotkaniem, telefonicznie lub mailowo. Wizyta odwołana później jest płatna.",
-  },
-] satisfies FaqItem[];
 
 // --------------------------------------------------------------- pages
 

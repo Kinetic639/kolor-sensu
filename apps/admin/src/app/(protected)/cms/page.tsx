@@ -2,6 +2,11 @@ import { AboutPageSection } from "@/features/cms/about-page-section";
 import { CmsSection } from "@/features/cms/cms-section";
 import { AppearanceSection } from "@/features/cms/appearance-section";
 import { ContactPageSection } from "@/features/cms/contact-page-section";
+import {
+  OfferPageSection,
+  ServicePageSection,
+} from "@/features/cms/offer-page-section";
+import { PricesPageSection } from "@/features/cms/prices-page-section";
 import { CrisisHelpSection } from "@/features/cms/crisis-help-section";
 import { FirstStepsSection } from "@/features/cms/first-steps-section";
 import { FixedSection, UnavailableSection } from "@/features/cms/fixed-section";
@@ -14,6 +19,9 @@ import {
   loadAboutPage,
   loadClosingCta,
   loadContactPage,
+  loadOfferPage,
+  loadPricesPage,
+  loadServicePage,
   loadSiteContact,
   loadSpecialistsPage,
   loadCrisisHelp,
@@ -327,6 +335,60 @@ async function SpecialistsPage() {
   );
 }
 
+/** Oferta: its search settings, its words and every service page's. */
+async function OfferPage() {
+  const [page, service, seo] = await Promise.all([
+    settle("oferta", loadOfferPage),
+    settle("strona usługi", loadServicePage),
+    loadSeo("oferta"),
+  ]);
+  return (
+    <>
+      <PagePublishBar
+        page="oferta"
+        status={pageStatus([page, service, seo].filter((one) => one !== null))}
+      />
+      <Seo model={seo} page="oferta" />
+      {page ? (
+        <OfferPageSection model={page} />
+      ) : (
+        <UnavailableSection title="Tytuł strony · Pusta oferta" />
+      )}
+      <FixedSection title="Usługi i katalogi">
+        Kafelki, katalogi i ich kolejność są z Usług (w portalu); każda usługa
+        ma swoją stronę z nazwą, opisem, czasem i cenami specjalistów.
+      </FixedSection>
+      {service ? (
+        <ServicePageSection model={service} />
+      ) : (
+        <UnavailableSection title="Strona usługi: Jak pracujemy · bez rezerwacji online" />
+      )}
+    </>
+  );
+}
+
+/** Cennik: its search settings, its words and its rules. */
+async function PricesPage() {
+  const [page, seo] = await Promise.all([
+    settle("cennik", loadPricesPage),
+    loadSeo("cennik"),
+  ]);
+  return (
+    <>
+      <PagePublishBar
+        page="cennik"
+        status={pageStatus([page, seo].filter((one) => one !== null))}
+      />
+      <Seo model={seo} page="cennik" />
+      {page ? (
+        <PricesPageSection model={page} />
+      ) : (
+        <UnavailableSection title="Tytuł strony · Ceny · Płatności i odwołania" />
+      )}
+    </>
+  );
+}
+
 /** Kontakt: its search settings and its words. */
 async function ContactPage() {
   const [page, seo] = await Promise.all([
@@ -413,8 +475,12 @@ export default async function CmsPage({ searchParams }: PageProps<"/cms">) {
         <HomePage />
       ) : strona === "o-nas" ? (
         <AboutPage />
+      ) : strona === "oferta" ? (
+        <OfferPage />
       ) : strona === "specjalisci" ? (
         <SpecialistsPage />
+      ) : strona === "cennik" ? (
+        <PricesPage />
       ) : strona === "kontakt" ? (
         <ContactPage />
       ) : strona === "gabinety" ? (
