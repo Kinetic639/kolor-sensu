@@ -53,7 +53,10 @@ Cennik its rules, a service's page its way to book or to ask and its data
 for Google, and that a wrong address under /oferta leads back to it. `keyboard-zoom.spec.ts` walks the public pages (and the first service) with
 a keyboard: the first Tab is "Przejdź do treści" and leads into the page,
 nothing focused hides under the cookie notice (WCAG 2.4.11), and at 200 %
-(640 px) no page scrolls sideways.
+(640 px) no page scrolls sideways. `legal-pages.spec.ts` checks Regulamin, Polityka
+prywatności and Pliki cookies: one h1 with the document's headings under it,
+links, 390 and 1280 px, axe, the footer's links to each, and their title,
+description, canonical address and link preview.
 
 Tests that would leave lasting changes (a service in the catalogue, the
 home page's draft) carry the `@writes-data` tag and run only locally.

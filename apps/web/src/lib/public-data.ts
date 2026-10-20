@@ -9,6 +9,7 @@ import {
   getPublishedAboutPage,
   getPublishedClosingCta,
   getPublishedContactPage,
+  getPublishedLegalPage,
   getPublishedOfferPage,
   getPublishedPricesPage,
   getPublishedServicePage,
@@ -42,6 +43,8 @@ import {
   listPublishedSpecialists,
   supportAreaImageUrl,
 } from "@repo/supabase";
+import type { LegalPageKey } from "@repo/contracts/cms-legal";
+import { defaultLegalPages } from "@repo/contracts/cms-legal-content";
 import {
   arrangeOffer,
   defaultAboutHeaders,
@@ -241,6 +244,15 @@ export const getSpecialistsPage = cache(() =>
 /** /kontakt, its words, travel description and questions. */
 export const getContactPage = cache(() =>
   load("contact page", getPublishedContactPage, defaultContactPage),
+);
+
+/** A legal document (Regulamin, Polityka prywatności, Pliki cookies). */
+export const getLegalPage = cache((key: LegalPageKey) =>
+  load(
+    `legal page ${key}`,
+    (client) => getPublishedLegalPage(client, key),
+    defaultLegalPages[key],
+  ),
 );
 
 /** /oferta's words. */
