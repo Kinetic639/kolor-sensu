@@ -43,7 +43,7 @@ RETURNS boolean
 LANGUAGE sql
 IMMUTABLE
 SET search_path TO ''
-AS $
+AS $$
   SELECT COALESCE(
     private.page_intro_is_valid(p_payload -> 'intro')
     AND jsonb_typeof(p_payload -> 'body') = 'object'
@@ -53,7 +53,7 @@ AS $
     AND jsonb_typeof(p_payload -> 'effectiveFrom') = 'string',
     false
   );
-$;
+$$;
 
 -- The payload check, its whole body: the legal keys.
 CREATE OR REPLACE FUNCTION private.site_content_payload_is_valid(p_key text, p_payload jsonb)
