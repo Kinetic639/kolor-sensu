@@ -71,25 +71,28 @@ AS $$
   END;
 $$;
 
+-- Draft and published in one statement: a row's checks see both columns
+-- at once, so neither may be left in the old shape while the other moves.
 UPDATE public.site_content
-SET draft_payload = jsonb_set(
-  draft_payload, '{intro}', private.page_intro_as_header(draft_payload -> 'intro')
-)
+SET
+  draft_payload = CASE
+    WHEN draft_payload ? 'intro' THEN jsonb_set(
+      draft_payload, '{intro}',
+      private.page_intro_as_header(draft_payload -> 'intro')
+    )
+    ELSE draft_payload
+  END,
+  published_payload = CASE
+    WHEN published_payload ? 'intro' THEN jsonb_set(
+      published_payload, '{intro}',
+      private.page_intro_as_header(published_payload -> 'intro')
+    )
+    ELSE published_payload
+  END
 WHERE key IN (
     'about_page', 'specialists_page', 'contact_page', 'offer_page',
     'prices_page', 'rooms'
   )
-  AND draft_payload ? 'intro';
-
-UPDATE public.site_content
-SET published_payload = jsonb_set(
-  published_payload, '{intro}',
-  private.page_intro_as_header(published_payload -> 'intro')
-)
-WHERE key IN (
-    'about_page', 'specialists_page', 'contact_page', 'offer_page',
-    'prices_page', 'rooms'
-  )
-  AND published_payload ? 'intro';
+  AND (draft_payload ? 'intro' OR published_payload ? 'intro');
 
 DROP FUNCTION private.page_intro_as_header(jsonb);
