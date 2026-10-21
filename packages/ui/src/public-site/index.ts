@@ -18,17 +18,28 @@ export type {
   WatercolorSectionBackgroundProps,
 } from "./surfaces";
 export {
+  COOKIE_CATEGORIES,
   COOKIE_CONSENT_EVENT,
   COOKIE_CONSENT_KEY,
+  COOKIE_CONSENT_VERSION,
   CookieConsent,
+  CookieSettingsButton,
+  cookieConsentAllows,
+  openCookieSettings,
   readCookieChoice,
+  readCookieConsent,
 } from "./cookie-consent";
 export { CursorRing } from "./cursor-ring";
 export { SUPPORT_AREA_SLOTS, SupportAreas } from "./support-areas";
 export type { SupportAreaItem, SupportAreasProps } from "./support-areas";
 export { ThoughtsLens } from "./thoughts-lens";
 export type { ThoughtPair, ThoughtsLensProps } from "./thoughts-lens";
-export type { CookieChoice, CookieConsentProps } from "./cookie-consent";
+export type {
+  CookieCategory,
+  CookieChoice,
+  CookieConsentProps,
+  CookieConsentRecord,
+} from "./cookie-consent";
 export { FaqSection } from "./faq-section";
 export type { FaqItem, FaqSectionProps } from "./faq-section";
 export { FeatureSection } from "./feature-section";

@@ -41,6 +41,13 @@ BEGIN
   ) <> 3 THEN
     RAISE EXCEPTION 'M: the three samples were not seeded unpublished';
   END IF;
+
+  -- The cookie policy's sample follows the notice (20261021090000).
+  IF (
+    SELECT draft_payload::text FROM public.site_content WHERE key = 'legal_cookies'
+  ) NOT LIKE '%ks_booking%Ustawienia plików cookies%' THEN
+    RAISE EXCEPTION 'M: the cookie policy''s sample was not brought up to date';
+  END IF;
 END;
 $$;
 

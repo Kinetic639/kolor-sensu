@@ -2,25 +2,26 @@
 
 import {
   COOKIE_CONSENT_EVENT,
-  readCookieChoice,
+  cookieConsentAllows,
   type CookieChoice,
 } from "@repo/ui/public-site/cookie-consent";
 import { MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 
 // Kontakt → the map (decided 19.10): Google's embedded map, which sets its
-// own cookies, so it loads only once the visitor agreed to all cookies (the
-// banner), or asks for it here ("Pokaż mapę", for this visit). Until then a
-// plain tile stands in its place; the address and "Pokaż na mapie" stay
-// beside it either way.
+// own cookies, so it loads only once the visitor allowed "Mapy i treści
+// zewnętrzne" (the cookie notice), or asks for it here ("Pokaż mapę", for
+// this visit). Withdrawn in the notice, it goes at once. Until then a plain
+// tile stands in its place; the address and "Pokaż na mapie" stay beside
+// it either way.
 
 export function ConsentMap({ address }: { address: string }) {
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
-    if (readCookieChoice() === "all") setShown(true);
+    if (cookieConsentAllows("external")) setShown(true);
     const onChoice = (event: Event) => {
-      if ((event as CustomEvent<CookieChoice>).detail === "all") setShown(true);
+      setShown((event as CustomEvent<CookieChoice>).detail === "all");
     };
     window.addEventListener(COOKIE_CONSENT_EVENT, onChoice);
     return () => window.removeEventListener(COOKIE_CONSENT_EVENT, onChoice);

@@ -42,6 +42,7 @@ async function load() {
 
 afterEach(() => {
   window.localStorage.clear();
+  window.sessionStorage.clear();
   vi.restoreAllMocks();
   vi.useRealTimers();
 });
@@ -102,7 +103,7 @@ describe("SiteIntro", () => {
     const first = await load();
     expect(first.intro.dataset.intro).toBe("play");
     expect(Number(first.intro.dataset.introAt)).toBeGreaterThanOrEqual(0);
-    expect(window.localStorage.getItem(introStorageKey)).toBe("1");
+    expect(window.sessionStorage.getItem(introStorageKey)).toBe("1");
     first.unmount();
 
     const again = await load();
