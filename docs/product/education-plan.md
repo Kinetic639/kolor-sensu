@@ -2,19 +2,33 @@
 
 ## Postęp
 
-- [ ] **PR 1 · Edytor artykułów** — bloki, menu „/”, przeciąganie, wklejanie zdjęć, renderer · _w przeglądzie_
-- [ ] **PR 2 · Baza Edukacji** — kategorie, artykuły, e-booki, przekierowania, miejsce na PDF
+Stan na 21.10 · PR-y: 0 / 6 zmergowanych · kartki MVP: 0 / 57 zielonych
+
+- [ ] **PR 1 · Edytor artykułów** — [#134](https://github.com/Kinetic639/kolor-sensu/pull/134)
+  - [x] kontrakt profilu „artykuł” (bloki, czas czytania, śródtytuły)
+  - [x] renderer na serwerze i spis treści
+  - [x] edytor: „Wstaw”, menu „/”, przeciąganie i przesuwanie, wklejanie zdjęć, tabela
+  - [x] testy (kontrakt 13, renderer 9, edytor 10) i Storybook
+  - [x] CI zielone
+  - [ ] zmergowany do develop
+- [ ] **PR 2 · Baza Edukacji** — [#136](https://github.com/Kinetic639/kolor-sensu/pull/136) (na PR 1)
+  - [x] migracja: kategorie, artykuły, e-booki, przekierowania, PDF
+  - [x] kontrakty i `@repo/supabase/education`
+  - [x] testy (SQL, kontrakty 10, supabase 6) i dokumentacja
+  - [ ] CI zielone
+  - [ ] zmergowany i migracja na DEV
 - [ ] **PR 3 · Portal admina** — Artykuły, Kategorie, E-booki, zakładka CMS Edukacja
 - [ ] **PR 4 · Strony artykułów** — /edukacja, lista, kategoria, artykuł, powiązania, menu
 - [ ] **PR 5 · Strony e-booków** — katalog, strona e-booka, film, fragment, karta w artykule
 - [ ] **PR 6 · SEO i jakość** — dane dla Google, obrazki, mapa strony, e2e, tabela „Każda strona”
 - [ ] **Miro** — kartki na zielono, wiersze tabeli „Każda strona”
 
-Kartki MVP: 0 / 57 zielonych (Edukacja i artykuły 21 + 4 nowe, Strona
-artykułu 8, Tworzenie artykułu 7, E-booki 9 + 1 nowa, E-booki w CMS 7).
+Kartki MVP: Edukacja i artykuły 21 + 4 nowe, Strona artykułu 8, Tworzenie
+artykułu 7, E-booki 9 + 1 nowa, E-booki w CMS 7 (sekcja 4).
 
-**Zasada aktualizacji:** każdy PR odhacza swój wiersz i wpisuje numer PR;
-kartki odhacza się w sekcji 4, gdy są sprawdzone testem w CI (zielone).
+**Zasada aktualizacji:** każdy krok odhacza się w commicie, który go
+kończy; PR jest odhaczony, gdy jest zmergowany i sprawdzony na DEV; kartki
+w sekcji 4, gdy są sprawdzone testem w CI.
 
 ## 1. Ustalenia (21.10)
 
