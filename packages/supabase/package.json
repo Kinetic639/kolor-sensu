@@ -13,7 +13,8 @@
     "./public": "./src/public.ts",
     "./secret": "./src/secret.ts",
     "./server": "./src/server.ts",
-    "./contact": "./src/contact.ts"
+    "./contact": "./src/contact.ts",
+    "./education": "./src/education.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

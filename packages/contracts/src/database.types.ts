@@ -267,6 +267,252 @@ export type Database = {
           },
         ];
       };
+      article_categories: {
+        Row: {
+          created_at: string;
+          description: string;
+          id: string;
+          name: string;
+          slug: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string;
+          id?: string;
+          name: string;
+          slug: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string;
+          id?: string;
+          name?: string;
+          slug?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      articles: {
+        Row: {
+          author_kind: string | null;
+          author_specialist_id: string | null;
+          body: Json | null;
+          category_id: string | null;
+          content_updated_at: string | null;
+          cover_alt: string | null;
+          cover_path: string | null;
+          created_at: string;
+          draft: Json;
+          ebook_id: string | null;
+          id: string;
+          lead: string | null;
+          og_image_path: string | null;
+          published_at: string | null;
+          reviewer_specialist_id: string | null;
+          seo_description: string | null;
+          seo_title: string | null;
+          slug: string | null;
+          sources: Json;
+          status: string;
+          title: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          author_kind?: string | null;
+          author_specialist_id?: string | null;
+          body?: Json | null;
+          category_id?: string | null;
+          content_updated_at?: string | null;
+          cover_alt?: string | null;
+          cover_path?: string | null;
+          created_at?: string;
+          draft?: Json;
+          ebook_id?: string | null;
+          id?: string;
+          lead?: string | null;
+          og_image_path?: string | null;
+          published_at?: string | null;
+          reviewer_specialist_id?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
+          slug?: string | null;
+          sources?: Json;
+          status?: string;
+          title?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          author_kind?: string | null;
+          author_specialist_id?: string | null;
+          body?: Json | null;
+          category_id?: string | null;
+          content_updated_at?: string | null;
+          cover_alt?: string | null;
+          cover_path?: string | null;
+          created_at?: string;
+          draft?: Json;
+          ebook_id?: string | null;
+          id?: string;
+          lead?: string | null;
+          og_image_path?: string | null;
+          published_at?: string | null;
+          reviewer_specialist_id?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
+          slug?: string | null;
+          sources?: Json;
+          status?: string;
+          title?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      ebooks: {
+        Row: {
+          audience: string | null;
+          content_updated_at: string | null;
+          contents: Json | null;
+          cover_alt: string | null;
+          cover_path: string | null;
+          created_at: string;
+          description: Json | null;
+          draft: Json;
+          format: string | null;
+          id: string;
+          naffy_url: string | null;
+          og_image_path: string | null;
+          published_at: string | null;
+          sample_path: string | null;
+          seo_description: string | null;
+          seo_title: string | null;
+          short_description: string | null;
+          slug: string | null;
+          status: string;
+          title: string | null;
+          updated_at: string;
+          video_url: string | null;
+        };
+        Insert: {
+          audience?: string | null;
+          content_updated_at?: string | null;
+          contents?: Json | null;
+          cover_alt?: string | null;
+          cover_path?: string | null;
+          created_at?: string;
+          description?: Json | null;
+          draft?: Json;
+          format?: string | null;
+          id?: string;
+          naffy_url?: string | null;
+          og_image_path?: string | null;
+          published_at?: string | null;
+          sample_path?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
+          short_description?: string | null;
+          slug?: string | null;
+          status?: string;
+          title?: string | null;
+          updated_at?: string;
+          video_url?: string | null;
+        };
+        Update: {
+          audience?: string | null;
+          content_updated_at?: string | null;
+          contents?: Json | null;
+          cover_alt?: string | null;
+          cover_path?: string | null;
+          created_at?: string;
+          description?: Json | null;
+          draft?: Json;
+          format?: string | null;
+          id?: string;
+          naffy_url?: string | null;
+          og_image_path?: string | null;
+          published_at?: string | null;
+          sample_path?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
+          short_description?: string | null;
+          slug?: string | null;
+          status?: string;
+          title?: string | null;
+          updated_at?: string;
+          video_url?: string | null;
+        };
+        Relationships: [];
+      };
+      article_services: {
+        Row: {
+          article_id: string;
+          service_id: string;
+        };
+        Insert: {
+          article_id?: string;
+          service_id?: string;
+        };
+        Update: {
+          article_id?: string;
+          service_id?: string;
+        };
+        Relationships: [];
+      };
+      article_specialists: {
+        Row: {
+          article_id: string;
+          specialist_id: string;
+        };
+        Insert: {
+          article_id?: string;
+          specialist_id?: string;
+        };
+        Update: {
+          article_id?: string;
+          specialist_id?: string;
+        };
+        Relationships: [];
+      };
+      article_slug_redirects: {
+        Row: {
+          article_id: string;
+          created_at: string;
+          old_slug: string;
+        };
+        Insert: {
+          article_id?: string;
+          created_at?: string;
+          old_slug?: string;
+        };
+        Update: {
+          article_id?: string;
+          created_at?: string;
+          old_slug?: string;
+        };
+        Relationships: [];
+      };
+      ebook_slug_redirects: {
+        Row: {
+          created_at: string;
+          ebook_id: string;
+          old_slug: string;
+        };
+        Insert: {
+          created_at?: string;
+          ebook_id?: string;
+          old_slug?: string;
+        };
+        Update: {
+          created_at?: string;
+          ebook_id?: string;
+          old_slug?: string;
+        };
+        Relationships: [];
+      };
       contact_messages: {
         Row: {
           created_at: string;
@@ -2315,6 +2561,82 @@ export type Database = {
         }[];
       };
       publish_site_content: { Args: { p_key: string }; Returns: undefined };
+      create_article: {
+        Args: { p_draft: Json };
+        Returns: string;
+      };
+      save_article_draft: {
+        Args: { p_id: string; p_draft: Json };
+        Returns: undefined;
+      };
+      list_articles_admin: {
+        Args: never;
+        Returns: {
+          id: string;
+          status: string;
+          draft: Json;
+          slug: string | null;
+          published_at: string | null;
+          updated_at: string;
+          has_unpublished_changes: boolean;
+        }[];
+      };
+      get_article_admin: {
+        Args: { p_id: string };
+        Returns: Json;
+      };
+      publish_article: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      unpublish_article: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      delete_article: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      delete_article_category: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      create_ebook: {
+        Args: { p_draft: Json };
+        Returns: string;
+      };
+      save_ebook_draft: {
+        Args: { p_id: string; p_draft: Json };
+        Returns: undefined;
+      };
+      list_ebooks_admin: {
+        Args: never;
+        Returns: {
+          id: string;
+          status: string;
+          draft: Json;
+          slug: string | null;
+          published_at: string | null;
+          updated_at: string;
+          has_unpublished_changes: boolean;
+        }[];
+      };
+      get_ebook_admin: {
+        Args: { p_id: string };
+        Returns: Json;
+      };
+      publish_ebook: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      unpublish_ebook: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      delete_ebook: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
       submit_contact_message: {
         Args: {
           p_email: string;

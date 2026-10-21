@@ -40,6 +40,32 @@ The editor enables the minimal StarterKit surface required for:
 
 `codeBlock` is disabled. The contract and renderer reject tables, images, video, embeds, iframes, mentions, arbitrary HTML, custom nodes, style attributes, and arbitrary content classes. Adding a feature requires updating the contract, editor configuration, renderer, tests, and documentation together.
 
+## Article Profile (21.10)
+
+Articles and e-books need more than a bio: images, boxes, quotations,
+tables, a booking button. They use the **article profile**, a superset kept
+apart so that bios, rooms and legal documents keep the base set:
+
+- `@repo/contracts/article-rich-text`: `articleDocumentSchema` (the base
+  blocks plus `articleImage`, `articleImagePair`, `callout`, `pullQuote`,
+  `table`, `bookingButton`), `articlePlainText`, `articleReadingMinutes`,
+  `articleHeadings` (unique ids, Polish letters folded), `articleImages`.
+  Fixed choices only: an image's width is `text`, `wide` or `full`; a box
+  is `important`, `tip` or `warning`; images are paths in the public
+  site-media bucket (`articles/…`, `ebooks/…`) with their size, and their
+  text for people who cannot see them is required.
+- `@repo/ui/article-editor`: `ArticleEditor`, the base toolbar plus
+  "Wstaw", a "/" menu, tables, drag handles, and "Przesuń blok w górę / w
+  dół" (WCAG 2.5.7: moving without dragging). Images pasted, dropped or
+  picked are uploaded by the host (`uploadImage`). It reports every change,
+  an image still without its text included; the host refuses to save
+  until `articleDocumentSchema` accepts it. Host values reach the nodes
+  through getters: Tiptap's `configure()` copies objects and arrays.
+- `@repo/ui/article-renderer`: `ArticleRenderer` (server, no script): a
+  42rem reading column, images breaking out to 60rem or the page,
+  headings with the table of contents' ids, tables scrolling in their own
+  focusable box; `ArticleTableOfContents` from three h2 headings.
+
 ## Security Model
 
 The Zod schema is strict and recursively whitelists every node, mark, and attribute. It rejects unknown keys, unsupported heading levels, malformed structures, oversized content, and excessive nesting. The renderer validates at its own boundary and explicitly maps accepted values to React elements; it never uses `dangerouslySetInnerHTML`.

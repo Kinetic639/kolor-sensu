@@ -21,6 +21,8 @@
     "./cms-pages": "./src/cms-pages.ts",
     "./cms-offer": "./src/cms-offer.ts",
     "./cms-legal": "./src/cms-legal.ts",
+    "./article-rich-text": "./src/article-rich-text.ts",
+    "./education": "./src/education.ts",
     "./cms-legal-content": "./src/cms-legal-content.ts",
     "./cms-appearance": "./src/cms-appearance.ts",
     "./cms-seo": "./src/cms-seo.ts",
