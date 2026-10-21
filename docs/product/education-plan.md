@@ -2,7 +2,7 @@
 
 ## Postęp
 
-Stan na 21.10 · PR-y: 2 / 6 zmergowanych (PR 3 czeka na merge, PR 4 w toku) · kartki MVP: 0 / 57 zielonych
+Stan na 21.10 · PR-y: 2 / 6 zmergowanych (PR 3 i PR 4 czekają na merge) · kartki MVP: 0 / 57 zielonych
 
 - [x] **PR 1 · Edytor artykułów** — [#134](https://github.com/Kinetic639/kolor-sensu/pull/134)
   - [x] kontrakt profilu „artykuł” (bloki, czas czytania, śródtytuły)
@@ -27,7 +27,7 @@ Stan na 21.10 · PR-y: 2 / 6 zmergowanych (PR 3 czeka na merge, PR 4 w toku) · 
   - [x] testy (listy i adresy 7), typy, lint
   - [x] CI zielone
   - [ ] zmergowany i sprawdzony na DEV
-- [ ] **PR 4 · Strony artykułów** — /edukacja, lista, kategoria, artykuł, powiązania, menu, podgląd szkicu, zakładka CMS Edukacja · _w toku_ (na PR 3)
+- [ ] **PR 4 · Strony artykułów** — [#143](https://github.com/Kinetic639/kolor-sensu/pull/143) (na PR 3) · /edukacja, lista, kategoria, artykuł, powiązania, menu, podgląd szkicu, zakładka CMS Edukacja
   - [x] dane strony: artykuły, kategorie, powiązania, przekierowania, podgląd szkicu
   - [x] /edukacja: najnowsze artykuły (do tej pory „wkrótce”)
   - [x] /edukacja/artykuly i kategorie: karty, filtr kategorii jako adresy
