@@ -69,3 +69,17 @@ for an article's body); data access `packages/supabase/src/education.ts`
 - Edukacja's own words (the tops of `/edukacja` and `/edukacja/artykuly`,
   the line while nothing is published, the word about therapy under every
   article) are the CMS's `education_page`.
+- E-books: `/edukacja/ebooki` and `/edukacja/ebooki/[slug]` (an old address
+  redirects). "Zobacz cenę i kup na Naffy" opens the product on Naffy; we
+  show no price. The free sample downloads as `<slug>-fragment.pdf`. An
+  article's recommended e-book shows as a card under it.
+- The film (`ConsentVideo`) loads nothing until "Odtwórz film" is clicked:
+  YouTube's no-cookie player or Vimeo with `dnt=1`, the cover as poster.
+  It belongs to the cookie category "Mapy, filmy i treści zewnętrzne";
+  withdrawing consent closes the player.
+- Every page has one H1 and a link preview: the cover or the portal's
+  sharing picture, else a generated card with the title
+  (`opengraph-image.tsx`). Google gets an `Article` or a `Book`.
+  `tests/e2e/education-pages.spec.ts` checks the pages on a phone and a
+  computer (axe, links, no sideways scroll, the film); the keyboard and
+  200 % checks cover the three list pages.
