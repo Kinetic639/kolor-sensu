@@ -6,7 +6,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { cn } from "../lib/utils";
 import { SecondaryButton } from "./actions";
 
-// The cookie notice: a small card in the lower corner, not a wall over the
+// The cookie notice: a small card in the lower right corner, not a wall over the
 // page. It only renders on the client and only until the visitor chooses,
 // so it never shifts the layout or blocks the first paint.
 //
@@ -222,7 +222,7 @@ export function CookieConsent({
       ref={ref}
       aria-label="Pliki cookies"
       className={cn(
-        "rounded-card-lg border-border/70 bg-surface shadow-card-hover fixed inset-x-3 bottom-3 z-50 grid max-h-[calc(100dvh-1.5rem)] gap-4 overflow-y-auto border p-5 sm:right-auto sm:bottom-5 sm:left-5 sm:max-w-sm",
+        "rounded-card-lg border-border/70 bg-surface shadow-card-hover fixed inset-x-3 bottom-3 z-50 grid max-h-[calc(100dvh-1.5rem)] gap-4 overflow-y-auto border p-5 sm:right-5 sm:bottom-5 sm:left-auto sm:max-w-sm",
         className,
       )}
     >
