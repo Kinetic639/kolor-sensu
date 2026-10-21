@@ -13,7 +13,15 @@ import {
 import type { Route } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import {
+  applyDiscountCode,
+  confirmFreeBooking,
+  discountRefusal,
+  removeDiscountCode,
+} from "@repo/supabase/discount-codes";
 import { attachVisitIntake } from "@repo/supabase/intakes";
+import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { getBookingWindow } from "@/lib/public-data";
 import { stripeServer } from "@/lib/stripe";
 import { createSecretClient } from "@/lib/supabase/secret";
@@ -24,7 +32,11 @@ import {
   type DetailsFormErrors,
   type DetailsFormValues,
 } from "./details-form-data";
-import { claimReservationEmail } from "./email/confirmation-server";
+import { discountProblem } from "./discount";
+import {
+  claimReservationEmail,
+  sendVisitConfirmation,
+} from "./email/confirmation-server";
 import { clientIp, turnstileKeys, verifyTurnstile, visitorKey } from "./guards";
 import { clearHoldToken, readHoldToken, saveHoldToken } from "./hold-cookie";
 import { clearIntake, readIntake } from "./intake-cookie";
@@ -159,6 +171,7 @@ async function goToPayment(token: string): Promise<never> {
   const booking = await getBooking(db, token);
   if (!booking || booking.status !== "held") redirect(EXPIRED);
   if (!booking.details) redirect(DETAILS_PATH);
+  if (booking.priceMinor === 0) return confirmFree(token, booking.reference);
   const timeZone = (await getBookingWindow())?.timeZone ?? "Europe/Warsaw";
 
   const session = await stripeServer().checkout.sessions.create(
@@ -260,7 +273,12 @@ export async function saveDetailsAction(
   // Saved (with its questionnaire, the cookie is done with): reserved to
   // pay later, or straight on to the payment.
   await clearIntake();
-  if (formData.get(INTENT_FIELD) === PAY_LATER) return reserveForLater(token);
+  if (formData.get(INTENT_FIELD) === PAY_LATER) {
+    // Nothing to pay later when the code covers it all.
+    const current = await getBooking(createSecretClient(), token);
+    if (current?.priceMinor === 0) return confirmFree(token, current.reference);
+    return reserveForLater(token);
+  }
   return goToPayment(token);
 }
 
@@ -287,4 +305,65 @@ async function reserveForLater(token: string): Promise<never> {
   });
   await clearHoldToken();
   redirect(`/wizyta/${link ?? token}?zmiana=zarezerwowana` as Route);
+}
+
+/**
+ * A visit its discount code made free: confirmed without a payment, the
+ * confirmation e-mailed as after a paid one.
+ */
+async function confirmFree(token: string, reference: string): Promise<never> {
+  try {
+    await confirmFreeBooking(createSecretClient(), token);
+  } catch (error) {
+    if (discountRefusal(error) === "hold_expired") redirect(EXPIRED);
+    throw error;
+  }
+  after(() => sendVisitConfirmation(reference));
+  redirect("/umow-wizyte/potwierdzenie?bezplatna=1" as Route);
+}
+
+export type DiscountFormState =
+  | { status: "idle" }
+  | { status: "applied" }
+  | { status: "refused"; message: string; code: string };
+
+/** "Zastosuj": a discount code on the held visit (useActionState). */
+export async function applyDiscountAction(
+  _previous: DiscountFormState,
+  formData: FormData,
+): Promise<DiscountFormState> {
+  const token = await readHoldToken();
+  if (!token) redirect(EXPIRED);
+  const code = String(formData.get("kod") ?? "").trim();
+  if (!code) return { status: "refused", message: "Wpisz kod rabatowy.", code };
+  const db = createSecretClient();
+  const pending = await pendingCheckoutSession(db, token).catch(() => null);
+  try {
+    await applyDiscountCode(db, token, code);
+  } catch (error) {
+    const hint = discountRefusal(error);
+    if (hint === "hold_expired") redirect(EXPIRED);
+    if (!hint) console.error("[booking] applying a code failed:", error);
+    return { status: "refused", message: discountProblem(hint), code };
+  }
+  // The payment begun at the old price closes in Stripe too.
+  if (pending) await expireSession(pending).catch(() => {});
+  revalidatePath(DETAILS_PATH);
+  return { status: "applied" };
+}
+
+/** "Usuń kod": the list price again. */
+export async function removeDiscountAction() {
+  const token = await readHoldToken();
+  if (!token) redirect(EXPIRED);
+  const db = createSecretClient();
+  const pending = await pendingCheckoutSession(db, token).catch(() => null);
+  try {
+    await removeDiscountCode(db, token);
+  } catch (error) {
+    if (discountRefusal(error) === "hold_expired") redirect(EXPIRED);
+    throw error;
+  }
+  if (pending) await expireSession(pending).catch(() => {});
+  revalidatePath(DETAILS_PATH);
 }

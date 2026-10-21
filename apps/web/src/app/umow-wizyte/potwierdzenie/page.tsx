@@ -22,7 +22,9 @@ export const metadata: Metadata = {
 export default async function BookingConfirmationPage({
   searchParams,
 }: PageProps<"/umow-wizyte/potwierdzenie">) {
-  const { sesja } = await searchParams;
+  const { sesja, bezplatna } = await searchParams;
+  // A visit a discount code made free: confirmed, nothing was paid.
+  if (bezplatna === "1") return <FreeConfirmation />;
   const sessionId =
     typeof sesja === "string" && /^cs_/.test(sesja) ? sesja : null;
   if (!sessionId) redirect(bookingHref({}));
@@ -105,6 +107,24 @@ export default async function BookingConfirmationPage({
           </SecondaryButton>
         )}
       </div>
+    </BookingStep>
+  );
+}
+
+/** A visit confirmed without a payment: its code covered the whole price. */
+async function FreeConfirmation() {
+  const visit = await readGuestVisit();
+  if (!visit || visit.booking.status !== "confirmed") redirect(bookingHref({}));
+  return (
+    <BookingStep
+      current={6}
+      lead="Kod rabatowy pokrył całą cenę, więc niczego nie pobraliśmy. Potwierdzenie wyślemy na Twój adres e-mail."
+      title="Wizyta potwierdzona"
+      visit={visit}
+    >
+      <PrimaryButton arrow asChild>
+        <Link href="/">Wróć na stronę główną</Link>
+      </PrimaryButton>
     </BookingStep>
   );
 }

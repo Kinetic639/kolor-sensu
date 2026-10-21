@@ -1986,6 +1986,14 @@ export type Database = {
           discount_minor: number;
         }[];
       };
+      get_visit_discount: {
+        Args: { p_id: string; p_own?: boolean };
+        Returns: {
+          code: string;
+          list_price_minor: number;
+          discount_minor: number;
+        }[];
+      };
       confirm_free_booking: {
         Args: { p_access_token: string };
         Returns: undefined;

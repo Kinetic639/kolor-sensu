@@ -1,11 +1,15 @@
 import { getBooking, type GuestBooking } from "@repo/supabase";
+import {
+  getBookingDiscount,
+  type BookingDiscount,
+} from "@repo/supabase/discount-codes";
 import { BookingStepper, BookingSummary } from "@repo/ui/booking";
 import { CalendarDays, FileText, House, UserRound } from "lucide-react";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { formatPrice } from "@/lib/format";
 import { getBookingWindow } from "@/lib/public-data";
 import { createSecretClient } from "@/lib/supabase/secret";
+import { priceWithDiscount } from "./discount";
 import { readHoldToken } from "./hold-cookie";
 import {
   bookingHref,
@@ -35,21 +39,29 @@ export interface GuestVisit {
   token: string;
   booking: GuestBooking;
   timeZone: string;
+  /** Its discount code, if one is applied. */
+  discount: BookingDiscount | null;
 }
 
 /** The guest's visit, or null (no cookie, a wrong one, nothing found). */
 export async function readGuestVisit(): Promise<GuestVisit | null> {
   const token = await readHoldToken();
   if (!token) return null;
-  const booking = await getBooking(createSecretClient(), token).catch(
-    (error) => {
-      console.error("[booking] reading the visit failed:", error);
-      return null;
-    },
-  );
+  const db = createSecretClient();
+  const booking = await getBooking(db, token).catch((error) => {
+    console.error("[booking] reading the visit failed:", error);
+    return null;
+  });
   if (!booking) return null;
-  const timeZone = (await getBookingWindow())?.timeZone ?? "Europe/Warsaw";
-  return { token, booking, timeZone };
+  const [window, discount] = await Promise.all([
+    getBookingWindow(),
+    getBookingDiscount(db, token).catch((error) => {
+      console.error("[booking] reading the discount failed:", error);
+      return null;
+    }),
+  ]);
+  const timeZone = window?.timeZone ?? "Europe/Warsaw";
+  return { token, booking, timeZone, discount };
 }
 
 /** The guest's live hold; otherwise back to the wizard. */
@@ -82,7 +94,7 @@ export function BookingStep({
   aside?: ReactNode;
   children: ReactNode;
 }) {
-  const { booking, timeZone } = visit;
+  const { booking, timeZone, discount } = visit;
   return (
     <div className="max-w-page px-gutter pb-section-sm mx-auto grid gap-8 pt-8 lg:pt-12">
       <div className="flex flex-wrap items-end justify-between gap-6">
@@ -120,7 +132,7 @@ export function BookingStep({
               icon: <FileText />,
               label: "Usługa",
               value: booking.serviceName,
-              detail: formatPrice(booking),
+              detail: priceWithDiscount(booking.priceMinor, discount),
             },
             {
               key: "forma",

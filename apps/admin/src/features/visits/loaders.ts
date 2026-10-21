@@ -17,6 +17,8 @@ import {
 import { panelIntake } from "@/lib/visit-intake";
 import { toVisitSearch, type VisitTableParams } from "@repo/ui/visit-table";
 import { panelClosing } from "@/lib/visit-closing";
+import { discountLabelOf } from "@/lib/visit-discount";
+import { getVisitDiscount } from "@repo/supabase/discount-codes";
 
 // `/rezerwacje` (R9): one page of everyone's visits, searched, filtered and
 // sorted by the database; what the filters offer (kept between requests,
@@ -38,6 +40,7 @@ export async function loadAdminVisits(params: VisitTableParams) {
     events,
     booker,
     intake,
+    discount,
   ] = await Promise.all([
     searchVisits(client, toVisitSearch(params, { timeZone })),
     specialistSummaries(),
@@ -49,6 +52,9 @@ export async function loadAdminVisits(params: VisitTableParams) {
     params.wizyta ? getVisitClient(client, params.wizyta) : null,
     // The questionnaire before a consultation (none where not given).
     params.wizyta ? panelIntake(client, params.wizyta, timeZone) : null,
+    params.wizyta
+      ? getVisitDiscount(client, params.wizyta).catch(() => null)
+      : null,
   ]);
 
   return {
@@ -72,6 +78,7 @@ export async function loadAdminVisits(params: VisitTableParams) {
               }
             : null,
           intake,
+          discount: discountLabelOf(discount),
           // Its closing (a held visit once begun).
           closing: await panelClosing(client, open),
         }

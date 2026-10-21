@@ -228,6 +228,13 @@ BEGIN
      OR (SELECT discount_total_minor FROM public.list_discount_codes() WHERE code = 'ZA-DARMO') <> 20000 THEN
     RAISE EXCEPTION 'U: the code''s uses were not counted';
   END IF;
+  IF (
+    SELECT discount_minor FROM public.get_visit_discount(
+      (SELECT id FROM public.appointments WHERE reference = 'KS-DISC-2')
+    )
+  ) IS DISTINCT FROM 20000 THEN
+    RAISE EXCEPTION 'U: the admin did not see the visit''s code';
+  END IF;
   SELECT id INTO used FROM public.list_discount_codes() WHERE code = 'ZA-DARMO';
   BEGIN
     PERFORM public.delete_discount_code(used);

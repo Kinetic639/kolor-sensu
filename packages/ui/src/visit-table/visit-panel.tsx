@@ -21,6 +21,7 @@ import {
   UserRound,
   UserRoundCheck,
   UsersRound,
+  TicketPercent,
   Wallet,
   X,
 } from "lucide-react";
@@ -288,11 +289,13 @@ function Details({
   specialistAvatar,
   intake,
   closing,
+  discount,
 }: {
   row: VisitRow;
   specialistAvatar?: string | null;
   intake?: VisitPanelIntake | null;
   closing?: ReactNode;
+  discount?: string | null;
 }) {
   return (
     <>
@@ -352,6 +355,14 @@ function Details({
           >
             <span className="font-medium tabular-nums">{row.amount}</span>
           </Prop>
+          {discount ? (
+            <Prop
+              icon={<TicketPercent aria-hidden="true" />}
+              label="Kod rabatowy"
+            >
+              <span className="tabular-nums">{discount}</span>
+            </Prop>
+          ) : null}
         </Group>
       ) : null}
 
@@ -413,6 +424,7 @@ export function VisitPanel({
   client = null,
   intake = null,
   closing = null,
+  discount = null,
 }: {
   row: VisitRow;
   /** The tabs' links (the table's address with each tab). */
@@ -432,6 +444,8 @@ export function VisitPanel({
   intake?: VisitPanelIntake | null;
   /** Its closing (`VisitClosingForm`), at the top of the details. */
   closing?: ReactNode;
+  /** Its discount code, as said: `JESIEN20: −40,00 zł (cena 200,00 zł)`. */
+  discount?: string | null;
 }) {
   // A tab not offered here (e.g. "Klient" for a specialist): the details.
   const shown = tabs.some((one) => one.key === tab) ? tab : "szczegoly";
@@ -470,6 +484,7 @@ export function VisitPanel({
           szczegoly: (
             <Details
               closing={closing}
+              discount={discount}
               intake={intake}
               row={row}
               specialistAvatar={specialistAvatar}

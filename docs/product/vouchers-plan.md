@@ -2,7 +2,7 @@
 
 ## Postęp
 
-Stan na 21.10 · PR-y: 0 / 5 zmergowanych (PR 1 w toku)
+Stan na 21.10 · PR-y: 0 / 5 zmergowanych (PR 1 i PR 2 czekają na merge)
 
 - [ ] **PR 1 · Kody rabatowe: baza i portal** — [#154](https://github.com/Kinetic639/kolor-sensu/pull/154) · czeka na merge
   - [x] baza: kody, rabat przy wizycie (cena katalogowa, rabat, kod), funkcje i testy SQL
@@ -11,7 +11,15 @@ Stan na 21.10 · PR-y: 0 / 5 zmergowanych (PR 1 w toku)
   - [x] testy (kontrakt 6, supabase 5, SQL), typy, lint
   - [x] CI zielone (po uzupełnieniu danych gościa w teście SQL)
   - [ ] zmergowany i sprawdzony na DEV
-- [ ] **PR 2 · Kody rabatowe w rezerwacji** — pole „Kod rabatowy” na kroku Dane, cena po rabacie w podsumowaniu, płatności, e-mailach i w portalu; rabat 100% bez płatności
+- [ ] **PR 2 · Kody rabatowe w rezerwacji** (na PR 1)
+  - [x] pole „Kod rabatowy” na kroku Dane: od razu, z „Usuń kod”; odmowy po polsku
+  - [x] cena po rabacie w podsumowaniu; płatność Stripe na kwotę po rabacie (stara sesja zamykana)
+  - [x] rabat 100%: „Potwierdź wizytę”, bez płatności, z e-mailem potwierdzenia
+  - [x] portal: kod przy wizycie w panelu Rezerwacji (`get_visit_discount`)
+  - [x] testy (widok 4, SQL), typy, lint
+  - [ ] CI zielone
+  - [ ] e2e: rezerwacja z kodem na DEV
+  - [ ] zmergowany i sprawdzony na DEV
 - [ ] **PR 3 · Vouchery: baza i portal** — voucher na kwotę, saldo, ważność 12 mies., ręczne wystawienie, unieważnienie
 - [ ] **PR 4 · Vouchery: zakup na stronie** — /vouchery (CMS), kwota, dane, Stripe, e-mail z PDF
 - [ ] **PR 5 · Vouchery w rezerwacji** — kod vouchera w kreatorze, saldo, dopłata, zwrot na saldo przy odwołaniu
