@@ -19,8 +19,11 @@ import {
 export function DetailsForm({
   saved,
   payLater,
+  free = false,
 }: {
   saved: DetailsFormValues | null;
+  /** A discount code covers the whole price: nothing to pay. */
+  free?: boolean;
   /** "8 października 2030, godz. 11:00", or null: pay now only. */
   payLater: string | null;
 }) {
@@ -122,9 +125,9 @@ export function DetailsForm({
       <div className="grid gap-3">
         <div className="flex flex-wrap gap-3">
           <PrimaryButton arrow disabled={pending} type="submit">
-            Zapłać teraz
+            {free ? "Potwierdź wizytę" : "Zapłać teraz"}
           </PrimaryButton>
-          {payLater ? (
+          {payLater && !free ? (
             <SecondaryButton
               disabled={pending}
               name={INTENT_FIELD}
@@ -136,9 +139,11 @@ export function DetailsForm({
           ) : null}
         </div>
         <p className="text-small text-text-muted">
-          {payLater
-            ? `Płacisz online. Jeśli wybierzesz płatność później, wyślemy Ci link e-mailem; opłać wizytę do ${payLater}, inaczej rezerwacja zostanie anulowana.`
-            : "Do wizyty zostało niewiele czasu, więc płatność jest potrzebna od razu."}
+          {free
+            ? "Kod rabatowy pokrywa całą cenę: potwierdzimy wizytę bez płatności."
+            : payLater
+              ? `Płacisz online. Jeśli wybierzesz płatność później, wyślemy Ci link e-mailem; opłać wizytę do ${payLater}, inaczej rezerwacja zostanie anulowana.`
+              : "Do wizyty zostało niewiele czasu, więc płatność jest potrzebna od razu."}
         </p>
       </div>
     </form>

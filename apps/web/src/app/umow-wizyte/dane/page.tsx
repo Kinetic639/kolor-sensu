@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { releaseHoldAction } from "@/features/booking/actions";
 import { BookingStep, requireLiveHold } from "@/features/booking/booking-step";
 import { DetailsForm } from "@/features/booking/details-form";
+import { DiscountForm } from "@/features/booking/discount-form";
 import { payLaterUntil } from "@/features/booking/pay-later";
 import { deadlineLabel, localTime } from "@/features/booking/visit-label";
 import { getBookingWindow } from "@/lib/public-data";
@@ -13,11 +14,12 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-// Step 5: the client's details for their held visit; saving them goes on
-// to the payment, or reserves the visit to pay later (R11).
+// Step 5: the client's details for their held visit, with a discount
+// code; saving them goes on to the payment, reserves the visit to pay
+// later (R11), or, when the code covers it all, confirms it.
 export default async function BookingDetailsPage() {
   const visit = await requireLiveHold();
-  const { booking, timeZone } = visit;
+  const { booking, timeZone, discount } = visit;
   const window = await getBookingWindow();
   const until = payLaterUntil(booking.startsAt, window?.paymentDueHours);
 
@@ -28,7 +30,11 @@ export default async function BookingDetailsPage() {
       title="Twoje dane"
       visit={visit}
     >
+      <div className="border-border/70 mb-6 border-b pb-6">
+        <DiscountForm applied={discount} />
+      </div>
       <DetailsForm
+        free={booking.priceMinor === 0}
         payLater={until ? deadlineLabel(until, timeZone) : null}
         saved={
           booking.details

@@ -147,3 +147,26 @@ export async function confirmFreeBooking(
   });
   if (error) throw error;
 }
+
+// ------------------------------------------------------------ the portals
+
+/** A visit's code, for whoever may see the visit (`own`: a specialist's). */
+export async function getVisitDiscount(
+  client: Client,
+  visitId: string,
+  own = false,
+): Promise<BookingDiscount | null> {
+  const { data, error } = await client.rpc("get_visit_discount", {
+    p_id: visitId,
+    p_own: own,
+  });
+  if (error) throw error;
+  const row = data?.[0];
+  return row
+    ? {
+        code: row.code,
+        listPriceMinor: row.list_price_minor,
+        discountMinor: row.discount_minor,
+      }
+    : null;
+}
