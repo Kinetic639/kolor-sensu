@@ -4,12 +4,12 @@
 
 Stan na 21.10 · PR-y: 0 / 5 zmergowanych (PR 1 w toku)
 
-- [ ] **PR 1 · Kody rabatowe: baza i portal** · _w toku_
+- [ ] **PR 1 · Kody rabatowe: baza i portal** — [#154](https://github.com/Kinetic639/kolor-sensu/pull/154) · czeka na merge
   - [x] baza: kody, rabat przy wizycie (cena katalogowa, rabat, kod), funkcje i testy SQL
   - [x] kontrakty i `@repo/supabase`
   - [x] portal: Kody rabatowe (lista z użyciami, dodawanie, edycja, wyłączanie)
   - [x] testy (kontrakt 6, supabase 5, SQL), typy, lint
-  - [ ] CI zielone
+  - [x] CI zielone (po uzupełnieniu danych gościa w teście SQL)
   - [ ] zmergowany i sprawdzony na DEV
 - [ ] **PR 2 · Kody rabatowe w rezerwacji** — pole „Kod rabatowy” na kroku Dane, cena po rabacie w podsumowaniu, płatności, e-mailach i w portalu; rabat 100% bez płatności
 - [ ] **PR 3 · Vouchery: baza i portal** — voucher na kwotę, saldo, ważność 12 mies., ręczne wystawienie, unieważnienie
