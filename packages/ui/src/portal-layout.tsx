@@ -15,6 +15,7 @@ import {
   type LucideIcon,
   BookOpen,
   Newspaper,
+  TicketPercent,
 } from "lucide-react";
 import { Fragment, type ElementType, type ReactNode } from "react";
 import {
@@ -48,6 +49,7 @@ const portalIcons = {
   calendar: CalendarDays,
   clients: ContactRound,
   clock: Clock3,
+  discounts: TicketPercent,
   cms: FileText,
   dashboard: LayoutDashboard,
   emails: Mail,
