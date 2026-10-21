@@ -2,21 +2,22 @@
 
 ## Postęp
 
-Stan na 21.10 · PR-y: 0 / 6 zmergowanych · kartki MVP: 0 / 57 zielonych
+Stan na 21.10 · PR-y: 2 / 6 zmergowanych · kartki MVP: 0 / 57 zielonych
 
-- [ ] **PR 1 · Edytor artykułów** — [#134](https://github.com/Kinetic639/kolor-sensu/pull/134)
+- [x] **PR 1 · Edytor artykułów** — [#134](https://github.com/Kinetic639/kolor-sensu/pull/134)
   - [x] kontrakt profilu „artykuł” (bloki, czas czytania, śródtytuły)
   - [x] renderer na serwerze i spis treści
   - [x] edytor: „Wstaw”, menu „/”, przeciąganie i przesuwanie, wklejanie zdjęć, tabela
   - [x] testy (kontrakt 13, renderer 9, edytor 10) i Storybook
   - [x] CI zielone
-  - [ ] zmergowany do develop
+  - [x] zmergowany do develop
 - [ ] **PR 2 · Baza Edukacji** — [#136](https://github.com/Kinetic639/kolor-sensu/pull/136) (na PR 1)
   - [x] migracja: kategorie, artykuły, e-booki, przekierowania, PDF
   - [x] kontrakty i `@repo/supabase/education`
   - [x] testy (SQL, kontrakty 10, supabase 6) i dokumentacja
-  - [ ] CI zielone
-  - [ ] zmergowany i migracja na DEV
+  - [ ] CI zielone — test SQL próbował dodać specjalistę, którego baza tworzy sama; poprawka w PR „Edukacja: poprawka testu bazy”
+  - [x] zmergowany do develop
+  - [ ] migracja na DEV (czeka na poprawkę testu: wdrożenie zatrzymało się na CI)
 - [ ] **PR 3 · Portal admina** — Artykuły, Kategorie, E-booki, zakładka CMS Edukacja
 - [ ] **PR 4 · Strony artykułów** — /edukacja, lista, kategoria, artykuł, powiązania, menu
 - [ ] **PR 5 · Strony e-booków** — katalog, strona e-booka, film, fragment, karta w artykule

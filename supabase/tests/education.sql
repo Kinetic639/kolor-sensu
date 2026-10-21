@@ -30,8 +30,7 @@ VALUES
   ('5b000000-0000-4000-8000-000000000001', 'admin'),
   ('5b000000-0000-4000-8000-000000000002', 'specialist');
 
-INSERT INTO public.specialists (id, user_id, public_slug)
-VALUES ('5b000000-0000-4000-8000-0000000000a1', '5b000000-0000-4000-8000-000000000002', 'edu-specjalista');
+-- The specialist role gives the user a specialist row of its own.
 
 INSERT INTO public.services (id, name, slug, default_duration_minutes)
 VALUES ('5b000000-0000-4000-8000-0000000000b1', 'Konsultacja edu', 'konsultacja-edu', 50);
@@ -54,7 +53,10 @@ INSERT INTO drafts VALUES
     'categoryId', '5b000000-0000-4000-8000-0000000000c1',
     'body', '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Treść artykułu."}]}]}'::jsonb,
     'authorKind', 'specialist',
-    'authorSpecialistId', '5b000000-0000-4000-8000-0000000000a1',
+    'authorSpecialistId', (
+      SELECT id FROM public.specialists
+      WHERE user_id = '5b000000-0000-4000-8000-000000000002'
+    ),
     'reviewerSpecialistId', null,
     'sources', '[{"title":"WHO","url":"https://www.who.int"}]'::jsonb,
     'serviceIds', '["5b000000-0000-4000-8000-0000000000b1"]'::jsonb,
