@@ -18,8 +18,10 @@ vi.mock("@/lib/public-data", () => ({
 
 let articles: { slug: string; categoryId: string; contentUpdatedAt: string }[] =
   [];
+let ebooks: { slug: string; contentUpdatedAt: string }[] = [];
 vi.mock("@/lib/education-data", () => ({
   getArticles: async () => articles,
+  getEbooks: async () => ebooks,
   getArticleCategories: async () => [
     { id: "c1", slug: "dzieci", name: "Dzieci", description: "", sortOrder: 0 },
     { id: "c2", slug: "pusta", name: "Pusta", description: "", sortOrder: 1 },
@@ -31,6 +33,7 @@ const { default: sitemap } = await import("./sitemap");
 beforeEach(() => {
   hidden = new Set();
   articles = [];
+  ebooks = [];
 });
 
 const urls = async () => (await sitemap()).map((entry) => entry.url);
@@ -79,5 +82,18 @@ describe("the sitemap", () => {
       entries.find((entry) => entry.url.endsWith("/lek-u-dzieci"))
         ?.lastModified,
     ).toBe("2026-10-21T10:00:00Z");
+  });
+
+  it("lists the e-books once there are any", async () => {
+    expect(await urls()).not.toContain(`${siteUrl}/edukacja/ebooki`);
+    ebooks = [
+      { slug: "spokojny-sen", contentUpdatedAt: "2026-10-21T10:00:00Z" },
+    ];
+    expect(await urls()).toEqual(
+      expect.arrayContaining([
+        `${siteUrl}/edukacja/ebooki`,
+        `${siteUrl}/edukacja/ebooki/spokojny-sen`,
+      ]),
+    );
   });
 });

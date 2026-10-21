@@ -1,11 +1,15 @@
 import {
+  ebookSampleUrl,
   educationImageUrl,
+  getEbookSlugRedirect,
+  getPublishedEbookBySlug,
   getArticleDraftPreview,
   getArticleSlugRedirect,
   getPublishedArticleBySlug,
   getPublishedArticleLinks,
   listArticleCategories,
   listPublishedArticles,
+  listPublishedEbooks,
 } from "@repo/supabase/education";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
@@ -76,7 +80,34 @@ export const getArticlePreview = cache(async (id: string) => {
   }
 });
 
-/** An article's image address (the public site-media bucket). */
+/** Every published e-book, newest first (few: one read). */
+export const getEbooks = cache(() =>
+  load("ebooks", (client) => listPublishedEbooks(client), []),
+);
+
+export const getEbook = cache((slug: string) =>
+  load(
+    `ebook ${slug}`,
+    (client) => getPublishedEbookBySlug(client, slug),
+    null,
+  ),
+);
+
+/** The current address of an e-book whose address changed, or null. */
+export const getEbookRedirect = cache((slug: string) =>
+  load(
+    `ebook redirect ${slug}`,
+    (client) => getEbookSlugRedirect(client, slug),
+    null,
+  ),
+);
+
+/** An e-book's free sample, downloaded under a readable name. */
+export function ebookSampleHref(path: string, slug: string): string {
+  return ebookSampleUrl(createPublicClient(), path, `${slug}-fragment.pdf`);
+}
+
+/** An article's or e-book's image address (the public site-media bucket). */
 export function articleImageUrl(path: string): string {
   return educationImageUrl(createPublicClient(), path);
 }

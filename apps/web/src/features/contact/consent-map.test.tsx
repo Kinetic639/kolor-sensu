@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { COOKIE_CONSENT_EVENT } from "@repo/ui/public-site/cookie-consent";
+import {
+  COOKIE_CONSENT_EVENT,
+  COOKIE_CONSENT_VERSION,
+} from "@repo/ui/public-site/cookie-consent";
 import {
   act,
   cleanup,
@@ -19,7 +22,7 @@ const consent = (external: boolean) =>
   window.localStorage.setItem(
     "ks-cookie-consent",
     JSON.stringify({
-      version: 1,
+      version: COOKIE_CONSENT_VERSION,
       givenAt: new Date().toISOString(),
       categories: { external },
     }),

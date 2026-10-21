@@ -217,9 +217,9 @@ const cookies: LegalPageContent = {
           ": przy płatności online używa własnych plików potrzebnych do bezpiecznej płatności.",
         ],
       ),
-      h2("Za Twoją zgodą: mapy i treści zewnętrzne"),
+      h2("Za Twoją zgodą: mapy, filmy i treści zewnętrzne"),
       p(
-        "Mapa Google na stronie Kontakt ładuje się dopiero, gdy zgodzisz się na „Mapy i treści zewnętrzne” w banerze albo klikniesz „Pokaż mapę”. Google zapisuje wtedy własne pliki, opisane w polityce prywatności Google.",
+        "Mapa Google na stronie Kontakt ładuje się dopiero, gdy zgodzisz się na „Mapy, filmy i treści zewnętrzne” w banerze albo klikniesz „Pokaż mapę”. Tak samo film na stronie e-booka: ładuje się z YouTube (w trybie bez plików śledzących) albo z Vimeo dopiero po Twojej zgodzie lub po kliknięciu „Odtwórz film”. Ich dostawcy zapisują wtedy własne pliki, opisane w ich politykach prywatności.",
       ),
       h2("Pliki analityczne i marketingowe"),
       p(
@@ -227,7 +227,7 @@ const cookies: LegalPageContent = {
       ),
       h2("Jak zmienić albo wycofać zgodę"),
       p(
-        "Kliknij „Ustawienia plików cookies” w stopce strony: zobaczysz swój obecny wybór i zmienisz go jednym kliknięciem. Po wycofaniu zgody mapa znika od razu. Pliki, które Google zapisał wcześniej, usuniesz w ustawieniach przeglądarki.",
+        "Kliknij „Ustawienia plików cookies” w stopce strony: zobaczysz swój obecny wybór i zmienisz go jednym kliknięciem. Po wycofaniu zgody mapa i filmy znikają od razu. Pliki zapisane wcześniej przez ich dostawców usuniesz w ustawieniach przeglądarki.",
       ),
     ],
   },

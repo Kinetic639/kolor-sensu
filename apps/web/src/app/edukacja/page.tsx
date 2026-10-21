@@ -1,4 +1,9 @@
-import { ArrowLink, ArticleGrid, SoftCard } from "@repo/ui/public-site";
+import {
+  ArrowLink,
+  ArticleGrid,
+  EbookGrid,
+  SoftCard,
+} from "@repo/ui/public-site";
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
 import {
@@ -14,7 +19,9 @@ import {
   articleImageUrl,
   getArticleCategories,
   getArticles,
+  getEbooks,
 } from "@/lib/education-data";
+import { EBOOKS_PATH, ebookCard } from "@/features/education/ebook-view";
 import { pageMetadata } from "@/lib/page-metadata";
 
 // Edukacja: what the centre teaches. Its introduction, then the newest
@@ -29,15 +36,15 @@ export function generateMetadata(): Promise<Metadata> {
 const LATEST = 3;
 
 export default async function EducationPage() {
-  const [closing, words, articles, categories, specialists] = await Promise.all(
-    [
+  const [closing, words, articles, categories, specialists, ebooks] =
+    await Promise.all([
       getClosingCta(),
       getEducationPage(),
       getArticles(),
       getArticleCategories(),
       getSpecialists(),
-    ],
-  );
+      getEbooks(),
+    ]);
   const people = toPeople(specialists);
 
   return (
@@ -67,7 +74,29 @@ export default async function EducationPage() {
             priorityFirst
           />
         </section>
-      ) : (
+      ) : null}
+      {ebooks.length ? (
+        <section
+          aria-labelledby="ebooki"
+          className="max-w-page px-gutter pb-section-sm mx-auto grid gap-8"
+        >
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h2 className="font-display text-h2 text-ink" id="ebooki">
+              {educationPage.ebooksHeading}
+            </h2>
+            <ArrowLink href={EBOOKS_PATH}>Wszystkie e-booki</ArrowLink>
+          </div>
+          <EbookGrid
+            ebooks={ebooks.slice(0, 2).map((ebook) => ({
+              ...ebookCard(ebook),
+              coverUrl: ebook.coverPath
+                ? articleImageUrl(ebook.coverPath)
+                : null,
+            }))}
+          />
+        </section>
+      ) : null}
+      {articles.length || ebooks.length ? null : (
         <section className="max-w-page px-gutter pb-section-sm mx-auto">
           <SoftCard tone="cream" className="grid gap-3 p-6 lg:p-8">
             <h2 className="font-display text-h3 text-ink">

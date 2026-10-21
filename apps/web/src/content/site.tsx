@@ -171,6 +171,11 @@ export const educationPage = {
   soonHeading: "Pierwsze materiały już wkrótce",
   latestHeading: "Najnowsze artykuły",
   relatedHeading: "Przeczytaj też",
+  ebooksHeading: "E-booki",
+  ebooksLead:
+    "Poradniki do czytania we własnym tempie, przygotowane przez naszych specjalistów. Na stronie każdego e-booka pobierzesz darmowy fragment.",
+  ebooksEmpty: "Pierwsze e-booki pojawią się tu wkrótce.",
+  ebookUnderArticle: "E-book",
 };
 
 export const bookingPage = {

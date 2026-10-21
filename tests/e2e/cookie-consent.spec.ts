@@ -50,7 +50,7 @@ test("a refusal is kept with its date and version, and the notice goes", async (
   const record = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("ks-cookie-consent") ?? "null"),
   );
-  expect(record).toMatchObject({ version: 1, categories: { external: false } });
+  expect(record).toMatchObject({ version: 2, categories: { external: false } });
   expect(Number.isNaN(Date.parse(record.givenAt))).toBe(false);
   await page.reload();
   await expect(notice(page)).toHaveCount(0);
@@ -68,7 +68,7 @@ test("consent to the map is given and withdrawn from the footer, and the map fol
 
   await notice(page).getByRole("button", { name: "Dostosuj" }).click();
   await notice(page)
-    .getByRole("checkbox", { name: /Mapy i treści zewnętrzne/ })
+    .getByRole("checkbox", { name: /Mapy, filmy i treści zewnętrzne/ })
     .check();
   await notice(page).getByRole("button", { name: "Zapisz wybór" }).click();
   await expect(map).toHaveCount(1);
@@ -79,7 +79,7 @@ test("consent to the map is given and withdrawn from the footer, and the map fol
   await settings.click();
   await expect(notice(page)).toBeVisible();
   const maps = notice(page).getByRole("checkbox", {
-    name: /Mapy i treści zewnętrzne/,
+    name: /Mapy, filmy i treści zewnętrzne/,
   });
   await expect(maps).toBeChecked();
   await maps.uncheck();

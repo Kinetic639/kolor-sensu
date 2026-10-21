@@ -146,3 +146,11 @@ export {
 } from "./article-page";
 export type { ArticlePersonData, ArticleServiceData } from "./article-page";
 export { ArticleShare } from "./article-share";
+export {
+  EbookCard,
+  EbookCover,
+  EbookDetails,
+  EbookGrid,
+  EbookHero,
+} from "./ebook-parts";
+export type { EbookCardData } from "./ebook-parts";

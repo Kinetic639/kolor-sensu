@@ -5,6 +5,7 @@ import {
 import type {
   ArticleCategory,
   PublishedArticle,
+  PublishedEbook,
 } from "@repo/contracts/education";
 import {
   ArticleRenderer,
@@ -19,6 +20,7 @@ import {
   ArticleShare,
   ArticleSources,
   ArticleTrust,
+  EbookCard,
   JsonLd,
 } from "@repo/ui/public-site";
 import { bookingHref } from "@/features/booking/search-params";
@@ -37,6 +39,7 @@ import {
   relatedArticles,
   type ArticlePerson,
 } from "./article-view";
+import { ebookCard } from "./ebook-view";
 
 // An article's page, the site's and the preview's: the header, the cover,
 // the table of contents (3 main headings or more) and the text, sharing,
@@ -63,6 +66,7 @@ export function ArticlePageView({
   links,
   all,
   therapyNote,
+  ebook,
 }: {
   article: PublishedArticle;
   categories: readonly ArticleCategory[];
@@ -74,6 +78,8 @@ export function ArticlePageView({
   all: readonly PublishedArticle[];
   /** The word about therapy under every article (the CMS's). */
   therapyNote: string;
+  /** The e-book it recommends (published only). */
+  ebook: PublishedEbook | null;
 }) {
   const category = categories.find((one) => one.id === article.categoryId);
   const author = articleAuthor(article, people);
@@ -140,6 +146,20 @@ export function ArticlePageView({
         reviewer={reviewer}
         therapyNote={therapyNote}
       />
+      {ebook ? (
+        <div className="px-gutter mx-auto w-full max-w-[46rem]">
+          <EbookCard
+            ebook={{
+              ...ebookCard(ebook),
+              coverUrl: ebook.coverPath
+                ? articleImageUrl(ebook.coverPath)
+                : null,
+            }}
+            eyebrow={educationPage.ebookUnderArticle}
+            headingLevel="h2"
+          />
+        </div>
+      ) : null}
       <ArticleServices
         services={services
           .filter((one) => links.serviceIds.includes(one.id))
