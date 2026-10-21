@@ -2,7 +2,7 @@
 
 ## Postęp
 
-Stan na 21.10 · PR-y: 4 / 6 zmergowanych (PR 5 w toku) · kartki MVP: 0 / 57 zielonych
+Stan na 21.10 · PR-y: 4 / 6 zmergowanych (PR 5 i PR 6 czekają na merge) · kartki MVP: 0 / 57 zielonych
 
 - [x] **PR 1 · Edytor artykułów** — [#134](https://github.com/Kinetic639/kolor-sensu/pull/134)
   - [x] kontrakt profilu „artykuł” (bloki, czas czytania, śródtytuły)
@@ -49,7 +49,16 @@ Stan na 21.10 · PR-y: 4 / 6 zmergowanych (PR 5 w toku) · kartki MVP: 0 / 57 zi
   - [x] testy (widok 5, film 2, UI 4, mapa strony), typy, lint
   - [ ] CI zielone
   - [ ] zmergowany i sprawdzony na DEV
-- [ ] **PR 6 · SEO i jakość** — dane dla Google, obrazki, mapa strony, e2e, tabela „Każda strona”
+- [ ] **PR 6 · SEO i jakość** — dane dla Google, obrazki, mapa strony, e2e, tabela „Każda strona” · _w toku_ (na PR 5)
+  - [x] dane dla Google: Article (PR 4), Book (PR 5)
+  - [x] obrazki do udostępniania: okładka albo własny, inaczej generowany z tytułem
+  - [x] mapa strony z datami zmian (PR 4, PR 5)
+  - [x] e2e: Edukacja (axe, H1, linki, telefon i komputer, film, 404, podgląd); klawiatura i 200 % na listach
+  - [x] e2e na DEV: /edukacja i artykuły zielone (artykuł: pominięty, brak opublikowanego)
+  - [x] Lighthouse na DEV (telefon): /edukacja 85, artykuły 80–85, dostępność 100, dobre praktyki 100
+  - [x] dokumentacja, tabela „Każda strona” (sekcja 3a)
+  - [ ] CI zielone
+  - [ ] zmergowany i sprawdzony na DEV (z opublikowanym artykułem i e-bookiem)
 - [ ] **Miro** — kartki na zielono, wiersze tabeli „Każda strona”
 
 Kartki MVP: Edukacja i artykuły 21 + 4 nowe, Strona artykułu 8, Tworzenie
@@ -144,6 +153,21 @@ fragment”, karta e-booka pod artykułem, przekierowania.
 Dane dla Google (Article, Book), obrazki do udostępniania z okładki, mapa
 strony z datami zmian, testy e2e nowych stron, test klawiatury i 200 %,
 Lighthouse, dokumentacja, wiersze tabeli „Każda strona”.
+
+## 3a. Tabela „Każda strona” (stan po PR 6)
+
+| Strona             | Tytuł i opis                          | Obrazek                       | Dane dla Google | Jeden H1 | Klawiatura, 200 % | Telefon / komputer | Szybkość (telefon)               | Zdjęcia z opisem               | Linki | e2e                  |
+| ------------------ | ------------------------------------- | ----------------------------- | --------------- | -------- | ----------------- | ------------------ | -------------------------------- | ------------------------------ | ----- | -------------------- |
+| /edukacja          | CMS                                   | generowany                    | —               | ✓        | ✓                 | ✓                  | 85 (DEV, lokalnie)               | ✓                              | ✓     | ✓                    |
+| /edukacja/artykuly | CMS                                   | generowany                    | —               | ✓        | ✓                 | ✓                  | 80–85                            | okładki dekoracyjne na kartach | ✓     | ✓                    |
+| kategoria          | opis kategorii                        | jak /edukacja                 | —               | ✓        | ✓                 | ✓                  | jak lista                        | jak lista                      | ✓     | ✓ (404)              |
+| artykuł            | pola SEO, inaczej tytuł i wstęp       | okładka / własny / generowany | Article         | ✓        | ✓                 | ✓                  | do zmierzenia z artykułem na DEV | opis obowiązkowy               | ✓     | ✓ (gdy opublikowany) |
+| /edukacja/ebooki   | kod                                   | generowany                    | —               | ✓        | ✓                 | ✓                  | do zmierzenia po PR 5            | ✓                              | ✓     | ✓                    |
+| e-book             | pola SEO, inaczej tytuł i krótki opis | okładka / własny / generowany | Book            | ✓        | ✓                 | ✓                  | do zmierzenia po PR 5            | opis okładki                   | ✓     | ✓ (gdy opublikowany) |
+
+SEO na DEV ma 69, bo DEV jest celowo wyłączony z indeksowania (`noindex`);
+liczy się wynik na produkcji. Pomiary z Lighthouse w wierszu poleceń są
+ostrzejsze niż w przeglądarce (/oferta: 78 zamiast 87).
 
 ## 4. Kartki
 
