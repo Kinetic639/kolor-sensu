@@ -292,7 +292,7 @@ export function EbookWorkspace(props: EbookWorkspaceProps) {
           <div className="grid gap-3 lg:grid-cols-2">
             <div className="grid content-start gap-3">
               <TextField
-                hint={`Puste: „${untitled(draft.title)}”.`}
+                hint={`Puste: „${untitled(draft.title)}”. Bez nazwy centrum: „| Kolor Sensu” dopisze się sam.`}
                 id="ebook-seo-title"
                 label="Tytuł w Google"
                 maxLength={EBOOK_LIMITS.seoTitle}

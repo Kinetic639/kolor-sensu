@@ -244,8 +244,9 @@ export function CookieConsent({
           <p className="text-small text-text-muted">
             Używamy plików niezbędnych do działania strony, na przykład przy
             rezerwacji i w ochronie formularzy. Za Twoją zgodą pokażemy też mapę
-            Google na stronie Kontakt, która zapisuje pliki Google. Wybór
-            zmienisz w każdej chwili w stopce, w „Ustawieniach plików cookies”.{" "}
+            Google na stronie Kontakt i filmy z YouTube lub Vimeo na stronach
+            e-booków, które zapisują pliki swoich dostawców. Wybór zmienisz w
+            każdej chwili w stopce, w „Ustawieniach plików cookies”.{" "}
             <Link
               href={policyHref}
               className="text-ink underline underline-offset-4 hover:no-underline"
