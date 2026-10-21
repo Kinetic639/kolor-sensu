@@ -54,13 +54,17 @@ export function RichTextRenderer({
   return (
     <Prose className={className}>
       {parsed.data.content.map((node, index) =>
-        renderBlock(node, `block-${index}`),
+        renderRichTextBlock(node, `block-${index}`),
       )}
     </Prose>
   );
 }
 
-function renderBlock(node: RichTextBlockNode, key: string): ReactNode {
+/** One base block as React (the article renderer draws its base blocks so). */
+export function renderRichTextBlock(
+  node: RichTextBlockNode,
+  key: string,
+): ReactNode {
   switch (node.type) {
     case "paragraph":
       return <p key={key}>{renderInlineContent(node.content, key)}</p>;
@@ -92,7 +96,7 @@ function renderBlock(node: RichTextBlockNode, key: string): ReactNode {
       return (
         <blockquote key={key}>
           {node.content.map((child, index) =>
-            renderBlock(child, `${key}-quote-${index}`),
+            renderRichTextBlock(child, `${key}-quote-${index}`),
           )}
         </blockquote>
       );
@@ -105,13 +109,14 @@ function renderListItem(node: RichTextListItemNode, key: string) {
   return (
     <li key={key}>
       {node.content.map((child, index) =>
-        renderBlock(child, `${key}-block-${index}`),
+        renderRichTextBlock(child, `${key}-block-${index}`),
       )}
     </li>
   );
 }
 
-function renderInlineContent(
+/** A block's inline content (text with marks, line breaks) as React. */
+export function renderInlineContent(
   content: RichTextInlineNode[] | undefined,
   keyPrefix: string,
 ) {
