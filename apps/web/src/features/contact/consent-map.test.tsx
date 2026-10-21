@@ -15,6 +15,15 @@ import { ConsentMap } from "./consent-map";
 
 const address = "ul. Długa 1, 61-001 Poznań";
 const map = () => screen.queryByTitle(`Mapa: ${address}`);
+const consent = (external: boolean) =>
+  window.localStorage.setItem(
+    "ks-cookie-consent",
+    JSON.stringify({
+      version: 1,
+      givenAt: new Date().toISOString(),
+      categories: { external },
+    }),
+  );
 
 afterEach(() => {
   cleanup();
@@ -30,8 +39,8 @@ describe("the map on Kontakt", () => {
     ).toBeInTheDocument();
   });
 
-  it("loads at once with consent to all cookies", () => {
-    window.localStorage.setItem("ks-cookie-consent", "all");
+  it("loads at once with consent to maps and external content", () => {
+    consent(true);
     render(<ConsentMap address={address} />);
     expect(map()).toHaveAttribute(
       "src",
@@ -40,7 +49,7 @@ describe("the map on Kontakt", () => {
   });
 
   it("stays away with only the necessary cookies, until asked for", () => {
-    window.localStorage.setItem("ks-cookie-consent", "necessary");
+    consent(false);
     render(<ConsentMap address={address} />);
     expect(map()).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Pokaż mapę" }));
@@ -55,5 +64,23 @@ describe("the map on Kontakt", () => {
       );
     });
     expect(map()).toBeInTheDocument();
+  });
+
+  it("goes as soon as the visitor withdraws consent in the notice", () => {
+    consent(true);
+    render(<ConsentMap address={address} />);
+    expect(map()).toBeInTheDocument();
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent(COOKIE_CONSENT_EVENT, { detail: "necessary" }),
+      );
+    });
+    expect(map()).not.toBeInTheDocument();
+  });
+
+  it("asks again for a choice in the old format", () => {
+    window.localStorage.setItem("ks-cookie-consent", "all");
+    render(<ConsentMap address={address} />);
+    expect(map()).not.toBeInTheDocument();
   });
 });

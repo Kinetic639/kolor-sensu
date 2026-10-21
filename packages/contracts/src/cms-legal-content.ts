@@ -191,39 +191,43 @@ const cookies: LegalPageContent = {
     type: "doc",
     content: [
       sample("informacji o plikach cookies"),
-      h2("Co zapisujemy w Twojej przeglądarce"),
+      h2("Niezbędne: działają bez zgody"),
+      p(
+        "Bez nich strona nie mogłaby działać tak, jak o to prosisz, dlatego prawo nie wymaga na nie zgody:",
+      ),
       ul(
         [
           bold("ks-cookie-consent"),
-          ": Twój wybór w banerze plików cookies, żeby nie pytać o niego przy każdej wizycie.",
+          " (pamięć przeglądarki, 12 miesięcy): Twój wybór w banerze, z datą i wersją, żeby nie pytać przy każdej wizycie. Po roku albo po zmianie zasad zapytamy ponownie.",
         ],
         [
-          bold("ks-intro"),
-          ": informacja, że animacja powitalna została już pokazana.",
+          bold("ks_booking"),
+          " (plik cookie, do 1 godziny): wstępna rezerwacja wybranego terminu, zanim dokończysz umawianie wizyty.",
+        ],
+        [
+          bold("ks_intake"),
+          " (plik cookie, do 24 godzin): informacja, że ankieta przed pierwszą wizytą jest już wypełniona, żeby kreator nie prosił o nią drugi raz.",
+        ],
+        [
+          bold("Cloudflare Turnstile"),
+          ": przy formularzach rezerwacji i kontaktu sprawdza, czy korzysta z nich człowiek, i może przy tym zapisać własne pliki.",
+        ],
+        [
+          bold("Stripe"),
+          ": przy płatności online używa własnych plików potrzebnych do bezpiecznej płatności.",
         ],
       ),
+      h2("Za Twoją zgodą: mapy i treści zewnętrzne"),
       p(
-        "Obie informacje są zapisane w pamięci Twojej przeglądarki i nie są wysyłane do nas ani do nikogo innego.",
+        "Mapa Google na stronie Kontakt ładuje się dopiero, gdy zgodzisz się na „Mapy i treści zewnętrzne” w banerze albo klikniesz „Pokaż mapę”. Google zapisuje wtedy własne pliki, opisane w polityce prywatności Google.",
       ),
-      h2("Pliki zewnętrznych usług"),
-      ul(
-        [
-          "Cloudflare Turnstile przy formularzach rezerwacji i kontaktu sprawdza, czy korzysta z nich człowiek, i może przy tym zapisać własne pliki.",
-        ],
-        [
-          "Mapa Google na stronie Kontakt ładuje się dopiero po Twojej zgodzie i może zapisywać pliki Google.",
-        ],
-        [
-          "Płatność online prowadzi przez Stripe, który używa własnych plików potrzebnych do bezpiecznej płatności.",
-        ],
-      ),
-      h2("Pliki analityczne"),
+      h2("Pliki analityczne i marketingowe"),
       p(
-        "Obecnie nie używamy plików analitycznych ani marketingowych. Jeśli je wprowadzimy, zadziałają tylko za Twoją zgodą wyrażoną w banerze.",
+        "Obecnie nie używamy plików analitycznych ani marketingowych. Jeśli je wprowadzimy, pojawią się w banerze jako osobna kategoria i zadziałają tylko za Twoją zgodą.",
       ),
-      h2("Jak zmienić wybór"),
+      h2("Jak zmienić albo wycofać zgodę"),
       p(
-        "Swój wybór możesz w każdej chwili usunąć, czyszcząc dane tej witryny w ustawieniach przeglądarki. Baner pojawi się wtedy ponownie.",
+        "Kliknij „Ustawienia plików cookies” w stopce strony: zobaczysz swój obecny wybór i zmienisz go jednym kliknięciem. Po wycofaniu zgody mapa znika od razu. Pliki, które Google zapisał wcześniej, usuniesz w ustawieniach przeglądarki.",
       ),
     ],
   },

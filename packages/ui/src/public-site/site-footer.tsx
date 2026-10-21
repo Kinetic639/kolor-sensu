@@ -1,5 +1,6 @@
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { PageLink as Link } from "./page-link";
+import { CookieSettingsButton } from "./cookie-consent";
 import { cn } from "../lib/utils";
 import { Separator } from "../separator";
 import { brandTagline, SiteLogo } from "./site-logo";
@@ -196,6 +197,10 @@ export function SiteFooter({
                   </Link>
                 </li>
               ))}
+              {/* Back to the cookie notice: change or withdraw consent. */}
+              <li>
+                <CookieSettingsButton className="hover:text-ink focus-visible:outline-ring cursor-pointer rounded-sm underline-offset-4 hover:underline focus-visible:outline-2" />
+              </li>
             </ul>
           ) : null}
         </div>

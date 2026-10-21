@@ -326,7 +326,9 @@ describe("CookieConsent", () => {
       within(notice).getByRole("button", { name: "Tylko niezbędne" }),
     );
     expect(onChoice).toHaveBeenCalledWith("necessary");
-    expect(window.localStorage.getItem("ks-cookie-consent")).toBe("necessary");
+    expect(
+      JSON.parse(window.localStorage.getItem("ks-cookie-consent")!),
+    ).toMatchObject({ version: 1, categories: { external: false } });
     expect(screen.queryByRole("region", { name: "Pliki cookies" })).toBeNull();
     unmount();
 

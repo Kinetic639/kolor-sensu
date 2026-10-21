@@ -52,4 +52,27 @@ describe("SiteFooter", () => {
     ).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Start" })).toBeInTheDocument();
   });
+
+  it("offers the cookie settings once, beside the legal links", () => {
+    render(
+      <SiteFooter
+        legal={[{ label: "Cookies", href: "/cookies" }]}
+        navigation={[
+          home,
+          {
+            label: "Oferta",
+            href: "/oferta",
+            footerColumn: true,
+            children: [{ label: "Konsultacja", href: "/oferta/konsultacja" }],
+          },
+        ]}
+      />,
+    );
+    expect(
+      screen.getAllByRole("button", { name: "Ustawienia plików cookies" }),
+    ).toHaveLength(1);
+    expect(
+      screen.getByRole("navigation", { name: "Oferta" }),
+    ).not.toHaveTextContent("Ustawienia plików cookies");
+  });
 });
