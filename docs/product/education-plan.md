@@ -3,7 +3,7 @@
 ## Postęp
 
 - [ ] **PR 1 · Edytor artykułów** — bloki, menu „/”, przeciąganie, wklejanie zdjęć, renderer · _w przeglądzie_
-- [ ] **PR 2 · Baza Edukacji** — kategorie, artykuły, e-booki, przekierowania, miejsce na PDF
+- [ ] **PR 2 · Baza Edukacji** — kategorie, artykuły, e-booki, przekierowania, miejsce na PDF · _w przeglądzie_
 - [ ] **PR 3 · Portal admina** — Artykuły, Kategorie, E-booki, zakładka CMS Edukacja
 - [ ] **PR 4 · Strony artykułów** — /edukacja, lista, kategoria, artykuł, powiązania, menu
 - [ ] **PR 5 · Strony e-booków** — katalog, strona e-booka, film, fragment, karta w artykule
