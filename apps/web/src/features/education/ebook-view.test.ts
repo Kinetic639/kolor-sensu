@@ -15,6 +15,7 @@ const ebook: PublishedEbook = {
   contents: [],
   format: "PDF, 48 stron",
   naffyUrl: "https://naffy.example.invalid/sen",
+  showPrice: false,
   videoUrl: "",
   samplePath: null,
   seoTitle: "",

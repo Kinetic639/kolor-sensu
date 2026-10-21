@@ -25,6 +25,7 @@ import {
   saveEbookDraftAction,
   unpublishEbookAction,
 } from "./actions";
+import { NaffyPriceChoice } from "./naffy-price-choice";
 import { followsTitle, untitled } from "./view-model";
 import {
   SectionLinks,
@@ -229,6 +230,11 @@ export function EbookWorkspace(props: EbookWorkspaceProps) {
               value={draft.videoUrl}
             />
           </div>
+          <NaffyPriceChoice
+            naffyUrl={draft.naffyUrl}
+            onChange={(showPrice) => change({ showPrice })}
+            showPrice={draft.showPrice}
+          />
         </WorkspaceSection>
 
         <WorkspaceSection

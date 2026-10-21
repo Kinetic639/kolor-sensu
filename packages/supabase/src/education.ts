@@ -395,7 +395,7 @@ export async function deleteArticle(client: Client, id: string) {
 // ------------------------------------------------------------ e-books: site
 
 const EBOOK_COLUMNS =
-  "id, slug, title, cover_path, cover_alt, short_description, description, audience, contents, format, naffy_url, video_url, sample_path, seo_title, seo_description, og_image_path, published_at, content_updated_at";
+  "id, slug, title, cover_path, cover_alt, short_description, description, audience, contents, format, naffy_url, show_price, video_url, sample_path, seo_title, seo_description, og_image_path, published_at, content_updated_at";
 
 type EbookRow = Pick<
   Database["public"]["Tables"]["ebooks"]["Row"],
@@ -410,6 +410,7 @@ type EbookRow = Pick<
   | "contents"
   | "format"
   | "naffy_url"
+  | "show_price"
   | "video_url"
   | "sample_path"
   | "seo_title"
@@ -432,6 +433,7 @@ export function toPublishedEbook(row: EbookRow): PublishedEbook {
     contents: (row.contents ?? []) as unknown as string[],
     format: row.format ?? "",
     naffyUrl: row.naffy_url ?? "",
+    showPrice: row.show_price,
     videoUrl: row.video_url ?? "",
     samplePath: row.sample_path,
     seoTitle: row.seo_title ?? "",

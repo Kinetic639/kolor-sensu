@@ -68,3 +68,22 @@ export const Page: Story = {
     </>
   ),
 };
+
+export const PageWithPromotion: Story = {
+  render: () => (
+    <EbookHero
+      coverAlt=""
+      coverUrl={null}
+      description={sampleEbooks[0]!.description}
+      format="PDF, 48 stron"
+      naffyUrl="https://example.invalid/naffy"
+      price={{
+        current: "20,67 zł",
+        regular: "37,00 zł",
+        lowest: "Najniższa cena z ostatnich 30 dni przed obniżką: 37,00 zł",
+      }}
+      sampleHref="https://example.invalid/fragment.pdf"
+      title={sampleEbooks[0]!.title}
+    />
+  ),
+};

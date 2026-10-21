@@ -152,5 +152,6 @@ export {
   EbookDetails,
   EbookGrid,
   EbookHero,
+  EbookPrice,
 } from "./ebook-parts";
-export type { EbookCardData } from "./ebook-parts";
+export type { EbookCardData, EbookPriceData } from "./ebook-parts";
