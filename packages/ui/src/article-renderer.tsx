@@ -198,7 +198,11 @@ function renderArticleBlock(
       return (
         <div className={COLUMN} key={key}>
           <PrimaryButton arrow asChild>
-            <PageLink href={context.bookingHref(node.attrs.service)}>
+            {/* The prose styles every link green and underlined: not this one. */}
+            <PageLink
+              className="text-on-primary! no-underline!"
+              href={context.bookingHref(node.attrs.service)}
+            >
               {node.attrs.label}
             </PageLink>
           </PrimaryButton>

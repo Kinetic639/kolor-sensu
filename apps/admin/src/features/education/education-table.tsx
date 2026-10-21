@@ -69,7 +69,7 @@ export function EducationTable({
         <tbody>
           {rows.map((row) => (
             <tr className="hover:bg-[var(--surface-subtle)]" key={row.id}>
-              <th className={`${cell} font-medium`} scope="row">
+              <th className={`${cell} text-left font-medium`} scope="row">
                 <Link
                   className="hover:underline focus-visible:underline focus-visible:outline-none"
                   href={`${basePath}/${row.id}` as Route}

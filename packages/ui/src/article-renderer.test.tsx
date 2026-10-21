@@ -65,6 +65,13 @@ describe("an article's body", () => {
     ).toHaveAttribute("href", "/umow-wizyte?usluga=konsultacja-psychologiczna");
   });
 
+  it("keeps its button readable: white on green, not a green underlined link", () => {
+    render(<ArticleRenderer document={sampleArticle} {...props} />);
+    expect(
+      screen.getByRole("link", { name: /Umów konsultację/ }).className,
+    ).toMatch(/text-on-primary! .*no-underline!/);
+  });
+
   it("shows nothing for content that is not an article", () => {
     const { container } = render(
       <ArticleRenderer
