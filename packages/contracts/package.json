@@ -23,6 +23,7 @@
     "./cms-legal": "./src/cms-legal.ts",
     "./article-rich-text": "./src/article-rich-text.ts",
     "./education": "./src/education.ts",
+    "./discount-codes": "./src/discount-codes.ts",
     "./cms-legal-content": "./src/cms-legal-content.ts",
     "./cms-appearance": "./src/cms-appearance.ts",
     "./cms-seo": "./src/cms-seo.ts",

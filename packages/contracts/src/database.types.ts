@@ -116,6 +116,9 @@ export type Database = {
           privacy_accepted_at: string | null;
           reference: string;
           refund_due_minor: number | null;
+          discount_code_id: string | null;
+          discount_minor: number;
+          list_price_minor: number | null;
           reschedule_count: number;
           room_id: string | null;
           service_id: string;
@@ -152,6 +155,9 @@ export type Database = {
           privacy_accepted_at?: string | null;
           reference: string;
           refund_due_minor?: number | null;
+          discount_code_id?: string | null;
+          discount_minor?: number;
+          list_price_minor?: number | null;
           reschedule_count?: number;
           room_id?: string | null;
           service_id: string;
@@ -188,6 +194,9 @@ export type Database = {
           privacy_accepted_at?: string | null;
           reference?: string;
           refund_due_minor?: number | null;
+          discount_code_id?: string | null;
+          discount_minor?: number;
+          list_price_minor?: number | null;
           reschedule_count?: number;
           room_id?: string | null;
           service_id?: string;
@@ -369,6 +378,45 @@ export type Database = {
           status?: string;
           title?: string | null;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      discount_codes: {
+        Row: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          ends_on: string | null;
+          id: string;
+          kind: string;
+          note: string;
+          starts_on: string | null;
+          updated_at: string;
+          value: number;
+        };
+        Insert: {
+          active?: boolean;
+          code: string;
+          created_at?: string;
+          ends_on?: string | null;
+          id?: string;
+          kind: string;
+          note?: string;
+          starts_on?: string | null;
+          updated_at?: string;
+          value: number;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          created_at?: string;
+          ends_on?: string | null;
+          id?: string;
+          kind?: string;
+          note?: string;
+          starts_on?: string | null;
+          updated_at?: string;
+          value?: number;
         };
         Relationships: [];
       };
@@ -1884,6 +1932,64 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      list_discount_codes: {
+        Args: never;
+        Returns: {
+          id: string;
+          code: string;
+          kind: string;
+          value: number;
+          starts_on: string | null;
+          ends_on: string | null;
+          active: boolean;
+          note: string;
+          created_at: string;
+          used_count: number;
+          discount_total_minor: number;
+        }[];
+      };
+      save_discount_code: {
+        Args: {
+          p_id: string | null;
+          p_code: string;
+          p_kind: string;
+          p_value: number;
+          p_starts_on: string | null;
+          p_ends_on: string | null;
+          p_active: boolean;
+          p_note: string;
+        };
+        Returns: string;
+      };
+      delete_discount_code: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      apply_discount_code: {
+        Args: { p_access_token: string; p_code: string };
+        Returns: {
+          code: string;
+          list_price_minor: number;
+          discount_minor: number;
+          price_minor: number;
+        }[];
+      };
+      remove_discount_code: {
+        Args: { p_access_token: string };
+        Returns: undefined;
+      };
+      get_booking_discount: {
+        Args: { p_access_token: string };
+        Returns: {
+          code: string;
+          list_price_minor: number;
+          discount_minor: number;
+        }[];
+      };
+      confirm_free_booking: {
+        Args: { p_access_token: string };
+        Returns: undefined;
+      };
       close_visit: {
         Args: {
           p_note?: string;

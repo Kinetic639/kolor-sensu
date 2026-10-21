@@ -14,7 +14,8 @@
     "./secret": "./src/secret.ts",
     "./server": "./src/server.ts",
     "./contact": "./src/contact.ts",
-    "./education": "./src/education.ts"
+    "./education": "./src/education.ts",
+    "./discount-codes": "./src/discount-codes.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
