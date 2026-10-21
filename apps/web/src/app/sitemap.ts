@@ -10,19 +10,25 @@ import {
   categoryHref,
   usedCategories,
 } from "@/features/education/article-view";
-import { getArticleCategories, getArticles } from "@/lib/education-data";
+import { EBOOKS_PATH, ebookHref } from "@/features/education/ebook-view";
+import {
+  getArticleCategories,
+  getArticles,
+  getEbooks,
+} from "@/lib/education-data";
 
 // Every public page, including each published service, specialist and
-// article (with the date its text last changed) and each category in use,
+// article and e-book (with the date its text last changed) and each category in use,
 // but those the CMS keeps out of search engines ("noindex").
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [services, specialists, hidden, articles, categories] =
+  const [services, specialists, hidden, articles, categories, ebooks] =
     await Promise.all([
       getServices(),
       getSpecialists(),
       hiddenPaths(),
       getArticles(),
       getArticleCategories(),
+      getEbooks(),
     ]);
   const page = (
     path: string,
@@ -53,6 +59,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           ...articles.map((article) => ({
             ...page(articleHref(article.slug), 0.6),
             lastModified: article.contentUpdatedAt,
+          })),
+        ]
+      : []),
+    ...(ebooks.length
+      ? [
+          page(EBOOKS_PATH, 0.6),
+          ...ebooks.map((ebook) => ({
+            ...page(ebookHref(ebook.slug), 0.6),
+            lastModified: ebook.contentUpdatedAt,
           })),
         ]
       : []),

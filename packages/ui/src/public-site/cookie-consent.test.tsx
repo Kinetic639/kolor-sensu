@@ -72,7 +72,7 @@ describe("the cookie notice", () => {
     fireEvent.click(screen.getByRole("button", { name: "Dostosuj" }));
     expect(screen.getByRole("checkbox", { name: /Niezbędne/ })).toBeDisabled();
     const maps = screen.getByRole("checkbox", {
-      name: /Mapy i treści zewnętrzne/,
+      name: /Mapy, filmy i treści zewnętrzne/,
     });
     expect(maps).not.toBeChecked();
     fireEvent.click(maps);
@@ -136,7 +136,7 @@ describe("the cookie notice", () => {
       );
     });
     const maps = within(notice()!).getByRole("checkbox", {
-      name: /Mapy i treści zewnętrzne/,
+      name: /Mapy, filmy i treści zewnętrzne/,
     });
     expect(maps).toBeChecked();
     fireEvent.click(maps);

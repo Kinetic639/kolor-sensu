@@ -26,16 +26,16 @@ import { SecondaryButton } from "./actions";
 export const COOKIE_CATEGORIES = [
   {
     key: "external",
-    label: "Mapy i treści zewnętrzne",
+    label: "Mapy, filmy i treści zewnętrzne",
     description:
-      "Mapa Google na stronie Kontakt. Google zapisuje przy tym własne pliki cookies.",
+      "Mapa Google na stronie Kontakt i filmy z YouTube lub Vimeo na stronach e-booków. Ich dostawcy zapisują przy tym własne pliki cookies.",
   },
 ] as const;
 
 export type CookieCategory = (typeof COOKIE_CATEGORIES)[number]["key"];
 
 /** Raised when the categories or what they mean change: all asked again. */
-export const COOKIE_CONSENT_VERSION = 1;
+export const COOKIE_CONSENT_VERSION = 2;
 /** How long a choice holds before the visitor is asked again. */
 export const COOKIE_CONSENT_MAX_AGE_DAYS = 365;
 

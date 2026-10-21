@@ -2,7 +2,7 @@
 
 ## Postęp
 
-Stan na 21.10 · PR-y: 3 / 6 zmergowanych (PR 4 czeka na merge) · kartki MVP: 0 / 57 zielonych
+Stan na 21.10 · PR-y: 4 / 6 zmergowanych (PR 5 w toku) · kartki MVP: 0 / 57 zielonych
 
 - [x] **PR 1 · Edytor artykułów** — [#134](https://github.com/Kinetic639/kolor-sensu/pull/134)
   - [x] kontrakt profilu „artykuł” (bloki, czas czytania, śródtytuły)
@@ -28,7 +28,7 @@ Stan na 21.10 · PR-y: 3 / 6 zmergowanych (PR 4 czeka na merge) · kartki MVP: 0
   - [x] CI zielone
   - [x] zmergowany do develop, wdrożony na DEV
   - [ ] sprawdzony na DEV (klik po portalu jako admin)
-- [ ] **PR 4 · Strony artykułów** — [#143](https://github.com/Kinetic639/kolor-sensu/pull/143) · /edukacja, lista, kategoria, artykuł, powiązania, menu, podgląd szkicu, zakładka CMS Edukacja
+- [ ] **PR 4 · Strony artykułów** — [#143](https://github.com/Kinetic639/kolor-sensu/pull/143) · zmergowany 21.10 · /edukacja, lista, kategoria, artykuł, powiązania, menu, podgląd szkicu, zakładka CMS Edukacja
   - [x] dane strony: artykuły, kategorie, powiązania, przekierowania, podgląd szkicu
   - [x] /edukacja: najnowsze artykuły (do tej pory „wkrótce”)
   - [x] /edukacja/artykuly i kategorie: karty, filtr kategorii jako adresy
@@ -37,8 +37,18 @@ Stan na 21.10 · PR-y: 3 / 6 zmergowanych (PR 4 czeka na merge) · kartki MVP: 0
   - [x] „Podgląd” w portalu; zakładka CMS Edukacja (`education_page`)
   - [x] testy (widok 9, UI 5, mapa strony, podgląd, kontrakt 2, SQL), typy, lint
   - [x] CI zielone (po dopisaniu udostępniania do listy wysp klienckich)
+  - [x] zmergowany do develop
+  - [ ] sprawdzony na DEV (lista, artykuł, przekierowanie, podgląd, Lighthouse)
+- [ ] **PR 5 · Strony e-booków** — katalog, strona e-booka, film, fragment, karta w artykule · _w toku_
+  - [x] dane: e-booki, przekierowania, fragment PDF pod czytelną nazwą
+  - [x] /edukacja/ebooki i e-booki na /edukacja, „E-booki” w menu, mapa strony
+  - [x] strona e-booka: okładka, H1, „Zobacz cenę i kup na Naffy”, „Pobierz darmowy fragment”, opis, „Dla kogo”, „Co jest w środku”, dane dla Google (Book)
+  - [x] film po kliknięciu (YouTube bez ciasteczek, Vimeo bez śledzenia), okładka zamiast miniatury
+  - [x] kategoria cookies „Mapy, filmy i treści zewnętrzne” (wersja zgody 2: wszyscy zapytani ponownie), domyślna polityka cookies
+  - [x] karta e-booka pod artykułem
+  - [x] testy (widok 5, film 2, UI 4, mapa strony), typy, lint
+  - [ ] CI zielone
   - [ ] zmergowany i sprawdzony na DEV
-- [ ] **PR 5 · Strony e-booków** — katalog, strona e-booka, film, fragment, karta w artykule
 - [ ] **PR 6 · SEO i jakość** — dane dla Google, obrazki, mapa strony, e2e, tabela „Każda strona”
 - [ ] **Miro** — kartki na zielono, wiersze tabeli „Każda strona”
 

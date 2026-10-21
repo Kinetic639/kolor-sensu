@@ -9,6 +9,7 @@ import {
   getArticleLinks,
   getArticleRedirect,
   getArticles,
+  getEbooks,
 } from "@/lib/education-data";
 import { baseOpenGraph } from "@/lib/page-metadata";
 import {
@@ -68,7 +69,7 @@ export default async function ArticlePage({
     if (moved) permanentRedirect(articleHref(moved));
     notFound();
   }
-  const [categories, specialists, services, links, all, words] =
+  const [categories, specialists, services, links, all, words, ebooks] =
     await Promise.all([
       getArticleCategories(),
       getSpecialists(),
@@ -76,6 +77,7 @@ export default async function ArticlePage({
       getArticleLinks(article.id),
       getArticles(),
       getEducationPage(),
+      getEbooks(),
     ]);
 
   return (
@@ -87,6 +89,7 @@ export default async function ArticlePage({
       people={toPeople(specialists)}
       services={services}
       therapyNote={words.therapyNote}
+      ebook={ebooks.find((one) => one.id === article.ebookId) ?? null}
     />
   );
 }

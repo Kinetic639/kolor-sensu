@@ -5,7 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CookieConsent } from "./cookie-consent";
+import { COOKIE_CONSENT_VERSION, CookieConsent } from "./cookie-consent";
 import { FaqSection } from "./faq-section";
 import { JsonLd } from "./json-ld";
 import { SiteBreadcrumbs } from "./site-breadcrumbs";
@@ -328,7 +328,10 @@ describe("CookieConsent", () => {
     expect(onChoice).toHaveBeenCalledWith("necessary");
     expect(
       JSON.parse(window.localStorage.getItem("ks-cookie-consent")!),
-    ).toMatchObject({ version: 1, categories: { external: false } });
+    ).toMatchObject({
+      version: COOKIE_CONSENT_VERSION,
+      categories: { external: false },
+    });
     expect(screen.queryByRole("region", { name: "Pliki cookies" })).toBeNull();
     unmount();
 

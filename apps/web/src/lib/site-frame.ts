@@ -8,7 +8,7 @@ import {
 } from "@repo/ui/public-site";
 import { cache } from "react";
 import { bookingCta, footerAbout, legalLinks } from "@/content/site";
-import { getArticles } from "@/lib/education-data";
+import { getArticles, getEbooks } from "@/lib/education-data";
 import {
   getAnnouncement,
   getCenter,
@@ -48,7 +48,7 @@ const serviceLink = (service: PublicService) => ({
  */
 function navigation(
   offer: PublicOfferEntry[],
-  hasArticles: boolean,
+  education: { articles: boolean; ebooks: boolean },
 ): SiteNavItem[] {
   return [
     {
@@ -83,8 +83,15 @@ function navigation(
       label: "Edukacja",
       href: "/edukacja",
       allLabel: "Wszystko w Edukacji",
-      ...(hasArticles && {
-        children: [{ label: "Artykuły", href: "/edukacja/artykuly" }],
+      ...((education.articles || education.ebooks) && {
+        children: [
+          ...(education.articles
+            ? [{ label: "Artykuły", href: "/edukacja/artykuly" }]
+            : []),
+          ...(education.ebooks
+            ? [{ label: "E-booki", href: "/edukacja/ebooki" }]
+            : []),
+        ],
       }),
     },
   ];
@@ -103,6 +110,7 @@ export const getSiteFrame = cache(async () => {
     company,
     hours,
     articles,
+    ebooks,
   ] = await Promise.all([
     getCenter(),
     getLocations(),
@@ -113,6 +121,7 @@ export const getSiteFrame = cache(async () => {
     // The contact hours: Ustawienia wspólne in the CMS (#23).
     getSiteContact().then((details) => details.hours),
     getArticles(),
+    getEbooks(),
   ]);
   // The first location with a usable address.
   const location = locations.find((one) => one.addressLine1 && one.city);
@@ -145,7 +154,10 @@ export const getSiteFrame = cache(async () => {
   ];
 
   return {
-    navigation: navigation(offer, articles.length > 0),
+    navigation: navigation(offer, {
+      articles: articles.length > 0,
+      ebooks: ebooks.length > 0,
+    }),
     cta: bookingCta,
     contact,
     socials,
