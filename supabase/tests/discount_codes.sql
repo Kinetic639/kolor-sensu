@@ -39,12 +39,14 @@ WHERE specialist.user_id = '5c000000-0000-4000-8000-000000000002'
 INSERT INTO public.appointments (
   reference, specialist_id, service_id, specialist_service_id, mode, room_id,
   during, buffer_minutes, duration_minutes, price_minor, currency_code,
-  status, hold_expires_at, access_token_hash, client_email, terms_accepted_at
+  status, hold_expires_at, access_token_hash, client_name, client_email,
+  terms_accepted_at, privacy_accepted_at
 )
 SELECT ref, offer.specialist_id, offer.service_id, offer.id, 'online', NULL,
   tstzrange(now() + make_interval(days => 7 + n), now() + make_interval(days => 7 + n, mins => 50)),
   10, 50, 20000, 'PLN', 'held', now() + interval '10 minutes',
-  extensions.digest(token, 'sha256'), 'guest@example.invalid', now()
+  extensions.digest(token, 'sha256'), 'Gość Testowy', 'guest@example.invalid',
+  now(), now()
 FROM public.specialist_services AS offer
 JOIN public.services AS service ON service.id = offer.service_id
 CROSS JOIN (VALUES ('KS-DISC-1', 'token-1', 0), ('KS-DISC-2', 'token-2', 1)) AS visit(ref, token, n)
