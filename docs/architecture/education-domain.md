@@ -83,3 +83,11 @@ for an article's body); data access `packages/supabase/src/education.ts`
   `tests/e2e/education-pages.spec.ts` checks the pages on a phone and a
   computer (axe, links, no sideways scroll, the film); the keyboard and
   200 % checks cover the three list pages.
+- The price (#150): an e-book's `showPrice` (draft) / `show_price`
+  (published) chooses between the price read from Naffy and only "Zobacz
+  cenę i kup na Naffy". `@repo/app-runtime/naffy-price` reads the
+  product's page on the server (product pages on naffy.io only, kept an
+  hour, 5 s at most): the price, a promotion's price and end, the lowest
+  price of the 30 days before it. Naffy has no public API, so anything
+  unexpected gives no price and the button stays as it was. The portal's
+  "Sprawdź cenę" shows what visitors will see.

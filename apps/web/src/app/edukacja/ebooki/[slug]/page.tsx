@@ -1,4 +1,5 @@
 import { EbookDetails, EbookHero, JsonLd } from "@repo/ui/public-site";
+import { naffyPriceView } from "@repo/app-runtime/naffy-price";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ClosingCta } from "@/components/closing-cta";
@@ -13,6 +14,7 @@ import {
   articleImageUrl,
   ebookSampleHref,
   getEbook,
+  getEbookPrice,
   getEbookRedirect,
   getEbooks,
 } from "@/lib/education-data";
@@ -20,7 +22,8 @@ import { baseOpenGraph } from "@/lib/page-metadata";
 import { getClosingCta } from "@/lib/public-data";
 
 // An e-book (docs/product/education-plan.md, PR 5): what it is, the way to
-// buy it on Naffy (the price is Naffy's) and the free sample, then the
+// buy it on Naffy (with its price read from Naffy, if the admin shows it)
+// and the free sample, then the
 // description, who it is for, what is inside and the film (loaded on a
 // click). An old address moves to the current one; a draft is not found.
 
@@ -68,7 +71,11 @@ export default async function EbookPage({
     if (moved) permanentRedirect(ebookHref(moved));
     notFound();
   }
-  const closing = await getClosingCta();
+  const [closing, price] = await Promise.all([
+    getClosingCta(),
+    ebook.showPrice ? getEbookPrice(ebook.naffyUrl) : null,
+  ]);
+  const shownPrice = price ? naffyPriceView(price) : null;
   const coverUrl = ebook.coverPath ? articleImageUrl(ebook.coverPath) : null;
   const video = videoEmbed(ebook.videoUrl);
 
@@ -80,6 +87,7 @@ export default async function EbookPage({
         description={ebook.shortDescription}
         format={ebook.format}
         naffyUrl={ebook.naffyUrl || null}
+        price={shownPrice}
         sampleHref={
           ebook.samplePath
             ? ebookSampleHref(ebook.samplePath, ebook.slug)
@@ -118,7 +126,14 @@ export default async function EbookPage({
             url: siteUrl,
           },
           ...(ebook.naffyUrl && {
-            offers: { "@type": "Offer", url: ebook.naffyUrl },
+            offers: {
+              "@type": "Offer",
+              url: ebook.naffyUrl,
+              ...(shownPrice && {
+                price: shownPrice.amount,
+                priceCurrency: "PLN",
+              }),
+            },
           }),
         }}
       />

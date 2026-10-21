@@ -385,6 +385,7 @@ export type Database = {
           format: string | null;
           id: string;
           naffy_url: string | null;
+          show_price: boolean;
           og_image_path: string | null;
           published_at: string | null;
           sample_path: string | null;
@@ -409,6 +410,7 @@ export type Database = {
           format?: string | null;
           id?: string;
           naffy_url?: string | null;
+          show_price?: boolean;
           og_image_path?: string | null;
           published_at?: string | null;
           sample_path?: string | null;
@@ -433,6 +435,7 @@ export type Database = {
           format?: string | null;
           id?: string;
           naffy_url?: string | null;
+          show_price?: boolean;
           og_image_path?: string | null;
           published_at?: string | null;
           sample_path?: string | null;

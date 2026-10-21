@@ -3,6 +3,7 @@
 import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/use-save";
+import { fetchNaffyPrice, naffyPriceView } from "@repo/app-runtime/naffy-price";
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
 import {
   articleCategoryInputSchema,
@@ -236,4 +237,21 @@ export async function deleteEbookAction(id: string): Promise<ActionResult> {
   }
   revalidatePath("/ebooki");
   redirect("/ebooki");
+}
+
+// ------------------------------------------------------------ Naffy
+
+export type NaffyPriceCheck =
+  | { ok: true; current: string; regular: string | null; lowest: string | null }
+  | { ok: false };
+
+/** The price visitors would see now, read from the product's Naffy page. */
+export async function checkNaffyPriceAction(
+  naffyUrl: string,
+): Promise<NaffyPriceCheck> {
+  await requirePortalRole();
+  const price = await fetchNaffyPrice(naffyUrl, { cache: "no-store" });
+  if (!price) return { ok: false };
+  const { current, regular, lowest } = naffyPriceView(price);
+  return { ok: true, current, regular, lowest };
 }

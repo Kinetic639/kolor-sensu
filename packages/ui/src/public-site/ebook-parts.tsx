@@ -125,6 +125,7 @@ export function EbookHero({
   coverAlt,
   naffyUrl,
   sampleHref,
+  price = null,
 }: {
   title: string;
   description: string;
@@ -133,6 +134,8 @@ export function EbookHero({
   coverAlt: string;
   /** The product on Naffy; none: no way to buy yet. */
   naffyUrl: string | null;
+  /** The price read from Naffy, when the admin shows it (none: only the way to Naffy). */
+  price?: EbookPriceData | null;
   /** The free sample (a PDF); none: no sample. */
   sampleHref: string | null;
 }) {
@@ -155,11 +158,12 @@ export function EbookHero({
           {description}
         </p>
         {format ? <p className="text-small text-text-muted">{format}</p> : null}
+        {price ? <EbookPrice price={price} /> : null}
         <div className="flex flex-wrap gap-3">
           {naffyUrl ? (
             <PrimaryButton asChild>
               <a href={naffyUrl} rel="noopener" target="_blank">
-                Zobacz cenę i kup na Naffy
+                {price ? "Kup na Naffy" : "Zobacz cenę i kup na Naffy"}
                 <ExternalLink aria-hidden="true" className="size-4" />
                 <span className="sr-only"> (otwiera się w nowej karcie)</span>
               </a>
@@ -177,6 +181,42 @@ export function EbookHero({
         </div>
       </div>
     </header>
+  );
+}
+
+export interface EbookPriceData {
+  /** `20,67 zł` */
+  current: string;
+  /** Before the promotion, crossed out (none: no promotion). */
+  regular: string | null;
+  /** The lowest price of the 30 days before the promotion, as a sentence. */
+  lowest: string | null;
+}
+
+/** The price as Naffy shows it: the old one crossed out, the new one, the 30-day lowest. */
+export function EbookPrice({ price }: { price: EbookPriceData }) {
+  return (
+    <div className="grid gap-1">
+      <p className="flex flex-wrap items-baseline gap-x-3">
+        {price.regular ? (
+          <del className="text-body text-text-muted">
+            <span className="sr-only">Cena przed obniżką: </span>
+            {price.regular}
+          </del>
+        ) : null}
+        <span className="font-display text-h3 text-ink">
+          {price.regular ? (
+            <span className="sr-only">Cena teraz: </span>
+          ) : (
+            <span className="sr-only">Cena: </span>
+          )}
+          {price.current}
+        </span>
+      </p>
+      {price.lowest ? (
+        <p className="text-small text-text-muted">{price.lowest}</p>
+      ) : null}
+    </div>
   );
 }
 

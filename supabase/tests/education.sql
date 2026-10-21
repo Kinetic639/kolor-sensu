@@ -77,6 +77,7 @@ INSERT INTO drafts VALUES
     'contents', '["Rozdział 1"]'::jsonb,
     'format', 'PDF, 40 stron',
     'naffyUrl', 'https://naffy.io/kolor-sensu/spokojny-sen',
+    'showPrice', true,
     'videoUrl', '',
     'samplePath', 'ebooks/0b8c2f2e-5c4f-4c0a-9a1e-3f6c2d1b7a92.pdf',
     'seoTitle', '',
@@ -207,9 +208,20 @@ BEGIN
     RAISE EXCEPTION 'V: a film from elsewhere than YouTube or Vimeo was accepted';
   EXCEPTION WHEN check_violation THEN NULL;
   END;
+  BEGIN
+    PERFORM public.create_ebook((SELECT draft FROM drafts WHERE name = 'ebook') - 'showPrice');
+    RAISE EXCEPTION 'V: an e-book without the price choice was accepted';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
   the_ebook := public.create_ebook((SELECT draft FROM drafts WHERE name = 'ebook'));
   INSERT INTO ids VALUES ('ebook', the_ebook);
   PERFORM public.publish_ebook(the_ebook);
+  IF (SELECT show_price FROM public.ebooks WHERE id = the_ebook) IS NOT TRUE THEN
+    RAISE EXCEPTION 'P: publishing did not copy the price choice';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.list_ebooks_admin() WHERE has_unpublished_changes) THEN
+    RAISE EXCEPTION 'P: a just published e-book has changes';
+  END IF;
 
   -- The admin reads every article, its draft through the function only.
   IF (public.get_article_admin(the_article) #>> '{draft,title}') <> 'Czym jest lęk' THEN
@@ -246,6 +258,9 @@ BEGIN
   END IF;
   IF (SELECT count(*) FROM public.ebooks) <> 1 THEN
     RAISE EXCEPTION 'V: a visitor did not see the published e-book';
+  END IF;
+  IF (SELECT show_price FROM public.ebooks) IS NOT TRUE THEN
+    RAISE EXCEPTION 'V: a visitor could not read whether to show the price';
   END IF;
   BEGIN
     PERFORM public.list_articles_admin();

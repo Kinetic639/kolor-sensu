@@ -11,6 +11,7 @@ import {
   listPublishedArticles,
   listPublishedEbooks,
 } from "@repo/supabase/education";
+import { fetchNaffyPrice } from "@repo/app-runtime/naffy-price";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createSecretClient } from "@/lib/supabase/secret";
@@ -100,6 +101,14 @@ export const getEbookRedirect = cache((slug: string) =>
     (client) => getEbookSlugRedirect(client, slug),
     null,
   ),
+);
+
+/**
+ * An e-book's price from its page on Naffy (#150), kept for an hour: the
+ * price and a promotion change on Naffy, not here. None when unsure.
+ */
+export const getEbookPrice = cache((naffyUrl: string) =>
+  fetchNaffyPrice(naffyUrl, { next: { revalidate: 3600 } }),
 );
 
 /** An e-book's free sample, downloaded under a readable name. */

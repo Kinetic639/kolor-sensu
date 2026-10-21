@@ -77,8 +77,11 @@ w sekcji 4, gdy są sprawdzone testem w CI.
 - Wzór wyglądu artykułu: experimental-history.com („The rise and fall of
   peer review”): wąska kolumna tekstu, zdjęcia z podpisem, cytaty,
   śródtytuły.
-- E-booki pod /edukacja/ebooki; bez ceny u nas: przycisk „Zobacz cenę i kup
-  na Naffy”; darmowy fragment do pobrania bez zapisu.
+- E-booki pod /edukacja/ebooki; darmowy fragment do pobrania bez zapisu.
+  Cena (zmiana z 21.10, #150): admin wybiera przy każdym e-booku, czy
+  pokazać cenę odczytaną z Naffy (przecena jak na Naffy: stara cena
+  przekreślona i najniższa cena z 30 dni przed obniżką; przycisk „Kup na
+  Naffy”), czy tylko przycisk „Zobacz cenę i kup na Naffy”.
 - **Poprawka opublikowanego** artykułu lub e-booka zapisuje się jako szkic;
   strona pokazuje wersję opublikowaną do ponownej publikacji (jak CMS i
   profile specjalistów).

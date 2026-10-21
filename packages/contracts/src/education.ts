@@ -200,6 +200,8 @@ export const ebookDraftSchema = z.strictObject({
       (url) => url === "" || /^https:\/\/[^/\s]+(\/\S*)?$/.test(url),
       "Podaj adres produktu na Naffy, zaczynający się od https://",
     ),
+  /** Show the price read from Naffy (else only the way to Naffy). */
+  showPrice: z.boolean().default(false),
   videoUrl: z
     .string()
     .trim()
@@ -231,6 +233,7 @@ export function emptyEbookDraft(slug = "nowy-ebook"): EbookDraft {
     contents: [],
     format: "",
     naffyUrl: "",
+    showPrice: false,
     videoUrl: "",
     samplePath: null,
     seoTitle: "",
@@ -252,6 +255,7 @@ export interface PublishedEbook {
   contents: string[];
   format: string;
   naffyUrl: string;
+  showPrice: boolean;
   videoUrl: string;
   samplePath: string | null;
   seoTitle: string;
