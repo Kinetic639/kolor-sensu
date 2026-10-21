@@ -2,7 +2,7 @@
 
 ## Postęp
 
-Stan na 21.10 · PR-y: 2 / 6 zmergowanych · kartki MVP: 0 / 57 zielonych
+Stan na 21.10 · PR-y: 2 / 6 zmergowanych (PR 3 w toku) · kartki MVP: 0 / 57 zielonych
 
 - [x] **PR 1 · Edytor artykułów** — [#134](https://github.com/Kinetic639/kolor-sensu/pull/134)
   - [x] kontrakt profilu „artykuł” (bloki, czas czytania, śródtytuły)
@@ -11,15 +11,23 @@ Stan na 21.10 · PR-y: 2 / 6 zmergowanych · kartki MVP: 0 / 57 zielonych
   - [x] testy (kontrakt 13, renderer 9, edytor 10) i Storybook
   - [x] CI zielone
   - [x] zmergowany do develop
-- [ ] **PR 2 · Baza Edukacji** — [#136](https://github.com/Kinetic639/kolor-sensu/pull/136) (na PR 1)
+- [x] **PR 2 · Baza Edukacji** — [#136](https://github.com/Kinetic639/kolor-sensu/pull/136) (na PR 1)
   - [x] migracja: kategorie, artykuły, e-booki, przekierowania, PDF
   - [x] kontrakty i `@repo/supabase/education`
   - [x] testy (SQL, kontrakty 10, supabase 6) i dokumentacja
-  - [ ] CI zielone — test SQL próbował dodać specjalistę, którego baza tworzy sama; poprawka w PR „Edukacja: poprawka testu bazy”
+  - [x] CI zielone (po poprawce testu w #138)
   - [x] zmergowany do develop
-  - [ ] migracja na DEV (czeka na poprawkę testu: wdrożenie zatrzymało się na CI)
-- [ ] **PR 3 · Portal admina** — Artykuły, Kategorie, E-booki, zakładka CMS Edukacja
-- [ ] **PR 4 · Strony artykułów** — /edukacja, lista, kategoria, artykuł, powiązania, menu
+  - [x] migracja na DEV
+- [ ] **PR 3 · Portal admina** — Artykuły, Kategorie, E-booki · _w toku_
+  - [x] nawigacja i okruszki: Artykuły, E-booki
+  - [x] Artykuły: lista z filtrami (stan, kategoria, szukanie), nowy artykuł
+  - [x] Artykuł: podstawy, treść w edytorze, ludzie i powiązania, SEO, publikacja, wycofanie, usuwanie
+  - [x] Kategorie: dodawanie, edycja, usuwanie
+  - [x] E-booki: lista, opis, Naffy i film, fragment PDF, SEO, publikacja
+  - [x] testy (listy i adresy 7), typy, lint
+  - [ ] CI zielone
+  - [ ] zmergowany i sprawdzony na DEV
+- [ ] **PR 4 · Strony artykułów** — /edukacja, lista, kategoria, artykuł, powiązania, menu, podgląd szkicu, zakładka CMS Edukacja
 - [ ] **PR 5 · Strony e-booków** — katalog, strona e-booka, film, fragment, karta w artykule
 - [ ] **PR 6 · SEO i jakość** — dane dla Google, obrazki, mapa strony, e2e, tabela „Każda strona”
 - [ ] **Miro** — kartki na zielono, wiersze tabeli „Każda strona”

@@ -13,6 +13,8 @@ import {
   UserRound,
   Users,
   type LucideIcon,
+  BookOpen,
+  Newspaper,
 } from "lucide-react";
 import { Fragment, type ElementType, type ReactNode } from "react";
 import {
@@ -40,6 +42,8 @@ import {
 
 const portalIcons = {
   announcements: Megaphone,
+  articles: Newspaper,
+  ebooks: BookOpen,
   bookings: CalendarCheck,
   calendar: CalendarDays,
   clients: ContactRound,
