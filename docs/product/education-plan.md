@@ -2,7 +2,7 @@
 
 ## Postęp
 
-Stan na 21.10 · PR-y: 4 / 6 zmergowanych (PR 5 i PR 6 czekają na merge) · kartki MVP: 0 / 57 zielonych
+Stan na 21.10 · PR-y: 6 / 6 zmergowanych (do sprawdzenia na DEV z opublikowaną treścią) · kartki MVP: 0 / 57 zielonych
 
 - [x] **PR 1 · Edytor artykułów** — [#134](https://github.com/Kinetic639/kolor-sensu/pull/134)
   - [x] kontrakt profilu „artykuł” (bloki, czas czytania, śródtytuły)
@@ -39,7 +39,7 @@ Stan na 21.10 · PR-y: 4 / 6 zmergowanych (PR 5 i PR 6 czekają na merge) · kar
   - [x] CI zielone (po dopisaniu udostępniania do listy wysp klienckich)
   - [x] zmergowany do develop
   - [ ] sprawdzony na DEV (lista, artykuł, przekierowanie, podgląd, Lighthouse)
-- [ ] **PR 5 · Strony e-booków** — katalog, strona e-booka, film, fragment, karta w artykule · _w toku_
+- [ ] **PR 5 · Strony e-booków** — [#145](https://github.com/Kinetic639/kolor-sensu/pull/145) · zmergowany 21.10 · katalog, strona e-booka, film, fragment, karta w artykule
   - [x] dane: e-booki, przekierowania, fragment PDF pod czytelną nazwą
   - [x] /edukacja/ebooki i e-booki na /edukacja, „E-booki” w menu, mapa strony
   - [x] strona e-booka: okładka, H1, „Zobacz cenę i kup na Naffy”, „Pobierz darmowy fragment”, opis, „Dla kogo”, „Co jest w środku”, dane dla Google (Book)
@@ -47,9 +47,10 @@ Stan na 21.10 · PR-y: 4 / 6 zmergowanych (PR 5 i PR 6 czekają na merge) · kar
   - [x] kategoria cookies „Mapy, filmy i treści zewnętrzne” (wersja zgody 2: wszyscy zapytani ponownie), domyślna polityka cookies
   - [x] karta e-booka pod artykułem
   - [x] testy (widok 5, film 2, UI 4, mapa strony), typy, lint
-  - [ ] CI zielone
-  - [ ] zmergowany i sprawdzony na DEV
-- [ ] **PR 6 · SEO i jakość** — dane dla Google, obrazki, mapa strony, e2e, tabela „Każda strona” · _w toku_ (na PR 5)
+  - [x] CI zielone (e2e banera cookies poprawiony na nową nazwę i wersję)
+  - [x] zmergowany do develop
+  - [ ] sprawdzony na DEV (z opublikowanym e-bookiem)
+- [ ] **PR 6 · SEO i jakość** — [#147](https://github.com/Kinetic639/kolor-sensu/pull/147) · zmergowany 21.10 · dane dla Google, obrazki, mapa strony, e2e, tabela „Każda strona”
   - [x] dane dla Google: Article (PR 4), Book (PR 5)
   - [x] obrazki do udostępniania: okładka albo własny, inaczej generowany z tytułem
   - [x] mapa strony z datami zmian (PR 4, PR 5)
@@ -57,8 +58,9 @@ Stan na 21.10 · PR-y: 4 / 6 zmergowanych (PR 5 i PR 6 czekają na merge) · kar
   - [x] e2e na DEV: /edukacja i artykuły zielone (artykuł: pominięty, brak opublikowanego)
   - [x] Lighthouse na DEV (telefon): /edukacja 85, artykuły 80–85, dostępność 100, dobre praktyki 100
   - [x] dokumentacja, tabela „Każda strona” (sekcja 3a)
-  - [ ] CI zielone
-  - [ ] zmergowany i sprawdzony na DEV (z opublikowanym artykułem i e-bookiem)
+  - [x] CI zielone
+  - [x] zmergowany do develop
+  - [ ] sprawdzony na DEV (z opublikowanym artykułem i e-bookiem)
 - [ ] **Miro** — kartki na zielono, wiersze tabeli „Każda strona”
 
 Kartki MVP: Edukacja i artykuły 21 + 4 nowe, Strona artykułu 8, Tworzenie
