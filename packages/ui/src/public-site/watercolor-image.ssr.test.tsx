@@ -44,7 +44,7 @@ describe("WatercolorImage on the server", () => {
     }
   });
 
-  it("keeps client-only code to small islands: reveals, caption motion, parallax layer, intro motion, navigation, cookie notice, room gallery, rooms peek, cursor ring, first steps, painted story, support areas, thoughts lens", () => {
+  it("keeps client-only code to small islands: reveals, caption motion, parallax layer, intro motion, navigation, cookie notice, room gallery, rooms peek, cursor ring, first steps, painted story, support areas, thoughts lens, article sharing", () => {
     const clientFiles = readdirSync(here)
       .filter(
         (file) => /\.tsx?$/.test(file) && !/\.(test|stories)\./.test(file),
@@ -55,6 +55,7 @@ describe("WatercolorImage on the server", () => {
       .sort();
 
     expect(clientFiles).toEqual([
+      "article-share.tsx",
       "cookie-consent.tsx",
       "cursor-ring.tsx",
       "first-steps.tsx",
