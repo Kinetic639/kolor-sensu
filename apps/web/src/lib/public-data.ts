@@ -16,6 +16,7 @@ import {
   getPublishedCrisisHelp,
   getPublishedSiteContact,
   getPublishedSpecialistsPage,
+  getPublishedEducationPage,
   getPublishedFirstSteps,
   getPublishedPageSeo,
   getPublishedSiteAppearance,
@@ -57,6 +58,7 @@ import {
   defaultCrisisHelp,
   defaultSiteContact,
   defaultSpecialistsPage,
+  defaultEducationPage,
   type AboutPageContent,
   defaultHomeStory,
   defaultHomeThoughts,
@@ -108,7 +110,7 @@ export type PublicCenter = NonNullable<
 
 type Client = ReturnType<typeof createPublicClient>;
 
-async function load<T>(
+export async function load<T>(
   what: string,
   query: (client: Client) => Promise<T>,
   fallback: T,
@@ -242,6 +244,11 @@ export const getSpecialistsPage = cache(() =>
 );
 
 /** /kontakt, its words, travel description and questions. */
+/** Edukacja's words: its tops, the empty line, the word about therapy. */
+export const getEducationPage = cache(() =>
+  load("education page", getPublishedEducationPage, defaultEducationPage),
+);
+
 export const getContactPage = cache(() =>
   load("contact page", getPublishedContactPage, defaultContactPage),
 );

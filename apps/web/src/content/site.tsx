@@ -166,13 +166,11 @@ export const workshopsPage = {
     "Obecnie nie mamy zaplanowanych wydarzeń. Zostaw nam wiadomość, a damy znać, gdy pojawią się nowe terminy.",
 };
 
+// Edukacja's words that are code (the rest is the CMS's, education_page).
 export const educationPage = {
-  eyebrow: "Edukacja",
-  heading: "Edukacja",
-  accent: "Wiedza, która pomaga zrozumieć.",
-  lead: "Tu będziemy dzielić się wiedzą o zdrowiu psychicznym, emocjach i relacjach: przystępnie, rzetelnie i bez oceniania.",
   soonHeading: "Pierwsze materiały już wkrótce",
-  soon: "Przygotowujemy artykuły i materiały edukacyjne. Jeśli masz pytanie, z którym chcesz przyjść już teraz, zadzwoń lub napisz do nas.",
+  latestHeading: "Najnowsze artykuły",
+  relatedHeading: "Przeczytaj też",
 };
 
 export const bookingPage = {

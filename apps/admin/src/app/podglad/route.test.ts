@@ -48,6 +48,22 @@ describe("GET /podglad", () => {
     ).toEqual({ ok: true, path: "/" });
   });
 
+  it("previews an article's draft by its id, nothing else", async () => {
+    const id = "11111111-1111-4111-8111-111111111111";
+    const response = await GET(
+      new Request(`https://admin.example.invalid/podglad?artykul=${id}`),
+    );
+    const location = new URL(response.headers.get("location")!);
+    expect(
+      verifyPreviewToken(location.searchParams.get("token")!, { secret }),
+    ).toEqual({ ok: true, path: `/edukacja/artykuly/podglad/${id}` });
+
+    const bad = await GET(
+      new Request("https://admin.example.invalid/podglad?artykul=..%2F..%2Fx"),
+    );
+    expect(bad.status).toBe(404);
+  });
+
   it("lets only an admin in", async () => {
     requirePortalRole.mockRejectedValue(new Error("NEXT_REDIRECT"));
     await expect(GET(open("glowna"))).rejects.toThrow("NEXT_REDIRECT");

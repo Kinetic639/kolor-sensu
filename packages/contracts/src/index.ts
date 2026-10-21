@@ -312,8 +312,10 @@ export {
   defaultClosingCta,
   defaultContactFaq,
   defaultContactPage,
+  defaultEducationPage,
   defaultSiteContact,
   defaultSpecialistsPage,
+  educationPageContentSchema,
   siteContactContentSchema,
   specialistsPageContentSchema,
 } from "@repo/contracts/cms-pages";
@@ -325,6 +327,7 @@ export type {
   ClosingCtaContent,
   ContactFaqItem,
   ContactPageContent,
+  EducationPageContent,
   SiteContactContent,
   SpecialistsPageContent,
 } from "@repo/contracts/cms-pages";

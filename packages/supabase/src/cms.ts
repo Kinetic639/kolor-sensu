@@ -8,13 +8,16 @@ import {
   defaultClosingCta,
   defaultContactPage,
   defaultSiteContact,
+  defaultEducationPage,
   defaultSpecialistsPage,
+  educationPageContentSchema,
   siteContactContentSchema,
   specialistsPageContentSchema,
   type AboutHeadersContent,
   type AboutPageContent,
   type ClosingCtaContent,
   type ContactPageContent,
+  type EducationPageContent,
   type SiteContactContent,
   type SpecialistsPageContent,
 } from "@repo/contracts/cms-pages";
@@ -683,6 +686,17 @@ export const getSpecialistsPageAdmin = specialistsPage.admin;
 export const updateSpecialistsPageDraft = specialistsPage.update;
 export const publishSpecialistsPage = specialistsPage.publish;
 export const getPublishedSpecialistsPage = specialistsPage.published;
+
+/** /edukacja and its articles: their words. */
+const educationPage = contentSection<EducationPageContent>(
+  "education_page",
+  educationPageContentSchema,
+  defaultEducationPage,
+);
+export const getEducationPageAdmin = educationPage.admin;
+export const updateEducationPageDraft = educationPage.update;
+export const publishEducationPage = educationPage.publish;
+export const getPublishedEducationPage = educationPage.published;
 
 /** /kontakt: its words, travel description and questions. */
 const contactPage = contentSection<ContactPageContent>(

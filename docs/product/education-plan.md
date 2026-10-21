@@ -2,7 +2,7 @@
 
 ## Postęp
 
-Stan na 21.10 · PR-y: 2 / 6 zmergowanych (PR 3 czeka na merge, PR 4 w toku) · kartki MVP: 0 / 57 zielonych
+Stan na 21.10 · PR-y: 3 / 6 zmergowanych (PR 4 czeka na merge) · kartki MVP: 0 / 57 zielonych
 
 - [x] **PR 1 · Edytor artykułów** — [#134](https://github.com/Kinetic639/kolor-sensu/pull/134)
   - [x] kontrakt profilu „artykuł” (bloki, czas czytania, śródtytuły)
@@ -18,7 +18,7 @@ Stan na 21.10 · PR-y: 2 / 6 zmergowanych (PR 3 czeka na merge, PR 4 w toku) · 
   - [x] CI zielone (po poprawce testu w #138)
   - [x] zmergowany do develop
   - [x] migracja na DEV
-- [ ] **PR 3 · Portal admina** — [#141](https://github.com/Kinetic639/kolor-sensu/pull/141) · czeka na merge
+- [ ] **PR 3 · Portal admina** — [#141](https://github.com/Kinetic639/kolor-sensu/pull/141) · zmergowany 21.10, na DEV
   - [x] nawigacja i okruszki: Artykuły, E-booki
   - [x] Artykuły: lista z filtrami (stan, kategoria, szukanie), nowy artykuł
   - [x] Artykuł: podstawy, treść w edytorze, ludzie i powiązania, SEO, publikacja, wycofanie, usuwanie
@@ -26,8 +26,18 @@ Stan na 21.10 · PR-y: 2 / 6 zmergowanych (PR 3 czeka na merge, PR 4 w toku) · 
   - [x] E-booki: lista, opis, Naffy i film, fragment PDF, SEO, publikacja
   - [x] testy (listy i adresy 7), typy, lint
   - [x] CI zielone
+  - [x] zmergowany do develop, wdrożony na DEV
+  - [ ] sprawdzony na DEV (klik po portalu jako admin)
+- [ ] **PR 4 · Strony artykułów** — [#143](https://github.com/Kinetic639/kolor-sensu/pull/143) · /edukacja, lista, kategoria, artykuł, powiązania, menu, podgląd szkicu, zakładka CMS Edukacja
+  - [x] dane strony: artykuły, kategorie, powiązania, przekierowania, podgląd szkicu
+  - [x] /edukacja: najnowsze artykuły (do tej pory „wkrótce”)
+  - [x] /edukacja/artykuly i kategorie: karty, filtr kategorii jako adresy
+  - [x] artykuł: nagłówek, okładka, spis treści, treść, udostępnianie, źródła, „Sprawdzone przez”, informacja o terapii, usługi, specjaliści, „Przeczytaj też”, dane dla Google
+  - [x] artykuły autora na profilu, „Warto przeczytać” na stronie usługi, menu Edukacji, mapa strony
+  - [x] „Podgląd” w portalu; zakładka CMS Edukacja (`education_page`)
+  - [x] testy (widok 9, UI 5, mapa strony, podgląd, kontrakt 2, SQL), typy, lint
+  - [x] CI zielone (po dopisaniu udostępniania do listy wysp klienckich)
   - [ ] zmergowany i sprawdzony na DEV
-- [ ] **PR 4 · Strony artykułów** — /edukacja, lista, kategoria, artykuł, powiązania, menu, podgląd szkicu, zakładka CMS Edukacja · _w toku_
 - [ ] **PR 5 · Strony e-booków** — katalog, strona e-booka, film, fragment, karta w artykule
 - [ ] **PR 6 · SEO i jakość** — dane dla Google, obrazki, mapa strony, e2e, tabela „Każda strona”
 - [ ] **Miro** — kartki na zielono, wiersze tabeli „Każda strona”

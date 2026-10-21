@@ -51,3 +51,21 @@ for an article's body); data access `packages/supabase/src/education.ts`
 - Free samples go to the public `site-downloads` bucket: PDF only, at
   most 20 MB, uploaded by admins (`uploadEbookSample`), downloaded from
   `ebookSampleUrl`.
+
+## On the site
+
+- `apps/web/src/lib/education-data.ts` reads what is published (never
+  throwing, like `public-data.ts`): every article at once (few), the
+  categories, an article's links and old addresses.
+- Pages: `/edukacja` (the newest articles), `/edukacja/artykuly`,
+  `/edukacja/artykuly/kategoria/[slug]` (only categories in use) and
+  `/edukacja/artykuly/[slug]` (an old address redirects; a draft is not
+  found). An author's articles show on their profile, a service's on its
+  page; the sitemap lists them with the date the text last changed.
+- Preview: the portal's "Podgląd" opens `/podglad?artykul=<id>`, which
+  signs a token for `/edukacja/artykuly/podglad/<id>`; in Draft Mode that
+  page reads the one draft with the service-role key
+  (`getArticleDraftPreview`).
+- Edukacja's own words (the tops of `/edukacja` and `/edukacja/artykuly`,
+  the line while nothing is published, the word about therapy under every
+  article) are the CMS's `education_page`.

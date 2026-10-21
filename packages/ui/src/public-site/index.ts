@@ -133,3 +133,16 @@ export { SpecialistsSection } from "./specialists-section";
 export type { SpecialistsSectionProps } from "./specialists-section";
 export { defaultWatercolorSrc, WatercolorImage } from "./watercolor-image";
 export type { WatercolorImageProps, WatercolorLook } from "./watercolor-image";
+export { ArticleCard, ArticleGrid } from "./article-cards";
+export type { ArticleCardData } from "./article-cards";
+export {
+  ArticleCover,
+  ArticleEndSection,
+  ArticleHeader,
+  ArticlePeople,
+  ArticleServices,
+  ArticleSources,
+  ArticleTrust,
+} from "./article-page";
+export type { ArticlePersonData, ArticleServiceData } from "./article-page";
+export { ArticleShare } from "./article-share";

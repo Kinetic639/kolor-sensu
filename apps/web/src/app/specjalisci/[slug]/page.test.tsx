@@ -49,6 +49,12 @@ const offer = {
 let found: typeof anna | null = anna;
 let movedTo: string | null = null;
 let offerless = false;
+vi.mock("@/lib/education-data", () => ({
+  getArticles: async () => [],
+  getServiceArticles: async () => [],
+  getArticleCategories: async () => [],
+  articleImageUrl: (path: string) => path,
+}));
 vi.mock("@/lib/public-data", () => ({
   getSpecialist: async () => found,
   getSpecialists: async () => (found ? [found] : []),

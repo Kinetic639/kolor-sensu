@@ -13,6 +13,7 @@ import {
   getServicePageAdmin,
   getSiteContactAdmin,
   getSpecialistsPageAdmin,
+  getEducationPageAdmin,
   getCrisisHelpAdmin,
   getHomeStoryAdmin,
   getHomeThoughtsAdmin,
@@ -170,6 +171,10 @@ export async function loadSpecialistsPage() {
   return mapContentViewModel(
     await getSpecialistsPageAdmin(await createClient()),
   );
+}
+
+export async function loadEducationPage() {
+  return mapContentViewModel(await getEducationPageAdmin(await createClient()));
 }
 
 export async function loadOfferPage() {

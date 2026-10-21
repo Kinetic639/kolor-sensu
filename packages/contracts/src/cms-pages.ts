@@ -206,6 +206,41 @@ export const defaultSpecialistsPage: SpecialistsPageContent = {
   helpHeading: "Nie wiesz, do kogo się zapisać? Pomożemy wybrać.",
 };
 
+// ---------------------------------------------------------------- Edukacja
+
+/**
+ * /edukacja and its articles: the top of /edukacja, the line while nothing
+ * is published, the top of /edukacja/artykuly, and the word about therapy
+ * under every article.
+ */
+export const educationPageContentSchema = z.strictObject({
+  intro: pageHeaderSchema,
+  emptyText: z.string().trim().min(1).max(400),
+  articlesIntro: pageHeaderSchema,
+  therapyNote: z.string().trim().min(1).max(600),
+});
+
+export type EducationPageContent = z.infer<typeof educationPageContentSchema>;
+
+export const defaultEducationPage: EducationPageContent = {
+  intro: pageHeader({
+    eyebrow: "Edukacja",
+    title: "Edukacja",
+    accent: "Wiedza, która pomaga zrozumieć.",
+    lead: "Dzielimy się wiedzą o zdrowiu psychicznym, emocjach i relacjach: przystępnie, rzetelnie i bez oceniania.",
+  }),
+  emptyText:
+    "Przygotowujemy artykuły i materiały edukacyjne. Jeśli masz pytanie, z którym chcesz przyjść już teraz, zadzwoń lub napisz do nas.",
+  articlesIntro: pageHeader({
+    eyebrow: "Edukacja",
+    title: "Artykuły",
+    accent: "",
+    lead: "Przystępnie o emocjach, relacjach i zdrowiu psychicznym, pisane przez naszych specjalistów.",
+  }),
+  therapyNote:
+    "Artykuł ma charakter edukacyjny i nie zastępuje konsultacji ze specjalistą. Jeśli to, o czym czytasz, dotyczy Ciebie lub bliskiej osoby, umów się na rozmowę. Jeśli czujesz, że Twoje życie jest zagrożone, od razu szukaj pomocy.",
+};
+
 // ---------------------------------------------------------------- Kontakt
 
 export const CONTACT_FAQ_MAX = 12;

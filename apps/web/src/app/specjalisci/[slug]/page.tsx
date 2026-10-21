@@ -10,6 +10,9 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { PageIntro } from "@/components/page-intro";
+import { ArticlesSection } from "@/features/education/articles-section";
+import { toPeople } from "@/features/education/article-page";
+import { getArticleCategories, getArticles } from "@/lib/education-data";
 import { bookingCta, siteUrl } from "@/content/site";
 import { bookingHref } from "@/features/booking/search-params";
 import { serviceHref } from "@/lib/site-frame";
@@ -56,10 +59,12 @@ export default async function SpecialistPage({
   params,
 }: PageProps<"/specjalisci/[slug]">) {
   const { slug } = await params;
-  const [specialist, all, offers] = await Promise.all([
+  const [specialist, all, offers, articles, categories] = await Promise.all([
     getSpecialist(slug),
     getSpecialists(),
     getSpecialistOffers(slug),
+    getArticles(),
+    getArticleCategories(),
   ]);
   if (!specialist) {
     // An address the admin has since changed: send visitors (and search
@@ -128,6 +133,17 @@ export default async function SpecialistPage({
         role={role}
         shortBio={specialist.shortBio}
         splash={specialistSplash(index)}
+      />
+      <ArticlesSection
+        articles={articles.filter(
+          (one) =>
+            one.authorKind === "specialist" &&
+            one.authorSpecialistId === specialist.specialistId,
+        )}
+        categories={categories}
+        heading={`Artykuły: ${specialist.displayName}`}
+        id="artykuly-autora"
+        people={toPeople(all)}
       />
       <JsonLd
         data={{

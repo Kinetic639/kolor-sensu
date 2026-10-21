@@ -4,15 +4,26 @@ import { siteUrl } from "@/content/site";
 import { specialistHref } from "@/lib/presentation";
 import { getPageSeo, getServices, getSpecialists } from "@/lib/public-data";
 import { serviceHref } from "@/lib/site-frame";
+import {
+  ARTICLES_PATH,
+  articleHref,
+  categoryHref,
+  usedCategories,
+} from "@/features/education/article-view";
+import { getArticleCategories, getArticles } from "@/lib/education-data";
 
-// Every public page, including each published service and specialist,
+// Every public page, including each published service, specialist and
+// article (with the date its text last changed) and each category in use,
 // but those the CMS keeps out of search engines ("noindex").
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [services, specialists, hidden] = await Promise.all([
-    getServices(),
-    getSpecialists(),
-    hiddenPaths(),
-  ]);
+  const [services, specialists, hidden, articles, categories] =
+    await Promise.all([
+      getServices(),
+      getSpecialists(),
+      hiddenPaths(),
+      getArticles(),
+      getArticleCategories(),
+    ]);
   const page = (
     path: string,
     priority: number,
@@ -33,6 +44,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     page("/gabinety", 0.6),
     page("/warsztaty", 0.6),
     page("/edukacja", 0.6),
+    ...(articles.length
+      ? [
+          page(ARTICLES_PATH, 0.6),
+          ...usedCategories(categories, articles).map((category) =>
+            page(categoryHref(category.slug), 0.5),
+          ),
+          ...articles.map((article) => ({
+            ...page(articleHref(article.slug), 0.6),
+            lastModified: article.contentUpdatedAt,
+          })),
+        ]
+      : []),
     page("/pomoc-w-kryzysie", 0.5),
     ...services.map((service) => page(serviceHref(service.slug), 0.8)),
     ...specialists.map((specialist) =>

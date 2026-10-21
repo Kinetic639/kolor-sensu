@@ -8,7 +8,9 @@ import {
   defaultAboutPage,
   defaultClosingCta,
   defaultContactPage,
+  defaultEducationPage,
   defaultSiteContact,
+  educationPageContentSchema,
   defaultSpecialistsPage,
   siteContactContentSchema,
   specialistsPageContentSchema,
@@ -87,6 +89,26 @@ describe("the other pages and the shared settings", () => {
       contactPageContentSchema.safeParse({
         ...defaultContactPage,
         intro: { ...defaultContactPage.intro, title: [] },
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("Edukacja", () => {
+  it("starts from the site's words, both headers with a title", () => {
+    expect(educationPageContentSchema.parse(defaultEducationPage)).toEqual(
+      defaultEducationPage,
+    );
+    expect(defaultEducationPage.articlesIntro.title[0]![0]!.text).toBe(
+      "Artykuły",
+    );
+  });
+
+  it("needs the word about therapy", () => {
+    expect(
+      educationPageContentSchema.safeParse({
+        ...defaultEducationPage,
+        therapyNote: " ",
       }).success,
     ).toBe(false);
   });
