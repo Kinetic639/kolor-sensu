@@ -1,10 +1,9 @@
-// SupportAreas: the areas of help as small circles around a large one
-// (after Talking Walls' art counseling gallery). Pointing at a small circle,
-// focusing it or tapping it shows its area in the large circle, which links
-// on.
+// SupportAreas: the areas of help as drops of paint around a large
+// watercolour blot. Pointing at a drop, focusing it or tapping it shows its
+// area in the blot, which links on.
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { SUPPORT_AREA_SLOTS, SupportAreas } from "./support-areas";
+import { SUPPORT_AREA_SLOTS, SupportAreas, areaPaint } from "./support-areas";
 
 const areas = [
   {
@@ -96,7 +95,46 @@ describe("SupportAreas", () => {
     ).toBeNull();
   });
 
-  it("paints an area without a photo, its name inside the small circle", () => {
+  it("keeps the area shown before under the new one while it blooms in", () => {
+    const { region } = renderAreas();
+    fireEvent.click(
+      within(region).getByRole("button", { name: "Warsztaty i rozwój" }),
+    );
+    const pictures = region.querySelectorAll<HTMLElement>(".ks-areas__picture");
+    expect([...pictures].map((picture) => picture.dataset.state)).toEqual([
+      "previous",
+      undefined,
+      "shown",
+    ]);
+  });
+
+  it("washes the stage in the chosen area's paint, sage and pink by turns", () => {
+    const { region } = renderAreas();
+    const stage = region.querySelector<HTMLElement>(".ks-areas__stage")!;
+    expect(stage.dataset.paint).toBe("sage");
+    fireEvent.click(
+      within(region).getByRole("button", { name: "Terapia dla par" }),
+    );
+    expect(stage.dataset.paint).toBe("pink");
+    expect([0, 1, 2, 3].map(areaPaint)).toEqual([
+      "sage",
+      "pink",
+      "sage",
+      "pink",
+    ]);
+  });
+
+  it("names photographed drops under them, for sighted visitors only", () => {
+    const { region } = renderAreas();
+    const button = within(region).getByRole("button", {
+      name: "Terapia indywidualna",
+    });
+    const name = button.querySelector(".ks-areas__name");
+    expect(name).toHaveTextContent("Terapia indywidualna");
+    expect(name).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("paints an area without a photo, its name inside the drop", () => {
     const { region } = renderAreas();
     const button = within(region).getByRole("button", {
       name: "Terapia dla par",
@@ -105,7 +143,7 @@ describe("SupportAreas", () => {
     expect(button).toHaveTextContent("Terapia dla par");
   });
 
-  it("places the small circles on the slots around the large one, in two depths", () => {
+  it("places the drops on the slots around the blot, in two depths", () => {
     const { region } = renderAreas();
     const items = region.querySelectorAll<HTMLElement>(".ks-areas__item");
     items.forEach((item, index) => {
@@ -116,6 +154,12 @@ describe("SupportAreas", () => {
         `${slot.size}rem`,
       );
       expect(item.dataset.depth).toBe(slot.depth);
+      expect(item.style.getPropertyValue("--ks-area-blot")).toBe(
+        `url("/watercolor/areas-blot-${slot.blot}.png")`,
+      );
+      expect(item.style.getPropertyValue("--ks-area-drop")).toBe(
+        `url("/watercolor/areas-drop-${areaPaint(index)}-${slot.blot}.webp")`,
+      );
     });
     expect(new Set(SUPPORT_AREA_SLOTS.map((slot) => slot.depth))).toEqual(
       new Set(["near", "far"]),
@@ -123,7 +167,7 @@ describe("SupportAreas", () => {
     expect(SUPPORT_AREA_SLOTS).toHaveLength(10);
   });
 
-  it("links to the whole offer under the circles", () => {
+  it("links to the whole offer under the drops", () => {
     renderAreas();
     expect(
       screen.getByRole("link", { name: "Zobacz całą ofertę" }),

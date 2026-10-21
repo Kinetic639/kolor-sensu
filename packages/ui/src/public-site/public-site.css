@@ -1257,67 +1257,154 @@
 
   /* --------------------------------------------------------- Support areas */
 
-  /* SupportAreas (support-areas.tsx), after Talking Walls' art counseling
-     gallery. Phones: the large circle first, the small ones in rows under
-     it. From 64 rem: the large circle in the middle of a stage, the small
-     ones placed around it (--ks-area-x/y/size, set per slot), at two
-     depths that drift apart as the section scrolls by. */
+  /* SupportAreas (support-areas.tsx), painted. Phones: the blot first, the
+     drops in rows under it. From 64 rem: the blot in the middle of a stage
+     on its wash, the drops placed around it (--ks-area-x/y/size/tilt, set
+     per slot, with their own blot, paint and rim images). Motion is
+     support-areas-motion.ts (GSAP); what is here is the still composition
+     and the small reactions to the pointer. */
+  .ks-areas {
+    /* The wash bleeds past the blot; never past the page. */
+    overflow-x: clip;
+  }
+
   .ks-areas__stage {
     position: relative;
     display: grid;
     justify-items: center;
-    gap: 2rem;
+    gap: 2.5rem;
   }
 
+  .ks-areas__heart {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    width: min(100%, 24rem);
+  }
+
+  /* The wash: paint bleeding past the photo's edge, sage or pink after the
+     chosen area, crossfading as the choice changes. */
+  .ks-areas__wash {
+    position: absolute;
+    inset: -16%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .ks-areas__wash-layer {
+    position: absolute;
+    inset: 0;
+    background: url("/watercolor/areas-wash-sage.webp") center / contain
+      no-repeat;
+    opacity: 0;
+    transition: opacity 900ms ease;
+  }
+
+  .ks-areas__wash-layer[data-paint="pink"] {
+    background-image: url("/watercolor/areas-wash-pink.webp");
+    rotate: 150deg;
+  }
+
+  .ks-areas__stage[data-paint="sage"] .ks-areas__wash-layer[data-paint="sage"],
+  .ks-areas__stage[data-paint="pink"] .ks-areas__wash-layer[data-paint="pink"] {
+    opacity: 0.9;
+  }
+
+  /* The blot: the photo cut by a brushed edge, as the hero's. */
   .ks-areas__center {
     position: relative;
+    z-index: 1;
     isolation: isolate;
     display: grid;
     place-items: center;
-    width: min(100%, 22rem);
+    width: 100%;
     aspect-ratio: 1;
-    overflow: hidden;
-    border-radius: 50%;
     color: var(--color-ink);
     text-decoration: none;
     outline-offset: 6px;
+    -webkit-mask: url("/watercolor/areas-center-mask.png") center / 100% 100%
+      no-repeat;
+    mask: url("/watercolor/areas-center-mask.png") center / 100% 100% no-repeat;
   }
 
+  /* The mask would cut a ring on the link away: the ring goes round the
+     blot instead. */
   .ks-areas__center:focus-visible {
-    outline: 2px solid var(--color-ring, var(--color-primary));
+    outline: none;
+  }
+
+  .ks-areas__heart:has(.ks-areas__center:focus-visible)::after {
+    content: "";
+    position: absolute;
+    inset: -3% -3% auto;
+    z-index: 2;
+    aspect-ratio: 1;
+    border: 2px solid var(--color-ring, var(--color-primary));
+    border-radius: 50%;
+    pointer-events: none;
   }
 
   .ks-areas__pictures {
     position: absolute;
-    inset: 0;
+    inset: -5%;
     z-index: 0;
-    transition: scale 600ms var(--ease-soft);
+    transition: scale 900ms var(--ease-soft);
   }
 
   .ks-areas__center:hover .ks-areas__pictures {
-    scale: 1.03;
+    scale: 1.05;
   }
 
-  /* Every area's picture waits in the circle; the shown one fades in. */
+  /* Every area's picture waits in the blot. The chosen one blooms in over
+     the one before, as wet paint spreads: a drop-shaped opening that grows
+     from the middle until it fills the blot. */
   .ks-areas__picture {
     position: absolute;
     inset: 0;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     opacity: 0;
-    transition: opacity 700ms ease;
   }
 
-  .ks-areas__picture[data-shown] {
+  .ks-areas__picture[data-state="previous"] {
+    z-index: 1;
     opacity: 1;
   }
 
-  /* A veil over a photo, so the words on it read. */
+  .ks-areas__picture[data-state="shown"] {
+    z-index: 2;
+    opacity: 1;
+    -webkit-mask: url("/watercolor/areas-blot-1.png") center / 260% 260%
+      no-repeat;
+    mask: url("/watercolor/areas-blot-1.png") center / 260% 260% no-repeat;
+    animation: ks-areas-bloom 1400ms cubic-bezier(0.3, 0.1, 0.3, 1) both;
+  }
+
+  @keyframes ks-areas-bloom {
+    from {
+      -webkit-mask-size: 0% 0%;
+      mask-size: 0% 0%;
+      filter: saturate(1.4) brightness(1.08);
+    }
+    60% {
+      filter: none;
+    }
+  }
+
+  /* A soft ink veil over a photo, darker in the middle where the words
+     are, so they read. */
   .ks-areas__center::after {
     content: "";
     position: absolute;
     inset: 0;
-    z-index: 1;
-    background: color-mix(in oklab, var(--color-ink) 42%, transparent);
+    z-index: 3;
+    background: radial-gradient(
+      closest-side,
+      color-mix(in oklab, var(--color-ink) 58%, transparent),
+      color-mix(in oklab, var(--color-ink) 30%, transparent) 75%,
+      color-mix(in oklab, var(--color-ink) 10%, transparent)
+    );
     opacity: 0;
     transition: opacity 700ms ease;
     pointer-events: none;
@@ -1327,33 +1414,56 @@
     opacity: 1;
   }
 
-  .ks-areas__ring {
-    position: absolute;
-    inset: 7%;
-    z-index: 2;
-    border: 1px solid var(--color-pink);
-    border-radius: 50%;
-    pointer-events: none;
-  }
-
   .ks-areas__text {
     position: relative;
-    z-index: 3;
+    z-index: 4;
     display: grid;
     justify-items: center;
-    gap: 0.75rem;
-    max-width: 72%;
+    gap: 0.7rem;
+    max-width: 62%;
     text-align: center;
-    animation: ks-areas-text 600ms var(--ease-soft) both;
+  }
+
+  /* The words arrive one after another, after the paint. */
+  .ks-areas__text > * {
+    animation: ks-areas-text 800ms var(--ease-soft) both;
+  }
+
+  .ks-areas__text > :nth-child(2) {
+    animation-delay: 120ms;
+  }
+
+  .ks-areas__text > :nth-child(3) {
+    animation-delay: 220ms;
+  }
+
+  .ks-areas__text > :nth-child(4) {
+    animation-delay: 320ms;
   }
 
   .ks-areas__text[data-on-photo] {
     color: var(--color-on-primary);
+    text-shadow: 0 1px 12px rgb(22 48 47 / 0.35);
+  }
+
+  .ks-areas__count {
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    opacity: 0.85;
+  }
+
+  .ks-areas__count-now {
+    color: var(--color-pink);
+  }
+
+  .ks-areas__text[data-on-photo] .ks-areas__count-now {
+    color: color-mix(in oklab, var(--color-blush) 70%, white);
   }
 
   .ks-areas__title {
     font-size: clamp(1.75rem, 3.2vw, 2.75rem);
     line-height: 1.05;
+    text-wrap: balance;
   }
 
   .ks-areas__lead {
@@ -1371,143 +1481,277 @@
     text-underline-offset: 6px;
   }
 
+  .ks-areas__arrow {
+    transition: translate 400ms var(--ease-soft);
+  }
+
+  .ks-areas__center:hover .ks-areas__arrow,
+  .ks-areas__center:focus-visible .ks-areas__arrow {
+    translate: 0.3rem 0;
+  }
+
   @keyframes ks-areas-text {
     from {
       opacity: 0;
       translate: 0 0.6rem;
+      filter: blur(3px);
     }
   }
 
-  /* Painted instead of photographed: a wash in the theme's colours on
-     paper grain. */
+  /* Painted instead of photographed: a wash in the area's paint. */
   .ks-areas__paint {
-    background-color: var(--color-primary-soft);
-    background-image:
-      url("/watercolor/paper.svg"),
-      radial-gradient(
-        circle at 35% 30%,
-        color-mix(in oklab, var(--color-sage) 35%, white),
-        var(--color-sage) 58%,
-        color-mix(in oklab, var(--color-primary) 30%, var(--color-sage))
-      );
-    background-size:
-      180px 180px,
-      100% 100%;
-    background-blend-mode: multiply, normal;
+    background:
+      url("/watercolor/areas-wash-sage.webp") center / 140% 140% no-repeat,
+      var(--color-primary-soft);
   }
 
-  .ks-areas__paint[data-paint="blush"] {
-    background-color: var(--color-pink-soft);
-    background-image:
-      url("/watercolor/paper.svg"),
-      radial-gradient(
-        circle at 35% 30%,
-        color-mix(in oklab, var(--color-blush) 35%, white),
-        var(--color-blush) 58%,
-        color-mix(in oklab, var(--color-pink) 35%, var(--color-blush))
-      );
+  .ks-areas__paint[data-paint="pink"] {
+    background:
+      url("/watercolor/areas-wash-pink.webp") center / 140% 140% no-repeat,
+      var(--color-pink-soft);
+  }
+
+  /* The handwritten invitation, under the blot, with its arrow. */
+  .ks-areas__hint {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-end;
+    gap: 0.25rem;
+    margin: 0.5rem 0 0;
+    text-align: center;
+    text-wrap: balance;
+    color: var(--color-pink-strong);
+    font-family: var(--font-hand);
+    font-size: 1.35rem;
+    line-height: 1.1;
+    rotate: -4deg;
+  }
+
+  .ks-areas__hint-arrow {
+    display: none;
   }
 
   .ks-areas__orbit {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 1rem;
+    gap: 1.25rem 0.75rem;
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
   .ks-areas__item {
-    width: 4.75rem;
+    width: 6.5rem;
+  }
+
+  .ks-areas__float {
+    display: block;
+  }
+
+  /* A drop: the photo cut by its blot, a rim of pigment round it; or plain
+     paint with the name inside. Its name sits under it. */
+  .ks-areas__dot {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 0.35rem;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-ink);
+    cursor: pointer;
+    outline: none;
+    rotate: var(--ks-area-tilt, 0deg);
+    transition:
+      scale 500ms var(--ease-soft),
+      rotate 700ms var(--ease-soft);
+  }
+
+  .ks-areas__drop {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
     aspect-ratio: 1;
   }
 
-  .ks-areas__dot {
-    position: relative;
-    display: block;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    overflow: hidden;
-    border: 0;
-    border-radius: 50%;
-    background: var(--color-surface);
-    cursor: pointer;
-    outline-offset: 4px;
-    transition: scale 300ms var(--ease-soft);
-  }
-
-  .ks-areas__dot:hover {
-    scale: 1.05;
-  }
-
-  .ks-areas__dot:focus-visible {
-    outline: 2px solid var(--color-ring, var(--color-primary));
-  }
-
-  /* The chosen one: faded, with a hairline ring inside. */
-  .ks-areas__dot::after {
+  /* The paint under the photo shows past its edge: the blot's splashes. */
+  .ks-areas__drop::before {
     content: "";
     position: absolute;
-    inset: 6%;
-    border: 1px solid var(--color-pink);
-    border-radius: 50%;
-    opacity: 0;
-    transition: opacity 300ms ease;
+    inset: 0;
+    background: var(--ks-area-drop) center / contain no-repeat;
+    transition:
+      scale 600ms var(--ease-soft),
+      opacity 400ms ease;
   }
 
-  .ks-areas__dot[aria-pressed="true"]::after {
-    opacity: 1;
-  }
-
-  .ks-areas__dot-picture,
-  .ks-areas__dot-paint {
-    transition: opacity 400ms ease;
+  .ks-areas__dot[data-photo] .ks-areas__drop::before {
+    opacity: 0.7;
   }
 
   .ks-areas__dot-picture {
     object-fit: cover;
+    -webkit-mask: var(--ks-area-blot) center / 100% 100% no-repeat;
+    mask: var(--ks-area-blot) center / 100% 100% no-repeat;
+    transition: filter 500ms ease;
   }
 
-  .ks-areas__dot[aria-pressed="true"] .ks-areas__dot-picture,
-  .ks-areas__dot[aria-pressed="true"] .ks-areas__dot-paint {
-    opacity: 0.3;
-  }
-
-  .ks-areas__dot-paint {
+  .ks-areas__rim {
     position: absolute;
     inset: 0;
-    display: grid;
-    place-items: center;
-    padding-inline: 14%;
+    background: var(--ks-area-rim) center / contain no-repeat;
+    opacity: 0.55;
+    transition:
+      opacity 400ms ease,
+      scale 600ms var(--ease-soft);
+    pointer-events: none;
   }
 
   .ks-areas__dot-label {
-    font-family: var(--font-display);
-    font-size: 0.75rem;
+    position: relative;
+    max-width: 74%;
+    font-size: 0.8rem;
     line-height: 1.15;
     text-align: center;
-    color: var(--color-ink);
+    text-wrap: balance;
+    rotate: calc(var(--ks-area-tilt, 0deg) * -1);
+  }
+
+  .ks-areas__name {
+    max-width: 10rem;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    text-align: center;
+    text-wrap: balance;
+    rotate: calc(var(--ks-area-tilt, 0deg) * -1);
+    background: linear-gradient(currentColor, currentColor) 50% 100% / 0 1px
+      no-repeat;
+    transition:
+      background-size 500ms var(--ease-soft),
+      color 300ms ease;
+  }
+
+  /* Pointed at: the drop swells and straightens, its paint spreads. */
+  .ks-areas__dot:hover,
+  .ks-areas__dot:focus-visible {
+    scale: 1.08;
+    rotate: 0deg;
+  }
+
+  .ks-areas__dot:hover .ks-areas__drop::before,
+  .ks-areas__dot:focus-visible .ks-areas__drop::before {
+    scale: 1.14;
+    opacity: 1;
+  }
+
+  .ks-areas__dot:hover .ks-areas__name,
+  .ks-areas__dot:focus-visible .ks-areas__name {
+    background-size: 100% 1px;
+  }
+
+  .ks-areas__dot:focus-visible .ks-areas__drop {
+    outline: 2px solid var(--color-ring, var(--color-primary));
+    outline-offset: 2px;
+    border-radius: 50%;
+  }
+
+  /* Chosen: its pigment deepens and its name turns pink, the thread
+     starts from it. */
+  .ks-areas__dot[aria-pressed="true"] .ks-areas__rim {
+    opacity: 1;
+    scale: 1.04;
+  }
+
+  .ks-areas__dot[aria-pressed="true"] .ks-areas__drop::before {
+    opacity: 1;
+  }
+
+  .ks-areas__dot[aria-pressed="true"] .ks-areas__dot-picture {
+    filter: saturate(0.6) brightness(1.05);
+  }
+
+  .ks-areas__dot[aria-pressed="true"] .ks-areas__name {
+    color: var(--color-pink-strong);
+  }
+
+  /* The thread: wide screens only, over the paint, under the drops. */
+  .ks-areas__thread {
+    display: none;
   }
 
   @media (min-width: 64rem) {
     .ks-areas__stage {
       display: block;
-      height: clamp(36rem, 50vw, 46rem);
+      height: clamp(40rem, 54vw, 50rem);
     }
 
-    .ks-areas__center {
+    .ks-areas__heart {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: clamp(20rem, 33vw, 30rem);
+      width: clamp(21rem, 34vw, 31rem);
       translate: -50% -50%;
+    }
+
+    .ks-areas__hint {
+      position: absolute;
+      top: 100%;
+      right: 88%;
+      width: max-content;
+      max-width: 13rem;
+      margin: -2.5rem 0 0;
+      flex-direction: column;
+      align-items: flex-end;
+      text-align: right;
+      rotate: -6deg;
+    }
+
+    .ks-areas__hint-arrow {
+      display: block;
+      width: 3.25rem;
+      align-self: flex-start;
+      order: -1;
+      margin-left: -1.5rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .ks-areas__thread {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    .ks-areas__thread-line {
+      fill: none;
+      stroke: var(--color-pink);
+      stroke-width: 1.25;
+      stroke-linecap: round;
+      opacity: 0.85;
+    }
+
+    .ks-areas__thread-dot {
+      fill: var(--color-pink);
+      transform-box: fill-box;
+      transform-origin: center;
     }
 
     .ks-areas__orbit {
       position: absolute;
       inset: 0;
+      z-index: 3;
       display: block;
       pointer-events: none;
     }
@@ -1517,59 +1761,37 @@
       top: calc(var(--ks-area-y) - var(--ks-area-size) / 2);
       left: calc(var(--ks-area-x) - var(--ks-area-size) / 2);
       width: var(--ks-area-size);
+    }
+
+    .ks-areas__dot {
       pointer-events: auto;
     }
 
     .ks-areas__dot-label {
       font-size: clamp(0.75rem, 0.9vw, 0.95rem);
     }
-  }
 
-  /* The drift: near circles move a little, far ones more, while the stage
-     crosses the screen (scroll-driven; where unsupported they stay put). */
-  @supports (animation-timeline: view()) {
-    @media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
-      .ks-areas__stage {
-        view-timeline: --ks-areas;
-      }
-
-      .ks-areas__item {
-        animation: ks-areas-near linear both;
-        animation-timeline: --ks-areas;
-      }
-
-      .ks-areas__item[data-depth="far"] {
-        animation-name: ks-areas-far;
-      }
-    }
-  }
-
-  @keyframes ks-areas-near {
-    from {
-      translate: 0 2.5rem;
-    }
-    to {
-      translate: 0 -2.5rem;
-    }
-  }
-
-  @keyframes ks-areas-far {
-    from {
-      translate: 0 7rem;
-    }
-    to {
-      translate: 0 -7rem;
+    /* The names of photographed drops hang under them, out of the way of
+       the drop's height. */
+    .ks-areas__name {
+      position: absolute;
+      top: 100%;
+      width: max-content;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .ks-areas__text {
+    .ks-areas__text > *,
+    .ks-areas__picture[data-state="shown"] {
       animation: none;
     }
 
     .ks-areas__pictures,
-    .ks-areas__picture,
-    .ks-areas__dot {
+    .ks-areas__wash-layer,
+    .ks-areas__dot,
+    .ks-areas__drop::before,
+    .ks-areas__rim,
+    .ks-areas__name {
       transition: none;
     }
   }
