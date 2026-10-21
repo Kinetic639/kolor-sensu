@@ -46,6 +46,12 @@ let offers = [offer];
 let words = defaultServicePage;
 let service: typeof therapy | null = therapy;
 let intake = new Set(["konsultacja-psychologiczna"]);
+vi.mock("@/lib/education-data", () => ({
+  getArticles: async () => [],
+  getServiceArticles: async () => [],
+  getArticleCategories: async () => [],
+  articleImageUrl: (path: string) => path,
+}));
 vi.mock("@/lib/public-data", () => ({
   getService: async () => service,
   getServices: async () => (service ? [service] : []),

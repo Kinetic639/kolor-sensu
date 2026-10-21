@@ -27,7 +27,16 @@ Stan na 21.10 · PR-y: 2 / 6 zmergowanych (PR 3 czeka na merge, PR 4 w toku) · 
   - [x] testy (listy i adresy 7), typy, lint
   - [x] CI zielone
   - [ ] zmergowany i sprawdzony na DEV
-- [ ] **PR 4 · Strony artykułów** — /edukacja, lista, kategoria, artykuł, powiązania, menu, podgląd szkicu, zakładka CMS Edukacja · _w toku_
+- [ ] **PR 4 · Strony artykułów** — /edukacja, lista, kategoria, artykuł, powiązania, menu, podgląd szkicu, zakładka CMS Edukacja · _w toku_ (na PR 3)
+  - [x] dane strony: artykuły, kategorie, powiązania, przekierowania, podgląd szkicu
+  - [x] /edukacja: najnowsze artykuły (do tej pory „wkrótce”)
+  - [x] /edukacja/artykuly i kategorie: karty, filtr kategorii jako adresy
+  - [x] artykuł: nagłówek, okładka, spis treści, treść, udostępnianie, źródła, „Sprawdzone przez”, informacja o terapii, usługi, specjaliści, „Przeczytaj też”, dane dla Google
+  - [x] artykuły autora na profilu, „Warto przeczytać” na stronie usługi, menu Edukacji, mapa strony
+  - [x] „Podgląd” w portalu; zakładka CMS Edukacja (`education_page`)
+  - [x] testy (widok 9, UI 5, mapa strony, podgląd, kontrakt 2, SQL), typy, lint
+  - [ ] CI zielone
+  - [ ] zmergowany i sprawdzony na DEV
 - [ ] **PR 5 · Strony e-booków** — katalog, strona e-booka, film, fragment, karta w artykule
 - [ ] **PR 6 · SEO i jakość** — dane dla Google, obrazki, mapa strony, e2e, tabela „Każda strona”
 - [ ] **Miro** — kartki na zielono, wiersze tabeli „Każda strona”

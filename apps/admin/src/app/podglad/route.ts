@@ -9,12 +9,15 @@ import {
 import { requirePortalRole } from "@/lib/auth";
 
 // The CMS's "Podgląd" (a link opening a new tab): for a signed-in admin,
-// signs a token for the page's path on the site with CMS_PREVIEW_SECRET and
+// signs a token for the page's path (or, with ?artykul=<id>, the path of
+// that article's draft preview) on the site with CMS_PREVIEW_SECRET and
 // sends the tab to the site's /api/preview, which turns the preview on.
 // Outside (protected)/ (a route handler has no layout), so it checks the
 // admin itself: anyone else goes to the login or "no access".
 
 export const dynamic = "force-dynamic";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function refuse(status: number, message: string) {
   return new Response(message, {
@@ -29,15 +32,21 @@ function refuse(status: number, message: string) {
 export async function GET(request: Request) {
   await requirePortalRole();
 
-  const page = parseCmsPreviewPage(
-    new URL(request.url).searchParams.get("strona"),
-  );
-  if (!page) return refuse(404, "Nie ma takiej strony.");
+  const query = new URL(request.url).searchParams;
+  const article = query.get("artykul");
+  const page = parseCmsPreviewPage(query.get("strona"));
+  const path =
+    article && UUID.test(article)
+      ? `/edukacja/artykuly/podglad/${article}`
+      : page
+        ? CMS_PAGE_SITE_PATHS[page]
+        : null;
+  if (!path) return refuse(404, "Nie ma takiej strony.");
 
   const secret = process.env.CMS_PREVIEW_SECRET;
   if (!secret) return refuse(500, "Podgląd nie jest skonfigurowany.");
 
-  const token = signPreviewToken({ path: CMS_PAGE_SITE_PATHS[page], secret });
+  const token = signPreviewToken({ path, secret });
   return new Response(null, {
     status: 303,
     headers: {

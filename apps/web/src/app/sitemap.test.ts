@@ -16,10 +16,21 @@ vi.mock("@/lib/public-data", () => ({
   }),
 }));
 
+let articles: { slug: string; categoryId: string; contentUpdatedAt: string }[] =
+  [];
+vi.mock("@/lib/education-data", () => ({
+  getArticles: async () => articles,
+  getArticleCategories: async () => [
+    { id: "c1", slug: "dzieci", name: "Dzieci", description: "", sortOrder: 0 },
+    { id: "c2", slug: "pusta", name: "Pusta", description: "", sortOrder: 1 },
+  ],
+}));
+
 const { default: sitemap } = await import("./sitemap");
 
 beforeEach(() => {
   hidden = new Set();
+  articles = [];
 });
 
 const urls = async () => (await sitemap()).map((entry) => entry.url);
@@ -42,5 +53,31 @@ describe("the sitemap", () => {
     expect(listed).not.toContain(`${siteUrl}/cookies`);
     expect(listed).not.toContain(`${siteUrl}/`);
     expect(listed).toContain(`${siteUrl}/o-nas`);
+  });
+
+  it("lists the articles, with their dates, and the categories in use", async () => {
+    expect(await urls()).not.toContain(`${siteUrl}/edukacja/artykuly`);
+    articles = [
+      {
+        slug: "lek-u-dzieci",
+        categoryId: "c1",
+        contentUpdatedAt: "2026-10-21T10:00:00Z",
+      },
+    ];
+    const entries = await sitemap();
+    const listed = entries.map((entry) => entry.url);
+    expect(listed).toEqual(
+      expect.arrayContaining([
+        `${siteUrl}/edukacja/artykuly`,
+        `${siteUrl}/edukacja/artykuly/kategoria/dzieci`,
+      ]),
+    );
+    expect(listed).not.toContain(
+      `${siteUrl}/edukacja/artykuly/kategoria/pusta`,
+    );
+    expect(
+      entries.find((entry) => entry.url.endsWith("/lek-u-dzieci"))
+        ?.lastModified,
+    ).toBe("2026-10-21T10:00:00Z");
   });
 });

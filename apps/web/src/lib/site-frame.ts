@@ -8,6 +8,7 @@ import {
 } from "@repo/ui/public-site";
 import { cache } from "react";
 import { bookingCta, footerAbout, legalLinks } from "@/content/site";
+import { getArticles } from "@/lib/education-data";
 import {
   getAnnouncement,
   getCenter,
@@ -45,7 +46,10 @@ const serviceLink = (service: PublicService) => ({
  * another, and each catalogue opening its own (its link: its place on the
  * offer page).
  */
-function navigation(offer: PublicOfferEntry[]): SiteNavItem[] {
+function navigation(
+  offer: PublicOfferEntry[],
+  hasArticles: boolean,
+): SiteNavItem[] {
   return [
     {
       label: "O nas",
@@ -75,7 +79,14 @@ function navigation(offer: PublicOfferEntry[]): SiteNavItem[] {
       }),
     },
     { label: "Warsztaty", href: "/warsztaty" },
-    { label: "Edukacja", href: "/edukacja" },
+    {
+      label: "Edukacja",
+      href: "/edukacja",
+      allLabel: "Wszystko w Edukacji",
+      ...(hasArticles && {
+        children: [{ label: "Artykuły", href: "/edukacja/artykuly" }],
+      }),
+    },
   ];
 }
 
@@ -83,17 +94,26 @@ function navigation(offer: PublicOfferEntry[]): SiteNavItem[] {
 const dialled = (phone: string) => phone.replace(/[^\d+]/g, "");
 
 export const getSiteFrame = cache(async () => {
-  const [center, locations, services, offer, announcement, company, hours] =
-    await Promise.all([
-      getCenter(),
-      getLocations(),
-      getServices(),
-      getOffer(),
-      getAnnouncement(),
-      getCompany(),
-      // The contact hours: Ustawienia wspólne in the CMS (#23).
-      getSiteContact().then((details) => details.hours),
-    ]);
+  const [
+    center,
+    locations,
+    services,
+    offer,
+    announcement,
+    company,
+    hours,
+    articles,
+  ] = await Promise.all([
+    getCenter(),
+    getLocations(),
+    getServices(),
+    getOffer(),
+    getAnnouncement(),
+    getCompany(),
+    // The contact hours: Ustawienia wspólne in the CMS (#23).
+    getSiteContact().then((details) => details.hours),
+    getArticles(),
+  ]);
   // The first location with a usable address.
   const location = locations.find((one) => one.addressLine1 && one.city);
 
@@ -125,7 +145,7 @@ export const getSiteFrame = cache(async () => {
   ];
 
   return {
-    navigation: navigation(offer),
+    navigation: navigation(offer, articles.length > 0),
     cta: bookingCta,
     contact,
     socials,

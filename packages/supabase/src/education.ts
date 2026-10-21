@@ -238,6 +238,55 @@ export async function getArticleSlugRedirect(
   return article?.slug ?? null;
 }
 
+/**
+ * An article's draft as the site's preview shows it, read with the
+ * service-role client on the server (only in Draft Mode, opened from the
+ * portal): shaped like a published article, dated now.
+ */
+export async function getArticleDraftPreview(
+  secretClient: Client,
+  id: string,
+): Promise<{
+  article: PublishedArticle;
+  serviceIds: string[];
+  specialistIds: string[];
+} | null> {
+  const { data, error } = await secretClient
+    .from("articles")
+    .select("id, draft")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const draft = readArticleDraft(data.draft);
+  const now = new Date().toISOString();
+  const article: PublishedArticle = {
+    id: data.id,
+    slug: draft.slug,
+    title: draft.title,
+    lead: draft.lead,
+    coverPath: draft.coverPath ?? "",
+    coverAlt: draft.coverAlt,
+    categoryId: draft.categoryId ?? "",
+    body: draft.body,
+    authorKind: draft.authorKind,
+    authorSpecialistId: draft.authorSpecialistId,
+    reviewerSpecialistId: draft.reviewerSpecialistId,
+    sources: draft.sources,
+    ebookId: draft.ebookId,
+    seoTitle: draft.seoTitle,
+    seoDescription: draft.seoDescription,
+    ogImagePath: draft.ogImagePath,
+    publishedAt: now,
+    contentUpdatedAt: now,
+  };
+  return {
+    article,
+    serviceIds: draft.serviceIds,
+    specialistIds: draft.specialistIds,
+  };
+}
+
 // ------------------------------------------------------------ articles: admin
 
 type AdminRow = {

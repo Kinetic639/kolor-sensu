@@ -27,6 +27,7 @@ import {
   loadServicePage,
   loadSiteContact,
   loadSpecialistsPage,
+  loadEducationPage,
   loadCrisisHelp,
   loadHomeLocation,
   loadNewsletterBand,
@@ -58,6 +59,7 @@ import {
 import { SeoSection } from "@/features/cms/seo-section";
 import { settle } from "@/features/cms/settle";
 import { SpecialistsPageSection } from "@/features/cms/specialists-page-section";
+import { EducationPageSection } from "@/features/cms/education-page-section";
 import { SpecialistsSections } from "@/features/cms/specialists-sections";
 import {
   ClosingCtaSection,
@@ -462,6 +464,32 @@ async function SeoOnlyPage({ page }: { page: CmsPage }) {
   );
 }
 
+/** Edukacja: its search settings and its words (the articles: Artykuły). */
+async function EducationPage() {
+  const [page, seo] = await Promise.all([
+    settle("edukacja", loadEducationPage),
+    loadSeo("edukacja"),
+  ]);
+  return (
+    <>
+      <PagePublishBar
+        page="edukacja"
+        status={pageStatus([page, seo].filter((one) => one !== null))}
+      />
+      <Seo model={seo} page="edukacja" />
+      {page ? (
+        <EducationPageSection model={page} />
+      ) : (
+        <UnavailableSection title="Tytuł strony · Materiały wkrótce · Artykuły · Informacja o terapii" />
+      )}
+      <FixedSection title="Artykuły i kategorie">
+        Artykuły, ich kategorie i e-booki edytujesz w osobnych pozycjach menu:
+        Artykuły i E-booki.
+      </FixedSection>
+    </>
+  );
+}
+
 /** The settings every page shares: how the components look. */
 async function SharedSettingsPage() {
   const [appearance, closing, contact] = await Promise.all([
@@ -510,6 +538,8 @@ export default async function CmsPage({ searchParams }: PageProps<"/cms">) {
         <OfferPage />
       ) : strona === "specjalisci" ? (
         <SpecialistsPage />
+      ) : strona === "edukacja" ? (
+        <EducationPage />
       ) : strona === "cennik" ? (
         <PricesPage />
       ) : strona === "kontakt" ? (

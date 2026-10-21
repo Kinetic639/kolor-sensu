@@ -80,12 +80,14 @@ import {
   contactPageContentSchema,
   siteContactContentSchema,
   specialistsPageContentSchema,
+  educationPageContentSchema,
   type AboutHeaderSection,
   type AboutPageContent,
   type ClosingCtaContent,
   type ContactPageContent,
   type SiteContactContent,
   type SpecialistsPageContent,
+  type EducationPageContent,
 } from "@repo/contracts/cms-pages";
 import {
   offerPageContentSchema,
@@ -113,6 +115,7 @@ import {
   publishServicePage,
   publishSiteContact,
   publishSpecialistsPage,
+  publishEducationPage,
   updateAboutHeadersDraft,
   updateAboutPageDraft,
   updateClosingCtaDraft,
@@ -123,6 +126,7 @@ import {
   updateServicePageDraft,
   updateSiteContactDraft,
   updateSpecialistsPageDraft,
+  updateEducationPageDraft,
 } from "@repo/supabase";
 import { revalidatePath } from "next/cache";
 import type { z } from "zod";
@@ -365,6 +369,17 @@ export async function updateSpecialistsPageDraftAction(
   );
 }
 
+/** Edukacja: its words (the tops, the empty line, the word about therapy). */
+export async function updateEducationPageDraftAction(
+  values: EducationPageContent,
+) {
+  return saveDraft(
+    educationPageContentSchema,
+    values,
+    updateEducationPageDraft,
+  );
+}
+
 export async function updateContactPageDraftAction(values: ContactPageContent) {
   return saveDraft(contactPageContentSchema, values, updateContactPageDraft);
 }
@@ -421,6 +436,17 @@ export async function publishSpecialistsPageAction() {
   return publishPage(
     [publishSpecialistsPage, (client) => publishPageSeo(client, "specialists")],
     "/specjalisci",
+  );
+}
+
+/**
+ * Edukacja: its words and its search settings. Every article shows the
+ * word about therapy, so the whole site refreshes.
+ */
+export async function publishEducationPageAction() {
+  return publishPage(
+    [publishEducationPage, (client) => publishPageSeo(client, "education")],
+    { path: "/", type: "layout" },
   );
 }
 

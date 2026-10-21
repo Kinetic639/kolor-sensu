@@ -100,8 +100,11 @@ export function WorkspaceBar({
   state,
   kind,
   actions,
+  previewHref,
 }: {
   back: { href: string; label: string };
+  /** The draft on the site, in a new tab (what is saved). */
+  previewHref?: string;
   title: string;
   state: StateTag;
   /** "artykuł" or "e-book", for the questions. */
@@ -119,6 +122,28 @@ export function WorkspaceBar({
               <span className="hidden text-[0.75rem] text-[var(--text-muted)] sm:inline">
                 Niezapisane zmiany
               </span>
+            ) : null}
+            {previewHref ? (
+              <Button
+                asChild
+                className="h-7 px-2.5 text-[0.8125rem]"
+                size="sm"
+                variant="outline"
+              >
+                <a
+                  href={previewHref}
+                  rel="noopener"
+                  target="_blank"
+                  title={
+                    dirty
+                      ? "Podgląd pokazuje zapisany szkic: najpierw zapisz zmiany."
+                      : undefined
+                  }
+                >
+                  Podgląd
+                  <span className="sr-only"> (nowa karta)</span>
+                </a>
+              </Button>
             ) : null}
             <Button
               className="h-7 px-2.5 text-[0.8125rem]"

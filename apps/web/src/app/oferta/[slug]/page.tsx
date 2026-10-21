@@ -11,6 +11,9 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageIntro } from "@/components/page-intro";
+import { ArticlesSection } from "@/features/education/articles-section";
+import { toPeople } from "@/features/education/article-page";
+import { getArticleCategories, getServiceArticles } from "@/lib/education-data";
 import { bookingHref } from "@/features/booking/search-params";
 import { bookingCta, rooms, siteUrl } from "@/content/site";
 import {
@@ -68,6 +71,10 @@ export default async function ServicePage({
       getServicePage(),
     ]);
   if (!service) notFound();
+  const [articles, categories] = await Promise.all([
+    getServiceArticles(service.id),
+    getArticleCategories(),
+  ]);
   const [firstVisit] = intake;
   const bookFirst: Route = firstVisit
     ? bookingHref({ usluga: firstVisit })
@@ -133,6 +140,14 @@ export default async function ServicePage({
             .filter(Boolean)
             .join(" · "),
         }))}
+      />
+
+      <ArticlesSection
+        articles={articles}
+        categories={categories}
+        heading="Warto przeczytać"
+        id="artykuly-uslugi"
+        people={toPeople(specialists)}
       />
 
       <FeatureSection

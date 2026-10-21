@@ -93,6 +93,7 @@ export function ArticleWorkspace(props: ArticleWorkspaceProps) {
     <div className="flex min-h-0 flex-1 flex-col">
       <WorkspaceBar
         actions={actions}
+        previewHref={`/podglad?artykul=${id}`}
         back={{ href: "/artykuly", label: "Artykuły" }}
         kind="artykuł"
         state={state}
