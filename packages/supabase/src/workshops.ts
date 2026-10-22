@@ -2,7 +2,7 @@ import type { Database, Json } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Workshops (docs/product/workshops-plan.md; migrations
-// 20261022130000_workshop_registrations.sql, 20261023090000_workshop_signup.sql).
+// 20261023080000_workshop_registrations.sql, 20261023090000_workshop_signup.sql).
 // The site reads public workshops with anyone's client; the guest's steps
 // (hold a seat, details, pay or pay later, the waitlist, the code) and the
 // payment's settling run on the site's server with the service-role

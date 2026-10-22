@@ -6,7 +6,7 @@
 -- the site shows Warsztaty in its menu and on its homepage.
 --
 -- Every function here checks the admin role. The workshop’s own triggers
--- (20261022130000) still check the blocks, the seats and the cancelling.
+-- (20261023080000) still check the blocks, the seats and the cancelling.
 
 -- ------------------------------------------------------------ the site’s switches
 

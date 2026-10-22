@@ -255,7 +255,7 @@ location the rest of that section already assumes.
 
 ## Registrations, blocking and the waitlist (22.10)
 
-Migration `20261022130000_workshop_registrations.sql`, plan and decisions
+Migration `20261023080000_workshop_registrations.sql`, plan and decisions
 in [workshops-plan.md](../product/workshops-plan.md). This supersedes the
 "Registrations", "Payments" (in part) and "Scheduling conflicts" notes
 below.

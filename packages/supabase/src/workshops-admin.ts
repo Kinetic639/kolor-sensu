@@ -4,7 +4,7 @@ import { uploadSiteImage } from "./cms";
 import type { WorkshopModality, WorkshopStatus } from "./workshops";
 
 // Workshops in the admin portal (docs/product/workshops-plan.md, PR 2;
-// migration 20261023120000_workshop_admin.sql): the list with seats and
+// migration 20261023130000_workshop_admin.sql): the list with seats and
 // money, one workshop for its form, saving it whole, publishing,
 // withdrawing, deleting, confirming and cancelling, and the site's two
 // switches. The database checks the admin role; a refusal keeps its hint
