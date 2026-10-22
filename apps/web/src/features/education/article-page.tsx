@@ -23,6 +23,7 @@ import {
   EbookCard,
   JsonLd,
 } from "@repo/ui/public-site";
+import type { ReactNode } from "react";
 import { bookingHref } from "@/features/booking/search-params";
 import { educationPage, siteUrl } from "@/content/site";
 import { articleImageUrl } from "@/lib/education-data";
@@ -67,6 +68,7 @@ export function ArticlePageView({
   all,
   therapyNote,
   ebook,
+  newsletter = null,
 }: {
   article: PublishedArticle;
   categories: readonly ArticleCategory[];
@@ -80,6 +82,8 @@ export function ArticlePageView({
   therapyNote: string;
   /** The e-book it recommends (published only). */
   ebook: PublishedEbook | null;
+  /** The newsletter's sign-up, after the article (while the CMS shows it). */
+  newsletter?: ReactNode;
 }) {
   const category = categories.find((one) => one.id === article.categoryId);
   const author = articleAuthor(article, people);
@@ -160,6 +164,7 @@ export function ArticlePageView({
           />
         </div>
       ) : null}
+      {newsletter}
       <ArticleServices
         services={services
           .filter((one) => links.serviceIds.includes(one.id))

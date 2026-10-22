@@ -38,7 +38,8 @@
     "./offer-layout": "./src/offer-layout.ts",
     "./specialist": "./src/specialist.ts",
     "./contact": "./src/contact.ts",
-    "./newsletter": "./src/newsletter.ts"
+    "./newsletter": "./src/newsletter.ts",
+    "./newsletter-issue": "./src/newsletter-issue.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

@@ -28,7 +28,14 @@ describe("readDetailsForm", () => {
         acceptTerms: true,
         acceptPrivacy: true,
       },
+      newsletter: false,
     });
+  });
+
+  it("reads the newsletter apart from the booking's consents", () => {
+    expect(readDetailsForm(form({ ...filled, newsletter: "on" }))).toEqual(
+      expect.objectContaining({ ok: true, newsletter: true }),
+    );
   });
 
   it("says what is wrong, field by field, keeping what was typed", () => {
@@ -46,6 +53,7 @@ describe("readDetailsForm", () => {
         email: "jan@",
         acceptTerms: true,
         acceptPrivacy: false,
+        newsletter: false,
       },
     });
   });

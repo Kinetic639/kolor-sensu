@@ -14,7 +14,7 @@ const DONE: Record<
   { text: string; alert?: boolean }
 > = {
   confirmed: {
-    text: "Gotowe, jesteś na liście. Pierwszy newsletter przyjdzie z najbliższym wydaniem. Wypisać się możesz w każdej chwili, linkiem w każdej wiadomości.",
+    text: "Gotowe, jesteś na liście. Wysłaliśmy Ci krótkie powitanie, a pierwszy newsletter przyjdzie z najbliższym wydaniem. Wypisać się możesz w każdej chwili, linkiem w każdej wiadomości.",
   },
   already: {
     text: "Ten adres jest już na liście. Nic więcej nie trzeba robić.",

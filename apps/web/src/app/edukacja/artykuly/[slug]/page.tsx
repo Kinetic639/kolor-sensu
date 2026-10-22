@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ArticlePageView, toPeople } from "@/features/education/article-page";
+import { NewsletterSection } from "@/features/newsletter/newsletter-section";
 import { articleHref, articleSeo } from "@/features/education/article-view";
 import {
   articleImageUrl,
@@ -21,6 +22,7 @@ import {
 // An article (docs/product/education-plan.md, PR 4): prerendered for each
 // published one and refreshed when the portal publishes. An old address
 // moves to the current one; a draft or a withdrawn article is not found.
+// Under it, the newsletter's sign-up while the CMS shows the newsletter.
 
 export async function generateStaticParams() {
   const articles = await getArticles();
@@ -90,6 +92,9 @@ export default async function ArticlePage({
       services={services}
       therapyNote={words.therapyNote}
       ebook={ebooks.find((one) => one.id === article.ebookId) ?? null}
+      newsletter={
+        <NewsletterSection className="w-full py-0" source="article" />
+      }
     />
   );
 }

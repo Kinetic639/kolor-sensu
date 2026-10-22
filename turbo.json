@@ -10,6 +10,7 @@
         "ADMIN_URL",
         "SPECIALIST_URL",
         "EMAIL_FROM",
+        "NEWSLETTER_FROM",
         "SUPABASE_SECRET_KEY",
         "CMS_REVALIDATE_SECRET",
         "CMS_PREVIEW_SECRET",

@@ -49,6 +49,7 @@ import {
   loadBookingParams,
 } from "./search-params";
 import { visitLabel } from "./visit-label";
+import { signUpForNewsletter } from "@/features/newsletter/signup-server";
 
 // The booking steps that write. The forms carry only the wizard's choices
 // and the client's details; the time's instant, the offer and the price
@@ -237,6 +238,17 @@ export async function saveDetailsAction(
     // The questionnaire, where the service asks for it, tied to the visit.
     await attachVisitIntake(db, token, (await readIntake())?.token ?? null);
     await saveBookingDetails(db, token, form.details);
+    if (form.newsletter) {
+      // Its own consent, confirmed by its own link; the visit goes on
+      // whatever happens to it.
+      const ip = clientIp(await headers());
+      const { email } = form.details;
+      after(() =>
+        signUpForNewsletter(email, "booking", ip).catch((error: unknown) => {
+          console.error("[booking] the newsletter sign-up failed:", error);
+        }),
+      );
+    }
   } catch (error) {
     if (error instanceof BookingError && error.code === "intake_required") {
       return {
@@ -247,6 +259,7 @@ export async function saveDetailsAction(
           notes: form.details.notes ?? "",
           acceptTerms: true,
           acceptPrivacy: true,
+          newsletter: form.newsletter,
         },
         message:
           "Ta konsultacja zaczyna się od krótkiego testu. Wróć do wyboru usługi, wypełnij go i wybierz termin ponownie.",
@@ -264,6 +277,7 @@ export async function saveDetailsAction(
           notes: form.details.notes ?? "",
           acceptTerms: true,
           acceptPrivacy: true,
+          newsletter: form.newsletter,
         },
         message: "Sprawdź, proszę, swoje dane i spróbuj ponownie.",
       };

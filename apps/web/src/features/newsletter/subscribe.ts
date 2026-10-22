@@ -81,41 +81,58 @@ export async function subscribeToNewsletter(
     return { status: "unverified", email };
   }
 
+  const status = await requestNewsletterSignup(
+    parsed.data.email,
+    parsed.data.source,
+    deps,
+  );
+  return status === "sent" ? { status } : { status, email };
+}
+
+/**
+ * The sign-up itself, once the address and the consent are checked and a
+ * person is behind it (the form's Turnstile, or a booking in progress):
+ * saved with the consent as shown, then the link to confirm it goes out
+ * (only for a new or expired one). "limited": a sixth within the hour.
+ */
+export async function requestNewsletterSignup(
+  email: string,
+  source: NewsletterSource,
+  deps: Omit<SubscribeDeps, "verify">,
+): Promise<"sent" | "limited" | "failed"> {
   const token = deps.token?.() ?? randomBytes(32).toString("base64url");
   const tokenHash = hashToken(token);
   let answer: "send" | "wait" | "active";
   try {
     answer = await deps.save({
-      email: parsed.data.email,
-      source: parsed.data.source,
+      email,
+      source,
       consentText: newsletterConsentText(deps.controller),
       consentVersion: NEWSLETTER_CONSENT_VERSION,
       senderKey: deps.senderKey,
       tokenHash,
     });
   } catch (error) {
-    if (error instanceof NewsletterRateLimitedError) {
-      return { status: "limited", email };
-    }
+    if (error instanceof NewsletterRateLimitedError) return "limited";
     console.error("[newsletter] saving the sign-up failed:", error);
-    return { status: "failed", email };
+    return "failed";
   }
-  if (answer !== "send") return { status: "sent" };
+  if (answer !== "send") return "sent";
 
   try {
     await deps.send(
-      parsed.data.email,
+      email,
       newsletterConfirmationContent(newsletterConfirmUrl(deps.siteUrl, token)),
       `newsletter-confirm-${tokenHash.slice(0, 32)}`,
     );
   } catch (error) {
     console.error("[newsletter] the confirmation e-mail failed:", error);
-    return { status: "failed", email };
+    return "failed";
   }
   try {
-    await deps.markSent(parsed.data.email);
+    await deps.markSent(email);
   } catch (error) {
     console.error("[newsletter] recording the e-mail failed:", error);
   }
-  return { status: "sent" };
+  return "sent";
 }

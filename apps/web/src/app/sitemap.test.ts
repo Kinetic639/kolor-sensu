@@ -28,12 +28,18 @@ vi.mock("@/lib/education-data", () => ({
   ],
 }));
 
+let issues: { number: number; sendAt: string }[] = [];
+vi.mock("@/lib/newsletter-data", () => ({
+  getNewsletterArchive: async () => issues,
+}));
+
 const { default: sitemap } = await import("./sitemap");
 
 beforeEach(() => {
   hidden = new Set();
   articles = [];
   ebooks = [];
+  issues = [];
 });
 
 const urls = async () => (await sitemap()).map((entry) => entry.url);
@@ -93,6 +99,17 @@ describe("the sitemap", () => {
       expect.arrayContaining([
         `${siteUrl}/edukacja/ebooki`,
         `${siteUrl}/edukacja/ebooki/spokojny-sen`,
+      ]),
+    );
+  });
+
+  it("lists the newsletter's archive once an issue is in it", async () => {
+    expect(await urls()).not.toContain(`${siteUrl}/newsletter`);
+    issues = [{ number: 1, sendAt: "2026-10-22T08:00:00Z" }];
+    expect(await urls()).toEqual(
+      expect.arrayContaining([
+        `${siteUrl}/newsletter`,
+        `${siteUrl}/newsletter/1`,
       ]),
     );
   });

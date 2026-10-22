@@ -5,12 +5,21 @@ import { z } from "zod";
 // database keeps the consent as the person saw it, with its version; a new
 // wording gets a new version.
 
-export const NEWSLETTER_SOURCES = ["home", "footer"] as const;
+export const NEWSLETTER_SOURCES = [
+  "home",
+  "footer",
+  "booking",
+  "article",
+  "archive",
+] as const;
 export type NewsletterSource = (typeof NEWSLETTER_SOURCES)[number];
 
 export const NEWSLETTER_SOURCE_LABELS: Record<NewsletterSource, string> = {
   home: "Strona główna",
   footer: "Stopka",
+  booking: "Rezerwacja wizyty",
+  article: "Pod artykułem",
+  archive: "Archiwum newslettera",
 };
 
 /** Change it whenever the consent's words change. */
