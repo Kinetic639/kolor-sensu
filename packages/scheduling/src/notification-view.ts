@@ -32,6 +32,10 @@ export interface NotificationLike {
     refundDueMinor: number | null;
     priceMinor: number | null;
     currencyCode: string | null;
+    /** A dispute: the amount, Stripe's status and reason. */
+    amountMinor?: number | null;
+    disputeStatus?: string | null;
+    disputeReason?: string | null;
   };
 }
 
@@ -105,6 +109,18 @@ const PROFILE_KINDS = new Set([
   "profile_rejected",
 ]);
 const SOON_MS = 48 * 60 * 60 * 1000;
+
+/** Stripe's dispute reasons, as the centre reads them. */
+const DISPUTE_REASONS: Record<string, string> = {
+  fraudulent: "Posiadacz karty nie rozpoznaje płatności",
+  duplicate: "Płatność pobrana dwa razy",
+  product_not_received: "Usługa nie została wykonana",
+  product_unacceptable: "Usługa niezgodna z opisem",
+  subscription_canceled: "Usługa była anulowana",
+  credit_not_processed: "Brak obiecanego zwrotu",
+  unrecognized: "Klient nie rozpoznaje płatności",
+  general: "Inny powód",
+};
 
 export function notificationView(
   notification: NotificationLike,
@@ -246,6 +262,15 @@ export function notificationView(
     [title, tone, icon] = ["Rezerwacja anulowana", "danger", "cancelled"];
   } else if (kind === "refunded") {
     [title, tone, icon] = ["Zwrot pieniędzy", "info", "refund"];
+  } else if (kind === "disputed") {
+    [title, tone, icon] = ["Spór o płatność", "danger", "refund"];
+  } else if (kind === "dispute_closed") {
+    [title, tone, icon] =
+      d.disputeStatus === "won"
+        ? ["Spór wygrany", "success", "refund"]
+        : d.disputeStatus === "lost"
+          ? ["Spór przegrany", "danger", "refund"]
+          : ["Spór zakończony", "neutral", "refund"];
   } else if (kind === "unpaid_limit") {
     [title, tone, icon] = [
       "Za dużo nieopłaconych rezerwacji",
@@ -372,6 +397,25 @@ export function notificationView(
   }
   if (admin && kind === "refunded" && d.refundMinor !== null) {
     details.push({ label: "Zwrócono", value: money(d.refundMinor) });
+  }
+  if (kind === "disputed" || kind === "dispute_closed") {
+    if (d.amountMinor != null) {
+      details.push({ label: "Kwota sporu", value: money(d.amountMinor) });
+    }
+    if (d.disputeReason) {
+      details.push({
+        label: "Powód",
+        value: DISPUTE_REASONS[d.disputeReason] ?? d.disputeReason,
+      });
+    }
+    if (kind === "disputed") {
+      details.push({
+        label: "Co zrobić",
+        value:
+          "Bank klienta cofnął płatność. Odpowiedz na spór w panelu Stripe w wyznaczonym terminie i dołącz potwierdzenie wizyty.",
+        tone: "danger",
+      });
+    }
   }
   if (kind === "unpaid_limit") {
     details.push({

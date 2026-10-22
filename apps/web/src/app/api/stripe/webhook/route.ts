@@ -1,11 +1,13 @@
 import { claimStripeEvent, releaseStripeEvent } from "@repo/supabase";
-import { handleStripeEvent } from "@/features/booking/payment";
+import { eventFitsKey, handleStripeEvent } from "@/features/booking/payment";
 import { paymentDeps } from "@/features/booking/payment-server";
 import { stripeServer } from "@/lib/stripe";
 import { createSecretClient } from "@/lib/supabase/secret";
 
 // Stripe's webhook (docs/product/booking-plan.md, R6): the raw body, its
 // signature checked with STRIPE_WEBHOOK_SECRET, each event handled once.
+// An event of the other mode (a test one on live keys, or the reverse) is
+// answered and ignored.
 // A failure gives the event back and answers 500, so Stripe retries.
 
 export const runtime = "nodejs";
@@ -24,6 +26,11 @@ export async function POST(request: Request) {
     event = stripeServer().webhooks.constructEvent(body, signature, secret);
   } catch {
     return new Response("Invalid signature", { status: 400 });
+  }
+
+  if (!eventFitsKey(event.livemode, process.env.STRIPE_SECRET_KEY)) {
+    console.warn(`[stripe] ${event.type} ${event.id}: another mode, ignored`);
+    return new Response("Ignored: another mode", { status: 200 });
   }
 
   const db = createSecretClient();

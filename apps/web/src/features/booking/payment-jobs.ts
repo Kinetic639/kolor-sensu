@@ -3,7 +3,9 @@ import type { DueBookingEmail } from "@repo/supabase";
 import type { VisitEmailKind } from "./email/send-visit-email";
 
 // The scheduled job behind pay-later (docs/product/booking-plan.md, R11),
-// every 15 minutes: cancel the reservations not paid in time, then send
+// every 15 minutes: ask Stripe how the payments still pending hours on
+// ended (their event lost, audit R7), cancel the reservations not paid in
+// time, then send
 // what is due (the payment reminders a day and six hours before, the
 // cancellations for want of payment, the reminders a day before a paid
 // visit). The database says what is due and claims each e-mail, so a
@@ -11,6 +13,8 @@ import type { VisitEmailKind } from "./email/send-visit-email";
 // lazily whenever someone books, so the calendar never waits for this job.
 
 export interface PaymentJobDeps {
+  /** Settles or frees the payments stuck pending; how many. Never throws. */
+  checkStuck: () => Promise<number>;
   cancelUnpaid: () => Promise<string[]>;
   listDue: () => Promise<DueBookingEmail[]>;
   /** Never throws. */
@@ -21,6 +25,7 @@ export interface PaymentJobDeps {
 }
 
 export async function runPaymentJobs(deps: PaymentJobDeps) {
+  const stuck = await deps.checkStuck();
   const cancelled = await deps.cancelUnpaid();
   const due = await deps.listDue();
   const tally = { sent: 0, skipped: 0, failed: 0 };
@@ -28,7 +33,7 @@ export async function runPaymentJobs(deps: PaymentJobDeps) {
     if (kind === "rescheduled" || kind === "refunded") continue;
     tally[await deps.send(reference, kind)] += 1;
   }
-  return { cancelled, ...tally };
+  return { stuck, cancelled, ...tally };
 }
 
 /** The database's schedule sends `Authorization: Bearer <CRON_SECRET>`. */

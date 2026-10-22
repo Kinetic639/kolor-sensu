@@ -67,7 +67,19 @@ const KINDS: Record<string, { title: string; tone: VisitTone }> = {
   email_sent: { title: "Wysłano e-mail", tone: "neutral" },
   reserved: { title: "Zarezerwowano, płatność później", tone: "info" },
   refund_issued: { title: "Zwrot zlecony przez centrum", tone: "info" },
+  reservation_confirmed: {
+    title: "Klient potwierdził rezerwację",
+    tone: "info",
+  },
+  payment_disputed: {
+    title: "Bank klienta otworzył spór o płatność",
+    tone: "danger",
+  },
+  dispute_closed: { title: "Spór zakończony", tone: "neutral" },
 };
+
+// A reservation is held this long until it is confirmed from its e-mail.
+const CONFIRM_WINDOW_MS = 31 * 60 * 1000;
 
 export function visitEventRows(
   events: VisitEventLike[],
@@ -119,9 +131,34 @@ export function visitEventRows(
       }
       case "reserved": {
         const due = day(d.payment_due_at);
+        // Since 22.10 held only until confirmed from the e-mail (30 min).
+        const toConfirm =
+          typeof d.payment_due_at === "string" &&
+          Date.parse(d.payment_due_at) - Date.parse(event.occurredAt) <=
+            CONFIRM_WINDOW_MS;
+        detail = due
+          ? toConfirm
+            ? `Do potwierdzenia z e-maila do ${due}`
+            : `Opłata do ${due}`
+          : null;
+        break;
+      }
+      case "reservation_confirmed": {
+        const due = day(d.payment_due_at);
         detail = due ? `Opłata do ${due}` : null;
         break;
       }
+      case "payment_disputed":
+      case "dispute_closed":
+        detail = money(d.amount_minor)
+          ? `Kwota: ${money(d.amount_minor)}`
+          : null;
+        if (event.kind === "dispute_closed" && d.status === "won") {
+          title = "Spór wygrany: płatność zostaje";
+        } else if (event.kind === "dispute_closed" && d.status === "lost") {
+          title = "Spór przegrany: pieniądze wróciły do klienta";
+        }
+        break;
       case "rescheduled": {
         const from = day(d.from_starts_at);
         const to = day(d.to_starts_at);
@@ -175,7 +212,13 @@ export function visitEventRows(
       tone:
         event.kind === "created" && event.actor === "centre"
           ? "info"
-          : (known?.tone ?? "neutral"),
+          : event.kind === "dispute_closed"
+            ? d.status === "won"
+              ? "success"
+              : d.status === "lost"
+                ? "danger"
+                : "neutral"
+            : (known?.tone ?? "neutral"),
       restored: d.restored === true,
     };
   });

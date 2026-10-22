@@ -3086,4 +3086,99 @@ END;
 $body$;
 RESET ROLE;
 
+-- AA: Stripe's side (audit of 22.10). A dispute on a visit's payment is
+-- written to its history and told to the admins, when it opens and when
+-- it closes; payments pending two hours on are listed for the job to ask
+-- Stripe about; a reservation past its time is cancelled even with a
+-- payment begun for it, once that payment's session is over.
+INSERT INTO public.payments (appointment_id, checkout_session_id, payment_intent_id, amount_minor, currency_code, status)
+SELECT id, 'cs_aa_paid', 'pi_aa_disputed', 25000, 'PLN', 'succeeded'
+FROM z_visits WHERE name = 'z2';
+INSERT INTO public.payments (appointment_id, checkout_session_id, amount_minor, currency_code, created_at)
+SELECT id, 'cs_aa_stuck', 25000, 'PLN', now() - interval '3 hours'
+FROM z_visits WHERE name = 'z1';
+INSERT INTO public.payments (appointment_id, checkout_session_id, amount_minor, currency_code, created_at)
+SELECT id, 'cs_aa_recent', 25000, 'PLN', now() - interval '10 minutes'
+FROM z_visits WHERE name = 'z2';
+
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  v_z2 uuid := (SELECT id FROM z_visits WHERE name = 'z2');
+  v_admins bigint := (SELECT count(DISTINCT user_id) FROM public.user_roles WHERE role = 'admin');
+BEGIN
+  IF public.record_dispute('pi_aa_disputed', 'du_1', 'needs_response', 25000, 'fraudulent', false)
+     IS DISTINCT FROM (SELECT reference FROM z_visits WHERE name = 'z2') THEN
+    RAISE EXCEPTION 'AA: the dispute did not find its visit';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.appointment_events
+    WHERE appointment_id = v_z2 AND kind = 'payment_disputed' AND actor = 'payment'
+      AND details ->> 'reason' = 'fraudulent' AND (details ->> 'amount_minor')::integer = 25000
+  ) THEN
+    RAISE EXCEPTION 'AA: the history does not say the payment is disputed';
+  END IF;
+  IF (SELECT count(*) FROM public.notifications
+      WHERE appointment_id = v_z2 AND kind = 'disputed' AND portal = 'admin'
+        AND details ->> 'dispute_reason' = 'fraudulent') <> v_admins THEN
+    RAISE EXCEPTION 'AA: the admins were not told of the dispute';
+  END IF;
+  PERFORM public.record_dispute('pi_aa_disputed', 'du_1', 'lost', 25000, 'fraudulent', true);
+  IF NOT EXISTS (
+    SELECT 1 FROM public.appointment_events
+    WHERE appointment_id = v_z2 AND kind = 'dispute_closed' AND details ->> 'status' = 'lost'
+  ) OR (SELECT count(*) FROM public.notifications
+        WHERE appointment_id = v_z2 AND kind = 'dispute_closed') <> v_admins THEN
+    RAISE EXCEPTION 'AA: the closed dispute was not recorded';
+  END IF;
+  IF public.record_dispute('pi_not_ours', 'du_2', 'needs_response', 100, 'general', false) IS NOT NULL THEN
+    RAISE EXCEPTION 'AA: a dispute on another payment found a visit';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM public.list_stuck_payments() WHERE checkout_session_id = 'cs_aa_stuck')
+     OR EXISTS (SELECT 1 FROM public.list_stuck_payments() WHERE checkout_session_id = 'cs_aa_recent') THEN
+    RAISE EXCEPTION 'AA: the stuck payments: %',
+      (SELECT array_agg(checkout_session_id) FROM public.list_stuck_payments());
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- z1 (confirmed) past its time with an old payment begun: cancelled; z2
+-- (not confirmed) past its time with a payment begun minutes ago: kept.
+UPDATE public.appointments SET payment_due_at = now() - interval '1 minute'
+WHERE id IN (SELECT id FROM z_visits WHERE name IN ('z1', 'z2'));
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  v_cancelled text[] := ARRAY(SELECT public.cancel_unpaid_visits());
+BEGIN
+  IF NOT (SELECT reference FROM z_visits WHERE name = 'z1') = ANY (v_cancelled)
+     OR (SELECT status FROM public.appointments WHERE id = (SELECT id FROM z_visits WHERE name = 'z1')) <> 'cancelled' THEN
+    RAISE EXCEPTION 'AA: an overdue reservation with a payment long over was kept';
+  END IF;
+  IF (SELECT status FROM public.appointments WHERE id = (SELECT id FROM z_visits WHERE name = 'z2')) <> 'awaiting_payment' THEN
+    RAISE EXCEPTION 'AA: cancelled while the client was paying';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.record_dispute('pi_x', 'du_x', 'lost', 1, 'general', true);
+    RAISE EXCEPTION 'AA: anon recorded a dispute';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.list_stuck_payments();
+    RAISE EXCEPTION 'AA: anon listed payments';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;
