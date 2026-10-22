@@ -73,8 +73,16 @@ export interface PaymentDeps {
     paymentIntentId: string | null,
   ) => Promise<FulfillmentOutcome>;
   fail: (sessionId: string, reason: "failed" | "expired") => Promise<void>;
-  /** Gives the money back for a time that was taken meanwhile. */
-  refundLostSlot: (sessionId: string, paymentIntentId: string) => Promise<void>;
+  /**
+   * Gives back a payment that did not count (the time was taken meanwhile,
+   * the visit was paid already or cancelled, or the price changed).
+   */
+  refundPayment: (
+    sessionId: string,
+    paymentIntentId: string,
+    amountMinor: number,
+    reference: string,
+  ) => Promise<void>;
   recordRefund: (
     paymentIntentId: string,
     refundedMinor: number,
@@ -95,19 +103,31 @@ function paymentIntentId(value: string | { id: string } | null) {
 export async function settleSession(
   session: Pick<
     Stripe.Checkout.Session,
-    "id" | "payment_status" | "payment_intent" | "metadata"
+    "id" | "payment_status" | "payment_intent" | "metadata" | "amount_total"
   >,
-  deps: Pick<PaymentDeps, "fulfill" | "refundLostSlot" | "onConfirmed">,
+  deps: Pick<PaymentDeps, "fulfill" | "refundPayment" | "onConfirmed">,
 ) {
   const paid =
     session.payment_status === "paid" ||
     session.payment_status === "no_payment_required";
   const intent = paymentIntentId(session.payment_intent);
   const outcome = await deps.fulfill(session.id, paid, intent);
-  if (outcome === "slot_lost" && paid && intent) {
-    await deps.refundLostSlot(session.id, intent);
-  }
   const reference = session.metadata?.appointment_reference;
+  // The database answers this once per payment, so opening the return page
+  // again never refunds a payment that confirmed its visit.
+  if (
+    (outcome === "slot_lost" || outcome === "refund_payment") &&
+    paid &&
+    intent &&
+    session.amount_total
+  ) {
+    await deps.refundPayment(
+      session.id,
+      intent,
+      session.amount_total,
+      reference ?? session.id,
+    );
+  }
   if (
     reference &&
     (outcome === "confirmed" || outcome === "already_confirmed")

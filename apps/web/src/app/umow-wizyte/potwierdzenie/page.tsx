@@ -54,7 +54,11 @@ export default async function BookingConfirmationPage({
       : null;
 
   const status = visit?.booking.status;
-  const confirmed = status === "confirmed" || outcome === "confirmed";
+  const refunded = outcome === "refund_payment";
+  const settled = outcome === "already_settled";
+  // A second payment for a visit paid already says it went back.
+  const confirmed =
+    !refunded && (status === "confirmed" || outcome === "confirmed");
   const waiting = !confirmed && status === "awaiting_payment";
   const lost = outcome === "slot_lost";
 
@@ -73,10 +77,20 @@ export default async function BookingConfirmationPage({
             title: "Termin został zajęty",
             lead: "Płatność dotarła po tym, jak termin zajęła inna osoba. Zwróciliśmy pieniądze; wybierz, proszę, inny termin.",
           }
-        : {
-            title: "Płatność nie została zakończona",
-            lead: "Nie pobraliśmy żadnej opłaty. Możesz spróbować ponownie albo wybrać inny termin.",
-          };
+        : refunded
+          ? {
+              title: "Zwróciliśmy tę płatność",
+              lead: "Ta wizyta była już opłacona albo jej cena się zmieniła, więc tę płatność oddaliśmy w całości. Stan wizyty znajdziesz w linku z wiadomości e-mail.",
+            }
+          : settled
+            ? {
+                title: "Ta płatność jest już rozliczona",
+                lead: "Stan wizyty i ewentualnego zwrotu znajdziesz w linku z wiadomości e-mail.",
+              }
+            : {
+                title: "Płatność nie została zakończona",
+                lead: "Nie pobraliśmy żadnej opłaty. Możesz spróbować ponownie albo wybrać inny termin.",
+              };
 
   if (!visit) {
     return (

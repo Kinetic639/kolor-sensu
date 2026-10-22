@@ -99,7 +99,12 @@ export type FulfillmentOutcome =
   | "confirmed"
   | "already_confirmed"
   | "awaiting_payment"
+  /** The time was taken meanwhile, or the visit cancelled: refund it. */
   | "slot_lost"
+  /** Paid twice, or not the visit's price: refund this payment. */
+  | "refund_payment"
+  /** Settled before (confirmed or refunded): nothing to do. */
+  | "already_settled"
   | "unknown_session";
 
 /** A completed session: confirms the visit (idempotent). */

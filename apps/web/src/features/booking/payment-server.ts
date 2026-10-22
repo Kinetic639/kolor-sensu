@@ -8,6 +8,7 @@ import { createSecretClient } from "@/lib/supabase/secret";
 import { stripeServer } from "@/lib/stripe";
 import { sendVisitConfirmation } from "./email/confirmation-server";
 import type { PaymentDeps } from "./payment";
+import { refundThroughStripe, type RefundingStripe } from "./stripe-refund";
 
 // The payment steps' real dependencies: the database (secret client) and
 // Stripe. Server only.
@@ -18,12 +19,19 @@ export function paymentDeps(): PaymentDeps {
     fulfill: (sessionId, paid, intent) =>
       fulfillCheckoutSession(db, sessionId, paid, intent),
     fail: (sessionId, reason) => failCheckoutSession(db, sessionId, reason),
-    refundLostSlot: async (sessionId, paymentIntentId) => {
-      const refund = await stripeServer().refunds.create(
-        { payment_intent: paymentIntentId, reason: "requested_by_customer" },
-        { idempotencyKey: `slot-lost:${sessionId}` },
+    refundPayment: async (
+      sessionId,
+      paymentIntentId,
+      amountMinor,
+      reference,
+    ) => {
+      const refunded = await refundThroughStripe(
+        stripeServer() as unknown as RefundingStripe,
+        paymentIntentId,
+        amountMinor,
+        { reference, idempotencyKey: `slot-lost:${sessionId}` },
       );
-      await recordRefund(db, paymentIntentId, refund.amount);
+      await recordRefund(db, paymentIntentId, refunded);
     },
     recordRefund: (paymentIntentId, refundedMinor) =>
       recordRefund(db, paymentIntentId, refundedMinor),
