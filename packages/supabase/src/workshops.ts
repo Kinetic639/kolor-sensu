@@ -38,6 +38,9 @@ const REFUSALS = [
   "code_not_started",
   "code_expired",
   "code_not_here",
+  "code_too_big",
+  "code_used_up",
+  "too_many_attempts",
 ] as const;
 
 export type WorkshopRefusal = (typeof REFUSALS)[number] | "unknown";

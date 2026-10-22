@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import {
   applyDiscountCode,
   discountRefusal,
+  GUESS_REFUSALS,
+  noteDiscountRefusal,
   getBookingDiscount,
   listDiscountCodes,
   saveDiscountCode,
@@ -34,6 +36,7 @@ describe("the admin's codes", () => {
         scope: "workshops",
         workshop_id: "w1",
         workshop_title: "Uważność",
+        max_uses: 20,
       },
     ]);
     expect(await listDiscountCodes(client)).toEqual([
@@ -52,6 +55,7 @@ describe("the admin's codes", () => {
         scope: "workshops",
         workshopId: "w1",
         workshopTitle: "Uważność",
+        maxUses: 20,
       },
     ]);
   });
@@ -68,6 +72,7 @@ describe("the admin's codes", () => {
       note: "Listopad",
       scope: "all",
       workshopId: null,
+      maxUses: 50,
     });
     expect(call).toHaveBeenCalledWith("save_discount_code", {
       p_id: null,
@@ -80,6 +85,7 @@ describe("the admin's codes", () => {
       p_note: "Listopad",
       p_scope: "all",
       p_workshop_id: null,
+      p_max_uses: 50,
     });
   });
 });
@@ -111,5 +117,19 @@ describe("a code on a booking", () => {
       discountRefusal({ hint: "code_expired", message: "Code expired" }),
     ).toBe("code_expired");
     expect(discountRefusal({ hint: "", message: "boom" })).toBeNull();
+    for (const hint of ["code_too_big", "code_used_up", "too_many_attempts"]) {
+      expect(discountRefusal({ hint, message: "" })).toBe(hint);
+    }
+  });
+
+  it("counts a wrong guess against the hold, not the other refusals", async () => {
+    const { call, client } = rpc(null);
+    await noteDiscountRefusal(client, "token");
+    expect(call).toHaveBeenCalledWith("note_discount_refusal", {
+      p_access_token: "token",
+    });
+    expect(GUESS_REFUSALS.has("code_unknown")).toBe(true);
+    expect(GUESS_REFUSALS.has("code_used_up")).toBe(false);
+    expect(GUESS_REFUSALS.has("too_many_attempts")).toBe(false);
   });
 });

@@ -39,6 +39,7 @@ export async function listDiscountCodes(
     scope: row.scope as DiscountScope,
     workshopId: row.workshop_id,
     workshopTitle: row.workshop_title,
+    maxUses: row.max_uses ?? null,
   }));
 }
 
@@ -59,6 +60,7 @@ export async function saveDiscountCode(
     p_note: input.note,
     p_scope: input.scope,
     p_workshop_id: input.workshopId,
+    p_max_uses: input.maxUses,
   });
   if (error) throw error;
   return data;
@@ -89,10 +91,35 @@ export function discountRefusal(error: unknown): string | null {
     "code_not_started",
     "code_expired",
     "code_not_here",
+    "code_too_big",
+    "code_used_up",
+    "too_many_attempts",
     "hold_expired",
   ].includes(hint)
     ? hint
     : null;
+}
+
+/** The refusals a guess may cause, counted against the hold. */
+export const GUESS_REFUSALS = new Set([
+  "code_unknown",
+  "code_not_started",
+  "code_expired",
+  "code_not_here",
+]);
+
+/**
+ * A refused code, counted against the hold (a visit's or a workshop
+ * seat's): after 10 in an hour no code is tried (too_many_attempts).
+ */
+export async function noteDiscountRefusal(
+  secretClient: Client,
+  accessToken: string,
+) {
+  const { error } = await secretClient.rpc("note_discount_refusal", {
+    p_access_token: accessToken,
+  });
+  if (error) throw error;
 }
 
 /** Applies a code to a held visit (service role); its new price. */

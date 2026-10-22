@@ -47,6 +47,14 @@ export const discountCodeInputSchema = z
     scope: z.enum(DISCOUNT_SCOPES).default("consultations"),
     /** One workshop only (with scope "workshops"). */
     workshopId: z.uuid().nullable().default(null),
+    /** How many visits and seats may have it; null: no limit. */
+    maxUses: z
+      .number()
+      .int()
+      .min(1, "Limit użyć: co najmniej 1.")
+      .max(100_000, "Za duży limit użyć.")
+      .nullable()
+      .default(null),
   })
   .refine((input) => !input.workshopId || input.scope === "workshops", {
     message: "Jeden warsztat wybiera się przy zakresie „Warsztaty”.",
@@ -141,6 +149,11 @@ export const DISCOUNT_PROBLEMS: Record<string, string> = {
   code_not_started: "Ten kod jeszcze nie działa.",
   code_expired: "Ten kod już wygasł.",
   code_not_here: "Ten kod nie działa na tę usługę.",
+  code_too_big:
+    "Ten kod zostawia do zapłaty mniej niż 2 zł, a tak małej płatności nie przyjmiemy. Skontaktuj się z nami.",
+  code_used_up: "Ten kod został już wykorzystany.",
+  too_many_attempts:
+    "Za dużo prób wpisania kodu. Spróbuj ponownie za godzinę albo skontaktuj się z nami.",
   discount_code_used:
     "Tego kodu użyto już przy wizytach: zamiast usuwać, wyłącz go.",
 };

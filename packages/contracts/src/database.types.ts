@@ -395,6 +395,7 @@ export type Database = {
           ends_on: string | null;
           id: string;
           kind: string;
+          max_uses: number | null;
           note: string;
           scope: string;
           starts_on: string | null;
@@ -409,6 +410,7 @@ export type Database = {
           ends_on?: string | null;
           id?: string;
           kind: string;
+          max_uses?: number | null;
           note?: string;
           scope?: string;
           starts_on?: string | null;
@@ -423,6 +425,7 @@ export type Database = {
           ends_on?: string | null;
           id?: string;
           kind?: string;
+          max_uses?: number | null;
           note?: string;
           scope?: string;
           starts_on?: string | null;
@@ -2396,7 +2399,12 @@ export type Database = {
           scope: string;
           workshop_id: string | null;
           workshop_title: string | null;
+          max_uses: number | null;
         }[];
+      };
+      note_discount_refusal: {
+        Args: { p_access_token: string };
+        Returns: undefined;
       };
       list_newsletter_archive: {
         Args: never;
@@ -2437,6 +2445,7 @@ export type Database = {
           p_note: string;
           p_scope: string;
           p_workshop_id: string | null;
+          p_max_uses?: number | null;
         };
         Returns: string;
       };
