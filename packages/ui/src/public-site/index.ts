@@ -155,3 +155,11 @@ export {
   EbookPrice,
 } from "./ebook-parts";
 export type { EbookCardData, EbookPriceData } from "./ebook-parts";
+export {
+  NewsletterArchiveList,
+  NewsletterIssueCards,
+} from "./newsletter-issue";
+export type {
+  NewsletterArchiveEntry,
+  NewsletterCardData,
+} from "./newsletter-issue";

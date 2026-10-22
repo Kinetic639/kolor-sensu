@@ -16,12 +16,15 @@ import {
   getArticles,
   getEbooks,
 } from "@/lib/education-data";
+import { getNewsletterArchive } from "@/lib/newsletter-data";
+import { newsletterArchiveHref } from "@repo/contracts/newsletter-issue";
 
 // Every public page, including each published service, specialist and
 // article and e-book (with the date its text last changed) and each category in use,
-// but those the CMS keeps out of search engines ("noindex").
+// and the newsletter's archive once an issue is in it, but those the CMS
+// keeps out of search engines ("noindex").
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [services, specialists, hidden, articles, categories, ebooks] =
+  const [services, specialists, hidden, articles, categories, ebooks, issues] =
     await Promise.all([
       getServices(),
       getSpecialists(),
@@ -29,6 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       getArticles(),
       getArticleCategories(),
       getEbooks(),
+      getNewsletterArchive(),
     ]);
   const page = (
     path: string,
@@ -68,6 +72,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           ...ebooks.map((ebook) => ({
             ...page(ebookHref(ebook.slug), 0.6),
             lastModified: ebook.contentUpdatedAt,
+          })),
+        ]
+      : []),
+    ...(issues.length
+      ? [
+          page("/newsletter", 0.4),
+          ...issues.map((issue) => ({
+            ...page(newsletterArchiveHref(issue.number), 0.3),
+            lastModified: issue.sendAt,
           })),
         ]
       : []),

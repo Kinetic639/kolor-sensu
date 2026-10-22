@@ -1,10 +1,18 @@
-import type { Database } from "@repo/contracts/database";
+import type { Database, Json } from "@repo/contracts/database";
 import type {
   NewsletterSource,
   NewsletterStatus,
   NewsletterStopReason,
   NewsletterSubscriber,
 } from "@repo/contracts/newsletter";
+import {
+  readNewsletterContent,
+  type NewsletterArchiveIssue,
+  type NewsletterIssue,
+  type NewsletterIssueDraft,
+  type NewsletterIssueRow,
+  type NewsletterIssueStatus,
+} from "@repo/contracts/newsletter-issue";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // The newsletter (docs/architecture/newsletter-domain.md, migration
@@ -204,4 +212,167 @@ export async function removeNewsletterSubscriber(
     p_id: id,
   });
   if (error) throw error;
+}
+
+// ------------------------------------------------------------ issues
+
+const toIssueRow = (row: {
+  id: string;
+  number: number | null;
+  subject: string;
+  status: string;
+  send_at: string | null;
+  recipients: number | null;
+  stopped_after: number | null;
+  in_archive: boolean;
+  updated_at: string;
+}): NewsletterIssueRow => ({
+  id: row.id,
+  number: row.number,
+  subject: row.subject,
+  status: row.status as NewsletterIssueStatus,
+  sendAt: row.send_at,
+  recipients: row.recipients,
+  stoppedAfter: row.stopped_after,
+  inArchive: row.in_archive,
+  updatedAt: row.updated_at,
+});
+
+export async function listNewsletterIssues(
+  client: Client,
+): Promise<NewsletterIssueRow[]> {
+  const { data, error } = await client.rpc("list_newsletter_issues");
+  if (error) throw error;
+  return (data ?? []).map(toIssueRow);
+}
+
+export async function getNewsletterIssue(
+  client: Client,
+  id: string,
+): Promise<NewsletterIssue | null> {
+  const { data, error } = await client.rpc("get_newsletter_issue", {
+    p_id: id,
+  });
+  if (error) throw error;
+  const row = data?.[0];
+  if (!row) return null;
+  return {
+    id: row.id,
+    number: row.number,
+    subject: row.subject,
+    previewText: row.preview_text,
+    ...readNewsletterContent(row),
+    inArchive: row.in_archive,
+    status: row.status as NewsletterIssueStatus,
+    sendAt: row.send_at,
+    broadcastId: row.broadcast_id,
+    recipients: row.recipients,
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function createNewsletterIssue(client: Client): Promise<string> {
+  const { data, error } = await client.rpc("create_newsletter_issue");
+  if (error) throw error;
+  return data;
+}
+
+export async function saveNewsletterIssue(
+  client: Client,
+  id: string,
+  draft: NewsletterIssueDraft,
+): Promise<void> {
+  const { error } = await client.rpc("save_newsletter_issue", {
+    p_id: id,
+    p_subject: draft.subject,
+    p_preview_text: draft.previewText,
+    p_intro: draft.intro as unknown as Json,
+    p_items: draft.items as unknown as Json,
+    p_closing: draft.closing as unknown as Json,
+    p_in_archive: draft.inArchive,
+  });
+  if (error) throw error;
+}
+
+export async function setNewsletterIssueArchive(
+  client: Client,
+  id: string,
+  inArchive: boolean,
+): Promise<void> {
+  const { error } = await client.rpc("set_newsletter_issue_archive", {
+    p_id: id,
+    p_in_archive: inArchive,
+  });
+  if (error) throw error;
+}
+
+export async function deleteNewsletterIssue(
+  client: Client,
+  id: string,
+): Promise<void> {
+  const { error } = await client.rpc("delete_newsletter_issue", { p_id: id });
+  if (error) throw error;
+}
+
+/** Sending, step 1: the draft is taken; null sends now. */
+export async function claimNewsletterIssue(
+  client: Client,
+  id: string,
+  sendAt: string | null,
+): Promise<void> {
+  const { error } = await client.rpc("claim_newsletter_issue", {
+    p_id: id,
+    // A null time sends now (the database's default).
+    p_send_at: sendAt as string,
+  });
+  if (error) throw error;
+}
+
+/** Sending, step 2: Resend has it; its number. */
+export async function finishNewsletterIssue(
+  client: Client,
+  id: string,
+  broadcastId: string,
+): Promise<number> {
+  const { data, error } = await client.rpc("finish_newsletter_issue", {
+    p_id: id,
+    p_broadcast_id: broadcastId,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/** Sending failed: the draft comes back. */
+export async function releaseNewsletterIssue(
+  client: Client,
+  id: string,
+): Promise<void> {
+  const { error } = await client.rpc("release_newsletter_issue", { p_id: id });
+  if (error) throw error;
+}
+
+/** A scheduled issue taken back (after Resend cancelled it). */
+export async function unscheduleNewsletterIssue(
+  client: Client,
+  id: string,
+): Promise<void> {
+  const { error } = await client.rpc("unschedule_newsletter_issue", {
+    p_id: id,
+  });
+  if (error) throw error;
+}
+
+/** The issues gone out and kept in the site's archive, newest first. */
+export async function listNewsletterArchive(
+  client: Client,
+): Promise<NewsletterArchiveIssue[]> {
+  const { data, error } = await client.rpc("list_newsletter_archive");
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    number: row.number,
+    subject: row.subject,
+    previewText: row.preview_text,
+    ...readNewsletterContent(row),
+    sendAt: row.send_at,
+  }));
 }

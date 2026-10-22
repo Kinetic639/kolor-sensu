@@ -5,11 +5,13 @@ import { ConfirmationEmail } from "@/features/booking/email/confirmation-email";
 import {
   newsletterConfirmationContent,
   newsletterConfirmUrl,
+  newsletterWelcomeContent,
 } from "./confirmation-email";
 
-// The newsletter's own e-mail for the admin's portal (CMS → E-maile): the
-// confirmation link, built as the real one, with a sample token. The
-// newsletter itself is written and sent in Resend.
+// The newsletter's own e-mails for the admin's portal (CMS → E-maile): the
+// confirmation link, built as the real one with a sample token, and the
+// welcome after it. The issues themselves have their own preview
+// (Newsletter → Wydania).
 
 export async function newsletterEmailPreviews(
   siteUrl: string,
@@ -18,6 +20,7 @@ export async function newsletterEmailPreviews(
   const content = newsletterConfirmationContent(
     newsletterConfirmUrl(siteUrl, "przyklad"),
   );
+  const welcome = newsletterWelcomeContent(siteUrl);
   return [
     {
       key: "newsletter-confirm",
@@ -31,6 +34,19 @@ export async function newsletterEmailPreviews(
         <ConfirmationEmail company={company} content={content} />,
       ),
       text: withCompany(content.text, company),
+    },
+    {
+      key: "newsletter-welcome",
+      group: "Newsletter",
+      name: "Powitanie w newsletterze",
+      when: "Zaraz po potwierdzeniu zapisu linkiem.",
+      attachment: null,
+      subject: welcome.subject,
+      preview: welcome.preview,
+      html: await render(
+        <ConfirmationEmail company={company} content={welcome} />,
+      ),
+      text: withCompany(welcome.text, company),
     },
   ];
 }

@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  NEWSLETTER_CONSENT_LINK_LABEL,
+  newsletterConsentLead,
+} from "@repo/contracts/newsletter";
 import { BookingField, ConsentCheckbox } from "@repo/ui/booking/fields";
 import { PrimaryButton, SecondaryButton } from "@repo/ui/public-site/actions";
 import { useActionState } from "react";
@@ -14,18 +18,23 @@ import {
 // Step 5: the client's details and consents. A plain form posted to the
 // server (it works before JavaScript loads); errors come back per field.
 // Then "Zapłać teraz", or, when the visit is far enough ahead, "Zarezerwuj,
-// zapłacę później" (R11): paid from the e-mailed link by `payLater`.
+// zapłacę później" (R11): paid from the e-mailed link by `payLater`. While
+// the newsletter is on, a separate, unticked "send me the newsletter" (its
+// own consent; a link to confirm it follows by e-mail).
 
 export function DetailsForm({
   saved,
   payLater,
   free = false,
+  newsletterController = null,
 }: {
   saved: DetailsFormValues | null;
   /** A discount code covers the whole price: nothing to pay. */
   free?: boolean;
   /** "8 października 2030, godz. 11:00", or null: pay now only. */
   payLater: string | null;
+  /** Who handles the newsletter's data; none: the newsletter is off. */
+  newsletterController?: string | null;
 }) {
   const [state, action, pending] = useActionState<DetailsFormState, FormData>(
     saveDetailsAction,
@@ -121,6 +130,25 @@ export function DetailsForm({
           text="Zapoznałem(-am) się z"
         />
       </fieldset>
+
+      {newsletterController ? (
+        <fieldset className="grid gap-2">
+          <legend className="text-small text-ink mb-1 font-medium">
+            Newsletter (dobrowolnie)
+          </legend>
+          <ConsentCheckbox
+            defaultChecked={values?.newsletter}
+            linkHref="/polityka-prywatnosci"
+            linkLabel={NEWSLETTER_CONSENT_LINK_LABEL}
+            name="newsletter"
+            text={newsletterConsentLead(newsletterController)}
+          />
+          <p className="text-small text-text-muted">
+            Wyślemy osobny e-mail z linkiem do potwierdzenia zapisu. Rezerwacja
+            nie zależy od tej zgody.
+          </p>
+        </fieldset>
+      ) : null}
 
       <div className="grid gap-3">
         <div className="flex flex-wrap gap-3">

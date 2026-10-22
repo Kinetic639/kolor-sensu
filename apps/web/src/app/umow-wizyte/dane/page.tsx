@@ -7,7 +7,8 @@ import { DetailsForm } from "@/features/booking/details-form";
 import { DiscountForm } from "@/features/booking/discount-form";
 import { payLaterUntil } from "@/features/booking/pay-later";
 import { deadlineLabel, localTime } from "@/features/booking/visit-label";
-import { getBookingWindow } from "@/lib/public-data";
+import { newsletterController } from "@/features/newsletter/signup-server";
+import { getBookingWindow, getNewsletterBand } from "@/lib/public-data";
 
 export const metadata: Metadata = {
   title: "Twoje dane · Umów wizytę",
@@ -16,11 +17,15 @@ export const metadata: Metadata = {
 
 // Step 5: the client's details for their held visit, with a discount
 // code; saving them goes on to the payment, reserves the visit to pay
-// later (R11), or, when the code covers it all, confirms it.
+// later (R11), or, when the code covers it all, confirms it. The newsletter
+// is offered while the CMS shows it.
 export default async function BookingDetailsPage() {
   const visit = await requireLiveHold();
   const { booking, timeZone, discount } = visit;
-  const window = await getBookingWindow();
+  const [window, newsletter] = await Promise.all([
+    getBookingWindow(),
+    getNewsletterBand(),
+  ]);
   const until = payLaterUntil(booking.startsAt, window?.paymentDueHours);
 
   return (
@@ -35,6 +40,9 @@ export default async function BookingDetailsPage() {
       </div>
       <DetailsForm
         free={booking.priceMinor === 0}
+        newsletterController={
+          newsletter.visible ? await newsletterController() : null
+        }
         payLater={until ? deadlineLabel(until, timeZone) : null}
         saved={
           booking.details

@@ -759,6 +759,60 @@ export type Database = {
         };
         Relationships: [];
       };
+      newsletter_issues: {
+        Row: {
+          broadcast_id: string | null;
+          closing: Json;
+          created_at: string;
+          id: string;
+          in_archive: boolean;
+          intro: Json;
+          items: Json;
+          number: number | null;
+          preview_text: string;
+          recipients: number | null;
+          send_at: string | null;
+          sent_by: string | null;
+          status: string;
+          subject: string;
+          updated_at: string;
+        };
+        Insert: {
+          broadcast_id?: string | null;
+          closing?: Json;
+          created_at?: string;
+          id?: string;
+          in_archive?: boolean;
+          intro?: Json;
+          items?: Json;
+          number?: number | null;
+          preview_text?: string;
+          recipients?: number | null;
+          send_at?: string | null;
+          sent_by?: string | null;
+          status?: string;
+          subject?: string;
+          updated_at?: string;
+        };
+        Update: {
+          broadcast_id?: string | null;
+          closing?: Json;
+          created_at?: string;
+          id?: string;
+          in_archive?: boolean;
+          intro?: Json;
+          items?: Json;
+          number?: number | null;
+          preview_text?: string;
+          recipients?: number | null;
+          send_at?: string | null;
+          sent_by?: string | null;
+          status?: string;
+          subject?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       newsletter_subscribers: {
         Row: {
           confirmation_sent_at: string | null;
@@ -1989,6 +2043,34 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      claim_newsletter_issue: {
+        Args: { p_id: string; p_send_at: string };
+        Returns: undefined;
+      };
+      create_newsletter_issue: { Args: never; Returns: string };
+      delete_newsletter_issue: { Args: { p_id: string }; Returns: undefined };
+      finish_newsletter_issue: {
+        Args: { p_broadcast_id: string; p_id: string };
+        Returns: number;
+      };
+      get_newsletter_issue: {
+        Args: { p_id: string };
+        Returns: {
+          broadcast_id: string;
+          closing: Json;
+          id: string;
+          in_archive: boolean;
+          intro: Json;
+          items: Json;
+          number: number;
+          preview_text: string;
+          recipients: number;
+          send_at: string;
+          status: string;
+          subject: string;
+          updated_at: string;
+        }[];
+      };
       list_discount_codes: {
         Args: never;
         Returns: {
@@ -2005,6 +2087,33 @@ export type Database = {
           discount_total_minor: number;
         }[];
       };
+      list_newsletter_archive: {
+        Args: never;
+        Returns: {
+          closing: Json;
+          intro: Json;
+          items: Json;
+          number: number;
+          preview_text: string;
+          send_at: string;
+          subject: string;
+        }[];
+      };
+      list_newsletter_issues: {
+        Args: never;
+        Returns: {
+          id: string;
+          in_archive: boolean;
+          number: number;
+          recipients: number;
+          send_at: string;
+          status: string;
+          stopped_after: number;
+          subject: string;
+          updated_at: string;
+        }[];
+      };
+      release_newsletter_issue: { Args: { p_id: string }; Returns: undefined };
       save_discount_code: {
         Args: {
           p_id: string | null;
@@ -2074,6 +2183,22 @@ export type Database = {
           tags: string[];
         }[];
       };
+      save_newsletter_issue: {
+        Args: {
+          p_closing: Json;
+          p_id: string;
+          p_in_archive: boolean;
+          p_intro: Json;
+          p_items: Json;
+          p_preview_text: string;
+          p_subject: string;
+        };
+        Returns: undefined;
+      };
+      set_newsletter_issue_archive: {
+        Args: { p_id: string; p_in_archive: boolean };
+        Returns: undefined;
+      };
       unclosed_visits_summary: {
         Args: { p_own?: boolean };
         Returns: {
@@ -2082,6 +2207,10 @@ export type Database = {
           specialist_name: string;
           visits: number;
         }[];
+      };
+      unschedule_newsletter_issue: {
+        Args: { p_id: string };
+        Returns: undefined;
       };
       visits_to_close_by_specialist: {
         Args: never;
