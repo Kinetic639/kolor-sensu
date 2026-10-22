@@ -151,9 +151,10 @@ export async function recordRefund(
 }
 
 /**
- * A dispute (a chargeback) on a visit's payment, opened or closed: written
- * to its history, the admins told. The visit's reference, or null when the
- * payment is not a visit's.
+ * A dispute (a chargeback) on a visit's or a workshop seat's payment,
+ * opened or closed: written to the visit's history, the admins told. Found
+ * by the payment, or by its reference when the payment is not settled yet.
+ * The reference, or null when the payment is neither.
  */
 export async function recordDispute(
   client: Client,
@@ -164,6 +165,8 @@ export async function recordDispute(
     amountMinor: number;
     reason: string;
     closed: boolean;
+    /** The visit's or the seat's (the payment's metadata), if known. */
+    reference?: string | null;
   },
 ) {
   const { data, error } = await client.rpc("record_dispute", {
@@ -173,6 +176,7 @@ export async function recordDispute(
     p_amount_minor: dispute.amountMinor,
     p_reason: dispute.reason,
     p_closed: dispute.closed,
+    p_reference: dispute.reference ?? undefined,
   });
   if (error) throw error;
   return data ?? null;

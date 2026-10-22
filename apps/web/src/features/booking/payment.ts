@@ -104,6 +104,11 @@ export interface PaymentDeps {
   };
   /** A dispute (a chargeback) opened or closed: the history and the admins. */
   recordDispute: (dispute: DisputeRecord) => Promise<unknown>;
+  /**
+   * The visit's or the seat's reference Stripe keeps with a payment (its
+   * metadata), for a dispute that comes before the payment is settled.
+   */
+  paymentReference?: (paymentIntentId: string) => Promise<string | null>;
 }
 
 export interface DisputeRecord {
@@ -115,6 +120,8 @@ export interface DisputeRecord {
   /** Stripe's: `fraudulent`, `product_not_received`… */
   reason: string;
   closed: boolean;
+  /** The visit's or the seat's, from the payment's metadata. */
+  reference: string | null;
 }
 
 function paymentIntentId(value: string | { id: string } | null) {
@@ -196,6 +203,7 @@ export async function handleStripeEvent(
         amountMinor: dispute.amount,
         reason: dispute.reason,
         closed: event.type === "charge.dispute.closed",
+        reference: (await deps.paymentReference?.(intent)) ?? null,
       });
       return;
     }

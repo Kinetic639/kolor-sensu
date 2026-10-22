@@ -187,6 +187,7 @@ describe("a dispute on a visit's payment", () => {
         amountMinor: 25000,
         reason: "fraudulent",
         closed: false,
+        reference: "2610-004",
       }),
     ).toBe("2610-004");
     expect(rpc).toHaveBeenCalledWith("record_dispute", {
@@ -196,6 +197,7 @@ describe("a dispute on a visit's payment", () => {
       p_amount_minor: 25000,
       p_reason: "fraudulent",
       p_closed: false,
+      p_reference: "2610-004",
     });
   });
 });

@@ -3181,4 +3181,26 @@ END;
 $body$;
 RESET ROLE;
 
+-- AB: a dispute that comes before its payment is settled (its intent not
+-- stored yet) finds the visit by the reference Stripe keeps with it.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  v_z1 uuid := (SELECT id FROM z_visits WHERE name = 'z1');
+  v_ref text := (SELECT reference FROM z_visits WHERE name = 'z1');
+BEGIN
+  IF public.record_dispute('pi_ab_unknown', 'du_ab', 'needs_response', 25000, 'general', false, v_ref)
+     IS DISTINCT FROM v_ref THEN
+    RAISE EXCEPTION 'AB: the dispute did not find the visit by its reference';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.appointment_events
+    WHERE appointment_id = v_z1 AND kind = 'payment_disputed' AND details ->> 'dispute_id' = 'du_ab'
+  ) THEN
+    RAISE EXCEPTION 'AB: the history does not say the payment is disputed';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

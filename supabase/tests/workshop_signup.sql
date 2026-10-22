@@ -252,4 +252,34 @@ END;
 $$;
 RESET ROLE;
 
+-- J: a dispute on a seat's payment tells the admins (by the payment, or by
+-- the seat's reference when the payment is not settled yet).
+DO $$
+DECLARE
+  v_ref text := (
+    SELECT seat.reference FROM public.workshop_payments AS payment
+    JOIN public.workshop_registrations AS seat ON seat.id = payment.registration_id
+    WHERE payment.payment_intent_id = 'pi_test_ws_a1'
+  );
+  v_admins bigint := (SELECT count(DISTINCT user_id) FROM public.user_roles WHERE role = 'admin');
+BEGIN
+  IF public.record_dispute('pi_test_ws_a1', 'du_ws_1', 'needs_response', 5000, 'fraudulent', false)
+     IS DISTINCT FROM v_ref THEN
+    RAISE EXCEPTION 'J: the dispute did not find the seat by its payment';
+  END IF;
+  IF (SELECT count(*) FROM public.notifications
+      WHERE kind = 'disputed' AND appointment_id IS NULL AND details ->> 'reference' = v_ref
+        AND details ->> 'service_name' = 'Warsztat A') <> v_admins THEN
+    RAISE EXCEPTION 'J: the admins were not told of the seat''s dispute';
+  END IF;
+  IF public.record_dispute('pi_not_stored_yet', 'du_ws_2', 'lost', 5000, 'fraudulent', true, v_ref)
+     IS DISTINCT FROM v_ref THEN
+    RAISE EXCEPTION 'J: the dispute did not find the seat by its reference';
+  END IF;
+  IF public.record_dispute('pi_nobodys', 'du_ws_3', 'lost', 100, 'general', true, 'NO-SUCH') IS NOT NULL THEN
+    RAISE EXCEPTION 'J: a dispute found a seat that is not there';
+  END IF;
+END;
+$$;
+
 ROLLBACK;
