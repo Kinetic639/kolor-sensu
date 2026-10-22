@@ -39,6 +39,18 @@ export function paymentDeps(): PaymentDeps {
       recordRefund(db, paymentIntentId, refundedMinor),
     onConfirmed: sendVisitConfirmation,
     recordDispute: (dispute) => recordDispute(db, dispute),
+    paymentReference: async (paymentIntentId) => {
+      try {
+        const { metadata } =
+          await stripeServer().paymentIntents.retrieve(paymentIntentId);
+        return (
+          metadata.appointment_reference ?? metadata.workshop_reference ?? null
+        );
+      } catch (error) {
+        console.error("[booking] reading a payment's reference failed:", error);
+        return null;
+      }
+    },
   };
 }
 

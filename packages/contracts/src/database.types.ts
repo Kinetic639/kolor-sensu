@@ -3671,6 +3671,7 @@ export type Database = {
           p_dispute_id: string;
           p_payment_intent_id: string;
           p_reason: string;
+          p_reference?: string;
           p_status: string;
         };
         Returns: string | null;
