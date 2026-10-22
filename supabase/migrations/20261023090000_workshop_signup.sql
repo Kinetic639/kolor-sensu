@@ -714,6 +714,11 @@ AS $$
 DECLARE
   v_registration public.workshop_registrations%ROWTYPE;
   v_token text;
+  -- The registration’s state the e-mail is about.
+  v_status text := CASE p_kind
+    WHEN 'confirmation' THEN 'confirmed'
+    WHEN 'reserved' THEN 'awaiting_payment'
+    ELSE 'waitlisted' END;
 BEGIN
   IF p_kind NOT IN ('confirmation', 'reserved', 'waitlisted') THEN
     RAISE EXCEPTION 'Unknown e-mail %', p_kind USING ERRCODE = 'invalid_parameter_value';
@@ -721,10 +726,7 @@ BEGIN
   SELECT * INTO v_registration FROM public.workshop_registrations AS r
   WHERE r.reference = p_reference FOR UPDATE;
   IF NOT FOUND OR v_registration.client_email IS NULL
-     OR v_registration.status::text <> CASE p_kind
-       WHEN 'confirmation' THEN 'confirmed'
-       WHEN 'reserved' THEN 'awaiting_payment'
-       ELSE 'waitlisted' END
+     OR v_registration.status::text <> v_status
   THEN
     RETURN;
   END IF;
