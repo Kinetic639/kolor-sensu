@@ -96,6 +96,13 @@ export const workshopInputSchema = z
 
 export type WorkshopInput = z.infer<typeof workshopInputSchema>;
 
+/** The portal asks the site to cancel a workshop (with refunds). */
+export const workshopCancelRequestSchema = z.strictObject({
+  reason: z.string().trim().max(1000).nullable(),
+});
+
+export type WorkshopCancelRequest = z.infer<typeof workshopCancelRequestSchema>;
+
 /** What the database's refusals say to the admin. */
 export const WORKSHOP_ADMIN_PROBLEMS: Record<string, string> = {
   slug_taken: "Ten adres ma już inny warsztat. Zmień adres.",

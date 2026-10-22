@@ -92,6 +92,9 @@ vi.mock("@/features/newsletter/newsletter-signup", () => ({
   ),
 }));
 
+// The coming workshops read on their own (an async section).
+vi.mock("@/components/home-workshops", () => ({ HomeWorkshops: () => null }));
+
 vi.mock("@/lib/site-frame", () => ({
   getSiteFrame: async () => ({ contact: published.contact }),
 }));

@@ -35,7 +35,14 @@ export function SiteImageField({
 }: {
   id: string;
   folder:
-    "hero" | "story" | "seo" | "appearance" | "about" | "articles" | "ebooks";
+    | "hero"
+    | "story"
+    | "seo"
+    | "appearance"
+    | "about"
+    | "articles"
+    | "ebooks"
+    | "workshops";
   label: string;
   hint: string;
   value: SiteImageValue;

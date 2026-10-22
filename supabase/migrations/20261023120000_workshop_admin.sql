@@ -272,10 +272,10 @@ BEGIN
     RAISE EXCEPTION 'Only a draft is published' USING HINT = 'not_draft';
   END IF;
   IF v_workshop.short_description IS NULL THEN
-    v_missing := v_missing || 'short_description';
+    v_missing := array_append(v_missing, 'short_description');
   END IF;
   IF v_workshop.starts_at <= now() THEN
-    v_missing := v_missing || 'starts_at';
+    v_missing := array_append(v_missing, 'starts_at');
   END IF;
   IF array_length(v_missing, 1) > 0 THEN
     RAISE EXCEPTION 'The workshop is not complete'

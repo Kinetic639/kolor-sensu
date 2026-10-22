@@ -17,6 +17,7 @@ import {
   BookOpen,
   Newspaper,
   TicketPercent,
+  Presentation,
 } from "lucide-react";
 import { Fragment, type ElementType, type ReactNode } from "react";
 import {
@@ -60,6 +61,7 @@ const portalIcons = {
   settings: Settings,
   specialist: UserRound,
   specialists: Users,
+  workshops: Presentation,
 } satisfies Record<string, LucideIcon>;
 
 export type PortalNavigationIcon = keyof typeof portalIcons;
