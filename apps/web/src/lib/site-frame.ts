@@ -9,6 +9,7 @@ import {
 import { cache } from "react";
 import { bookingCta, footerAbout, legalLinks } from "@/content/site";
 import { getArticles, getEbooks } from "@/lib/education-data";
+import { getWorkshopVisibility } from "./workshop-data";
 import {
   getAnnouncement,
   getCenter,
@@ -49,6 +50,7 @@ const serviceLink = (service: PublicService) => ({
 function navigation(
   offer: PublicOfferEntry[],
   education: { articles: boolean; ebooks: boolean },
+  workshops = true,
 ): SiteNavItem[] {
   return [
     {
@@ -78,7 +80,8 @@ function navigation(
         ),
       }),
     },
-    { label: "Warsztaty", href: "/warsztaty" },
+    // Shown while the portal's switch says so (Warsztaty → Na stronie).
+    ...(workshops ? [{ label: "Warsztaty", href: "/warsztaty" }] : []),
     {
       label: "Edukacja",
       href: "/edukacja",
@@ -111,6 +114,7 @@ export const getSiteFrame = cache(async () => {
     hours,
     articles,
     ebooks,
+    workshopVisibility,
   ] = await Promise.all([
     getCenter(),
     getLocations(),
@@ -122,6 +126,7 @@ export const getSiteFrame = cache(async () => {
     getSiteContact().then((details) => details.hours),
     getArticles(),
     getEbooks(),
+    getWorkshopVisibility(),
   ]);
   // The first location with a usable address.
   const location = locations.find((one) => one.addressLine1 && one.city);
@@ -154,10 +159,11 @@ export const getSiteFrame = cache(async () => {
   ];
 
   return {
-    navigation: navigation(offer, {
-      articles: articles.length > 0,
-      ebooks: ebooks.length > 0,
-    }),
+    navigation: navigation(
+      offer,
+      { articles: articles.length > 0, ebooks: ebooks.length > 0 },
+      workshopVisibility.inMenu,
+    ),
     cta: bookingCta,
     contact,
     socials,

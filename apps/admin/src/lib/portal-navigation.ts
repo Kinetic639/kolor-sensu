@@ -26,6 +26,7 @@ export const adminNavigation: PortalNavigationSection[] = [
     label: "STRONA",
     items: [
       { label: "CMS", href: "/cms", icon: "cms" },
+      { label: "Warsztaty", href: "/warsztaty", icon: "workshops" },
       { label: "Artykuły", href: "/artykuly", icon: "articles" },
       { label: "E-booki", href: "/ebooki", icon: "ebooks" },
       { label: "Ogłoszenia", href: "/ogloszenia", icon: "announcements" },

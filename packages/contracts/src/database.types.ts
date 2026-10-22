@@ -694,6 +694,8 @@ export type Database = {
           centre_payment_link_hours: number;
           client_retention_years: number | null;
           intake_retention_months: number;
+          workshops_in_menu: boolean;
+          workshops_on_home: boolean;
           legal_name: string | null;
           regon: string | null;
           registered_address: string | null;
@@ -724,6 +726,8 @@ export type Database = {
           centre_payment_link_hours?: number;
           client_retention_years?: number | null;
           intake_retention_months?: number;
+          workshops_in_menu?: boolean;
+          workshops_on_home?: boolean;
           legal_name?: string | null;
           regon?: string | null;
           registered_address?: string | null;
@@ -754,6 +758,8 @@ export type Database = {
           centre_payment_link_hours?: number;
           client_retention_years?: number | null;
           intake_retention_months?: number;
+          workshops_in_menu?: boolean;
+          workshops_on_home?: boolean;
           legal_name?: string | null;
           regon?: string | null;
           registered_address?: string | null;
@@ -2643,6 +2649,61 @@ export type Database = {
           confirmed: boolean;
           updated_at: string;
         }[];
+      };
+      admin_list_workshops: {
+        Args: never;
+        Returns: {
+          id: string;
+          slug: string;
+          title: string;
+          status: Database["public"]["Enums"]["workshop_status"];
+          modality: Database["public"]["Enums"]["workshop_modality"];
+          starts_at: string;
+          ends_at: string;
+          capacity: number;
+          min_participants: number | null;
+          price_minor: number;
+          currency_code: string;
+          confirmed: boolean;
+          registration_enabled: boolean;
+          leaders: string | null;
+          location_name: string | null;
+          room_name: string | null;
+          confirmed_count: number;
+          awaiting_count: number;
+          held_count: number;
+          waitlist_count: number;
+          paid_minor: number;
+          updated_at: string;
+        }[];
+      };
+      admin_get_workshop: {
+        Args: { p_id: string };
+        Returns: Json;
+      };
+      save_workshop: {
+        Args: { p_id: string | null; p_data: Json };
+        Returns: string;
+      };
+      publish_workshop: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      unpublish_workshop: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      delete_workshop: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      workshop_visibility: {
+        Args: never;
+        Returns: { in_menu: boolean; on_home: boolean }[];
+      };
+      set_workshop_visibility: {
+        Args: { p_in_menu: boolean | null; p_on_home: boolean | null };
+        Returns: undefined;
       };
       cancel_workshop_registration: {
         Args: { p_access_token: string };

@@ -14,6 +14,7 @@ import {
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
 import { HomeLocation } from "@/components/home-location";
+import { HomeWorkshops } from "@/components/home-workshops";
 import { NewsletterSignup } from "@/features/newsletter/newsletter-signup";
 import { newsletterSiteKey } from "@/features/newsletter/site-key";
 import {
@@ -138,6 +139,7 @@ export default async function Home() {
       {roomPhotos.length > 0 ? (
         <RoomsPeek header={headers.rooms} photos={roomPhotos} />
       ) : null}
+      <HomeWorkshops />
       <PaintedStory
         header={headers.story}
         steps={toStorySteps(story, storyImages)}

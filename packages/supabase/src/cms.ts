@@ -394,7 +394,8 @@ export async function uploadSiteImage(
     | "appearance"
     | "about"
     | "articles"
-    | "ebooks",
+    | "ebooks"
+    | "workshops",
 ): Promise<string> {
   const problem = validateSpecialistImage(file);
   if (problem) throw new Error(problem);

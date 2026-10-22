@@ -18,7 +18,15 @@ Stan na 22.10 · PR-y: 1 / 7 zmergowanych (PR 3 i 4 razem w #168)
   - [x] testy SQL, typy
   - [x] CI zielone
   - [ ] zmergowany i sprawdzony na DEV
-- [ ] **PR 2 · Portal admina** — lista, tworzenie i edycja, termin, kolizje, podgląd, publikacja, potwierdzenie, wycofanie; CMS strony Warsztaty i wspólne zasady; przełącznik „Warsztaty w menu” i sekcja na stronie głównej (przeniesione z PR 3: oba ustawia admin)
+- [ ] **PR 2 · Portal admina** — [#171](https://github.com/Kinetic639/kolor-sensu/pull/171)
+  - [x] Warsztaty w menu portalu: lista (nadchodzące, szkice, minione, odwołane, szukaj) z terminem, prowadzącymi, miejscem, zapisanymi i wpłatami
+  - [x] edytor: tytuł, adres, krótki opis, okładka, opis w edytorze, dla kogo, program, data i godziny, forma, miejsce i sala albo link online, prowadzący i współprowadzący, cena, miejsca, minimum, koniec zapisów, Google
+  - [x] publikacja (sprawdza krótki opis i termin w przyszłości), kolizje sali i prowadzących nazwane, „Potwierdź warsztat”, wycofanie i usunięcie bez zapisanych
+  - [x] odwołanie z powodem: strona zwraca pieniądze przez Stripe każdemu, kto zapłacił
+  - [x] przełączniki „W menu strony” i „Na stronie głównej” (sekcja z dwoma najbliższymi warsztatami)
+  - [x] testy (SQL, kontrakt, widok, odwołanie), typy, lint
+  - [x] CI zielone
+  - [ ] sprawdzony na DEV (założenie, publikacja, zapis z BLIK, odwołanie ze zwrotem)
 - [ ] **PR 3 + 4 · Strona, zapis i płatność** — [#168](https://github.com/Kinetic639/kolor-sensu/pull/168)
   - [x] /warsztaty: nadchodzące (odwołany z etykietą do dnia terminu), minione, filtr formy, pusty stan z kontaktem
   - [x] /warsztaty/[adres]: jeden H1, termin, miejsce, prowadzący, cena, wolne miejsca, „Potwierdzony” / „Czeka na komplet”, opis z edytora, dla kogo, program, zasady, dane Event, mapa strony
