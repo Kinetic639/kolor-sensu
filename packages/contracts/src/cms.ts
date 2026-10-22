@@ -572,7 +572,7 @@ export const defaultHomeHeaders: HomeHeadersContent = {
     eyebrow: "Obszary wsparcia",
     title: "W czym możemy pomóc",
     description:
-      "Wybierz koło, aby zobaczyć, czym zajmujemy się w każdym z obszarów.",
+      "Wybierz kroplę, aby zobaczyć, czym zajmujemy się w każdym z obszarów.",
   }),
   whyUs: plainHeader({
     eyebrow: "Dlaczego my",

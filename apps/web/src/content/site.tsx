@@ -78,7 +78,7 @@ export const supportAreasCopy = {
   eyebrow: "Obszary wsparcia",
   heading: "W czym możemy pomóc",
   description:
-    "Wybierz koło, aby zobaczyć, czym zajmujemy się w każdym z obszarów.",
+    "Wybierz kroplę, aby zobaczyć, czym zajmujemy się w każdym z obszarów.",
 };
 
 export const defaultSupportAreas = [

@@ -3,11 +3,12 @@ import { expect } from "storybook/test";
 import { CursorRing } from "./cursor-ring";
 import { SupportAreas, type SupportAreaItem } from "./support-areas";
 
-// SupportAreas: the areas of help as small circles around a large one
-// (after Talking Walls' art counseling gallery). Point at a small circle
-// (or tap it) and its area shows in the large one; the small circles drift
-// at two depths as the section scrolls by. Areas without a photo are
-// painted in the theme's colours. On phones the large circle comes first.
+// SupportAreas: the areas of help as drops of paint around a large
+// watercolour blot. Point at a drop (or tap it) and its area blooms in the
+// blot, a pink thread running from the drop; scroll and the drops drift at
+// two depths against the blot's wash, move the mouse and they lean after
+// it. Areas without a photo are drops of plain paint. On phones the blot
+// comes first.
 
 const book = { href: "#umow-wizyte", linkLabel: "Umów wizytę" };
 
@@ -69,7 +70,7 @@ const meta = {
     eyebrow: "Obszary wsparcia",
     heading: "W czym możemy pomóc",
     description:
-      "Najedź na koło, aby zobaczyć, czym zajmujemy się w każdym z obszarów.",
+      "Wybierz kroplę, aby zobaczyć, czym zajmujemy się w każdym z obszarów.",
     areas,
     cta: { href: "#oferta", label: "Zobacz całą ofertę" },
   },
@@ -93,7 +94,12 @@ export const Default: Story = {
   },
 };
 
-/** The full ten circles the stage has room for. */
+/** On a phone: the blot first, the drops in rows under it. */
+export const Mobile: Story = {
+  globals: { viewport: { value: "mobile", isRotated: false } },
+};
+
+/** The full ten drops the stage has room for. */
 export const TenAreas: Story = {
   args: {
     areas: [...areas, ...areas].map((area, index) => ({
