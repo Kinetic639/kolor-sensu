@@ -25,7 +25,7 @@ Stan na 22.10 · PR-y: 1 / 7 zmergowanych (PR 3 i 4 razem w #168)
   - [x] odwołanie z powodem: strona zwraca pieniądze przez Stripe każdemu, kto zapłacił
   - [x] przełączniki „W menu strony” i „Na stronie głównej” (sekcja z dwoma najbliższymi warsztatami)
   - [x] testy (SQL, kontrakt, widok, odwołanie), typy, lint
-  - [ ] CI zielone
+  - [x] CI zielone
   - [ ] sprawdzony na DEV (założenie, publikacja, zapis z BLIK, odwołanie ze zwrotem)
 - [ ] **PR 3 + 4 · Strona, zapis i płatność** — [#168](https://github.com/Kinetic639/kolor-sensu/pull/168)
   - [x] /warsztaty: nadchodzące (odwołany z etykietą do dnia terminu), minione, filtr formy, pusty stan z kontaktem
