@@ -28,7 +28,7 @@ Stan na 22.10 · PR-y: 1 / 7 zmergowanych (PR 3 i 4 razem w #168)
   - [x] kody rabatowe z zakresem (konsultacje / warsztaty / jeden warsztat / wszystko) w portalu; dotychczasowe kody: konsultacje
   - [x] zadanie w tle kończy przeterminowane miejsca
   - [x] testy (SQL, kontrakty, supabase, widok, e-maile, płatność, UI ze stories), typy, lint
-  - [ ] CI zielone
+  - [x] CI zielone
   - [ ] sprawdzony na DEV (zapis z BLIK, zapłacę później, kod, lista rezerwowa)
 - [ ] **PR 5 · Po zapisie** — strona zapisu, rezygnacja i zwroty, przekazanie miejsca, przypomnienia o wpłacie i o warsztacie, lista rezerwowa, odwołanie przez centrum
 - [ ] **PR 6 · Uczestnicy w portalach** — lista uczestników, eksport, ręczny zapis, wiadomość do wszystkich, obecność, kalendarz, dashboard, powiadomienia, portal specjalisty
