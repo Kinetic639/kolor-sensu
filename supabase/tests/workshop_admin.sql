@@ -1,4 +1,4 @@
--- The workshops' admin (20261023120000): only admins save, publish,
+-- The workshops' admin (20261023130000): only admins save, publish,
 -- withdraw and delete; a workshop is saved whole (its co-leaders and online
 -- link with it); publishing wants a short description and a future date;
 -- withdrawing and deleting wait until nobody is signed up; the list counts

@@ -1,4 +1,4 @@
--- Workshop registrations (20261022130000): a published workshop blocks its
+-- Workshop registrations (20261023080000): a published workshop blocks its
 -- leaders and room (and a visit already there stops it); a guest holds a
 -- seat, gives details, pays later or (free) confirms; a full workshop has
 -- a waitlist, whose first person is offered a freed seat; refunds are full
