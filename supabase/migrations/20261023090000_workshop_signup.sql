@@ -215,7 +215,7 @@ CREATE INDEX workshop_registrations_discount_code_idx
 GRANT SELECT (list_price_minor, discount_minor, discount_code_id)
   ON public.workshop_registrations TO authenticated;
 
--- A registration's payments through Stripe.
+-- A registration’s payments through Stripe.
 CREATE TABLE public.workshop_payments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   registration_id uuid NOT NULL REFERENCES public.workshop_registrations (id) ON DELETE RESTRICT,
@@ -246,7 +246,7 @@ CREATE POLICY "Admins can read workshop payments" ON public.workshop_payments
   FOR SELECT TO authenticated
   USING (public.has_role('admin'::public.app_role));
 
--- A registration's e-mails, each sent once, each with its own link token.
+-- A registration’s e-mails, each sent once, each with its own link token.
 CREATE TABLE public.workshop_emails (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   registration_id uuid NOT NULL REFERENCES public.workshop_registrations (id) ON DELETE CASCADE,
@@ -262,7 +262,7 @@ ALTER TABLE public.workshop_emails ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.workshop_emails FORCE ROW LEVEL SECURITY;
 REVOKE ALL ON public.workshop_emails FROM anon, authenticated;
 
--- The registration's id for a guest's token: the one from their hold, or
+-- The registration’s id for a guest’s token: the one from their hold, or
 -- one an e-mail carried. No lock.
 CREATE OR REPLACE FUNCTION private.workshop_registration_id(p_access_token text)
 RETURNS uuid
@@ -281,7 +281,7 @@ AS $$
   );
 $$;
 
--- The registration row for a guest's token (either kind), locked.
+-- The registration row for a guest’s token (either kind), locked.
 CREATE OR REPLACE FUNCTION private.workshop_registration_by_token(p_access_token text)
 RETURNS public.workshop_registrations
 LANGUAGE sql
@@ -424,7 +424,7 @@ END;
 $$;
 
 -- A seat that can still be paid for: held or offered in time, or awaiting
--- payment before its due time; with the participant's details.
+-- payment before its due time; with the participant’s details.
 CREATE OR REPLACE FUNCTION private.payable_workshop_seat(p_access_token text)
 RETURNS public.workshop_registrations
 LANGUAGE plpgsql
@@ -507,7 +507,7 @@ $$;
 -- ------------------------------------------------------------ paying
 
 -- The Stripe session started for the seat (amount checked against the
--- seat's price); the earlier pending one stops counting. While the guest
+-- seat’s price); the earlier pending one stops counting. While the guest
 -- pays, the hold or offer stays theirs (never beyond a day).
 CREATE OR REPLACE FUNCTION public.attach_workshop_checkout(
   p_access_token text,
@@ -562,8 +562,8 @@ AS $$
 $$;
 
 -- A completed session: the seat is confirmed (paid). A seat whose hold
--- ran out is still confirmed while a seat is free; otherwise 'seat_lost'
--- (the site refunds it). 'pending' while a slow method has not paid yet.
+-- ran out is still confirmed while a seat is free; otherwise ’seat_lost’
+-- (the site refunds it). ’pending’ while a slow method has not paid yet.
 CREATE OR REPLACE FUNCTION public.fulfill_workshop_checkout(
   p_session_id text, p_paid boolean, p_payment_intent_id text
 )
@@ -646,7 +646,7 @@ BEGIN
 END;
 $$;
 
--- Stripe's refunded total for a payment; the registration's refunded sum
+-- Stripe’s refunded total for a payment; the registration’s refunded sum
 -- follows (never above what it paid).
 CREATE OR REPLACE FUNCTION public.record_workshop_refund(
   p_payment_intent_id text, p_refunded_minor integer
@@ -682,7 +682,7 @@ $$;
 
 -- ------------------------------------------------------------ e-mails
 
--- Claims a registration's e-mail of this kind if nobody sent it (and no
+-- Claims a registration’s e-mail of this kind if nobody sent it (and no
 -- send is under way): what it says, and the token of its link.
 CREATE OR REPLACE FUNCTION public.claim_workshop_email(p_reference text, p_kind text)
 RETURNS TABLE (
