@@ -41,6 +41,16 @@ describe("a discount code's form", () => {
     expect(parse({ scope: "workshops", workshopId })).toBe(true);
     expect(parse({ scope: "all", workshopId })).toBe(false);
   });
+
+  it("has no limit of uses unless one is set, of at least 1", () => {
+    expect(discountCodeInputSchema.parse(input).maxUses).toBeNull();
+    const parse = (maxUses: number | null) =>
+      discountCodeInputSchema.safeParse({ ...input, maxUses }).success;
+    expect(parse(20)).toBe(true);
+    expect(parse(null)).toBe(true);
+    expect(parse(0)).toBe(false);
+    expect(parse(1.5)).toBe(false);
+  });
 });
 
 describe("a discount", () => {

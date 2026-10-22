@@ -251,4 +251,93 @@ $$;
 
 RESET ROLE;
 
+-- ------------------------------------------------------------ the rules (audit of 22.10)
+-- A code leaves nothing or at least 2 zł to pay; a limited code's last use
+-- goes to whoever takes it first (a lapsed hold gives it back); 10 wrong
+-- codes in an hour on one hold, and no code is tried any more.
+
+INSERT INTO public.appointments (
+  reference, specialist_id, service_id, specialist_service_id, mode, room_id,
+  during, buffer_minutes, duration_minutes, price_minor, currency_code,
+  status, hold_expires_at, access_token_hash, client_name, client_email,
+  terms_accepted_at, privacy_accepted_at
+)
+SELECT ref, offer.specialist_id, offer.service_id, offer.id, 'online', NULL,
+  tstzrange(now() + make_interval(days => 7 + n), now() + make_interval(days => 7 + n, mins => 50)),
+  10, 50, 20000, 'PLN', 'held', now() + interval '10 minutes',
+  extensions.digest(token, 'sha256'), 'Gość Testowy', 'guest@example.invalid',
+  now(), now()
+FROM public.specialist_services AS offer
+JOIN public.services AS service ON service.id = offer.service_id
+CROSS JOIN (VALUES ('KS-DISC-3', 'token-3', 2), ('KS-DISC-4', 'token-4', 3)) AS visit(ref, token, n)
+WHERE service.slug = 'discount-test-consultation';
+INSERT INTO public.discount_codes (code, kind, value, max_uses)
+VALUES ('PRAWIE', 'amount', 19900, NULL), ('RAZ', 'percent', 10, 1);
+
+CREATE FUNCTION pg_temp.code_hint(p_token text, p_code text)
+RETURNS text
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_hint text;
+BEGIN
+  PERFORM public.apply_discount_code(p_token, p_code);
+  RETURN '';
+EXCEPTION WHEN OTHERS THEN
+  GET STACKED DIAGNOSTICS v_hint = PG_EXCEPTION_HINT;
+  RETURN coalesce(nullif(v_hint, ''), SQLERRM);
+END;
+$$;
+GRANT EXECUTE ON FUNCTION pg_temp.code_hint(text, text) TO service_role;
+
+SET LOCAL ROLE service_role;
+DO $$
+BEGIN
+  IF pg_temp.code_hint('token-3', 'PRAWIE') <> 'code_too_big' THEN
+    RAISE EXCEPTION 'R: a code leaving 1 zł to pay was accepted';
+  END IF;
+  IF pg_temp.code_hint('token-3', 'RAZ') <> '' OR pg_temp.code_hint('token-3', 'RAZ') <> '' THEN
+    RAISE EXCEPTION 'R: a code with a use left was refused (or counted against itself)';
+  END IF;
+  IF pg_temp.code_hint('token-4', 'RAZ') <> 'code_used_up' THEN
+    RAISE EXCEPTION 'R: a code past its uses was accepted';
+  END IF;
+END;
+$$;
+RESET ROLE;
+
+-- The first hold lapses: its use is free again.
+UPDATE public.appointments SET hold_expires_at = now() - interval '1 minute'
+WHERE reference = 'KS-DISC-3';
+SET LOCAL ROLE service_role;
+DO $$
+DECLARE
+  i integer;
+BEGIN
+  IF pg_temp.code_hint('token-4', 'RAZ') <> '' THEN
+    RAISE EXCEPTION 'R: a lapsed hold kept the code''s use';
+  END IF;
+  FOR i IN 1..10 LOOP
+    PERFORM public.note_discount_refusal('token-4');
+  END LOOP;
+  IF pg_temp.code_hint('token-4', 'MINUS50') <> 'too_many_attempts' THEN
+    RAISE EXCEPTION 'R: codes were still tried after 10 wrong ones';
+  END IF;
+  IF pg_temp.code_hint('token-2', 'MINUS50') = 'too_many_attempts' THEN
+    RAISE EXCEPTION 'R: another hold paid for the wrong guesses';
+  END IF;
+END;
+$$;
+RESET ROLE;
+
+SET LOCAL ROLE anon;
+DO $$
+BEGIN
+  PERFORM public.note_discount_refusal('token-1');
+  RAISE EXCEPTION 'R: anon noted a refusal';
+EXCEPTION WHEN insufficient_privilege THEN NULL;
+END;
+$$;
+RESET ROLE;
+
 ROLLBACK;

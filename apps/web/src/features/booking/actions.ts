@@ -17,6 +17,8 @@ import {
   applyDiscountCode,
   confirmFreeBooking,
   discountRefusal,
+  GUESS_REFUSALS,
+  noteDiscountRefusal,
   removeDiscountCode,
 } from "@repo/supabase/discount-codes";
 import { attachVisitIntake } from "@repo/supabase/intakes";
@@ -395,6 +397,9 @@ export async function applyDiscountAction(
     const hint = discountRefusal(error);
     if (hint === "hold_expired") redirect(EXPIRED);
     if (!hint) console.error("[booking] applying a code failed:", error);
+    // A wrong guess counts against the hold (10 an hour).
+    if (hint && GUESS_REFUSALS.has(hint))
+      await noteDiscountRefusal(db, token).catch(() => undefined);
     return { status: "refused", message: discountProblem(hint), code };
   }
   // The payment begun at the old price closes in Stripe too.

@@ -192,6 +192,7 @@ export function DiscountCodeManager({
                     </td>
                     <td className={`${cell} hidden tabular-nums sm:table-cell`}>
                       {code.usedCount}
+                      {code.maxUses ? ` / ${code.maxUses}` : ""}
                     </td>
                     <td className={`${cell} hidden tabular-nums lg:table-cell`}>
                       {formatMinor(code.discountTotalMinor)}
@@ -247,6 +248,9 @@ function CodeForm({
   const [endsOn, setEndsOn] = useState(initial?.endsOn ?? "");
   const [active, setActive] = useState(initial?.active ?? true);
   const [note, setNote] = useState(initial?.note ?? "");
+  const [maxUses, setMaxUses] = useState(
+    initial?.maxUses ? String(initial.maxUses) : "",
+  );
   const [scope, setScope] = useState<DiscountScope>(
     initial?.scope ?? "consultations",
   );
@@ -275,6 +279,12 @@ function CodeForm({
       note,
       scope,
       workshopId: scope === "workshops" && workshopId ? workshopId : null,
+      // Empty: no limit; anything but a whole number is refused.
+      maxUses: maxUses.trim()
+        ? /^\d+$/.test(maxUses.trim())
+          ? Number(maxUses.trim())
+          : 0
+        : null,
     };
     run(() => saveDiscountCodeAction(id, input), "Zapisano kod", onDone);
   }
@@ -325,6 +335,14 @@ function CodeForm({
           maxLength={300}
           onChange={setNote}
           value={note}
+        />
+        <TextField
+          hint="Ile wizyt i miejsc na warsztatach może go mieć. Puste: bez limitu."
+          id={`${prefix}-max-uses`}
+          label="Limit użyć"
+          maxLength={6}
+          onChange={setMaxUses}
+          value={maxUses}
         />
         <div className="grid content-start gap-1">
           <label className="text-sm font-medium" htmlFor={`${prefix}-starts`}>

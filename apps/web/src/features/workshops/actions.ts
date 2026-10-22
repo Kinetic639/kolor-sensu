@@ -26,6 +26,10 @@ import {
 } from "@/features/booking/details-form-data";
 import { discountProblem } from "@/features/booking/discount";
 import {
+  GUESS_REFUSALS,
+  noteDiscountRefusal,
+} from "@repo/supabase/discount-codes";
+import {
   clientIp,
   turnstileKeys,
   verifyTurnstile,
@@ -266,6 +270,9 @@ export async function applySeatCodeAction(
     const hint = error instanceof WorkshopError ? error.code : null;
     if (!hint || hint === "unknown")
       console.error("[workshops] applying a code failed:", error);
+    // A wrong guess counts against the hold (10 an hour).
+    if (hint && GUESS_REFUSALS.has(hint))
+      await noteDiscountRefusal(db, token).catch(() => undefined);
     return { status: "refused", message: discountProblem(hint), code };
   }
   // The payment begun at the old price closes in Stripe too.

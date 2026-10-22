@@ -50,5 +50,12 @@ kończy; PR jest odhaczony, gdy jest zmergowany i sprawdzony na DEV.
 - Kod wpisuje się na kroku **Dane**, zanim powstanie płatność; zmiana
   kodu unieważnia rozpoczętą płatność, a krok Płatność tworzy nową.
 - Rabat 100%: wizyta jest potwierdzana bez Stripe (osobna funkcja w bazie).
+- **Zasady kodów (audyt 22.10):** kod pokrywa całą cenę albo zostawia do
+  zapłaty co najmniej 2 zł (minimum Stripe), inaczej jest odrzucany
+  (`code_too_big`). Kod może mieć limit użyć (`max_uses`): liczą się wizyty
+  i miejsca na warsztatach z tym kodem, trzymane, zarezerwowane albo
+  potwierdzone (`code_used_up`). Po 10 błędnych kodach w ciągu godziny na
+  jednej blokadzie żaden kod nie jest sprawdzany (`too_many_attempts`).
+  Kody osobiste i wybór usług: na później.
 - Wszystko sprawdza baza (daty, wyłączenie, stan wizyty); strona tylko
   pokazuje wynik.
