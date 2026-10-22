@@ -4,6 +4,8 @@ import { BookingWizard } from "@/features/booking/booking-wizard";
 import { turnstileKeys } from "@/features/booking/guards";
 import { loadWizard } from "@/features/booking/load-wizard";
 import { readIntake } from "@/features/booking/intake-cookie";
+import { RememberChoices } from "@/features/booking/remember-choices";
+import { memoryValue } from "@/features/booking/wizard-memory";
 import { sendToIntake } from "@/features/booking/intake-gate";
 import {
   intakeHref,
@@ -44,10 +46,13 @@ export default async function BookingPage({
     redirect(intakeHref(wizard.params));
   }
   return (
-    <BookingWizard
-      params={wizard.params}
-      turnstileSiteKey={turnstileKeys().siteKey}
-      view={wizard.view}
-    />
+    <>
+      <RememberChoices value={memoryValue(wizard.params)} />
+      <BookingWizard
+        params={wizard.params}
+        turnstileSiteKey={turnstileKeys().siteKey}
+        view={wizard.view}
+      />
+    </>
   );
 }

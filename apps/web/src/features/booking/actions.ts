@@ -11,7 +11,7 @@ import {
   saveBookingDetails,
 } from "@repo/supabase";
 import type { Route } from "next";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   applyDiscountCode,
@@ -49,6 +49,7 @@ import {
   loadBookingParams,
 } from "./search-params";
 import { visitLabel } from "./visit-label";
+import { MEMORY_COOKIE, readMemory } from "./wizard-memory";
 import { signUpForNewsletter } from "@/features/newsletter/signup-server";
 
 // The booking steps that write. The forms carry only the wizard's choices
@@ -116,7 +117,11 @@ export async function holdTimeAction(formData: FormData) {
   redirect(DETAILS_PATH);
 }
 
-/** "Zmień termin": gives the held time back and returns to the wizard. */
+/**
+ * "Zmień termin": gives the held time back and returns to the wizard, with
+ * the same service, specialist, form and week (#164); only the time is
+ * chosen again.
+ */
 export async function releaseHoldAction() {
   const token = await readHoldToken();
   if (token) {
@@ -127,7 +132,9 @@ export async function releaseHoldAction() {
     await releaseHold(db, token).catch(() => false);
     await clearHoldToken();
   }
-  redirect(bookingHref({}));
+  redirect(
+    bookingHref(readMemory((await cookies()).get(MEMORY_COOKIE)?.value)),
+  );
 }
 
 /** The site's own address, for Stripe's return link. */
