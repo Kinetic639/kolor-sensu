@@ -58,6 +58,7 @@ const SAMPLE: ClaimedBookingEmail & { manageToken: string } = {
   bookedBy: "client",
   paid: true,
   paymentDueAt: null,
+  confirmBy: null,
 };
 
 const unpaid = {
@@ -84,10 +85,15 @@ export function clientEmails(options: CatalogueOptions): CatalogueEmail[] {
     {
       key: "reserved",
       group: "Rezerwacja i płatność",
-      name: "Rezerwacja do opłacenia",
-      when: "Gdy klient rezerwuje i płaci później, z linkiem do płatności.",
+      name: "Rezerwacja do potwierdzenia",
+      when: "Gdy klient rezerwuje i płaci później: potwierdza rezerwację w ciągu 30 minut, potem płaci.",
       attachment: CALENDAR,
-      build: () => reservationContent("reserved", unpaid, options),
+      build: () =>
+        reservationContent(
+          "reserved",
+          { ...unpaid, confirmBy: "2026-11-08T09:30:00Z" },
+          options,
+        ),
     },
     {
       key: "reserved-by-centre",

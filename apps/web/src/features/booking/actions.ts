@@ -57,6 +57,10 @@ import { signUpForNewsletter } from "@/features/newsletter/signup-server";
 
 const DETAILS_PATH = "/umow-wizyte/dane" as Route;
 const PAYMENT_PATH = "/umow-wizyte/platnosc" as Route;
+// Paid at once although "Zapłacę później" was chosen: the step says why.
+const PAY_NOW_PATH = "/umow-wizyte/platnosc?limit=1" as Route;
+// A reservation waits for the client to confirm it from the e-mail.
+const CHECK_EMAIL_PATH = "/umow-wizyte/potwierdzenie?zarezerwowana=1" as Route;
 
 function formParams(formData: FormData) {
   return loadBookingParams(
@@ -150,7 +154,10 @@ export async function startPaymentAction() {
   return goToPayment(token);
 }
 
-async function goToPayment(token: string): Promise<never> {
+async function goToPayment(
+  token: string,
+  paymentPath: Route = PAYMENT_PATH,
+): Promise<never> {
   const db = createSecretClient();
 
   const pending = await pendingCheckoutSession(db, token);
@@ -164,7 +171,7 @@ async function goToPayment(token: string): Promise<never> {
       session?.status === "open" &&
       session.customer_email === current?.details?.email
     ) {
-      redirect(PAYMENT_PATH);
+      redirect(paymentPath);
     }
     if (session?.status === "open") await expireSession(session.id);
   }
@@ -200,7 +207,7 @@ async function goToPayment(token: string): Promise<never> {
     }
     throw error;
   }
-  redirect(PAYMENT_PATH);
+  redirect(paymentPath);
 }
 
 export type DetailsFormState =
@@ -297,16 +304,23 @@ export async function saveDetailsAction(
 }
 
 /**
- * "Zarezerwuj, zapłacę później" (R11): the visit is reserved until its
- * payment is due, the link to pay goes by e-mail, and the visit's page
- * opens by that same link. Too close to the visit, it is paid now.
+ * "Zarezerwuj, zapłacę później" (R11): the visit is reserved, the link goes
+ * by e-mail, and the client confirms the reservation from it within 30
+ * minutes (a real address), then pays by its time. The browser never gets
+ * the link itself. Too close to the visit, or with two unpaid reservations
+ * already (by e-mail, phone or visitor), it is paid now.
  */
 async function reserveForLater(token: string): Promise<never> {
   const db = createSecretClient();
   const pending = await pendingCheckoutSession(db, token);
-  let reference: string;
+  const ip = clientIp(await headers());
+  let reserved: Awaited<ReturnType<typeof reserveHold>>;
   try {
-    ({ reference } = await reserveHold(db, token));
+    reserved = await reserveHold(
+      db,
+      token,
+      visitorKey(ip, process.env.SUPABASE_SECRET_KEY ?? ""),
+    );
   } catch (error) {
     if (error instanceof BookingError && error.code === "pay_now_required") {
       return goToPayment(token);
@@ -314,16 +328,17 @@ async function reserveForLater(token: string): Promise<never> {
     if (error instanceof BookingError) redirect(EXPIRED);
     throw error;
   }
+  if (reserved.outcome === "pay_now") return goToPayment(token, PAY_NOW_PATH);
   // A payment begun before ("Zapłać teraz", then back) cannot be paid any
   // more: the reservation is paid from its own link. Expired only now, once
   // the database no longer counts it, so Stripe's event frees nothing.
   if (pending) await expireSession(pending);
-  const link = await claimReservationEmail(reference).catch((error) => {
-    console.error(`[booking] reserved e-mail ${reference}:`, error);
+  await claimReservationEmail(reserved.reference).catch((error) => {
+    console.error(`[booking] reserved e-mail ${reserved.reference}:`, error);
     return null;
   });
   await clearHoldToken();
-  redirect(`/wizyta/${link ?? token}?zmiana=zarezerwowana` as Route);
+  redirect(CHECK_EMAIL_PATH);
 }
 
 /**

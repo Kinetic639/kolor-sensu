@@ -307,6 +307,24 @@ describe("a profile sent for review", () => {
 });
 
 describe("a visit to close", () => {
+  it("too many unpaid reservations: a warning for the admins, leading to it", () => {
+    const view = notificationView(
+      at({ kind: "unpaid_limit", actor: "system" }),
+      options,
+    );
+    expect(view).toMatchObject({
+      title: "Za dużo nieopłaconych rezerwacji",
+      summary: "Jan Kowalski · czw. 08.10, 11:00",
+      tone: "warning",
+      icon: "reserved",
+      reference: "2610-004",
+    });
+    expect(ids(view)).toContain("system");
+    expect(view.details).toContainEqual(
+      expect.objectContaining({ label: "Co się stało" }),
+    );
+  });
+
   it("what, when, and the way to it", () => {
     const view = notificationView(
       at({ kind: "visit_to_close", actor: "system" }, { clientName: null }),

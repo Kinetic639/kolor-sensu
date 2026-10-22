@@ -120,6 +120,8 @@ export type Database = {
           discount_minor: number;
           list_price_minor: number | null;
           reschedule_count: number;
+          reservation_confirm_by: string | null;
+          reserved_by_key: string | null;
           room_id: string | null;
           service_id: string;
           specialist_id: string;
@@ -159,6 +161,8 @@ export type Database = {
           discount_minor?: number;
           list_price_minor?: number | null;
           reschedule_count?: number;
+          reservation_confirm_by?: string | null;
+          reserved_by_key?: string | null;
           room_id?: string | null;
           service_id: string;
           specialist_id: string;
@@ -198,6 +202,8 @@ export type Database = {
           discount_minor?: number;
           list_price_minor?: number | null;
           reschedule_count?: number;
+          reservation_confirm_by?: string | null;
+          reserved_by_key?: string | null;
           room_id?: string | null;
           service_id?: string;
           specialist_id?: string;
@@ -2477,6 +2483,7 @@ export type Database = {
           cancelled_by: string | null;
           client_email: string;
           client_name: string;
+          confirm_by: string | null;
           currency_code: string;
           ends_at: string;
           location_address: string;
@@ -3048,6 +3055,10 @@ export type Database = {
         Args: never;
         Returns: string | null;
       };
+      confirm_reservation: {
+        Args: { p_manage_token: string };
+        Returns: string | null;
+      };
       record_refund: {
         Args: { p_payment_intent_id: string; p_refunded_minor: number };
         Returns: boolean;
@@ -3095,11 +3106,17 @@ export type Database = {
         }[];
       };
       reserve_hold: {
-        Args: { p_access_token: string };
+        Args: { p_access_token: string; p_client_key?: string };
         Returns: {
-          payment_due_at: string;
+          confirm_by: string | null;
+          outcome: string;
+          payment_due_at: string | null;
           reference: string;
         }[];
+      };
+      reservation_confirm_by: {
+        Args: { p_manage_token: string };
+        Returns: string | null;
       };
       save_availability_rule: {
         Args: {

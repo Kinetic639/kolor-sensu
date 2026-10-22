@@ -26,6 +26,7 @@ const visit = {
   bookedBy: "centre",
   paid: false,
   paymentDueAt: "2030-09-30T09:00:00+00:00",
+  confirmBy: null,
 } satisfies ClaimedBookingEmail;
 
 const options = {
@@ -56,6 +57,30 @@ describe("reservationContent", () => {
     expect(content.text).toContain("https://kolorsensu.pl/wizyta/link-token");
     expect(content.text).not.toContain("na miejscu");
     expect(content.ics).toContain("UID:3010-004@kolorsensu.pl");
+  });
+
+  it("a client's reservation asks to be confirmed first, by its time", () => {
+    const content = reservationContent(
+      "reserved",
+      {
+        ...visit,
+        bookedBy: "client",
+        confirmBy: "2030-09-29T09:30:00+00:00",
+      },
+      options,
+    );
+    expect(content.subject).toBe(
+      "Potwierdź rezerwację wizyty 3010-004 do 29 września 2030, godz. 11:30",
+    );
+    expect(content.heading).toBe("Potwierdź swoją rezerwację");
+    expect(content.buttonLabel).toBe("Potwierdź rezerwację");
+    expect(content.intro).toContain("29 września 2030, godz. 11:30");
+    expect(content.intro).toContain("30 września 2030, godz. 11:00");
+    expect(content.rows).toContainEqual([
+      "Potwierdź do",
+      "29 września 2030, godz. 11:30",
+    ]);
+    expect(content.manageUrl).toBe("https://kolorsensu.pl/wizyta/link-token");
   });
 
   it("the reminders say the time is running out", () => {

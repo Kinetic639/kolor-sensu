@@ -246,6 +246,12 @@ export function notificationView(
     [title, tone, icon] = ["Rezerwacja anulowana", "danger", "cancelled"];
   } else if (kind === "refunded") {
     [title, tone, icon] = ["Zwrot pieniędzy", "info", "refund"];
+  } else if (kind === "unpaid_limit") {
+    [title, tone, icon] = [
+      "Za dużo nieopłaconych rezerwacji",
+      "warning",
+      "reserved",
+    ];
   } else {
     [title, tone, icon] = ["Zmiana w rezerwacji", "neutral", "new"];
   }
@@ -275,6 +281,12 @@ export function notificationView(
       id: "centre",
       label: "Umówiona przez centrum",
       tone: "neutral",
+    });
+  } else if (kind === "unpaid_limit") {
+    badges.push({
+      id: "system",
+      label: "Musi zapłacić od razu",
+      tone: "warning",
     });
   } else if (changed && actor === "system") {
     badges.push({
@@ -360,6 +372,14 @@ export function notificationView(
   }
   if (admin && kind === "refunded" && d.refundMinor !== null) {
     details.push({ label: "Zwrócono", value: money(d.refundMinor) });
+  }
+  if (kind === "unpaid_limit") {
+    details.push({
+      label: "Co się stało",
+      value:
+        "Ta osoba (ten sam e-mail, telefon albo urządzenie) ma już dwie nieopłacone rezerwacje, więc tę wizytę musi opłacić od razu. Wiele takich prób może oznaczać blokowanie terminów.",
+      tone: "warning",
+    });
   }
   if (d.reason && d.reason !== "unpaid") {
     details.push({ label: "Powód", value: d.reason });

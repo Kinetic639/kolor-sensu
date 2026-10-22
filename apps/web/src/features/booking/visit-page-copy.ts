@@ -8,7 +8,7 @@ import { visitChanges, type ChangePolicy } from "./visit-changes";
 // R8): what the client may still do themselves, until when, and what
 // happens with the money. Pure, so every case is tested.
 
-export type VisitChangeDone = "przelozona" | "odwolana" | "zarezerwowana";
+export type VisitChangeDone = "przelozona" | "odwolana" | "potwierdzona";
 
 export interface VisitPageCopy {
   /** What just changed (after a move or a cancellation). */
@@ -25,8 +25,8 @@ export interface VisitPageCopy {
 const NOTICES: Record<VisitChangeDone, string> = {
   przelozona: "Wizyta została przełożona. Wysłaliśmy e-mail z nowym terminem.",
   odwolana: "Wizyta została odwołana. Wysłaliśmy potwierdzenie e-mailem.",
-  zarezerwowana:
-    "Zarezerwowaliśmy wizytę. Link do płatności wysłaliśmy też e-mailem.",
+  potwierdzona:
+    "Rezerwacja potwierdzona. Termin czeka na Ciebie do czasu płatności.",
 };
 
 export function visitPageCopy({

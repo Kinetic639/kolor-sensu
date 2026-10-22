@@ -9,6 +9,8 @@ import {
   listFreeSlots,
   releaseHold,
   reserveHold,
+  confirmReservation,
+  reservationConfirmBy,
 } from "./booking";
 
 function rpcClient(data: unknown, error: unknown = null) {
@@ -293,16 +295,39 @@ describe("saveBookingDetails", () => {
 });
 
 describe("reserveHold", () => {
-  it("reserves the held visit until its payment is due", async () => {
+  it("reserves the held visit until it is confirmed, then paid", async () => {
     const { client, rpc } = rpcClient([
-      { reference: "2610-004", payment_due_at: "2030-10-01T09:00:00+00:00" },
+      {
+        reference: "2610-004",
+        outcome: "reserved",
+        payment_due_at: "2030-10-01T09:00:00+00:00",
+        confirm_by: "2030-09-29T09:30:00+00:00",
+      },
     ]);
-    expect(await reserveHold(client, "token")).toEqual({
+    expect(await reserveHold(client, "token", "visitor-key")).toEqual({
       reference: "2610-004",
+      outcome: "reserved",
       paymentDueAt: "2030-10-01T09:00:00+00:00",
+      confirmBy: "2030-09-29T09:30:00+00:00",
     });
     expect(rpc).toHaveBeenCalledWith("reserve_hold", {
       p_access_token: "token",
+      p_client_key: "visitor-key",
+    });
+  });
+
+  it("says when the person has too many unpaid reservations", async () => {
+    const { client } = rpcClient([
+      {
+        reference: "2610-005",
+        outcome: "pay_now",
+        payment_due_at: null,
+        confirm_by: null,
+      },
+    ]);
+    expect(await reserveHold(client, "token")).toMatchObject({
+      outcome: "pay_now",
+      paymentDueAt: null,
     });
   });
 
@@ -313,6 +338,31 @@ describe("reserveHold", () => {
     });
     await expect(reserveHold(client, "token")).rejects.toMatchObject({
       code: "pay_now_required",
+    });
+  });
+});
+
+describe("confirmReservation", () => {
+  it("gives the time to pay by, or null", async () => {
+    const { client, rpc } = rpcClient("2030-09-30T09:00:00+00:00");
+    expect(await confirmReservation(client, "link")).toBe(
+      "2030-09-30T09:00:00+00:00",
+    );
+    expect(rpc).toHaveBeenCalledWith("confirm_reservation", {
+      p_manage_token: "link",
+    });
+    expect(await confirmReservation(rpcClient(null).client, "link")).toBeNull();
+  });
+});
+
+describe("reservationConfirmBy", () => {
+  it("asks by the link's token", async () => {
+    const { client, rpc } = rpcClient("2030-09-29T09:30:00+00:00");
+    expect(await reservationConfirmBy(client, "link")).toBe(
+      "2030-09-29T09:30:00+00:00",
+    );
+    expect(rpc).toHaveBeenCalledWith("reservation_confirm_by", {
+      p_manage_token: "link",
     });
   });
 });
