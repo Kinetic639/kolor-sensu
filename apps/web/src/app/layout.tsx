@@ -9,7 +9,10 @@ import {
 } from "@/content/site";
 import { PageTransition } from "@/components/page-transition";
 import { PreviewBar } from "@/components/preview-bar";
+import { NewsletterSignup } from "@/features/newsletter/newsletter-signup";
+import { newsletterSiteKey } from "@/features/newsletter/site-key";
 import { baseOpenGraph } from "@/lib/page-metadata";
+import { getCompany, getNewsletterBand } from "@/lib/public-data";
 import { getSiteFrame } from "@/lib/site-frame";
 import "./globals.css";
 
@@ -57,16 +60,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const {
-    navigation,
-    cta,
-    contact,
-    socials,
-    legal,
-    about,
-    announcement,
-    company,
-  } = await getSiteFrame();
+  const [
+    { navigation, cta, contact, socials, legal, about, announcement, company },
+    newsletterBand,
+    companyDetails,
+  ] = await Promise.all([getSiteFrame(), getNewsletterBand(), getCompany()]);
+  // The newsletter's form in the footer, once the CMS shows the newsletter
+  // (and the site can check for bots).
+  const turnstileSiteKey = newsletterBand.visible ? newsletterSiteKey() : null;
 
   return (
     <html
@@ -86,6 +87,16 @@ export default async function RootLayout({
           legal={legal}
           about={about}
           company={company}
+          newsletter={
+            turnstileSiteKey ? (
+              <NewsletterSignup
+                compact
+                controller={companyDetails?.legalName ?? "Kolor Sensu"}
+                source="footer"
+                turnstileSiteKey={turnstileSiteKey}
+              />
+            ) : null
+          }
           siteUrl={siteUrl}
           year={new Date().getFullYear()}
           // The first-visit intro is off for now: it covers the page for

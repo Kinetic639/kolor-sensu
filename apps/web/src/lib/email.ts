@@ -6,7 +6,8 @@ import { Resend } from "resend";
 
 let client: Resend | null = null;
 
-function resend() {
+/** The Resend client (server only): sending, and the newsletter's contacts. */
+export function resend() {
   const key = process.env.RESEND_API_KEY;
   if (!key) throw new Error("RESEND_API_KEY is not configured");
   client ??= new Resend(key);
@@ -29,6 +30,8 @@ export interface EmailMessage {
   /** Where a reply goes (the visitor, for the contact form's notice). */
   replyTo?: string;
   attachments?: { filename: string; contentType: string; content: string }[];
+  /** Labels Resend reports back with the e-mail's events (its webhook). */
+  tags?: { name: string; value: string }[];
 }
 
 /** Sends one e-mail; the key makes a retried send a no-op. Throws on failure. */

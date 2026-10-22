@@ -323,8 +323,8 @@ Four keys, each saved as a draft and published with the page:
   `{ visible, facts: 2..4 × { title ≤60, text ≤200 } }` (`whyUsContentSchema`).
   Hidden until published, so the facts the centre stands by are approved first.
 - **`newsletter_band`** (the newsletter band, after "Jak zacząć"):
-  `{ visible }`; its words are its header. Hidden until signing up works;
-  the form joins once the newsletter tool is chosen.
+  `{ visible }`; its words are its header, the sign-up form sits under
+  them and in the footer while it is visible (newsletter-domain.md).
 - **`home_location`** ("Gdzie jesteśmy", before the closing invitation):
   `{ visible }`; its header is the CMS's, the address, phone, e-mail and
   hours are the company details (the card Kontakt shows). Shown from the start.

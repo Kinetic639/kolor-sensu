@@ -39,6 +39,8 @@ export interface SiteLayoutProps {
   announcement?: SiteAnnouncement | null;
   /** The company in one line, in the footer (Ustawienia → Centrum). */
   company?: string | null;
+  /** The newsletter's sign-up form, in the footer (when it is on). */
+  newsletter?: ReactNode;
   children: ReactNode;
 }
 
@@ -55,6 +57,7 @@ export function SiteLayout({
   intro = true,
   announcement = null,
   company = null,
+  newsletter = null,
   children,
 }: SiteLayoutProps) {
   return (
@@ -83,6 +86,7 @@ export function SiteLayout({
         about={about}
         year={year}
         company={company}
+        newsletter={newsletter}
       />
       <CursorRing />
       {siteUrl ? (

@@ -1,5 +1,7 @@
 import { plainHeader } from "@repo/contracts/section-header";
 import type { Meta, StoryObj } from "@storybook/react";
+import { BookingField, ConsentCheckbox } from "../booking/booking-fields";
+import { PrimaryButton } from "./actions";
 import { CrisisStrip } from "./crisis-strip";
 import { NewsletterBand } from "./newsletter-band";
 import { WhyUsSection } from "./why-us-section";
@@ -70,7 +72,7 @@ export const WhyUsTwoFacts: Story = {
   ),
 };
 
-/** The newsletter band (the form joins once the tool is chosen). */
+/** The newsletter band, without its form (as in the CMS until it is on). */
 export const Newsletter: Story = {
   render: () => (
     <NewsletterBand
@@ -80,6 +82,44 @@ export const Newsletter: Story = {
         description: "Artykuły, warsztaty i nowości z centrum, raz w miesiącu.",
       })}
     />
+  ),
+};
+
+/** The site's sign-up form, as the site puts it in the band (a stand-in). */
+function SignupStandIn() {
+  return (
+    <form className="grid gap-4" onSubmit={(event) => event.preventDefault()}>
+      <BookingField
+        autoComplete="email"
+        label="Adres e-mail"
+        name="email"
+        type="email"
+      />
+      <ConsentCheckbox
+        linkHref="/polityka-prywatnosci"
+        linkLabel="polityce prywatności"
+        name="consent"
+        text="Chcę dostawać na ten adres newsletter Kolor Sensu: artykuły, warsztaty i nowości z centrum, mniej więcej raz w miesiącu. Mogę się wypisać w każdej chwili, linkiem w każdej wiadomości. Administratorem danych jest Kolor Sensu sp. z o.o. Więcej w"
+      />
+      <div>
+        <PrimaryButton type="submit">Zapisz się</PrimaryButton>
+      </div>
+    </form>
+  );
+}
+
+/** The newsletter band with the sign-up form under its words. */
+export const NewsletterWithForm: Story = {
+  render: () => (
+    <NewsletterBand
+      header={plainHeader({
+        eyebrow: "Newsletter",
+        title: "Bądźmy w kontakcie",
+        description: "Artykuły, warsztaty i nowości z centrum, raz w miesiącu.",
+      })}
+    >
+      <SignupStandIn />
+    </NewsletterBand>
   ),
 };
 

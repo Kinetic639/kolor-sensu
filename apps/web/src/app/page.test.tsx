@@ -82,6 +82,14 @@ vi.mock("@/lib/public-data", () => ({
   getHomeLocation: async () => published.location,
   getCrisisHelp: async () => published.crisis,
   getWatercolorLook: async () => published.watercolor,
+  getCompany: async () => ({ legalName: "Kolor Sensu sp. z o.o." }),
+}));
+
+// The sign-up form stands in (its own test: newsletter-signup.test.tsx).
+vi.mock("@/features/newsletter/newsletter-signup", () => ({
+  NewsletterSignup: ({ controller }: { controller: string }) => (
+    <form aria-label={`Zapis na newsletter (${controller})`} />
+  ),
 }));
 
 vi.mock("@/lib/site-frame", () => ({
@@ -315,11 +323,14 @@ describe("the newsletter band", () => {
     expect(title("Bądźmy w kontakcie")).not.toBeInTheDocument();
   });
 
-  it("shows its header when switched on", async () => {
+  it("shows its header and the sign-up form when switched on", async () => {
     published.newsletter = { visible: true };
     await renderHome();
+    const band = screen.getByRole("region", { name: "Bądźmy w kontakcie" });
     expect(
-      screen.getByRole("region", { name: "Bądźmy w kontakcie" }),
+      within(band).getByRole("form", {
+        name: "Zapis na newsletter (Kolor Sensu sp. z o.o.)",
+      }),
     ).toBeInTheDocument();
   });
 });

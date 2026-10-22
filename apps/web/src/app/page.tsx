@@ -14,6 +14,8 @@ import {
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
 import { HomeLocation } from "@/components/home-location";
+import { NewsletterSignup } from "@/features/newsletter/newsletter-signup";
+import { newsletterSiteKey } from "@/features/newsletter/site-key";
 import {
   bookingCta,
   defaultSupportAreas,
@@ -38,6 +40,7 @@ import {
   getWatercolorLook,
   getWhyUs,
   getClosingCta,
+  getCompany,
 } from "@/lib/public-data";
 import { getSiteFrame } from "@/lib/site-frame";
 import { toRoomsPeekPhotos } from "@/lib/rooms-peek";
@@ -68,6 +71,7 @@ export default async function Home() {
     roomGroups,
     watercolor,
     closing,
+    company,
   ] = await Promise.all([
     getHomeContent(),
     getHomeHeaders(),
@@ -85,7 +89,9 @@ export default async function Home() {
     getRoomsByLocation(),
     getWatercolorLook(),
     getClosingCta(),
+    getCompany(),
   ]);
+  const newsletterKey = newsletter.visible ? newsletterSiteKey() : null;
   const spotlight = toSpotlight(sections, specialists);
   const roomPhotos = toRoomsPeekPhotos(roomGroups);
 
@@ -137,8 +143,14 @@ export default async function Home() {
         steps={toStorySteps(story, storyImages)}
         watercolor={watercolor}
       />
-      {newsletter.visible ? (
-        <NewsletterBand header={headers.newsletter} />
+      {newsletterKey ? (
+        <NewsletterBand header={headers.newsletter}>
+          <NewsletterSignup
+            controller={company?.legalName ?? "Kolor Sensu"}
+            source="home"
+            turnstileSiteKey={newsletterKey}
+          />
+        </NewsletterBand>
       ) : null}
       <CrisisStrip
         heading={crisis.heading}
