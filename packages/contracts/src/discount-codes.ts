@@ -8,6 +8,16 @@ import { z } from "zod";
 export const DISCOUNT_KINDS = ["percent", "amount"] as const;
 export type DiscountKind = (typeof DISCOUNT_KINDS)[number];
 
+/** What a code is for; "workshops" with a workshop: that one only. */
+export const DISCOUNT_SCOPES = ["consultations", "workshops", "all"] as const;
+export type DiscountScope = (typeof DISCOUNT_SCOPES)[number];
+
+export const DISCOUNT_SCOPE_LABELS: Record<DiscountScope, string> = {
+  consultations: "Konsultacje",
+  workshops: "Warsztaty",
+  all: "Wszystko",
+};
+
 const day = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Podaj datę.")
@@ -34,6 +44,13 @@ export const discountCodeInputSchema = z
     endsOn: day,
     active: z.boolean(),
     note: z.string().trim().max(300),
+    scope: z.enum(DISCOUNT_SCOPES).default("consultations"),
+    /** One workshop only (with scope "workshops"). */
+    workshopId: z.uuid().nullable().default(null),
+  })
+  .refine((input) => !input.workshopId || input.scope === "workshops", {
+    message: "Jeden warsztat wybiera się przy zakresie „Warsztaty”.",
+    path: ["workshopId"],
   })
   .refine((input) => input.kind === "amount" || input.value <= 100, {
     message: "Rabat procentowy: od 1 do 100 %.",
@@ -54,6 +71,8 @@ export type DiscountCodeInput = z.infer<typeof discountCodeInputSchema>;
 export interface DiscountCode extends DiscountCodeInput {
   id: string;
   createdAt: string;
+  /** The one workshop's title, when the code is for one. */
+  workshopTitle: string | null;
   /** Visits reserved or confirmed with it. */
   usedCount: number;
   /** What it took off confirmed visits, in grosze. */
@@ -121,6 +140,7 @@ export const DISCOUNT_PROBLEMS: Record<string, string> = {
   code_unknown: "Nie ma takiego kodu albo jest już nieaktywny.",
   code_not_started: "Ten kod jeszcze nie działa.",
   code_expired: "Ten kod już wygasł.",
+  code_not_here: "Ten kod nie działa na tę usługę.",
   discount_code_used:
     "Tego kodu użyto już przy wizytach: zamiast usuwać, wyłącz go.",
 };

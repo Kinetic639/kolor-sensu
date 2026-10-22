@@ -1,21 +1,61 @@
-import { FeatureSection, SoftCard } from "@repo/ui/public-site";
-import type { Metadata } from "next";
+import { FeatureSection, SoftCard, WorkshopGrid } from "@repo/ui/public-site";
+import type { Metadata, Route } from "next";
+import Link from "next/link";
 import { ClosingCta } from "@/components/closing-cta";
 import { PageIntro } from "@/components/page-intro";
 import { workshops, workshopsPage } from "@/content/site";
+import {
+  readModality,
+  splitWorkshops,
+  workshopCard,
+  type ModalityFilter,
+} from "@/features/workshops/workshop-view";
 import { pageMetadata } from "@/lib/page-metadata";
-import { getWatercolorLook, getClosingCta } from "@/lib/public-data";
+import {
+  getBookingWindow,
+  getClosingCta,
+  getWatercolorLook,
+} from "@/lib/public-data";
+import { getWorkshops, workshopImageUrl } from "@/lib/workshop-data";
 
-// Title, description and link preview: the CMS's over the page's own.
+// Warsztaty (docs/product/workshops-plan.md, PR 3): the coming workshops,
+// soonest first, with their seats (a cancelled one labelled until its day),
+// filtered by form from the address (?forma=online|stacjonarnie); the past
+// ones below; with none coming, the word and the way to ask. Refreshed every
+// minute, as the seats change.
+
+export const revalidate = 60;
+
 export function generateMetadata(): Promise<Metadata> {
   return pageMetadata("workshops");
 }
 
-export default async function WorkshopsPage() {
-  const [watercolor, closing] = await Promise.all([
+const FILTERS: { value: ModalityFilter; label: string }[] = [
+  { value: null, label: "Wszystkie" },
+  { value: "stacjonarnie", label: "Stacjonarnie" },
+  { value: "online", label: "Online" },
+];
+
+const filterHref = (value: ModalityFilter) =>
+  (value ? `/warsztaty?forma=${value}` : "/warsztaty") as Route;
+
+export default async function WorkshopsPage({
+  searchParams,
+}: PageProps<"/warsztaty">) {
+  const filter = readModality((await searchParams).forma);
+  const [all, window, watercolor, closing] = await Promise.all([
+    getWorkshops(),
+    getBookingWindow(),
     getWatercolorLook(),
     getClosingCta(),
   ]);
+  const now = new Date();
+  const timeZone = window?.timeZone ?? "Europe/Warsaw";
+  const card = (one: (typeof all)[number]) =>
+    workshopCard(one, { now, timeZone, imageUrl: workshopImageUrl });
+  const { upcoming, past } = splitWorkshops(all, now, filter);
+  const anyComing = splitWorkshops(all, now).upcoming.length > 0;
+
   return (
     <>
       <PageIntro
@@ -24,16 +64,68 @@ export default async function WorkshopsPage() {
         accent={workshopsPage.accent}
         lead={workshopsPage.lead}
       />
-      <section className="max-w-page px-gutter mx-auto">
-        <SoftCard tone="cream" className="grid gap-3 p-6 lg:p-8">
-          <h2 className="font-display text-h3 text-ink">
-            Nadchodzące wydarzenia
+      <section
+        aria-labelledby="nadchodzace"
+        className="max-w-page px-gutter mx-auto grid gap-6"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h2 className="font-display text-h2 text-ink" id="nadchodzace">
+            Nadchodzące warsztaty
           </h2>
-          <p className="text-body text-text-muted max-w-copy">
-            {workshopsPage.empty}
-          </p>
-        </SoftCard>
+          {anyComing ? (
+            <nav aria-label="Forma warsztatów">
+              <ul className="flex flex-wrap gap-2">
+                {FILTERS.map((option) => (
+                  <li key={option.label}>
+                    <Link
+                      aria-current={
+                        option.value === filter ? "page" : undefined
+                      }
+                      className="border-border text-small text-ink aria-[current=page]:bg-primary aria-[current=page]:text-on-primary focus-visible:outline-ring inline-flex rounded-full border px-4 py-1.5 focus-visible:outline-2"
+                      href={filterHref(option.value)}
+                      scroll={false}
+                    >
+                      {option.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ) : null}
+        </div>
+        {upcoming.length ? (
+          <WorkshopGrid workshops={upcoming.map(card)} />
+        ) : (
+          <SoftCard className="grid gap-3 p-6 lg:p-8" tone="cream">
+            <p className="text-body text-text-muted max-w-copy">
+              {anyComing
+                ? "W tej formie nie mamy teraz zaplanowanych warsztatów."
+                : workshopsPage.empty}
+            </p>
+            <p>
+              <Link
+                className="text-body text-primary-strong font-semibold underline"
+                href={anyComing ? filterHref(null) : "/kontakt"}
+              >
+                {anyComing ? "Pokaż wszystkie" : "Zapytaj o najbliższe terminy"}
+              </Link>
+            </p>
+          </SoftCard>
+        )}
       </section>
+
+      {past.length ? (
+        <section
+          aria-labelledby="minione"
+          className="max-w-page px-gutter mx-auto mt-16 grid gap-6"
+        >
+          <h2 className="font-display text-h2 text-ink" id="minione">
+            Minione warsztaty
+          </h2>
+          <WorkshopGrid workshops={past.map(card)} />
+        </section>
+      ) : null}
+
       <FeatureSection
         {...workshops}
         heading="Grupy i warsztaty tematyczne"

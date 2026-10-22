@@ -3,6 +3,7 @@ import type {
   DiscountCode,
   DiscountCodeInput,
   DiscountKind,
+  DiscountScope,
 } from "@repo/contracts/discount-codes";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -35,6 +36,9 @@ export async function listDiscountCodes(
     createdAt: row.created_at,
     usedCount: Number(row.used_count),
     discountTotalMinor: Number(row.discount_total_minor),
+    scope: row.scope as DiscountScope,
+    workshopId: row.workshop_id,
+    workshopTitle: row.workshop_title,
   }));
 }
 
@@ -53,6 +57,8 @@ export async function saveDiscountCode(
     p_ends_on: input.endsOn,
     p_active: input.active,
     p_note: input.note,
+    p_scope: input.scope,
+    p_workshop_id: input.workshopId,
   });
   if (error) throw error;
   return data;
@@ -82,6 +88,7 @@ export function discountRefusal(error: unknown): string | null {
     "code_unknown",
     "code_not_started",
     "code_expired",
+    "code_not_here",
     "hold_expired",
   ].includes(hint)
     ? hint

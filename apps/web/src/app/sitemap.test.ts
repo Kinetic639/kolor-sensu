@@ -33,6 +33,11 @@ vi.mock("@/lib/newsletter-data", () => ({
   getNewsletterArchive: async () => issues,
 }));
 
+let workshops: { slug: string; status: string; updatedAt: string }[] = [];
+vi.mock("@/lib/workshop-data", () => ({
+  getWorkshops: async () => workshops,
+}));
+
 const { default: sitemap } = await import("./sitemap");
 
 beforeEach(() => {
@@ -40,6 +45,7 @@ beforeEach(() => {
   articles = [];
   ebooks = [];
   issues = [];
+  workshops = [];
 });
 
 const urls = async () => (await sitemap()).map((entry) => entry.url);
@@ -101,6 +107,24 @@ describe("the sitemap", () => {
         `${siteUrl}/edukacja/ebooki/spokojny-sen`,
       ]),
     );
+  });
+
+  it("lists the published workshops, not the cancelled ones", async () => {
+    workshops = [
+      {
+        slug: "uwaznosc",
+        status: "published",
+        updatedAt: "2026-10-22T08:00:00Z",
+      },
+      {
+        slug: "odwolany",
+        status: "cancelled",
+        updatedAt: "2026-10-22T08:00:00Z",
+      },
+    ];
+    const all = await urls();
+    expect(all).toContain(`${siteUrl}/warsztaty/uwaznosc`);
+    expect(all).not.toContain(`${siteUrl}/warsztaty/odwolany`);
   });
 
   it("lists the newsletter's archive once an issue is in it", async () => {
