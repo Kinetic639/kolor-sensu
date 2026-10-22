@@ -7,7 +7,7 @@ tablicy Miro, kolumna „Strona · 7. Warsztaty” i jej ramki „elementy”.
 
 Stan na 22.10 · PR-y: 0 / 7 zmergowanych
 
-- [ ] **PR 1 · Baza** (czeka na CI i merge)
+- [ ] **PR 1 · Baza** — [#157](https://github.com/Kinetic639/kolor-sensu/pull/157) · czeka na merge
   - [x] warsztat: opis w edytorze, dla kogo, program, okładka, SEO, minimum, koniec zapisów, potwierdzenie, odwołanie z powodem
   - [x] współprowadzący i link do spotkania online (widzą go tylko admin, prowadzący i potwierdzeni uczestnicy)
   - [x] opublikowany warsztat blokuje prowadzących i salę w rezerwacji wizyt; kolizja z wizytą albo innym warsztatem jest odrzucana
@@ -16,7 +16,7 @@ Stan na 22.10 · PR-y: 0 / 7 zmergowanych
   - [x] zwroty: pełny do 7 dni przed; później, gdy miejsce przejmie lista; pełny, gdy odwołuje centrum
   - [x] wygasanie (trzymanie, oferta, brak wpłaty) i funkcja dla zadania w tle
   - [x] testy SQL, typy
-  - [ ] CI zielone
+  - [x] CI zielone
   - [ ] zmergowany i sprawdzony na DEV
 - [ ] **PR 2 · Portal admina** — lista, tworzenie i edycja, termin, kolizje, podgląd, publikacja, potwierdzenie, wycofanie; CMS strony Warsztaty i wspólne zasady
 - [ ] **PR 3 · Strona** — /warsztaty (nadchodzące, minione, filtr formy) i /warsztaty/[adres], dane Event, mapa strony, sekcja na stronie głównej, przełącznik w menu
