@@ -325,6 +325,48 @@ describe("a visit to close", () => {
     );
   });
 
+  it("a dispute: a warning with the amount and Stripe's reason", () => {
+    const view = notificationView(
+      at(
+        { kind: "disputed", actor: "payment" },
+        { amountMinor: 25000, disputeReason: "fraudulent" },
+      ),
+      options,
+    );
+    expect(view).toMatchObject({
+      title: "Spór o płatność",
+      tone: "danger",
+      icon: "refund",
+      reference: "2610-004",
+    });
+    expect(view.details).toContainEqual({
+      label: "Kwota sporu",
+      value: expect.stringMatching(/^250\s+zł$/),
+    });
+    expect(view.details).toContainEqual(
+      expect.objectContaining({ label: "Co zrobić" }),
+    );
+  });
+
+  it("a dispute closed: won or lost", () => {
+    const won = notificationView(
+      at(
+        { kind: "dispute_closed", actor: "payment" },
+        { disputeStatus: "won" },
+      ),
+      options,
+    );
+    const lost = notificationView(
+      at(
+        { kind: "dispute_closed", actor: "payment" },
+        { disputeStatus: "lost" },
+      ),
+      options,
+    );
+    expect(won).toMatchObject({ title: "Spór wygrany", tone: "success" });
+    expect(lost).toMatchObject({ title: "Spór przegrany", tone: "danger" });
+  });
+
   it("what, when, and the way to it", () => {
     const view = notificationView(
       at({ kind: "visit_to_close", actor: "system" }, { clientName: null }),

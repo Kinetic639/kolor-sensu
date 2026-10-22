@@ -282,6 +282,8 @@ export {
   pendingCheckoutSession,
   pendingReservationPayment,
   recordRefund,
+  recordDispute,
+  listStuckPayments,
   releaseStripeEvent,
 } from "./booking-payments";
 export type {

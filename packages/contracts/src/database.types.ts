@@ -3594,6 +3594,23 @@ export type Database = {
         Args: { p_manage_token: string };
         Returns: string | null;
       };
+      record_dispute: {
+        Args: {
+          p_amount_minor: number;
+          p_closed: boolean;
+          p_dispute_id: string;
+          p_payment_intent_id: string;
+          p_reason: string;
+          p_status: string;
+        };
+        Returns: string | null;
+      };
+      list_stuck_payments: {
+        Args: never;
+        Returns: {
+          checkout_session_id: string;
+        }[];
+      };
       record_refund: {
         Args: { p_payment_intent_id: string; p_refunded_minor: number };
         Returns: boolean;

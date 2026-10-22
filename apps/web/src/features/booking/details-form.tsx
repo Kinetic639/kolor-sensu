@@ -24,11 +24,20 @@ import {
 
 export function DetailsForm({
   saved,
+  prefill = null,
   payLater,
   free = false,
   newsletterController = null,
 }: {
   saved: DetailsFormValues | null;
+  /**
+   * What the client gave for a time they changed ("Zmień termin"): filled
+   * in again, but not saved yet, and the consents are ticked anew.
+   */
+  prefill?: Pick<
+    DetailsFormValues,
+    "name" | "email" | "phone" | "notes"
+  > | null;
   /** A discount code covers the whole price: nothing to pay. */
   free?: boolean;
   /** "8 października 2030, godz. 11:00", or null: pay now only. */
@@ -41,7 +50,12 @@ export function DetailsForm({
     saved ? { status: "saved" } : { status: "idle" },
   );
   const values =
-    state.status === "invalid" ? state.values : (saved ?? undefined);
+    state.status === "invalid"
+      ? state.values
+      : (saved ??
+        (prefill
+          ? { ...prefill, acceptTerms: false, acceptPrivacy: false }
+          : undefined));
   const errors = state.status === "invalid" ? state.errors : {};
 
   return (

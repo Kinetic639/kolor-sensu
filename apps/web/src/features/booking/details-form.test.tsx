@@ -32,4 +32,33 @@ describe("the booking's details form", () => {
       screen.queryByRole("group", { name: "Newsletter (dobrowolnie)" }),
     ).toBeNull();
   });
+
+  it("a new time keeps the details given before, the consents to tick again", () => {
+    render(
+      <DetailsForm
+        payLater={null}
+        prefill={{
+          name: "Ola Klientka",
+          email: "ola@example.invalid",
+          phone: "600 100 200",
+          notes: "Pierwsza wizyta",
+        }}
+        saved={null}
+      />,
+    );
+    expect(screen.getByLabelText(/Imię i nazwisko/)).toHaveProperty(
+      "value",
+      "Ola Klientka",
+    );
+    expect(screen.getByDisplayValue("ola@example.invalid")).toBeTruthy();
+    expect(screen.getByDisplayValue("600 100 200")).toBeTruthy();
+    for (const name of ["acceptTerms", "acceptPrivacy"]) {
+      const box = document.querySelector<HTMLInputElement>(
+        `input[name="${name}"]`,
+      );
+      expect(box?.checked).toBe(false);
+    }
+    // Not "saved": these are for the new visit, still to be sent.
+    expect(screen.queryByText(/Twoje dane są zapisane/)).toBeNull();
+  });
 });

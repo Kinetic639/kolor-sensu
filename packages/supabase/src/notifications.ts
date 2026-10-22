@@ -29,6 +29,9 @@ export type NotificationKind =
   | "profile_submitted"
   /** Their profile approved, or sent back with a reason (the specialist). */
   | "profile_approved"
+  /** A payment's dispute (a chargeback) opened, or closed (admins only). */
+  | "disputed"
+  | "dispute_closed"
   /** A held visit has ended and waits for its specialist to close it. */
   | "visit_to_close"
   /** A third unpaid reservation by one person: paid at once (admins). */
@@ -53,6 +56,10 @@ export interface NotificationDetails {
   refundDueMinor: number | null;
   priceMinor: number | null;
   currencyCode: string | null;
+  /** A dispute: the amount, Stripe's status and reason. */
+  amountMinor?: number | null;
+  disputeStatus?: string | null;
+  disputeReason?: string | null;
 }
 
 export interface PortalNotification {
@@ -108,6 +115,9 @@ export function toPortalNotification(
       refundMinor: minor(d.refund_minor),
       refundDueMinor: minor(d.refund_due_minor),
       priceMinor: minor(d.price_minor),
+      amountMinor: minor(d.amount_minor),
+      disputeStatus: text(d.dispute_status),
+      disputeReason: text(d.dispute_reason),
       currencyCode: text(d.currency_code),
     },
   };
