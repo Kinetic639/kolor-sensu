@@ -1,6 +1,9 @@
 "use server";
 
-import { confirmNewsletterSubscription } from "@repo/supabase/newsletter";
+import {
+  confirmNewsletterSubscription,
+  unsubscribeNewsletter,
+} from "@repo/supabase/newsletter";
 import { headers } from "next/headers";
 import {
   clientIp,
@@ -13,15 +16,19 @@ import { newsletterWelcomeContent } from "./confirmation-email";
 import type {
   NewsletterConfirmResult,
   NewsletterResult,
+  NewsletterUnsubscribeResult,
 } from "./newsletter-shared";
 import { syncNewsletterNow } from "./server";
 import { newsletterSignupDeps, sendNewsletterEmail } from "./signup-server";
 import { hashToken, subscribeToNewsletter } from "./subscribe";
+import { isUnsubscribeCode } from "./unsubscribe-code";
 
 // The newsletter's Server Actions (useActionState): signing up (with the
 // database, Turnstile and Resend behind it, subscribe.ts) and confirming
 // with the link's token, after which the welcome goes out and the address
-// is copied to Resend at once (the schedule retries if that fails).
+// is copied to Resend at once (the schedule retries if that fails); and
+// unsubscribing with the code from an issue's link: off the list here at
+// once, then unsubscribed in Resend too (the schedule retries that too).
 
 export async function subscribeToNewsletterAction(
   _previous: NewsletterResult,
@@ -66,4 +73,25 @@ export async function confirmNewsletterAction(
     ]);
   }
   return { status: confirmation.outcome };
+}
+
+export async function unsubscribeNewsletterAction(
+  _previous: NewsletterUnsubscribeResult,
+  form: FormData,
+): Promise<NewsletterUnsubscribeResult> {
+  const code = String(form.get("kod") ?? "");
+  if (!isUnsubscribeCode(code)) return { status: "unknown" };
+  let result;
+  try {
+    result = await unsubscribeNewsletter(createSecretClient(), code);
+  } catch (error) {
+    console.error("[newsletter] unsubscribing failed:", error);
+    return { status: "failed" };
+  }
+  if (result.outcome === "stopped") {
+    await syncNewsletterNow().catch((error: unknown) => {
+      console.error("[newsletter] unsubscribing in Resend failed:", error);
+    });
+  }
+  return { status: result.outcome };
 }

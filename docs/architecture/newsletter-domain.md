@@ -5,8 +5,9 @@ every article, the archive, or a box when booking a visit), confirm by
 e-mail (double opt-in) and get a welcome e-mail; the confirmed addresses
 are copied to Resend. The owner writes each issue in the admin portal
 (Newsletter → Wydania) and sends it from there, through Resend Broadcasts,
-now or at a chosen time. Unsubscribing is Resend's link in every message;
-Resend tells the site through a webhook. The portal also shows the list,
+now or at a chosen time. Every issue links to the site's own unsubscribe
+page (`/newsletter/wypisz`); one-click unsubscribing in the mail program
+goes through Resend, which tells the site through a webhook. The portal also shows the list,
 the consent each address gave, removes an address on request and exports
 a CSV. Sent issues can be read on the site at `/newsletter`.
 
@@ -29,6 +30,8 @@ row per address (lowercase, unique):
 - `token_hash`: SHA-256 of the link's token; the token itself is only in
   the e-mail. A link lasts 7 days; unconfirmed sign-ups are removed after
   7 days (`forget-stale-newsletter-signups`, hourly).
+- `unsubscribe_token`: the random code in the address's unsubscribe link,
+  kept in Resend as the contact's `unsubscribe_token` property.
 - `sender_key`: a keyed hash of the visitor's IP, for the limit of 5
   sign-ups an hour.
 
@@ -85,16 +88,23 @@ Sending: the portal's actions call the site's `/api/centrum/newsletter`
 with the admin's token (the site checks the admin role). The site renders
 the issue (`features/newsletter/issue-email.tsx`, React Email) and creates
 the broadcast for `RESEND_NEWSLETTER_SEGMENT_ID` (required) from
-`NEWSLETTER_FROM` (else `EMAIL_FROM`), with Resend's
-`{{{RESEND_UNSUBSCRIBE_URL}}}`. "Wyślij test" sends the draft to the
+`NEWSLETTER_FROM` (else `EMAIL_FROM`), its unsubscribe link
+`/newsletter/wypisz?kod={{{contact.unsubscribe_token}}}` (Resend fills in
+each contact's code; the sync runs just before, so every contact has it). "Wyślij test" sends the draft to the
 admin's own address as an ordinary e-mail, without an unsubscribe link.
 
 ## Resend
 
 - **Sync** (`/api/cron/newsletter`, pg_cron every 10 minutes, and right
-  after a confirmation): active rows not yet copied are created or updated
-  as contacts (added to `RESEND_NEWSLETTER_SEGMENT_ID` when set);
-  `removing` rows are deleted there, then here.
+  after a confirmation or an unsubscribe): active rows not yet copied are
+  created or updated as contacts (added to `RESEND_NEWSLETTER_SEGMENT_ID`
+  when set, with the `unsubscribe_token` property, which the sync defines
+  in Resend the first time); rows unsubscribed on our page are marked
+  unsubscribed there; `removing` rows are deleted there, then here.
+- **Unsubscribe page** (`/newsletter/wypisz?kod=…`): names the address
+  (masked) and takes it off the list on a button press (mail scanners open
+  links): `unsubscribe_newsletter` stops it here at once, and the sync
+  tells Resend.
 - **Webhook** (`/api/resend/webhook`, signed with `RESEND_WEBHOOK_SECRET`):
   `contact.updated` with `unsubscribed`, `contact.deleted`, and for
   newsletter e-mails (a broadcast, or the `category=newsletter` tag)

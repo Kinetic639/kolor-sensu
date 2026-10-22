@@ -831,6 +831,7 @@ export type Database = {
           stopped_at: string | null;
           synced_at: string | null;
           token_hash: string;
+          unsubscribe_token: string;
         };
         Insert: {
           confirmation_sent_at?: string | null;
@@ -849,6 +850,7 @@ export type Database = {
           stopped_at?: string | null;
           synced_at?: string | null;
           token_hash: string;
+          unsubscribe_token?: string;
         };
         Update: {
           confirmation_sent_at?: string | null;
@@ -867,6 +869,7 @@ export type Database = {
           stopped_at?: string | null;
           synced_at?: string | null;
           token_hash?: string;
+          unsubscribe_token?: string;
         };
         Relationships: [];
       };
@@ -2958,6 +2961,13 @@ export type Database = {
         }[];
       };
       finish_newsletter_removal: { Args: { p_id: string }; Returns: undefined };
+      find_newsletter_unsubscribe: {
+        Args: { p_token: string };
+        Returns: {
+          email: string;
+          status: string;
+        }[];
+      };
       get_newsletter_consent: {
         Args: { p_id: string };
         Returns: {
@@ -2997,6 +3007,7 @@ export type Database = {
           email: string;
           id: string;
           status: string;
+          unsubscribe_token: string;
         }[];
       };
       remove_newsletter_subscriber: {
@@ -3013,6 +3024,13 @@ export type Database = {
           p_token_hash: string;
         };
         Returns: string;
+      };
+      unsubscribe_newsletter: {
+        Args: { p_token: string };
+        Returns: {
+          email: string;
+          outcome: string;
+        }[];
       };
       stop_newsletter_subscription: {
         Args: { p_email: string; p_reason: string };
