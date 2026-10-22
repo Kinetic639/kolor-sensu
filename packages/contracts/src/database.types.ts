@@ -1071,6 +1071,7 @@ export type Database = {
           starts_at: string | null;
           type: Database["public"]["Enums"]["room_availability_exception_type"];
           updated_at: string;
+          workshop_id: string | null;
         };
         Insert: {
           created_at?: string;
@@ -1082,6 +1083,7 @@ export type Database = {
           starts_at?: string | null;
           type: Database["public"]["Enums"]["room_availability_exception_type"];
           updated_at?: string;
+          workshop_id?: string | null;
         };
         Update: {
           created_at?: string;
@@ -1093,6 +1095,7 @@ export type Database = {
           starts_at?: string | null;
           type?: Database["public"]["Enums"]["room_availability_exception_type"];
           updated_at?: string;
+          workshop_id?: string | null;
         };
         Relationships: [
           {
@@ -1100,6 +1103,13 @@ export type Database = {
             columns: ["room_id"];
             isOneToOne: false;
             referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "room_availability_exceptions_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: false;
+            referencedRelation: "workshops";
             referencedColumns: ["id"];
           },
         ];
@@ -1765,6 +1775,7 @@ export type Database = {
           reason: string | null;
           specialist_id: string;
           updated_at: string;
+          workshop_id: string | null;
         };
         Insert: {
           created_at?: string;
@@ -1773,6 +1784,7 @@ export type Database = {
           reason?: string | null;
           specialist_id: string;
           updated_at?: string;
+          workshop_id?: string | null;
         };
         Update: {
           created_at?: string;
@@ -1781,6 +1793,7 @@ export type Database = {
           reason?: string | null;
           specialist_id?: string;
           updated_at?: string;
+          workshop_id?: string | null;
         };
         Relationships: [
           {
@@ -1788,6 +1801,13 @@ export type Database = {
             columns: ["specialist_id"];
             isOneToOne: false;
             referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "specialist_time_off_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: false;
+            referencedRelation: "workshops";
             referencedColumns: ["id"];
           },
         ];
@@ -1883,9 +1903,173 @@ export type Database = {
           },
         ];
       };
+      workshop_co_leaders: {
+        Row: {
+          specialist_id: string;
+          workshop_id: string;
+        };
+        Insert: {
+          specialist_id: string;
+          workshop_id: string;
+        };
+        Update: {
+          specialist_id?: string;
+          workshop_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "workshop_co_leaders_specialist_id_fkey";
+            columns: ["specialist_id"];
+            isOneToOne: false;
+            referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workshop_co_leaders_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: false;
+            referencedRelation: "workshops";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      workshop_online_links: {
+        Row: {
+          meeting_url: string;
+          updated_at: string;
+          workshop_id: string;
+        };
+        Insert: {
+          meeting_url: string;
+          updated_at?: string;
+          workshop_id: string;
+        };
+        Update: {
+          meeting_url?: string;
+          updated_at?: string;
+          workshop_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "workshop_online_links_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: true;
+            referencedRelation: "workshops";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      workshop_registrations: {
+        Row: {
+          access_token_hash: string;
+          attended: boolean | null;
+          booked_by: string;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          client_email: string | null;
+          client_name: string | null;
+          client_notes: string | null;
+          client_phone: string | null;
+          confirmed_at: string | null;
+          created_at: string;
+          currency_code: string;
+          hold_expires_at: string | null;
+          id: string;
+          offer_expires_at: string | null;
+          paid_minor: number;
+          payment_due_at: string | null;
+          price_minor: number;
+          privacy_accepted_at: string | null;
+          reference: string;
+          refund_due_minor: number;
+          refund_when_replaced: boolean;
+          refunded_minor: number;
+          status: Database["public"]["Enums"]["workshop_registration_status"];
+          terms_accepted_at: string | null;
+          updated_at: string;
+          waitlisted_at: string | null;
+          workshop_id: string;
+        };
+        Insert: {
+          access_token_hash: string;
+          attended?: boolean | null;
+          booked_by?: string;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          client_email?: string | null;
+          client_name?: string | null;
+          client_notes?: string | null;
+          client_phone?: string | null;
+          confirmed_at?: string | null;
+          created_at?: string;
+          currency_code: string;
+          hold_expires_at?: string | null;
+          id?: string;
+          offer_expires_at?: string | null;
+          paid_minor?: number;
+          payment_due_at?: string | null;
+          price_minor: number;
+          privacy_accepted_at?: string | null;
+          reference: string;
+          refund_due_minor?: number;
+          refund_when_replaced?: boolean;
+          refunded_minor?: number;
+          status?: Database["public"]["Enums"]["workshop_registration_status"];
+          terms_accepted_at?: string | null;
+          updated_at?: string;
+          waitlisted_at?: string | null;
+          workshop_id: string;
+        };
+        Update: {
+          access_token_hash?: string;
+          attended?: boolean | null;
+          booked_by?: string;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          client_email?: string | null;
+          client_name?: string | null;
+          client_notes?: string | null;
+          client_phone?: string | null;
+          confirmed_at?: string | null;
+          created_at?: string;
+          currency_code?: string;
+          hold_expires_at?: string | null;
+          id?: string;
+          offer_expires_at?: string | null;
+          paid_minor?: number;
+          payment_due_at?: string | null;
+          price_minor?: number;
+          privacy_accepted_at?: string | null;
+          reference?: string;
+          refund_due_minor?: number;
+          refund_when_replaced?: boolean;
+          refunded_minor?: number;
+          status?: Database["public"]["Enums"]["workshop_registration_status"];
+          terms_accepted_at?: string | null;
+          updated_at?: string;
+          waitlisted_at?: string | null;
+          workshop_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "workshop_registrations_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: false;
+            referencedRelation: "workshops";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       workshops: {
         Row: {
+          agenda: string | null;
+          audience: string | null;
+          body: Json | null;
+          cancel_reason: string | null;
+          cancelled_at: string | null;
           capacity: number;
+          confirmed_at: string | null;
+          cover_alt: string | null;
           cover_image_path: string | null;
           created_at: string;
           currency_code: string;
@@ -1893,10 +2077,14 @@ export type Database = {
           id: string;
           location_id: string | null;
           long_description: string | null;
+          min_participants: number | null;
           modality: Database["public"]["Enums"]["workshop_modality"];
           price_minor: number;
+          registration_closes_at: string | null;
           registration_enabled: boolean;
           room_id: string | null;
+          seo_description: string | null;
+          seo_title: string | null;
           short_description: string | null;
           slug: string;
           specialist_id: string;
@@ -1906,7 +2094,14 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          agenda?: string | null;
+          audience?: string | null;
+          body?: Json | null;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
           capacity: number;
+          confirmed_at?: string | null;
+          cover_alt?: string | null;
           cover_image_path?: string | null;
           created_at?: string;
           currency_code?: string;
@@ -1914,10 +2109,14 @@ export type Database = {
           id?: string;
           location_id?: string | null;
           long_description?: string | null;
+          min_participants?: number | null;
           modality?: Database["public"]["Enums"]["workshop_modality"];
           price_minor: number;
+          registration_closes_at?: string | null;
           registration_enabled?: boolean;
           room_id?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
           short_description?: string | null;
           slug: string;
           specialist_id: string;
@@ -1927,7 +2126,14 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          agenda?: string | null;
+          audience?: string | null;
+          body?: Json | null;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
           capacity?: number;
+          confirmed_at?: string | null;
+          cover_alt?: string | null;
           cover_image_path?: string | null;
           created_at?: string;
           currency_code?: string;
@@ -1935,10 +2141,14 @@ export type Database = {
           id?: string;
           location_id?: string | null;
           long_description?: string | null;
+          min_participants?: number | null;
           modality?: Database["public"]["Enums"]["workshop_modality"];
           price_minor?: number;
+          registration_closes_at?: string | null;
           registration_enabled?: boolean;
           room_id?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
           short_description?: string | null;
           slug?: string;
           specialist_id?: string;
@@ -2142,6 +2352,129 @@ export type Database = {
       delete_discount_code: {
         Args: { p_id: string };
         Returns: undefined;
+      };
+      workshop_availability: {
+        Args: { p_ids: string[] };
+        Returns: {
+          workshop_id: string;
+          seats_left: number;
+          waitlist_count: number;
+          registration_open: boolean;
+          confirmed: boolean;
+          pay_later_until: string;
+          full_refund_until: string;
+        }[];
+      };
+      hold_workshop_seat: {
+        Args: { p_slug: string; p_client_key: string };
+        Returns: {
+          registration_id: string;
+          reference: string;
+          access_token: string;
+          hold_expires_at: string;
+        }[];
+      };
+      save_workshop_registration_details: {
+        Args: {
+          p_access_token: string;
+          p_name: string;
+          p_email: string;
+          p_phone: string | null;
+          p_notes: string | null;
+          p_accept_terms: boolean;
+          p_accept_privacy: boolean;
+        };
+        Returns: undefined;
+      };
+      reserve_workshop_seat: {
+        Args: { p_access_token: string };
+        Returns: { reference: string; payment_due_at: string }[];
+      };
+      confirm_free_workshop_seat: {
+        Args: { p_access_token: string };
+        Returns: string;
+      };
+      join_workshop_waitlist: {
+        Args: {
+          p_slug: string;
+          p_client_key: string;
+          p_name: string;
+          p_email: string;
+          p_phone: string | null;
+          p_notes: string | null;
+          p_accept_terms: boolean;
+          p_accept_privacy: boolean;
+        };
+        Returns: { reference: string; access_token: string }[];
+      };
+      get_workshop_registration: {
+        Args: { p_access_token: string };
+        Returns: {
+          reference: string;
+          status: Database["public"]["Enums"]["workshop_registration_status"];
+          workshop_slug: string;
+          workshop_title: string;
+          workshop_status: Database["public"]["Enums"]["workshop_status"];
+          workshop_confirmed: boolean;
+          modality: Database["public"]["Enums"]["workshop_modality"];
+          starts_at: string;
+          ends_at: string;
+          location_name: string | null;
+          location_address: string | null;
+          room_name: string | null;
+          price_minor: number;
+          currency_code: string;
+          paid_minor: number;
+          refund_due_minor: number;
+          refunded_minor: number;
+          client_name: string | null;
+          client_email: string | null;
+          client_phone: string | null;
+          client_notes: string | null;
+          details_saved: boolean;
+          hold_expires_at: string | null;
+          payment_due_at: string | null;
+          offer_expires_at: string | null;
+          waitlist_position: number | null;
+          full_refund_until: string;
+          can_pay_later: boolean;
+          cancelled_by: string | null;
+          meeting_url: string | null;
+        }[];
+      };
+      cancel_workshop_registration: {
+        Args: { p_access_token: string };
+        Returns: {
+          reference: string;
+          refund_minor: number;
+          refund_when_replaced: boolean;
+        }[];
+      };
+      transfer_workshop_seat: {
+        Args: {
+          p_access_token: string;
+          p_name: string;
+          p_email: string;
+          p_phone: string | null;
+        };
+        Returns: undefined;
+      };
+      run_workshop_jobs: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
+      confirm_workshop: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      cancel_workshop: {
+        Args: { p_id: string; p_reason?: string | null };
+        Returns: {
+          registration_id: string;
+          reference: string;
+          client_email: string | null;
+          refund_minor: number;
+        }[];
       };
       apply_discount_code: {
         Args: { p_access_token: string; p_code: string };
@@ -3269,6 +3602,14 @@ export type Database = {
         | "other";
       visit_mode: "in_person" | "online";
       workshop_modality: "in_person" | "online";
+      workshop_registration_status:
+        | "held"
+        | "awaiting_payment"
+        | "confirmed"
+        | "waitlisted"
+        | "offered"
+        | "cancelled"
+        | "expired";
       workshop_status: "draft" | "published" | "cancelled" | "completed";
     };
     CompositeTypes: {
@@ -3436,6 +3777,15 @@ export const Constants = {
       ],
       visit_mode: ["in_person", "online"],
       workshop_modality: ["in_person", "online"],
+      workshop_registration_status: [
+        "held",
+        "awaiting_payment",
+        "confirmed",
+        "waitlisted",
+        "offered",
+        "cancelled",
+        "expired",
+      ],
       workshop_status: ["draft", "published", "cancelled", "completed"],
     },
   },
