@@ -430,9 +430,11 @@ BEGIN
          JOIN public.workshops AS w ON w.id = r.workshop_id WHERE w.slug = 'ws-reg-main') = 0 THEN
     RAISE EXCEPTION 'Q: a co-leader did not see their workshop''s participants';
   END IF;
-  IF pg_temp.hint_of($sql$SELECT access_token_hash FROM public.workshop_registrations$sql$) <> '42501' THEN
+  BEGIN
+    PERFORM access_token_hash FROM public.workshop_registrations LIMIT 1;
     RAISE EXCEPTION 'Q: a leader read the access tokens';
-  END IF;
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
   IF pg_temp.hint_of(format('SELECT public.cancel_workshop(%L)',
       (SELECT id FROM public.workshops WHERE slug = 'ws-reg-main'))) <> '42501' THEN
     RAISE EXCEPTION 'Q: a leader cancelled a workshop';
@@ -464,12 +466,16 @@ SELECT set_config('request.jwt.claims', '', true);
 SET LOCAL ROLE anon;
 DO $$
 BEGIN
-  IF pg_temp.hint_of($sql$SELECT 1 FROM public.workshop_registrations$sql$) <> '42501' THEN
+  BEGIN
+    PERFORM 1 FROM public.workshop_registrations LIMIT 1;
     RAISE EXCEPTION 'Q: a visitor read registrations';
-  END IF;
-  IF pg_temp.hint_of($sql$SELECT 1 FROM public.workshop_online_links$sql$) <> '42501' THEN
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM 1 FROM public.workshop_online_links LIMIT 1;
     RAISE EXCEPTION 'Q: a visitor read a meeting link';
-  END IF;
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
   IF NOT EXISTS (
     SELECT 1 FROM public.workshop_co_leaders AS co
     JOIN public.workshops AS w ON w.id = co.workshop_id WHERE w.slug = 'ws-reg-main'
