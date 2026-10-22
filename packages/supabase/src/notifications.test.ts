@@ -49,8 +49,30 @@ describe("toPortalNotification", () => {
         refundMinor: null,
         refundDueMinor: 0,
         priceMinor: 20000,
+        amountMinor: null,
+        disputeStatus: null,
+        disputeReason: null,
         currencyCode: "PLN",
       },
+    });
+  });
+
+  it("a dispute: its amount, Stripe's status and reason", () => {
+    const n = toPortalNotification({
+      ...row,
+      kind: "disputed",
+      actor: "payment",
+      details: {
+        reference: "2610-004",
+        amount_minor: 20000,
+        dispute_status: "needs_response",
+        dispute_reason: "fraudulent",
+      },
+    });
+    expect(n.details).toMatchObject({
+      amountMinor: 20000,
+      disputeStatus: "needs_response",
+      disputeReason: "fraudulent",
     });
   });
 

@@ -3,9 +3,11 @@ import type Stripe from "stripe";
 import { describe, expect, it, vi } from "vitest";
 import {
   checkoutSessionParams,
+  eventFitsKey,
   handleStripeEvent,
   type PaymentDeps,
   settleSession,
+  stuckSessionAction,
 } from "./payment";
 
 const booking: GuestBooking = {
@@ -113,6 +115,7 @@ function deps(outcome = "confirmed" as const): PaymentDeps {
     fail: vi.fn().mockResolvedValue(undefined),
     refundPayment: vi.fn().mockResolvedValue(undefined),
     recordRefund: vi.fn().mockResolvedValue(true),
+    recordDispute: vi.fn().mockResolvedValue("KS-20301002-6422"),
   };
 }
 
@@ -230,10 +233,102 @@ describe("handleStripeEvent", () => {
     expect(d.recordRefund).toHaveBeenCalledWith("pi_1", 20000);
   });
 
+  it("records a dispute when it opens and when it closes", async () => {
+    const d = deps();
+    const dispute = {
+      id: "du_1",
+      payment_intent: "pi_1",
+      amount: 20000,
+      reason: "fraudulent",
+      status: "needs_response",
+    };
+    await handleStripeEvent(event("charge.dispute.created", dispute), d);
+    expect(d.recordDispute).toHaveBeenCalledWith({
+      paymentIntentId: "pi_1",
+      disputeId: "du_1",
+      status: "needs_response",
+      amountMinor: 20000,
+      reason: "fraudulent",
+      closed: false,
+    });
+    await handleStripeEvent(
+      event("charge.dispute.closed", { ...dispute, status: "lost" }),
+      d,
+    );
+    expect(d.recordDispute).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: "lost", closed: true }),
+    );
+  });
+
   it("ignores other events", async () => {
     const d = deps();
     await handleStripeEvent(event("customer.created", {}), d);
     expect(d.fulfill).not.toHaveBeenCalled();
     expect(d.fail).not.toHaveBeenCalled();
+  });
+});
+
+describe("eventFitsKey", () => {
+  it("a live event only with a live key, a test one only with a test key", () => {
+    expect(eventFitsKey(false, "sk_test_123")).toBe(true);
+    expect(eventFitsKey(true, "rk_live_123")).toBe(true);
+    expect(eventFitsKey(true, "sk_test_123")).toBe(false);
+    expect(eventFitsKey(false, "sk_live_123")).toBe(false);
+    expect(eventFitsKey(false, undefined)).toBe(false);
+  });
+});
+
+describe("stuckSessionAction", () => {
+  const intent = (status: string) => ({ id: "pi_1", status });
+
+  it("a payment Stripe settled meanwhile is settled here too", () => {
+    expect(
+      stuckSessionAction({
+        status: "complete",
+        payment_status: "paid",
+        payment_intent: intent("succeeded"),
+      }),
+    ).toBe("settle");
+  });
+
+  it("a session never paid frees its time", () => {
+    expect(
+      stuckSessionAction({
+        status: "expired",
+        payment_status: "unpaid",
+        payment_intent: null,
+      }),
+    ).toBe("expire");
+    expect(
+      stuckSessionAction({
+        status: "complete",
+        payment_status: "unpaid",
+        payment_intent: intent("canceled"),
+      }),
+    ).toBe("fail");
+    expect(
+      stuckSessionAction({
+        status: "complete",
+        payment_status: "unpaid",
+        payment_intent: intent("requires_payment_method"),
+      }),
+    ).toBe("fail");
+  });
+
+  it("money still on its way waits", () => {
+    expect(
+      stuckSessionAction({
+        status: "complete",
+        payment_status: "unpaid",
+        payment_intent: intent("processing"),
+      }),
+    ).toBe("wait");
+    expect(
+      stuckSessionAction({
+        status: "open",
+        payment_status: "unpaid",
+        payment_intent: null,
+      }),
+    ).toBe("wait");
   });
 });

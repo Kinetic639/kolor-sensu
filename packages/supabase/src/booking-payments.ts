@@ -151,6 +151,41 @@ export async function recordRefund(
 }
 
 /**
+ * A dispute (a chargeback) on a visit's payment, opened or closed: written
+ * to its history, the admins told. The visit's reference, or null when the
+ * payment is not a visit's.
+ */
+export async function recordDispute(
+  client: Client,
+  dispute: {
+    paymentIntentId: string;
+    disputeId: string;
+    status: string;
+    amountMinor: number;
+    reason: string;
+    closed: boolean;
+  },
+) {
+  const { data, error } = await client.rpc("record_dispute", {
+    p_payment_intent_id: dispute.paymentIntentId,
+    p_dispute_id: dispute.disputeId,
+    p_status: dispute.status,
+    p_amount_minor: dispute.amountMinor,
+    p_reason: dispute.reason,
+    p_closed: dispute.closed,
+  });
+  if (error) throw error;
+  return data ?? null;
+}
+
+/** Checkout Sessions still pending two hours on, to ask Stripe about. */
+export async function listStuckPayments(client: Client): Promise<string[]> {
+  const { data, error } = await client.rpc("list_stuck_payments");
+  if (error) throw error;
+  return (data ?? []).map((row) => row.checkout_session_id);
+}
+
+/**
  * Claims a Stripe event for handling; false when it was handled (or is
  * being handled) already, so a redelivery does nothing twice.
  */

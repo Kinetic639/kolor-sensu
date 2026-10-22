@@ -282,4 +282,71 @@ describe("the centre's own way (R12)", () => {
     );
     expect(rows[0]!.title).toBe("Wysłano e-mail: Zwrot pieniędzy");
   });
+
+  it("pay later: confirmed from the e-mail, then paid by its time", () => {
+    const rows = visitEventRows(
+      [
+        {
+          id: 1,
+          occurredAt: "2026-10-01T08:00:00+00:00",
+          kind: "reserved",
+          actor: "client",
+          actorName: null,
+          details: { payment_due_at: "2026-10-01T08:30:00+00:00" },
+        },
+        {
+          id: 2,
+          occurredAt: "2026-10-01T08:10:00+00:00",
+          kind: "reservation_confirmed",
+          actor: "client",
+          actorName: null,
+          details: { payment_due_at: "2026-10-02T08:00:00+00:00" },
+        },
+      ],
+      options,
+    );
+    expect(rows.map((row) => [row.title, row.detail, row.tone])).toEqual([
+      [
+        "Zarezerwowano, płatność później",
+        expect.stringMatching(/^Do potwierdzenia z e-maila do .*10:30$/),
+        "info",
+      ],
+      [
+        "Klient potwierdził rezerwację",
+        expect.stringMatching(/^Opłata do .*02\.10\.2026, 10:00$/),
+        "info",
+      ],
+    ]);
+  });
+});
+
+describe("a dispute (a chargeback)", () => {
+  it("opened, then closed, with the amount and the outcome", () => {
+    const rows = visitEventRows(
+      [
+        {
+          id: 1,
+          occurredAt: "2026-10-20T08:00:00+00:00",
+          kind: "payment_disputed",
+          actor: "payment",
+          actorName: null,
+          details: { amount_minor: 25000, status: "needs_response" },
+        },
+        {
+          id: 2,
+          occurredAt: "2026-11-20T08:00:00+00:00",
+          kind: "dispute_closed",
+          actor: "payment",
+          actorName: null,
+          details: { amount_minor: 25000, status: "lost" },
+        },
+      ],
+      options,
+    );
+    expect(rows.map((row) => [row.title, row.tone])).toEqual([
+      ["Bank klienta otworzył spór o płatność", "danger"],
+      ["Spór przegrany: pieniądze wróciły do klienta", "danger"],
+    ]);
+    expect(rows[0]!.detail).toMatch(/^Kwota: 250\s+zł$/);
+  });
 });

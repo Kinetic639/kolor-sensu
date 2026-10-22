@@ -89,6 +89,19 @@ export interface PaymentDeps {
   ) => Promise<unknown>;
   /** The visit is confirmed (again, possibly): send its e-mail, once. */
   onConfirmed?: (reference: string) => Promise<unknown>;
+  /** A dispute (a chargeback) opened or closed: the history and the admins. */
+  recordDispute: (dispute: DisputeRecord) => Promise<unknown>;
+}
+
+export interface DisputeRecord {
+  paymentIntentId: string;
+  disputeId: string;
+  /** Stripe's: `needs_response`, `under_review`, `won`, `lost`… */
+  status: string;
+  amountMinor: number;
+  /** Stripe's: `fraudulent`, `product_not_received`… */
+  reason: string;
+  closed: boolean;
 }
 
 function paymentIntentId(value: string | { id: string } | null) {
@@ -152,6 +165,21 @@ export async function handleStripeEvent(
     case "checkout.session.expired":
       await deps.fail(event.data.object.id, "expired");
       return;
+    case "charge.dispute.created":
+    case "charge.dispute.closed": {
+      const dispute = event.data.object;
+      const intent = paymentIntentId(dispute.payment_intent);
+      if (!intent) return;
+      await deps.recordDispute({
+        paymentIntentId: intent,
+        disputeId: dispute.id,
+        status: dispute.status,
+        amountMinor: dispute.amount,
+        reason: dispute.reason,
+        closed: event.type === "charge.dispute.closed",
+      });
+      return;
+    }
     case "charge.refunded": {
       const charge = event.data.object;
       const intent = paymentIntentId(charge.payment_intent);
@@ -161,4 +189,37 @@ export async function handleStripeEvent(
     default:
       return;
   }
+}
+
+/**
+ * Whether an event belongs to the server's Stripe key: a test event never
+ * changes live data, nor a live one test data (R2), even if the webhook's
+ * secret were the same.
+ */
+export function eventFitsKey(livemode: boolean, secretKey: string | undefined) {
+  if (!secretKey) return false;
+  const live = /^(sk|rk)_live_/.test(secretKey);
+  return livemode === live;
+}
+
+/**
+ * A payment still pending hours later (its event lost, R7), as Stripe has
+ * it now: settled (paid), freed (never paid, or the payment failed), or
+ * still on its way.
+ */
+export function stuckSessionAction(
+  session: Pick<Stripe.Checkout.Session, "status" | "payment_status"> & {
+    payment_intent: string | { status: string } | null;
+  },
+): "settle" | "expire" | "fail" | "wait" {
+  if (session.status === "expired") return "expire";
+  if (session.status !== "complete") return "wait";
+  if (session.payment_status !== "unpaid") return "settle";
+  const status =
+    typeof session.payment_intent === "object"
+      ? session.payment_intent?.status
+      : undefined;
+  return status === "canceled" || status === "requires_payment_method"
+    ? "fail"
+    : "wait";
 }
