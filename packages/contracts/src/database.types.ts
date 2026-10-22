@@ -759,6 +759,63 @@ export type Database = {
         };
         Relationships: [];
       };
+      newsletter_subscribers: {
+        Row: {
+          confirmation_sent_at: string | null;
+          confirmed_at: string | null;
+          consent_text: string;
+          consent_version: string;
+          created_at: string;
+          email: string;
+          id: string;
+          requested_at: string;
+          resend_contact_id: string | null;
+          sender_key: string;
+          source: string;
+          status: string;
+          stop_reason: string | null;
+          stopped_at: string | null;
+          synced_at: string | null;
+          token_hash: string;
+        };
+        Insert: {
+          confirmation_sent_at?: string | null;
+          confirmed_at?: string | null;
+          consent_text: string;
+          consent_version: string;
+          created_at?: string;
+          email: string;
+          id?: string;
+          requested_at?: string;
+          resend_contact_id?: string | null;
+          sender_key: string;
+          source: string;
+          status?: string;
+          stop_reason?: string | null;
+          stopped_at?: string | null;
+          synced_at?: string | null;
+          token_hash: string;
+        };
+        Update: {
+          confirmation_sent_at?: string | null;
+          confirmed_at?: string | null;
+          consent_text?: string;
+          consent_version?: string;
+          created_at?: string;
+          email?: string;
+          id?: string;
+          requested_at?: string;
+          resend_contact_id?: string | null;
+          sender_key?: string;
+          source?: string;
+          status?: string;
+          stop_reason?: string | null;
+          stopped_at?: string | null;
+          synced_at?: string | null;
+          token_hash?: string;
+        };
+        Relationships: [];
+      };
       locations: {
         Row: {
           accessibility_notes: string | null;
@@ -2763,6 +2820,74 @@ export type Database = {
           p_sender_key: string;
         };
         Returns: string;
+      };
+      confirm_newsletter_subscription: {
+        Args: { p_token_hash: string };
+        Returns: {
+          email: string;
+          outcome: string;
+        }[];
+      };
+      finish_newsletter_removal: { Args: { p_id: string }; Returns: undefined };
+      get_newsletter_consent: {
+        Args: { p_id: string };
+        Returns: {
+          confirmed_at: string;
+          consent_text: string;
+          consent_version: string;
+          email: string;
+          requested_at: string;
+        }[];
+      };
+      list_newsletter_subscribers: {
+        Args: never;
+        Returns: {
+          confirmed_at: string;
+          consent_version: string;
+          email: string;
+          id: string;
+          requested_at: string;
+          source: string;
+          status: string;
+          stop_reason: string;
+          stopped_at: string;
+          synced: boolean;
+        }[];
+      };
+      mark_newsletter_confirmation_sent: {
+        Args: { p_email: string };
+        Returns: undefined;
+      };
+      mark_newsletter_synced: {
+        Args: { p_contact_id: string; p_id: string };
+        Returns: undefined;
+      };
+      newsletter_contacts_to_sync: {
+        Args: never;
+        Returns: {
+          email: string;
+          id: string;
+          status: string;
+        }[];
+      };
+      remove_newsletter_subscriber: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      request_newsletter_subscription: {
+        Args: {
+          p_consent_text: string;
+          p_consent_version: string;
+          p_email: string;
+          p_sender_key: string;
+          p_source: string;
+          p_token_hash: string;
+        };
+        Returns: string;
+      };
+      stop_newsletter_subscription: {
+        Args: { p_email: string; p_reason: string };
+        Returns: boolean;
       };
       mark_contact_message_notified: {
         Args: { p_id: string };

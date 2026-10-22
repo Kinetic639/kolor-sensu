@@ -15,7 +15,8 @@
     "./server": "./src/server.ts",
     "./contact": "./src/contact.ts",
     "./education": "./src/education.ts",
-    "./discount-codes": "./src/discount-codes.ts"
+    "./discount-codes": "./src/discount-codes.ts",
+    "./newsletter": "./src/newsletter.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

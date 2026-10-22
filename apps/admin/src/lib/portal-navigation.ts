@@ -30,6 +30,7 @@ export const adminNavigation: PortalNavigationSection[] = [
       { label: "E-booki", href: "/ebooki", icon: "ebooks" },
       { label: "Ogłoszenia", href: "/ogloszenia", icon: "announcements" },
       { label: "E-maile", href: "/maile", icon: "emails" },
+      { label: "Newsletter", href: "/newsletter", icon: "newsletter" },
     ],
   },
   {

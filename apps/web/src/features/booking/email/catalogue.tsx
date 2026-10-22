@@ -230,7 +230,7 @@ export function clientEmails(options: CatalogueOptions): CatalogueEmail[] {
 
 export interface EmailPreview {
   key: string;
-  group: CatalogueEmail["group"];
+  group: CatalogueEmail["group"] | "Newsletter";
   name: string;
   when: string;
   attachment: string | null;

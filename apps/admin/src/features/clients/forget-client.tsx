@@ -47,7 +47,8 @@ export function ForgetClientButton({
             <AlertDialogDescription>
               Dane klienta „{name}” (imię i nazwisko, e-mail, telefon, notatki)
               znikną z karty, wizyt i powiadomień, a odpowiedzi z testu zostaną
-              usunięte. Wizyty i płatności zostają, opisane jako „Klient
+              usunięte. Jeśli ten adres jest zapisany na newsletter, zniknie też
+              z newslettera. Wizyty i płatności zostają, opisane jako „Klient
               usunięty”. Tego nie da się cofnąć.
             </AlertDialogDescription>
           </AlertDialogHeader>

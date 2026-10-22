@@ -13,7 +13,14 @@ import {
 import type { VisitEmailContent } from "./confirmation-content";
 
 // A visit e-mail's look (the confirmation, a new time, a cancellation): simple, readable in every mail client,
-// in the public site's colours (inline, as e-mail needs).
+// in the public site's colours (inline, as e-mail needs). The newsletter's
+// confirmation link wears it too, without the visit's details.
+
+/** What the template shows: a visit e-mail's words, without its files. */
+export type EmailLook = Omit<VisitEmailContent, "subject" | "text" | "ics"> & {
+  /** Over the signature; "Do zobaczenia," unless given. */
+  farewell?: string;
+};
 
 const colors = {
   ink: "#16302f",
@@ -28,7 +35,7 @@ export function ConfirmationEmail({
   content,
   company = null,
 }: {
-  content: VisitEmailContent;
+  content: EmailLook;
   /** The company in one line, at the foot (Ustawienia → Centrum). */
   company?: string | null;
 }) {
@@ -69,24 +76,26 @@ export function ConfirmationEmail({
             {content.greeting} {content.intro}
           </Text>
 
-          <Section
-            style={{
-              border: `1px solid ${colors.border}`,
-              borderRadius: 12,
-              margin: "16px 0",
-              padding: "8px 16px",
-            }}
-          >
-            {content.rows.map(([label, value]) => (
-              <Text
-                key={label}
-                style={{ fontSize: 15, lineHeight: "22px", margin: "8px 0" }}
-              >
-                <span style={{ color: colors.muted }}>{label}:</span>{" "}
-                <strong>{value}</strong>
-              </Text>
-            ))}
-          </Section>
+          {content.rows.length ? (
+            <Section
+              style={{
+                border: `1px solid ${colors.border}`,
+                borderRadius: 12,
+                margin: "16px 0",
+                padding: "8px 16px",
+              }}
+            >
+              {content.rows.map(([label, value]) => (
+                <Text
+                  key={label}
+                  style={{ fontSize: 15, lineHeight: "22px", margin: "8px 0" }}
+                >
+                  <span style={{ color: colors.muted }}>{label}:</span>{" "}
+                  <strong>{value}</strong>
+                </Text>
+              ))}
+            </Section>
+          ) : null}
 
           <Button
             href={content.manageUrl}
@@ -120,7 +129,7 @@ export function ConfirmationEmail({
             </Text>
           ) : null}
           <Text style={{ color: colors.muted, fontSize: 13 }}>
-            Do zobaczenia,
+            {content.farewell ?? "Do zobaczenia,"}
             <br />
             Kolor Sensu
           </Text>

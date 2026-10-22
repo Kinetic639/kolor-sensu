@@ -37,7 +37,8 @@
     "./services": "./src/services.ts",
     "./offer-layout": "./src/offer-layout.ts",
     "./specialist": "./src/specialist.ts",
-    "./contact": "./src/contact.ts"
+    "./contact": "./src/contact.ts",
+    "./newsletter": "./src/newsletter.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

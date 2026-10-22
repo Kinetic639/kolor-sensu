@@ -75,4 +75,20 @@ describe("SiteFooter", () => {
       screen.getByRole("navigation", { name: "Oferta" }),
     ).not.toHaveTextContent("Ustawienia plików cookies");
   });
+
+  it("shows the site's newsletter form only when given", () => {
+    const { rerender } = render(<SiteFooter navigation={[home]} />);
+    expect(
+      screen.queryByRole("form", { name: "Zapis na newsletter" }),
+    ).not.toBeInTheDocument();
+    rerender(
+      <SiteFooter
+        navigation={[home]}
+        newsletter={<form aria-label="Zapis na newsletter" />}
+      />,
+    );
+    expect(
+      screen.getByRole("form", { name: "Zapis na newsletter" }),
+    ).toBeInTheDocument();
+  });
 });

@@ -37,4 +37,15 @@ describe("NewsletterBand", () => {
       "/kontakt",
     );
   });
+
+  it("puts the sign-up form under its words", () => {
+    render(
+      <NewsletterBand header={plainHeader({ title: "Bądźmy w kontakcie" })}>
+        <form aria-label="Zapis na newsletter" />
+      </NewsletterBand>,
+    );
+    expect(
+      screen.getByRole("form", { name: "Zapis na newsletter" }),
+    ).toBeInTheDocument();
+  });
 });
