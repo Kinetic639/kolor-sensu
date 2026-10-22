@@ -38,7 +38,12 @@ import {
   sendVisitConfirmation,
 } from "./email/confirmation-server";
 import { clientIp, turnstileKeys, verifyTurnstile, visitorKey } from "./guards";
-import { clearHoldToken, readHoldToken, saveHoldToken } from "./hold-cookie";
+import {
+  clearHoldToken,
+  readHoldToken,
+  saveFormerHoldToken,
+  saveHoldToken,
+} from "./hold-cookie";
 import { clearIntake, readIntake } from "./intake-cookie";
 import { loadWizard } from "./load-wizard";
 import { checkoutSessionParams } from "./payment";
@@ -94,7 +99,10 @@ export async function holdTimeAction(formData: FormData) {
   const client = createSecretClient();
   // One visitor, one held time: choosing again gives the earlier one back.
   const previous = await readHoldToken();
-  if (previous) await releaseHold(client, previous).catch(() => false);
+  if (previous) {
+    await releaseHold(client, previous).catch(() => false);
+    await saveFormerHoldToken(previous);
+  }
 
   try {
     const held = await holdSlot(client, {
@@ -135,6 +143,8 @@ export async function releaseHoldAction() {
     if (session) await expireSession(session);
     await releaseHold(db, token).catch(() => false);
     await clearHoldToken();
+    // The details given for it are filled in for the next time chosen.
+    await saveFormerHoldToken(token);
   }
   redirect(
     bookingHref(readMemory((await cookies()).get(MEMORY_COOKIE)?.value)),
