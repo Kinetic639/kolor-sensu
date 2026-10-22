@@ -139,8 +139,12 @@ REVOKE ALL ON public.workshop_co_leaders FROM anon, authenticated;
 GRANT SELECT ON public.workshop_co_leaders TO anon, authenticated;
 GRANT INSERT, DELETE ON public.workshop_co_leaders TO authenticated;
 
-CREATE POLICY "Anyone can read the co-leaders of a public workshop" ON public.workshop_co_leaders
-  FOR SELECT TO anon, authenticated
+CREATE POLICY "Visitors can read the co-leaders of a public workshop" ON public.workshop_co_leaders
+  FOR SELECT TO anon
+  USING (private.workshop_is_public(workshop_id));
+
+CREATE POLICY "Staff can read the co-leaders of permitted workshops" ON public.workshop_co_leaders
+  FOR SELECT TO authenticated
   USING (
     private.workshop_is_public(workshop_id)
     OR public.has_role('admin'::public.app_role)
