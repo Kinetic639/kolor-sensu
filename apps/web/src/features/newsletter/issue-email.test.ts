@@ -1,7 +1,7 @@
 import type { RichTextDocument } from "@repo/contracts/rich-text";
 import { describe, expect, it } from "vitest";
 import {
-  RESEND_UNSUBSCRIBE_URL,
+  newsletterUnsubscribeUrl,
   newsletterIssueText,
   renderNewsletterIssue,
   type NewsletterIssueEmailContent,
@@ -39,9 +39,11 @@ const content: NewsletterIssueEmailContent = {
   closing: doc("Do zobaczenia"),
 };
 
+const UNSUBSCRIBE = newsletterUnsubscribeUrl("https://ks.example.invalid");
+
 const options = {
   origin: "https://ks.example.invalid",
-  unsubscribeUrl: RESEND_UNSUBSCRIBE_URL,
+  unsubscribeUrl: UNSUBSCRIBE,
   webUrl: "https://ks.example.invalid/newsletter/2",
   company: null,
 };
@@ -65,15 +67,19 @@ describe("the issue's e-mail", () => {
     expect(text).toContain(
       "Dowiedz się więcej: https://ks.example.invalid/warsztaty",
     );
-    expect(text).toContain(
-      `Wypisz się z newslettera: ${RESEND_UNSUBSCRIBE_URL}`,
+    expect(text).toContain(`Wypisz się z newslettera: ${UNSUBSCRIBE}`);
+  });
+
+  it("links to the site's unsubscribe page with the contact's code", async () => {
+    expect(UNSUBSCRIBE).toBe(
+      "https://ks.example.invalid/newsletter/wypisz?kod={{{contact.unsubscribe_token}}}",
     );
   });
 
-  it("renders the HTML with Resend's unsubscribe placeholder", async () => {
+  it("renders the HTML with the unsubscribe link", async () => {
     const rendered = await renderNewsletterIssue(content, options);
     expect(rendered.subject).toBe("Listopad w Kolor Sensu");
-    expect(rendered.html).toContain(RESEND_UNSUBSCRIBE_URL);
+    expect(rendered.html).toContain(UNSUBSCRIBE);
     expect(rendered.html).toContain("Warsztaty dla rodziców");
   });
 
@@ -82,7 +88,7 @@ describe("the issue's e-mail", () => {
       ...options,
       unsubscribeUrl: null,
     });
-    expect(rendered.html).not.toContain(RESEND_UNSUBSCRIBE_URL);
+    expect(rendered.html).not.toContain(UNSUBSCRIBE);
     expect(rendered.text).not.toContain("Wypisz się");
   });
 });

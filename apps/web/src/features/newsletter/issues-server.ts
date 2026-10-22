@@ -15,8 +15,8 @@ import { emailSender, resend, sendEmail } from "@/lib/email";
 import { articleImageUrl, getArticles, getEbooks } from "@/lib/education-data";
 import { getSiteFrame } from "@/lib/site-frame";
 import {
+  newsletterUnsubscribeUrl,
   renderNewsletterIssue,
-  RESEND_UNSUBSCRIBE_URL,
   type RenderedNewsletterIssue,
 } from "./issue-email";
 import { newsletterCards } from "./issue-items";
@@ -110,7 +110,7 @@ export function sendIssueAsAdmin(
     load: (issueId) => getNewsletterIssue(asAdmin, issueId),
     claim: (issueId, at) => claimNewsletterIssue(asAdmin, issueId, at),
     render: (issue: NewsletterIssue) =>
-      renderIssue(issue, RESEND_UNSUBSCRIBE_URL),
+      renderIssue(issue, newsletterUnsubscribeUrl(siteUrl())),
     sync: syncNewsletterNow,
     async broadcast(issue, at) {
       const { data, error } = await resend().broadcasts.create({

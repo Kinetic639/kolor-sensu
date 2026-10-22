@@ -103,8 +103,13 @@ export async function confirmNewsletterSubscription(
 export interface NewsletterContactToSync {
   id: string;
   email: string;
-  /** "active": copy it to Resend; "removing": delete it there, then here. */
-  status: "active" | "removing";
+  /**
+   * "active": copy it to Resend; "unsubscribed": unsubscribe it there too;
+   * "removing": delete it there, then here.
+   */
+  status: "active" | "unsubscribed" | "removing";
+  /** The code in its unsubscribe link (kept in Resend with the contact). */
+  unsubscribeToken: string;
 }
 
 export async function newsletterContactsToSync(
@@ -115,18 +120,20 @@ export async function newsletterContactsToSync(
   return (data ?? []).map((row) => ({
     id: row.id,
     email: row.email,
-    status: row.status as "active" | "removing",
+    status: row.status as NewsletterContactToSync["status"],
+    unsubscribeToken: row.unsubscribe_token,
   }));
 }
 
 export async function markNewsletterSynced(
   client: Client,
   id: string,
-  contactId: string,
+  contactId: string | null,
 ): Promise<void> {
   const { error } = await client.rpc("mark_newsletter_synced", {
     p_id: id,
-    p_contact_id: contactId,
+    // null keeps the id it has (an unsubscribe brought to Resend).
+    p_contact_id: contactId as string,
   });
   if (error) throw error;
 }
@@ -142,6 +149,39 @@ export async function finishNewsletterRemoval(
 }
 
 /** Resend reports the address stopped; true when it was on the list. */
+/** The address behind an unsubscribe link, if the code is known. */
+export async function findNewsletterUnsubscribe(
+  client: Client,
+  token: string,
+): Promise<{ email: string; status: NewsletterStatus } | null> {
+  const { data, error } = await client.rpc("find_newsletter_unsubscribe", {
+    p_token: token,
+  });
+  if (error) throw error;
+  const row = data?.[0];
+  return row
+    ? { email: row.email, status: row.status as NewsletterStatus }
+    : null;
+}
+
+export type NewsletterUnsubscribeOutcome = "stopped" | "already" | "unknown";
+
+/** The unsubscribe page's button: the address is off the list here. */
+export async function unsubscribeNewsletter(
+  client: Client,
+  token: string,
+): Promise<{ outcome: NewsletterUnsubscribeOutcome; email: string | null }> {
+  const { data, error } = await client.rpc("unsubscribe_newsletter", {
+    p_token: token,
+  });
+  if (error) throw error;
+  const row = data?.[0];
+  return {
+    outcome: (row?.outcome ?? "unknown") as NewsletterUnsubscribeOutcome,
+    email: row?.email ?? null,
+  };
+}
+
 export async function stopNewsletterSubscription(
   client: Client,
   email: string,

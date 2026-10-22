@@ -36,8 +36,13 @@ const colors = {
   border: "#e3e0d8",
 };
 
-/** Resend puts each recipient's own unsubscribe link here. */
-export const RESEND_UNSUBSCRIBE_URL = "{{{RESEND_UNSUBSCRIBE_URL}}}";
+/**
+ * Each recipient's own link to the site's unsubscribe page: Resend puts in
+ * the contact's code (its `unsubscribe_token` property, features/newsletter/
+ * sync.ts).
+ */
+export const newsletterUnsubscribeUrl = (origin: string) =>
+  `${origin}/newsletter/wypisz?kod={{{contact.unsubscribe_token}}}`;
 
 export interface NewsletterIssueEmailContent {
   subject: string;

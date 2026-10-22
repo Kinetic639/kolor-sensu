@@ -26,3 +26,10 @@ export type NewsletterConfirmResult =
   | { status: "already" }
   | { status: "unknown" }
   | { status: "failed" };
+
+export type NewsletterUnsubscribeResult =
+  | { status: "idle" }
+  | { status: "stopped" }
+  | { status: "already" }
+  | { status: "unknown" }
+  | { status: "failed" };
