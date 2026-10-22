@@ -256,6 +256,8 @@ export {
   listFreeSlots,
   releaseHold,
   reserveHold,
+  confirmReservation,
+  reservationConfirmBy,
   saveBookingDetails,
 } from "./booking";
 export type {

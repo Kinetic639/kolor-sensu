@@ -31,6 +31,8 @@ export type NotificationKind =
   | "profile_approved"
   /** A held visit has ended and waits for its specialist to close it. */
   | "visit_to_close"
+  /** A third unpaid reservation by one person: paid at once (admins). */
+  | "unpaid_limit"
   | "profile_rejected";
 
 export interface NotificationDetails {

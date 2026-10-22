@@ -21,6 +21,7 @@ const reserved: ClaimedBookingEmail = {
   bookedBy: "centre",
   paid: false,
   paymentDueAt: "2030-09-30T09:00:00+00:00",
+  confirmBy: null,
 };
 
 function deps(claimed: ClaimedBookingEmail | null) {

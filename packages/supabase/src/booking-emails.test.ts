@@ -34,6 +34,7 @@ describe("claimBookingEmail", () => {
         booked_by: "centre",
         paid: false,
         payment_due_at: "2030-09-30T09:00:00+00:00",
+        confirm_by: null,
       },
     ]);
     expect(
@@ -57,6 +58,7 @@ describe("claimBookingEmail", () => {
       bookedBy: "centre",
       paid: false,
       paymentDueAt: "2030-09-30T09:00:00+00:00",
+      confirmBy: null,
     });
     expect(rpc).toHaveBeenCalledWith("claim_booking_email", {
       p_reference: "KS-20301002-1534",

@@ -26,6 +26,7 @@ const visit: ClaimedBookingEmail = {
   bookedBy: "client",
   paid: true,
   paymentDueAt: null,
+  confirmBy: null,
 };
 
 const options = {

@@ -1,7 +1,11 @@
 "use server";
 
 import { toFreeSlots } from "@repo/scheduling";
-import { listRescheduleSlots, type BookingErrorCode } from "@repo/supabase";
+import {
+  confirmReservation,
+  listRescheduleSlots,
+  type BookingErrorCode,
+} from "@repo/supabase";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { createSecretClient } from "@/lib/supabase/secret";
@@ -37,7 +41,10 @@ function failed(code: BookingErrorCode): ChangeFormState {
   };
 }
 
-function visitPath(token: string, change: "odwolana" | "przelozona") {
+function visitPath(
+  token: string,
+  change: "odwolana" | "przelozona" | "potwierdzona",
+) {
   return `/wizyta/${token}?zmiana=${change}` as Route;
 }
 
@@ -90,4 +97,23 @@ export async function rescheduleVisitAction(
   );
   if (!result.ok) return failed(result.code);
   redirect(visitPath(token, "przelozona"));
+}
+
+/**
+ * "Potwierdzam rezerwację" (pay later): the client, from the e-mail's link,
+ * keeps the reservation; from then on it is paid by its own time.
+ */
+export async function confirmReservationAction(form: FormData) {
+  const token = String(form.get("token") ?? "");
+  const visit = await visitByLinkToken(token);
+  if (!visit) redirect("/umow-wizyte" as Route);
+  const due = await confirmReservation(createSecretClient(), token).catch(
+    (error: unknown) => {
+      console.error("[booking] confirming a reservation failed:", error);
+      return null;
+    },
+  );
+  redirect(
+    due ? visitPath(token, "potwierdzona") : (`/wizyta/${token}` as Route),
+  );
 }

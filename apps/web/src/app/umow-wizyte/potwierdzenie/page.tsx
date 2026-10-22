@@ -22,9 +22,11 @@ export const metadata: Metadata = {
 export default async function BookingConfirmationPage({
   searchParams,
 }: PageProps<"/umow-wizyte/potwierdzenie">) {
-  const { sesja, bezplatna } = await searchParams;
+  const { sesja, bezplatna, zarezerwowana } = await searchParams;
   // A visit a discount code made free: confirmed, nothing was paid.
   if (bezplatna === "1") return <FreeConfirmation />;
+  // Reserved to pay later: confirmed from the e-mail, not here.
+  if (zarezerwowana === "1") return <CheckEmail />;
   const sessionId =
     typeof sesja === "string" && /^cs_/.test(sesja) ? sesja : null;
   if (!sessionId) redirect(bookingHref({}));
@@ -140,5 +142,33 @@ async function FreeConfirmation() {
         <Link href="/">Wróć na stronę główną</Link>
       </PrimaryButton>
     </BookingStep>
+  );
+}
+
+/**
+ * Reserved to pay later: the link to confirm it went by e-mail, so the
+ * address is checked before the time is held for longer.
+ */
+function CheckEmail() {
+  return (
+    <div className="max-w-page px-gutter pb-section-sm mx-auto grid gap-6 pt-8 lg:pt-12">
+      <h1 className="font-display text-display text-ink">
+        Sprawdź skrzynkę e-mail
+      </h1>
+      <div className="text-body text-text-muted grid max-w-2xl gap-3">
+        <p>
+          Wysłaliśmy Ci wiadomość z linkiem do rezerwacji. Otwórz go i kliknij
+          „Potwierdzam rezerwację” w ciągu 30 minut, a termin poczeka na Ciebie
+          do czasu płatności.
+        </p>
+        <p>
+          Bez potwierdzenia termin wróci do wolnych terminów. Nie widzisz
+          wiadomości? Zajrzyj do folderu spam albo oferty.
+        </p>
+      </div>
+      <PrimaryButton arrow asChild className="justify-self-start">
+        <Link href="/">Wróć na stronę główną</Link>
+      </PrimaryButton>
+    </div>
   );
 }

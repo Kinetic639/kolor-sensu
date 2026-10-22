@@ -22,7 +22,10 @@ const DETAILS = "/umow-wizyte/dane" as Route;
 // Step 5, paying: Stripe's Payment Element for the session the server
 // created ("Zapisz dane" or "Przejdź do płatności"). Reading the session is
 // all this page does; it never creates one.
-export default async function BookingPaymentPage() {
+export default async function BookingPaymentPage({
+  searchParams,
+}: PageProps<"/umow-wizyte/platnosc">) {
+  const { limit } = await searchParams;
   const visit = await requireLiveHold();
   const { booking, timeZone, token } = visit;
   if (!booking.details) redirect(DETAILS);
@@ -49,7 +52,11 @@ export default async function BookingPaymentPage() {
         />
       }
       current={4}
-      lead="Zapłać za wizytę kartą, BLIK-iem lub przelewem. Po opłaceniu od razu ją potwierdzimy."
+      lead={
+        limit === "1"
+          ? "Masz już dwie nieopłacone rezerwacje, więc tę wizytę opłać teraz: kartą, BLIK-iem lub przelewem. Po opłaceniu od razu ją potwierdzimy."
+          : "Zapłać za wizytę kartą, BLIK-iem lub przelewem. Po opłaceniu od razu ją potwierdzimy."
+      }
       title="Płatność"
       visit={visit}
     >
