@@ -3063,4 +3063,27 @@ END;
 $body$;
 RESET ROLE;
 
+-- Only the site's server reserves and confirms.
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.reserve_hold('x', 'visitor-anon');
+    RAISE EXCEPTION 'Z: anon reserved';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.confirm_reservation('x');
+    RAISE EXCEPTION 'Z: anon confirmed a reservation';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.reservation_confirm_by('x');
+    RAISE EXCEPTION 'Z: anon read a reservation';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

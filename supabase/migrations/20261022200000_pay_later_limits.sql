@@ -56,7 +56,7 @@ AS $$
   WHERE due.at IS NOT NULL;
 $$;
 
-REVOKE ALL ON FUNCTION private.reservation_due(timestamptz, timestamptz) FROM PUBLIC;
+REVOKE ALL ON FUNCTION private.reservation_due(timestamptz, timestamptz) FROM PUBLIC, anon, authenticated;
 
 -- The last nine digits of a phone number ('' when it has fewer).
 CREATE FUNCTION private.phone_key(p_phone text)
@@ -69,7 +69,7 @@ AS $$
   FROM (SELECT regexp_replace(coalesce(p_phone, ''), '\D', '', 'g') AS digits) AS phone;
 $$;
 
-REVOKE ALL ON FUNCTION private.phone_key(text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION private.phone_key(text) FROM PUBLIC, anon, authenticated;
 
 DROP FUNCTION public.reserve_hold(text);
 
@@ -164,7 +164,7 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.reserve_hold(text, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.reserve_hold(text, text) FROM PUBLIC, anon, authenticated;
 GRANT ALL ON FUNCTION public.reserve_hold(text, text) TO service_role;
 
 -- The client confirms the reservation from its e-mail link: from then on it
@@ -201,7 +201,7 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.confirm_reservation(text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.confirm_reservation(text) FROM PUBLIC, anon, authenticated;
 GRANT ALL ON FUNCTION public.confirm_reservation(text) TO service_role;
 
 -- Until when a reservation waits to be confirmed from its e-mail link, or
@@ -220,7 +220,7 @@ AS $$
     AND visit.payment_due_at > now();
 $$;
 
-REVOKE ALL ON FUNCTION public.reservation_confirm_by(text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.reservation_confirm_by(text) FROM PUBLIC, anon, authenticated;
 GRANT ALL ON FUNCTION public.reservation_confirm_by(text) TO service_role;
 
 -- A reservation not confirmed in time lapses quietly (nobody confirmed the
@@ -355,5 +355,5 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.claim_booking_email(text, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.claim_booking_email(text, text) FROM PUBLIC, anon, authenticated;
 GRANT ALL ON FUNCTION public.claim_booking_email(text, text) TO service_role;
