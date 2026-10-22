@@ -253,6 +253,41 @@ Workshops migration never touches `room_opening_hours` or
 with `AND location_id = (SELECT location_a_id FROM rooms_test_ids)`, the
 location the rest of that section already assumes.
 
+## Registrations, blocking and the waitlist (22.10)
+
+Migration `20261022130000_workshop_registrations.sql`, plan and decisions
+in [workshops-plan.md](../product/workshops-plan.md). This supersedes the
+"Registrations", "Payments" (in part) and "Scheduling conflicts" notes
+below.
+
+- **New workshop fields:** `body` (rich text, as articles), `audience`,
+  `agenda`, `cover_alt`, `seo_title`/`seo_description`, `min_participants`,
+  `registration_closes_at` (null: 24 hours before), `confirmed_at`,
+  `cancelled_at`/`cancel_reason`. A cancelled workshop stays cancelled;
+  admins may delete a workshop without registrations.
+- **Co-leaders:** `workshop_co_leaders`; they read the workshop and its
+  participants like the main leader (`private.leads_workshop`).
+- **Online link:** `workshop_online_links`, read by admins and leaders;
+  participants get it from `get_workshop_registration` once confirmed.
+- **Blocking:** a published (or completed) workshop writes time off for
+  each leader and a room block (widened to the centre's grid), tagged with
+  `workshop_id`. A leader or room with a live visit or another workshop
+  then is refused (`specialist_busy`, `specialist_away`, `room_busy`).
+  These rows change only with the workshop (`delete_time_off` and the room
+  exception policies refuse them).
+- **Registrations:** `workshop_registrations`, statuses `held`,
+  `awaiting_payment`, `confirmed`, `waitlisted`, `offered`, `cancelled`,
+  `expired`. Guests use service-role functions: `hold_workshop_seat`,
+  `save_workshop_registration_details`, `reserve_workshop_seat` (pay
+  later, until seven days before), `confirm_free_workshop_seat`,
+  `join_workshop_waitlist`, `get_workshop_registration`,
+  `cancel_workshop_registration`, `transfer_workshop_seat`;
+  `run_workshop_jobs` ends what has run out. The site reads seats with
+  `workshop_availability` (anon). Admins: `confirm_workshop`,
+  `cancel_workshop` (returns who to refund).
+- **Seat changes lock the workshop row first**, so the last seat goes to
+  one person; a freed seat goes to the first on the waitlist for 24 hours.
+
 ## Future extensions (documented, not built)
 
 - **Registrations**: a future `workshop_registrations` table
