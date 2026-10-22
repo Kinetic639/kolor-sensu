@@ -155,9 +155,13 @@ BEGIN
   END IF;
 
   -- E: a refund is recorded on the payment and the registration.
-  IF NOT public.record_workshop_refund('pi_test_ws_b1', 8000)
-     OR (SELECT refunded_minor FROM public.get_workshop_registration((SELECT token FROM tokens WHERE name = 'b1'))) <> 8000 THEN
-    RAISE EXCEPTION 'E: the refund was not recorded';
+  IF NOT public.record_workshop_refund('pi_test_ws_b1', 8000) THEN
+    RAISE EXCEPTION 'E: the payment was not found: %',
+      (SELECT json_agg(row_to_json(p)) FROM public.workshop_payments AS p);
+  END IF;
+  IF (SELECT refunded_minor FROM public.get_workshop_registration((SELECT token FROM tokens WHERE name = 'b1'))) IS DISTINCT FROM 8000 THEN
+    RAISE EXCEPTION 'E: the registration did not record the refund: %',
+      (SELECT row_to_json(r) FROM public.get_workshop_registration((SELECT token FROM tokens WHERE name = 'b1')) AS r);
   END IF;
   IF public.record_workshop_refund('pi_test_unknown', 100) THEN
     RAISE EXCEPTION 'E: an unknown payment was refunded';
