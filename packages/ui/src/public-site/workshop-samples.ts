@@ -1,0 +1,73 @@
+import type { WorkshopCardData } from "./workshop-parts";
+
+// Sample workshops for the stories and tests: one with seats, one with a
+// few left, one full, one cancelled.
+
+export const sampleWorkshops: WorkshopCardData[] = [
+  {
+    id: "w1",
+    href: "/warsztaty/uwaznosc-na-co-dzien",
+    title: "Uważność na co dzień",
+    description:
+      "Dwie godziny spokojnych ćwiczeń: jak zauważać napięcie, zanim zamieni się w zmęczenie.",
+    dateLabel: "wtorek, 12 listopada 2030",
+    timeLabel: "17:00–19:00",
+    placeLabel: "Kolor Sensu, ul. Spokojna 1, Warszawa",
+    priceLabel: "150 zł",
+    leaders: "Anna Nowak",
+    coverUrl: null,
+    coverAlt: "",
+    seatsLabel: null,
+    seatsTone: null,
+    statusLabel: null,
+  },
+  {
+    id: "w2",
+    href: "/warsztaty/rodzic-w-emocjach",
+    title: "Rodzic w emocjach",
+    description:
+      "Warsztat dla rodziców nastolatków: rozmowa, gdy obu stronom puszczają nerwy.",
+    dateLabel: "sobota, 16 listopada 2030",
+    timeLabel: "10:00–13:00",
+    placeLabel: "Online",
+    priceLabel: "120 zł",
+    leaders: "Ewa Kowalska, Marta Zielińska",
+    coverUrl: null,
+    coverAlt: "",
+    seatsLabel: "Ostatnie 2 miejsca",
+    seatsTone: "few",
+    statusLabel: null,
+  },
+  {
+    id: "w3",
+    href: "/warsztaty/sen-bez-presji",
+    title: "Sen bez presji",
+    description: null,
+    dateLabel: "czwartek, 21 listopada 2030",
+    timeLabel: "18:00–20:00",
+    placeLabel: "Kolor Sensu, ul. Spokojna 1, Warszawa",
+    priceLabel: "Bezpłatnie",
+    leaders: null,
+    coverUrl: null,
+    coverAlt: "",
+    seatsLabel: "Brak miejsc · lista rezerwowa",
+    seatsTone: "full",
+    statusLabel: null,
+  },
+  {
+    id: "w4",
+    href: "/warsztaty/granice-w-pracy",
+    title: "Granice w pracy",
+    description: "Jak mówić „nie” bez poczucia winy.",
+    dateLabel: "poniedziałek, 2 grudnia 2030",
+    timeLabel: "17:30–19:30",
+    placeLabel: "Online",
+    priceLabel: "90 zł",
+    leaders: "Anna Nowak",
+    coverUrl: null,
+    coverAlt: "",
+    seatsLabel: null,
+    seatsTone: null,
+    statusLabel: "Odwołany",
+  },
+];

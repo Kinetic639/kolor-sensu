@@ -31,6 +31,9 @@ describe("the admin's codes", () => {
         created_at: "2026-10-21T10:00:00Z",
         used_count: "3",
         discount_total_minor: "12000",
+        scope: "workshops",
+        workshop_id: "w1",
+        workshop_title: "Uważność",
       },
     ]);
     expect(await listDiscountCodes(client)).toEqual([
@@ -46,6 +49,9 @@ describe("the admin's codes", () => {
         createdAt: "2026-10-21T10:00:00Z",
         usedCount: 3,
         discountTotalMinor: 12000,
+        scope: "workshops",
+        workshopId: "w1",
+        workshopTitle: "Uważność",
       },
     ]);
   });
@@ -60,6 +66,8 @@ describe("the admin's codes", () => {
       endsOn: null,
       active: true,
       note: "Listopad",
+      scope: "all",
+      workshopId: null,
     });
     expect(call).toHaveBeenCalledWith("save_discount_code", {
       p_id: null,
@@ -70,6 +78,8 @@ describe("the admin's codes", () => {
       p_ends_on: null,
       p_active: true,
       p_note: "Listopad",
+      p_scope: "all",
+      p_workshop_id: null,
     });
   });
 });

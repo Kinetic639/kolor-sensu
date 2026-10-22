@@ -396,9 +396,11 @@ export type Database = {
           id: string;
           kind: string;
           note: string;
+          scope: string;
           starts_on: string | null;
           updated_at: string;
           value: number;
+          workshop_id: string | null;
         };
         Insert: {
           active?: boolean;
@@ -408,9 +410,11 @@ export type Database = {
           id?: string;
           kind: string;
           note?: string;
+          scope?: string;
           starts_on?: string | null;
           updated_at?: string;
           value: number;
+          workshop_id?: string | null;
         };
         Update: {
           active?: boolean;
@@ -420,11 +424,21 @@ export type Database = {
           id?: string;
           kind?: string;
           note?: string;
+          scope?: string;
           starts_on?: string | null;
           updated_at?: string;
           value?: number;
+          workshop_id?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "discount_codes_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: false;
+            referencedRelation: "workshops";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       ebooks: {
         Row: {
@@ -1959,8 +1973,80 @@ export type Database = {
           },
         ];
       };
+      workshop_emails: {
+        Row: {
+          claimed_at: string;
+          id: number;
+          kind: string;
+          message_id: string | null;
+          registration_id: string;
+          sent_at: string | null;
+          token_hash: string;
+        };
+        Insert: {
+          claimed_at?: string;
+          id?: never;
+          kind: string;
+          message_id?: string | null;
+          registration_id: string;
+          sent_at?: string | null;
+          token_hash: string;
+        };
+        Update: {
+          claimed_at?: string;
+          id?: never;
+          kind?: string;
+          message_id?: string | null;
+          registration_id?: string;
+          sent_at?: string | null;
+          token_hash?: string;
+        };
+        Relationships: [];
+      };
+      workshop_payments: {
+        Row: {
+          amount_minor: number;
+          checkout_session_id: string;
+          created_at: string;
+          currency_code: string;
+          id: string;
+          payment_intent_id: string | null;
+          refunded_minor: number;
+          registration_id: string;
+          status: Database["public"]["Enums"]["payment_status"];
+          updated_at: string;
+        };
+        Insert: {
+          amount_minor: number;
+          checkout_session_id: string;
+          created_at?: string;
+          currency_code: string;
+          id?: string;
+          payment_intent_id?: string | null;
+          refunded_minor?: number;
+          registration_id: string;
+          status?: Database["public"]["Enums"]["payment_status"];
+          updated_at?: string;
+        };
+        Update: {
+          amount_minor?: number;
+          checkout_session_id?: string;
+          created_at?: string;
+          currency_code?: string;
+          id?: string;
+          payment_intent_id?: string | null;
+          refunded_minor?: number;
+          registration_id?: string;
+          status?: Database["public"]["Enums"]["payment_status"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       workshop_registrations: {
         Row: {
+          discount_code_id: string | null;
+          discount_minor: number;
+          list_price_minor: number | null;
           access_token_hash: string;
           attended: boolean | null;
           booked_by: string;
@@ -2307,6 +2393,9 @@ export type Database = {
           created_at: string;
           used_count: number;
           discount_total_minor: number;
+          scope: string;
+          workshop_id: string | null;
+          workshop_title: string | null;
         }[];
       };
       list_newsletter_archive: {
@@ -2346,6 +2435,8 @@ export type Database = {
           p_ends_on: string | null;
           p_active: boolean;
           p_note: string;
+          p_scope: string;
+          p_workshop_id: string | null;
         };
         Returns: string;
       };
@@ -2440,6 +2531,117 @@ export type Database = {
           can_pay_later: boolean;
           cancelled_by: string | null;
           meeting_url: string | null;
+          list_price_minor: number | null;
+          discount_minor: number;
+          discount_code: string | null;
+        }[];
+      };
+      apply_workshop_discount: {
+        Args: { p_access_token: string; p_code: string };
+        Returns: {
+          code: string;
+          list_price_minor: number;
+          discount_minor: number;
+          price_minor: number;
+        }[];
+      };
+      remove_workshop_discount: {
+        Args: { p_access_token: string };
+        Returns: undefined;
+      };
+      attach_workshop_checkout: {
+        Args: {
+          p_access_token: string;
+          p_session_id: string;
+          p_expires_at: string;
+          p_amount_minor: number;
+          p_currency_code: string;
+        };
+        Returns: undefined;
+      };
+      pending_workshop_checkout: {
+        Args: { p_access_token: string };
+        Returns: string | null;
+      };
+      fulfill_workshop_checkout: {
+        Args: {
+          p_session_id: string;
+          p_paid: boolean;
+          p_payment_intent_id: string | null;
+        };
+        Returns: string;
+      };
+      fail_workshop_checkout: {
+        Args: { p_session_id: string; p_reason: string };
+        Returns: undefined;
+      };
+      record_workshop_refund: {
+        Args: { p_payment_intent_id: string; p_refunded_minor: number };
+        Returns: boolean;
+      };
+      claim_workshop_email: {
+        Args: { p_reference: string; p_kind: string };
+        Returns: {
+          reference: string;
+          manage_token: string;
+          status: Database["public"]["Enums"]["workshop_registration_status"];
+          client_name: string | null;
+          client_email: string;
+          workshop_title: string;
+          workshop_slug: string;
+          modality: Database["public"]["Enums"]["workshop_modality"];
+          starts_at: string;
+          ends_at: string;
+          location_name: string | null;
+          location_address: string | null;
+          room_name: string | null;
+          leaders: string | null;
+          price_minor: number;
+          paid_minor: number;
+          currency_code: string;
+          payment_due_at: string | null;
+          waitlist_position: number | null;
+        }[];
+      };
+      mark_workshop_email_sent: {
+        Args: { p_reference: string; p_kind: string; p_message_id: string };
+        Returns: undefined;
+      };
+      release_workshop_email: {
+        Args: { p_reference: string; p_kind: string };
+        Returns: undefined;
+      };
+      list_public_workshops: {
+        Args: never;
+        Returns: {
+          id: string;
+          slug: string;
+          title: string;
+          short_description: string | null;
+          body: Json | null;
+          audience: string | null;
+          agenda: string | null;
+          cover_image_path: string | null;
+          cover_alt: string | null;
+          seo_title: string | null;
+          seo_description: string | null;
+          modality: Database["public"]["Enums"]["workshop_modality"];
+          status: Database["public"]["Enums"]["workshop_status"];
+          starts_at: string;
+          ends_at: string;
+          price_minor: number;
+          currency_code: string;
+          capacity: number;
+          min_participants: number | null;
+          location_name: string | null;
+          location_address: string | null;
+          location_city: string | null;
+          room_name: string | null;
+          leaders: Json;
+          seats_left: number;
+          registration_open: boolean;
+          confirmed: boolean;
+          updated_at: string;
         }[];
       };
       cancel_workshop_registration: {

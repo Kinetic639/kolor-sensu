@@ -3,6 +3,8 @@
 import { TextField } from "@/features/cms/text-field";
 import { useSave } from "@/lib/use-save";
 import {
+  DISCOUNT_SCOPE_LABELS,
+  DISCOUNT_SCOPES,
   DISCOUNT_STATE_LABELS,
   discountCodeState,
   discountLabel,
@@ -11,6 +13,7 @@ import {
   type DiscountCode,
   type DiscountCodeInput,
   type DiscountKind,
+  type DiscountScope,
 } from "@repo/contracts/discount-codes";
 import { Button } from "@repo/ui/button";
 import { DETAIL_BUTTON } from "@repo/ui/detail-page";
@@ -20,7 +23,8 @@ import { useState } from "react";
 import { deleteDiscountCodeAction, saveDiscountCodeAction } from "./actions";
 
 // Kody rabatowe: the codes as a compact table (few, all at once): the
-// code, its discount, its dates, whether it works today, how often it was
+// code, its discount, what it is for (consultations, workshops, one
+// workshop or everything), its dates, whether it works today, how often it was
 // used and what it took off; "Edytuj" opens it in place, a new one is added
 // above the list. A used code cannot be deleted, only switched off.
 
@@ -39,6 +43,18 @@ const DATE = new Intl.DateTimeFormat("pl-PL", {
 });
 const day = (iso: string) => DATE.format(new Date(`${iso}T00:00:00Z`));
 
+/** A workshop a code may be for (the coming and current ones). */
+export interface CodeWorkshop {
+  id: string;
+  title: string;
+}
+
+function scopeLabel(code: Pick<DiscountCode, "scope" | "workshopTitle">) {
+  return code.workshopTitle
+    ? `Warsztat: ${code.workshopTitle}`
+    : DISCOUNT_SCOPE_LABELS[code.scope];
+}
+
 function dates(code: Pick<DiscountCode, "startsOn" | "endsOn">): string {
   if (code.startsOn && code.endsOn)
     return `${day(code.startsOn)} – ${day(code.endsOn)}`;
@@ -50,8 +66,10 @@ function dates(code: Pick<DiscountCode, "startsOn" | "endsOn">): string {
 export function DiscountCodeManager({
   codes,
   today,
+  workshops,
 }: {
   codes: readonly DiscountCode[];
+  workshops: readonly CodeWorkshop[];
   /** The centre's day, YYYY-MM-DD. */
   today: string;
 }) {
@@ -66,8 +84,9 @@ export function DiscountCodeManager({
     <div className="grid gap-3">
       <div className="flex items-center justify-between gap-2 px-3.5 pt-3">
         <p className="text-sm text-[var(--text-muted)]">
-          Klient wpisuje kod przy rezerwacji, na kroku z danymi. Kod działa w
-          swoich datach, dopóki jest włączony.
+          Klient wpisuje kod przy rezerwacji albo zapisie na warsztat, na kroku
+          z danymi. Kod działa w swoich datach, dopóki jest włączony, i tylko
+          tam, na co jest przeznaczony.
         </p>
         {editing !== "new" ? (
           <Button onClick={() => setEditing("new")} size="sm">
@@ -84,7 +103,11 @@ export function DiscountCodeManager({
           <h2 className="text-sm font-semibold" id="new-code-title">
             Nowy kod rabatowy
           </h2>
-          <CodeForm id={null} onDone={() => setEditing(null)} />
+          <CodeForm
+            id={null}
+            onDone={() => setEditing(null)}
+            workshops={workshops}
+          />
         </section>
       ) : null}
       {codes.length === 0 ? null : (
@@ -98,6 +121,9 @@ export function DiscountCodeManager({
                 </th>
                 <th className={head} scope="col">
                   Rabat
+                </th>
+                <th className={`${head} hidden sm:table-cell`} scope="col">
+                  Na co
                 </th>
                 <th className={`${head} hidden md:table-cell`} scope="col">
                   Ważny
@@ -122,12 +148,13 @@ export function DiscountCodeManager({
                   <tr key={code.id}>
                     <td
                       className="border-b border-[var(--border)] p-3"
-                      colSpan={7}
+                      colSpan={8}
                     >
                       <CodeForm
                         id={code.id}
                         initial={code}
                         onDone={() => setEditing(null)}
+                        workshops={workshops}
                       />
                     </td>
                   </tr>
@@ -149,6 +176,9 @@ export function DiscountCodeManager({
                     </th>
                     <td className={`${cell} tabular-nums`}>
                       {discountLabel(code)}
+                    </td>
+                    <td className={`${cell} hidden sm:table-cell`}>
+                      {scopeLabel(code)}
                     </td>
                     <td
                       className={`${cell} hidden text-[var(--text-muted)] md:table-cell`}
@@ -195,10 +225,12 @@ function CodeForm({
   id,
   initial,
   onDone,
+  workshops,
 }: {
   id: string | null;
   initial?: DiscountCode;
   onDone: () => void;
+  workshops: readonly CodeWorkshop[];
 }) {
   const { isPending, run } = useSave();
   const prefix = id ?? "new";
@@ -215,6 +247,21 @@ function CodeForm({
   const [endsOn, setEndsOn] = useState(initial?.endsOn ?? "");
   const [active, setActive] = useState(initial?.active ?? true);
   const [note, setNote] = useState(initial?.note ?? "");
+  const [scope, setScope] = useState<DiscountScope>(
+    initial?.scope ?? "consultations",
+  );
+  const [workshopId, setWorkshopId] = useState(initial?.workshopId ?? "");
+  // A code for a workshop that has passed still shows as it is.
+  const choices =
+    initial?.workshopId && !workshops.some((w) => w.id === initial.workshopId)
+      ? [
+          ...workshops,
+          {
+            id: initial.workshopId,
+            title: initial.workshopTitle ?? "Warsztat",
+          },
+        ]
+      : workshops;
 
   function submit() {
     const amount = kind === "percent" ? Number(value) : parseZloty(value);
@@ -226,6 +273,8 @@ function CodeForm({
       endsOn: endsOn || null,
       active,
       note,
+      scope,
+      workshopId: scope === "workshops" && workshopId ? workshopId : null,
     };
     run(() => saveDiscountCodeAction(id, input), "Zapisano kod", onDone);
   }
@@ -301,6 +350,46 @@ function CodeForm({
             value={endsOn}
           />
         </div>
+        <div className="grid content-start gap-1">
+          <label className="text-sm font-medium" htmlFor={`${prefix}-scope`}>
+            Na co działa
+          </label>
+          <select
+            className={FIELD}
+            id={`${prefix}-scope`}
+            onChange={(event) => setScope(event.target.value as DiscountScope)}
+            value={scope}
+          >
+            {DISCOUNT_SCOPES.map((option) => (
+              <option key={option} value={option}>
+                {DISCOUNT_SCOPE_LABELS[option]}
+              </option>
+            ))}
+          </select>
+        </div>
+        {scope === "workshops" ? (
+          <div className="grid content-start gap-1">
+            <label
+              className="text-sm font-medium"
+              htmlFor={`${prefix}-workshop`}
+            >
+              Który warsztat
+            </label>
+            <select
+              className={FIELD}
+              id={`${prefix}-workshop`}
+              onChange={(event) => setWorkshopId(event.target.value)}
+              value={workshopId}
+            >
+              <option value="">Każdy warsztat</option>
+              {choices.map((workshop) => (
+                <option key={workshop.id} value={workshop.id}>
+                  {workshop.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
         <label className="flex items-center gap-2 self-end pb-2 text-sm">
           <input
             checked={active}
@@ -339,11 +428,7 @@ function DeleteCode({ code }: { code: DiscountCode }) {
       onClick={() =>
         run(() => deleteDiscountCodeAction(code.id), "Usunięto kod")
       }
-      title={
-        used
-          ? "Kodu użyto przy wizytach: zamiast usuwać, wyłącz go."
-          : undefined
-      }
+      title={used ? "Kodu już użyto: zamiast usuwać, wyłącz go." : undefined}
       type="button"
     >
       <Trash2 aria-hidden="true" />

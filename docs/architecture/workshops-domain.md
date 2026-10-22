@@ -288,6 +288,32 @@ below.
 - **Seat changes lock the workshop row first**, so the last seat goes to
   one person; a freed seat goes to the first on the waitlist for 24 hours.
 
+## The site, signing up and paying (PR 3 and 4)
+
+Migration `20261023090000_workshop_signup.sql`; the site's code is in
+`apps/web/src/features/workshops`, `@repo/supabase/workshops` and
+`@repo/ui/public-site` (`WorkshopCard`, `WorkshopFacts`).
+
+- **Reading:** `list_public_workshops()` (anon) gives every non-draft
+  workshop with its place, its leaders that have a public profile and its
+  seats; the pages filter (few workshops). This supersedes the direct table
+  reads described above.
+- **Signing up:** the bot check (Turnstile), then `hold_workshop_seat` (the
+  token in an httpOnly cookie under `/warsztaty`), the details, a code
+  (`apply_workshop_discount`), then Stripe, `reserve_workshop_seat` or
+  `confirm_free_workshop_seat`; `join_workshop_waitlist` when full.
+- **Paying:** `workshop_payments` holds each Checkout Session (the amount is
+  checked against the seat). The session says `workshop_reference` in its
+  metadata, so the shared Stripe webhook settles it with
+  `fulfill_workshop_checkout`. A seat whose hold ran out is still confirmed
+  while a seat is free; otherwise `seat_lost`, and the site refunds it.
+- **E-mails:** `workshop_emails` claims each kind once (confirmation,
+  reserved, waitlisted) with its own link token; the guest's functions
+  accept either token.
+- **Codes:** `discount_codes.scope` (`consultations`, `workshops` with an
+  optional `workshop_id`, `all`). Codes made before this are for
+  consultations; a visit refuses a workshops-only code (`code_not_here`).
+
 ## Future extensions (documented, not built)
 
 - **Registrations**: a future `workshop_registrations` table

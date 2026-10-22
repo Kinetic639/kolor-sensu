@@ -64,7 +64,7 @@ SET LOCAL ROLE authenticated;
 DO $$
 BEGIN
   BEGIN
-    PERFORM public.save_discount_code(NULL, 'NOPE', 'percent', 10, NULL, NULL, true, '');
+    PERFORM public.save_discount_code(NULL, 'NOPE', 'percent', 10, NULL, NULL, true, '', 'consultations', NULL);
     RAISE EXCEPTION 'A: a specialist added a code';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
@@ -91,33 +91,33 @@ SET LOCAL ROLE authenticated;
 
 DO $$
 BEGIN
-  PERFORM public.save_discount_code(NULL, ' jesien20 ', 'percent', 20, NULL, NULL, true, 'Jesień');
-  PERFORM public.save_discount_code(NULL, 'MINUS50', 'amount', 5000, NULL, NULL, true, '');
-  PERFORM public.save_discount_code(NULL, 'ZA-DARMO', 'amount', 1000000, NULL, NULL, true, '');
-  PERFORM public.save_discount_code(NULL, 'STARY', 'percent', 10, NULL, current_date - 1, true, '');
-  PERFORM public.save_discount_code(NULL, 'PRZYSZLY', 'percent', 10, current_date + 30, NULL, true, '');
-  PERFORM public.save_discount_code(NULL, 'WYLACZONY', 'percent', 10, NULL, NULL, false, '');
+  PERFORM public.save_discount_code(NULL, ' jesien20 ', 'percent', 20, NULL, NULL, true, 'Jesień', 'consultations', NULL);
+  PERFORM public.save_discount_code(NULL, 'MINUS50', 'amount', 5000, NULL, NULL, true, '', 'consultations', NULL);
+  PERFORM public.save_discount_code(NULL, 'ZA-DARMO', 'amount', 1000000, NULL, NULL, true, '', 'consultations', NULL);
+  PERFORM public.save_discount_code(NULL, 'STARY', 'percent', 10, NULL, current_date - 1, true, '', 'consultations', NULL);
+  PERFORM public.save_discount_code(NULL, 'PRZYSZLY', 'percent', 10, current_date + 30, NULL, true, '', 'consultations', NULL);
+  PERFORM public.save_discount_code(NULL, 'WYLACZONY', 'percent', 10, NULL, NULL, false, '', 'consultations', NULL);
 
   IF NOT EXISTS (SELECT 1 FROM public.list_discount_codes() WHERE code = 'JESIEN20') THEN
     RAISE EXCEPTION 'C: the code was not kept in capitals';
   END IF;
   BEGIN
-    PERFORM public.save_discount_code(NULL, 'ZLE', 'percent', 101, NULL, NULL, true, '');
+    PERFORM public.save_discount_code(NULL, 'ZLE', 'percent', 101, NULL, NULL, true, '', 'consultations', NULL);
     RAISE EXCEPTION 'C: more than 100 %% was accepted';
   EXCEPTION WHEN check_violation THEN NULL;
   END;
   BEGIN
-    PERFORM public.save_discount_code(NULL, 'ZŁY KOD', 'percent', 10, NULL, NULL, true, '');
+    PERFORM public.save_discount_code(NULL, 'ZŁY KOD', 'percent', 10, NULL, NULL, true, '', 'consultations', NULL);
     RAISE EXCEPTION 'C: a code with a space was accepted';
   EXCEPTION WHEN check_violation THEN NULL;
   END;
   BEGIN
-    PERFORM public.save_discount_code(NULL, 'ODWROTNIE', 'percent', 10, current_date, current_date - 1, true, '');
+    PERFORM public.save_discount_code(NULL, 'ODWROTNIE', 'percent', 10, current_date, current_date - 1, true, '', 'consultations', NULL);
     RAISE EXCEPTION 'C: an end before the start was accepted';
   EXCEPTION WHEN check_violation THEN NULL;
   END;
   BEGIN
-    PERFORM public.save_discount_code(NULL, 'MINUS50', 'percent', 10, NULL, NULL, true, '');
+    PERFORM public.save_discount_code(NULL, 'MINUS50', 'percent', 10, NULL, NULL, true, '', 'consultations', NULL);
     RAISE EXCEPTION 'C: the same code twice was accepted';
   EXCEPTION WHEN unique_violation THEN NULL;
   END;

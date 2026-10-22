@@ -32,6 +32,15 @@ describe("a discount code's form", () => {
     expect(fails({ kind: "amount", value: 101 })).toBe(true);
     expect(fails({ startsOn: "2026-11-02", endsOn: "2026-11-01" })).toBe(false);
   });
+
+  it("is for consultations unless said, and one workshop only as workshops", () => {
+    expect(discountCodeInputSchema.parse(input).scope).toBe("consultations");
+    const workshopId = "4f9b6d2e-8c1a-4e3b-9f7d-2a6c5b8e1d40";
+    const parse = (patch: object) =>
+      discountCodeInputSchema.safeParse({ ...input, ...patch }).success;
+    expect(parse({ scope: "workshops", workshopId })).toBe(true);
+    expect(parse({ scope: "all", workshopId })).toBe(false);
+  });
 });
 
 describe("a discount", () => {

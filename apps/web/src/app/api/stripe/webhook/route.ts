@@ -1,6 +1,7 @@
 import { claimStripeEvent, releaseStripeEvent } from "@repo/supabase";
 import { eventFitsKey, handleStripeEvent } from "@/features/booking/payment";
 import { paymentDeps } from "@/features/booking/payment-server";
+import { webhookWorkshopDeps } from "@/features/workshops/payment-server";
 import { stripeServer } from "@/lib/stripe";
 import { createSecretClient } from "@/lib/supabase/secret";
 
@@ -8,6 +9,7 @@ import { createSecretClient } from "@/lib/supabase/secret";
 // signature checked with STRIPE_WEBHOOK_SECRET, each event handled once.
 // An event of the other mode (a test one on live keys, or the reverse) is
 // answered and ignored.
+// A workshop seat's sessions are settled as workshops' (features/workshops).
 // A failure gives the event back and answers 500, so Stripe retries.
 
 export const runtime = "nodejs";
@@ -38,7 +40,10 @@ export async function POST(request: Request) {
     return new Response("Already handled", { status: 200 });
   }
   try {
-    await handleStripeEvent(event, paymentDeps());
+    await handleStripeEvent(event, {
+      ...paymentDeps(),
+      workshop: webhookWorkshopDeps(),
+    });
   } catch (error) {
     console.error(`[stripe] ${event.type} ${event.id} failed:`, error);
     await releaseStripeEvent(db, event.id).catch(() => undefined);

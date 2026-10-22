@@ -155,6 +155,12 @@ export {
   EbookPrice,
 } from "./ebook-parts";
 export type { EbookCardData, EbookPriceData } from "./ebook-parts";
+export { WorkshopCard, WorkshopFacts, WorkshopGrid } from "./workshop-parts";
+export type {
+  WorkshopCardData,
+  WorkshopFact,
+  WorkshopSeatsTone,
+} from "./workshop-parts";
 export {
   NewsletterArchiveList,
   NewsletterIssueCards,

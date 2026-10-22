@@ -16,6 +16,7 @@
     "./contact": "./src/contact.ts",
     "./education": "./src/education.ts",
     "./discount-codes": "./src/discount-codes.ts",
+    "./workshops": "./src/workshops.ts",
     "./newsletter": "./src/newsletter.ts"
   },
   "scripts": {

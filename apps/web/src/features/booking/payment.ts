@@ -89,6 +89,19 @@ export interface PaymentDeps {
   ) => Promise<unknown>;
   /** The visit is confirmed (again, possibly): send its e-mail, once. */
   onConfirmed?: (reference: string) => Promise<unknown>;
+  /**
+   * A workshop seat's payments (features/workshops/payment.ts): a session
+   * whose metadata names a workshop registration is settled there; a
+   * failure or a refund goes to both (each skips what is not its own).
+   */
+  workshop?: {
+    settle: (session: Stripe.Checkout.Session) => Promise<unknown>;
+    fail: (sessionId: string, reason: "failed" | "expired") => Promise<void>;
+    recordRefund: (
+      paymentIntentId: string,
+      refundedMinor: number,
+    ) => Promise<unknown>;
+  };
   /** A dispute (a chargeback) opened or closed: the history and the admins. */
   recordDispute: (dispute: DisputeRecord) => Promise<unknown>;
 }
@@ -157,13 +170,19 @@ export async function handleStripeEvent(
   switch (event.type) {
     case "checkout.session.completed":
     case "checkout.session.async_payment_succeeded":
+      if (deps.workshop && event.data.object.metadata?.workshop_reference) {
+        await deps.workshop.settle(event.data.object);
+        return;
+      }
       await settleSession(event.data.object, deps);
       return;
     case "checkout.session.async_payment_failed":
       await deps.fail(event.data.object.id, "failed");
+      await deps.workshop?.fail(event.data.object.id, "failed");
       return;
     case "checkout.session.expired":
       await deps.fail(event.data.object.id, "expired");
+      await deps.workshop?.fail(event.data.object.id, "expired");
       return;
     case "charge.dispute.created":
     case "charge.dispute.closed": {
@@ -183,7 +202,10 @@ export async function handleStripeEvent(
     case "charge.refunded": {
       const charge = event.data.object;
       const intent = paymentIntentId(charge.payment_intent);
-      if (intent) await deps.recordRefund(intent, charge.amount_refunded);
+      if (intent) {
+        await deps.recordRefund(intent, charge.amount_refunded);
+        await deps.workshop?.recordRefund(intent, charge.amount_refunded);
+      }
       return;
     }
     default:

@@ -133,6 +133,30 @@ const session = {
 };
 
 describe("handleStripeEvent", () => {
+  it("settles a workshop seat's session as a workshop's, failures and refunds both ways", async () => {
+    const workshop = {
+      settle: vi.fn().mockResolvedValue("confirmed"),
+      fail: vi.fn().mockResolvedValue(undefined),
+      recordRefund: vi.fn().mockResolvedValue(true),
+    };
+    const d = { ...deps(), workshop };
+    const seat = { ...session, metadata: { workshop_reference: "W2611-004" } };
+    await handleStripeEvent(event("checkout.session.completed", seat), d);
+    expect(workshop.settle).toHaveBeenCalledWith(seat);
+    expect(d.fulfill).not.toHaveBeenCalled();
+    await handleStripeEvent(event("checkout.session.expired", seat), d);
+    expect(d.fail).toHaveBeenCalledWith("cs_1", "expired");
+    expect(workshop.fail).toHaveBeenCalledWith("cs_1", "expired");
+    await handleStripeEvent(
+      event("charge.refunded", {
+        payment_intent: "pi_1",
+        amount_refunded: 500,
+      }),
+      d,
+    );
+    expect(workshop.recordRefund).toHaveBeenCalledWith("pi_1", 500);
+  });
+
   it("confirms a paid session", async () => {
     const d = deps();
     await handleStripeEvent(event("checkout.session.completed", session), d);

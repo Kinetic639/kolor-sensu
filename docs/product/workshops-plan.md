@@ -5,9 +5,9 @@ tablicy Miro, kolumna „Strona · 7. Warsztaty” i jej ramki „elementy”.
 
 ## Postęp
 
-Stan na 22.10 · PR-y: 0 / 7 zmergowanych
+Stan na 22.10 · PR-y: 1 / 7 zmergowanych (PR 3 i 4 razem w #168)
 
-- [ ] **PR 1 · Baza** — [#157](https://github.com/Kinetic639/kolor-sensu/pull/157) · czeka na merge
+- [ ] **PR 1 · Baza** — [#157](https://github.com/Kinetic639/kolor-sensu/pull/157) · zmergowany
   - [x] warsztat: opis w edytorze, dla kogo, program, okładka, SEO, minimum, koniec zapisów, potwierdzenie, odwołanie z powodem
   - [x] współprowadzący i link do spotkania online (widzą go tylko admin, prowadzący i potwierdzeni uczestnicy)
   - [x] opublikowany warsztat blokuje prowadzących i salę w rezerwacji wizyt; kolizja z wizytą albo innym warsztatem jest odrzucana
@@ -18,9 +18,18 @@ Stan na 22.10 · PR-y: 0 / 7 zmergowanych
   - [x] testy SQL, typy
   - [x] CI zielone
   - [ ] zmergowany i sprawdzony na DEV
-- [ ] **PR 2 · Portal admina** — lista, tworzenie i edycja, termin, kolizje, podgląd, publikacja, potwierdzenie, wycofanie; CMS strony Warsztaty i wspólne zasady
-- [ ] **PR 3 · Strona** — /warsztaty (nadchodzące, minione, filtr formy) i /warsztaty/[adres], dane Event, mapa strony, sekcja na stronie głównej, przełącznik w menu
-- [ ] **PR 4 · Zapis i płatność** — formularz, Stripe (karta, BLIK, P24) albo płatność później, kody rabatowe z zakresem, bezpłatne, potwierdzenie i e-mail z plikiem kalendarza
+- [ ] **PR 2 · Portal admina** — lista, tworzenie i edycja, termin, kolizje, podgląd, publikacja, potwierdzenie, wycofanie; CMS strony Warsztaty i wspólne zasady; przełącznik „Warsztaty w menu” i sekcja na stronie głównej (przeniesione z PR 3: oba ustawia admin)
+- [ ] **PR 3 + 4 · Strona, zapis i płatność** — [#168](https://github.com/Kinetic639/kolor-sensu/pull/168)
+  - [x] /warsztaty: nadchodzące (odwołany z etykietą do dnia terminu), minione, filtr formy, pusty stan z kontaktem
+  - [x] /warsztaty/[adres]: jeden H1, termin, miejsce, prowadzący, cena, wolne miejsca, „Potwierdzony” / „Czeka na komplet”, opis z edytora, dla kogo, program, zasady, dane Event, mapa strony
+  - [x] zapis: bot-check, trzymanie miejsca, dane, kod rabatowy, Stripe (karta, BLIK, P24) albo „Zapłacę później”, bezpłatne potwierdzenie, lista rezerwowa przy komplecie
+  - [x] po płatności: webhook i strona powrotu, miejsce zajęte w międzyczasie → zwrot; e-maile: potwierdzenie z plikiem kalendarza, rezerwacja z linkiem do zapłaty, lista rezerwowa
+  - [x] strona zapisu z linku (status, zapłać teraz, link online po potwierdzeniu)
+  - [x] kody rabatowe z zakresem (konsultacje / warsztaty / jeden warsztat / wszystko) w portalu; dotychczasowe kody: konsultacje
+  - [x] zadanie w tle kończy przeterminowane miejsca
+  - [x] testy (SQL, kontrakty, supabase, widok, e-maile, płatność, UI ze stories), typy, lint
+  - [x] CI zielone
+  - [ ] sprawdzony na DEV (zapis z BLIK, zapłacę później, kod, lista rezerwowa)
 - [ ] **PR 5 · Po zapisie** — strona zapisu, rezygnacja i zwroty, przekazanie miejsca, przypomnienia o wpłacie i o warsztacie, lista rezerwowa, odwołanie przez centrum
 - [ ] **PR 6 · Uczestnicy w portalach** — lista uczestników, eksport, ręczny zapis, wiadomość do wszystkich, obecność, kalendarz, dashboard, powiadomienia, portal specjalisty
 - [ ] **PR 7 · Jakość** — e2e na DEV i STAGING, tabela „Każda strona”, Lighthouse, dokumentacja
