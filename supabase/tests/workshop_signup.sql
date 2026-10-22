@@ -222,7 +222,7 @@ BEGIN
   END IF;
   PERFORM public.save_discount_code(NULL, 'NOWY', 'percent', 5, NULL, NULL, true, '', 'all', NULL);
   BEGIN
-    PERFORM public.delete_discount_code((SELECT id FROM public.discount_codes WHERE code = 'WARSZTATY'));
+    PERFORM public.delete_discount_code((SELECT id FROM public.list_discount_codes() WHERE code = 'WARSZTATY'));
     RAISE EXCEPTION 'H: a code used on a workshop was deleted';
   EXCEPTION WHEN raise_exception THEN
     IF SQLERRM <> 'discount_code_used' THEN RAISE; END IF;
