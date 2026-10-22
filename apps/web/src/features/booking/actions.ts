@@ -303,6 +303,7 @@ export async function saveDetailsAction(
  */
 async function reserveForLater(token: string): Promise<never> {
   const db = createSecretClient();
+  const pending = await pendingCheckoutSession(db, token);
   let reference: string;
   try {
     ({ reference } = await reserveHold(db, token));
@@ -313,6 +314,10 @@ async function reserveForLater(token: string): Promise<never> {
     if (error instanceof BookingError) redirect(EXPIRED);
     throw error;
   }
+  // A payment begun before ("Zapłać teraz", then back) cannot be paid any
+  // more: the reservation is paid from its own link. Expired only now, once
+  // the database no longer counts it, so Stripe's event frees nothing.
+  if (pending) await expireSession(pending);
   const link = await claimReservationEmail(reference).catch((error) => {
     console.error(`[booking] reserved e-mail ${reference}:`, error);
     return null;

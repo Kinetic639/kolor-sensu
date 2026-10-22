@@ -981,6 +981,7 @@ export type Database = {
           checkout_session_id: string;
           created_at: string;
           currency_code: string;
+          fulfilment: string | null;
           id: string;
           payment_intent_id: string | null;
           refunded_minor: number;
@@ -993,6 +994,7 @@ export type Database = {
           checkout_session_id: string;
           created_at?: string;
           currency_code: string;
+          fulfilment?: string | null;
           id?: string;
           payment_intent_id?: string | null;
           refunded_minor?: number;
@@ -1005,6 +1007,7 @@ export type Database = {
           checkout_session_id?: string;
           created_at?: string;
           currency_code?: string;
+          fulfilment?: string | null;
           id?: string;
           payment_intent_id?: string | null;
           refunded_minor?: number;

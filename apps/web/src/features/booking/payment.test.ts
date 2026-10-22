@@ -5,6 +5,7 @@ import {
   checkoutSessionParams,
   handleStripeEvent,
   type PaymentDeps,
+  settleSession,
 } from "./payment";
 
 const booking: GuestBooking = {
@@ -110,7 +111,7 @@ function deps(outcome = "confirmed" as const): PaymentDeps {
   return {
     fulfill: vi.fn().mockResolvedValue(outcome),
     fail: vi.fn().mockResolvedValue(undefined),
-    refundLostSlot: vi.fn().mockResolvedValue(undefined),
+    refundPayment: vi.fn().mockResolvedValue(undefined),
     recordRefund: vi.fn().mockResolvedValue(true),
   };
 }
@@ -125,6 +126,7 @@ const session = {
   object: "checkout.session",
   payment_status: "paid",
   payment_intent: "pi_1",
+  amount_total: 20000,
 };
 
 describe("handleStripeEvent", () => {
@@ -172,7 +174,37 @@ describe("handleStripeEvent", () => {
   it("refunds money for a time that was lost meanwhile", async () => {
     const d = deps("slot_lost" as never);
     await handleStripeEvent(event("checkout.session.completed", session), d);
-    expect(d.refundLostSlot).toHaveBeenCalledWith("cs_1", "pi_1");
+    expect(d.refundPayment).toHaveBeenCalledWith(
+      "cs_1",
+      "pi_1",
+      20000,
+      "KS-20301002-6422",
+    );
+  });
+
+  it("refunds a second payment for a visit already paid", async () => {
+    const d = { ...deps("refund_payment" as never), onConfirmed: vi.fn() };
+    await handleStripeEvent(event("checkout.session.completed", session), d);
+    expect(d.refundPayment).toHaveBeenCalledWith(
+      "cs_1",
+      "pi_1",
+      20000,
+      "KS-20301002-6422",
+    );
+    expect(d.onConfirmed).not.toHaveBeenCalled();
+  });
+
+  it("does nothing for a payment settled before (the return page again)", async () => {
+    const d = { ...deps("already_settled" as never), onConfirmed: vi.fn() };
+    await settleSession(session as never, d);
+    expect(d.refundPayment).not.toHaveBeenCalled();
+    expect(d.onConfirmed).not.toHaveBeenCalled();
+  });
+
+  it("refunds nothing while the money is still on its way", async () => {
+    const d = deps("slot_lost" as never);
+    await settleSession({ ...session, payment_status: "unpaid" } as never, d);
+    expect(d.refundPayment).not.toHaveBeenCalled();
   });
 
   it("frees the time of a failed or expired session", async () => {

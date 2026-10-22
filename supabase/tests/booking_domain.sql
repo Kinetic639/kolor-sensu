@@ -689,10 +689,72 @@ BEGIN
     RAISE EXCEPTION 'Q: a lost time gave %', outcome;
   END IF;
 
-  -- Paid after the hold lapsed, the time still free: confirmed anyway.
+  -- Settled once: the time freed again does not bring back a visit whose
+  -- money goes back; the refund is asked for until it is recorded.
   UPDATE public.appointments SET status = 'cancelled' WHERE id = other.appointment_id;
   outcome := public.fulfill_checkout_session('cs_test_3', true, 'pi_test_3');
+  IF outcome <> 'slot_lost'
+     OR (SELECT status FROM public.appointments WHERE id = held.appointment_id) <> 'expired' THEN
+    RAISE EXCEPTION 'Q: a lost time came back: %', outcome;
+  END IF;
+  PERFORM public.record_refund('pi_test_3', 25000);
+  outcome := public.fulfill_checkout_session('cs_test_3', true, 'pi_test_3');
+  IF outcome <> 'already_settled'
+     OR (SELECT status FROM public.appointments WHERE id = held.appointment_id) <> 'expired' THEN
+    RAISE EXCEPTION 'Q: a refunded payment confirmed the visit: %', outcome;
+  END IF;
+
+  -- Paid after the hold lapsed, the time still free: confirmed anyway.
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.tuesday, '10:00'), p_client_key => 'visitor-q9'
+  );
+  PERFORM public.save_booking_details(held.access_token, 'Ewa Test', 'ewa@example.com',
+    '600100200', NULL, true, true);
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_test_4', now() + interval '30 minutes', 25000, 'PLN');
+  -- A second session for the same visit (another tab): both get paid.
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_test_5', now() + interval '30 minutes', 25000, 'PLN');
+  UPDATE public.appointments SET hold_expires_at = now() - interval '1 second'
+  WHERE id = held.appointment_id;
+  outcome := public.fulfill_checkout_session('cs_test_4', true, 'pi_test_4');
   IF outcome <> 'confirmed' THEN RAISE EXCEPTION 'Q: a free lapsed time gave %', outcome; END IF;
+  -- The second payment goes back; the first still confirms.
+  outcome := public.fulfill_checkout_session('cs_test_5', true, 'pi_test_5');
+  IF outcome <> 'refund_payment' THEN RAISE EXCEPTION 'Q: a second payment gave %', outcome; END IF;
+  IF public.fulfill_checkout_session('cs_test_4', true, 'pi_test_4') <> 'already_confirmed'
+     OR public.fulfill_checkout_session('cs_test_5', true, 'pi_test_5') <> 'refund_payment' THEN
+    RAISE EXCEPTION 'Q: two payments settled again differently';
+  END IF;
+
+  -- A session for an old price (the discount code changed since): refunded,
+  -- the visit is not confirmed for it.
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.monday, (regexp_match(pg_temp.free_times('in_person', t.monday), '(\S+)$'))[1]::time),
+    p_client_key => 'visitor-q10'
+  );
+  PERFORM public.save_booking_details(held.access_token, 'Jan Test', 'jan@example.com',
+    '600100200', NULL, true, true);
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_test_6', now() + interval '30 minutes', 25000, 'PLN');
+  UPDATE public.appointments SET price_minor = 30000 WHERE id = held.appointment_id;
+  outcome := public.fulfill_checkout_session('cs_test_6', true, 'pi_test_6');
+  IF outcome <> 'refund_payment'
+     OR (SELECT status FROM public.appointments WHERE id = held.appointment_id) <> 'held' THEN
+    RAISE EXCEPTION 'Q: an old price gave %', outcome;
+  END IF;
+
+  -- Refunds are recorded only upwards, whatever order they come in.
+  PERFORM public.record_refund('pi_test_4', 10000);
+  PERFORM public.record_refund('pi_test_4', 0);
+  PERFORM public.record_refund('pi_test_4', 5000);
+  IF (SELECT (status, refunded_minor) FROM public.payments WHERE checkout_session_id = 'cs_test_4')
+     IS DISTINCT FROM ('partially_refunded'::public.payment_status, 10000) THEN
+    RAISE EXCEPTION 'Q: a refund went down';
+  END IF;
+  PERFORM public.record_refund('pi_test_6', 0);
+  IF (SELECT status FROM public.payments WHERE checkout_session_id = 'cs_test_6') <> 'succeeded' THEN
+    RAISE EXCEPTION 'Q: a refund of nothing changed the payment';
+  END IF;
 
   -- An unknown session.
   IF public.fulfill_checkout_session('cs_unknown', true, NULL) <> 'unknown_session' THEN
@@ -991,6 +1053,10 @@ BEGIN
   IF (SELECT (status, cancelled_by, refund_due_minor) FROM public.get_booking(b.link_token))
      IS DISTINCT FROM ('cancelled'::public.appointment_status, 'client'::text, 0) THEN
     RAISE EXCEPTION 'S: the late-cancelled visit';
+  END IF;
+  -- The old return page opened again: no refund the window did not give.
+  IF public.fulfill_checkout_session('cs_test_s2', true, 'pi_test_s2') <> 'already_settled' THEN
+    RAISE EXCEPTION 'S: a late cancellation refunded through the return page';
   END IF;
 END;
 $body$;
