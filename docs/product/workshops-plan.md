@@ -38,8 +38,16 @@ Stan na 22.10 · PR-y: 1 / 7 zmergowanych (PR 3 i 4 razem w #168)
   - [x] testy (SQL, kontrakty, supabase, widok, e-maile, płatność, UI ze stories), typy, lint
   - [x] CI zielone
   - [ ] sprawdzony na DEV (zapis z BLIK, zapłacę później, kod, lista rezerwowa)
-- [ ] **PR 5 · Po zapisie** — strona zapisu, rezygnacja i zwroty, przekazanie miejsca, przypomnienia o wpłacie i o warsztacie, lista rezerwowa, odwołanie przez centrum
-- [ ] **PR 6 · Uczestnicy w portalach** — lista uczestników, eksport, ręczny zapis, wiadomość do wszystkich, obecność, kalendarz, dashboard, powiadomienia, portal specjalisty
+- [ ] **PR 5 + 6 · Po zapisie i uczestnicy w portalach** — [#175](https://github.com/Kinetic639/kolor-sensu/pull/175)
+  - [x] strona zapisu: rezygnacja (z tym, co stanie się z pieniędzmi) i przekazanie miejsca; zwrot przez Stripe
+  - [x] e-maile: oferta z listy rezerwowej, przypomnienie o wpłacie, przypomnienie dzień przed (z linkiem online), anulowanie, nowy termin, zwrot
+  - [x] nowy termin: pełny zwrot w każdej chwili i e-mail; zadanie w tle wysyła e-maile, oddaje zaległe zwroty, przypomina o minimum
+  - [x] portal admina: uczestnicy (zapisani, lista rezerwowa, rezygnacje), ręczny zapis, wypisanie ze zwrotem, wiadomość do wszystkich, CSV, obecność, „Zakończ warsztat”, zadania na dashboardzie
+  - [x] powiadomienia w portalach: nowy zapis, rezygnacja, komplet, za mało chętnych
+  - [x] portal specjalisty: Moje warsztaty z uczestnikami i obecnością
+  - [x] testy (SQL, widoki, e-maile, zwroty, zadanie w tle), typy, lint
+  - [ ] CI zielone
+  - [ ] sprawdzony na DEV
 - [ ] **PR 7 · Jakość** — e2e na DEV i STAGING, tabela „Każda strona”, Lighthouse, dokumentacja
 
 **Zasada aktualizacji:** każdy krok odhacza się w commicie, który go

@@ -187,12 +187,19 @@ $$;
 RESET ROLE;
 
 -- I: the minimum not reached three days before the payments are due.
-DO $$
+DO $
+DECLARE
+  v_first integer;
 BEGIN
-  IF public.remind_workshop_minimums() <> 1
+  v_first := public.remind_workshop_minimums();
+  IF v_first <> 1
      OR NOT EXISTS (SELECT 1 FROM public.notifications WHERE kind = 'workshop_minimum' AND portal = 'admin')
      OR public.remind_workshop_minimums() <> 0 THEN
-    RAISE EXCEPTION 'I: the minimum was not reminded once';
+    RAISE EXCEPTION 'I: the minimum was not reminded once (% the first time): %', v_first,
+      (SELECT json_agg(json_build_object('slug', w.slug, 'min', w.min_participants,
+        'confirmed_at', w.confirmed_at, 'reminded', w.minimum_reminded_at, 'starts', w.starts_at,
+        'paid', (SELECT count(*) FROM public.workshop_registrations AS r WHERE r.workshop_id = w.id AND r.status = 'confirmed')))
+       FROM public.workshops AS w WHERE w.slug LIKE 'ws-after-%');
   END IF;
   -- The workshop happens (moved into the past, as postgres).
   UPDATE public.workshops
