@@ -313,8 +313,11 @@ GRANT EXECUTE ON FUNCTION pg_temp.code_hint(text, text) TO service_role;
 SET LOCAL ROLE service_role;
 DO $$
 BEGIN
-  IF pg_temp.code_hint('token-3', 'PRAWIE') <> ''
-     OR (SELECT price_minor FROM public.appointments WHERE reference = 'KS-DISC-3') <> 200 THEN
+  -- (Two statements: one would read the price from before the code.)
+  IF pg_temp.code_hint('token-3', 'PRAWIE') <> '' THEN
+    RAISE EXCEPTION 'R: a code over the price was refused';
+  END IF;
+  IF (SELECT price_minor FROM public.appointments WHERE reference = 'KS-DISC-3') <> 200 THEN
     RAISE EXCEPTION 'R: a code that would leave 1 zł was not cut down to leave 2 zł';
   END IF;
   IF pg_temp.code_hint('token-3', 'RAZ') <> '' OR pg_temp.code_hint('token-3', 'RAZ') <> '' THEN
