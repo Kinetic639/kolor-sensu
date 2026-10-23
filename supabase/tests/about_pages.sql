@@ -56,8 +56,17 @@ BEGIN
   IF (
     SELECT jsonb_array_length(draft_payload -> 'faq') FROM public.site_content
     WHERE key = 'contact_page'
-  ) IS DISTINCT FROM 5 THEN
-    RAISE EXCEPTION 'M: Kontakt was not seeded with the site''s five questions';
+  ) IS DISTINCT FROM 4 THEN
+    RAISE EXCEPTION 'M: Kontakt was not seeded with the site''s four questions';
+  END IF;
+  -- Cancelling a visit is said from the settings (20261024110000), not
+  -- written into the CMS.
+  IF EXISTS (
+    SELECT 1 FROM public.site_content,
+      jsonb_array_elements(draft_payload -> 'faq') AS item
+    WHERE key = 'contact_page' AND item ->> 'answer' LIKE '%24 godziny przed spotkaniem%'
+  ) THEN
+    RAISE EXCEPTION 'M: Kontakt still says 24 hours to cancel';
   END IF;
 END;
 $$;

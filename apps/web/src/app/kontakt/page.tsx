@@ -4,8 +4,13 @@ import { ContactCard } from "@/components/contact-details";
 import { PageIntro } from "@/components/page-intro";
 import { turnstileKeys } from "@/features/booking/guards";
 import { ConsentMap } from "@/features/contact/consent-map";
+import { cancellingAnswer } from "@/features/contact/cancelling-answer";
 import { ContactForm } from "@/features/contact/contact-form";
-import { getCompany, getContactPage } from "@/lib/public-data";
+import {
+  getBookingWindow,
+  getCompany,
+  getContactPage,
+} from "@/lib/public-data";
 import { pageMetadata } from "@/lib/page-metadata";
 import { getSiteFrame } from "@/lib/site-frame";
 
@@ -13,7 +18,8 @@ import { getSiteFrame } from "@/lib/site-frame";
 // e-mail and hours (Ustawienia, and the hours from Ustawienia wspólne) with
 // "Pokaż na mapie"; the map (once the visitor consents to its cookies) and
 // how to get here; the form; the questions and answers. Every word is the
-// CMS's (CMS → Kontakt).
+// CMS's (CMS → Kontakt), but for the answer on cancelling a visit: that is
+// the centre's settings (Ustawienia → Rezerwacje online), as in Cennik.
 
 // Title, description and link preview: the CMS's over the page's own.
 export function generateMetadata(): Promise<Metadata> {
@@ -21,11 +27,13 @@ export function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ContactPage() {
-  const [page, { contact }, company] = await Promise.all([
+  const [page, { contact }, company, window] = await Promise.all([
     getContactPage(),
     getSiteFrame(),
     getCompany(),
+    getBookingWindow(),
   ]);
+  const faq = window ? [...page.faq, cancellingAnswer(window)] : page.faq;
   const { intro } = page;
   const address = contact
     ? `${contact.address.street}, ${contact.address.postalCode} ${contact.address.city}`
@@ -64,8 +72,8 @@ export default async function ContactPage() {
           />
         </div>
       </div>
-      {page.faq.length > 0 ? (
-        <FaqSection heading={page.faqHeading} items={page.faq} />
+      {faq.length > 0 ? (
+        <FaqSection heading={page.faqHeading} items={faq} />
       ) : null}
     </>
   );
