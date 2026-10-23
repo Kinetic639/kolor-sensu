@@ -20,7 +20,8 @@ import { SecondaryButton } from "./actions";
 // cookies" in the footer opens it again, to change or withdraw consent;
 // pages listening (the map) follow at once. While it shows, the page keeps
 // what the keyboard focuses clear of it (scroll-padding-bottom: WCAG
-// 2.4.11).
+// 2.4.11) and leaves room under itself, so the footer's last links (help
+// in a crisis) scroll above it.
 
 /** The non-necessary uses the visitor can allow, one switch each. */
 export const COOKIE_CATEGORIES = [
@@ -165,13 +166,17 @@ export function CookieConsent({
     return () => window.removeEventListener(COOKIE_SETTINGS_EVENT, reopen);
   }, [storageKey]);
 
-  // A focused element is scrolled above the notice, never under it.
+  // A focused element is scrolled above the notice, never under it; the
+  // room under the page lets even the footer's last links scroll above it.
   useEffect(() => {
     const notice = ref.current;
     if (!open || !notice) return;
     const root = document.documentElement;
+    const body = document.body;
     const keepClear = () => {
-      root.style.scrollPaddingBottom = `${notice.offsetHeight + 24}px`;
+      const room = `${notice.offsetHeight + 24}px`;
+      root.style.scrollPaddingBottom = room;
+      body.style.paddingBottom = room;
     };
     keepClear();
     const observer =
@@ -183,6 +188,8 @@ export function CookieConsent({
       observer?.disconnect();
       root.style.removeProperty("scroll-padding-bottom");
       if (root.getAttribute("style") === "") root.removeAttribute("style");
+      body.style.removeProperty("padding-bottom");
+      if (body.getAttribute("style") === "") body.removeAttribute("style");
     };
   }, [open]);
 

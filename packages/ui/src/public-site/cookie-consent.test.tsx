@@ -178,4 +178,13 @@ describe("the cookie notice", () => {
     );
     expect(document.documentElement.style.scrollPaddingBottom).toBe("");
   });
+
+  it("leaves room under the page, so the footer scrolls above it", () => {
+    render(<CookieConsent />);
+    expect(document.body.style.paddingBottom).toMatch(/px$/);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Akceptuję wszystkie" }),
+    );
+    expect(document.body.style.paddingBottom).toBe("");
+  });
 });
