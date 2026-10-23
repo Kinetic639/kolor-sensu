@@ -17,6 +17,7 @@ const PAGES = [
   "/kontakt",
   "/oferta",
   "/cennik",
+  "/warsztaty",
   "/edukacja",
   "/edukacja/artykuly",
   "/edukacja/ebooki",
@@ -32,15 +33,23 @@ async function open(page: Page, path: string) {
   expect(response?.ok(), path).toBe(true);
 }
 
-/** Every page here, with the first service's page. */
-async function pages(page: Page) {
-  await open(page, "/oferta");
-  const service = await page
-    .locator('main a[href^="/oferta/"]')
+/** The first link under `list` to a page of its own, if there is one. */
+async function firstOf(page: Page, list: string) {
+  await open(page, list);
+  return page
+    .locator(`main a[href^="${list}/"]`)
     .first()
-    .getAttribute("href")
+    .getAttribute("href", { timeout: 5_000 })
     .catch(() => null);
-  return service ? [...PAGES, service] : PAGES;
+}
+
+/** Every page here, with the first service's and workshop's pages. */
+async function pages(page: Page) {
+  const service = await firstOf(page, "/oferta");
+  const workshop = await firstOf(page, "/warsztaty");
+  return [...PAGES, service, workshop].filter(
+    (path): path is string => path !== null,
+  );
 }
 
 test("the first Tab on every page skips to its content", async ({ page }) => {
