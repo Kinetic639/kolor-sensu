@@ -120,6 +120,11 @@ test("Warsztaty and a workshop's page: one h1, no sideways scroll, axe, the Even
         .map((script) => JSON.parse(script.textContent ?? "{}"))
         .find((data) => data["@type"] === "Event"),
     );
+  // A picture for a shared link: the cover, or else the list's.
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+    "content",
+    /\S/,
+  );
   expect(event).toMatchObject({
     name: title,
     eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
