@@ -37,6 +37,13 @@ Turnstile uses Cloudflare's always-pass test keys.
 Each run of the booking test leaves one confirmed test visit, in a week
 picked at random so runs do not all take the same hours.
 
+The payment tests (`payments.spec.ts`) walk the same wizard
+(`support/booking.ts`) and pay with Stripe's test cards (a card, one asking
+for 3D Secure, a declined one) and with Przelewy24. They run only with
+`E2E_PAYMENTS=1`: on STAGING by hand, Actions → Staging E2E → Run workflow
+with "payments" ticked. Once they have passed there, the gate goes and they
+join every release's run.
+
 The workshop test (`workshops.spec.ts`) needs "Warsztat testowy E2E"
 (`warsztat-testowy-e2e`; overridable: `E2E_WORKSHOP_SLUG`,
 `E2E_WORKSHOP_TITLE`): published, online, priced (10 zł), with plenty of
