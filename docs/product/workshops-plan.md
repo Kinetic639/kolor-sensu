@@ -38,9 +38,22 @@ Stan na 22.10 · PR-y: 1 / 7 zmergowanych (PR 3 i 4 razem w #168)
   - [x] testy (SQL, kontrakty, supabase, widok, e-maile, płatność, UI ze stories), typy, lint
   - [x] CI zielone
   - [ ] sprawdzony na DEV (zapis z BLIK, zapłacę później, kod, lista rezerwowa)
-- [ ] **PR 5 · Po zapisie** — strona zapisu, rezygnacja i zwroty, przekazanie miejsca, przypomnienia o wpłacie i o warsztacie, lista rezerwowa, odwołanie przez centrum
-- [ ] **PR 6 · Uczestnicy w portalach** — lista uczestników, eksport, ręczny zapis, wiadomość do wszystkich, obecność, kalendarz, dashboard, powiadomienia, portal specjalisty
+- [ ] **PR 5 + 6 · Po zapisie i uczestnicy w portalach** — [#175](https://github.com/Kinetic639/kolor-sensu/pull/175)
+  - [x] strona zapisu: rezygnacja (z tym, co stanie się z pieniędzmi) i przekazanie miejsca; zwrot przez Stripe
+  - [x] e-maile: oferta z listy rezerwowej, przypomnienie o wpłacie, przypomnienie dzień przed (z linkiem online), anulowanie, nowy termin, zwrot
+  - [x] nowy termin: pełny zwrot w każdej chwili i e-mail; zadanie w tle wysyła e-maile, oddaje zaległe zwroty, przypomina o minimum
+  - [x] portal admina: uczestnicy (zapisani, lista rezerwowa, rezygnacje), ręczny zapis, wypisanie ze zwrotem, wiadomość do wszystkich, CSV, obecność, „Zakończ warsztat”, zadania na dashboardzie
+  - [x] powiadomienia w portalach: nowy zapis, rezygnacja, komplet, za mało chętnych
+  - [x] portal specjalisty: Moje warsztaty z uczestnikami i obecnością
+  - [x] testy (SQL, widoki, e-maile, zwroty, zadanie w tle), typy, lint
+  - [x] CI zielone
+  - [ ] sprawdzony na DEV
 - [ ] **PR 7 · Jakość** — e2e na DEV i STAGING, tabela „Każda strona”, Lighthouse, dokumentacja
+  - [x] e2e `workshops.spec.ts`: strony (jeden H1, 390 i 1280 px, axe, dane Event), zapis z BLIK (admin i prowadzący widzą uczestnika), „zapłacę później” i rezygnacja; przechodzi na DEV (strona warsztatu po wdrożeniu poprawki listy faktów)
+  - [x] klawiatura i 200 %: Warsztaty i strona warsztatu w `keyboard-zoom.spec.ts`
+  - [x] Lighthouse na DEV (telefon): dostępność 100 (strona warsztatu 93 → poprawione), dobre praktyki 100, SEO tylko `noindex` DEV-a; LCP ok. 2,3 s przy spowolnieniu, CLS 0
+  - [x] dokumentacja: `end-to-end-tests.md`, `workshops-domain.md`
+  - [ ] „Warsztat testowy E2E” na STAGING i Staging E2E zielone (przy wydaniu)
 
 **Zasada aktualizacji:** każdy krok odhacza się w commicie, który go
 kończy; PR jest odhaczony, gdy jest zmergowany i sprawdzony na DEV.

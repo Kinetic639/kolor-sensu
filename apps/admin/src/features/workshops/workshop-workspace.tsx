@@ -26,7 +26,7 @@ import { DetailBar } from "@repo/ui/detail-page";
 import { toast } from "@repo/ui/toast";
 import { Tag } from "@repo/ui/visit-table";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { SiteImageField } from "@/features/cms/site-image-field";
 import { TextField } from "@/features/cms/text-field";
 import {
@@ -100,6 +100,7 @@ export function WorkshopWorkspace({
   places,
   services,
   webUrl,
+  participants,
 }: {
   initial: WorkshopInput;
   state: WorkshopState;
@@ -108,6 +109,8 @@ export function WorkshopWorkspace({
   services: readonly { slug: string; name: string }[];
   /** The public site's address, for "Zobacz na stronie". */
   webUrl: string;
+  /** The participants' section (a saved workshop). */
+  participants?: ReactNode;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -344,7 +347,13 @@ export function WorkshopWorkspace({
         }
         title={draft.title || "Nowy warsztat"}
       />
-      <SectionLinks sections={SECTIONS} />
+      <SectionLinks
+        sections={
+          participants
+            ? [{ id: "uczestnicy", label: "Uczestnicy" }, ...SECTIONS]
+            : SECTIONS
+        }
+      />
       <div className="min-h-0 flex-1 overflow-y-auto bg-[var(--surface)]">
         {cancelled ? (
           <p className="mx-3.5 mt-3 rounded-[var(--radius-control)] border border-[var(--border)] p-3 text-sm">
@@ -352,6 +361,11 @@ export function WorkshopWorkspace({
             {state.cancelReason ? `: ${state.cancelReason}` : ""}. Zapisani
             dostali zwrot pieniędzy.
           </p>
+        ) : null}
+        {participants ? (
+          <WorkspaceSection id="uczestnicy" title="Uczestnicy">
+            {participants}
+          </WorkspaceSection>
         ) : null}
         <fieldset className="contents" disabled={cancelled}>
           <WorkspaceSection id="podstawy" title="Podstawy">

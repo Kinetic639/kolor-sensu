@@ -1,23 +1,21 @@
 import {
   cancelWorkshop,
-  refundableWorkshopPayments,
+  centreCancelWorkshopParticipant,
   WorkshopAdminError,
 } from "@repo/supabase/workshops-admin";
-import { recordWorkshopRefund } from "@repo/supabase/workshops";
 import { createSupabasePublicClient } from "@repo/supabase/public";
-import {
-  refundThroughStripe,
-  type RefundingStripe,
-} from "@/features/booking/stripe-refund";
+import { after } from "next/server";
 import { getPublicSupabaseEnvironment } from "@/lib/supabase/environment";
 import { createSecretClient } from "@/lib/supabase/secret";
-import { stripeServer } from "@/lib/stripe";
+import { sendWorkshopEmail } from "./email/send";
+import { refundRegistration } from "./refunds";
 
-// The centre cancels a workshop (docs/product/workshops-plan.md, PR 2):
-// the database (as the admin, who must be one) cancels every seat and says
-// who is owed what; each paid seat is then given back in full through
-// Stripe here, where the payments live. A refund that fails stays owed in
-// the database (refund_due above refunded) and is reported.
+// The centre cancels a workshop or one participant (docs/product/
+// workshops-plan.md, PR 2 and 6): the database (as the admin, who must be
+// one) cancels and says who is owed what; the money goes back through
+// Stripe here, where the payments live, and each participant hears of it.
+// A refund that fails stays owed in the database (the scheduled job tries
+// again) and is reported.
 
 export interface CentreCancelOutcome {
   ok: true;
@@ -25,43 +23,28 @@ export interface CentreCancelOutcome {
   refundFailed: boolean;
 }
 
-export async function cancelWorkshopAsCentre(
-  workshopId: string,
-  reason: string | null,
-  accessToken: string,
-): Promise<CentreCancelOutcome | { ok: false; code: string }> {
-  const asAdmin = createSupabasePublicClient(
+function asAdmin(accessToken: string) {
+  return createSupabasePublicClient(
     getPublicSupabaseEnvironment(),
     accessToken,
   );
-  let owed;
-  try {
-    owed = await cancelWorkshop(asAdmin, workshopId, reason);
-  } catch (error) {
-    if (error instanceof WorkshopAdminError)
-      return { ok: false, code: error.code };
-    throw error;
-  }
+}
 
+async function refundAndTell(
+  seats: { registrationId: string; reference: string; refundMinor: number }[],
+): Promise<CentreCancelOutcome> {
   const db = createSecretClient();
   let refunded = 0;
   let refundFailed = false;
-  for (const seat of owed) {
+  for (const seat of seats) {
     try {
-      for (const payment of await refundableWorkshopPayments(
-        db,
-        seat.registrationId,
-      )) {
-        const total = await refundThroughStripe(
-          stripeServer() as unknown as RefundingStripe,
-          payment.paymentIntentId,
-          payment.amountMinor - payment.refundedMinor,
-          {
-            reference: seat.reference,
-            idempotencyKey: `workshop-cancelled:${payment.paymentIntentId}`,
-          },
+      if (seat.refundMinor > 0) {
+        await refundRegistration(
+          db,
+          { id: seat.registrationId, reference: seat.reference },
+          seat.refundMinor,
+          "cancelled",
         );
-        await recordWorkshopRefund(db, payment.paymentIntentId, total);
       }
       refunded += 1;
     } catch (error) {
@@ -70,4 +53,56 @@ export async function cancelWorkshopAsCentre(
     }
   }
   return { ok: true, refunded, refundFailed };
+}
+
+export async function cancelWorkshopAsCentre(
+  workshopId: string,
+  reason: string | null,
+  accessToken: string,
+): Promise<CentreCancelOutcome | { ok: false; code: string }> {
+  let owed;
+  try {
+    owed = await cancelWorkshop(asAdmin(accessToken), workshopId, reason);
+  } catch (error) {
+    if (error instanceof WorkshopAdminError)
+      return { ok: false, code: error.code };
+    throw error;
+  }
+  const outcome = await refundAndTell(owed);
+  // Everyone signed up hears of it (also those with nothing to refund),
+  // through the e-mails the cancellation made due.
+  after(() => sendDueCancellations());
+  return outcome;
+}
+
+/** The admin cancels one participant, giving back what they chose. */
+export async function cancelParticipantAsCentre(
+  registrationId: string,
+  refundMinor: number,
+  accessToken: string,
+): Promise<CentreCancelOutcome | { ok: false; code: string }> {
+  let seat;
+  try {
+    seat = await centreCancelWorkshopParticipant(
+      asAdmin(accessToken),
+      registrationId,
+      refundMinor,
+    );
+  } catch (error) {
+    if (error instanceof WorkshopAdminError)
+      return { ok: false, code: error.code };
+    throw error;
+  }
+  const outcome = await refundAndTell([{ registrationId, ...seat }]);
+  after(() => sendWorkshopEmail(seat.reference, "cancelled"));
+  return outcome;
+}
+
+/** The cancellations' e-mails, now rather than at the next scheduled run. */
+async function sendDueCancellations() {
+  const { listDueWorkshopEmails } = await import("@repo/supabase/workshops");
+  const due = await listDueWorkshopEmails(createSecretClient()).catch(() => []);
+  for (const { reference, kind } of due) {
+    if (kind === "cancelled") await sendWorkshopEmail(reference, kind);
+  }
 }

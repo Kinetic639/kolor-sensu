@@ -4,6 +4,7 @@ import { deadlineLabel, localTime, visitLabel } from "../visit-label";
 import {
   contactLineOf,
   place,
+  placeRow,
   type ConfirmationOptions,
   type VisitEmailContent,
 } from "./confirmation-content";
@@ -49,7 +50,7 @@ function visitRows(
       "Termin",
       `${visitLabel(visit.startsAt, timeZone)}–${localTime(visit.endsAt, timeZone)}`,
     ],
-    ["Miejsce", place(visit)],
+    ["Miejsce", placeRow(visit)],
   ];
 }
 

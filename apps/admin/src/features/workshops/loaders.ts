@@ -4,6 +4,8 @@ import {
   getAdminWorkshop,
   getWorkshopVisibility,
   listAdminWorkshops,
+  listWorkshopMessages,
+  listWorkshopParticipants,
 } from "@repo/supabase/workshops-admin";
 import { cache } from "react";
 import { rooms } from "@/lib/reference-data";
@@ -52,3 +54,11 @@ export async function workshopTitle(id: string): Promise<string | null> {
   const workshop = await loadWorkshop(id).catch(() => null);
   return workshop?.title ?? null;
 }
+
+export const loadParticipants = cache(async (workshopId: string) =>
+  listWorkshopParticipants(await createClient(), workshopId),
+);
+
+export const loadWorkshopMessages = cache(async (workshopId: string) =>
+  listWorkshopMessages(await createClient(), workshopId),
+);

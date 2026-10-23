@@ -14,7 +14,7 @@ import { emailSender, sendEmail } from "@/lib/email";
 import { getBookingWindow } from "@/lib/public-data";
 import { getSiteFrame } from "@/lib/site-frame";
 import { createSecretClient } from "@/lib/supabase/secret";
-import { workshopEmailContent } from "./content";
+import { WITH_CALENDAR, workshopEmailContent } from "./content";
 
 // Sending a workshop's e-mails (server only): claimed in the database
 // first, so the webhook and the return page never both send one; Resend's
@@ -52,16 +52,15 @@ async function deliver(
           <ConfirmationEmail company={options.company} content={content} />,
         ),
         text: withCompany(content.text, options.company),
-        attachments:
-          kind === "waitlisted"
-            ? []
-            : [
-                {
-                  filename: `warsztat-${email.reference}.ics`,
-                  contentType: "text/calendar; charset=utf-8; method=PUBLISH",
-                  content: content.ics,
-                },
-              ],
+        attachments: !WITH_CALENDAR.has(kind)
+          ? []
+          : [
+              {
+                filename: `warsztat-${email.reference}.ics`,
+                contentType: "text/calendar; charset=utf-8; method=PUBLISH",
+                content: content.ics,
+              },
+            ],
       },
       `workshop-${kind}:${email.reference}:${email.manageToken.slice(0, 16)}`,
     );

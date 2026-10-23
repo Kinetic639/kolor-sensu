@@ -113,6 +113,6 @@ export const sampleFaq = [
   {
     question: "Jak mogę odwołać lub przełożyć wizytę?",
     answer:
-      "Najpóźniej 24 godziny przed spotkaniem, telefonicznie lub mailowo. Wizyta odwołana później jest płatna.",
+      "Wizytę odwołasz z pełnym zwrotem opłaty najpóźniej 48 godz. przed jej początkiem, a termin zmienisz najpóźniej 48 godz. przed nią: na stronie wizyty (link jest w e-mailu z potwierdzeniem), telefonicznie albo mailowo.",
   },
 ] as const satisfies readonly FaqItem[];

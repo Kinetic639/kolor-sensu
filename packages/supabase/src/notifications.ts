@@ -36,7 +36,13 @@ export type NotificationKind =
   | "visit_to_close"
   /** A third unpaid reservation by one person: paid at once (admins). */
   | "unpaid_limit"
-  | "profile_rejected";
+  | "profile_rejected"
+  /** Workshops (admins and the workshop's leaders): a sign-up, a seat
+   * given up, the workshop full, its minimum not reached in time. */
+  | "workshop_signup"
+  | "workshop_cancelled"
+  | "workshop_full"
+  | "workshop_minimum";
 
 export interface NotificationDetails {
   reference: string | null;
@@ -60,6 +66,8 @@ export interface NotificationDetails {
   amountMinor?: number | null;
   disputeStatus?: string | null;
   disputeReason?: string | null;
+  /** The workshop a workshop notification is about. */
+  workshopId?: string | null;
 }
 
 export interface PortalNotification {
@@ -119,6 +127,7 @@ export function toPortalNotification(
       disputeStatus: text(d.dispute_status),
       disputeReason: text(d.dispute_reason),
       currencyCode: text(d.currency_code),
+      workshopId: text(d.workshop_id),
     },
   };
 }

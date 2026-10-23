@@ -16,7 +16,7 @@ import {
   bookingNoticeHref,
   loadBookingParams,
 } from "./search-params";
-import { visitLabel } from "./visit-label";
+import { ONLINE_LINK_NOTE, visitLabel } from "./visit-label";
 
 // The steps after a time is held (Dane, Płatność, Potwierdzenie): the
 // visit is found by the guest's cookie, never by the address.
@@ -144,6 +144,7 @@ export function BookingStep({
                   : [booking.locationName, booking.roomName]
                       .filter(Boolean)
                       .join(" · ") || "Stacjonarnie",
+              detail: booking.mode === "online" ? ONLINE_LINK_NOTE : undefined,
             },
             {
               key: "specjalista",

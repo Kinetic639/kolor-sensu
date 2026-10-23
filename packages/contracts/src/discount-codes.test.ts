@@ -27,7 +27,8 @@ describe("a discount code's form", () => {
       discountCodeInputSchema.safeParse({ ...input, ...patch }).success;
     expect(fails({ code: "ZŁY KOD" })).toBe(false);
     expect(fails({ code: "AB" })).toBe(false);
-    expect(fails({ value: 101 })).toBe(false);
+    expect(fails({ value: 100 })).toBe(false);
+    expect(fails({ value: 99 })).toBe(true);
     expect(fails({ value: 0 })).toBe(false);
     expect(fails({ kind: "amount", value: 101 })).toBe(true);
     expect(fails({ startsOn: "2026-11-02", endsOn: "2026-11-01" })).toBe(false);
@@ -54,11 +55,13 @@ describe("a discount code's form", () => {
 });
 
 describe("a discount", () => {
-  it("is a share or an amount, never more than the price", () => {
+  it("is a share or an amount, always leaving 2 zł to pay", () => {
     expect(discountOn("percent", 20, 20000)).toBe(4000);
     expect(discountOn("percent", 15, 333)).toBe(50);
     expect(discountOn("amount", 5000, 20000)).toBe(5000);
-    expect(discountOn("amount", 50000, 20000)).toBe(20000);
+    expect(discountOn("amount", 50000, 20000)).toBe(19800);
+    expect(discountOn("percent", 99, 20000)).toBe(19800);
+    expect(discountOn("amount", 100, 200)).toBe(0);
   });
 
   it("reads as the admin and the guest see it", () => {

@@ -301,6 +301,190 @@ export function uploadWorkshopImage(client: Client, file: File) {
   return uploadSiteImage(client, file, "workshops");
 }
 
+// ------------------------------------------------------------ participants
+
+export interface WorkshopParticipant {
+  id: string;
+  reference: string;
+  status: Database["public"]["Enums"]["workshop_registration_status"];
+  bookedBy: "client" | "centre";
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  notes: string | null;
+  priceMinor: number;
+  paidMinor: number;
+  refundDueMinor: number;
+  refundedMinor: number;
+  paidOutside: boolean;
+  paymentDueAt: string | null;
+  offerExpiresAt: string | null;
+  holdExpiresAt: string | null;
+  waitlistedAt: string | null;
+  attended: boolean | null;
+  cancelledBy: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+}
+
+/**
+ * A workshop's registrations, as its admins and leaders read them (the
+ * database's rules), in the order they came; holds given up are left out.
+ */
+export async function listWorkshopParticipants(
+  client: Client,
+  workshopId: string,
+): Promise<WorkshopParticipant[]> {
+  const { data, error } = await client
+    .from("workshop_registrations")
+    .select(
+      "id, reference, status, booked_by, client_name, client_email, client_phone, client_notes, price_minor, paid_minor, refund_due_minor, refunded_minor, paid_outside, payment_due_at, offer_expires_at, hold_expires_at, waitlisted_at, attended, cancelled_by, cancelled_at, created_at",
+    )
+    .eq("workshop_id", workshopId)
+    .order("created_at");
+  if (error) throw error;
+  return data
+    .filter((row) => row.status !== "expired" || row.client_email)
+    .map((row) => ({
+      id: row.id,
+      reference: row.reference,
+      status: row.status,
+      bookedBy: row.booked_by === "centre" ? "centre" : "client",
+      name: row.client_name,
+      email: row.client_email,
+      phone: row.client_phone,
+      notes: row.client_notes,
+      priceMinor: row.price_minor,
+      paidMinor: row.paid_minor,
+      refundDueMinor: row.refund_due_minor,
+      refundedMinor: row.refunded_minor,
+      paidOutside: row.paid_outside,
+      paymentDueAt: row.payment_due_at,
+      offerExpiresAt: row.offer_expires_at,
+      holdExpiresAt: row.hold_expires_at,
+      waitlistedAt: row.waitlisted_at,
+      attended: row.attended,
+      cancelledBy: row.cancelled_by,
+      cancelledAt: row.cancelled_at,
+      createdAt: row.created_at,
+    }));
+}
+
+/** The admin adds someone: paid outside (confirmed), or to pay by the link. */
+export async function centreAddWorkshopParticipant(
+  client: Client,
+  workshopId: string,
+  participant: {
+    name: string;
+    email: string;
+    phone: string | null;
+    notes: string | null;
+    paidOutside: boolean;
+  },
+): Promise<{
+  reference: string;
+  status: Database["public"]["Enums"]["workshop_registration_status"];
+}> {
+  const { data, error } = await client.rpc("centre_add_workshop_participant", {
+    p_workshop_id: workshopId,
+    p_name: participant.name,
+    p_email: participant.email,
+    p_phone: participant.phone,
+    p_notes: participant.notes,
+    p_paid_outside: participant.paidOutside,
+  });
+  if (error) throw refusal(error);
+  const row = data![0]!;
+  return { reference: row.reference, status: row.status };
+}
+
+/** The admin cancels one participant; the refund the site is to make. */
+export async function centreCancelWorkshopParticipant(
+  client: Client,
+  registrationId: string,
+  refundMinor: number,
+): Promise<{ reference: string; refundMinor: number }> {
+  const { data, error } = await client.rpc(
+    "centre_cancel_workshop_participant",
+    { p_registration_id: registrationId, p_refund_minor: refundMinor },
+  );
+  if (error) throw refusal(error);
+  const row = data![0]!;
+  return { reference: row.reference, refundMinor: row.refund_minor };
+}
+
+/** Who came (the admin or the workshop's leaders, once it began). */
+export async function setWorkshopAttendance(
+  client: Client,
+  registrationId: string,
+  attended: boolean,
+) {
+  const { error } = await client.rpc("set_workshop_attendance", {
+    p_registration_id: registrationId,
+    p_attended: attended,
+  });
+  if (error) throw refusal(error);
+}
+
+export const completeWorkshop = async (client: Client, id: string) => {
+  const { error } = await client.rpc("complete_workshop", { p_id: id });
+  if (error) throw refusal(error);
+};
+
+/** Keeps the admin's message; whom the site is to send it to. */
+export async function recordWorkshopMessage(
+  client: Client,
+  workshopId: string,
+  subject: string,
+  body: string,
+): Promise<{
+  messageId: string | null;
+  recipients: { reference: string; name: string | null; email: string }[];
+}> {
+  const { data, error } = await client.rpc("record_workshop_message", {
+    p_workshop_id: workshopId,
+    p_subject: subject,
+    p_body: body,
+  });
+  if (error) throw refusal(error);
+  return {
+    messageId: data?.[0]?.message_id ?? null,
+    recipients: (data ?? []).map((row) => ({
+      reference: row.reference,
+      name: row.client_name,
+      email: row.client_email,
+    })),
+  };
+}
+
+export interface WorkshopMessage {
+  id: string;
+  subject: string;
+  body: string;
+  recipients: number;
+  createdAt: string;
+}
+
+/** The messages written to a workshop's participants, newest first. */
+export async function listWorkshopMessages(
+  client: Client,
+  workshopId: string,
+): Promise<WorkshopMessage[]> {
+  const { data, error } = await client
+    .from("workshop_messages")
+    .select("id, subject, body, recipients, created_at")
+    .eq("workshop_id", workshopId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data.map((row) => ({
+    id: row.id,
+    subject: row.subject,
+    body: row.body,
+    recipients: row.recipients,
+    createdAt: row.created_at,
+  }));
+}
+
 // ------------------------------------------------------------ the site's switches
 
 export interface WorkshopVisibility {
@@ -327,4 +511,38 @@ export async function setWorkshopVisibility(
     p_on_home: visibility.onHome ?? null,
   });
   if (error) throw refusal(error);
+}
+
+export interface LedWorkshop {
+  id: string;
+  title: string;
+  slug: string;
+  status: WorkshopStatus;
+  modality: WorkshopModality;
+  startsAt: string;
+  endsAt: string;
+  capacity: number;
+}
+
+/**
+ * The workshops a specialist leads (main or co-leader; the database's
+ * rules show them no others), not drafts, the coming ones first.
+ */
+export async function listLedWorkshops(client: Client): Promise<LedWorkshop[]> {
+  const { data, error } = await client
+    .from("workshops")
+    .select("id, title, slug, status, modality, starts_at, ends_at, capacity")
+    .neq("status", "draft")
+    .order("starts_at");
+  if (error) throw error;
+  return data.map((row) => ({
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    status: row.status,
+    modality: row.modality,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    capacity: row.capacity,
+  }));
 }

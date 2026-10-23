@@ -2,7 +2,7 @@ import type { GuestBooking } from "@repo/supabase";
 import type { BookingSummaryItem } from "@repo/ui/booking";
 import { CalendarDays, FileText, House, UserRound } from "lucide-react";
 import { formatPrice } from "@/lib/format";
-import { localTime, visitLabel } from "./visit-label";
+import { localTime, ONLINE_LINK_NOTE, visitLabel } from "./visit-label";
 
 /** A booked visit's summary rows (the visit's pages). */
 export function visitSummaryItems(
@@ -39,6 +39,7 @@ export function visitSummaryItems(
           : [booking.locationName, booking.roomName]
               .filter(Boolean)
               .join(" · ") || "Stacjonarnie",
+      detail: booking.mode === "online" ? ONLINE_LINK_NOTE : undefined,
     },
   ];
 }

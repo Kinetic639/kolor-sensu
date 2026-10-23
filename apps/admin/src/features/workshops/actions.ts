@@ -7,10 +7,12 @@ import {
   type WorkshopInput,
 } from "@repo/contracts/workshops";
 import {
+  completeWorkshop,
   confirmWorkshop,
   deleteWorkshop,
   publishWorkshop,
   saveWorkshop,
+  setWorkshopAttendance,
   setWorkshopVisibility,
   unpublishWorkshop,
   WorkshopAdminError,
@@ -201,4 +203,141 @@ export async function setWorkshopVisibilityAction(
   } catch (error) {
     return failure(error, "Nie udało się zapisać ustawienia.");
   }
+}
+
+// ------------------------------------------------------------ participants
+
+/** Asks the site (it moves money and sends e-mails) as this admin. */
+async function askTheSite(
+  path: string,
+  body: unknown,
+): Promise<
+  { ok: true; answer: Record<string, unknown> } | { ok: false; message: string }
+> {
+  await requirePortalRole();
+  const client = await createClient();
+  const {
+    data: { session },
+  } = await client.auth.getSession();
+  if (!session) return { ok: false, message: "Zaloguj się ponownie." };
+  const url = new URL(
+    path,
+    process.env.NEXT_PUBLIC_WEB_URL || "http://localhost:3000",
+  );
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${session.access_token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+    const answer = ((await response.json().catch(() => null)) ?? {}) as Record<
+      string,
+      unknown
+    >;
+    if (!response.ok) {
+      const code = typeof answer.error === "string" ? answer.error : "";
+      const fields = answer.fields as Record<string, string> | undefined;
+      return {
+        ok: false,
+        message:
+          WORKSHOP_ADMIN_PROBLEMS[code] ??
+          (fields ? Object.values(fields)[0] : undefined) ??
+          "Nie udało się zapisać zmiany.",
+      };
+    }
+    return { ok: true, answer };
+  } catch (error) {
+    console.error(`[workshops] ${path} failed:`, error);
+    return { ok: false, message: "Nie udało się połączyć ze stroną." };
+  }
+}
+
+export async function addParticipantAction(
+  workshopId: string,
+  participant: {
+    name: string;
+    email: string;
+    phone: string;
+    notes: string;
+    paidOutside: boolean;
+  },
+): Promise<ActionResult> {
+  const result = await askTheSite(
+    `/api/centrum/warsztaty/${encodeURIComponent(workshopId)}/uczestnicy`,
+    {
+      name: participant.name,
+      email: participant.email.trim(),
+      phone: participant.phone.trim() || null,
+      notes: participant.notes.trim() || null,
+      paidOutside: participant.paidOutside,
+    },
+  );
+  if (!result.ok) return result;
+  revalidatePath(`/warsztaty/${workshopId}`);
+  return { ok: true };
+}
+
+export async function cancelParticipantAction(
+  workshopId: string,
+  registrationId: string,
+  refundMinor: number,
+): Promise<ActionResult> {
+  const result = await askTheSite(
+    `/api/centrum/warsztaty/zapisy/${encodeURIComponent(registrationId)}/odwolanie`,
+    { refundMinor },
+  );
+  if (!result.ok) return result;
+  revalidatePath(`/warsztaty/${workshopId}`);
+  if (result.answer.refundFailed)
+    return {
+      ok: false,
+      message:
+        "Zapis anulowany, ale zwrot się nie udał. Spróbujemy ponownie automatycznie w ciągu kwadransa.",
+    };
+  return { ok: true };
+}
+
+export async function messageParticipantsAction(
+  workshopId: string,
+  message: { subject: string; body: string },
+): Promise<ActionResult> {
+  const result = await askTheSite(
+    `/api/centrum/warsztaty/${encodeURIComponent(workshopId)}/wiadomosc`,
+    message,
+  );
+  if (!result.ok) return result;
+  revalidatePath(`/warsztaty/${workshopId}`);
+  if (Number(result.answer.failed) > 0)
+    return {
+      ok: false,
+      message: `Wysłano ${String(result.answer.sent)}, nie udało się: ${String(result.answer.failed)}.`,
+    };
+  return { ok: true };
+}
+
+export async function setAttendanceAction(
+  workshopId: string,
+  registrationId: string,
+  attended: boolean,
+): Promise<ActionResult> {
+  await requirePortalRole();
+  try {
+    await setWorkshopAttendance(await createClient(), registrationId, attended);
+    revalidatePath(`/warsztaty/${workshopId}`);
+    return { ok: true };
+  } catch (error) {
+    return failure(error, "Nie udało się zapisać obecności.");
+  }
+}
+
+export async function completeWorkshopAction(id: string, slug: string) {
+  return run(
+    (client) => completeWorkshop(client, id),
+    slug,
+    "Nie udało się zakończyć warsztatu.",
+  );
 }

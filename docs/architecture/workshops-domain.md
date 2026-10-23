@@ -314,6 +314,32 @@ Migration `20261023090000_workshop_signup.sql`; the site's code is in
   optional `workshop_id`, `all`). Codes made before this are for
   consultations; a visit refuses a workshops-only code (`code_not_here`).
 
+## After signing up, and the portals (PR 5 and 6)
+
+Migration `20261023170000_workshop_after_signup.sql`.
+
+- **The guest's page:** giving the seat up (a full refund up to 7 days
+  before, or at any time after the centre moved the date; later only once
+  the waitlist takes the seat), passing it to someone else, leaving the
+  waitlist. Refunds go through Stripe from the site.
+- **The background job** (every 15 minutes, with the visits'): frees seats
+  whose time ran out, offers them to the waitlist, reminds admins of the
+  minimum, pays owed refunds and sends the e-mails that are due, each kind
+  once.
+- **The admin portal** calls the site's `/api/centrum/warsztaty/…` routes
+  with the admin's token (money and e-mail live in the site): adding a
+  participant, removing one with a refund, a message to everyone. The list,
+  the CSV, attendance and "Zakończ warsztat" use the database directly.
+- **The specialist portal** shows the workshops the specialist leads, with
+  the participants' contact details and attendance; no one else's.
+
+## Tests
+
+The SQL tests (`supabase/tests/workshop_*.sql`) run in CI. The end-to-end
+test (`tests/e2e/workshops.spec.ts`, see `end-to-end-tests.md`) needs
+"Warsztat testowy E2E" on the target; `keyboard-zoom.spec.ts` also walks
+Warsztaty and the first workshop's page.
+
 ## Future extensions (documented, not built)
 
 - **Registrations**: a future `workshop_registrations` table

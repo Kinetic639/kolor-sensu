@@ -109,6 +109,7 @@ export function ContactPageSection({
       <CmsSection note="pytania i odpowiedzi" title="FAQ">
         <div className="px-3.5 py-3">
           <TextField
+            hint="Pytanie o odwołanie i przełożenie wizyty strona dodaje sama, z godzinami z Ustawień → Rezerwacje online."
             id="cms-contact-faq-heading"
             invalid={problems.faqHeading}
             label="Nagłówek"

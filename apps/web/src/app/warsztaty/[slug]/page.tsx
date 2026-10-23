@@ -59,14 +59,18 @@ export async function generateMetadata({
       title: seo.title,
       description: seo.description,
       url: workshopHref(workshop.slug),
-      ...(workshop.coverPath && {
-        images: [
-          {
-            url: workshopImageUrl(workshop.coverPath),
-            alt: workshop.coverAlt ?? workshop.title,
-          },
-        ],
-      }),
+      // The cover, or else the list's picture (an own openGraph drops it).
+      images: [
+        workshop.coverPath
+          ? {
+              url: workshopImageUrl(workshop.coverPath),
+              alt: workshop.coverAlt ?? workshop.title,
+            }
+          : {
+              url: "/warsztaty/opengraph-image",
+              alt: "Warsztaty · Kolor Sensu",
+            },
+      ],
     },
   };
 }

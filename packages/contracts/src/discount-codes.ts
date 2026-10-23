@@ -2,7 +2,8 @@ import { z } from "zod";
 
 // Discount codes (docs/product/vouchers-plan.md): a percentage or an amount
 // off a visit, from and until optional dates, switched on or off by the
-// admin. The database checks the same rules again and computes the
+// admin. No code makes anything free: at least 2 zł, the least Stripe
+// takes, is always left to pay. The database checks the same rules again and computes the
 // discount; this is what the portal's form and the site show.
 
 export const DISCOUNT_KINDS = ["percent", "amount"] as const;
@@ -38,7 +39,7 @@ export const discountCodeInputSchema = z
           ),
       ),
     kind: z.enum(DISCOUNT_KINDS),
-    /** Percent (1–100) or grosze. */
+    /** Percent (1–99) or grosze. */
     value: z.number().int().positive(),
     startsOn: day,
     endsOn: day,
@@ -60,8 +61,9 @@ export const discountCodeInputSchema = z
     message: "Jeden warsztat wybiera się przy zakresie „Warsztaty”.",
     path: ["workshopId"],
   })
-  .refine((input) => input.kind === "amount" || input.value <= 100, {
-    message: "Rabat procentowy: od 1 do 100 %.",
+  .refine((input) => input.kind === "amount" || input.value <= 99, {
+    message:
+      "Rabat procentowy: od 1 do 99 % (zawsze zostaje co najmniej 2 zł do zapłaty).",
     path: ["value"],
   })
   .refine((input) => input.kind === "percent" || input.value <= 10_000_000, {
@@ -87,7 +89,13 @@ export interface DiscountCode extends DiscountCodeInput {
   discountTotalMinor: number;
 }
 
-/** A code's discount on a price, in grosze: never more than the price. */
+/** The least a payment may be (Stripe's), in grosze: what a code leaves. */
+export const LEAST_TO_PAY_MINOR = 200;
+
+/**
+ * A code's discount on a price, in grosze: never more than leaves 2 zł to
+ * pay (0 on a price of 2 zł or less, which takes no code).
+ */
 export function discountOn(
   kind: DiscountKind,
   value: number,
@@ -95,7 +103,7 @@ export function discountOn(
 ): number {
   const off =
     kind === "percent" ? Math.round((priceMinor * value) / 100) : value;
-  return Math.min(priceMinor, off);
+  return Math.max(0, Math.min(priceMinor - LEAST_TO_PAY_MINOR, off));
 }
 
 const PLN = new Intl.NumberFormat("pl-PL", {
@@ -150,7 +158,7 @@ export const DISCOUNT_PROBLEMS: Record<string, string> = {
   code_expired: "Ten kod już wygasł.",
   code_not_here: "Ten kod nie działa na tę usługę.",
   code_too_big:
-    "Ten kod zostawia do zapłaty mniej niż 2 zł, a tak małej płatności nie przyjmiemy. Skontaktuj się z nami.",
+    "Przy tej cenie kod rabatowy nie działa: najmniejsza płatność to 2 zł.",
   code_used_up: "Ten kod został już wykorzystany.",
   too_many_attempts:
     "Za dużo prób wpisania kodu. Spróbuj ponownie za godzinę albo skontaktuj się z nami.",

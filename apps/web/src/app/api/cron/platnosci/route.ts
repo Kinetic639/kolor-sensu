@@ -1,16 +1,24 @@
 import { cancelUnpaidVisits, listDueBookingEmails } from "@repo/supabase";
-import { runWorkshopJobs } from "@repo/supabase/workshops";
+import {
+  listDueWorkshopEmails,
+  listOwedWorkshopRefunds,
+  remindWorkshopMinimums,
+  runWorkshopJobs as expireWorkshopSeats,
+} from "@repo/supabase/workshops";
 import { NextResponse } from "next/server";
 import { sendVisitEmailOnce } from "@/features/booking/email/confirmation-server";
 import { isCronRequest, runPaymentJobs } from "@/features/booking/payment-jobs";
 import { checkStuckPayments } from "@/features/booking/payment-server";
+import { sendWorkshopEmail } from "@/features/workshops/email/send";
+import { runWorkshopJobs } from "@/features/workshops/jobs";
+import { refundRegistration } from "@/features/workshops/refunds";
 import { createSecretClient } from "@/lib/supabase/secret";
 
 // Called by the database every 15 minutes (pg_cron + pg_net, migration
 // payment_schedule): payments stuck pending are asked of Stripe, unpaid
 // reservations are cancelled and the payment and visit reminders go out
-// (R11). Workshop seats whose hold, offer or payment time ran out end
-// too (their seats go to the waitlist).
+// (R11). Then the workshops' part (features/workshops/jobs.ts): seats that
+// ran out, minimums, owed refunds and the e-mails events call for.
 
 export const dynamic = "force-dynamic";
 
@@ -25,9 +33,22 @@ export async function GET(request: Request) {
     listDue: () => listDueBookingEmails(db),
     send: sendVisitEmailOnce,
   });
-  const workshopSeats = await runWorkshopJobs(db).catch((error) => {
+  const workshops = await runWorkshopJobs({
+    expire: () => expireWorkshopSeats(db),
+    remindMinimums: () => remindWorkshopMinimums(db),
+    listOwed: () => listOwedWorkshopRefunds(db),
+    refund: (owed) =>
+      refundRegistration(
+        db,
+        { id: owed.registrationId, reference: owed.reference },
+        owed.owedMinor,
+        "owed",
+      ),
+    listDue: () => listDueWorkshopEmails(db),
+    send: sendWorkshopEmail,
+  }).catch((error) => {
     console.error("[cron] workshop jobs failed:", error);
     return null;
   });
-  return NextResponse.json({ ...result, workshopSeats });
+  return NextResponse.json({ ...result, workshops });
 }
