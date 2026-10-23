@@ -399,3 +399,42 @@ describe("notificationDays", () => {
     ]);
   });
 });
+
+describe("a workshop", () => {
+  const workshop = (kind: string) =>
+    at(
+      { kind, actor: "client", appointmentId: null },
+      {
+        reference: "W2610-007",
+        serviceName: "Uważność",
+        clientName: "Ola Nowak",
+        workshopId: "w1",
+      },
+    );
+
+  it("a sign-up: who, which workshop and when, leading to it for the admin", () => {
+    const view = notificationView(workshop("workshop_signup"), options);
+    expect(view).toMatchObject({
+      title: "Nowy zapis na warsztat",
+      summary: "Ola Nowak · Uważność · czw. 08.10, 11:00",
+      tone: "success",
+      href: "/warsztaty/w1",
+      visitId: null,
+    });
+  });
+
+  it("the minimum not reached: what to decide; the leader's list for a specialist", () => {
+    const view = notificationView(workshop("workshop_minimum"), {
+      ...options,
+      portal: "specialist",
+    });
+    expect(view).toMatchObject({
+      title: "Za mało chętnych",
+      tone: "warning",
+      href: "/warsztaty",
+    });
+    expect(view.details).toContainEqual(
+      expect.objectContaining({ label: "Do decyzji" }),
+    );
+  });
+});

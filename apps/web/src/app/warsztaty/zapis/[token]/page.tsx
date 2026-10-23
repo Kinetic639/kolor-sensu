@@ -10,6 +10,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deadlineLabel } from "@/features/booking/visit-label";
 import { payReservedSeatAction } from "@/features/workshops/actions";
+import {
+  CancelSeatForm,
+  TransferSeatForm,
+} from "@/features/workshops/registration-forms";
+import {
+  CHANGE_NOTICES,
+  refundRule,
+  seatChoices,
+} from "@/features/workshops/registration-view";
 import { seatPrice } from "@/features/workshops/seat-step";
 import {
   workshopDateLabel,
@@ -28,9 +37,9 @@ export const dynamic = "force-dynamic";
 
 // A registration's page, by the link its e-mails carry (or the guest's
 // own token): where it stands (confirmed, waiting for the payment with
-// "Zapłać", on the waitlist), the workshop's facts, and once confirmed
-// online, the meeting's link. Giving the seat up and passing it on come
-// with the next part of the plan (PR 5).
+// "Zapłać", on the waitlist), the workshop's facts, once confirmed online
+// the meeting's link, and giving the seat up (what happens to the money
+// said first) or passing it on.
 
 const STATUS = {
   confirmed: "Miejsce potwierdzone",
@@ -75,6 +84,9 @@ export default async function RegistrationPage({
       ? registration.offerExpiresAt
       : registration.paymentDueAt;
 
+  const choices = seatChoices(registration, new Date(), timeZone);
+  const change =
+    typeof query.zmiana === "string" ? CHANGE_NOTICES[query.zmiana] : null;
   const lead =
     query.zarezerwowano === "1"
       ? "Wysłaliśmy Ci e-mail z tym linkiem. Opłać miejsce w terminie, a będzie Twoje."
@@ -95,6 +107,21 @@ export default async function RegistrationPage({
         </h1>
         {lead ? (
           <p className="text-body text-text-muted max-w-2xl">{lead}</p>
+        ) : null}
+        {change ? (
+          <p
+            className="rounded-card-sm bg-primary-soft text-small text-ink p-4"
+            role="status"
+          >
+            {change}
+          </p>
+        ) : null}
+        {registration.status === "cancelled" &&
+        registration.cancelledBy === "centre" &&
+        registration.workshopCancelReason ? (
+          <p className="text-body text-ink">
+            Powód odwołania: {registration.workshopCancelReason}
+          </p>
         ) : null}
         {query.platnosc === "niedostepna" ? (
           <p
@@ -151,14 +178,35 @@ export default async function RegistrationPage({
             </Link>
           </SecondaryButton>
         </div>
+        {choices.cancel || choices.transfer ? (
+          <section
+            aria-labelledby="zmiany"
+            className="border-border/70 grid gap-4 border-t pt-6"
+          >
+            <h2 className="font-display text-h3 text-ink" id="zmiany">
+              Nie możesz przyjść?
+            </h2>
+            {registration.status !== "waitlisted" ? (
+              <p className="text-small text-text-muted">
+                {refundRule(registration, timeZone)}
+              </p>
+            ) : null}
+            {choices.transfer ? <TransferSeatForm token={token} /> : null}
+            {choices.cancel ? (
+              <CancelSeatForm
+                consequence={choices.cancel.consequence}
+                label={choices.cancel.label}
+                token={token}
+              />
+            ) : null}
+          </section>
+        ) : null}
         <p className="text-small text-text-muted">
-          Chcesz zrezygnować albo przekazać miejsce innej osobie? Zadzwoń lub
-          napisz do nas;{" "}
+          Pytania?{" "}
           <Link className="underline" href="/kontakt">
-            kontakt
+            Skontaktuj się z nami
           </Link>
-          . Pełny zwrot przy rezygnacji do{" "}
-          {deadlineLabel(registration.fullRefundUntil, timeZone)}.
+          .
         </p>
       </div>
 

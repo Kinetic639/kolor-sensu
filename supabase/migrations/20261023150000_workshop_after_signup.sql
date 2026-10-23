@@ -96,19 +96,22 @@ BEGIN
   WHERE w.id = p_workshop_id;
 
   INSERT INTO public.notifications (user_id, portal, appointment_id, kind, actor, details)
-  SELECT admin.user_id, 'admin', NULL, p_kind, p_actor, v_details
+  SELECT admin.user_id, 'admin', NULL::uuid, p_kind, p_actor, v_details
   FROM (SELECT DISTINCT role.user_id FROM public.user_roles AS role WHERE role.role = 'admin') AS admin;
 
   INSERT INTO public.notifications (user_id, portal, appointment_id, kind, actor, details)
-  SELECT DISTINCT specialist.user_id, 'specialist', NULL, p_kind, p_actor,
+  SELECT leader.user_id, 'specialist', NULL::uuid, p_kind, p_actor,
     v_details - 'price_minor'
-  FROM public.specialists AS specialist
-  WHERE specialist.user_id IS NOT NULL
-    AND specialist.id IN (
-      SELECT w.specialist_id FROM public.workshops AS w WHERE w.id = p_workshop_id
-      UNION
-      SELECT co.specialist_id FROM public.workshop_co_leaders AS co WHERE co.workshop_id = p_workshop_id
-    );
+  FROM (
+    SELECT DISTINCT specialist.user_id
+    FROM public.specialists AS specialist
+    WHERE specialist.user_id IS NOT NULL
+      AND specialist.id IN (
+        SELECT w.specialist_id FROM public.workshops AS w WHERE w.id = p_workshop_id
+        UNION
+        SELECT co.specialist_id FROM public.workshop_co_leaders AS co WHERE co.workshop_id = p_workshop_id
+      )
+  ) AS leader;
 END;
 $$;
 

@@ -8,6 +8,8 @@ const cancelWorkshop = vi.fn();
 const refundableWorkshopPayments = vi.fn();
 const recordWorkshopRefund = vi.fn();
 const refundThroughStripe = vi.fn();
+const centreCancelWorkshopParticipant = vi.fn();
+const sendWorkshopEmail = vi.fn();
 
 class WorkshopAdminError extends Error {
   constructor(readonly code: string) {
@@ -17,12 +19,15 @@ class WorkshopAdminError extends Error {
 
 vi.mock("@repo/supabase/workshops-admin", () => ({
   cancelWorkshop: (...args: unknown[]) => cancelWorkshop(...args),
+  centreCancelWorkshopParticipant: (...args: unknown[]) =>
+    centreCancelWorkshopParticipant(...args),
   refundableWorkshopPayments: (...args: unknown[]) =>
     refundableWorkshopPayments(...args),
   WorkshopAdminError,
 }));
 vi.mock("@repo/supabase/workshops", () => ({
   recordWorkshopRefund: (...args: unknown[]) => recordWorkshopRefund(...args),
+  listDueWorkshopEmails: async () => [{ reference: "W1", kind: "cancelled" }],
 }));
 vi.mock("@repo/supabase/public", () => ({
   createSupabasePublicClient: () => ({ asAdmin: true }),
@@ -37,8 +42,13 @@ vi.mock("@/lib/supabase/secret", () => ({
   createSecretClient: () => ({ secret: true }),
 }));
 vi.mock("@/lib/stripe", () => ({ stripeServer: () => ({}) }));
+vi.mock("next/server", () => ({ after: (task: () => unknown) => task() }));
+vi.mock("./email/send", () => ({
+  sendWorkshopEmail: (...args: unknown[]) => sendWorkshopEmail(...args),
+}));
 
-const { cancelWorkshopAsCentre } = await import("./centre-cancel");
+const { cancelParticipantAsCentre, cancelWorkshopAsCentre } =
+  await import("./centre-cancel");
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -66,7 +76,7 @@ describe("the centre cancels a workshop", () => {
     );
     expect(refundThroughStripe).toHaveBeenCalledWith({}, "pi_1", 10000, {
       reference: "W1",
-      idempotencyKey: "workshop-cancelled:pi_1",
+      idempotencyKey: "workshop-cancelled:pi_1:10000",
     });
     expect(recordWorkshopRefund).toHaveBeenCalledWith(
       { secret: true },
@@ -98,5 +108,37 @@ describe("the centre cancels a workshop", () => {
       refunded: 0,
       refundFailed: true,
     });
+  });
+
+  it("tells everyone of the cancellation", async () => {
+    cancelWorkshop.mockResolvedValue([]);
+    await cancelWorkshopAsCentre("w1", null, "token");
+    // Sent after the answer (next/server after).
+    await vi.waitFor(() =>
+      expect(sendWorkshopEmail).toHaveBeenCalledWith("W1", "cancelled"),
+    );
+  });
+});
+
+describe("the centre cancels one participant", () => {
+  it("gives back what the admin chose, and tells them", async () => {
+    centreCancelWorkshopParticipant.mockResolvedValue({
+      reference: "W9",
+      refundMinor: 4000,
+    });
+    refundableWorkshopPayments.mockResolvedValue([
+      { paymentIntentId: "pi_9", amountMinor: 10000, refundedMinor: 0 },
+    ]);
+    refundThroughStripe.mockResolvedValue(4000);
+    expect(await cancelParticipantAsCentre("r9", 4000, "token")).toEqual({
+      ok: true,
+      refunded: 1,
+      refundFailed: false,
+    });
+    expect(refundThroughStripe).toHaveBeenCalledWith({}, "pi_9", 4000, {
+      reference: "W9",
+      idempotencyKey: "workshop-cancelled:pi_9:4000",
+    });
+    expect(sendWorkshopEmail).toHaveBeenCalledWith("W9", "cancelled");
   });
 });

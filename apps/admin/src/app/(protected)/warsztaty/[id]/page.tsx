@@ -5,7 +5,13 @@ import {
   loadServiceOptions,
   loadSpecialistOptions,
 } from "@/features/education/loaders";
-import { loadPlaces, loadWorkshop } from "@/features/workshops/loaders";
+import {
+  loadParticipants,
+  loadPlaces,
+  loadWorkshop,
+  loadWorkshopMessages,
+} from "@/features/workshops/loaders";
+import { ParticipantsPanel } from "@/features/workshops/participants-panel";
 import { recordToInput } from "@/features/workshops/view-model";
 import { WorkshopWorkspace } from "@/features/workshops/workshop-workspace";
 import { centreSettings } from "@/lib/reference-data";
@@ -28,6 +34,13 @@ export default async function WorkshopPage({
     ],
   );
   if (!isNew && !workshop) notFound();
+  const [participants, messages] = workshop
+    ? await Promise.all([
+        loadParticipants(workshop.id),
+        loadWorkshopMessages(workshop.id),
+      ])
+    : [[], []];
+  const now = Date.now();
   const initial = workshop
     ? recordToInput(workshop, settings.timezone)
     : emptyWorkshopInput(specialists[0]?.id ?? "");
@@ -36,6 +49,19 @@ export default async function WorkshopPage({
     <FullBleed>
       <WorkshopWorkspace
         initial={initial}
+        participants={
+          workshop && workshop.status !== "draft" ? (
+            <ParticipantsPanel
+              ended={new Date(workshop.endsAt).getTime() <= now}
+              messages={messages}
+              participants={participants}
+              slug={workshop.slug}
+              started={new Date(workshop.startsAt).getTime() <= now}
+              status={workshop.status}
+              workshopId={workshop.id}
+            />
+          ) : undefined
+        }
         key={workshop?.updatedAt ?? "nowy"}
         places={places}
         services={services}

@@ -103,6 +103,35 @@ export const workshopCancelRequestSchema = z.strictObject({
 
 export type WorkshopCancelRequest = z.infer<typeof workshopCancelRequestSchema>;
 
+/** The portal adds a participant (a call, a transfer). */
+export const workshopParticipantRequestSchema = z.strictObject({
+  name: z.string().trim().min(1, "Podaj imię i nazwisko.").max(200),
+  email: z.email("Podaj poprawny e-mail.").max(320),
+  phone: z.string().trim().max(40).nullable(),
+  notes: z.string().trim().max(1000).nullable(),
+  /** Paid to the centre directly: confirmed at once. */
+  paidOutside: z.boolean(),
+});
+
+export type WorkshopParticipantRequest = z.infer<
+  typeof workshopParticipantRequestSchema
+>;
+
+/** The portal cancels one participant, giving back what the admin chose. */
+export const workshopParticipantCancelSchema = z.strictObject({
+  refundMinor: z.number().int().min(0).max(10_000_000),
+});
+
+/** The admin writes to everyone signed up. */
+export const workshopMessageRequestSchema = z.strictObject({
+  subject: z.string().trim().min(1, "Wpisz temat.").max(200),
+  body: z.string().trim().min(1, "Wpisz wiadomość.").max(5000),
+});
+
+export type WorkshopMessageRequest = z.infer<
+  typeof workshopMessageRequestSchema
+>;
+
 /** What the database's refusals say to the admin. */
 export const WORKSHOP_ADMIN_PROBLEMS: Record<string, string> = {
   slug_taken: "Ten adres ma już inny warsztat. Zmień adres.",
@@ -121,6 +150,15 @@ export const WORKSHOP_ADMIN_PROBLEMS: Record<string, string> = {
   not_deletable: "Usunąć można tylko szkic albo odwołany warsztat.",
   not_cancellable: "Tego warsztatu nie da się już odwołać.",
   workshop_cancelled: "Odwołany warsztat zostaje odwołany.",
+  full: "Brak wolnych miejsc.",
+  already_registered: "Ta osoba jest już zapisana na ten warsztat.",
+  invalid_details: "Sprawdź imię, e-mail i telefon.",
+  registration_closed: "Na ten warsztat nie można się już zapisać.",
+  already_cancelled: "Ten zapis jest już anulowany.",
+  refund_too_high: "Zwrot nie może być większy niż wpłata przez stronę.",
+  not_started: "Obecność zaznacza się po rozpoczęciu warsztatu.",
+  not_ended: "Zakończyć można warsztat, który już się odbył.",
+  invalid_message: "Wpisz temat i treść wiadomości.",
   not_found: "Nie ma takiego warsztatu.",
 };
 
