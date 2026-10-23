@@ -94,7 +94,11 @@ test("the footer leads to every legal document", async ({ page }) => {
   await open(page, "/");
   const footer = page.getByRole("contentinfo");
   for (const path of PAGES) {
-    await expect(footer.locator(`a[href="${path}"]`), path).toHaveCount(1);
+    // The newsletter's consent links the policy too; that one is the form's.
+    await expect(
+      footer.locator(`xpath=.//a[@href="${path}"][not(ancestor::form)]`),
+      path,
+    ).toHaveCount(1);
   }
 });
 
