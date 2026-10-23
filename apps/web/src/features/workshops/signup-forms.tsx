@@ -151,7 +151,7 @@ export function SeatDetailsForm({
         </div>
         <p className="text-small text-text-muted">
           {free
-            ? "Udział jest bezpłatny (albo kod pokrywa całą cenę): potwierdzimy zapis bez płatności."
+            ? "Udział jest bezpłatny: potwierdzimy zapis bez płatności."
             : payLater
               ? `Płacisz online. Jeśli wybierzesz płatność później, wyślemy Ci link e-mailem; opłać miejsce do ${payLater}, inaczej się zwolni.`
               : "Do warsztatu zostało mniej niż tydzień, więc płatność jest potrzebna od razu."}

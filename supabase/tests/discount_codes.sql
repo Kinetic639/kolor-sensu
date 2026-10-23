@@ -2,7 +2,7 @@
 -- percentage or an amount off a held visit (never below zero), within its
 -- dates and while switched on; another code replaces it, removing it brings
 -- the list price back, and the payment begun at the old price is given up;
--- a visit the code made free is confirmed without a payment; a used code
+-- no code makes a visit free (it leaves at least 2 zł to pay); a used code
 -- cannot be deleted. Everything is rolled back at the end.
 
 BEGIN;
@@ -107,6 +107,11 @@ BEGIN
   EXCEPTION WHEN check_violation THEN NULL;
   END;
   BEGIN
+    PERFORM public.save_discount_code(NULL, 'CALOSC', 'percent', 100, NULL, NULL, true, '', 'consultations', NULL);
+    RAISE EXCEPTION 'C: a 100 %% code was accepted';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  BEGIN
     PERFORM public.save_discount_code(NULL, 'ZŁY KOD', 'percent', 10, NULL, NULL, true, '', 'consultations', NULL);
     RAISE EXCEPTION 'C: a code with a space was accepted';
   EXCEPTION WHEN check_violation THEN NULL;
@@ -193,15 +198,30 @@ BEGIN
     IF SQLERRM <> 'The visit is not free' THEN RAISE; END IF;
   END;
 
-  -- An amount over the price: free, never below zero; confirmed.
+  -- An amount over the price: cut down to leave 2 zł; still paid for.
   SELECT * INTO result FROM public.apply_discount_code('token-2', 'ZA-DARMO');
-  IF result.price_minor <> 0 OR result.discount_minor <> 20000 THEN
-    RAISE EXCEPTION 'B: the discount went past the price: %', result;
+  IF result.price_minor <> 200 OR result.discount_minor <> 19800 THEN
+    RAISE EXCEPTION 'B: the discount left other than 2 zł: %', result;
   END IF;
-  PERFORM public.confirm_free_booking('token-2');
-  IF (SELECT status FROM public.appointments WHERE reference = 'KS-DISC-2') <> 'confirmed' THEN
-    RAISE EXCEPTION 'B: the free visit was not confirmed';
-  END IF;
+  BEGIN
+    PERFORM public.confirm_free_booking('token-2');
+    RAISE EXCEPTION 'B: a visit with a big code was confirmed for free';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'The visit is not free' THEN RAISE; END IF;
+  END;
+END;
+$$;
+
+RESET ROLE;
+
+-- Paid (as the Stripe webhook confirms it).
+UPDATE public.appointments SET status = 'confirmed', confirmed_at = now()
+WHERE reference = 'KS-DISC-2';
+
+SET LOCAL ROLE service_role;
+
+DO $$
+BEGIN
   -- Confirmed: the code cannot change any more.
   BEGIN
     PERFORM public.remove_discount_code('token-2');
@@ -225,14 +245,14 @@ DECLARE
   used uuid;
 BEGIN
   IF (SELECT used_count FROM public.list_discount_codes() WHERE code = 'ZA-DARMO') <> 1
-     OR (SELECT discount_total_minor FROM public.list_discount_codes() WHERE code = 'ZA-DARMO') <> 20000 THEN
+     OR (SELECT discount_total_minor FROM public.list_discount_codes() WHERE code = 'ZA-DARMO') <> 19800 THEN
     RAISE EXCEPTION 'U: the code''s uses were not counted';
   END IF;
   IF (
     SELECT discount_minor FROM public.get_visit_discount(
       (SELECT id FROM public.appointments WHERE reference = 'KS-DISC-2')
     )
-  ) IS DISTINCT FROM 20000 THEN
+  ) IS DISTINCT FROM 19800 THEN
     RAISE EXCEPTION 'U: the admin did not see the visit''s code';
   END IF;
   SELECT id INTO used FROM public.list_discount_codes() WHERE code = 'ZA-DARMO';
@@ -252,7 +272,7 @@ $$;
 RESET ROLE;
 
 -- ------------------------------------------------------------ the rules (audit of 22.10)
--- A code leaves nothing or at least 2 zł to pay; a limited code's last use
+-- A code leaves at least 2 zł to pay (a price of 2 zł takes none); a limited code's last use
 -- goes to whoever takes it first (a lapsed hold gives it back); 10 wrong
 -- codes in an hour on one hold, and no code is tried any more.
 
@@ -293,8 +313,12 @@ GRANT EXECUTE ON FUNCTION pg_temp.code_hint(text, text) TO service_role;
 SET LOCAL ROLE service_role;
 DO $$
 BEGIN
-  IF pg_temp.code_hint('token-3', 'PRAWIE') <> 'code_too_big' THEN
-    RAISE EXCEPTION 'R: a code leaving 1 zł to pay was accepted';
+  -- (Two statements: one would read the price from before the code.)
+  IF pg_temp.code_hint('token-3', 'PRAWIE') <> '' THEN
+    RAISE EXCEPTION 'R: a code over the price was refused';
+  END IF;
+  IF (SELECT price_minor FROM public.appointments WHERE reference = 'KS-DISC-3') <> 200 THEN
+    RAISE EXCEPTION 'R: a code that would leave 1 zł was not cut down to leave 2 zł';
   END IF;
   IF pg_temp.code_hint('token-3', 'RAZ') <> '' OR pg_temp.code_hint('token-3', 'RAZ') <> '' THEN
     RAISE EXCEPTION 'R: a code with a use left was refused (or counted against itself)';
@@ -305,6 +329,20 @@ BEGIN
 END;
 $$;
 RESET ROLE;
+
+-- A price of 2 zł or less takes no code; a percentage is cut down too.
+DO $$
+BEGIN
+  IF private.discount_on('percent', 99, 20000) <> 19800
+     OR private.discount_on('amount', 50, 1000) <> 50 THEN
+    RAISE EXCEPTION 'R: a discount within the price was changed';
+  END IF;
+  PERFORM private.discount_on('amount', 100, 200);
+  RAISE EXCEPTION 'R: a code on a 2 zł price was accepted';
+EXCEPTION WHEN raise_exception THEN
+  IF SQLERRM LIKE 'R:%' THEN RAISE; END IF;
+END;
+$$;
 
 -- The first hold lapses: its use is free again.
 UPDATE public.appointments SET hold_expires_at = now() - interval '1 minute'
