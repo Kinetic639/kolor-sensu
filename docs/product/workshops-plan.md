@@ -46,7 +46,7 @@ Stan na 22.10 · PR-y: 1 / 7 zmergowanych (PR 3 i 4 razem w #168)
   - [x] powiadomienia w portalach: nowy zapis, rezygnacja, komplet, za mało chętnych
   - [x] portal specjalisty: Moje warsztaty z uczestnikami i obecnością
   - [x] testy (SQL, widoki, e-maile, zwroty, zadanie w tle), typy, lint
-  - [ ] CI zielone
+  - [x] CI zielone
   - [ ] sprawdzony na DEV
 - [ ] **PR 7 · Jakość** — e2e na DEV i STAGING, tabela „Każda strona”, Lighthouse, dokumentacja
 
