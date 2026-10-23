@@ -27,7 +27,13 @@ const contact: SiteContact = {
 
 let page: ContactPageContent = defaultContactPage;
 let details: SiteContact | undefined = contact;
+let window: {
+  cancellationWindowHours: number;
+  rescheduleWindowHours: number;
+  maxSelfReschedules: number;
+} | null = null;
 vi.mock("@/lib/public-data", () => ({
+  getBookingWindow: async () => window,
   getContactPage: async () => page,
   getCompany: async () => ({ legalName: "Kolor Sensu sp. z o.o." }),
 }));
@@ -49,6 +55,7 @@ beforeAll(async () => {
 beforeEach(() => {
   page = defaultContactPage;
   details = contact;
+  window = null;
 });
 afterEach(cleanup);
 
@@ -115,6 +122,26 @@ describe("Kontakt", () => {
     render(await Contact());
     expect(
       screen.queryByText("Czy potrzebuję skierowania?"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("says how long before a visit it is cancelled or moved, from the settings", async () => {
+    window = {
+      cancellationWindowHours: 48,
+      rescheduleWindowHours: 24,
+      maxSelfReschedules: 1,
+    };
+    render(await Contact());
+    expect(
+      screen.getByText("Jak mogę odwołać lub przełożyć wizytę?"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /pełnym zwrotem opłaty najpóźniej 48 godz\..*zmienisz najpóźniej 24 godz\./,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/24 godziny przed spotkaniem/),
     ).not.toBeInTheDocument();
   });
 

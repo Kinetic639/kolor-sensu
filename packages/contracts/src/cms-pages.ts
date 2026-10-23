@@ -273,11 +273,6 @@ export const defaultContactFaq: ContactFaqItem[] = [
     answer:
       "Tak. Część specjalistów prowadzi sesje online; informację znajdziesz w opisie usługi i przy każdym specjaliście.",
   },
-  {
-    question: "Jak mogę odwołać lub przełożyć wizytę?",
-    answer:
-      "Najpóźniej 24 godziny przed spotkaniem, telefonicznie lub mailowo. Wizyta odwołana później jest płatna.",
-  },
 ];
 
 /**
