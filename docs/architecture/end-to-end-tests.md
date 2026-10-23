@@ -48,8 +48,8 @@ The workshop test (`workshops.spec.ts`) needs "Warsztat testowy E2E"
 (`warsztat-testowy-e2e`; overridable: `E2E_WORKSHOP_SLUG`,
 `E2E_WORKSHOP_TITLE`): published, online, priced (10 zł), with plenty of
 seats (500), months ahead, led by "Test Specjalista". The admin makes it
-under Warsztaty → Nowy warsztat. DEV has it; STAGING gets it once the
-workshops are released there. It checks Warsztaty and the workshop's page
+under Warsztaty → Nowy warsztat. DEV and STAGING have it. It checks
+Warsztaty and the workshop's page
 (one h1, 390 and 1280 px, axe, the Event data for Google), a guest signing
 up and paying with BLIK (then the admin and the leader see them), and a
 guest reserving to pay later and giving the seat up. Each run leaves one
