@@ -157,15 +157,17 @@ export function WorkshopFacts({
       {facts.map((fact) => {
         const Icon = FACT_ICONS[fact.icon];
         return (
-          <div className="grid grid-cols-[1.5rem_1fr] gap-3" key={fact.label}>
-            <Icon
-              aria-hidden="true"
-              className="text-primary-strong mt-0.5 size-5"
-            />
-            <div className="grid gap-0.5">
-              <dt className="text-small text-text-muted">{fact.label}</dt>
-              <dd className="text-body text-ink">{fact.value}</dd>
-            </div>
+          // dt and dd straight under the group (the list's own rule); the
+          // icon inside the term, the value under it, indented as one.
+          <div className="grid gap-0.5" key={fact.label}>
+            <dt className="text-small text-text-muted flex items-center gap-3">
+              <Icon
+                aria-hidden="true"
+                className="text-primary-strong size-5 shrink-0"
+              />
+              {fact.label}
+            </dt>
+            <dd className="text-body text-ink pl-8">{fact.value}</dd>
           </div>
         );
       })}

@@ -37,6 +37,17 @@ Turnstile uses Cloudflare's always-pass test keys.
 Each run of the booking test leaves one confirmed test visit, in a week
 picked at random so runs do not all take the same hours.
 
+The workshop test (`workshops.spec.ts`) needs "Warsztat testowy E2E"
+(`warsztat-testowy-e2e`; overridable: `E2E_WORKSHOP_SLUG`,
+`E2E_WORKSHOP_TITLE`): published, online, priced (10 zł), with plenty of
+seats (500), months ahead, led by "Test Specjalista". The admin makes it
+under Warsztaty → Nowy warsztat. DEV has it; STAGING gets it once the
+workshops are released there. It checks Warsztaty and the workshop's page
+(one h1, 390 and 1280 px, axe, the Event data for Google), a guest signing
+up and paying with BLIK (then the admin and the leader see them), and a
+guest reserving to pay later and giving the seat up. Each run leaves one
+confirmed test seat.
+
 The home page test (`home.spec.ts`) needs nothing seeded: it checks what
 any published content must keep (one h1, the crisis strip, the closing
 invitation, links that resolve, no sideways scroll at 390 and 1280 px) and
@@ -50,7 +61,7 @@ key cannot pass, as on localhost). It writes nothing. `offer-pages.spec.ts`
 does the same for Oferta, Cennik and the first service's page (one h1,
 links, 390 and 1280 px, axe), and checks that Oferta has no questions,
 Cennik its rules, a service's page its way to book or to ask and its data
-for Google, and that a wrong address under /oferta leads back to it. `keyboard-zoom.spec.ts` walks the public pages (and the first service) with
+for Google, and that a wrong address under /oferta leads back to it. `keyboard-zoom.spec.ts` walks the public pages (and the first service and workshop) with
 a keyboard: the first Tab is "Przejdź do treści" and leads into the page,
 nothing focused hides under the cookie notice (WCAG 2.4.11), and at 200 %
 (640 px) no page scrolls sideways. `legal-pages.spec.ts` checks Regulamin, Polityka
