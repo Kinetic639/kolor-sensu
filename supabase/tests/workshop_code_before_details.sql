@@ -1,5 +1,5 @@
 -- A discount code on a workshop seat before the participant's details
--- (20261023190000, #190): it applies and comes off on a held seat with no
+-- (20261024120000, #190): it applies and comes off on a held seat with no
 -- details yet, saving the details later keeps it, paying still needs the
 -- details, and a seat run out still refuses it. Everything is rolled back
 -- at the end.
