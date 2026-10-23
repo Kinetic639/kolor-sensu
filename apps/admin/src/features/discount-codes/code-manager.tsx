@@ -321,7 +321,7 @@ function CodeForm({
           </select>
         </div>
         <TextField
-          hint={kind === "percent" ? "Od 1 do 100." : "Np. 50 albo 49,99."}
+          hint={kind === "percent" ? "Od 1 do 99." : "Np. 50 albo 49,99."}
           id={`${prefix}-value`}
           label={kind === "percent" ? "Rabat (%)" : "Rabat (zł)"}
           maxLength={10}

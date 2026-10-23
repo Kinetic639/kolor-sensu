@@ -120,16 +120,17 @@ BEGIN
     RAISE EXCEPTION 'B: an unknown session was not told apart';
   END IF;
 
-  -- C: a code covering it all: a free seat, confirmed without Stripe.
+  -- C: a code over the price makes no seat free: 2 zł are left to pay.
   SELECT access_token INTO v_token FROM public.hold_workshop_seat('ws-signup-a', 'ws-signup-key-2');
   PERFORM public.save_workshop_registration_details(v_token, 'Bogna', 'bogna@example.invalid', NULL, NULL, true, true);
-  PERFORM public.apply_workshop_discount(v_token, 'wszystko');
-  IF pg_temp.hint_of(format(
-    'SELECT public.attach_workshop_checkout(%L, %L, now() + interval ''31 minutes'', 0, %L)',
-    v_token, 'cs_test_ws_free', 'pln')) <> 'free' THEN
-    RAISE EXCEPTION 'C: a free seat started a payment';
+  SELECT price_minor INTO v_price FROM public.apply_workshop_discount(v_token, 'wszystko');
+  IF v_price <> 200 THEN
+    RAISE EXCEPTION 'C: a code over the price left % to pay', v_price;
   END IF;
-  PERFORM public.confirm_free_workshop_seat(v_token);
+  PERFORM public.attach_workshop_checkout(v_token, 'cs_test_ws_c', now() + interval '31 minutes', 200, 'pln');
+  IF public.fulfill_workshop_checkout('cs_test_ws_c', true, 'pi_test_ws_c') <> 'confirmed' THEN
+    RAISE EXCEPTION 'C: the 2 zł seat was not confirmed once paid';
+  END IF;
 
   -- D: a hold run out but a seat still free: the payment still confirms;
   -- with no seat left the seat is lost (and the money goes back).

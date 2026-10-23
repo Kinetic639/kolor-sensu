@@ -14,7 +14,7 @@ Stan na 21.10 · PR-y: 0 / 5 zmergowanych (PR 1 i PR 2 czekają na merge)
 - [ ] **PR 2 · Kody rabatowe w rezerwacji** (na PR 1)
   - [x] pole „Kod rabatowy” na kroku Dane: od razu, z „Usuń kod”; odmowy po polsku
   - [x] cena po rabacie w podsumowaniu; płatność Stripe na kwotę po rabacie (stara sesja zamykana)
-  - [x] rabat 100%: „Potwierdź wizytę”, bez płatności, z e-mailem potwierdzenia
+  - [x] ~~rabat 100%: „Potwierdź wizytę”, bez płatności~~ (od 23.10 kod zawsze zostawia 2 zł, #179)
   - [x] portal: kod przy wizycie w panelu Rezerwacji (`get_visit_discount`)
   - [x] testy (widok 4, SQL), typy, lint
   - [ ] CI zielone
@@ -49,10 +49,13 @@ kończy; PR jest odhaczony, gdy jest zmergowany i sprawdzony na DEV.
   e-maile i listy działają bez zmian na kwocie po rabacie.
 - Kod wpisuje się na kroku **Dane**, zanim powstanie płatność; zmiana
   kodu unieważnia rozpoczętą płatność, a krok Płatność tworzy nową.
-- Rabat 100%: wizyta jest potwierdzana bez Stripe (osobna funkcja w bazie).
-- **Zasady kodów (audyt 22.10):** kod pokrywa całą cenę albo zostawia do
-  zapłaty co najmniej 2 zł (minimum Stripe), inaczej jest odrzucany
-  (`code_too_big`). Kod może mieć limit użyć (`max_uses`): liczą się wizyty
+- **Bez darmowych wizyt z kodu (decyzja 23.10, #179):** kod zawsze zostawia
+  do zapłaty co najmniej 2 zł (minimum Stripe). Większy kod (kwota ponad
+  cenę, wysoki procent) jest przycinany do ceny minus 2 zł; przy cenie 2 zł
+  lub niższej kod nie działa (`code_too_big`). Rabat procentowy: 1–99 %.
+  Potwierdzanie bez Stripe zostaje tylko dla rzeczy bezpłatnych z ceny
+  (np. darmowy warsztat).
+- **Zasady kodów (audyt 22.10):** Kod może mieć limit użyć (`max_uses`): liczą się wizyty
   i miejsca na warsztatach z tym kodem, trzymane, zarezerwowane albo
   potwierdzone (`code_used_up`). Po 10 błędnych kodach w ciągu godziny na
   jednej blokadzie żaden kod nie jest sprawdzany (`too_many_attempts`).
