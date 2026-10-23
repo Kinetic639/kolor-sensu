@@ -187,7 +187,7 @@ $$;
 RESET ROLE;
 
 -- I: the minimum not reached three days before the payments are due.
-DO $
+DO $$
 DECLARE
   v_first integer;
 BEGIN
