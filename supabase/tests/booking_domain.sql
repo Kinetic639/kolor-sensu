@@ -689,10 +689,72 @@ BEGIN
     RAISE EXCEPTION 'Q: a lost time gave %', outcome;
   END IF;
 
-  -- Paid after the hold lapsed, the time still free: confirmed anyway.
+  -- Settled once: the time freed again does not bring back a visit whose
+  -- money goes back; the refund is asked for until it is recorded.
   UPDATE public.appointments SET status = 'cancelled' WHERE id = other.appointment_id;
   outcome := public.fulfill_checkout_session('cs_test_3', true, 'pi_test_3');
+  IF outcome <> 'slot_lost'
+     OR (SELECT status FROM public.appointments WHERE id = held.appointment_id) <> 'expired' THEN
+    RAISE EXCEPTION 'Q: a lost time came back: %', outcome;
+  END IF;
+  PERFORM public.record_refund('pi_test_3', 25000);
+  outcome := public.fulfill_checkout_session('cs_test_3', true, 'pi_test_3');
+  IF outcome <> 'already_settled'
+     OR (SELECT status FROM public.appointments WHERE id = held.appointment_id) <> 'expired' THEN
+    RAISE EXCEPTION 'Q: a refunded payment confirmed the visit: %', outcome;
+  END IF;
+
+  -- Paid after the hold lapsed, the time still free: confirmed anyway.
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.tuesday, '10:00'), p_client_key => 'visitor-q9'
+  );
+  PERFORM public.save_booking_details(held.access_token, 'Ewa Test', 'ewa@example.com',
+    '600100200', NULL, true, true);
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_test_4', now() + interval '30 minutes', 25000, 'PLN');
+  -- A second session for the same visit (another tab): both get paid.
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_test_5', now() + interval '30 minutes', 25000, 'PLN');
+  UPDATE public.appointments SET hold_expires_at = now() - interval '1 second'
+  WHERE id = held.appointment_id;
+  outcome := public.fulfill_checkout_session('cs_test_4', true, 'pi_test_4');
   IF outcome <> 'confirmed' THEN RAISE EXCEPTION 'Q: a free lapsed time gave %', outcome; END IF;
+  -- The second payment goes back; the first still confirms.
+  outcome := public.fulfill_checkout_session('cs_test_5', true, 'pi_test_5');
+  IF outcome <> 'refund_payment' THEN RAISE EXCEPTION 'Q: a second payment gave %', outcome; END IF;
+  IF public.fulfill_checkout_session('cs_test_4', true, 'pi_test_4') <> 'already_confirmed'
+     OR public.fulfill_checkout_session('cs_test_5', true, 'pi_test_5') <> 'refund_payment' THEN
+    RAISE EXCEPTION 'Q: two payments settled again differently';
+  END IF;
+
+  -- A session for an old price (the discount code changed since): refunded,
+  -- the visit is not confirmed for it.
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.monday, (regexp_match(pg_temp.free_times('in_person', t.monday), '(\S+)$'))[1]::time),
+    p_client_key => 'visitor-q10'
+  );
+  PERFORM public.save_booking_details(held.access_token, 'Jan Test', 'jan@example.com',
+    '600100200', NULL, true, true);
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_test_6', now() + interval '30 minutes', 25000, 'PLN');
+  UPDATE public.appointments SET price_minor = 30000 WHERE id = held.appointment_id;
+  outcome := public.fulfill_checkout_session('cs_test_6', true, 'pi_test_6');
+  IF outcome <> 'refund_payment'
+     OR (SELECT status FROM public.appointments WHERE id = held.appointment_id) <> 'held' THEN
+    RAISE EXCEPTION 'Q: an old price gave %', outcome;
+  END IF;
+
+  -- Refunds are recorded only upwards, whatever order they come in.
+  PERFORM public.record_refund('pi_test_4', 10000);
+  PERFORM public.record_refund('pi_test_4', 0);
+  PERFORM public.record_refund('pi_test_4', 5000);
+  IF (SELECT (status, refunded_minor) FROM public.payments WHERE checkout_session_id = 'cs_test_4')
+     IS DISTINCT FROM ('partially_refunded'::public.payment_status, 10000) THEN
+    RAISE EXCEPTION 'Q: a refund went down';
+  END IF;
+  PERFORM public.record_refund('pi_test_6', 0);
+  IF (SELECT status FROM public.payments WHERE checkout_session_id = 'cs_test_6') <> 'succeeded' THEN
+    RAISE EXCEPTION 'Q: a refund of nothing changed the payment';
+  END IF;
 
   -- An unknown session.
   IF public.fulfill_checkout_session('cs_unknown', true, NULL) <> 'unknown_session' THEN
@@ -991,6 +1053,10 @@ BEGIN
   IF (SELECT (status, cancelled_by, refund_due_minor) FROM public.get_booking(b.link_token))
      IS DISTINCT FROM ('cancelled'::public.appointment_status, 'client'::text, 0) THEN
     RAISE EXCEPTION 'S: the late-cancelled visit';
+  END IF;
+  -- The old return page opened again: no refund the window did not give.
+  IF public.fulfill_checkout_session('cs_test_s2', true, 'pi_test_s2') <> 'already_settled' THEN
+    RAISE EXCEPTION 'S: a late cancellation refunded through the return page';
   END IF;
 END;
 $body$;
@@ -1801,9 +1867,14 @@ BEGIN
     'ola@example.invalid', '600100200', NULL, true, true);
   SELECT * INTO r FROM public.reserve_hold(held.access_token);
   SELECT * INTO v FROM public.appointments WHERE id = held.appointment_id;
+  -- Held for 30 minutes until confirmed from the e-mail (Z), then paid by a
+  -- day after booking (sooner than 48 hours before the visit).
   IF v.status <> 'awaiting_payment' OR v.hold_expires_at IS NOT NULL
-     OR v.payment_due_at <> pg_temp.at(x.day + 7, '13:00') - interval '48 hours'
-     OR r.payment_due_at <> v.payment_due_at OR r.reference <> v.reference THEN
+     OR v.payment_due_at <> now() + interval '30 minutes'
+     OR v.reservation_confirm_by <> v.payment_due_at
+     OR r.confirm_by <> v.payment_due_at OR r.outcome <> 'reserved'
+     OR r.payment_due_at <> v.created_at + interval '24 hours'
+     OR r.reference <> v.reference THEN
     RAISE EXCEPTION 'Y: the reservation: %', row_to_json(v);
   END IF;
   IF NOT EXISTS (
@@ -2815,6 +2886,319 @@ BEGIN
   PERFORM public.get_client(gen_random_uuid());
   RAISE EXCEPTION 'AE: a visitor read a client';
 EXCEPTION WHEN insufficient_privilege THEN NULL;
+END;
+$body$;
+RESET ROLE;
+
+-- Z: "Zapłacę później" cannot block the schedule (audit of 22.10). One
+-- person (by e-mail, phone or visitor) has at most two unpaid reservations;
+-- a third is paid at once and the admins are told, once. A reservation is
+-- held for 30 minutes until the client confirms it from the e-mail's link,
+-- then paid by a day after booking (or the centre's time before the visit,
+-- if sooner); one not confirmed lapses quietly, without an e-mail.
+CREATE FUNCTION pg_temp.reserve_new(
+  p_mode public.visit_mode, p_at timestamptz, p_name text, p_email text,
+  p_phone text, p_hold_key text, p_reserve_key text
+)
+RETURNS TABLE (appointment_id uuid, reference text, outcome text)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  held record;
+  r record;
+BEGIN
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', p_mode, p_at,
+    p_client_key => p_hold_key
+  );
+  PERFORM public.save_booking_details(held.access_token, p_name, p_email,
+    p_phone, NULL, true, true);
+  SELECT * INTO r FROM public.reserve_hold(held.access_token, p_reserve_key);
+  RETURN QUERY SELECT held.appointment_id, held.reference, r.outcome;
+END;
+$$;
+GRANT EXECUTE ON FUNCTION pg_temp.reserve_new(public.visit_mode, timestamptz, text, text, text, text, text) TO service_role;
+CREATE TEMP TABLE z_visits (name text PRIMARY KEY, id uuid, reference text, outcome text);
+GRANT ALL ON z_visits TO service_role;
+
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  x x_day%ROWTYPE;
+  v public.appointments%ROWTYPE;
+  c record;
+  v_due timestamptz;
+BEGIN
+  SELECT * INTO x FROM x_day;
+  INSERT INTO z_visits SELECT 'z1', * FROM pg_temp.reserve_new('online',
+    pg_temp.at(x.day + 14, '13:00'), 'Zofia Raz', 'zofia@example.invalid',
+    '600 200 300', 'visitor-z1-hold', 'visitor-z-same');
+  INSERT INTO z_visits SELECT 'z2', * FROM pg_temp.reserve_new('online',
+    pg_temp.at(x.day + 14, '14:00'), 'Zofia Raz', 'zofia@example.invalid',
+    '600200300', 'visitor-z2-hold', 'visitor-z-same');
+  IF (SELECT array_agg(outcome ORDER BY name) FROM z_visits) <> ARRAY['reserved', 'reserved'] THEN
+    RAISE EXCEPTION 'Z: two unpaid reservations were not allowed';
+  END IF;
+
+  SELECT * INTO v FROM public.appointments WHERE id = (SELECT id FROM z_visits WHERE name = 'z1');
+  IF v.status <> 'awaiting_payment' OR v.payment_due_at <> now() + interval '30 minutes'
+     OR v.reservation_confirm_by <> v.payment_due_at OR v.reserved_by_key <> 'visitor-z-same' THEN
+    RAISE EXCEPTION 'Z: the reservation before it is confirmed: %', row_to_json(v);
+  END IF;
+
+  -- The e-mail: confirm by the 30 minutes, pay by a day after booking.
+  SELECT * INTO c FROM public.claim_booking_email(v.reference, 'reserved');
+  IF c.confirm_by <> v.reservation_confirm_by
+     OR c.payment_due_at <> v.created_at + interval '24 hours' OR c.manage_token IS NULL THEN
+    RAISE EXCEPTION 'Z: the reservation e-mail: %', row_to_json(c);
+  END IF;
+  IF public.reservation_confirm_by(c.manage_token) <> v.reservation_confirm_by
+     OR public.reservation_confirm_by('not-the-link') IS NOT NULL THEN
+    RAISE EXCEPTION 'Z: until when to confirm, by the link';
+  END IF;
+  IF public.confirm_reservation('not-the-link') IS NOT NULL THEN
+    RAISE EXCEPTION 'Z: confirmed without the link';
+  END IF;
+  v_due := public.confirm_reservation(c.manage_token);
+  SELECT * INTO v FROM public.appointments WHERE id = v.id;
+  IF v_due IS DISTINCT FROM v.created_at + interval '24 hours'
+     OR v.payment_due_at <> v_due OR v.reservation_confirm_by IS NOT NULL
+     OR v.status <> 'awaiting_payment' THEN
+    RAISE EXCEPTION 'Z: the confirmed reservation: %', row_to_json(v);
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.appointment_events
+    WHERE appointment_id = v.id AND kind = 'reservation_confirmed' AND actor = 'client'
+  ) THEN
+    RAISE EXCEPTION 'Z: the history does not say it was confirmed';
+  END IF;
+  IF public.confirm_reservation(c.manage_token) IS NOT NULL
+     OR public.reservation_confirm_by(c.manage_token) IS NOT NULL THEN
+    RAISE EXCEPTION 'Z: confirmed twice';
+  END IF;
+
+  -- A third: the same e-mail (written otherwise), the same phone, or the
+  -- same visitor, is paid at once; still held, nothing reserved.
+  INSERT INTO z_visits SELECT 'z3', * FROM pg_temp.reserve_new('in_person',
+    pg_temp.at(x.day + 14, '09:00'), 'Zofia Raz', 'Zofia@Example.invalid',
+    '511 222 333', 'visitor-z3-hold', NULL);
+  INSERT INTO z_visits SELECT 'z4', * FROM pg_temp.reserve_new('in_person',
+    pg_temp.at(x.day + 14, '10:00'), 'Zenon Inny', 'zenon@example.invalid',
+    '+48 600-200-300', 'visitor-z4-hold', NULL);
+  INSERT INTO z_visits SELECT 'z5', * FROM pg_temp.reserve_new('in_person',
+    pg_temp.at(x.day + 14, '11:00'), 'Zuzanna Inna', 'zuzanna@example.invalid',
+    '700 800 900', 'visitor-z5-hold', 'visitor-z-same');
+  IF (SELECT array_agg(outcome ORDER BY name) FROM z_visits WHERE name IN ('z3', 'z4', 'z5'))
+     <> ARRAY['pay_now', 'pay_now', 'pay_now'] THEN
+    RAISE EXCEPTION 'Z: a third unpaid reservation: %',
+      (SELECT array_agg(outcome ORDER BY name) FROM z_visits);
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.appointments
+    WHERE id IN (SELECT id FROM z_visits WHERE name IN ('z3', 'z4', 'z5'))
+      AND (status <> 'held' OR payment_due_at IS NOT NULL)
+  ) THEN
+    RAISE EXCEPTION 'Z: a refused reservation was reserved';
+  END IF;
+  IF (SELECT count(*) FROM public.notifications
+      WHERE kind = 'unpaid_limit' AND portal = 'admin'
+        AND appointment_id = (SELECT id FROM z_visits WHERE name = 'z3'))
+     <> (SELECT count(DISTINCT user_id) FROM public.user_roles WHERE role = 'admin') THEN
+    RAISE EXCEPTION 'Z: the admins were not told of the third reservation';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Another person may still reserve (the admins hear nothing of it); one
+-- not confirmed lapses quietly.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  x x_day%ROWTYPE;
+  v_before bigint;
+BEGIN
+  SELECT * INTO x FROM x_day;
+  v_before := (SELECT count(*) FROM public.notifications WHERE kind = 'unpaid_limit');
+  INSERT INTO z_visits SELECT 'z6', * FROM pg_temp.reserve_new('online',
+    pg_temp.at(x.day + 15, '09:00'), 'Zbigniew Trzeci', 'zbigniew@example.invalid',
+    '500 400 300', 'visitor-z6-hold', 'visitor-z-other');
+  IF (SELECT outcome FROM z_visits WHERE name = 'z6') <> 'reserved' THEN
+    RAISE EXCEPTION 'Z: another person could not reserve';
+  END IF;
+  IF (SELECT count(*) FROM public.notifications WHERE kind = 'unpaid_limit') <> v_before THEN
+    RAISE EXCEPTION 'Z: the admins were told without a reason';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+UPDATE public.appointments SET payment_due_at = now() - interval '1 minute',
+  reservation_confirm_by = now() - interval '1 minute'
+WHERE id = (SELECT id FROM z_visits WHERE name = 'z6');
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  v_ref text := (SELECT reference FROM z_visits WHERE name = 'z6');
+BEGIN
+  IF v_ref IN (SELECT reference FROM public.cancel_unpaid_visits()) THEN
+    RAISE EXCEPTION 'Z: a reservation not confirmed was cancelled as unpaid';
+  END IF;
+  IF (SELECT (status, cancelled_by, reservation_confirm_by)
+      FROM public.appointments WHERE reference = v_ref)
+     IS DISTINCT FROM ('expired'::public.appointment_status, NULL::text, NULL::timestamptz) THEN
+    RAISE EXCEPTION 'Z: a reservation not confirmed did not lapse';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.list_due_emails() WHERE reference = v_ref) THEN
+    RAISE EXCEPTION 'Z: an e-mail is due for a reservation nobody confirmed';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.list_free_slots('booking-test-consultation', 'booking-test-anna',
+      'online', (SELECT day FROM x_day) + 15, (SELECT day FROM x_day) + 15)
+    WHERE starts_at = pg_temp.at((SELECT day FROM x_day) + 15, '09:00')
+  ) THEN
+    RAISE EXCEPTION 'Z: the lapsed reservation still holds its time';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Only the site's server reserves and confirms.
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.reserve_hold('x', 'visitor-anon');
+    RAISE EXCEPTION 'Z: anon reserved';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.confirm_reservation('x');
+    RAISE EXCEPTION 'Z: anon confirmed a reservation';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.reservation_confirm_by('x');
+    RAISE EXCEPTION 'Z: anon read a reservation';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
+-- AA: Stripe's side (audit of 22.10). A dispute on a visit's payment is
+-- written to its history and told to the admins, when it opens and when
+-- it closes; payments pending two hours on are listed for the job to ask
+-- Stripe about; a reservation past its time is cancelled even with a
+-- payment begun for it, once that payment's session is over.
+INSERT INTO public.payments (appointment_id, checkout_session_id, payment_intent_id, amount_minor, currency_code, status)
+SELECT id, 'cs_aa_paid', 'pi_aa_disputed', 25000, 'PLN', 'succeeded'
+FROM z_visits WHERE name = 'z2';
+INSERT INTO public.payments (appointment_id, checkout_session_id, amount_minor, currency_code, created_at)
+SELECT id, 'cs_aa_stuck', 25000, 'PLN', now() - interval '3 hours'
+FROM z_visits WHERE name = 'z1';
+INSERT INTO public.payments (appointment_id, checkout_session_id, amount_minor, currency_code, created_at)
+SELECT id, 'cs_aa_recent', 25000, 'PLN', now() - interval '10 minutes'
+FROM z_visits WHERE name = 'z2';
+
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  v_z2 uuid := (SELECT id FROM z_visits WHERE name = 'z2');
+  v_admins bigint := (SELECT count(DISTINCT user_id) FROM public.user_roles WHERE role = 'admin');
+BEGIN
+  IF public.record_dispute('pi_aa_disputed', 'du_1', 'needs_response', 25000, 'fraudulent', false)
+     IS DISTINCT FROM (SELECT reference FROM z_visits WHERE name = 'z2') THEN
+    RAISE EXCEPTION 'AA: the dispute did not find its visit';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.appointment_events
+    WHERE appointment_id = v_z2 AND kind = 'payment_disputed' AND actor = 'payment'
+      AND details ->> 'reason' = 'fraudulent' AND (details ->> 'amount_minor')::integer = 25000
+  ) THEN
+    RAISE EXCEPTION 'AA: the history does not say the payment is disputed';
+  END IF;
+  IF (SELECT count(*) FROM public.notifications
+      WHERE appointment_id = v_z2 AND kind = 'disputed' AND portal = 'admin'
+        AND details ->> 'dispute_reason' = 'fraudulent') <> v_admins THEN
+    RAISE EXCEPTION 'AA: the admins were not told of the dispute';
+  END IF;
+  PERFORM public.record_dispute('pi_aa_disputed', 'du_1', 'lost', 25000, 'fraudulent', true);
+  IF NOT EXISTS (
+    SELECT 1 FROM public.appointment_events
+    WHERE appointment_id = v_z2 AND kind = 'dispute_closed' AND details ->> 'status' = 'lost'
+  ) OR (SELECT count(*) FROM public.notifications
+        WHERE appointment_id = v_z2 AND kind = 'dispute_closed') <> v_admins THEN
+    RAISE EXCEPTION 'AA: the closed dispute was not recorded';
+  END IF;
+  IF public.record_dispute('pi_not_ours', 'du_2', 'needs_response', 100, 'general', false) IS NOT NULL THEN
+    RAISE EXCEPTION 'AA: a dispute on another payment found a visit';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM public.list_stuck_payments() WHERE checkout_session_id = 'cs_aa_stuck')
+     OR EXISTS (SELECT 1 FROM public.list_stuck_payments() WHERE checkout_session_id = 'cs_aa_recent') THEN
+    RAISE EXCEPTION 'AA: the stuck payments: %',
+      (SELECT array_agg(checkout_session_id) FROM public.list_stuck_payments());
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- z1 (confirmed) past its time with an old payment begun: cancelled; z2
+-- (not confirmed) past its time with a payment begun minutes ago: kept.
+UPDATE public.appointments SET payment_due_at = now() - interval '1 minute'
+WHERE id IN (SELECT id FROM z_visits WHERE name IN ('z1', 'z2'));
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  v_cancelled text[] := ARRAY(SELECT public.cancel_unpaid_visits());
+BEGIN
+  IF NOT (SELECT reference FROM z_visits WHERE name = 'z1') = ANY (v_cancelled)
+     OR (SELECT status FROM public.appointments WHERE id = (SELECT id FROM z_visits WHERE name = 'z1')) <> 'cancelled' THEN
+    RAISE EXCEPTION 'AA: an overdue reservation with a payment long over was kept';
+  END IF;
+  IF (SELECT status FROM public.appointments WHERE id = (SELECT id FROM z_visits WHERE name = 'z2')) <> 'awaiting_payment' THEN
+    RAISE EXCEPTION 'AA: cancelled while the client was paying';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.record_dispute('pi_x', 'du_x', 'lost', 1, 'general', true);
+    RAISE EXCEPTION 'AA: anon recorded a dispute';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM public.list_stuck_payments();
+    RAISE EXCEPTION 'AA: anon listed payments';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
+-- AB: a dispute that comes before its payment is settled (its intent not
+-- stored yet) finds the visit by the reference Stripe keeps with it.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  v_z1 uuid := (SELECT id FROM z_visits WHERE name = 'z1');
+  v_ref text := (SELECT reference FROM z_visits WHERE name = 'z1');
+BEGIN
+  IF public.record_dispute('pi_ab_unknown', 'du_ab', 'needs_response', 25000, 'general', false, v_ref)
+     IS DISTINCT FROM v_ref THEN
+    RAISE EXCEPTION 'AB: the dispute did not find the visit by its reference';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.appointment_events
+    WHERE appointment_id = v_z1 AND kind = 'payment_disputed' AND details ->> 'dispute_id' = 'du_ab'
+  ) THEN
+    RAISE EXCEPTION 'AB: the history does not say the payment is disputed';
+  END IF;
 END;
 $body$;
 RESET ROLE;

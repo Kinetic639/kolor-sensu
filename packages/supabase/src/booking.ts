@@ -369,15 +369,52 @@ export function cancelledByOf(value: string | null | undefined) {
 
 /**
  * "Zarezerwuj, zapłacę później": the held visit, with the details saved, is
- * reserved until its payment is due. Throws a BookingError (pay_now_required
- * when the visit is too close to pay later).
+ * reserved until the client confirms it from its e-mail (`confirmBy`), then
+ * until its payment is due (`paymentDueAt`). `pay_now`: the person has two
+ * unpaid reservations already, so this one is paid at once. Throws a
+ * BookingError (pay_now_required when the visit is too close to pay later).
  */
-export async function reserveHold(client: Client, accessToken: string) {
+export async function reserveHold(
+  client: Client,
+  accessToken: string,
+  clientKey?: string,
+) {
   const { data, error } = await client.rpc("reserve_hold", {
     p_access_token: accessToken,
+    ...(clientKey ? { p_client_key: clientKey } : {}),
   });
   if (error) throw bookingError(error);
   const row = data?.[0];
   if (!row) throw new BookingError("unknown", "Nothing was reserved");
-  return { reference: row.reference, paymentDueAt: row.payment_due_at };
+  return {
+    reference: row.reference,
+    outcome:
+      row.outcome === "pay_now" ? ("pay_now" as const) : ("reserved" as const),
+    paymentDueAt: row.payment_due_at ?? null,
+    confirmBy: row.confirm_by ?? null,
+  };
+}
+
+/**
+ * The client confirms their reservation from its e-mail link: the time to
+ * pay by from now on, or null (nothing to confirm).
+ */
+export async function confirmReservation(client: Client, manageToken: string) {
+  const { data, error } = await client.rpc("confirm_reservation", {
+    p_manage_token: manageToken,
+  });
+  if (error) throw bookingError(error);
+  return data ?? null;
+}
+
+/** Until when the reservation waits to be confirmed, or null. */
+export async function reservationConfirmBy(
+  client: Client,
+  manageToken: string,
+) {
+  const { data, error } = await client.rpc("reservation_confirm_by", {
+    p_manage_token: manageToken,
+  });
+  if (error) throw bookingError(error);
+  return data ?? null;
 }

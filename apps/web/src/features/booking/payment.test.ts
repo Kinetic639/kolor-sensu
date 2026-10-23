@@ -3,8 +3,11 @@ import type Stripe from "stripe";
 import { describe, expect, it, vi } from "vitest";
 import {
   checkoutSessionParams,
+  eventFitsKey,
   handleStripeEvent,
   type PaymentDeps,
+  settleSession,
+  stuckSessionAction,
 } from "./payment";
 
 const booking: GuestBooking = {
@@ -110,8 +113,9 @@ function deps(outcome = "confirmed" as const): PaymentDeps {
   return {
     fulfill: vi.fn().mockResolvedValue(outcome),
     fail: vi.fn().mockResolvedValue(undefined),
-    refundLostSlot: vi.fn().mockResolvedValue(undefined),
+    refundPayment: vi.fn().mockResolvedValue(undefined),
     recordRefund: vi.fn().mockResolvedValue(true),
+    recordDispute: vi.fn().mockResolvedValue("KS-20301002-6422"),
   };
 }
 
@@ -125,9 +129,34 @@ const session = {
   object: "checkout.session",
   payment_status: "paid",
   payment_intent: "pi_1",
+  amount_total: 20000,
 };
 
 describe("handleStripeEvent", () => {
+  it("settles a workshop seat's session as a workshop's, failures and refunds both ways", async () => {
+    const workshop = {
+      settle: vi.fn().mockResolvedValue("confirmed"),
+      fail: vi.fn().mockResolvedValue(undefined),
+      recordRefund: vi.fn().mockResolvedValue(true),
+    };
+    const d = { ...deps(), workshop };
+    const seat = { ...session, metadata: { workshop_reference: "W2611-004" } };
+    await handleStripeEvent(event("checkout.session.completed", seat), d);
+    expect(workshop.settle).toHaveBeenCalledWith(seat);
+    expect(d.fulfill).not.toHaveBeenCalled();
+    await handleStripeEvent(event("checkout.session.expired", seat), d);
+    expect(d.fail).toHaveBeenCalledWith("cs_1", "expired");
+    expect(workshop.fail).toHaveBeenCalledWith("cs_1", "expired");
+    await handleStripeEvent(
+      event("charge.refunded", {
+        payment_intent: "pi_1",
+        amount_refunded: 500,
+      }),
+      d,
+    );
+    expect(workshop.recordRefund).toHaveBeenCalledWith("pi_1", 500);
+  });
+
   it("confirms a paid session", async () => {
     const d = deps();
     await handleStripeEvent(event("checkout.session.completed", session), d);
@@ -172,7 +201,37 @@ describe("handleStripeEvent", () => {
   it("refunds money for a time that was lost meanwhile", async () => {
     const d = deps("slot_lost" as never);
     await handleStripeEvent(event("checkout.session.completed", session), d);
-    expect(d.refundLostSlot).toHaveBeenCalledWith("cs_1", "pi_1");
+    expect(d.refundPayment).toHaveBeenCalledWith(
+      "cs_1",
+      "pi_1",
+      20000,
+      "KS-20301002-6422",
+    );
+  });
+
+  it("refunds a second payment for a visit already paid", async () => {
+    const d = { ...deps("refund_payment" as never), onConfirmed: vi.fn() };
+    await handleStripeEvent(event("checkout.session.completed", session), d);
+    expect(d.refundPayment).toHaveBeenCalledWith(
+      "cs_1",
+      "pi_1",
+      20000,
+      "KS-20301002-6422",
+    );
+    expect(d.onConfirmed).not.toHaveBeenCalled();
+  });
+
+  it("does nothing for a payment settled before (the return page again)", async () => {
+    const d = { ...deps("already_settled" as never), onConfirmed: vi.fn() };
+    await settleSession(session as never, d);
+    expect(d.refundPayment).not.toHaveBeenCalled();
+    expect(d.onConfirmed).not.toHaveBeenCalled();
+  });
+
+  it("refunds nothing while the money is still on its way", async () => {
+    const d = deps("slot_lost" as never);
+    await settleSession({ ...session, payment_status: "unpaid" } as never, d);
+    expect(d.refundPayment).not.toHaveBeenCalled();
   });
 
   it("frees the time of a failed or expired session", async () => {
@@ -198,10 +257,127 @@ describe("handleStripeEvent", () => {
     expect(d.recordRefund).toHaveBeenCalledWith("pi_1", 20000);
   });
 
+  it("records a dispute when it opens and when it closes", async () => {
+    const d = deps();
+    const dispute = {
+      id: "du_1",
+      payment_intent: "pi_1",
+      amount: 20000,
+      reason: "fraudulent",
+      status: "needs_response",
+    };
+    await handleStripeEvent(event("charge.dispute.created", dispute), d);
+    expect(d.recordDispute).toHaveBeenCalledWith({
+      paymentIntentId: "pi_1",
+      disputeId: "du_1",
+      status: "needs_response",
+      amountMinor: 20000,
+      reason: "fraudulent",
+      closed: false,
+      reference: null,
+    });
+    await handleStripeEvent(
+      event("charge.dispute.closed", { ...dispute, status: "lost" }),
+      d,
+    );
+    expect(d.recordDispute).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: "lost", closed: true }),
+    );
+  });
+
+  it("names the visit or the seat a dispute is for (it may come before the payment is settled)", async () => {
+    const d = {
+      ...deps(),
+      paymentReference: vi.fn().mockResolvedValue("W2611-004"),
+    };
+    await handleStripeEvent(
+      event("charge.dispute.created", {
+        id: "du_2",
+        payment_intent: { id: "pi_2" },
+        amount: 8000,
+        reason: "general",
+        status: "needs_response",
+      }),
+      d,
+    );
+    expect(d.paymentReference).toHaveBeenCalledWith("pi_2");
+    expect(d.recordDispute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        paymentIntentId: "pi_2",
+        reference: "W2611-004",
+      }),
+    );
+  });
+
   it("ignores other events", async () => {
     const d = deps();
     await handleStripeEvent(event("customer.created", {}), d);
     expect(d.fulfill).not.toHaveBeenCalled();
     expect(d.fail).not.toHaveBeenCalled();
+  });
+});
+
+describe("eventFitsKey", () => {
+  it("a live event only with a live key, a test one only with a test key", () => {
+    expect(eventFitsKey(false, "sk_test_123")).toBe(true);
+    expect(eventFitsKey(true, "rk_live_123")).toBe(true);
+    expect(eventFitsKey(true, "sk_test_123")).toBe(false);
+    expect(eventFitsKey(false, "sk_live_123")).toBe(false);
+    expect(eventFitsKey(false, undefined)).toBe(false);
+  });
+});
+
+describe("stuckSessionAction", () => {
+  const intent = (status: string) => ({ id: "pi_1", status });
+
+  it("a payment Stripe settled meanwhile is settled here too", () => {
+    expect(
+      stuckSessionAction({
+        status: "complete",
+        payment_status: "paid",
+        payment_intent: intent("succeeded"),
+      }),
+    ).toBe("settle");
+  });
+
+  it("a session never paid frees its time", () => {
+    expect(
+      stuckSessionAction({
+        status: "expired",
+        payment_status: "unpaid",
+        payment_intent: null,
+      }),
+    ).toBe("expire");
+    expect(
+      stuckSessionAction({
+        status: "complete",
+        payment_status: "unpaid",
+        payment_intent: intent("canceled"),
+      }),
+    ).toBe("fail");
+    expect(
+      stuckSessionAction({
+        status: "complete",
+        payment_status: "unpaid",
+        payment_intent: intent("requires_payment_method"),
+      }),
+    ).toBe("fail");
+  });
+
+  it("money still on its way waits", () => {
+    expect(
+      stuckSessionAction({
+        status: "complete",
+        payment_status: "unpaid",
+        payment_intent: intent("processing"),
+      }),
+    ).toBe("wait");
+    expect(
+      stuckSessionAction({
+        status: "open",
+        payment_status: "unpaid",
+        payment_intent: null,
+      }),
+    ).toBe("wait");
   });
 });

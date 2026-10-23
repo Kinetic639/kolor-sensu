@@ -17,8 +17,9 @@ import { brandTagline } from "./site-logo";
 // stylesheet fades the paper out after a few seconds anyway.
 //
 // The inline script right after it decides, before the first paint, whether
-// it plays: only on the first visit (remembered in localStorage), not under
-// reduced motion, and not where storage is blocked (it would otherwise play
+// it plays: only on the first page of a visit (remembered in sessionStorage,
+// so nothing outlives the visit without consent), not under reduced
+// motion, and not where storage is blocked (it would otherwise play
 // on every page). It records when it started; once the motion runs it also
 // records when the paper starts to fade, so the page's reveals can wait for
 // it (reveal-support.ts, introRemaining). Without JavaScript it never shows.
@@ -26,7 +27,7 @@ import { brandTagline } from "./site-logo";
 export const introStorageKey = "ks-intro";
 
 const id = "ks-intro";
-const script = `(function(){var e=document.getElementById("${id}");if(!e)return;try{if(localStorage.getItem("${introStorageKey}"))return;localStorage.setItem("${introStorageKey}","1")}catch(_){return}if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;e.dataset.introAt=String(Math.round(performance.now()));e.dataset.intro="play"})()`;
+const script = `(function(){var e=document.getElementById("${id}");if(!e)return;try{if(sessionStorage.getItem("${introStorageKey}"))return;sessionStorage.setItem("${introStorageKey}","1")}catch(_){return}if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;e.dataset.introAt=String(Math.round(performance.now()));e.dataset.intro="play"})()`;
 
 const greeting = "Witaj";
 

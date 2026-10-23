@@ -21,6 +21,7 @@ const claimed: ClaimedBookingEmail = {
   bookedBy: "client",
   paid: true,
   paymentDueAt: null,
+  confirmBy: null,
 };
 
 function deps(overrides: Partial<ChangeEmailDeps> = {}) {

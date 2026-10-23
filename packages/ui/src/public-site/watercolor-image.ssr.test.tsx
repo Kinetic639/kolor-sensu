@@ -44,7 +44,7 @@ describe("WatercolorImage on the server", () => {
     }
   });
 
-  it("keeps client-only code to small islands: reveals, caption motion, intro motion, navigation, cookie notice, room gallery", () => {
+  it("keeps client-only code to small islands: reveals, caption motion, parallax layer, intro motion, navigation, cookie notice, room gallery, rooms peek, cursor ring, first steps, painted story, support areas, thoughts lens, article sharing", () => {
     const clientFiles = readdirSync(here)
       .filter(
         (file) => /\.tsx?$/.test(file) && !/\.(test|stories)\./.test(file),
@@ -55,14 +55,22 @@ describe("WatercolorImage on the server", () => {
       .sort();
 
     expect(clientFiles).toEqual([
+      "article-share.tsx",
       "cookie-consent.tsx",
+      "cursor-ring.tsx",
+      "first-steps.tsx",
       "intro-motion.tsx",
       "offer-reveal.tsx",
+      "painted-story.tsx",
       "room-gallery.tsx",
+      "rooms-peek.tsx",
       "site-mobile-nav.tsx",
       "site-navigation.tsx",
       "specialist-reveal.tsx",
+      "support-areas.tsx",
+      "thoughts-lens.tsx",
       "watercolor-caption-motion.tsx",
+      "watercolor-parallax.tsx",
       "watercolor-reveal.tsx",
     ]);
   });
@@ -89,5 +97,30 @@ describe("WatercolorImage on the server", () => {
     );
     expect(html).toContain("Przestrzeń dla ważnych rozmów");
     expect(html).not.toContain("data-paint");
+  });
+
+  it("preloads the photo's brush mask for the hero, which paints only once it is in", () => {
+    const preloadsMask = (html: string) =>
+      /<link rel="preload"[^>]*href="\/watercolor\/photo-mask\.png"/.test(html);
+    const props = { src: "/kolor-sensu/therapy-room-upload.png", alt: "" };
+    expect(
+      preloadsMask(renderToString(<WatercolorImage {...props} priority />)),
+    ).toBe(true);
+    expect(preloadsMask(renderToString(<WatercolorImage {...props} />))).toBe(
+      false,
+    );
+  });
+
+  it("preloads the mask in CORS mode, as the stylesheet fetches it", () => {
+    const html = renderToString(
+      <WatercolorImage
+        src="/kolor-sensu/therapy-room-upload.png"
+        alt=""
+        priority
+      />,
+    );
+    const link = html.match(/<link[^>]*photo-mask\.png[^>]*>/)?.[0];
+    // An empty crossorigin is "anonymous".
+    expect(link).toMatch(/crossorigin="(anonymous)?"/);
   });
 });

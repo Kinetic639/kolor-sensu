@@ -47,6 +47,10 @@ export interface RichTextEditorProps {
   ariaLabel?: string;
 }
 
+/** The editing area's typography (the editor's own, not the site's). */
+export const EDITOR_CONTENT_CLASS =
+  "[&_.ProseMirror_h2]:font-heading [&_.ProseMirror_h3]:font-heading [&_.ProseMirror]:max-w-none [&_.ProseMirror]:text-base [&_.ProseMirror]:leading-7 [&_.ProseMirror]:text-[var(--text)] [&_.ProseMirror_a]:font-medium [&_.ProseMirror_a]:text-[var(--primary)] [&_.ProseMirror_a]:underline [&_.ProseMirror_blockquote]:my-5 [&_.ProseMirror_blockquote]:border-l-4 [&_.ProseMirror_blockquote]:border-[var(--primary)] [&_.ProseMirror_blockquote]:pl-4 [&_.ProseMirror_code]:rounded [&_.ProseMirror_code]:bg-[var(--surface-muted)] [&_.ProseMirror_code]:px-1.5 [&_.ProseMirror_h2]:mt-8 [&_.ProseMirror_h2]:mb-3 [&_.ProseMirror_h2]:text-3xl [&_.ProseMirror_h2]:font-semibold [&_.ProseMirror_h3]:mt-6 [&_.ProseMirror_h3]:mb-2 [&_.ProseMirror_h3]:text-2xl [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_hr]:my-7 [&_.ProseMirror_hr]:border-[var(--border)] [&_.ProseMirror_ol]:my-4 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-7 [&_.ProseMirror_p]:my-3 [&_.ProseMirror_ul]:my-4 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-7";
+
 export function RichTextEditor({
   value,
   onChange,
@@ -126,19 +130,22 @@ export function RichTextEditor({
       <TooltipProvider delayDuration={300}>
         <RichTextToolbar disabled={disabled} editor={editor} />
       </TooltipProvider>
-      <div className="[&_.ProseMirror_h2]:font-heading [&_.ProseMirror_h3]:font-heading [&_.ProseMirror]:max-w-none [&_.ProseMirror]:text-base [&_.ProseMirror]:leading-7 [&_.ProseMirror]:text-[var(--text)] [&_.ProseMirror_a]:font-medium [&_.ProseMirror_a]:text-[var(--primary)] [&_.ProseMirror_a]:underline [&_.ProseMirror_blockquote]:my-5 [&_.ProseMirror_blockquote]:border-l-4 [&_.ProseMirror_blockquote]:border-[var(--primary)] [&_.ProseMirror_blockquote]:pl-4 [&_.ProseMirror_code]:rounded [&_.ProseMirror_code]:bg-[var(--surface-muted)] [&_.ProseMirror_code]:px-1.5 [&_.ProseMirror_h2]:mt-8 [&_.ProseMirror_h2]:mb-3 [&_.ProseMirror_h2]:text-3xl [&_.ProseMirror_h2]:font-semibold [&_.ProseMirror_h3]:mt-6 [&_.ProseMirror_h3]:mb-2 [&_.ProseMirror_h3]:text-2xl [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_hr]:my-7 [&_.ProseMirror_hr]:border-[var(--border)] [&_.ProseMirror_ol]:my-4 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-7 [&_.ProseMirror_p]:my-3 [&_.ProseMirror_ul]:my-4 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-7">
+      <div className={EDITOR_CONTENT_CLASS}>
         <EditorContent editor={editor} />
       </div>
     </div>
   );
 }
 
-function RichTextToolbar({
+/** The formatting toolbar; an editor may add its own controls after it. */
+export function RichTextToolbar({
   editor,
   disabled,
+  children,
 }: {
   editor: Editor | null;
   disabled: boolean;
+  children?: React.ReactNode;
 }) {
   const inactive = disabled || !editor;
   return (
@@ -258,11 +265,12 @@ function RichTextToolbar({
           editor?.chain().focus().unsetAllMarks().clearNodes().run()
         }
       />
+      {children}
     </div>
   );
 }
 
-function ToolbarButton({
+export function ToolbarButton({
   active = false,
   disabled,
   icon,
@@ -302,7 +310,7 @@ function ToolbarButton({
   );
 }
 
-function ToolbarSeparator() {
+export function ToolbarSeparator() {
   return (
     <Separator className="mx-1 hidden h-7 sm:block" orientation="vertical" />
   );
@@ -404,7 +412,8 @@ function LinkControl({
   );
 }
 
-function canonicalizeEditorJson(value: unknown): unknown {
+/** The editor's JSON reduced to the base contract's keys. */
+export function canonicalizeEditorJson(value: unknown): unknown {
   if (!value || typeof value !== "object" || !("type" in value)) return value;
   const node = value as {
     type: string;

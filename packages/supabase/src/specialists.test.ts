@@ -19,6 +19,8 @@ import {
   specialistMappers,
   uploadSpecialistProfileImage,
   validateSpecialistImage,
+  getPublishedSpecialistBySlug,
+  listPublishedSpecialists,
 } from "./specialists";
 
 const specialistId = "20000000-0000-4000-8000-000000000001";
@@ -606,5 +608,37 @@ describe("createSpecialistMediaSignedUrl", () => {
     await expect(
       createSpecialistMediaSignedUrl(client, "gone.webp"),
     ).rejects.toThrow("Not found");
+  });
+});
+
+describe("published specialists on the site", () => {
+  // Issue #63 (decided 19.10): "Widoczny na stronie" alone puts a published
+  // profile on the site; an inactive specialist shows, only not bookable.
+  function chain() {
+    const eq = vi.fn();
+    const query = {
+      select: () => query,
+      eq: (...args: unknown[]) => {
+        eq(...args);
+        return query;
+      },
+      order: () => Promise.resolve({ data: [], error: null }),
+      maybeSingle: () => Promise.resolve({ data: null, error: null }),
+    };
+    return { eq, client: { from: () => query } as never };
+  }
+
+  it("lists published profiles whether or not the specialist is active", async () => {
+    const { eq, client } = chain();
+    await listPublishedSpecialists(client);
+    expect(eq).toHaveBeenCalledWith("publication_status", "published");
+    expect(eq).not.toHaveBeenCalledWith("specialists.active", true);
+  });
+
+  it("opens a published profile whether or not the specialist is active", async () => {
+    const { eq, client } = chain();
+    await getPublishedSpecialistBySlug(client, "anna-nowak");
+    expect(eq).toHaveBeenCalledWith("specialists.public_slug", "anna-nowak");
+    expect(eq).not.toHaveBeenCalledWith("specialists.active", true);
   });
 });

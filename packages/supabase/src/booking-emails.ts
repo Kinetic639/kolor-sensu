@@ -47,8 +47,10 @@ export interface ClaimedBookingEmail {
   bookedBy: "client" | "centre";
   /** Paid online. */
   paid: boolean;
-  /** A reservation: to be paid by then. */
+  /** A reservation: to be paid by then (once confirmed). */
   paymentDueAt: string | null;
+  /** A client's reservation not confirmed yet: confirm it by then. */
+  confirmBy: string | null;
 }
 
 /** What the e-mail needs, or null when it is not this caller's to send. */
@@ -83,6 +85,7 @@ export async function claimBookingEmail(
         bookedBy: row.booked_by === "centre" ? "centre" : "client",
         paid: row.paid,
         paymentDueAt: row.payment_due_at ?? null,
+        confirmBy: row.confirm_by ?? null,
       }
     : null;
 }

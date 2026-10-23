@@ -12,7 +12,13 @@
     "./intakes": "./src/intakes.ts",
     "./public": "./src/public.ts",
     "./secret": "./src/secret.ts",
-    "./server": "./src/server.ts"
+    "./server": "./src/server.ts",
+    "./contact": "./src/contact.ts",
+    "./education": "./src/education.ts",
+    "./discount-codes": "./src/discount-codes.ts",
+    "./workshops": "./src/workshops.ts",
+    "./workshops-admin": "./src/workshops-admin.ts",
+    "./newsletter": "./src/newsletter.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

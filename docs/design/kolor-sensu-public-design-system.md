@@ -439,7 +439,8 @@ revealed by **blooms**, never brush strokes.
   supplied splash asset, whole and unframed; the cut-out portrait at full box
   width, its lower edge dissolving into the watercolor in patches between
   67 % and 80 % of the box (`portrait-dissolve.png`), with the splash's own
-  pigment multiplied over the clothes there (`portrait-stain.png`); then the
+  pigment multiplied over its very bottom (`portrait-stain.png`, only from
+  70 % of the box: higher up it reads as stains on the clothes); then the
   info plate, the only rectangular element, overlapping from 80 %.
 - **Splash matte** (`generate-splash-matte.mjs` →
   `specialist-splash-matte.data.ts`, `splash-time.png`): 27 bloom regions.
@@ -500,6 +501,158 @@ band after another.
   Brush Matte Debug, Slow Motion Debug, Frame Strip, All Paints Animated)
   and OfferSection (Desktop, Tablet, Mobile).
 
+### Cursor ring
+
+`CursorRing` (in `SiteLayout`, so on every page) is a hairline ring that
+accompanies the mouse, after Talking Walls
+(https://talkingwalls.co.il/art-counseling). The real cursor stays.
+
+- **Spring** (`cursor-ring-motion.ts`): each frame the 20 px ring closes a
+  fifth of the gap to the mouse (at any frame rate), turns along that gap and
+  grows along it by half of it, up to 40 px. A quick flick pulls it into a
+  capsule; at rest it settles back into a circle and stops redrawing.
+- **States:** over links and buttons it shrinks and fades (the pointer is
+  enough); over offer tiles and specialist cards (`.ks-of`, `.ks-sp`) it
+  becomes a solid `pink-strong` disc saying "Zobacz" (white, 5 : 1);
+  `data-cursor-label="…"` on any element gives another word, and the disc
+  grows to fit it. The disc never turns or stretches, so its word reads.
+- **Fallbacks:** touch, pens and reduced motion get nothing (no listener,
+  CSS hides it); it is `aria-hidden`.
+- **Storybook:** Cursor ring (Playground, Shapes).
+
+### Thoughts lens
+
+`ThoughtsLens` (homepage, right under the hero) is a crowd of difficult
+thoughts with kinder ones hidden under them. Copy: the CMS's
+`home_thoughts` (pairs; `defaultHomeThoughts` in the contracts until
+published).
+
+- **Crowd:** the negative thoughts in two rows of large display type
+  (the same size as the hero's own lines, about 3.75rem), outlined
+  (`pink`, hairline) and filled (`pink` mixed with `blush`, a powder pink)
+  by turns, so neighbours read apart. Each row is repeated three times and
+  slides gently, the two rows in opposite directions, 12vw in all while the
+  band crosses the screen (scroll-driven CSS; static where unsupported or
+  under reduced motion).
+- **Turn:** every negative thought hides its own positive one (its pair
+  in the CMS). Pointed at, or tapped, the negative one dissolves like
+  mist: each letter drifts its own way (`thoughts-mist.ts`), turns, swells
+  and fades in about 0.45 s. The positive one condenses in its place out of
+  a blur, in sage green (`primary` mixed with `sage`), filled where the
+  negative was outlined and the other way round. The word eases its width
+  from one thought to the other, so the crowd makes room. A turned thought
+  stays turned until the page is loaded again. Transitions only: nothing
+  runs while no word turns. Reduced motion: the turn is instant.
+- **Assistive tech:** the band is a region named by `label`; the pictures
+  of words are hidden and the positive thoughts are read as a list (each
+  once).
+- **Storybook:** Thoughts lens (Playground).
+
+### Painted story
+
+`PaintedStory` (homepage, after the team; copy: `story` in
+`apps/web/src/content/site.tsx`) tells "Jak zacząć / Twoja droga do
+lepszego samopoczucia" in a few steps while scrolling, after David Whyte
+Experience. Brought over from PR #12; to be reworked.
+
+- **Wide screens with motion** (from 64 rem): one screen stays pinned for
+  as long as it takes to scroll through the steps. The text column changes
+  step by step (the others are inert). One counter over the text says
+  where the story is ("01 / 03", the display face, the number in
+  `pink-strong`): when the step changes its number rolls, the old one
+  leaving upwards into mist, the new one coming up sharp (0.8 s). Each step's
+  picture is painted over the previous
+  one with WatercolorImage's own brush (`watercolor-paint-matte.ts`).
+  Scrolling back lifts the later pictures off again.
+- **Phones:** the steps follow one another, text then picture, each
+  picture painted in as it comes into view.
+- **Fallbacks:** reduced motion and no script show every step plainly;
+  Safari (no SVG masks on HTML) gets a short cross-fade instead of the
+  brush. The step count ("01 / 03") is `pink-strong`, as text under 24px.
+- **Storybook:** Painted story (Default).
+
+### Support areas
+
+`SupportAreas` (homepage, under the thoughts, in place of the offer tiles;
+the areas come from the CMS, `docs/architecture/cms-domain.md`) shows the
+areas of help as small circles around a large one, after Talking Walls'
+art counseling gallery (https://talkingwalls.co.il/art-counseling).
+
+- **Large circle** (a link): the chosen area's photo fades in (0.7 s)
+  under a 42 % ink veil, with a hairline `pink` ring inside, the area's
+  name in the display face, its sentence and where it leads ("Umów
+  wizytę" unless the CMS gives a link). Pointed at, the picture grows 3 %.
+- **Small circles** (buttons): pointing at one, focusing it or tapping it
+  chooses it; the chosen one fades to 30 % with the same ring. Ten slots
+  around the stage (`SUPPORT_AREA_SLOTS`), left and right by turns, two
+  depths: near ones drift 5 rem, far ones 14 rem as the section scrolls by
+  (scroll-driven CSS).
+- **No photo:** a wash of `sage` or `blush` on paper grain, the area's
+  name inside the small circle; the large circle then shows ink text.
+- **Phones:** the large circle first, the small ones in rows under it.
+  Reduced motion: no drift, no fades of the text.
+- **Storybook:** Support areas (Default, TenAreas).
+
+### First steps
+
+`FirstSteps` ("Pierwszy krok", homepage, between the areas of help and the
+specialist sections; words from the CMS) shows four steps of starting
+therapy on a compact band, after the last variant of the owner's mock-up
+sheet: circles joined by a wave.
+
+- **Stroke:** the supplied brush stroke (pink flowing into sage,
+  `docs/design/references/public/first-steps-ribbon.png`, cropped by
+  `generate-first-steps-ribbon.mjs`) lies behind the band at half
+  strength. While the band comes up the screen it fills in from both
+  sides to the middle: a threshold on its time map
+  (`first-steps-matte.ts`, #11's technique at a small scale), frayed
+  along the bristles.
+- **Hold:** from 64 rem, with motion welcome, the band then stays in the
+  middle of the screen (sticky, as `PaintedStory` holds its screen) for
+  110 vh of scrolling. Only then does the wave start.
+- **Once:** nothing is taken back by scrolling up: the stroke, the wave
+  and the steps stay. When the held band has been scrolled past it lets
+  go for good: the room it held goes (the page is moved by as much at
+  once, so nothing jumps) and it is an ordinary, finished section from
+  then on, until the page is loaded again.
+- **Wave:** a line from the heading's side through the middle of each
+  circle, rising and falling between them, ending in the last circle
+  (`first-steps-wave.ts`); pink then green with a quick change in the
+  middle (mixed evenly the two pass through brown). Its whole way shows
+  faintly in grey; scrolling draws it in colour from the left over the
+  first 82 % of the hold, a drop of paint at its tip (0.45 s lag).
+- **Steps:** circles drawn by hand (not quite round), a pale wash of
+  green or pink by turns, an ink line icon, the name in the display face,
+  a sentence under it. They wait grey: the circle colourless, icon and
+  name muted, the sentence hidden. When the line gets to a step it takes
+  colour, for good: the wash spreads from the middle (0.9 s), a ring
+  ripples out (1.3 s), the icon settles with a small overshoot (the last
+  step's sprout grows from its root), the name darkens and the sentence
+  comes up under it; coloured circles breathe (7 % over 6 s).
+- **Phones:** the steps one under another, circle left, words right; no
+  wave and no hold, each step takes colour as it comes into view. Reduced
+  motion and no script: the finished band.
+- **Storybook:** First steps (ScrollToPaint, Finished).
+
+### Specialist spotlight
+
+`SpecialistSpotlight` ("Z kim porozmawiasz", homepage, switched on in the
+CMS; `docs/architecture/cms-domain.md`) presents one specialist at length.
+
+- **Portrait:** the cards' own artwork (`SpecialistArtwork`: the cut-out
+  portrait on its watercolor splash), only larger (up to 30 rem), with the
+  cards' entrance (`SpecialistReveal`, no plate), which waits until 80 %
+  of the portrait is on screen (or as much as the screen can show). No new
+  mask or backdrop.
+- **Words:** the section header as elsewhere (eyebrow, heading, caption),
+  then the name (h3), the role, the short bio, and short lists as chips on
+  `primary-soft`: "W czym pomagam", "Z kim pracuję", "Formy pracy" (empty
+  ones are left out). "Umów wizytę" and "Poznaj mnie bliżej" (the profile).
+- **Layout:** phones stack header, portrait, words; from 64 rem the header
+  runs across the top, under it the portrait on the left and the words on
+  the right.
+- **Storybook:** Specialist spotlight (Default, Animated).
+
 ## 12. Primitives
 
 Only what the references repeat:
@@ -522,6 +675,34 @@ Only what the references repeat:
 | `WatercolorSectionBackground` | Closing call-to-action band                |
 
 Buttons accept `asChild` to render a `next/link` `<Link>`.
+
+### Section header
+
+Nearly every section opens the same way: an eyebrow, a title, a
+description, sometimes a call to action. `SectionHeader` draws that from one
+shared format (`@repo/contracts/section-header`, `sectionHeaderSchema`) that
+the CMS will edit: **words and colours only, never the markup.**
+
+- **The section decides the markup:** the title's heading level (`as`: one
+  `h1` per page, in the hero; section titles `h2`), its size, the header's
+  alignment and the heading's id. Nothing in the content can change them.
+- **Eyebrow:** a paragraph (it never enters the outline), in the default
+  muted colour, green (`primary-strong`) or pink (`pink-strong`).
+- **Title:** one or two lines; any words in either in green (`primary`) or
+  pink (`pink`), large enough for the light shades. Coloured words are spans
+  inside the one heading and the second line a line break after a space, so
+  a screen reader or a search engine reads one plain title.
+- **Description:** a paragraph, with at most one link anywhere in it, to a
+  page of the site (`SITE_PAGES`) or to booking a chosen service, in the default ink, green or pink (the
+  strong shades: it is small text). Underlined, so it is not told by colour
+  alone.
+- **Call to action** under the description, to a page of the site or to
+  booking a chosen service: the green
+  button, the outlined button or the arrow link.
+- Empty parts leave no element behind. The site's own headers are built with
+  `plainHeader` (every word in the default colour) until the CMS publishes
+  others.
+- **Storybook:** Section header (Full, Centred, Plain).
 
 ### Site layout (reference A's header and footer)
 

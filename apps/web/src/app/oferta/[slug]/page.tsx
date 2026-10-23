@@ -2,14 +2,19 @@ import {
   FeatureSection,
   JsonLd,
   PrimaryButton,
+  SecondaryButton,
   ServiceFacts,
   ServicePageView,
   serviceParagraphs,
 } from "@repo/ui/public-site";
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageIntro } from "@/components/page-intro";
+import { ArticlesSection } from "@/features/education/articles-section";
+import { toPeople } from "@/features/education/article-page";
+import { getArticleCategories, getServiceArticles } from "@/lib/education-data";
+import { bookingHref } from "@/features/booking/search-params";
 import { bookingCta, rooms, siteUrl } from "@/content/site";
 import {
   formatDuration,
@@ -19,10 +24,14 @@ import {
   specialistHref,
 } from "@/lib/presentation";
 import {
+  getBookableCatalog,
+  getIntakeServiceSlugs,
   getService,
   getServiceOffers,
+  getServicePage,
   getServices,
   getSpecialists,
+  getWatercolorLook,
 } from "@/lib/public-data";
 import { serviceHref, serviceTitle } from "@/lib/site-frame";
 
@@ -51,12 +60,25 @@ export default async function ServicePage({
   params,
 }: PageProps<"/oferta/[slug]">) {
   const { slug } = await params;
-  const [service, offers, specialists] = await Promise.all([
-    getService(slug),
-    getServiceOffers(slug),
-    getSpecialists(),
-  ]);
+  const [service, offers, specialists, watercolor, intake, bookable, words] =
+    await Promise.all([
+      getService(slug),
+      getServiceOffers(slug),
+      getSpecialists(),
+      getWatercolorLook(),
+      getIntakeServiceSlugs(),
+      getBookableCatalog(),
+      getServicePage(),
+    ]);
   if (!service) notFound();
+  const [articles, categories] = await Promise.all([
+    getServiceArticles(service.id),
+    getArticleCategories(),
+  ]);
+  const [firstVisit] = intake;
+  const bookFirst: Route = firstVisit
+    ? bookingHref({ usluga: firstVisit })
+    : "/umow-wizyte";
 
   const title = serviceTitle(service);
   const paragraphs = serviceParagraphs(service.description);
@@ -67,7 +89,15 @@ export default async function ServicePage({
     );
     return specialist ? [{ offer, specialist }] : [];
   });
-  const price = priceRange(byTeam.map(({ offer }) => offer));
+  // Booked online: "Umów" opens booking with this service chosen (#94)
+  // and the prices show. Otherwise (no specialist offers it, or its online
+  // booking is off) the price is agreed and the visitor calls or writes.
+  const online =
+    byTeam.length > 0 &&
+    bookable.services.some((one) => one.slug === service.slug);
+  const price = online
+    ? priceRange(byTeam.map(({ offer }) => offer))
+    : words.unbooked.priceText;
 
   return (
     <>
@@ -84,9 +114,17 @@ export default async function ServicePage({
 
       <ServicePageView
         action={
-          <PrimaryButton asChild arrow>
-            <Link href="/umow-wizyte">{bookingCta.label}</Link>
-          </PrimaryButton>
+          online ? (
+            <PrimaryButton asChild arrow>
+              <Link href={bookingHref({ usluga: service.slug })}>
+                {bookingCta.label}
+              </Link>
+            </PrimaryButton>
+          ) : (
+            <SecondaryButton asChild arrow>
+              <Link href="/kontakt">{words.unbooked.contactLabel}</Link>
+            </SecondaryButton>
+          )
         }
         className="max-w-page px-gutter pb-section-sm mx-auto"
         paragraphs={paragraphs}
@@ -95,7 +133,7 @@ export default async function ServicePage({
           name: specialist.displayName,
           href: specialistHref(specialist.publicSlug),
           meta: [
-            formatPrice(offer),
+            online ? formatPrice(offer) : null,
             formatDuration(offer.effectiveDurationMinutes),
             offerModes(offer),
           ]
@@ -104,14 +142,23 @@ export default async function ServicePage({
         }))}
       />
 
+      <ArticlesSection
+        articles={articles}
+        categories={categories}
+        heading="Warto przeczytać"
+        id="artykuly-uslugi"
+        people={toPeople(specialists)}
+      />
+
       <FeatureSection
         {...rooms}
-        eyebrow="Jak pracujemy"
-        heading="Spokojna rozmowa, bez oceniania"
-        description="Na pierwszym spotkaniu poznajemy Twoją historię i to, co chcesz zmienić. Razem ustalamy cel i rytm spotkań."
-        cta={{ href: "/umow-wizyte", label: "Umów pierwsze spotkanie" }}
+        eyebrow={words.howWeWork.eyebrow || undefined}
+        heading={words.howWeWork.heading}
+        description={words.howWeWork.description || undefined}
+        cta={{ href: bookFirst, label: words.howWeWork.ctaLabel }}
         imagePosition="left"
         animationPreset="watercolor-reveal"
+        watercolor={watercolor}
       />
 
       <JsonLd
@@ -122,7 +169,7 @@ export default async function ServicePage({
           description: service.shortDescription ?? paragraphs[0],
           url: `${siteUrl}${serviceHref(service.slug)}`,
           provider: { "@type": "MedicalBusiness", name: "Kolor Sensu" },
-          ...(byTeam.length > 0 && {
+          ...(online && {
             offers: byTeam.map(({ offer }) => ({
               "@type": "Offer",
               price: offer.priceMinor / 100,

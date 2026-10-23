@@ -71,8 +71,13 @@ export function EditorialHeading({
       {...props}
     >
       {children}
+      {/* The space keeps the two lines apart for anything that reads the
+          text (a screen reader, a search engine); the block breaks the line. */}
       {accent ? (
-        <span className={cn("block", accentTones[accentTone])}>{accent}</span>
+        <>
+          {" "}
+          <span className={cn("block", accentTones[accentTone])}>{accent}</span>
+        </>
       ) : null}
     </Tag>
   );

@@ -1,4 +1,4 @@
-import { gsap } from "gsap";
+import type { GsapInstance } from "./lazy-gsap";
 import { offerMatte } from "./offer-brush-matte.data";
 
 // The brush matte of OfferTile's entrance animation: the tile's watercolor
@@ -175,6 +175,8 @@ export function createOfferMatte(
 }
 
 export interface OfferTimelineOptions {
+  /** GSAP, loaded when the reveal is near (lazy-gsap.ts). */
+  gsap: GsapInstance;
   /** The layers the timeline animates; any may be missing. */
   paint?: Element | null;
   content?: Element | null;
@@ -188,6 +190,7 @@ export interface OfferTimelineOptions {
 
 /** The whole tile reveal as one GSAP timeline, about 0.9 s long. */
 export function createOfferTimeline({
+  gsap,
   paint,
   content,
   arrow,

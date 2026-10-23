@@ -22,6 +22,14 @@ const storagePatterns = supabaseUrl
         hostname: new URL(supabaseUrl).hostname,
         pathname: "/storage/v1/object/public/room-media/**",
       },
+      // The site's own photos (support areas): the public site-media bucket.
+      {
+        protocol: /** @type {"https" | "http"} */ (
+          new URL(supabaseUrl).protocol.replace(":", "")
+        ),
+        hostname: new URL(supabaseUrl).hostname,
+        pathname: "/storage/v1/object/public/site-media/**",
+      },
     ]
   : [];
 
@@ -34,14 +42,17 @@ const nextConfig = {
   transpilePackages: ["@repo/app-runtime", "@repo/ui"],
   typedRoutes: true,
   async headers() {
+    const noindex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
     return indexable
-      ? []
-      : [
+      ? [
+          // The CMS preview (Draft Mode's cookie) is never indexed either.
           {
             source: "/:path*",
-            headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+            has: [{ type: "cookie", key: "__prerender_bypass" }],
+            headers: noindex,
           },
-        ];
+        ]
+      : [{ source: "/:path*", headers: noindex }];
   },
   images: {
     // AVIF first (about 20% smaller than WebP; slower only on the first,

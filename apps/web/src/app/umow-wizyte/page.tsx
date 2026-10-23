@@ -4,6 +4,8 @@ import { BookingWizard } from "@/features/booking/booking-wizard";
 import { turnstileKeys } from "@/features/booking/guards";
 import { loadWizard } from "@/features/booking/load-wizard";
 import { readIntake } from "@/features/booking/intake-cookie";
+import { RememberChoices } from "@/features/booking/remember-choices";
+import { memoryValue } from "@/features/booking/wizard-memory";
 import { sendToIntake } from "@/features/booking/intake-gate";
 import {
   intakeHref,
@@ -11,13 +13,12 @@ import {
 } from "@/features/booking/search-params";
 import { getIntakeServiceSlugs } from "@/lib/public-data";
 import { redirect } from "next/navigation";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Umów wizytę",
-  description:
-    "Umów wizytę w Kolor Sensu: wybierz usługę, formę spotkania, specjalistę i wolny termin.",
-  alternates: { canonical: "/umow-wizyte" },
-};
+// Title, description and link preview: the CMS's over the page's own.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("booking");
+}
 
 // The booking wizard (docs/product/booking-plan.md): its step follows from
 // the address. While online booking is off, booking by phone or email. A
@@ -45,10 +46,13 @@ export default async function BookingPage({
     redirect(intakeHref(wizard.params));
   }
   return (
-    <BookingWizard
-      params={wizard.params}
-      turnstileSiteKey={turnstileKeys().siteKey}
-      view={wizard.view}
-    />
+    <>
+      <RememberChoices value={memoryValue(wizard.params)} />
+      <BookingWizard
+        params={wizard.params}
+        turnstileSiteKey={turnstileKeys().siteKey}
+        view={wizard.view}
+      />
+    </>
   );
 }

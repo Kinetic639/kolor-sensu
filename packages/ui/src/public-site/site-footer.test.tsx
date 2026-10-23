@@ -52,4 +52,43 @@ describe("SiteFooter", () => {
     ).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Start" })).toBeInTheDocument();
   });
+
+  it("offers the cookie settings once, beside the legal links", () => {
+    render(
+      <SiteFooter
+        legal={[{ label: "Cookies", href: "/cookies" }]}
+        navigation={[
+          home,
+          {
+            label: "Oferta",
+            href: "/oferta",
+            footerColumn: true,
+            children: [{ label: "Konsultacja", href: "/oferta/konsultacja" }],
+          },
+        ]}
+      />,
+    );
+    expect(
+      screen.getAllByRole("button", { name: "Ustawienia plików cookies" }),
+    ).toHaveLength(1);
+    expect(
+      screen.getByRole("navigation", { name: "Oferta" }),
+    ).not.toHaveTextContent("Ustawienia plików cookies");
+  });
+
+  it("shows the site's newsletter form only when given", () => {
+    const { rerender } = render(<SiteFooter navigation={[home]} />);
+    expect(
+      screen.queryByRole("form", { name: "Zapis na newsletter" }),
+    ).not.toBeInTheDocument();
+    rerender(
+      <SiteFooter
+        navigation={[home]}
+        newsletter={<form aria-label="Zapis na newsletter" />}
+      />,
+    );
+    expect(
+      screen.getByRole("form", { name: "Zapis na newsletter" }),
+    ).toBeInTheDocument();
+  });
 });

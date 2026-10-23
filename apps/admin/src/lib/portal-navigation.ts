@@ -19,14 +19,19 @@ export const adminNavigation: PortalNavigationSection[] = [
       { label: "Specjaliści", href: "/specjalisci", icon: "specialists" },
       { label: "Gabinety", href: "/gabinety", icon: "rooms" },
       { label: "Oferta", href: "/oferta", icon: "services" },
+      { label: "Kody rabatowe", href: "/kody-rabatowe", icon: "discounts" },
     ],
   },
   {
     label: "STRONA",
     items: [
       { label: "CMS", href: "/cms", icon: "cms" },
+      { label: "Warsztaty", href: "/warsztaty", icon: "workshops" },
+      { label: "Artykuły", href: "/artykuly", icon: "articles" },
+      { label: "E-booki", href: "/ebooki", icon: "ebooks" },
       { label: "Ogłoszenia", href: "/ogloszenia", icon: "announcements" },
       { label: "E-maile", href: "/maile", icon: "emails" },
+      { label: "Newsletter", href: "/newsletter", icon: "newsletter" },
     ],
   },
   {

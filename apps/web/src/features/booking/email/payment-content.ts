@@ -4,6 +4,7 @@ import { deadlineLabel, localTime, visitLabel } from "../visit-label";
 import {
   contactLineOf,
   place,
+  placeRow,
   type ConfirmationOptions,
   type VisitEmailContent,
 } from "./confirmation-content";
@@ -49,7 +50,7 @@ function visitRows(
       "Termin",
       `${visitLabel(visit.startsAt, timeZone)}–${localTime(visit.endsAt, timeZone)}`,
     ],
-    ["Miejsce", place(visit)],
+    ["Miejsce", placeRow(visit)],
   ];
 }
 
@@ -105,27 +106,39 @@ export function reservationContent(
     throw new Error("A reservation has a time to pay by");
   const due = deadlineLabel(visit.paymentDueAt, timeZone);
   const manageUrl = `${siteUrl}/wizyta/${visit.manageToken}`;
+  // A client's own reservation is confirmed from this e-mail first.
+  const confirmBy =
+    kind === "reserved" && visit.confirmBy
+      ? deadlineLabel(visit.confirmBy, timeZone)
+      : null;
   const rows: [string, string][] = [
     ...visitRows(visit, timeZone),
     ["Do zapłaty", formatPrice(visit)],
+    ...(confirmBy ? [["Potwierdź do", confirmBy] as [string, string]] : []),
     ["Zapłać do", due],
     ["Numer rezerwacji", visit.reference],
   ];
   const greeting = `Dzień dobry, ${visit.clientName}!`;
-  const intro = `${
-    kind === "reserved"
-      ? visit.bookedBy === "centre"
-        ? "Zarezerwowaliśmy dla Ciebie wizytę w Kolor Sensu."
-        : "Dziękujemy za rezerwację wizyty w Kolor Sensu."
-      : "Twoja wizyta w Kolor Sensu nie jest jeszcze opłacona."
-  } Opłać ją online do ${due}. Jeśli nie zapłacisz do tego czasu, anulujemy rezerwację, a termin wróci do grafiku.`;
+  const intro = confirmBy
+    ? `Dziękujemy za rezerwację wizyty w Kolor Sensu. Potwierdź ją przyciskiem poniżej do ${confirmBy}, a termin poczeka na Ciebie; bez potwierdzenia wróci do grafiku. Potem opłać wizytę online do ${due}.`
+    : `${
+        kind === "reserved"
+          ? visit.bookedBy === "centre"
+            ? "Zarezerwowaliśmy dla Ciebie wizytę w Kolor Sensu."
+            : "Dziękujemy za rezerwację wizyty w Kolor Sensu."
+          : "Twoja wizyta w Kolor Sensu nie jest jeszcze opłacona."
+      } Opłać ją online do ${due}. Jeśli nie zapłacisz do tego czasu, anulujemy rezerwację, a termin wróci do grafiku.`;
   const contactLine = contactLineOf(contact);
-  const buttonLabel = "Zapłać za wizytę";
+  const buttonLabel = confirmBy ? "Potwierdź rezerwację" : "Zapłać za wizytę";
   const copy = RESERVATION_COPY[kind];
   return {
-    subject: copy.subject(visit.reference, due),
-    preview: `${visit.serviceName}, ${visitLabel(visit.startsAt, timeZone)} – opłać do ${due}`,
-    heading: copy.heading,
+    subject: confirmBy
+      ? `Potwierdź rezerwację wizyty ${visit.reference} do ${confirmBy}`
+      : copy.subject(visit.reference, due),
+    preview: `${visit.serviceName}, ${visitLabel(visit.startsAt, timeZone)} – ${
+      confirmBy ? `potwierdź do ${confirmBy}` : `opłać do ${due}`
+    }`,
+    heading: confirmBy ? "Potwierdź swoją rezerwację" : copy.heading,
     greeting,
     intro,
     rows,

@@ -1,7 +1,11 @@
 "use client";
 
-import { BookingField, ConsentCheckbox } from "@repo/ui/booking";
-import { PrimaryButton, SecondaryButton } from "@repo/ui/public-site";
+import {
+  NEWSLETTER_CONSENT_LINK_LABEL,
+  newsletterConsentLead,
+} from "@repo/contracts/newsletter";
+import { BookingField, ConsentCheckbox } from "@repo/ui/booking/fields";
+import { PrimaryButton, SecondaryButton } from "@repo/ui/public-site/actions";
 import { useActionState } from "react";
 import { saveDetailsAction, type DetailsFormState } from "./actions";
 import {
@@ -14,22 +18,44 @@ import {
 // Step 5: the client's details and consents. A plain form posted to the
 // server (it works before JavaScript loads); errors come back per field.
 // Then "Zapłać teraz", or, when the visit is far enough ahead, "Zarezerwuj,
-// zapłacę później" (R11): paid from the e-mailed link by `payLater`.
+// zapłacę później" (R11): paid from the e-mailed link by `payLater`. While
+// the newsletter is on, a separate, unticked "send me the newsletter" (its
+// own consent; a link to confirm it follows by e-mail).
 
 export function DetailsForm({
   saved,
+  prefill = null,
   payLater,
+  free = false,
+  newsletterController = null,
 }: {
   saved: DetailsFormValues | null;
+  /**
+   * What the client gave for a time they changed ("Zmień termin"): filled
+   * in again, but not saved yet, and the consents are ticked anew.
+   */
+  prefill?: Pick<
+    DetailsFormValues,
+    "name" | "email" | "phone" | "notes"
+  > | null;
+  /** A discount code covers the whole price: nothing to pay. */
+  free?: boolean;
   /** "8 października 2030, godz. 11:00", or null: pay now only. */
   payLater: string | null;
+  /** Who handles the newsletter's data; none: the newsletter is off. */
+  newsletterController?: string | null;
 }) {
   const [state, action, pending] = useActionState<DetailsFormState, FormData>(
     saveDetailsAction,
     saved ? { status: "saved" } : { status: "idle" },
   );
   const values =
-    state.status === "invalid" ? state.values : (saved ?? undefined);
+    state.status === "invalid"
+      ? state.values
+      : (saved ??
+        (prefill
+          ? { ...prefill, acceptTerms: false, acceptPrivacy: false }
+          : undefined));
   const errors = state.status === "invalid" ? state.errors : {};
 
   return (
@@ -119,12 +145,31 @@ export function DetailsForm({
         />
       </fieldset>
 
+      {newsletterController ? (
+        <fieldset className="grid gap-2">
+          <legend className="text-small text-ink mb-1 font-medium">
+            Newsletter (dobrowolnie)
+          </legend>
+          <ConsentCheckbox
+            defaultChecked={values?.newsletter}
+            linkHref="/polityka-prywatnosci"
+            linkLabel={NEWSLETTER_CONSENT_LINK_LABEL}
+            name="newsletter"
+            text={newsletterConsentLead(newsletterController)}
+          />
+          <p className="text-small text-text-muted">
+            Wyślemy osobny e-mail z linkiem do potwierdzenia zapisu. Rezerwacja
+            nie zależy od tej zgody.
+          </p>
+        </fieldset>
+      ) : null}
+
       <div className="grid gap-3">
         <div className="flex flex-wrap gap-3">
           <PrimaryButton arrow disabled={pending} type="submit">
-            Zapłać teraz
+            {free ? "Potwierdź wizytę" : "Zapłać teraz"}
           </PrimaryButton>
-          {payLater ? (
+          {payLater && !free ? (
             <SecondaryButton
               disabled={pending}
               name={INTENT_FIELD}
@@ -136,9 +181,11 @@ export function DetailsForm({
           ) : null}
         </div>
         <p className="text-small text-text-muted">
-          {payLater
-            ? `Płacisz online. Jeśli wybierzesz płatność później, wyślemy Ci link e-mailem; opłać wizytę do ${payLater}, inaczej rezerwacja zostanie anulowana.`
-            : "Do wizyty zostało niewiele czasu, więc płatność jest potrzebna od razu."}
+          {free
+            ? "Kod rabatowy pokrywa całą cenę: potwierdzimy wizytę bez płatności."
+            : payLater
+              ? `Płacisz online. Jeśli wybierzesz płatność później, wyślemy Ci link e-mailem; opłać wizytę do ${payLater}, inaczej rezerwacja zostanie anulowana.`
+              : "Do wizyty zostało niewiele czasu, więc płatność jest potrzebna od razu."}
         </p>
       </div>
     </form>

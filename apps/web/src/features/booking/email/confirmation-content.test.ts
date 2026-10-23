@@ -21,6 +21,7 @@ const visit = {
   bookedBy: "client",
   paid: true,
   paymentDueAt: null,
+  confirmBy: null,
 } satisfies ClaimedBookingEmail;
 
 const options = {
@@ -66,7 +67,7 @@ describe("confirmationContent", () => {
     expect(content.manageUrl).toBe("https://kolorsensu.pl/wizyta/link-token");
   });
 
-  it("says an online visit is online", () => {
+  it("says an online visit is online, and that its link comes before it", () => {
     const online = confirmationContent(
       {
         ...visit,
@@ -77,7 +78,13 @@ describe("confirmationContent", () => {
       },
       options,
     );
-    expect(online.rows).toContainEqual(["Miejsce", "Online"]);
+    expect(online.rows).toContainEqual([
+      "Miejsce",
+      "Online. Link do spotkania wyślemy Ci przed wizytą.",
+    ]);
+    expect(online.text).toContain("Link do spotkania wyślemy Ci przed wizytą.");
+    expect(online.ics).toContain("LOCATION:Online");
+    expect(content.text).not.toContain("Link do spotkania");
   });
 
   it("has a plain-text version with everything that matters", () => {

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AnnouncementBar, type SiteAnnouncement } from "./announcement-bar";
+import { CursorRing } from "./cursor-ring";
 import { JsonLd } from "./json-ld";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
@@ -19,6 +20,7 @@ import { SkipLink } from "./skip-link";
 //
 // plus the centre as schema.org structured data when the site's origin is
 // known. Pages render their sections as children; each page has one <h1>.
+// The mouse's companion ring (CursorRing) follows on every page.
 
 export interface SiteLayoutProps {
   navigation: readonly SiteNavItem[];
@@ -37,6 +39,8 @@ export interface SiteLayoutProps {
   announcement?: SiteAnnouncement | null;
   /** The company in one line, in the footer (Ustawienia → Centrum). */
   company?: string | null;
+  /** The newsletter's sign-up form, in the footer (when it is on). */
+  newsletter?: ReactNode;
   children: ReactNode;
 }
 
@@ -53,6 +57,7 @@ export function SiteLayout({
   intro = true,
   announcement = null,
   company = null,
+  newsletter = null,
   children,
 }: SiteLayoutProps) {
   return (
@@ -81,7 +86,9 @@ export function SiteLayout({
         about={about}
         year={year}
         company={company}
+        newsletter={newsletter}
       />
+      <CursorRing />
       {siteUrl ? (
         <JsonLd
           data={{

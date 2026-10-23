@@ -1,7 +1,9 @@
 import Image, { type ImageProps } from "next/image";
 import type { CSSProperties, ReactNode } from "react";
+import { preload } from "react-dom";
 import { cn } from "../lib/utils";
 import { CaptionMotion } from "./watercolor-caption-motion";
+import { ParallaxLayer } from "./watercolor-parallax";
 import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
 
 // Server-safe on purpose: no hooks, no browser APIs, no "use client" here.
@@ -16,6 +18,12 @@ import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
 //   │                         ancestor, as the page's <main> is
 //   ├── .ks-wc__photo         the uploaded photo, cropped with object-fit:
 //   │                         cover and cut by the dry-brush photo mask
+//   ├── .ks-wc__parallax      optional second decorative image in the
+//   │                         backdrop's frame, over the photo's edges (e.g.
+//   │                         drops of paint around it), drifting on scroll:
+//   │                         its own tiny client island (ParallaxLayer:
+//   │                         watercolor-parallax.tsx), still under reduced
+//   │                         motion; painted in with the backdrop
 //   ├── .ks-wc__caption       optional handwritten overlay (real text),
 //   │                         its own tiny client island (CaptionMotion:
 //   │                         watercolor-caption-motion.tsx) for a discreet
@@ -33,9 +41,13 @@ import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
 // reveals them through a matte: the backdrop painted in with brush strokes
 // from both sides, the photo spreading in blooms from its middle while the
 // backdrop is still being painted. It ends on exactly this static
-// composition.
+// composition. For the hero (`priority`), the page's largest paint, a phone
+// shows the photo at once and paints only the backdrop around it.
 
 /** The approved painted backdrop: dusty pink left, sage green right. */
+/** The photo layer's dry-brush mask (public-site.css, .ks-wc__photo). */
+export const photoMaskSrc = "/watercolor/photo-mask.png";
+
 export const defaultWatercolorSrc = "/watercolor/watercolor-background.webp";
 
 export interface WatercolorImageProps {
@@ -49,8 +61,17 @@ export interface WatercolorImageProps {
    * decorative (the surrounding text already says everything).
    */
   alt: string;
-  /** Painted backdrop behind the photo. `null` leaves it out. */
+  /**
+   * Painted backdrop behind the photo. `null` leaves it out. It fills the
+   * backdrop's frame (16 : 10): another shape is cropped to it.
+   */
   watercolorSrc?: ImageProps["src"] | null;
+  /**
+   * Optional transparent image in the backdrop's frame, over the photo's
+   * edges, that drifts on scroll (parallax), e.g. drops of paint around
+   * the photo.
+   */
+  parallaxSrc?: ImageProps["src"] | null;
   /**
    * Ratio of the component's box (the photo; the watercolor overflows it).
    * The mask and the backdrop are drawn for 3 / 2 (the default); ratios up
@@ -79,7 +100,9 @@ export interface WatercolorImageProps {
    * backdrop is painted in with brush strokes from both sides, the photo
    * spreads in blooms from its middle outward, then the caption appears
    * (about 1.15 s). "none"
-   * (default) renders the static composition only.
+   * (default) renders the static composition only. With `priority`, a
+   * screen narrower than 64rem shows the photo at once (it is the page's
+   * largest paint) and paints only the backdrop and the caption.
    */
   animationPreset?: "none" | "watercolor-reveal";
   /**
@@ -93,14 +116,24 @@ export interface WatercolorImageProps {
   style?: CSSProperties;
 }
 
+/**
+ * The painted photo's look, as the site's shared settings set it (the CMS's
+ * "Ustawienia wspólne"): passed on by the sections that show the photo.
+ */
+export type WatercolorLook = Pick<
+  WatercolorImageProps,
+  "watercolorSrc" | "parallaxSrc"
+>;
+
 export function WatercolorImage({
   src,
   alt,
   watercolorSrc = defaultWatercolorSrc,
+  parallaxSrc = null,
   aspectRatio,
   objectPosition = "50% 50%",
   // The layers are about 1.17x the box (the watercolor overflows it).
-  sizes = "(min-width: 1024px) 70vw, 117vw",
+  sizes = "(min-width: 1024px) 70vw, calc(117vw - 3rem)",
   priority = false,
   quality,
   caption,
@@ -111,6 +144,17 @@ export function WatercolorImage({
   imageClassName,
   style,
 }: WatercolorImageProps) {
+  // A masked layer paints only once its mask is in, and the stylesheet
+  // reveals the mask late: for the hero (the page's largest paint) it is
+  // fetched from the start. CSS masks are fetched in CORS mode: the preload
+  // must be too, or the browser fetches the mask a second time.
+  if (priority) {
+    preload(photoMaskSrc, {
+      as: "image",
+      fetchPriority: "high",
+      crossOrigin: "anonymous",
+    });
+  }
   const Root = caption ? "figure" : "div";
   const loading = priority ? undefined : "lazy";
   const rootProps = {
@@ -147,6 +191,17 @@ export function WatercolorImage({
           style={{ objectPosition }}
         />
       </div>
+      {parallaxSrc ? (
+        <ParallaxLayer>
+          <Image
+            src={parallaxSrc}
+            alt=""
+            fill
+            sizes={sizes}
+            loading={priority ? "eager" : "lazy"}
+          />
+        </ParallaxLayer>
+      ) : null}
       {caption ? (
         <CaptionMotion>
           {caption}
@@ -165,6 +220,7 @@ export function WatercolorImage({
     <WatercolorReveal
       as={Root}
       reducedMotionMode={reducedMotionMode}
+      photoAtOnceOnPhones={priority}
       {...rootProps}
     >
       {layers}

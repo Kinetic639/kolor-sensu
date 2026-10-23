@@ -22,7 +22,11 @@ export const metadata: Metadata = {
 export default async function BookingConfirmationPage({
   searchParams,
 }: PageProps<"/umow-wizyte/potwierdzenie">) {
-  const { sesja } = await searchParams;
+  const { sesja, bezplatna, zarezerwowana } = await searchParams;
+  // A visit a discount code made free: confirmed, nothing was paid.
+  if (bezplatna === "1") return <FreeConfirmation />;
+  // Reserved to pay later: confirmed from the e-mail, not here.
+  if (zarezerwowana === "1") return <CheckEmail />;
   const sessionId =
     typeof sesja === "string" && /^cs_/.test(sesja) ? sesja : null;
   if (!sessionId) redirect(bookingHref({}));
@@ -52,7 +56,11 @@ export default async function BookingConfirmationPage({
       : null;
 
   const status = visit?.booking.status;
-  const confirmed = status === "confirmed" || outcome === "confirmed";
+  const refunded = outcome === "refund_payment";
+  const settled = outcome === "already_settled";
+  // A second payment for a visit paid already says it went back.
+  const confirmed =
+    !refunded && (status === "confirmed" || outcome === "confirmed");
   const waiting = !confirmed && status === "awaiting_payment";
   const lost = outcome === "slot_lost";
 
@@ -71,10 +79,20 @@ export default async function BookingConfirmationPage({
             title: "Termin został zajęty",
             lead: "Płatność dotarła po tym, jak termin zajęła inna osoba. Zwróciliśmy pieniądze; wybierz, proszę, inny termin.",
           }
-        : {
-            title: "Płatność nie została zakończona",
-            lead: "Nie pobraliśmy żadnej opłaty. Możesz spróbować ponownie albo wybrać inny termin.",
-          };
+        : refunded
+          ? {
+              title: "Zwróciliśmy tę płatność",
+              lead: "Ta wizyta była już opłacona albo jej cena się zmieniła, więc tę płatność oddaliśmy w całości. Stan wizyty znajdziesz w linku z wiadomości e-mail.",
+            }
+          : settled
+            ? {
+                title: "Ta płatność jest już rozliczona",
+                lead: "Stan wizyty i ewentualnego zwrotu znajdziesz w linku z wiadomości e-mail.",
+              }
+            : {
+                title: "Płatność nie została zakończona",
+                lead: "Nie pobraliśmy żadnej opłaty. Możesz spróbować ponownie albo wybrać inny termin.",
+              };
 
   if (!visit) {
     return (
@@ -106,5 +124,51 @@ export default async function BookingConfirmationPage({
         )}
       </div>
     </BookingStep>
+  );
+}
+
+/** A visit confirmed without a payment: its code covered the whole price. */
+async function FreeConfirmation() {
+  const visit = await readGuestVisit();
+  if (!visit || visit.booking.status !== "confirmed") redirect(bookingHref({}));
+  return (
+    <BookingStep
+      current={6}
+      lead="Kod rabatowy pokrył całą cenę, więc niczego nie pobraliśmy. Potwierdzenie wyślemy na Twój adres e-mail."
+      title="Wizyta potwierdzona"
+      visit={visit}
+    >
+      <PrimaryButton arrow asChild>
+        <Link href="/">Wróć na stronę główną</Link>
+      </PrimaryButton>
+    </BookingStep>
+  );
+}
+
+/**
+ * Reserved to pay later: the link to confirm it went by e-mail, so the
+ * address is checked before the time is held for longer.
+ */
+function CheckEmail() {
+  return (
+    <div className="max-w-page px-gutter pb-section-sm mx-auto grid gap-6 pt-8 lg:pt-12">
+      <h1 className="font-display text-display text-ink">
+        Sprawdź skrzynkę e-mail
+      </h1>
+      <div className="text-body text-text-muted grid max-w-2xl gap-3">
+        <p>
+          Wysłaliśmy Ci wiadomość z linkiem do rezerwacji. Otwórz go i kliknij
+          „Potwierdzam rezerwację” w ciągu 30 minut, a termin poczeka na Ciebie
+          do czasu płatności.
+        </p>
+        <p>
+          Bez potwierdzenia termin wróci do wolnych terminów. Nie widzisz
+          wiadomości? Zajrzyj do folderu spam albo oferty.
+        </p>
+      </div>
+      <PrimaryButton arrow asChild className="justify-self-start">
+        <Link href="/">Wróć na stronę główną</Link>
+      </PrimaryButton>
+    </div>
   );
 }

@@ -99,7 +99,12 @@ export type FulfillmentOutcome =
   | "confirmed"
   | "already_confirmed"
   | "awaiting_payment"
+  /** The time was taken meanwhile, or the visit cancelled: refund it. */
   | "slot_lost"
+  /** Paid twice, or not the visit's price: refund this payment. */
+  | "refund_payment"
+  /** Settled before (confirmed or refunded): nothing to do. */
+  | "already_settled"
   | "unknown_session";
 
 /** A completed session: confirms the visit (idempotent). */
@@ -143,6 +148,45 @@ export async function recordRefund(
   });
   if (error) throw error;
   return Boolean(data);
+}
+
+/**
+ * A dispute (a chargeback) on a visit's or a workshop seat's payment,
+ * opened or closed: written to the visit's history, the admins told. Found
+ * by the payment, or by its reference when the payment is not settled yet.
+ * The reference, or null when the payment is neither.
+ */
+export async function recordDispute(
+  client: Client,
+  dispute: {
+    paymentIntentId: string;
+    disputeId: string;
+    status: string;
+    amountMinor: number;
+    reason: string;
+    closed: boolean;
+    /** The visit's or the seat's (the payment's metadata), if known. */
+    reference?: string | null;
+  },
+) {
+  const { data, error } = await client.rpc("record_dispute", {
+    p_payment_intent_id: dispute.paymentIntentId,
+    p_dispute_id: dispute.disputeId,
+    p_status: dispute.status,
+    p_amount_minor: dispute.amountMinor,
+    p_reason: dispute.reason,
+    p_closed: dispute.closed,
+    p_reference: dispute.reference ?? undefined,
+  });
+  if (error) throw error;
+  return data ?? null;
+}
+
+/** Checkout Sessions still pending two hours on, to ask Stripe about. */
+export async function listStuckPayments(client: Client): Promise<string[]> {
+  const { data, error } = await client.rpc("list_stuck_payments");
+  if (error) throw error;
+  return (data ?? []).map((row) => row.checkout_session_id);
 }
 
 /**

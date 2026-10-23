@@ -102,6 +102,7 @@ export default async function BookingsPage({
             row={open.row}
             client={open.client}
             closing={open.closing}
+            discount={open.discount}
             intake={open.intake}
             specialistAvatar={avatars[open.row.specialistId]}
             tab={params.karta}

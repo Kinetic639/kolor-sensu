@@ -156,55 +156,56 @@ const hardBreakNodeSchema: z.ZodType<RichTextHardBreakNode> = z
   .object({ type: z.literal("hardBreak") })
   .strict();
 
-const inlineNodeSchema: z.ZodType<RichTextInlineNode> = z.union([
+export const richTextInlineNodeSchema: z.ZodType<RichTextInlineNode> = z.union([
   textNodeSchema,
   hardBreakNodeSchema,
 ]);
 
-const blockNodeSchema: z.ZodType<RichTextBlockNode> = z.lazy(() =>
-  z.union([
-    z
-      .object({
-        type: z.literal("paragraph"),
-        content: z.array(inlineNodeSchema).optional(),
-      })
-      .strict(),
-    z
-      .object({
-        type: z.literal("heading"),
-        attrs: z
-          .object({ level: z.union([z.literal(2), z.literal(3)]) })
-          .strict(),
-        content: z.array(inlineNodeSchema).optional(),
-      })
-      .strict(),
-    z
-      .object({
-        type: z.literal("bulletList"),
-        content: z.array(listItemNodeSchema).min(1),
-      })
-      .strict(),
-    z
-      .object({
-        type: z.literal("orderedList"),
-        content: z.array(listItemNodeSchema).min(1),
-      })
-      .strict(),
-    z
-      .object({
-        type: z.literal("blockquote"),
-        content: z.array(blockNodeSchema).min(1),
-      })
-      .strict(),
-    z.object({ type: z.literal("horizontalRule") }).strict(),
-  ]),
+export const richTextBlockNodeSchema: z.ZodType<RichTextBlockNode> = z.lazy(
+  () =>
+    z.union([
+      z
+        .object({
+          type: z.literal("paragraph"),
+          content: z.array(richTextInlineNodeSchema).optional(),
+        })
+        .strict(),
+      z
+        .object({
+          type: z.literal("heading"),
+          attrs: z
+            .object({ level: z.union([z.literal(2), z.literal(3)]) })
+            .strict(),
+          content: z.array(richTextInlineNodeSchema).optional(),
+        })
+        .strict(),
+      z
+        .object({
+          type: z.literal("bulletList"),
+          content: z.array(listItemNodeSchema).min(1),
+        })
+        .strict(),
+      z
+        .object({
+          type: z.literal("orderedList"),
+          content: z.array(listItemNodeSchema).min(1),
+        })
+        .strict(),
+      z
+        .object({
+          type: z.literal("blockquote"),
+          content: z.array(richTextBlockNodeSchema).min(1),
+        })
+        .strict(),
+      z.object({ type: z.literal("horizontalRule") }).strict(),
+    ]),
 );
 
 const listItemNodeSchema: z.ZodType<RichTextListItemNode> = z.lazy(() =>
   z
     .object({
       type: z.literal("listItem"),
-      content: z.array(blockNodeSchema).min(1),
+      content: z.array(richTextBlockNodeSchema).min(1),
     })
     .strict(),
 );
@@ -223,7 +224,7 @@ function documentByteLength(value: unknown): number {
 export const richTextDocumentSchema: z.ZodType<RichTextDocument> = z
   .object({
     type: z.literal("doc"),
-    content: z.array(blockNodeSchema).min(1),
+    content: z.array(richTextBlockNodeSchema).min(1),
   })
   .strict()
   .superRefine((document, context) => {

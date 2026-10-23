@@ -37,8 +37,6 @@ export function SiteLogo({
   return (
     <Link
       href={href}
-      // The name and the tagline are two blocks; say them as one phrase.
-      aria-label={tagline ? `Kolor Sensu, ${tagline}` : undefined}
       className={cn(
         "focus-visible:outline-ring inline-flex shrink-0 items-center gap-2.5 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4",
         className,
@@ -64,7 +62,12 @@ export function SiteLogo({
           <span className="text-primary">Sensu</span>
         </span>
         {tagline ? (
-          <span className="text-text-muted text-[0.75rem]">{tagline}</span>
+          <span className="text-text-muted text-[0.75rem]">
+            {/* The name and the tagline are two blocks; the link's text
+                says them as one phrase, so it needs no label of its own
+                (which would differ from what it shows). */}
+            <span className="sr-only">,</span> {tagline}
+          </span>
         ) : null}
       </span>
     </Link>

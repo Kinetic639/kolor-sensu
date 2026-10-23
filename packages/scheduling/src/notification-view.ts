@@ -32,6 +32,12 @@ export interface NotificationLike {
     refundDueMinor: number | null;
     priceMinor: number | null;
     currencyCode: string | null;
+    /** A dispute: the amount, Stripe's status and reason. */
+    amountMinor?: number | null;
+    disputeStatus?: string | null;
+    disputeReason?: string | null;
+    /** The workshop a workshop notification is about. */
+    workshopId?: string | null;
   };
 }
 
@@ -105,6 +111,28 @@ const PROFILE_KINDS = new Set([
   "profile_rejected",
 ]);
 const SOON_MS = 48 * 60 * 60 * 1000;
+
+const WORKSHOP_KINDS: Record<
+  string,
+  [title: string, tone: VisitTone, icon: NotificationIcon]
+> = {
+  workshop_signup: ["Nowy zapis na warsztat", "success", "new"],
+  workshop_cancelled: ["Rezygnacja z warsztatu", "warning", "cancelled"],
+  workshop_full: ["Warsztat ma komplet", "success", "paid"],
+  workshop_minimum: ["Za mało chętnych", "warning", "closing"],
+};
+
+/** Stripe's dispute reasons, as the centre reads them. */
+const DISPUTE_REASONS: Record<string, string> = {
+  fraudulent: "Posiadacz karty nie rozpoznaje płatności",
+  duplicate: "Płatność pobrana dwa razy",
+  product_not_received: "Usługa nie została wykonana",
+  product_unacceptable: "Usługa niezgodna z opisem",
+  subscription_canceled: "Usługa była anulowana",
+  credit_not_processed: "Brak obiecanego zwrotu",
+  unrecognized: "Klient nie rozpoznaje płatności",
+  general: "Inny powód",
+};
 
 export function notificationView(
   notification: NotificationLike,
@@ -233,6 +261,49 @@ export function notificationView(
     };
   }
 
+  // A workshop: a sign-up, a seat given up, full, its minimum not reached;
+  // leading to the workshop (the admin's page of it, the specialist's list).
+  if (WORKSHOP_KINDS[kind]) {
+    const [title, tone, icon] = WORKSHOP_KINDS[kind];
+    const when = d.startsAt ? visitTime(d.startsAt, "dd.MM, HH:mm") : null;
+    return {
+      id: notification.id,
+      title,
+      reference: d.reference,
+      summary: [d.clientName, d.serviceName, when].filter(Boolean).join(" · "),
+      badges: [],
+      details: [
+        ...(d.serviceName ? [{ label: "Warsztat", value: d.serviceName }] : []),
+        ...(when ? [{ label: "Termin", value: when }] : []),
+        ...(kind === "workshop_minimum"
+          ? [
+              {
+                label: "Do decyzji",
+                value:
+                  "Zapisało się mniej osób niż minimum. Potwierdź warsztat albo go odwołaj.",
+              },
+            ]
+          : []),
+        ...(admin && kind === "workshop_signup" && d.priceMinor
+          ? [{ label: "Zapłacono", value: money(d.priceMinor) }]
+          : []),
+      ],
+      tone,
+      icon,
+      visitId: null,
+      href: d.workshopId
+        ? admin
+          ? `/warsztaty/${d.workshopId}`
+          : "/warsztaty"
+        : null,
+      linkText: d.workshopId ? "Warsztat" : null,
+      person: null,
+      day,
+      time: local(notification.createdAt, "HH:mm"),
+      unread: notification.readAt === null,
+    };
+  }
+
   let title: string;
   let tone: VisitTone;
   let icon: NotificationIcon;
@@ -246,6 +317,21 @@ export function notificationView(
     [title, tone, icon] = ["Rezerwacja anulowana", "danger", "cancelled"];
   } else if (kind === "refunded") {
     [title, tone, icon] = ["Zwrot pieniędzy", "info", "refund"];
+  } else if (kind === "disputed") {
+    [title, tone, icon] = ["Spór o płatność", "danger", "refund"];
+  } else if (kind === "dispute_closed") {
+    [title, tone, icon] =
+      d.disputeStatus === "won"
+        ? ["Spór wygrany", "success", "refund"]
+        : d.disputeStatus === "lost"
+          ? ["Spór przegrany", "danger", "refund"]
+          : ["Spór zakończony", "neutral", "refund"];
+  } else if (kind === "unpaid_limit") {
+    [title, tone, icon] = [
+      "Za dużo nieopłaconych rezerwacji",
+      "warning",
+      "reserved",
+    ];
   } else {
     [title, tone, icon] = ["Zmiana w rezerwacji", "neutral", "new"];
   }
@@ -275,6 +361,12 @@ export function notificationView(
       id: "centre",
       label: "Umówiona przez centrum",
       tone: "neutral",
+    });
+  } else if (kind === "unpaid_limit") {
+    badges.push({
+      id: "system",
+      label: "Musi zapłacić od razu",
+      tone: "warning",
     });
   } else if (changed && actor === "system") {
     badges.push({
@@ -360,6 +452,33 @@ export function notificationView(
   }
   if (admin && kind === "refunded" && d.refundMinor !== null) {
     details.push({ label: "Zwrócono", value: money(d.refundMinor) });
+  }
+  if (kind === "disputed" || kind === "dispute_closed") {
+    if (d.amountMinor != null) {
+      details.push({ label: "Kwota sporu", value: money(d.amountMinor) });
+    }
+    if (d.disputeReason) {
+      details.push({
+        label: "Powód",
+        value: DISPUTE_REASONS[d.disputeReason] ?? d.disputeReason,
+      });
+    }
+    if (kind === "disputed") {
+      details.push({
+        label: "Co zrobić",
+        value:
+          "Bank klienta cofnął płatność. Odpowiedz na spór w panelu Stripe w wyznaczonym terminie i dołącz potwierdzenie wizyty.",
+        tone: "danger",
+      });
+    }
+  }
+  if (kind === "unpaid_limit") {
+    details.push({
+      label: "Co się stało",
+      value:
+        "Ta osoba (ten sam e-mail, telefon albo urządzenie) ma już dwie nieopłacone rezerwacje, więc tę wizytę musi opłacić od razu. Wiele takich prób może oznaczać blokowanie terminów.",
+      tone: "warning",
+    });
   }
   if (d.reason && d.reason !== "unpaid") {
     details.push({ label: "Powód", value: d.reason });

@@ -10,12 +10,16 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { PageIntro } from "@/components/page-intro";
+import { ArticlesSection } from "@/features/education/articles-section";
+import { toPeople } from "@/features/education/article-page";
+import { getArticleCategories, getArticles } from "@/lib/education-data";
 import { bookingCta, siteUrl } from "@/content/site";
 import { bookingHref } from "@/features/booking/search-params";
 import { serviceHref } from "@/lib/site-frame";
 import {
   formatDuration,
   formatPrice,
+  NOT_TAKING_CLIENTS,
   offerModes,
   portraitPlaceholder,
   specialistHref,
@@ -55,10 +59,12 @@ export default async function SpecialistPage({
   params,
 }: PageProps<"/specjalisci/[slug]">) {
   const { slug } = await params;
-  const [specialist, all, offers] = await Promise.all([
+  const [specialist, all, offers, articles, categories] = await Promise.all([
     getSpecialist(slug),
     getSpecialists(),
     getSpecialistOffers(slug),
+    getArticles(),
+    getArticleCategories(),
   ]);
   if (!specialist) {
     // An address the admin has since changed: send visitors (and search
@@ -80,11 +86,20 @@ export default async function SpecialistPage({
       <SpecialistProfileView
         actions={
           <>
-            <PrimaryButton asChild arrow>
-              <Link href={bookingHref({ specjalista: specialist.publicSlug })}>
-                {bookingCta.label}
-              </Link>
-            </PrimaryButton>
+            {specialist.active ? (
+              <PrimaryButton asChild arrow>
+                <Link
+                  href={bookingHref({ specjalista: specialist.publicSlug })}
+                >
+                  {bookingCta.label}
+                </Link>
+              </PrimaryButton>
+            ) : (
+              // Visible but not taking new clients (#63): no booking.
+              <p className="text-body text-text-muted">
+                {`Obecnie ${NOT_TAKING_CLIENTS}.`}
+              </p>
+            )}
             <SecondaryButton asChild>
               <Link href="/specjalisci">Wszyscy specjaliści</Link>
             </SecondaryButton>
@@ -119,6 +134,17 @@ export default async function SpecialistPage({
         shortBio={specialist.shortBio}
         splash={specialistSplash(index)}
       />
+      <ArticlesSection
+        articles={articles.filter(
+          (one) =>
+            one.authorKind === "specialist" &&
+            one.authorSpecialistId === specialist.specialistId,
+        )}
+        categories={categories}
+        heading={`Artykuły: ${specialist.displayName}`}
+        id="artykuly-autora"
+        people={toPeople(all)}
+      />
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -127,6 +153,11 @@ export default async function SpecialistPage({
           jobTitle: role,
           description: specialist.shortBio ?? undefined,
           url: `${siteUrl}${specialistHref(specialist.publicSlug)}`,
+          // A lasting address (zdjecie/route.ts), not the expiring one.
+          image:
+            specialist.photoUrl || specialist.portraitUrl
+              ? `${siteUrl}${specialistHref(specialist.publicSlug)}/zdjecie`
+              : undefined,
           worksFor: { "@type": "MedicalBusiness", name: "Kolor Sensu" },
           knowsLanguage: specialist.languages,
         }}

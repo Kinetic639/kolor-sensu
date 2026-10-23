@@ -3,11 +3,13 @@ import { createSupabasePublicClient } from "@repo/supabase/public";
 import { NextResponse } from "next/server";
 import { emailPreviews } from "@/features/booking/email/catalogue";
 import { siteUrl } from "@/features/booking/email/confirmation-server";
+import { newsletterEmailPreviews } from "@/features/newsletter/preview";
 import { getSiteFrame } from "@/lib/site-frame";
 import { getPublicSupabaseEnvironment } from "@/lib/supabase/environment";
 import { createSecretClient } from "@/lib/supabase/secret";
 
-// Every e-mail a client gets, for the admin's portal (CMS → E-maile): each
+// Every e-mail a client gets, for the admin's portal (CMS → E-maile), and
+// the newsletter's confirmation link: each
 // built by the same functions and template as the real ones, from a sample
 // visit, with the centre's contact, company and reminder settings. The
 // admin's token comes with the request; the database says whether they
@@ -37,15 +39,18 @@ export async function GET(request: Request) {
     getSiteFrame(),
     getCenterSettings(createSecretClient()),
   ]);
-  const previews = await emailPreviews(
-    {
-      siteUrl: siteUrl(),
-      timeZone: settings.timezone,
-      contact: { phone: contact?.phoneLabel, email: contact?.email },
-      visitReminderHours: settings.visitReminderHours,
-      paymentReminderHours: settings.paymentReminderHours,
-    },
-    company,
-  );
-  return NextResponse.json({ emails: previews });
+  const [previews, newsletter] = await Promise.all([
+    emailPreviews(
+      {
+        siteUrl: siteUrl(),
+        timeZone: settings.timezone,
+        contact: { phone: contact?.phoneLabel, email: contact?.email },
+        visitReminderHours: settings.visitReminderHours,
+        paymentReminderHours: settings.paymentReminderHours,
+      },
+      company,
+    ),
+    newsletterEmailPreviews(siteUrl(), company),
+  ]);
+  return NextResponse.json({ emails: [...previews, ...newsletter] });
 }

@@ -1,0 +1,64 @@
+// @vitest-environment jsdom
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { DetailsForm } from "./details-form";
+
+vi.mock("./actions", () => ({ saveDetailsAction: vi.fn() }));
+
+afterEach(cleanup);
+
+describe("the booking's details form", () => {
+  it("offers the newsletter, unticked, while it is on", () => {
+    render(
+      <DetailsForm
+        newsletterController="Kolor Sensu sp. z o.o."
+        payLater={null}
+        saved={null}
+      />,
+    );
+    const group = screen.getByRole("group", {
+      name: "Newsletter (dobrowolnie)",
+    });
+    const box = group.querySelector<HTMLInputElement>(
+      'input[name="newsletter"]',
+    );
+    expect(box).not.toBeNull();
+    expect(box!.checked).toBe(false);
+  });
+
+  it("leaves it out while the newsletter is off", () => {
+    render(<DetailsForm payLater={null} saved={null} />);
+    expect(
+      screen.queryByRole("group", { name: "Newsletter (dobrowolnie)" }),
+    ).toBeNull();
+  });
+
+  it("a new time keeps the details given before, the consents to tick again", () => {
+    render(
+      <DetailsForm
+        payLater={null}
+        prefill={{
+          name: "Ola Klientka",
+          email: "ola@example.invalid",
+          phone: "600 100 200",
+          notes: "Pierwsza wizyta",
+        }}
+        saved={null}
+      />,
+    );
+    expect(screen.getByLabelText(/Imię i nazwisko/)).toHaveProperty(
+      "value",
+      "Ola Klientka",
+    );
+    expect(screen.getByDisplayValue("ola@example.invalid")).toBeTruthy();
+    expect(screen.getByDisplayValue("600 100 200")).toBeTruthy();
+    for (const name of ["acceptTerms", "acceptPrivacy"]) {
+      const box = document.querySelector<HTMLInputElement>(
+        `input[name="${name}"]`,
+      );
+      expect(box?.checked).toBe(false);
+    }
+    // Not "saved": these are for the new visit, still to be sent.
+    expect(screen.queryByText(/Twoje dane są zapisane/)).toBeNull();
+  });
+});

@@ -5,7 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CookieConsent } from "./cookie-consent";
+import { COOKIE_CONSENT_VERSION, CookieConsent } from "./cookie-consent";
 import { FaqSection } from "./faq-section";
 import { JsonLd } from "./json-ld";
 import { SiteBreadcrumbs } from "./site-breadcrumbs";
@@ -110,6 +110,14 @@ describe("SiteLayout", () => {
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
   });
 
+  it("brings the mouse's ring along on every page, hidden from assistive tech", () => {
+    const { container } = render(page());
+    expect(container.querySelector(".ks-cursor")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+  });
+
   it("puts the logo, linking home, in the header", () => {
     render(page());
     const header = screen.getByRole("banner");
@@ -118,6 +126,8 @@ describe("SiteLayout", () => {
       name: "Kolor Sensu, Centrum psychoterapii i rozwoju",
     });
     expect(home).toHaveAttribute("href", "/");
+    // Named by what it shows (WCAG 2.5.3), not by a label over it.
+    expect(home).not.toHaveAttribute("aria-label");
     expect(home.querySelector("img")).toHaveAttribute("alt", "");
     expect(home.querySelector("img")!.getAttribute("src")).toContain(
       "logo-mark.png",
@@ -316,7 +326,12 @@ describe("CookieConsent", () => {
       within(notice).getByRole("button", { name: "Tylko niezbędne" }),
     );
     expect(onChoice).toHaveBeenCalledWith("necessary");
-    expect(window.localStorage.getItem("ks-cookie-consent")).toBe("necessary");
+    expect(
+      JSON.parse(window.localStorage.getItem("ks-cookie-consent")!),
+    ).toMatchObject({
+      version: COOKIE_CONSENT_VERSION,
+      categories: { external: false },
+    });
     expect(screen.queryByRole("region", { name: "Pliki cookies" })).toBeNull();
     unmount();
 

@@ -116,7 +116,12 @@ export type Database = {
           privacy_accepted_at: string | null;
           reference: string;
           refund_due_minor: number | null;
+          discount_code_id: string | null;
+          discount_minor: number;
+          list_price_minor: number | null;
           reschedule_count: number;
+          reservation_confirm_by: string | null;
+          reserved_by_key: string | null;
           room_id: string | null;
           service_id: string;
           specialist_id: string;
@@ -152,7 +157,12 @@ export type Database = {
           privacy_accepted_at?: string | null;
           reference: string;
           refund_due_minor?: number | null;
+          discount_code_id?: string | null;
+          discount_minor?: number;
+          list_price_minor?: number | null;
           reschedule_count?: number;
+          reservation_confirm_by?: string | null;
+          reserved_by_key?: string | null;
           room_id?: string | null;
           service_id: string;
           specialist_id: string;
@@ -188,7 +198,12 @@ export type Database = {
           privacy_accepted_at?: string | null;
           reference?: string;
           refund_due_minor?: number | null;
+          discount_code_id?: string | null;
+          discount_minor?: number;
+          list_price_minor?: number | null;
           reschedule_count?: number;
+          reservation_confirm_by?: string | null;
+          reserved_by_key?: string | null;
           room_id?: string | null;
           service_id?: string;
           specialist_id?: string;
@@ -267,6 +282,344 @@ export type Database = {
           },
         ];
       };
+      article_categories: {
+        Row: {
+          created_at: string;
+          description: string;
+          id: string;
+          name: string;
+          slug: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string;
+          id?: string;
+          name: string;
+          slug: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string;
+          id?: string;
+          name?: string;
+          slug?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      articles: {
+        Row: {
+          author_kind: string | null;
+          author_specialist_id: string | null;
+          body: Json | null;
+          category_id: string | null;
+          content_updated_at: string | null;
+          cover_alt: string | null;
+          cover_path: string | null;
+          created_at: string;
+          draft: Json;
+          ebook_id: string | null;
+          id: string;
+          lead: string | null;
+          og_image_path: string | null;
+          published_at: string | null;
+          reviewer_specialist_id: string | null;
+          seo_description: string | null;
+          seo_title: string | null;
+          slug: string | null;
+          sources: Json;
+          status: string;
+          title: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          author_kind?: string | null;
+          author_specialist_id?: string | null;
+          body?: Json | null;
+          category_id?: string | null;
+          content_updated_at?: string | null;
+          cover_alt?: string | null;
+          cover_path?: string | null;
+          created_at?: string;
+          draft?: Json;
+          ebook_id?: string | null;
+          id?: string;
+          lead?: string | null;
+          og_image_path?: string | null;
+          published_at?: string | null;
+          reviewer_specialist_id?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
+          slug?: string | null;
+          sources?: Json;
+          status?: string;
+          title?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          author_kind?: string | null;
+          author_specialist_id?: string | null;
+          body?: Json | null;
+          category_id?: string | null;
+          content_updated_at?: string | null;
+          cover_alt?: string | null;
+          cover_path?: string | null;
+          created_at?: string;
+          draft?: Json;
+          ebook_id?: string | null;
+          id?: string;
+          lead?: string | null;
+          og_image_path?: string | null;
+          published_at?: string | null;
+          reviewer_specialist_id?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
+          slug?: string | null;
+          sources?: Json;
+          status?: string;
+          title?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      discount_codes: {
+        Row: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          ends_on: string | null;
+          id: string;
+          kind: string;
+          max_uses: number | null;
+          note: string;
+          scope: string;
+          starts_on: string | null;
+          updated_at: string;
+          value: number;
+          workshop_id: string | null;
+        };
+        Insert: {
+          active?: boolean;
+          code: string;
+          created_at?: string;
+          ends_on?: string | null;
+          id?: string;
+          kind: string;
+          max_uses?: number | null;
+          note?: string;
+          scope?: string;
+          starts_on?: string | null;
+          updated_at?: string;
+          value: number;
+          workshop_id?: string | null;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          created_at?: string;
+          ends_on?: string | null;
+          id?: string;
+          kind?: string;
+          max_uses?: number | null;
+          note?: string;
+          scope?: string;
+          starts_on?: string | null;
+          updated_at?: string;
+          value?: number;
+          workshop_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "discount_codes_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: false;
+            referencedRelation: "workshops";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ebooks: {
+        Row: {
+          audience: string | null;
+          content_updated_at: string | null;
+          contents: Json | null;
+          cover_alt: string | null;
+          cover_path: string | null;
+          created_at: string;
+          description: Json | null;
+          draft: Json;
+          format: string | null;
+          id: string;
+          naffy_url: string | null;
+          show_price: boolean;
+          og_image_path: string | null;
+          published_at: string | null;
+          sample_path: string | null;
+          seo_description: string | null;
+          seo_title: string | null;
+          short_description: string | null;
+          slug: string | null;
+          status: string;
+          title: string | null;
+          updated_at: string;
+          video_url: string | null;
+        };
+        Insert: {
+          audience?: string | null;
+          content_updated_at?: string | null;
+          contents?: Json | null;
+          cover_alt?: string | null;
+          cover_path?: string | null;
+          created_at?: string;
+          description?: Json | null;
+          draft?: Json;
+          format?: string | null;
+          id?: string;
+          naffy_url?: string | null;
+          show_price?: boolean;
+          og_image_path?: string | null;
+          published_at?: string | null;
+          sample_path?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
+          short_description?: string | null;
+          slug?: string | null;
+          status?: string;
+          title?: string | null;
+          updated_at?: string;
+          video_url?: string | null;
+        };
+        Update: {
+          audience?: string | null;
+          content_updated_at?: string | null;
+          contents?: Json | null;
+          cover_alt?: string | null;
+          cover_path?: string | null;
+          created_at?: string;
+          description?: Json | null;
+          draft?: Json;
+          format?: string | null;
+          id?: string;
+          naffy_url?: string | null;
+          show_price?: boolean;
+          og_image_path?: string | null;
+          published_at?: string | null;
+          sample_path?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
+          short_description?: string | null;
+          slug?: string | null;
+          status?: string;
+          title?: string | null;
+          updated_at?: string;
+          video_url?: string | null;
+        };
+        Relationships: [];
+      };
+      article_services: {
+        Row: {
+          article_id: string;
+          service_id: string;
+        };
+        Insert: {
+          article_id?: string;
+          service_id?: string;
+        };
+        Update: {
+          article_id?: string;
+          service_id?: string;
+        };
+        Relationships: [];
+      };
+      article_specialists: {
+        Row: {
+          article_id: string;
+          specialist_id: string;
+        };
+        Insert: {
+          article_id?: string;
+          specialist_id?: string;
+        };
+        Update: {
+          article_id?: string;
+          specialist_id?: string;
+        };
+        Relationships: [];
+      };
+      article_slug_redirects: {
+        Row: {
+          article_id: string;
+          created_at: string;
+          old_slug: string;
+        };
+        Insert: {
+          article_id?: string;
+          created_at?: string;
+          old_slug?: string;
+        };
+        Update: {
+          article_id?: string;
+          created_at?: string;
+          old_slug?: string;
+        };
+        Relationships: [];
+      };
+      ebook_slug_redirects: {
+        Row: {
+          created_at: string;
+          ebook_id: string;
+          old_slug: string;
+        };
+        Insert: {
+          created_at?: string;
+          ebook_id?: string;
+          old_slug?: string;
+        };
+        Update: {
+          created_at?: string;
+          ebook_id?: string;
+          old_slug?: string;
+        };
+        Relationships: [];
+      };
+      contact_messages: {
+        Row: {
+          created_at: string;
+          email: string;
+          id: string;
+          message: string;
+          name: string;
+          notified_at: string | null;
+          phone: string | null;
+          sender_key: string;
+        };
+        Insert: {
+          created_at?: string;
+          email: string;
+          id?: string;
+          message: string;
+          name: string;
+          notified_at?: string | null;
+          phone?: string | null;
+          sender_key: string;
+        };
+        Update: {
+          created_at?: string;
+          email?: string;
+          id?: string;
+          message?: string;
+          name?: string;
+          notified_at?: string | null;
+          phone?: string | null;
+          sender_key?: string;
+        };
+        Relationships: [];
+      };
       center_public_profile: {
         Row: {
           created_at: string;
@@ -344,6 +697,8 @@ export type Database = {
           centre_payment_link_hours: number;
           client_retention_years: number | null;
           intake_retention_months: number;
+          workshops_in_menu: boolean;
+          workshops_on_home: boolean;
           legal_name: string | null;
           regon: string | null;
           registered_address: string | null;
@@ -374,6 +729,8 @@ export type Database = {
           centre_payment_link_hours?: number;
           client_retention_years?: number | null;
           intake_retention_months?: number;
+          workshops_in_menu?: boolean;
+          workshops_on_home?: boolean;
           legal_name?: string | null;
           regon?: string | null;
           registered_address?: string | null;
@@ -404,6 +761,8 @@ export type Database = {
           centre_payment_link_hours?: number;
           client_retention_years?: number | null;
           intake_retention_months?: number;
+          workshops_in_menu?: boolean;
+          workshops_on_home?: boolean;
           legal_name?: string | null;
           regon?: string | null;
           registered_address?: string | null;
@@ -426,6 +785,120 @@ export type Database = {
           timezone?: string;
           updated_at?: string;
           visit_reminder_hours?: number | null;
+        };
+        Relationships: [];
+      };
+      newsletter_issues: {
+        Row: {
+          broadcast_id: string | null;
+          closing: Json;
+          created_at: string;
+          id: string;
+          in_archive: boolean;
+          intro: Json;
+          items: Json;
+          number: number | null;
+          preview_text: string;
+          recipients: number | null;
+          send_at: string | null;
+          sent_by: string | null;
+          status: string;
+          subject: string;
+          updated_at: string;
+        };
+        Insert: {
+          broadcast_id?: string | null;
+          closing?: Json;
+          created_at?: string;
+          id?: string;
+          in_archive?: boolean;
+          intro?: Json;
+          items?: Json;
+          number?: number | null;
+          preview_text?: string;
+          recipients?: number | null;
+          send_at?: string | null;
+          sent_by?: string | null;
+          status?: string;
+          subject?: string;
+          updated_at?: string;
+        };
+        Update: {
+          broadcast_id?: string | null;
+          closing?: Json;
+          created_at?: string;
+          id?: string;
+          in_archive?: boolean;
+          intro?: Json;
+          items?: Json;
+          number?: number | null;
+          preview_text?: string;
+          recipients?: number | null;
+          send_at?: string | null;
+          sent_by?: string | null;
+          status?: string;
+          subject?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      newsletter_subscribers: {
+        Row: {
+          confirmation_sent_at: string | null;
+          confirmed_at: string | null;
+          consent_text: string;
+          consent_version: string;
+          created_at: string;
+          email: string;
+          id: string;
+          requested_at: string;
+          resend_contact_id: string | null;
+          sender_key: string;
+          source: string;
+          status: string;
+          stop_reason: string | null;
+          stopped_at: string | null;
+          synced_at: string | null;
+          token_hash: string;
+          unsubscribe_token: string;
+        };
+        Insert: {
+          confirmation_sent_at?: string | null;
+          confirmed_at?: string | null;
+          consent_text: string;
+          consent_version: string;
+          created_at?: string;
+          email: string;
+          id?: string;
+          requested_at?: string;
+          resend_contact_id?: string | null;
+          sender_key: string;
+          source: string;
+          status?: string;
+          stop_reason?: string | null;
+          stopped_at?: string | null;
+          synced_at?: string | null;
+          token_hash: string;
+          unsubscribe_token?: string;
+        };
+        Update: {
+          confirmation_sent_at?: string | null;
+          confirmed_at?: string | null;
+          consent_text?: string;
+          consent_version?: string;
+          created_at?: string;
+          email?: string;
+          id?: string;
+          requested_at?: string;
+          resend_contact_id?: string | null;
+          sender_key?: string;
+          source?: string;
+          status?: string;
+          stop_reason?: string | null;
+          stopped_at?: string | null;
+          synced_at?: string | null;
+          token_hash?: string;
+          unsubscribe_token?: string;
         };
         Relationships: [];
       };
@@ -537,6 +1010,7 @@ export type Database = {
           checkout_session_id: string;
           created_at: string;
           currency_code: string;
+          fulfilment: string | null;
           id: string;
           payment_intent_id: string | null;
           refunded_minor: number;
@@ -549,6 +1023,7 @@ export type Database = {
           checkout_session_id: string;
           created_at?: string;
           currency_code: string;
+          fulfilment?: string | null;
           id?: string;
           payment_intent_id?: string | null;
           refunded_minor?: number;
@@ -561,6 +1036,7 @@ export type Database = {
           checkout_session_id?: string;
           created_at?: string;
           currency_code?: string;
+          fulfilment?: string | null;
           id?: string;
           payment_intent_id?: string | null;
           refunded_minor?: number;
@@ -618,6 +1094,7 @@ export type Database = {
           starts_at: string | null;
           type: Database["public"]["Enums"]["room_availability_exception_type"];
           updated_at: string;
+          workshop_id: string | null;
         };
         Insert: {
           created_at?: string;
@@ -629,6 +1106,7 @@ export type Database = {
           starts_at?: string | null;
           type: Database["public"]["Enums"]["room_availability_exception_type"];
           updated_at?: string;
+          workshop_id?: string | null;
         };
         Update: {
           created_at?: string;
@@ -640,6 +1118,7 @@ export type Database = {
           starts_at?: string | null;
           type?: Database["public"]["Enums"]["room_availability_exception_type"];
           updated_at?: string;
+          workshop_id?: string | null;
         };
         Relationships: [
           {
@@ -647,6 +1126,13 @@ export type Database = {
             columns: ["room_id"];
             isOneToOne: false;
             referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "room_availability_exceptions_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: false;
+            referencedRelation: "workshops";
             referencedColumns: ["id"];
           },
         ];
@@ -1312,6 +1798,7 @@ export type Database = {
           reason: string | null;
           specialist_id: string;
           updated_at: string;
+          workshop_id: string | null;
         };
         Insert: {
           created_at?: string;
@@ -1320,6 +1807,7 @@ export type Database = {
           reason?: string | null;
           specialist_id: string;
           updated_at?: string;
+          workshop_id?: string | null;
         };
         Update: {
           created_at?: string;
@@ -1328,6 +1816,7 @@ export type Database = {
           reason?: string | null;
           specialist_id?: string;
           updated_at?: string;
+          workshop_id?: string | null;
         };
         Relationships: [
           {
@@ -1335,6 +1824,13 @@ export type Database = {
             columns: ["specialist_id"];
             isOneToOne: false;
             referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "specialist_time_off_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: false;
+            referencedRelation: "workshops";
             referencedColumns: ["id"];
           },
         ];
@@ -1430,9 +1926,284 @@ export type Database = {
           },
         ];
       };
+      workshop_co_leaders: {
+        Row: {
+          specialist_id: string;
+          workshop_id: string;
+        };
+        Insert: {
+          specialist_id: string;
+          workshop_id: string;
+        };
+        Update: {
+          specialist_id?: string;
+          workshop_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "workshop_co_leaders_specialist_id_fkey";
+            columns: ["specialist_id"];
+            isOneToOne: false;
+            referencedRelation: "specialists";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workshop_co_leaders_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: false;
+            referencedRelation: "workshops";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      workshop_messages: {
+        Row: {
+          body: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          recipients: number;
+          subject: string;
+          workshop_id: string;
+        };
+        Insert: {
+          body: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          recipients?: number;
+          subject: string;
+          workshop_id: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          recipients?: number;
+          subject?: string;
+          workshop_id?: string;
+        };
+        Relationships: [];
+      };
+      workshop_online_links: {
+        Row: {
+          meeting_url: string;
+          updated_at: string;
+          workshop_id: string;
+        };
+        Insert: {
+          meeting_url: string;
+          updated_at?: string;
+          workshop_id: string;
+        };
+        Update: {
+          meeting_url?: string;
+          updated_at?: string;
+          workshop_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "workshop_online_links_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: true;
+            referencedRelation: "workshops";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      workshop_emails: {
+        Row: {
+          claimed_at: string;
+          id: number;
+          kind: string;
+          message_id: string | null;
+          registration_id: string;
+          sent_at: string | null;
+          token_hash: string;
+        };
+        Insert: {
+          claimed_at?: string;
+          id?: never;
+          kind: string;
+          message_id?: string | null;
+          registration_id: string;
+          sent_at?: string | null;
+          token_hash: string;
+        };
+        Update: {
+          claimed_at?: string;
+          id?: never;
+          kind?: string;
+          message_id?: string | null;
+          registration_id?: string;
+          sent_at?: string | null;
+          token_hash?: string;
+        };
+        Relationships: [];
+      };
+      workshop_payments: {
+        Row: {
+          amount_minor: number;
+          checkout_session_id: string;
+          created_at: string;
+          currency_code: string;
+          id: string;
+          payment_intent_id: string | null;
+          refunded_minor: number;
+          registration_id: string;
+          status: Database["public"]["Enums"]["payment_status"];
+          updated_at: string;
+        };
+        Insert: {
+          amount_minor: number;
+          checkout_session_id: string;
+          created_at?: string;
+          currency_code: string;
+          id?: string;
+          payment_intent_id?: string | null;
+          refunded_minor?: number;
+          registration_id: string;
+          status?: Database["public"]["Enums"]["payment_status"];
+          updated_at?: string;
+        };
+        Update: {
+          amount_minor?: number;
+          checkout_session_id?: string;
+          created_at?: string;
+          currency_code?: string;
+          id?: string;
+          payment_intent_id?: string | null;
+          refunded_minor?: number;
+          registration_id?: string;
+          status?: Database["public"]["Enums"]["payment_status"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      workshop_registrations: {
+        Row: {
+          discount_code_id: string | null;
+          discount_minor: number;
+          list_price_minor: number | null;
+          access_token_hash: string;
+          attended: boolean | null;
+          booked_by: string;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          client_email: string | null;
+          client_name: string | null;
+          client_notes: string | null;
+          client_phone: string | null;
+          confirmed_at: string | null;
+          created_at: string;
+          currency_code: string;
+          hold_expires_at: string | null;
+          id: string;
+          offer_expires_at: string | null;
+          paid_minor: number;
+          payment_due_at: string | null;
+          price_minor: number;
+          privacy_accepted_at: string | null;
+          reference: string;
+          refund_due_minor: number;
+          refund_when_replaced: boolean;
+          rescheduled_at: string | null;
+          refund_any_time: boolean;
+          paid_outside: boolean;
+          refunded_minor: number;
+          status: Database["public"]["Enums"]["workshop_registration_status"];
+          terms_accepted_at: string | null;
+          updated_at: string;
+          waitlisted_at: string | null;
+          workshop_id: string;
+        };
+        Insert: {
+          access_token_hash: string;
+          attended?: boolean | null;
+          booked_by?: string;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          client_email?: string | null;
+          client_name?: string | null;
+          client_notes?: string | null;
+          client_phone?: string | null;
+          confirmed_at?: string | null;
+          created_at?: string;
+          currency_code: string;
+          hold_expires_at?: string | null;
+          id?: string;
+          offer_expires_at?: string | null;
+          paid_minor?: number;
+          payment_due_at?: string | null;
+          price_minor: number;
+          privacy_accepted_at?: string | null;
+          reference: string;
+          refund_due_minor?: number;
+          refund_when_replaced?: boolean;
+          rescheduled_at?: string | null;
+          refund_any_time?: boolean;
+          paid_outside?: boolean;
+          refunded_minor?: number;
+          status?: Database["public"]["Enums"]["workshop_registration_status"];
+          terms_accepted_at?: string | null;
+          updated_at?: string;
+          waitlisted_at?: string | null;
+          workshop_id: string;
+        };
+        Update: {
+          access_token_hash?: string;
+          attended?: boolean | null;
+          booked_by?: string;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          client_email?: string | null;
+          client_name?: string | null;
+          client_notes?: string | null;
+          client_phone?: string | null;
+          confirmed_at?: string | null;
+          created_at?: string;
+          currency_code?: string;
+          hold_expires_at?: string | null;
+          id?: string;
+          offer_expires_at?: string | null;
+          paid_minor?: number;
+          payment_due_at?: string | null;
+          price_minor?: number;
+          privacy_accepted_at?: string | null;
+          reference?: string;
+          refund_due_minor?: number;
+          refund_when_replaced?: boolean;
+          rescheduled_at?: string | null;
+          refund_any_time?: boolean;
+          paid_outside?: boolean;
+          refunded_minor?: number;
+          status?: Database["public"]["Enums"]["workshop_registration_status"];
+          terms_accepted_at?: string | null;
+          updated_at?: string;
+          waitlisted_at?: string | null;
+          workshop_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "workshop_registrations_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: false;
+            referencedRelation: "workshops";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       workshops: {
         Row: {
+          agenda: string | null;
+          audience: string | null;
+          body: Json | null;
+          cancel_reason: string | null;
+          cancelled_at: string | null;
           capacity: number;
+          confirmed_at: string | null;
+          cover_alt: string | null;
           cover_image_path: string | null;
           created_at: string;
           currency_code: string;
@@ -1440,10 +2211,15 @@ export type Database = {
           id: string;
           location_id: string | null;
           long_description: string | null;
+          min_participants: number | null;
+          minimum_reminded_at: string | null;
           modality: Database["public"]["Enums"]["workshop_modality"];
           price_minor: number;
+          registration_closes_at: string | null;
           registration_enabled: boolean;
           room_id: string | null;
+          seo_description: string | null;
+          seo_title: string | null;
           short_description: string | null;
           slug: string;
           specialist_id: string;
@@ -1453,7 +2229,14 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          agenda?: string | null;
+          audience?: string | null;
+          body?: Json | null;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
           capacity: number;
+          confirmed_at?: string | null;
+          cover_alt?: string | null;
           cover_image_path?: string | null;
           created_at?: string;
           currency_code?: string;
@@ -1461,10 +2244,15 @@ export type Database = {
           id?: string;
           location_id?: string | null;
           long_description?: string | null;
+          min_participants?: number | null;
+          minimum_reminded_at?: string | null;
           modality?: Database["public"]["Enums"]["workshop_modality"];
           price_minor: number;
+          registration_closes_at?: string | null;
           registration_enabled?: boolean;
           room_id?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
           short_description?: string | null;
           slug: string;
           specialist_id: string;
@@ -1474,7 +2262,14 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          agenda?: string | null;
+          audience?: string | null;
+          body?: Json | null;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
           capacity?: number;
+          confirmed_at?: string | null;
+          cover_alt?: string | null;
           cover_image_path?: string | null;
           created_at?: string;
           currency_code?: string;
@@ -1482,10 +2277,15 @@ export type Database = {
           id?: string;
           location_id?: string | null;
           long_description?: string | null;
+          min_participants?: number | null;
+          minimum_reminded_at?: string | null;
           modality?: Database["public"]["Enums"]["workshop_modality"];
           price_minor?: number;
+          registration_closes_at?: string | null;
           registration_enabled?: boolean;
           room_id?: string | null;
+          seo_description?: string | null;
+          seo_title?: string | null;
           short_description?: string | null;
           slug?: string;
           specialist_id?: string;
@@ -1602,6 +2402,490 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      claim_newsletter_issue: {
+        Args: { p_id: string; p_send_at: string };
+        Returns: undefined;
+      };
+      create_newsletter_issue: { Args: never; Returns: string };
+      delete_newsletter_issue: { Args: { p_id: string }; Returns: undefined };
+      finish_newsletter_issue: {
+        Args: { p_broadcast_id: string; p_id: string };
+        Returns: number;
+      };
+      get_newsletter_issue: {
+        Args: { p_id: string };
+        Returns: {
+          broadcast_id: string;
+          closing: Json;
+          id: string;
+          in_archive: boolean;
+          intro: Json;
+          items: Json;
+          number: number;
+          preview_text: string;
+          recipients: number;
+          send_at: string;
+          status: string;
+          subject: string;
+          updated_at: string;
+        }[];
+      };
+      list_discount_codes: {
+        Args: never;
+        Returns: {
+          id: string;
+          code: string;
+          kind: string;
+          value: number;
+          starts_on: string | null;
+          ends_on: string | null;
+          active: boolean;
+          note: string;
+          created_at: string;
+          used_count: number;
+          discount_total_minor: number;
+          scope: string;
+          workshop_id: string | null;
+          workshop_title: string | null;
+          max_uses: number | null;
+        }[];
+      };
+      note_discount_refusal: {
+        Args: { p_access_token: string };
+        Returns: undefined;
+      };
+      list_newsletter_archive: {
+        Args: never;
+        Returns: {
+          closing: Json;
+          intro: Json;
+          items: Json;
+          number: number;
+          preview_text: string;
+          send_at: string;
+          subject: string;
+        }[];
+      };
+      list_newsletter_issues: {
+        Args: never;
+        Returns: {
+          id: string;
+          in_archive: boolean;
+          number: number;
+          recipients: number;
+          send_at: string;
+          status: string;
+          stopped_after: number;
+          subject: string;
+          updated_at: string;
+        }[];
+      };
+      release_newsletter_issue: { Args: { p_id: string }; Returns: undefined };
+      save_discount_code: {
+        Args: {
+          p_id: string | null;
+          p_code: string;
+          p_kind: string;
+          p_value: number;
+          p_starts_on: string | null;
+          p_ends_on: string | null;
+          p_active: boolean;
+          p_note: string;
+          p_scope: string;
+          p_workshop_id: string | null;
+          p_max_uses?: number | null;
+        };
+        Returns: string;
+      };
+      delete_discount_code: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      workshop_availability: {
+        Args: { p_ids: string[] };
+        Returns: {
+          workshop_id: string;
+          seats_left: number;
+          waitlist_count: number;
+          registration_open: boolean;
+          confirmed: boolean;
+          pay_later_until: string;
+          full_refund_until: string;
+        }[];
+      };
+      hold_workshop_seat: {
+        Args: { p_slug: string; p_client_key: string };
+        Returns: {
+          registration_id: string;
+          reference: string;
+          access_token: string;
+          hold_expires_at: string;
+        }[];
+      };
+      save_workshop_registration_details: {
+        Args: {
+          p_access_token: string;
+          p_name: string;
+          p_email: string;
+          p_phone: string | null;
+          p_notes: string | null;
+          p_accept_terms: boolean;
+          p_accept_privacy: boolean;
+        };
+        Returns: undefined;
+      };
+      reserve_workshop_seat: {
+        Args: { p_access_token: string };
+        Returns: { reference: string; payment_due_at: string }[];
+      };
+      confirm_free_workshop_seat: {
+        Args: { p_access_token: string };
+        Returns: string;
+      };
+      join_workshop_waitlist: {
+        Args: {
+          p_slug: string;
+          p_client_key: string;
+          p_name: string;
+          p_email: string;
+          p_phone: string | null;
+          p_notes: string | null;
+          p_accept_terms: boolean;
+          p_accept_privacy: boolean;
+        };
+        Returns: { reference: string; access_token: string }[];
+      };
+      get_workshop_registration: {
+        Args: { p_access_token: string };
+        Returns: {
+          reference: string;
+          status: Database["public"]["Enums"]["workshop_registration_status"];
+          workshop_slug: string;
+          workshop_title: string;
+          workshop_status: Database["public"]["Enums"]["workshop_status"];
+          workshop_confirmed: boolean;
+          modality: Database["public"]["Enums"]["workshop_modality"];
+          starts_at: string;
+          ends_at: string;
+          location_name: string | null;
+          location_address: string | null;
+          room_name: string | null;
+          price_minor: number;
+          currency_code: string;
+          paid_minor: number;
+          refund_due_minor: number;
+          refunded_minor: number;
+          client_name: string | null;
+          client_email: string | null;
+          client_phone: string | null;
+          client_notes: string | null;
+          details_saved: boolean;
+          hold_expires_at: string | null;
+          payment_due_at: string | null;
+          offer_expires_at: string | null;
+          waitlist_position: number | null;
+          full_refund_until: string;
+          can_pay_later: boolean;
+          cancelled_by: string | null;
+          meeting_url: string | null;
+          list_price_minor: number | null;
+          discount_minor: number;
+          discount_code: string | null;
+          refund_any_time: boolean;
+          refund_when_replaced: boolean;
+          workshop_cancel_reason: string | null;
+          paid_outside: boolean;
+        }[];
+      };
+      apply_workshop_discount: {
+        Args: { p_access_token: string; p_code: string };
+        Returns: {
+          code: string;
+          list_price_minor: number;
+          discount_minor: number;
+          price_minor: number;
+        }[];
+      };
+      remove_workshop_discount: {
+        Args: { p_access_token: string };
+        Returns: undefined;
+      };
+      attach_workshop_checkout: {
+        Args: {
+          p_access_token: string;
+          p_session_id: string;
+          p_expires_at: string;
+          p_amount_minor: number;
+          p_currency_code: string;
+        };
+        Returns: undefined;
+      };
+      pending_workshop_checkout: {
+        Args: { p_access_token: string };
+        Returns: string | null;
+      };
+      fulfill_workshop_checkout: {
+        Args: {
+          p_session_id: string;
+          p_paid: boolean;
+          p_payment_intent_id: string | null;
+        };
+        Returns: string;
+      };
+      fail_workshop_checkout: {
+        Args: { p_session_id: string; p_reason: string };
+        Returns: undefined;
+      };
+      record_workshop_refund: {
+        Args: { p_payment_intent_id: string; p_refunded_minor: number };
+        Returns: boolean;
+      };
+      claim_workshop_email: {
+        Args: { p_reference: string; p_kind: string };
+        Returns: {
+          reference: string;
+          manage_token: string;
+          status: Database["public"]["Enums"]["workshop_registration_status"];
+          client_name: string | null;
+          client_email: string;
+          workshop_title: string;
+          workshop_slug: string;
+          modality: Database["public"]["Enums"]["workshop_modality"];
+          starts_at: string;
+          ends_at: string;
+          location_name: string | null;
+          location_address: string | null;
+          room_name: string | null;
+          leaders: string | null;
+          price_minor: number;
+          paid_minor: number;
+          currency_code: string;
+          payment_due_at: string | null;
+          waitlist_position: number | null;
+          offer_expires_at: string | null;
+          cancelled_by: string | null;
+          cancel_reason: string | null;
+          refund_due_minor: number;
+          refunded_minor: number;
+          refund_when_replaced: boolean;
+          meeting_url: string | null;
+          paid_outside: boolean;
+        }[];
+      };
+      list_due_workshop_emails: {
+        Args: never;
+        Returns: { reference: string; kind: string }[];
+      };
+      list_owed_workshop_refunds: {
+        Args: never;
+        Returns: {
+          registration_id: string;
+          reference: string;
+          owed_minor: number;
+        }[];
+      };
+      remind_workshop_minimums: {
+        Args: never;
+        Returns: number;
+      };
+      centre_add_workshop_participant: {
+        Args: {
+          p_workshop_id: string;
+          p_name: string;
+          p_email: string;
+          p_phone: string | null;
+          p_notes: string | null;
+          p_paid_outside: boolean;
+        };
+        Returns: {
+          reference: string;
+          status: Database["public"]["Enums"]["workshop_registration_status"];
+        }[];
+      };
+      centre_cancel_workshop_participant: {
+        Args: { p_registration_id: string; p_refund_minor: number };
+        Returns: { reference: string; refund_minor: number }[];
+      };
+      set_workshop_attendance: {
+        Args: { p_registration_id: string; p_attended: boolean };
+        Returns: undefined;
+      };
+      complete_workshop: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      record_workshop_message: {
+        Args: { p_workshop_id: string; p_subject: string; p_body: string };
+        Returns: {
+          message_id: string;
+          reference: string;
+          client_name: string | null;
+          client_email: string;
+        }[];
+      };
+      mark_workshop_email_sent: {
+        Args: { p_reference: string; p_kind: string; p_message_id: string };
+        Returns: undefined;
+      };
+      release_workshop_email: {
+        Args: { p_reference: string; p_kind: string };
+        Returns: undefined;
+      };
+      list_public_workshops: {
+        Args: never;
+        Returns: {
+          id: string;
+          slug: string;
+          title: string;
+          short_description: string | null;
+          body: Json | null;
+          audience: string | null;
+          agenda: string | null;
+          cover_image_path: string | null;
+          cover_alt: string | null;
+          seo_title: string | null;
+          seo_description: string | null;
+          modality: Database["public"]["Enums"]["workshop_modality"];
+          status: Database["public"]["Enums"]["workshop_status"];
+          starts_at: string;
+          ends_at: string;
+          price_minor: number;
+          currency_code: string;
+          capacity: number;
+          min_participants: number | null;
+          location_name: string | null;
+          location_address: string | null;
+          location_city: string | null;
+          room_name: string | null;
+          leaders: Json;
+          seats_left: number;
+          registration_open: boolean;
+          confirmed: boolean;
+          updated_at: string;
+        }[];
+      };
+      admin_list_workshops: {
+        Args: never;
+        Returns: {
+          id: string;
+          slug: string;
+          title: string;
+          status: Database["public"]["Enums"]["workshop_status"];
+          modality: Database["public"]["Enums"]["workshop_modality"];
+          starts_at: string;
+          ends_at: string;
+          capacity: number;
+          min_participants: number | null;
+          price_minor: number;
+          currency_code: string;
+          confirmed: boolean;
+          registration_enabled: boolean;
+          leaders: string | null;
+          location_name: string | null;
+          room_name: string | null;
+          confirmed_count: number;
+          awaiting_count: number;
+          held_count: number;
+          waitlist_count: number;
+          paid_minor: number;
+          updated_at: string;
+        }[];
+      };
+      admin_get_workshop: {
+        Args: { p_id: string };
+        Returns: Json;
+      };
+      save_workshop: {
+        Args: { p_id: string | null; p_data: Json };
+        Returns: string;
+      };
+      publish_workshop: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      unpublish_workshop: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      delete_workshop: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      workshop_visibility: {
+        Args: never;
+        Returns: { in_menu: boolean; on_home: boolean }[];
+      };
+      set_workshop_visibility: {
+        Args: { p_in_menu: boolean | null; p_on_home: boolean | null };
+        Returns: undefined;
+      };
+      cancel_workshop_registration: {
+        Args: { p_access_token: string };
+        Returns: {
+          reference: string;
+          refund_minor: number;
+          refund_when_replaced: boolean;
+        }[];
+      };
+      transfer_workshop_seat: {
+        Args: {
+          p_access_token: string;
+          p_name: string;
+          p_email: string;
+          p_phone: string | null;
+        };
+        Returns: undefined;
+      };
+      run_workshop_jobs: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
+      confirm_workshop: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      cancel_workshop: {
+        Args: { p_id: string; p_reason?: string | null };
+        Returns: {
+          registration_id: string;
+          reference: string;
+          client_email: string | null;
+          refund_minor: number;
+        }[];
+      };
+      apply_discount_code: {
+        Args: { p_access_token: string; p_code: string };
+        Returns: {
+          code: string;
+          list_price_minor: number;
+          discount_minor: number;
+          price_minor: number;
+        }[];
+      };
+      remove_discount_code: {
+        Args: { p_access_token: string };
+        Returns: undefined;
+      };
+      get_booking_discount: {
+        Args: { p_access_token: string };
+        Returns: {
+          code: string;
+          list_price_minor: number;
+          discount_minor: number;
+        }[];
+      };
+      get_visit_discount: {
+        Args: { p_id: string; p_own?: boolean };
+        Returns: {
+          code: string;
+          list_price_minor: number;
+          discount_minor: number;
+        }[];
+      };
+      confirm_free_booking: {
+        Args: { p_access_token: string };
+        Returns: undefined;
+      };
       close_visit: {
         Args: {
           p_note?: string;
@@ -1621,6 +2905,22 @@ export type Database = {
           tags: string[];
         }[];
       };
+      save_newsletter_issue: {
+        Args: {
+          p_closing: Json;
+          p_id: string;
+          p_in_archive: boolean;
+          p_intro: Json;
+          p_items: Json;
+          p_preview_text: string;
+          p_subject: string;
+        };
+        Returns: undefined;
+      };
+      set_newsletter_issue_archive: {
+        Args: { p_id: string; p_in_archive: boolean };
+        Returns: undefined;
+      };
       unclosed_visits_summary: {
         Args: { p_own?: boolean };
         Returns: {
@@ -1629,6 +2929,10 @@ export type Database = {
           specialist_name: string;
           visits: number;
         }[];
+      };
+      unschedule_newsletter_issue: {
+        Args: { p_id: string };
+        Returns: undefined;
       };
       visits_to_close_by_specialist: {
         Args: never;
@@ -1889,6 +3193,7 @@ export type Database = {
           cancelled_by: string | null;
           client_email: string;
           client_name: string;
+          confirm_by: string | null;
           currency_code: string;
           ends_at: string;
           location_address: string;
@@ -2282,6 +3587,206 @@ export type Database = {
         }[];
       };
       publish_site_content: { Args: { p_key: string }; Returns: undefined };
+      create_article: {
+        Args: { p_draft: Json };
+        Returns: string;
+      };
+      save_article_draft: {
+        Args: { p_id: string; p_draft: Json };
+        Returns: undefined;
+      };
+      list_articles_admin: {
+        Args: never;
+        Returns: {
+          id: string;
+          status: string;
+          draft: Json;
+          slug: string | null;
+          published_at: string | null;
+          updated_at: string;
+          has_unpublished_changes: boolean;
+        }[];
+      };
+      get_article_admin: {
+        Args: { p_id: string };
+        Returns: Json;
+      };
+      publish_article: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      unpublish_article: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      delete_article: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      delete_article_category: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      create_ebook: {
+        Args: { p_draft: Json };
+        Returns: string;
+      };
+      save_ebook_draft: {
+        Args: { p_id: string; p_draft: Json };
+        Returns: undefined;
+      };
+      list_ebooks_admin: {
+        Args: never;
+        Returns: {
+          id: string;
+          status: string;
+          draft: Json;
+          slug: string | null;
+          published_at: string | null;
+          updated_at: string;
+          has_unpublished_changes: boolean;
+        }[];
+      };
+      get_ebook_admin: {
+        Args: { p_id: string };
+        Returns: Json;
+      };
+      publish_ebook: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      unpublish_ebook: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      delete_ebook: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      submit_contact_message: {
+        Args: {
+          p_email: string;
+          p_message: string;
+          p_name: string;
+          p_phone: string | null;
+          p_sender_key: string;
+        };
+        Returns: string;
+      };
+      confirm_newsletter_subscription: {
+        Args: { p_token_hash: string };
+        Returns: {
+          email: string;
+          outcome: string;
+        }[];
+      };
+      finish_newsletter_removal: { Args: { p_id: string }; Returns: undefined };
+      find_newsletter_unsubscribe: {
+        Args: { p_token: string };
+        Returns: {
+          email: string;
+          status: string;
+        }[];
+      };
+      get_newsletter_consent: {
+        Args: { p_id: string };
+        Returns: {
+          confirmed_at: string;
+          consent_text: string;
+          consent_version: string;
+          email: string;
+          requested_at: string;
+        }[];
+      };
+      list_newsletter_subscribers: {
+        Args: never;
+        Returns: {
+          confirmed_at: string;
+          consent_version: string;
+          email: string;
+          id: string;
+          requested_at: string;
+          source: string;
+          status: string;
+          stop_reason: string;
+          stopped_at: string;
+          synced: boolean;
+        }[];
+      };
+      mark_newsletter_confirmation_sent: {
+        Args: { p_email: string };
+        Returns: undefined;
+      };
+      mark_newsletter_synced: {
+        Args: { p_contact_id: string; p_id: string };
+        Returns: undefined;
+      };
+      newsletter_contacts_to_sync: {
+        Args: never;
+        Returns: {
+          email: string;
+          id: string;
+          status: string;
+          unsubscribe_token: string;
+        }[];
+      };
+      remove_newsletter_subscriber: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      request_newsletter_subscription: {
+        Args: {
+          p_consent_text: string;
+          p_consent_version: string;
+          p_email: string;
+          p_sender_key: string;
+          p_source: string;
+          p_token_hash: string;
+        };
+        Returns: string;
+      };
+      unsubscribe_newsletter: {
+        Args: { p_token: string };
+        Returns: {
+          email: string;
+          outcome: string;
+        }[];
+      };
+      stop_newsletter_subscription: {
+        Args: { p_email: string; p_reason: string };
+        Returns: boolean;
+      };
+      mark_contact_message_notified: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      get_site_content_draft: { Args: { p_key: string }; Returns: Json };
+      get_site_content_draft_version: {
+        Args: never;
+        Returns: string | null;
+      };
+      confirm_reservation: {
+        Args: { p_manage_token: string };
+        Returns: string | null;
+      };
+      record_dispute: {
+        Args: {
+          p_amount_minor: number;
+          p_closed: boolean;
+          p_dispute_id: string;
+          p_payment_intent_id: string;
+          p_reason: string;
+          p_reference?: string;
+          p_status: string;
+        };
+        Returns: string | null;
+      };
+      list_stuck_payments: {
+        Args: never;
+        Returns: {
+          checkout_session_id: string;
+        }[];
+      };
       record_refund: {
         Args: { p_payment_intent_id: string; p_refunded_minor: number };
         Returns: boolean;
@@ -2329,11 +3834,17 @@ export type Database = {
         }[];
       };
       reserve_hold: {
-        Args: { p_access_token: string };
+        Args: { p_access_token: string; p_client_key?: string };
         Returns: {
-          payment_due_at: string;
+          confirm_by: string | null;
+          outcome: string;
+          payment_due_at: string | null;
           reference: string;
         }[];
+      };
+      reservation_confirm_by: {
+        Args: { p_manage_token: string };
+        Returns: string | null;
       };
       save_availability_rule: {
         Args: {
@@ -2486,6 +3997,14 @@ export type Database = {
         | "other";
       visit_mode: "in_person" | "online";
       workshop_modality: "in_person" | "online";
+      workshop_registration_status:
+        | "held"
+        | "awaiting_payment"
+        | "confirmed"
+        | "waitlisted"
+        | "offered"
+        | "cancelled"
+        | "expired";
       workshop_status: "draft" | "published" | "cancelled" | "completed";
     };
     CompositeTypes: {
@@ -2653,6 +4172,15 @@ export const Constants = {
       ],
       visit_mode: ["in_person", "online"],
       workshop_modality: ["in_person", "online"],
+      workshop_registration_status: [
+        "held",
+        "awaiting_payment",
+        "confirmed",
+        "waitlisted",
+        "offered",
+        "cancelled",
+        "expired",
+      ],
       workshop_status: ["draft", "published", "cancelled", "completed"],
     },
   },

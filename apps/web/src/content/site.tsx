@@ -1,8 +1,9 @@
 import {
-  type FaqItem,
   type HeroSectionProps,
+  type PaintedStoryStep,
   PenguinLoader,
 } from "@repo/ui/public-site";
+import type { PublicSupportArea } from "@repo/supabase";
 import { Heart, House, Leaf, Users } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -34,12 +35,11 @@ export const siteDescription =
 export const footerAbout =
   "Centrum psychoterapii i rozwoju. Psychoterapia indywidualna, par, dzieci i młodzieży w spokojnej, bezpiecznej przestrzeni.";
 
-/** Opening hours as shown in the footer and on the contact page. */
-export const openingHours = "Pn–Pt 8:00–20:00, sob. 9:00–14:00";
-
 export const bookingCta = { label: "Umów wizytę", href: "/umow-wizyte" };
 
+// The footer's bottom row, on every page; help in a crisis first.
 export const legalLinks = [
+  { label: "Pomoc w kryzysie", href: "/pomoc-w-kryzysie" },
   { label: "Polityka prywatności", href: "/polityka-prywatnosci" },
   { label: "Regulamin", href: "/regulamin" },
   { label: "Cookies", href: "/cookies" },
@@ -68,19 +68,62 @@ export const hero = {
   },
 } satisfies HeroSectionProps;
 
-export const offerCopy = {
-  eyebrow: "Nasza oferta",
-  heading: "Wsparcie w różnych obszarach życia",
+// The thoughts under the hero are the CMS's (defaultHomeThoughts in the
+// contracts until published).
+
+// Home → Obszary wsparcia: the section's own words; the areas themselves
+// come from the CMS once published, these until then (same as the CMS's
+// starting draft, plus the site's photos).
+export const supportAreasCopy = {
+  eyebrow: "Obszary wsparcia",
+  heading: "W czym możemy pomóc",
   description:
-    "Oferujemy terapię, konsultacje i warsztaty dopasowane do Twoich potrzeb.",
+    "Wybierz koło, aby zobaczyć, czym zajmujemy się w każdym z obszarów.",
 };
 
-export const specialistsCopy = {
-  eyebrow: "Nasi specjaliści",
-  heading: "Poznaj nasz zespół",
-  description:
-    "Doświadczony zespół specjalistów, którzy z empatią i zaangażowaniem towarzyszą w drodze do lepszego samopoczucia.",
-};
+export const defaultSupportAreas = [
+  {
+    id: "indywidualna",
+    title: "Terapia indywidualna",
+    lead: "Spotkania jeden na jeden, w Twoim tempie: o tym, co trudne, i o tym, czego potrzebujesz.",
+    image: {
+      src: "/images/gabinet-fotel.webp",
+      alt: "Jasny gabinet z fotelem i roślinami",
+    },
+    link: null,
+  },
+  {
+    id: "pary",
+    title: "Terapia dla par",
+    lead: "Wspólna przestrzeń, by lepiej się słyszeć, rozumieć i szukać porozumienia.",
+    image: { src: "/images/gabinet.jpg", alt: "Gabinet z dwoma fotelami" },
+    link: null,
+  },
+  {
+    id: "mlodziez",
+    title: "Wsparcie dzieci i młodzieży",
+    lead: "Pomoc dla młodszych osób i ich rodziców: w trudnych emocjach, w szkole i w relacjach.",
+    image: null,
+    link: null,
+  },
+  {
+    id: "rodzinna",
+    title: "Terapia rodzinna",
+    lead: "Praca z całą rodziną nad tym, co dzieje się między jej członkami.",
+    image: null,
+    link: null,
+  },
+  {
+    id: "warsztaty",
+    title: "Warsztaty i rozwój",
+    lead: "Grupy i spotkania tematyczne dla osób, które chcą lepiej siebie poznać.",
+    image: {
+      src: "/images/warsztaty.jpg",
+      alt: "Uczestnicy warsztatu rozmawiają w kręgu",
+    },
+    link: { href: "/warsztaty", label: "Zobacz warsztaty" },
+  },
+] satisfies PublicSupportArea[];
 
 export const rooms = {
   eyebrow: "Nasze gabinety",
@@ -104,69 +147,16 @@ export const workshops = {
   },
 };
 
-export const closingCta = "Zrób pierwszy krok do lepszego samopoczucia";
-
-export const faq = [
-  {
-    question: "Jak wygląda pierwsza wizyta?",
-    answer:
-      "Pierwsze spotkanie to konsultacja: rozmawiamy o tym, z czym przychodzisz, czego potrzebujesz i jaka forma pomocy będzie najlepsza. Nie musisz się do niej specjalnie przygotowywać.",
-  },
-  {
-    question: "Ile trwa sesja i jak często się spotykamy?",
-    answer:
-      "Sesja trwa zwykle 50 minut. Najczęściej spotykamy się raz w tygodniu, ale częstotliwość ustalamy wspólnie z terapeutą.",
-  },
-  {
-    question: "Czy potrzebuję skierowania?",
-    answer:
-      "Nie. Na psychoterapię i konsultacje psychologiczne możesz umówić się bez skierowania.",
-  },
-  {
-    question: "Czy możliwe są spotkania online?",
-    answer:
-      "Tak. Część specjalistów prowadzi sesje online; informację znajdziesz w opisie usługi i przy każdym specjaliście.",
-  },
-  {
-    question: "Jak mogę odwołać lub przełożyć wizytę?",
-    answer:
-      "Najpóźniej 24 godziny przed spotkaniem, telefonicznie lub mailowo. Wizyta odwołana później jest płatna.",
-  },
-] satisfies FaqItem[];
+// The homepage's scroll story (PaintedStory): its steps are the CMS's
+// (defaultHomeStory until published); a step without its own photo takes
+// one of these, in turn.
+export const storyImages = [
+  rooms.image,
+  hero.image,
+  workshops.image,
+] satisfies PaintedStoryStep["image"][];
 
 // --------------------------------------------------------------- pages
-
-export const about = {
-  heading: "O nas",
-  accent: "Spokojnie, uważnie, z sensem.",
-  lead: "Kolor Sensu to miejsce, w którym można zatrzymać się, poukładać myśli i znaleźć wsparcie. Tworzymy zespół psychoterapeutów i psychologów, którzy pracują z dorosłymi, parami, dziećmi i młodzieżą.",
-  values: [
-    {
-      title: "Bezpieczeństwo",
-      text: "Rozmawiamy bez oceniania, w poufności i we własnym tempie.",
-    },
-    {
-      title: "Indywidualne podejście",
-      text: "Każdą współpracę zaczynamy od zrozumienia Twojej sytuacji i potrzeb.",
-    },
-    {
-      title: "Profesjonalizm",
-      text: "Nasi specjaliści stale się szkolą i pracują pod regularną superwizją.",
-    },
-  ],
-};
-
-export const roomsPage = {
-  heading: "Gabinety",
-  accent: "Przestrzeń dla ważnych rozmów.",
-  lead: "Nasze gabinety są jasne, ciche i przytulne. Zadbaliśmy o to, żeby już od progu łatwiej było odetchnąć i poczuć się bezpiecznie.",
-  points: [
-    "Wygodne fotele i spokojne, naturalne kolory",
-    "Dobra izolacja akustyczna: rozmowa zostaje w gabinecie",
-    "Poczekalnia z herbatą i wodą",
-    "Dogodny dojazd w centrum miasta",
-  ],
-};
 
 export const workshopsPage = {
   heading: "Warsztaty",
@@ -176,15 +166,16 @@ export const workshopsPage = {
     "Obecnie nie mamy zaplanowanych wydarzeń. Zostaw nam wiadomość, a damy znać, gdy pojawią się nowe terminy.",
 };
 
+// Edukacja's words that are code (the rest is the CMS's, education_page).
 export const educationPage = {
-  eyebrow: "Edukacja",
-  heading: "Edukacja",
-  accent: "Wiedza, która pomaga zrozumieć.",
-  lead: "Tu będziemy dzielić się wiedzą o zdrowiu psychicznym, emocjach i relacjach: przystępnie, rzetelnie i bez oceniania.",
-  description:
-    "Wiedza o zdrowiu psychicznym, emocjach i relacjach od specjalistów Kolor Sensu.",
   soonHeading: "Pierwsze materiały już wkrótce",
-  soon: "Przygotowujemy artykuły i materiały edukacyjne. Jeśli masz pytanie, z którym chcesz przyjść już teraz, zadzwoń lub napisz do nas.",
+  latestHeading: "Najnowsze artykuły",
+  relatedHeading: "Przeczytaj też",
+  ebooksHeading: "E-booki",
+  ebooksLead:
+    "Poradniki do czytania we własnym tempie, przygotowane przez naszych specjalistów. Na stronie każdego e-booka pobierzesz darmowy fragment.",
+  ebooksEmpty: "Pierwsze e-booki pojawią się tu wkrótce.",
+  ebookUnderArticle: "E-book",
 };
 
 export const bookingPage = {
@@ -207,17 +198,4 @@ export const bookingPage = {
   ],
 };
 
-export const legalPages = {
-  "polityka-prywatnosci": {
-    title: "Polityka prywatności",
-    description: "Jak Kolor Sensu przetwarza dane osobowe.",
-  },
-  regulamin: {
-    title: "Regulamin",
-    description: "Zasady korzystania z usług Kolor Sensu.",
-  },
-  cookies: {
-    title: "Pliki cookies",
-    description: "Jak strona Kolor Sensu używa plików cookies.",
-  },
-} as const;
+// Their titles and descriptions for search engines: @repo/contracts/cms-seo.

@@ -282,7 +282,11 @@ describe("paint matte", () => {
 describe("paint timeline", () => {
   it("lasts about 1.2 s", () => {
     const { matte, caption } = build();
-    const timeline = createPaintTimeline(matte, { caption, paused: true });
+    const timeline = createPaintTimeline(matte, {
+      gsap,
+      caption,
+      paused: true,
+    });
 
     expect(timeline.duration()).toBeCloseTo(paintRevealLength, 5);
     expect(timeline.duration()).toBeGreaterThanOrEqual(1);
@@ -292,7 +296,11 @@ describe("paint timeline", () => {
 
   it("starts with nothing painted", () => {
     const { matte, caption } = build();
-    const timeline = createPaintTimeline(matte, { caption, paused: true });
+    const timeline = createPaintTimeline(matte, {
+      gsap,
+      caption,
+      paused: true,
+    });
 
     for (const { front } of [...matte.backdrop.strokes, matte.photo]) {
       // alpha = offset − sharpness × grey ≤ 0 for every grey ≥ 0.
@@ -304,7 +312,11 @@ describe("paint timeline", () => {
 
   it("only moves the fronts: colour stays white, nothing fades", () => {
     const { matte, caption } = build();
-    const timeline = createPaintTimeline(matte, { caption, paused: true });
+    const timeline = createPaintTimeline(matte, {
+      gsap,
+      caption,
+      paused: true,
+    });
     const stroke = matte.backdrop.strokes[0]!;
     const matrix = (front: SVGFEColorMatrixElement) =>
       front.getAttribute("values")!.trim().split(/\s+/).slice(0, -1);
@@ -323,7 +335,7 @@ describe("paint timeline", () => {
 
   it("runs the photo's threshold linearly (the blooms' timing is in the map)", () => {
     const { matte } = build();
-    const timeline = createPaintTimeline(matte, { paused: true });
+    const timeline = createPaintTimeline(matte, { gsap, paused: true });
     const [tween] = gsap.getTweensOf(matte.photo.front);
     expect(tween!.vars.ease).toBe("none");
     expect(tween!.duration()).toBeCloseTo(photoSplashTiming.duration, 5);
@@ -333,7 +345,11 @@ describe("paint timeline", () => {
 
   it("animates the matte and the caption only, never the painted layers", () => {
     const { matte, caption } = build();
-    const timeline = createPaintTimeline(matte, { caption, paused: true });
+    const timeline = createPaintTimeline(matte, {
+      gsap,
+      caption,
+      paused: true,
+    });
 
     const tweens = timeline.getChildren(true, true, false) as gsap.core.Tween[];
     expect(tweens.length).toBeGreaterThan(0);
@@ -354,7 +370,11 @@ describe("paint timeline", () => {
 
   it("ends with everything fully painted and every filter gone", () => {
     const { matte, caption } = build();
-    const timeline = createPaintTimeline(matte, { caption, paused: true });
+    const timeline = createPaintTimeline(matte, {
+      gsap,
+      caption,
+      paused: true,
+    });
 
     timeline.progress(1);
     for (const stroke of matte.backdrop.strokes) {
@@ -376,7 +396,7 @@ describe("paint timeline", () => {
 
   it("leaves nothing running once killed", () => {
     const { matte, caption } = build();
-    const timeline = createPaintTimeline(matte, { caption });
+    const timeline = createPaintTimeline(matte, { gsap, caption });
 
     timeline.kill();
     for (const { front, group } of [...matte.backdrop.strokes, matte.photo]) {

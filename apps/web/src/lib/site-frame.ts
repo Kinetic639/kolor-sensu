@@ -7,12 +7,9 @@ import {
   type SiteSocial,
 } from "@repo/ui/public-site";
 import { cache } from "react";
-import {
-  bookingCta,
-  footerAbout,
-  legalLinks,
-  openingHours,
-} from "@/content/site";
+import { bookingCta, footerAbout, legalLinks } from "@/content/site";
+import { getArticles, getEbooks } from "@/lib/education-data";
+import { getWorkshopVisibility } from "./workshop-data";
 import {
   getAnnouncement,
   getCenter,
@@ -20,6 +17,7 @@ import {
   getLocations,
   getOffer,
   getServices,
+  getSiteContact,
   type PublicOfferEntry,
   type PublicService,
 } from "@/lib/public-data";
@@ -49,7 +47,11 @@ const serviceLink = (service: PublicService) => ({
  * another, and each catalogue opening its own (its link: its place on the
  * offer page).
  */
-function navigation(offer: PublicOfferEntry[]): SiteNavItem[] {
+function navigation(
+  offer: PublicOfferEntry[],
+  education: { articles: boolean; ebooks: boolean },
+  workshops = true,
+): SiteNavItem[] {
   return [
     {
       label: "O nas",
@@ -78,8 +80,23 @@ function navigation(offer: PublicOfferEntry[]): SiteNavItem[] {
         ),
       }),
     },
-    { label: "Warsztaty", href: "/warsztaty" },
-    { label: "Edukacja", href: "/edukacja" },
+    // Shown while the portal's switch says so (Warsztaty → Na stronie).
+    ...(workshops ? [{ label: "Warsztaty", href: "/warsztaty" }] : []),
+    {
+      label: "Edukacja",
+      href: "/edukacja",
+      allLabel: "Wszystko w Edukacji",
+      ...((education.articles || education.ebooks) && {
+        children: [
+          ...(education.articles
+            ? [{ label: "Artykuły", href: "/edukacja/artykuly" }]
+            : []),
+          ...(education.ebooks
+            ? [{ label: "E-booki", href: "/edukacja/ebooki" }]
+            : []),
+        ],
+      }),
+    },
   ];
 }
 
@@ -87,15 +104,30 @@ function navigation(offer: PublicOfferEntry[]): SiteNavItem[] {
 const dialled = (phone: string) => phone.replace(/[^\d+]/g, "");
 
 export const getSiteFrame = cache(async () => {
-  const [center, locations, services, offer, announcement, company] =
-    await Promise.all([
-      getCenter(),
-      getLocations(),
-      getServices(),
-      getOffer(),
-      getAnnouncement(),
-      getCompany(),
-    ]);
+  const [
+    center,
+    locations,
+    services,
+    offer,
+    announcement,
+    company,
+    hours,
+    articles,
+    ebooks,
+    workshopVisibility,
+  ] = await Promise.all([
+    getCenter(),
+    getLocations(),
+    getServices(),
+    getOffer(),
+    getAnnouncement(),
+    getCompany(),
+    // The contact hours: Ustawienia wspólne in the CMS (#23).
+    getSiteContact().then((details) => details.hours),
+    getArticles(),
+    getEbooks(),
+    getWorkshopVisibility(),
+  ]);
   // The first location with a usable address.
   const location = locations.find((one) => one.addressLine1 && one.city);
 
@@ -113,7 +145,7 @@ export const getSiteFrame = cache(async () => {
           phoneLabel: center.publicPhone,
         }),
         ...(center?.publicEmail && { email: center.publicEmail }),
-        hours: openingHours,
+        ...(hours && { hours }),
       }
     : undefined;
 
@@ -127,7 +159,11 @@ export const getSiteFrame = cache(async () => {
   ];
 
   return {
-    navigation: navigation(offer),
+    navigation: navigation(
+      offer,
+      { articles: articles.length > 0, ebooks: ebooks.length > 0 },
+      workshopVisibility.inMenu,
+    ),
     cta: bookingCta,
     contact,
     socials,

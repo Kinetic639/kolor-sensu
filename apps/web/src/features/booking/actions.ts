@@ -11,9 +11,19 @@ import {
   saveBookingDetails,
 } from "@repo/supabase";
 import type { Route } from "next";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import {
+  applyDiscountCode,
+  confirmFreeBooking,
+  discountRefusal,
+  GUESS_REFUSALS,
+  noteDiscountRefusal,
+  removeDiscountCode,
+} from "@repo/supabase/discount-codes";
 import { attachVisitIntake } from "@repo/supabase/intakes";
+import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { getBookingWindow } from "@/lib/public-data";
 import { stripeServer } from "@/lib/stripe";
 import { createSecretClient } from "@/lib/supabase/secret";
@@ -24,9 +34,18 @@ import {
   type DetailsFormErrors,
   type DetailsFormValues,
 } from "./details-form-data";
-import { claimReservationEmail } from "./email/confirmation-server";
+import { discountProblem } from "./discount";
+import {
+  claimReservationEmail,
+  sendVisitConfirmation,
+} from "./email/confirmation-server";
 import { clientIp, turnstileKeys, verifyTurnstile, visitorKey } from "./guards";
-import { clearHoldToken, readHoldToken, saveHoldToken } from "./hold-cookie";
+import {
+  clearHoldToken,
+  readHoldToken,
+  saveFormerHoldToken,
+  saveHoldToken,
+} from "./hold-cookie";
 import { clearIntake, readIntake } from "./intake-cookie";
 import { loadWizard } from "./load-wizard";
 import { checkoutSessionParams } from "./payment";
@@ -37,6 +56,8 @@ import {
   loadBookingParams,
 } from "./search-params";
 import { visitLabel } from "./visit-label";
+import { MEMORY_COOKIE, readMemory } from "./wizard-memory";
+import { signUpForNewsletter } from "@/features/newsletter/signup-server";
 
 // The booking steps that write. The forms carry only the wizard's choices
 // and the client's details; the time's instant, the offer and the price
@@ -44,6 +65,10 @@ import { visitLabel } from "./visit-label";
 
 const DETAILS_PATH = "/umow-wizyte/dane" as Route;
 const PAYMENT_PATH = "/umow-wizyte/platnosc" as Route;
+// Paid at once although "Zapłacę później" was chosen: the step says why.
+const PAY_NOW_PATH = "/umow-wizyte/platnosc?limit=1" as Route;
+// A reservation waits for the client to confirm it from the e-mail.
+const CHECK_EMAIL_PATH = "/umow-wizyte/potwierdzenie?zarezerwowana=1" as Route;
 
 function formParams(formData: FormData) {
   return loadBookingParams(
@@ -76,7 +101,10 @@ export async function holdTimeAction(formData: FormData) {
   const client = createSecretClient();
   // One visitor, one held time: choosing again gives the earlier one back.
   const previous = await readHoldToken();
-  if (previous) await releaseHold(client, previous).catch(() => false);
+  if (previous) {
+    await releaseHold(client, previous).catch(() => false);
+    await saveFormerHoldToken(previous);
+  }
 
   try {
     const held = await holdSlot(client, {
@@ -103,7 +131,11 @@ export async function holdTimeAction(formData: FormData) {
   redirect(DETAILS_PATH);
 }
 
-/** "Zmień termin": gives the held time back and returns to the wizard. */
+/**
+ * "Zmień termin": gives the held time back and returns to the wizard, with
+ * the same service, specialist, form and week (#164); only the time is
+ * chosen again.
+ */
 export async function releaseHoldAction() {
   const token = await readHoldToken();
   if (token) {
@@ -113,8 +145,12 @@ export async function releaseHoldAction() {
     if (session) await expireSession(session);
     await releaseHold(db, token).catch(() => false);
     await clearHoldToken();
+    // The details given for it are filled in for the next time chosen.
+    await saveFormerHoldToken(token);
   }
-  redirect(bookingHref({}));
+  redirect(
+    bookingHref(readMemory((await cookies()).get(MEMORY_COOKIE)?.value)),
+  );
 }
 
 /** The site's own address, for Stripe's return link. */
@@ -137,7 +173,10 @@ export async function startPaymentAction() {
   return goToPayment(token);
 }
 
-async function goToPayment(token: string): Promise<never> {
+async function goToPayment(
+  token: string,
+  paymentPath: Route = PAYMENT_PATH,
+): Promise<never> {
   const db = createSecretClient();
 
   const pending = await pendingCheckoutSession(db, token);
@@ -151,7 +190,7 @@ async function goToPayment(token: string): Promise<never> {
       session?.status === "open" &&
       session.customer_email === current?.details?.email
     ) {
-      redirect(PAYMENT_PATH);
+      redirect(paymentPath);
     }
     if (session?.status === "open") await expireSession(session.id);
   }
@@ -159,6 +198,7 @@ async function goToPayment(token: string): Promise<never> {
   const booking = await getBooking(db, token);
   if (!booking || booking.status !== "held") redirect(EXPIRED);
   if (!booking.details) redirect(DETAILS_PATH);
+  if (booking.priceMinor === 0) return confirmFree(token, booking.reference);
   const timeZone = (await getBookingWindow())?.timeZone ?? "Europe/Warsaw";
 
   const session = await stripeServer().checkout.sessions.create(
@@ -186,7 +226,7 @@ async function goToPayment(token: string): Promise<never> {
     }
     throw error;
   }
-  redirect(PAYMENT_PATH);
+  redirect(paymentPath);
 }
 
 export type DetailsFormState =
@@ -224,6 +264,17 @@ export async function saveDetailsAction(
     // The questionnaire, where the service asks for it, tied to the visit.
     await attachVisitIntake(db, token, (await readIntake())?.token ?? null);
     await saveBookingDetails(db, token, form.details);
+    if (form.newsletter) {
+      // Its own consent, confirmed by its own link; the visit goes on
+      // whatever happens to it.
+      const ip = clientIp(await headers());
+      const { email } = form.details;
+      after(() =>
+        signUpForNewsletter(email, "booking", ip).catch((error: unknown) => {
+          console.error("[booking] the newsletter sign-up failed:", error);
+        }),
+      );
+    }
   } catch (error) {
     if (error instanceof BookingError && error.code === "intake_required") {
       return {
@@ -234,6 +285,7 @@ export async function saveDetailsAction(
           notes: form.details.notes ?? "",
           acceptTerms: true,
           acceptPrivacy: true,
+          newsletter: form.newsletter,
         },
         message:
           "Ta konsultacja zaczyna się od krótkiego testu. Wróć do wyboru usługi, wypełnij go i wybierz termin ponownie.",
@@ -251,6 +303,7 @@ export async function saveDetailsAction(
           notes: form.details.notes ?? "",
           acceptTerms: true,
           acceptPrivacy: true,
+          newsletter: form.newsletter,
         },
         message: "Sprawdź, proszę, swoje dane i spróbuj ponownie.",
       };
@@ -260,20 +313,33 @@ export async function saveDetailsAction(
   // Saved (with its questionnaire, the cookie is done with): reserved to
   // pay later, or straight on to the payment.
   await clearIntake();
-  if (formData.get(INTENT_FIELD) === PAY_LATER) return reserveForLater(token);
+  if (formData.get(INTENT_FIELD) === PAY_LATER) {
+    // Nothing to pay later when the code covers it all.
+    const current = await getBooking(createSecretClient(), token);
+    if (current?.priceMinor === 0) return confirmFree(token, current.reference);
+    return reserveForLater(token);
+  }
   return goToPayment(token);
 }
 
 /**
- * "Zarezerwuj, zapłacę później" (R11): the visit is reserved until its
- * payment is due, the link to pay goes by e-mail, and the visit's page
- * opens by that same link. Too close to the visit, it is paid now.
+ * "Zarezerwuj, zapłacę później" (R11): the visit is reserved, the link goes
+ * by e-mail, and the client confirms the reservation from it within 30
+ * minutes (a real address), then pays by its time. The browser never gets
+ * the link itself. Too close to the visit, or with two unpaid reservations
+ * already (by e-mail, phone or visitor), it is paid now.
  */
 async function reserveForLater(token: string): Promise<never> {
   const db = createSecretClient();
-  let reference: string;
+  const pending = await pendingCheckoutSession(db, token);
+  const ip = clientIp(await headers());
+  let reserved: Awaited<ReturnType<typeof reserveHold>>;
   try {
-    ({ reference } = await reserveHold(db, token));
+    reserved = await reserveHold(
+      db,
+      token,
+      visitorKey(ip, process.env.SUPABASE_SECRET_KEY ?? ""),
+    );
   } catch (error) {
     if (error instanceof BookingError && error.code === "pay_now_required") {
       return goToPayment(token);
@@ -281,10 +347,79 @@ async function reserveForLater(token: string): Promise<never> {
     if (error instanceof BookingError) redirect(EXPIRED);
     throw error;
   }
-  const link = await claimReservationEmail(reference).catch((error) => {
-    console.error(`[booking] reserved e-mail ${reference}:`, error);
+  if (reserved.outcome === "pay_now") return goToPayment(token, PAY_NOW_PATH);
+  // A payment begun before ("Zapłać teraz", then back) cannot be paid any
+  // more: the reservation is paid from its own link. Expired only now, once
+  // the database no longer counts it, so Stripe's event frees nothing.
+  if (pending) await expireSession(pending);
+  await claimReservationEmail(reserved.reference).catch((error) => {
+    console.error(`[booking] reserved e-mail ${reserved.reference}:`, error);
     return null;
   });
   await clearHoldToken();
-  redirect(`/wizyta/${link ?? token}?zmiana=zarezerwowana` as Route);
+  redirect(CHECK_EMAIL_PATH);
+}
+
+/**
+ * A visit its discount code made free: confirmed without a payment, the
+ * confirmation e-mailed as after a paid one.
+ */
+async function confirmFree(token: string, reference: string): Promise<never> {
+  try {
+    await confirmFreeBooking(createSecretClient(), token);
+  } catch (error) {
+    if (discountRefusal(error) === "hold_expired") redirect(EXPIRED);
+    throw error;
+  }
+  after(() => sendVisitConfirmation(reference));
+  redirect("/umow-wizyte/potwierdzenie?bezplatna=1" as Route);
+}
+
+export type DiscountFormState =
+  | { status: "idle" }
+  | { status: "applied" }
+  | { status: "refused"; message: string; code: string };
+
+/** "Zastosuj": a discount code on the held visit (useActionState). */
+export async function applyDiscountAction(
+  _previous: DiscountFormState,
+  formData: FormData,
+): Promise<DiscountFormState> {
+  const token = await readHoldToken();
+  if (!token) redirect(EXPIRED);
+  const code = String(formData.get("kod") ?? "").trim();
+  if (!code) return { status: "refused", message: "Wpisz kod rabatowy.", code };
+  const db = createSecretClient();
+  const pending = await pendingCheckoutSession(db, token).catch(() => null);
+  try {
+    await applyDiscountCode(db, token, code);
+  } catch (error) {
+    const hint = discountRefusal(error);
+    if (hint === "hold_expired") redirect(EXPIRED);
+    if (!hint) console.error("[booking] applying a code failed:", error);
+    // A wrong guess counts against the hold (10 an hour).
+    if (hint && GUESS_REFUSALS.has(hint))
+      await noteDiscountRefusal(db, token).catch(() => undefined);
+    return { status: "refused", message: discountProblem(hint), code };
+  }
+  // The payment begun at the old price closes in Stripe too.
+  if (pending) await expireSession(pending).catch(() => {});
+  revalidatePath(DETAILS_PATH);
+  return { status: "applied" };
+}
+
+/** "Usuń kod": the list price again. */
+export async function removeDiscountAction() {
+  const token = await readHoldToken();
+  if (!token) redirect(EXPIRED);
+  const db = createSecretClient();
+  const pending = await pendingCheckoutSession(db, token).catch(() => null);
+  try {
+    await removeDiscountCode(db, token);
+  } catch (error) {
+    if (discountRefusal(error) === "hold_expired") redirect(EXPIRED);
+    throw error;
+  }
+  if (pending) await expireSession(pending).catch(() => {});
+  revalidatePath(DETAILS_PATH);
 }

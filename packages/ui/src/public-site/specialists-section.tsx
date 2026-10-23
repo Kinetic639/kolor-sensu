@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 import { cn } from "../lib/utils";
 import { ArrowLink } from "./actions";
 import {
@@ -7,9 +7,17 @@ import {
   type SpecialistWatercolorCardProps,
 } from "./specialist-card";
 import { EditorialHeading, SectionEyebrow } from "./typography";
+import type { SectionHeaderContent } from "@repo/contracts/section-header";
+import { SectionHeader } from "./section-header";
 
 export interface SpecialistsSectionProps {
   specialists: readonly Specialist[];
+  /**
+   * The header as the CMS edits it (words and colours; the markup stays
+   * this section's). When given, it replaces eyebrow, heading,
+   * description and cta (its own call to action takes cta's place).
+   */
+  header?: SectionHeaderContent;
   eyebrow?: ReactNode;
   heading?: ReactNode;
   description?: ReactNode;
@@ -31,6 +39,7 @@ const STAGGER = 0.12;
  */
 export function SpecialistsSection({
   specialists,
+  header,
   eyebrow = "Nasi specjaliści",
   heading = "Poznaj nasz zespół",
   description,
@@ -40,26 +49,34 @@ export function SpecialistsSection({
   id,
   className,
 }: SpecialistsSectionProps) {
+  const headingId = useId();
   return (
     <section
+      aria-labelledby={headingId}
       id={id}
       className={cn(
         "max-w-page px-gutter py-section-sm mx-auto grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,8fr)] lg:items-center lg:gap-8",
         className,
       )}
     >
-      <div className="grid content-start gap-4">
-        <SectionEyebrow>{eyebrow}</SectionEyebrow>
-        <EditorialHeading>{heading}</EditorialHeading>
-        {description ? (
-          <p className="max-w-copy text-body text-text-muted">{description}</p>
-        ) : null}
-        {cta ? (
-          <ArrowLink href={cta.href} className="mt-2 justify-self-start">
-            {cta.label}
-          </ArrowLink>
-        ) : null}
-      </div>
+      {header ? (
+        <SectionHeader content={header} className="gap-4" id={headingId} />
+      ) : (
+        <div className="grid content-start gap-4">
+          <SectionEyebrow>{eyebrow}</SectionEyebrow>
+          <EditorialHeading id={headingId}>{heading}</EditorialHeading>
+          {description ? (
+            <p className="max-w-copy text-body text-text-muted">
+              {description}
+            </p>
+          ) : null}
+          {cta ? (
+            <ArrowLink href={cta.href} className="mt-2 justify-self-start">
+              {cta.label}
+            </ArrowLink>
+          ) : null}
+        </div>
+      )}
       <ul className="ks-sp-list">
         {specialists.map((specialist, index) => (
           <li key={specialist.href}>

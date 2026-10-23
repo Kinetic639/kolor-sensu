@@ -25,3 +25,23 @@ export async function saveHoldToken(token: string) {
 export async function clearHoldToken() {
   (await cookies()).delete({ name: NAME, path: "/umow-wizyte" });
 }
+
+// The hold given back for another time ("Zmień termin", or a time chosen
+// again): its token, for an hour, so the details given for it are filled
+// in for the new time. Its visit stays given back; only its details are
+// read again, by the same secret.
+const FORMER = "ks_booking_former";
+
+export async function readFormerHoldToken() {
+  return (await cookies()).get(FORMER)?.value ?? null;
+}
+
+export async function saveFormerHoldToken(token: string) {
+  (await cookies()).set(FORMER, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/umow-wizyte",
+    maxAge: MAX_AGE_SECONDS,
+  });
+}

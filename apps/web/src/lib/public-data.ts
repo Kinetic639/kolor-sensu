@@ -5,8 +5,31 @@ import {
   getCurrentAnnouncement,
   getPublicCenterProfile,
   getPublicServiceBySlug,
+  getPublishedAboutHeaders,
+  getPublishedAboutPage,
+  getPublishedClosingCta,
+  getPublishedContactPage,
+  getPublishedLegalPage,
+  getPublishedOfferPage,
+  getPublishedPricesPage,
+  getPublishedServicePage,
+  getPublishedCrisisHelp,
+  getPublishedSiteContact,
+  getPublishedSpecialistsPage,
+  getPublishedEducationPage,
+  getPublishedFirstSteps,
+  getPublishedPageSeo,
+  getPublishedSiteAppearance,
+  getPublishedHomeLocation,
+  getPublishedNewsletterBand,
+  getPublishedWhyUs,
+  getPublishedHomeHeaders,
   getPublishedHomeContent,
+  getPublishedHomeStory,
+  getPublishedHomeThoughts,
+  getPublishedHomeSections,
   getPublishedRoomsPageContent,
+  getPublishedSupportAreas,
   getPublishedSpecialistBySlug,
   getSpecialistSlugRedirect,
   listBookableCatalog,
@@ -19,15 +42,45 @@ import {
   listPublicOffersForSpecialist,
   listPublicSpecialistOffersForService,
   listPublishedSpecialists,
+  supportAreaImageUrl,
 } from "@repo/supabase";
+import type { LegalPageKey } from "@repo/contracts/cms-legal";
+import { defaultLegalPages } from "@repo/contracts/cms-legal-content";
 import {
   arrangeOffer,
+  defaultAboutHeaders,
+  defaultAboutPage,
+  defaultClosingCta,
+  defaultContactPage,
+  defaultOfferPage,
+  defaultPricesPage,
+  defaultServicePage,
+  defaultCrisisHelp,
+  defaultSiteContact,
+  defaultSpecialistsPage,
+  defaultEducationPage,
+  type AboutPageContent,
+  defaultHomeStory,
+  defaultHomeThoughts,
+  defaultHomeLocation,
+  defaultNewsletterBand,
+  defaultWhyUs,
+  defaultFirstSteps,
+  defaultHomeHeaders,
+  defaultHomeSections,
   defaultRoomsPageContent,
   flattenOffer,
+  defaultPageSeo,
+  type PageSeoContent,
+  type SeoPage,
 } from "@repo/contracts";
 import { intakeServiceSlugs } from "@repo/supabase/intakes";
+import type { WatercolorLook } from "@repo/ui/public-site";
 import { cache } from "react";
-import { createPublicClient } from "@/lib/supabase/public";
+import { createReadClient } from "@/lib/preview";
+import type { createPublicClient } from "@/lib/supabase/public";
+import type { HomeHero, HomeStory } from "@/lib/home-content";
+import type { HomeSections } from "@/lib/spotlight";
 import { groupRoomsByLocation } from "./rooms-by-location";
 
 // Everything the public pages read from Supabase, in one place. Each
@@ -36,7 +89,8 @@ import { groupRoomsByLocation } from "./rooms-by-location";
 // it logs the error and returns an empty result, so the site still renders
 // (with its own content) instead of failing. Pages are prerendered and
 // revalidated (see app/layout.tsx), and /api/revalidate refreshes a path on
-// demand when the CMS publishes.
+// demand when the CMS publishes. In the CMS preview (Draft Mode, lib/preview.ts)
+// the same loaders read the CMS drafts instead, on every request.
 
 export type PublicService = Awaited<
   ReturnType<typeof listPublicServices>
@@ -56,13 +110,13 @@ export type PublicCenter = NonNullable<
 
 type Client = ReturnType<typeof createPublicClient>;
 
-async function load<T>(
+export async function load<T>(
   what: string,
   query: (client: Client) => Promise<T>,
   fallback: T,
 ): Promise<T> {
   try {
-    return await query(createPublicClient());
+    return await query(await createReadClient());
   } catch (error) {
     console.error(`[public-data] ${what} failed:`, error);
     return fallback;
@@ -77,9 +131,188 @@ export const getLocations = cache(() =>
   load("locations", listPublicLocations, []),
 );
 
-/** The home hero's CMS fields, published from the admin's /cms. */
+/**
+ * The home hero's CMS fields, published from the admin's /cms (null until
+ * then: the site's own hero), with its photo as an address.
+ */
 export const getHomeContent = cache(() =>
-  load("home content", getPublishedHomeContent, null),
+  load<HomeHero | null>(
+    "home content",
+    async (client) => {
+      const content = await getPublishedHomeContent(client);
+      if (!content) return null;
+      return {
+        ...content,
+        imageUrl: content.imagePath
+          ? supportAreaImageUrl(client, content.imagePath)
+          : null,
+      };
+    },
+    null,
+  ),
+);
+
+/** Home → "Myśli, które się odmieniają", published (the site's until then). */
+export const getHomeThoughts = cache(() =>
+  load("home thoughts", getPublishedHomeThoughts, defaultHomeThoughts),
+);
+
+/**
+ * Home → the story's steps, published (the site's until then), each photo
+ * as an address.
+ */
+export const getHomeStory = cache(() =>
+  load<HomeStory>(
+    "home story",
+    async (client) => {
+      const story = await getPublishedHomeStory(client);
+      return {
+        steps: story.steps.map((step) => ({
+          ...step,
+          imageUrl: step.imagePath
+            ? supportAreaImageUrl(client, step.imagePath)
+            : null,
+        })),
+      };
+    },
+    {
+      steps: defaultHomeStory.steps.map((step) => ({
+        ...step,
+        imageUrl: null,
+      })),
+    },
+  ),
+);
+
+/** Home → Obszary wsparcia, published from the admin's /cms; null until then. */
+export const getSupportAreas = cache(() =>
+  load("support areas", getPublishedSupportAreas, null),
+);
+
+/**
+ * Home → the sections' headers (eyebrow, title, description, call to
+ * action), published from the admin's /cms (the site's own until then).
+ */
+export const getHomeHeaders = cache(() =>
+  load("home headers", getPublishedHomeHeaders, defaultHomeHeaders),
+);
+
+/** Home → "Pierwszy krok", published from the admin's /cms (the site's own until then). */
+export const getFirstSteps = cache(() =>
+  load("first steps", getPublishedFirstSteps, defaultFirstSteps),
+);
+
+/** Home → "Dlaczego my", published from the admin's /cms (hidden until then). */
+export const getWhyUs = cache(() =>
+  load("why us", getPublishedWhyUs, defaultWhyUs),
+);
+
+/** Home → whether the newsletter band shows (hidden until published). */
+export const getNewsletterBand = cache(() =>
+  load("newsletter band", getPublishedNewsletterBand, defaultNewsletterBand),
+);
+
+/** Home → whether "Gdzie jesteśmy" shows (shown until published otherwise). */
+export const getHomeLocation = cache(() =>
+  load("home location", getPublishedHomeLocation, defaultHomeLocation),
+);
+
+/** O nas, its words, with the story's photo as an address. */
+export const getAboutPage = cache(() =>
+  load<AboutPageContent & { storyImageUrl: string | null }>(
+    "about page",
+    async (client) => {
+      const about = await getPublishedAboutPage(client);
+      const path = about.story.imagePath;
+      return {
+        ...about,
+        storyImageUrl: path ? supportAreaImageUrl(client, path) : null,
+      };
+    },
+    { ...defaultAboutPage, storyImageUrl: null },
+  ),
+);
+
+/** O nas → its sections' headers. */
+export const getAboutHeaders = cache(() =>
+  load("about headers", getPublishedAboutHeaders, defaultAboutHeaders),
+);
+
+/** /specjalisci, its words. */
+export const getSpecialistsPage = cache(() =>
+  load("specialists page", getPublishedSpecialistsPage, defaultSpecialistsPage),
+);
+
+/** /kontakt, its words, travel description and questions. */
+/** Edukacja's words: its tops, the empty line, the word about therapy. */
+export const getEducationPage = cache(() =>
+  load("education page", getPublishedEducationPage, defaultEducationPage),
+);
+
+export const getContactPage = cache(() =>
+  load("contact page", getPublishedContactPage, defaultContactPage),
+);
+
+/** A legal document (Regulamin, Polityka prywatności, Pliki cookies). */
+export const getLegalPage = cache((key: LegalPageKey) =>
+  load(
+    `legal page ${key}`,
+    (client) => getPublishedLegalPage(client, key),
+    defaultLegalPages[key],
+  ),
+);
+
+/** /oferta's words. */
+export const getOfferPage = cache(() =>
+  load("offer page", getPublishedOfferPage, defaultOfferPage),
+);
+
+/** The words every service's page shares. */
+export const getServicePage = cache(() =>
+  load("service page", getPublishedServicePage, defaultServicePage),
+);
+
+/** /cennik's words and rules. */
+export const getPricesPage = cache(() =>
+  load("prices page", getPublishedPricesPage, defaultPricesPage),
+);
+
+/** The closing banner's words (Ustawienia wspólne). */
+export const getClosingCta = cache(() =>
+  load("closing banner", getPublishedClosingCta, defaultClosingCta),
+);
+
+/** The contact hours (Ustawienia wspólne). */
+export const getSiteContact = cache(() =>
+  load("site contact", getPublishedSiteContact, defaultSiteContact),
+);
+
+/**
+ * Home → the crisis strip's words and numbers, published from the admin's
+ * /cms (the site's own until then). Never empty: on any failure, the
+ * site's own numbers.
+ */
+export const getCrisisHelp = cache(() =>
+  load("crisis help", getPublishedCrisisHelp, defaultCrisisHelp),
+);
+
+/**
+ * Home → which specialist sections show, published from the admin's /cms
+ * (the team until then), with the spotlight's own photo as an address.
+ */
+export const getHomeSections = cache(() =>
+  load<HomeSections>(
+    "home sections",
+    async (client) => {
+      const sections = await getPublishedHomeSections(client);
+      const path = sections.spotlight.imagePath;
+      return {
+        ...sections,
+        spotlightImage: path ? supportAreaImageUrl(client, path) : null,
+      };
+    },
+    { ...defaultHomeSections, spotlightImage: null },
+  ),
 );
 
 /** Which optional sections /gabinety shows, set in the admin's CMS. */
@@ -256,4 +489,53 @@ export const getCompany = cache(() => load("company", getCompanyDetails, null));
 /** The centre's time zone and booking horizon. */
 export const getBookingWindow = cache(() =>
   load("booking window", readBookingWindow, null),
+);
+
+/** A page's search and sharing settings, with its picture as an address. */
+export type PageSeo = PageSeoContent & { ogImageUrl: string | null };
+
+/**
+ * A page's search and sharing settings, published from the admin's /cms
+ * (every field empty, the page's own, until then).
+ */
+export const getPageSeo = cache((page: SeoPage) =>
+  load<PageSeo>(
+    `${page} seo`,
+    async (client) => {
+      const seo = await getPublishedPageSeo(client, page);
+      return {
+        ...seo,
+        ogImageUrl: seo.ogImagePath
+          ? supportAreaImageUrl(client, seo.ogImagePath)
+          : null,
+      };
+    },
+    { ...defaultPageSeo, ogImageUrl: null },
+  ),
+);
+
+/**
+ * The painted photo's look, from the site's shared settings published in
+ * the admin's /cms: its backdrop (the site's own until one is chosen) and
+ * its optional parallax layer, as addresses.
+ */
+export const getWatercolorLook = cache(() =>
+  load<WatercolorLook>(
+    "watercolor look",
+    async (client) => {
+      const look = await getPublishedSiteAppearance(client);
+      return {
+        ...(look.watercolorBackdropPath && {
+          watercolorSrc: supportAreaImageUrl(
+            client,
+            look.watercolorBackdropPath,
+          ),
+        }),
+        parallaxSrc: look.watercolorParallaxPath
+          ? supportAreaImageUrl(client, look.watercolorParallaxPath)
+          : null,
+      };
+    },
+    {},
+  ),
 );

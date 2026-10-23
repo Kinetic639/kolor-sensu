@@ -1,5 +1,7 @@
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
+import type { ReactNode } from "react";
 import { PageLink as Link } from "./page-link";
+import { CookieSettingsButton } from "./cookie-consent";
 import { cn } from "../lib/utils";
 import { Separator } from "../separator";
 import { brandTagline, SiteLogo } from "./site-logo";
@@ -13,8 +15,8 @@ import { SocialIcon, socialNames } from "./social-icons";
 
 // Server-safe. Reference A's footer: the brand with a line about the centre,
 // the navigation, the offer, contact details (a real <address>, links that
-// dial and write) and social profiles; under a hairline, the copyright and
-// the legal links.
+// dial and write) and social profiles; the site's newsletter form when it is
+// on; under a hairline, the copyright and the legal links.
 
 export interface SiteFooterProps {
   navigation: readonly SiteNavItem[];
@@ -28,6 +30,8 @@ export interface SiteFooterProps {
   year?: number;
   /** The company in one line (its name, address, NIP), under it. */
   company?: string | null;
+  /** The newsletter's sign-up form (the site's), under the columns. */
+  newsletter?: ReactNode;
   className?: string;
 }
 
@@ -48,6 +52,7 @@ export function SiteFooter({
   about,
   year = new Date().getFullYear(),
   company = null,
+  newsletter = null,
   className,
 }: SiteFooterProps) {
   const offer = navigation.find((item) => item.footerColumn);
@@ -177,6 +182,12 @@ export function SiteFooter({
         ) : null}
       </div>
 
+      {newsletter ? (
+        <div className="max-w-page px-gutter mx-auto pb-12">
+          <div className="max-w-xl">{newsletter}</div>
+        </div>
+      ) : null}
+
       <div className="max-w-page px-gutter mx-auto">
         <Separator className="bg-border/70" />
         <div className="text-small text-text-muted flex flex-col gap-3 py-6 sm:flex-row sm:items-center sm:justify-between">
@@ -196,6 +207,10 @@ export function SiteFooter({
                   </Link>
                 </li>
               ))}
+              {/* Back to the cookie notice: change or withdraw consent. */}
+              <li>
+                <CookieSettingsButton className="hover:text-ink focus-visible:outline-ring cursor-pointer rounded-sm underline-offset-4 hover:underline focus-visible:outline-2" />
+              </li>
             </ul>
           ) : null}
         </div>

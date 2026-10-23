@@ -2,37 +2,40 @@ import { SpecialistWatercolorCard } from "@repo/ui/public-site";
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
 import { PageIntro } from "@/components/page-intro";
-import { specialistsCopy } from "@/content/site";
 import { toSpecialistCard } from "@/lib/presentation";
-import { getSpecialists } from "@/lib/public-data";
+import {
+  getClosingCta,
+  getSpecialists,
+  getSpecialistsPage,
+} from "@/lib/public-data";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Specjaliści",
-  description:
-    "Poznaj psychoterapeutów i psychologów Kolor Sensu: ich doświadczenie, podejście i formy pracy.",
-  alternates: { canonical: "/specjalisci" },
-};
+// Title, description and link preview: the CMS's over the page's own.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("specialists");
+}
 
 // Cards entering together, each a little after the one before; every other
 // one blooms mirrored (as in SpecialistsSection).
 const STAGGER = 0.12;
 
+// Every word is the CMS's (CMS → Specjaliści): the top, the line for an
+// empty list and the closing banner's line.
 export default async function SpecialistsPage() {
-  const specialists = await getSpecialists();
+  const [specialists, page, closing] = await Promise.all([
+    getSpecialists(),
+    getSpecialistsPage(),
+    getClosingCta(),
+  ]);
+  const { intro } = page;
 
   return (
     <>
-      <PageIntro
-        eyebrow={specialistsCopy.eyebrow}
-        heading="Specjaliści"
-        accent="Ludzie, którzy słuchają."
-        lead={specialistsCopy.description}
-      />
+      <PageIntro header={intro} />
       <section className="max-w-page px-gutter pb-section-sm mx-auto">
         {specialists.length === 0 ? (
           <p className="text-body text-text-muted max-w-copy">
-            Profile naszych specjalistów pojawią się tu wkrótce. Zadzwoń lub
-            napisz do nas, a pomożemy dobrać osobę i termin.
+            {page.emptyText}
           </p>
         ) : (
           <ul className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
@@ -55,7 +58,7 @@ export default async function SpecialistsPage() {
           </ul>
         )}
       </section>
-      <ClosingCta heading="Nie wiesz, do kogo się zapisać? Pomożemy wybrać." />
+      <ClosingCta heading={page.helpHeading} words={closing} />
     </>
   );
 }

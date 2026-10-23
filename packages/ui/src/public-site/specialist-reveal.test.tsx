@@ -37,6 +37,9 @@ function mockIntersectionObserver() {
     callback: IntersectionObserverCallback;
     targets: Element[];
   }> = [];
+  // As a real one: an observer made once the element is on screen
+  // reports it at once.
+  let visible = false;
   class Observer {
     targets: Element[] = [];
     constructor(public callback: IntersectionObserverCallback) {
@@ -44,6 +47,14 @@ function mockIntersectionObserver() {
     }
     observe(target: Element) {
       this.targets.push(target);
+      if (visible) {
+        queueMicrotask(() =>
+          this.callback(
+            [{ target, isIntersecting: true } as IntersectionObserverEntry],
+            this as unknown as IntersectionObserver,
+          ),
+        );
+      }
     }
     unobserve() {}
     disconnect() {
@@ -56,6 +67,7 @@ function mockIntersectionObserver() {
   vi.stubGlobal("IntersectionObserver", Observer);
   return {
     scrollIntoView() {
+      visible = true;
       for (const observer of observers) {
         observer.callback(
           observer.targets.map(

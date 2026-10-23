@@ -12,22 +12,28 @@
 //   waiting         mounted; waits until the image is in view and loaded.
 //   playing         the paint matte (watercolor-paint-matte.ts) masks the
 //                   backdrop and the photo, and GSAP paints it stroke by
-//                   stroke.
+//                   stroke. With photoAtOnceOnPhones (the hero), a screen
+//                   narrower than 64rem shows the photo throughout and only
+//                   the backdrop is painted.
 //   fading          reduced motion, "simple-fade": a short fade instead.
 //   done            the matte is removed and the reveal styles no longer
 //                   apply: this is exactly the static composition, and
 //                   nothing keeps running.
 
-import { useGSAP } from "@gsap/react";
-import { gsap } from "gsap";
 import {
   createContext,
   type CSSProperties,
   type ReactNode,
   type RefObject,
   useContext,
+  useEffect,
   useRef,
 } from "react";
+import {
+  type GsapAnimation,
+  type GsapTimeline,
+  useLazyGsap,
+} from "./lazy-gsap";
 import {
   createPaintMatte,
   createPaintTimeline,
@@ -42,8 +48,6 @@ import {
   svgMasksSupported,
   watchReveal,
 } from "./reveal-support";
-
-gsap.registerPlugin(useGSAP);
 
 export type ReducedMotionMode = "static" | "simple-fade";
 
@@ -65,10 +69,7 @@ export interface WatercolorRevealDebug {
   /** Keep the matte in the page after the reveal, to inspect it. */
   keepMatte?: boolean;
   /** Receives the matte and the timeline once the reveal starts. */
-  onReveal?: (reveal: {
-    matte: PaintMatte;
-    timeline: gsap.core.Timeline;
-  }) => void;
+  onReveal?: (reveal: { matte: PaintMatte; timeline: GsapTimeline }) => void;
 }
 
 export const WatercolorRevealDebugContext =
@@ -77,9 +78,29 @@ export const WatercolorRevealDebugContext =
 export interface WatercolorRevealProps {
   as: "div" | "figure";
   reducedMotionMode: ReducedMotionMode;
+  /**
+   * The page's largest paint (the hero): below 64rem the photo shows at
+   * once, unmasked, so a phone does not wait for the script to see it.
+   */
+  photoAtOnceOnPhones?: boolean;
   className?: string;
   style?: CSSProperties;
   children: ReactNode;
+}
+
+/** Wide enough for the full reveal of a photoAtOnceOnPhones picture. */
+export const FULL_REVEAL_QUERY = "(min-width: 64rem)";
+
+/** Whether the picture shows as it is, with no reveal. */
+function staysStill(root: HTMLElement, reducedMotionMode: ReducedMotionMode) {
+  const reduce = matches("(prefers-reduced-motion: reduce)");
+  return (
+    // Already shown by the no-script fallback (the script came late).
+    shownByFallback(root, revealProperties.hidden, "none") ||
+    !matches("(scripting: enabled)") ||
+    (reduce && reducedMotionMode === "static") ||
+    (!reduce && !svgMasksSupported())
+  );
 }
 
 // Longest wait for the images before painting anyway.
@@ -88,6 +109,7 @@ const LOAD_TIMEOUT = 1500;
 export function WatercolorReveal({
   as: Root,
   reducedMotionMode,
+  photoAtOnceOnPhones = false,
   className,
   style,
   children,
@@ -95,31 +117,33 @@ export function WatercolorReveal({
   const ref = useRef<HTMLElement>(null);
   const debug = useContext(WatercolorRevealDebugContext);
 
-  useGSAP(
-    (_, contextSafe) => {
+  // At once, without GSAP: whether it is revealed at all, so the
+  // stylesheet's fallback does not show the picture before its turn. GSAP
+  // comes when the picture is near (useLazyGsap).
+  useEffect(() => {
+    const root = ref.current;
+    if (root && !root.dataset.reveal) {
+      root.dataset.reveal = staysStill(root, reducedMotionMode)
+        ? "done"
+        : "waiting";
+    }
+  }, [reducedMotionMode]);
+
+  useLazyGsap(
+    ({ gsap }, contextSafe) => {
       const root = ref.current;
-      if (!root) return;
+      if (!root || root.dataset.reveal === "done") return;
       const setState = (state: string) => {
         root.dataset.reveal = state;
       };
-
       const reduce = matches("(prefers-reduced-motion: reduce)");
-      // Already shown by the no-script fallback (the script came late).
-      const shown = shownByFallback(root, revealProperties.hidden, "none");
-      if (
-        shown ||
-        !matches("(scripting: enabled)") ||
-        (reduce && reducedMotionMode === "static") ||
-        (!reduce && !svgMasksSupported())
-      ) {
-        setState("done");
-        return;
-      }
-      setState("waiting");
+      // The photo is painted in too, unless it is already showing.
+      const paintsPhoto =
+        root.dataset.photoAtOnce === undefined || matches(FULL_REVEAL_QUERY);
 
       let cancelled = false;
       let timer: ReturnType<typeof setTimeout> | undefined;
-      let animation: gsap.core.Animation | undefined;
+      let animation: GsapAnimation | undefined;
       let matte: PaintMatte | undefined;
       // The caption, or the decorative mark in its place: shown late.
       const caption = root.querySelector<HTMLElement>(
@@ -148,7 +172,7 @@ export function WatercolorReveal({
         if (!debug?.keepMatte) matte?.svg.remove();
       };
 
-      const fade = contextSafe!(() => {
+      const fade = contextSafe(() => {
         setState("fading");
         animation = gsap.fromTo(
           root,
@@ -164,21 +188,25 @@ export function WatercolorReveal({
 
       // Built ahead, paused at its start: the masks are only applied once
       // it plays, so until then the layers stay unpainted.
-      let timeline: gsap.core.Timeline | undefined;
-      const build = contextSafe!(() => {
+      let timeline: GsapTimeline | undefined;
+      const build = contextSafe(() => {
         matte = createPaintMatte(root);
         timeline = createPaintTimeline(matte, {
+          gsap,
           caption,
+          photo: paintsPhoto,
           paused: true,
           onComplete: finish,
         });
         animation = timeline;
       });
 
-      const paint = contextSafe!(() => {
+      const paint = contextSafe(() => {
         if (!matte || !timeline) build();
         root.style.setProperty(revealProperties.backdrop, matte!.backdrop.url);
-        root.style.setProperty(revealProperties.photo, matte!.photo.url);
+        if (paintsPhoto) {
+          root.style.setProperty(revealProperties.photo, matte!.photo.url);
+        }
         setState("playing");
         debug?.onReveal?.({ matte: matte!, timeline: timeline! });
         const frozen = debug?.freezeAt;
@@ -230,7 +258,12 @@ export function WatercolorReveal({
         matte?.svg.remove();
       };
     },
-    { scope: ref },
+    {
+      scope: ref,
+      onUnavailable: () => {
+        if (ref.current) ref.current.dataset.reveal = "done";
+      },
+    },
   );
 
   return (
@@ -240,6 +273,7 @@ export function WatercolorReveal({
       style={style}
       data-animation="watercolor-reveal"
       data-reduced-motion={reducedMotionMode}
+      data-photo-at-once={photoAtOnceOnPhones ? "narrow" : undefined}
     >
       {children}
     </Root>

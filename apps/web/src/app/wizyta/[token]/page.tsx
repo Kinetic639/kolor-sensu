@@ -1,3 +1,4 @@
+import { reservationConfirmBy } from "@repo/supabase";
 import { BookingSummary } from "@repo/ui/booking";
 import { PrimaryButton, SecondaryButton } from "@repo/ui/public-site";
 import type { Metadata, Route } from "next";
@@ -10,7 +11,10 @@ import { visitByLinkToken } from "@/features/booking/guest-visit";
 import { settleSession } from "@/features/booking/payment";
 import { paymentDeps } from "@/features/booking/payment-server";
 import { RefreshWhileWaiting } from "@/features/booking/refresh-while-waiting";
+import { confirmReservationAction } from "@/features/booking/visit-actions";
+import { deadlineLabel } from "@/features/booking/visit-label";
 import { stripeServer } from "@/lib/stripe";
+import { createSecretClient } from "@/lib/supabase/secret";
 import {
   visitPageCopy,
   type VisitChangeDone,
@@ -40,6 +44,10 @@ const STATUS: Record<string, { title: string; lead: string }> = {
     title: "Czekamy na potwierdzenie płatności",
     lead: "Gdy bank potwierdzi płatność, wizyta zostanie potwierdzona.",
   },
+  unconfirmed: {
+    title: "Potwierdź swoją rezerwację",
+    lead: "Termin czeka na Ciebie. Potwierdź rezerwację, a potem opłać wizytę online.",
+  },
   reserved: {
     title: "Twoja wizyta czeka na płatność",
     lead: "Termin jest zarezerwowany dla Ciebie. Opłać wizytę online, a od razu ją potwierdzimy.",
@@ -50,7 +58,7 @@ const STATUS: Record<string, { title: string; lead: string }> = {
   },
 };
 
-const CHANGES: VisitChangeDone[] = ["przelozona", "odwolana", "zarezerwowana"];
+const CHANGES: VisitChangeDone[] = ["przelozona", "odwolana", "potwierdzona"];
 
 export default async function VisitPage({
   params,
@@ -89,7 +97,13 @@ export default async function VisitPage({
     booking.status === "awaiting_payment" &&
     booking.paymentDueAt !== null &&
     !pendingBank;
-  const status = STATUS[reserved ? "reserved" : booking.status] ?? {
+  // Reserved to pay later, not confirmed from the e-mail yet (30 minutes).
+  const confirmBy = reserved
+    ? await reservationConfirmBy(createSecretClient(), token).catch(() => null)
+    : null;
+  const status = STATUS[
+    confirmBy ? "unconfirmed" : reserved ? "reserved" : booking.status
+  ] ?? {
     title: "Ta rezerwacja nie jest aktywna",
     lead: "Jeśli masz pytania, skontaktuj się z nami.",
   };
@@ -132,7 +146,26 @@ export default async function VisitPage({
           ) : null}
         </BookingSummary>
         <div className="grid gap-5">
-          {copy.pay ? (
+          {confirmBy ? (
+            <section aria-labelledby="potwierdzenie" className="grid gap-3">
+              <h2
+                className="text-title text-ink font-semibold"
+                id="potwierdzenie"
+              >
+                Potwierdzenie rezerwacji
+              </h2>
+              <p className="text-small text-text-muted">
+                Potwierdź rezerwację do {deadlineLabel(confirmBy, timeZone)}.
+                Bez potwierdzenia termin wróci do wolnych terminów.
+              </p>
+              <form action={confirmReservationAction}>
+                <input name="token" type="hidden" value={token} />
+                <PrimaryButton arrow type="submit">
+                  Potwierdzam rezerwację
+                </PrimaryButton>
+              </form>
+            </section>
+          ) : copy.pay ? (
             <section aria-labelledby="platnosc" className="grid gap-3">
               <h2 className="text-title text-ink font-semibold" id="platnosc">
                 Płatność

@@ -9,7 +9,7 @@ describe("HeroSection", () => {
   it("heads the page with one H1, its second line in brand green", () => {
     render(<HeroSection {...sampleHero} />);
     const heading = screen.getByRole("heading", { level: 1 });
-    expect(heading).toHaveTextContent("Więcej zrozumienia.Więcej sensu.");
+    expect(heading).toHaveTextContent("Więcej zrozumienia. Więcej sensu.");
     const accent = within(heading).getByText("Więcej sensu.");
     expect(accent).toHaveClass("text-primary");
     expect(accent).not.toHaveClass("text-pink");
@@ -56,6 +56,24 @@ describe("HeroSection", () => {
     expect(container.querySelector("figcaption")).toHaveTextContent(
       "Przestrzeń dla ważnych rozmów",
     );
+  });
+
+  it("uses the site's chosen backdrop and parallax layer", () => {
+    const { container } = render(
+      <HeroSection
+        {...sampleHero}
+        watercolor={{
+          watercolorSrc: "/media/backdrop.webp",
+          parallaxSrc: "/media/drops.png",
+        }}
+      />,
+    );
+    expect(
+      container.querySelector(".ks-wc__backdrop img")?.getAttribute("src"),
+    ).toContain("backdrop.webp");
+    expect(
+      container.querySelector(".ks-wc__parallax img")?.getAttribute("src"),
+    ).toContain("drops.png");
   });
 
   it("paints the picture in with WatercolorImage's brush strokes when animated", () => {

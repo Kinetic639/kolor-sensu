@@ -6,7 +6,7 @@ import {
   useCheckoutElements,
 } from "@stripe/react-stripe-js/checkout";
 import { loadStripe } from "@stripe/stripe-js";
-import { PrimaryButton } from "@repo/ui/public-site";
+import { PrimaryButton } from "@repo/ui/public-site/actions";
 import { useState, type FormEvent } from "react";
 
 // Step 6: Stripe's Payment Element inside our own step (card, BLIK,

@@ -307,6 +307,66 @@ describe("a profile sent for review", () => {
 });
 
 describe("a visit to close", () => {
+  it("too many unpaid reservations: a warning for the admins, leading to it", () => {
+    const view = notificationView(
+      at({ kind: "unpaid_limit", actor: "system" }),
+      options,
+    );
+    expect(view).toMatchObject({
+      title: "Za dużo nieopłaconych rezerwacji",
+      summary: "Jan Kowalski · czw. 08.10, 11:00",
+      tone: "warning",
+      icon: "reserved",
+      reference: "2610-004",
+    });
+    expect(ids(view)).toContain("system");
+    expect(view.details).toContainEqual(
+      expect.objectContaining({ label: "Co się stało" }),
+    );
+  });
+
+  it("a dispute: a warning with the amount and Stripe's reason", () => {
+    const view = notificationView(
+      at(
+        { kind: "disputed", actor: "payment" },
+        { amountMinor: 25000, disputeReason: "fraudulent" },
+      ),
+      options,
+    );
+    expect(view).toMatchObject({
+      title: "Spór o płatność",
+      tone: "danger",
+      icon: "refund",
+      reference: "2610-004",
+    });
+    expect(view.details).toContainEqual({
+      label: "Kwota sporu",
+      value: expect.stringMatching(/^250\s+zł$/),
+    });
+    expect(view.details).toContainEqual(
+      expect.objectContaining({ label: "Co zrobić" }),
+    );
+  });
+
+  it("a dispute closed: won or lost", () => {
+    const won = notificationView(
+      at(
+        { kind: "dispute_closed", actor: "payment" },
+        { disputeStatus: "won" },
+      ),
+      options,
+    );
+    const lost = notificationView(
+      at(
+        { kind: "dispute_closed", actor: "payment" },
+        { disputeStatus: "lost" },
+      ),
+      options,
+    );
+    expect(won).toMatchObject({ title: "Spór wygrany", tone: "success" });
+    expect(lost).toMatchObject({ title: "Spór przegrany", tone: "danger" });
+  });
+
   it("what, when, and the way to it", () => {
     const view = notificationView(
       at({ kind: "visit_to_close", actor: "system" }, { clientName: null }),
@@ -337,5 +397,44 @@ describe("notificationDays", () => {
       ["Dziś", [0, 1]],
       ["Wczoraj", [2]],
     ]);
+  });
+});
+
+describe("a workshop", () => {
+  const workshop = (kind: string) =>
+    at(
+      { kind, actor: "client", appointmentId: null },
+      {
+        reference: "W2610-007",
+        serviceName: "Uważność",
+        clientName: "Ola Nowak",
+        workshopId: "w1",
+      },
+    );
+
+  it("a sign-up: who, which workshop and when, leading to it for the admin", () => {
+    const view = notificationView(workshop("workshop_signup"), options);
+    expect(view).toMatchObject({
+      title: "Nowy zapis na warsztat",
+      summary: "Ola Nowak · Uważność · czw. 08.10, 11:00",
+      tone: "success",
+      href: "/warsztaty/w1",
+      visitId: null,
+    });
+  });
+
+  it("the minimum not reached: what to decide; the leader's list for a specialist", () => {
+    const view = notificationView(workshop("workshop_minimum"), {
+      ...options,
+      portal: "specialist",
+    });
+    expect(view).toMatchObject({
+      title: "Za mało chętnych",
+      tone: "warning",
+      href: "/warsztaty",
+    });
+    expect(view.details).toContainEqual(
+      expect.objectContaining({ label: "Do decyzji" }),
+    );
   });
 });

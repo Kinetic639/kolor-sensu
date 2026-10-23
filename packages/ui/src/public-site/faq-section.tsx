@@ -9,6 +9,8 @@ import { cn } from "../lib/utils";
 import { ArrowLink } from "./actions";
 import { JsonLd } from "./json-ld";
 import { EditorialHeading, SectionEyebrow } from "./typography";
+import type { SectionHeaderContent } from "@repo/contracts/section-header";
+import { SectionHeader } from "./section-header";
 
 // Server-safe section around a client accordion (shadcn Accordion,
 // restyled). Every answer is in the server HTML (forceMount: closed answers
@@ -23,6 +25,12 @@ export interface FaqItem {
 
 export interface FaqSectionProps {
   items: readonly FaqItem[];
+  /**
+   * The header as the CMS edits it (words and colours; the markup stays
+   * this section's). When given, it replaces eyebrow, heading,
+   * description and cta (its own call to action takes cta's place).
+   */
+  header?: SectionHeaderContent;
   eyebrow?: ReactNode;
   heading?: ReactNode;
   description?: ReactNode;
@@ -33,6 +41,7 @@ export interface FaqSectionProps {
 
 export function FaqSection({
   items,
+  header,
   eyebrow = "Pytania i odpowiedzi",
   heading = "Zanim się zobaczymy",
   description,
@@ -48,18 +57,24 @@ export function FaqSection({
         className,
       )}
     >
-      <div className="grid content-start gap-4">
-        <SectionEyebrow>{eyebrow}</SectionEyebrow>
-        <EditorialHeading>{heading}</EditorialHeading>
-        {description ? (
-          <p className="max-w-copy text-body text-text-muted">{description}</p>
-        ) : null}
-        {cta ? (
-          <ArrowLink href={cta.href} className="mt-2 justify-self-start">
-            {cta.label}
-          </ArrowLink>
-        ) : null}
-      </div>
+      {header ? (
+        <SectionHeader content={header} className="gap-4" />
+      ) : (
+        <div className="grid content-start gap-4">
+          <SectionEyebrow>{eyebrow}</SectionEyebrow>
+          <EditorialHeading>{heading}</EditorialHeading>
+          {description ? (
+            <p className="max-w-copy text-body text-text-muted">
+              {description}
+            </p>
+          ) : null}
+          {cta ? (
+            <ArrowLink href={cta.href} className="mt-2 justify-self-start">
+              {cta.label}
+            </ArrowLink>
+          ) : null}
+        </div>
+      )}
       <Accordion
         type="single"
         collapsible

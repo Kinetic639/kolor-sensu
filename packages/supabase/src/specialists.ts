@@ -213,7 +213,10 @@ export async function listPublishedSpecialists(
     .from("specialist_public_profiles")
     .select(publicProfileSelection)
     .eq("publication_status", "published")
-    .eq("specialists.active", true)
+    // "Widoczny na stronie" is the database's rule for visitors (RLS:
+    // specialist_is_listed; anon may not even read the column). Shown
+    // whether or not they take new clients (#63): an inactive one is only
+    // not bookable (`active` on each profile says which).
     .order("published_at", { ascending: false });
 
   if (error) throw error;
@@ -229,7 +232,6 @@ export async function getPublishedSpecialistBySlug(
     .from("specialist_public_profiles")
     .select(publicProfileSelection)
     .eq("publication_status", "published")
-    .eq("specialists.active", true)
     .eq("specialists.public_slug", publicSlug)
     .maybeSingle();
 

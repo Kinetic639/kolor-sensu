@@ -16,15 +16,19 @@
 //   fading          reduced motion, "simple-fade": a short fade instead.
 //   done            no matte, no inline styles: exactly the static card.
 
-import { useGSAP } from "@gsap/react";
-import { gsap } from "gsap";
 import {
   createContext,
   type ReactNode,
   type RefObject,
   useContext,
+  useEffect,
   useRef,
 } from "react";
+import {
+  type GsapAnimation,
+  type GsapTimeline,
+  useLazyGsap,
+} from "./lazy-gsap";
 import {
   decoded,
   matches,
@@ -42,8 +46,6 @@ import {
 } from "./specialist-splash-matte";
 import type { ReducedMotionMode } from "./watercolor-reveal";
 
-gsap.registerPlugin(useGSAP);
-
 /**
  * Inspection hooks for Storybook (slow motion, matte debug, frame strips).
  * Not for product pages.
@@ -54,10 +56,7 @@ export interface SpecialistRevealDebug {
   /** Keep the matte in the page after the reveal, to inspect it. */
   keepMatte?: boolean;
   /** Receives the matte (if any) and the timeline once the reveal starts. */
-  onReveal?: (reveal: {
-    matte?: SplashMatte;
-    timeline: gsap.core.Timeline;
-  }) => void;
+  onReveal?: (reveal: { matte?: SplashMatte; timeline: GsapTimeline }) => void;
 }
 
 export const SpecialistRevealDebugContext =
@@ -69,8 +68,24 @@ export interface SpecialistRevealProps {
   reducedMotionMode: ReducedMotionMode;
   /** Extra wait (s) before this card starts, to stagger a row of cards. */
   delay: number;
+  /**
+   * How much of the card has to be on screen before it plays (0 to 1);
+   * less where the screen is too short to show that much of it.
+   */
+  threshold?: number;
   className?: string;
   children: ReactNode;
+}
+
+/** Whether it shows as it is, with no reveal. */
+function staysStill(root: HTMLElement, reducedMotionMode: ReducedMotionMode) {
+  return (
+    // Already shown by the no-script fallback (the script came late).
+    shownByFallback(root, "--ks-sp-hidden", "1") ||
+    !matches("(scripting: enabled)") ||
+    (matches("(prefers-reduced-motion: reduce)") &&
+      reducedMotionMode === "static")
+  );
 }
 
 // Longest wait for the images before revealing anyway.
@@ -88,32 +103,33 @@ export function SpecialistReveal({
   matte: variant,
   reducedMotionMode,
   delay,
+  threshold = 0.3,
   className,
   children,
 }: SpecialistRevealProps) {
   const ref = useRef<HTMLElement>(null);
   const debug = useContext(SpecialistRevealDebugContext);
 
-  useGSAP(
-    (_, contextSafe) => {
+  // At once, without GSAP: whether it is revealed at all, so the
+  // stylesheet's fallback does not show it before its turn. GSAP comes
+  // when it is near (useLazyGsap).
+  useEffect(() => {
+    const root = ref.current;
+    if (root && !root.dataset.reveal) {
+      root.dataset.reveal = staysStill(root, reducedMotionMode)
+        ? "done"
+        : "waiting";
+    }
+  }, [reducedMotionMode]);
+
+  useLazyGsap(
+    ({ gsap }, contextSafe) => {
       const root = ref.current;
-      if (!root) return;
+      if (!root || root.dataset.reveal === "done") return;
       const setState = (state: string) => {
         root.dataset.reveal = state;
       };
-
       const reduce = matches("(prefers-reduced-motion: reduce)");
-      // Already shown by the no-script fallback (the script came late).
-      const shown = shownByFallback(root, "--ks-sp-hidden", "1");
-      if (
-        shown ||
-        !matches("(scripting: enabled)") ||
-        (reduce && reducedMotionMode === "static")
-      ) {
-        setState("done");
-        return;
-      }
-      setState("waiting");
 
       const find = (selector: string) =>
         root.querySelector<HTMLElement>(selector);
@@ -125,7 +141,7 @@ export function SpecialistReveal({
       };
       let cancelled = false;
       let timer: ReturnType<typeof setTimeout> | undefined;
-      let animation: gsap.core.Animation | undefined;
+      let animation: GsapAnimation | undefined;
       let matte: SplashMatte | undefined;
 
       const clear = () => {
@@ -148,7 +164,7 @@ export function SpecialistReveal({
         if (!debug?.keepMatte) matte?.svg.remove();
       };
 
-      const fade = contextSafe!(() => {
+      const fade = contextSafe(() => {
         setState("fading");
         animation = gsap.fromTo(
           root,
@@ -160,12 +176,13 @@ export function SpecialistReveal({
       // Built ahead, paused at its start (the layers are hidden until then
       // anyway); the mask goes on when it plays.
       const frozen = debug?.freezeAt;
-      let timeline: gsap.core.Timeline | undefined;
-      const build = contextSafe!(() => {
+      let timeline: GsapTimeline | undefined;
+      const build = contextSafe(() => {
         if (targets.splash && svgMasksSupported()) {
           matte = createSplashMatte(root, variant);
         }
         timeline = createSplashTimeline({
+          gsap,
           ...targets,
           matte,
           delay: frozen === undefined ? delay : 0,
@@ -175,7 +192,7 @@ export function SpecialistReveal({
         animation = timeline;
       });
 
-      const reveal = contextSafe!(() => {
+      const reveal = contextSafe(() => {
         if (!timeline) build();
         if (matte && targets.splash) {
           targets.splash.style.setProperty("mask-image", matte.url);
@@ -212,12 +229,15 @@ export function SpecialistReveal({
         else reveal();
       };
 
-      // Prepare when the card comes near, play once a good part of it is on
-      // screen. (A frozen debug frame is drawn at once.)
+      // Prepare when the card comes near, play once enough of it is on
+      // screen: `threshold` of it, or as much as nine tenths of the
+      // screen can show. (A frozen debug frame is drawn at once.)
+      const height = root.getBoundingClientRect().height;
+      const fits = height > 0 ? (window.innerHeight * 0.9) / height : threshold;
       const stop =
         frozen === undefined
           ? watchReveal(root, {
-              threshold: 0.3,
+              threshold: Math.min(threshold, fits),
               near: () => void prepare(),
               visible: () => void start(),
             })
@@ -231,7 +251,12 @@ export function SpecialistReveal({
         matte?.svg.remove();
       };
     },
-    { scope: ref },
+    {
+      scope: ref,
+      onUnavailable: () => {
+        if (ref.current) ref.current.dataset.reveal = "done";
+      },
+    },
   );
 
   return (

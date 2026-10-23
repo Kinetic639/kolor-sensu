@@ -22,6 +22,7 @@ export const specialistNavigation: PortalNavigationSection[] = [
     items: [
       { label: "Moje rezerwacje", href: "/rezerwacje", icon: "bookings" },
       { label: "Moi klienci", href: "/klienci", icon: "clients" },
+      { label: "Moje warsztaty", href: "/warsztaty", icon: "workshops" },
     ],
   },
   {

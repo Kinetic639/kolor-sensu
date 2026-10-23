@@ -1,39 +1,114 @@
-import { SoftCard } from "@repo/ui/public-site";
+import {
+  ArrowLink,
+  ArticleGrid,
+  EbookGrid,
+  SoftCard,
+} from "@repo/ui/public-site";
 import type { Metadata } from "next";
 import { ClosingCta } from "@/components/closing-cta";
+import {
+  getClosingCta,
+  getEducationPage,
+  getSpecialists,
+} from "@/lib/public-data";
 import { PageIntro } from "@/components/page-intro";
 import { educationPage } from "@/content/site";
+import { toPeople } from "@/features/education/article-page";
+import { ARTICLES_PATH, articleCard } from "@/features/education/article-view";
+import {
+  articleImageUrl,
+  getArticleCategories,
+  getArticles,
+  getEbooks,
+} from "@/lib/education-data";
+import { EBOOKS_PATH, ebookCard } from "@/features/education/ebook-view";
+import { pageMetadata } from "@/lib/page-metadata";
 
-// Edukacja: the place for what the centre teaches (articles first, other
-// kinds later, each under its own path, e.g. /edukacja/artykuly/[slug]).
-// For now its introduction and a word that the content is coming.
+// Edukacja: what the centre teaches. Its introduction, then the newest
+// articles with the way to all of them (e-books join in the next step);
+// until the first article is published, a word that the content is coming.
 
-export const metadata: Metadata = {
-  title: "Edukacja",
-  description: educationPage.description,
-  alternates: { canonical: "/edukacja" },
-};
+// Title, description and link preview: the CMS's over the page's own.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("education");
+}
 
-export default function EducationPage() {
+const LATEST = 3;
+
+export default async function EducationPage() {
+  const [closing, words, articles, categories, specialists, ebooks] =
+    await Promise.all([
+      getClosingCta(),
+      getEducationPage(),
+      getArticles(),
+      getArticleCategories(),
+      getSpecialists(),
+      getEbooks(),
+    ]);
+  const people = toPeople(specialists);
+
   return (
     <>
-      <PageIntro
-        eyebrow={educationPage.eyebrow}
-        heading={educationPage.heading}
-        accent={educationPage.accent}
-        lead={educationPage.lead}
-      />
-      <section className="max-w-page px-gutter pb-section-sm mx-auto">
-        <SoftCard tone="cream" className="grid gap-3 p-6 lg:p-8">
-          <h2 className="font-display text-h3 text-ink">
-            {educationPage.soonHeading}
-          </h2>
-          <p className="text-body text-text-muted max-w-copy">
-            {educationPage.soon}
-          </p>
-        </SoftCard>
-      </section>
-      <ClosingCta />
+      <PageIntro header={words.intro} />
+      {articles.length ? (
+        <section
+          aria-labelledby="najnowsze-artykuly"
+          className="max-w-page px-gutter pb-section-sm mx-auto grid gap-8"
+        >
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h2
+              className="font-display text-h2 text-ink"
+              id="najnowsze-artykuly"
+            >
+              {educationPage.latestHeading}
+            </h2>
+            <ArrowLink href={ARTICLES_PATH}>Wszystkie artykuły</ArrowLink>
+          </div>
+          <ArticleGrid
+            articles={articles.slice(0, LATEST).map((article) => ({
+              ...articleCard(article, categories, people),
+              coverUrl: article.coverPath
+                ? articleImageUrl(article.coverPath)
+                : null,
+            }))}
+            priorityFirst
+          />
+        </section>
+      ) : null}
+      {ebooks.length ? (
+        <section
+          aria-labelledby="ebooki"
+          className="max-w-page px-gutter pb-section-sm mx-auto grid gap-8"
+        >
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h2 className="font-display text-h2 text-ink" id="ebooki">
+              {educationPage.ebooksHeading}
+            </h2>
+            <ArrowLink href={EBOOKS_PATH}>Wszystkie e-booki</ArrowLink>
+          </div>
+          <EbookGrid
+            ebooks={ebooks.slice(0, 2).map((ebook) => ({
+              ...ebookCard(ebook),
+              coverUrl: ebook.coverPath
+                ? articleImageUrl(ebook.coverPath)
+                : null,
+            }))}
+          />
+        </section>
+      ) : null}
+      {articles.length || ebooks.length ? null : (
+        <section className="max-w-page px-gutter pb-section-sm mx-auto">
+          <SoftCard tone="cream" className="grid gap-3 p-6 lg:p-8">
+            <h2 className="font-display text-h3 text-ink">
+              {educationPage.soonHeading}
+            </h2>
+            <p className="text-body text-text-muted max-w-copy">
+              {words.emptyText}
+            </p>
+          </SoftCard>
+        </section>
+      )}
+      <ClosingCta words={closing} />
     </>
   );
 }

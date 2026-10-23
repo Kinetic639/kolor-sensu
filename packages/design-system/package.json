@@ -13,7 +13,8 @@
     "generate:brand": "node scripts/generate-brand-icons.mjs",
     "generate:intro": "node scripts/generate-intro-penguin.mjs",
     "lint": "eslint . --max-warnings 0",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate:first-steps": "node scripts/generate-first-steps-ribbon.mjs"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",

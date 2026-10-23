@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { gsap } from "gsap";
 import { type ReactNode, StrictMode } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WatercolorImage } from "./watercolor-image";
+import { loadGsap } from "./lazy-gsap";
 import type { PaintMatte } from "./watercolor-paint-matte";
 import {
   revealProperties,
@@ -18,13 +19,15 @@ const base = {
 };
 
 // jsdom has no matchMedia; each test says which preferences the visitor has.
-function mockMedia({ reduce = false, scripting = true } = {}) {
+function mockMedia({ reduce = false, scripting = true, wide = false } = {}) {
   window.matchMedia = vi.fn((query: string) => ({
     matches: query.includes("reduce")
       ? reduce
       : query.includes("scripting")
         ? scripting
-        : false,
+        : query.includes("min-width")
+          ? wide
+          : false,
     media: query,
     onchange: null,
     addEventListener: vi.fn(),
@@ -44,6 +47,10 @@ function mockIntersectionObserver() {
     targets: Element[];
     options?: IntersectionObserverInit;
   }> = [];
+  // As a real one: an observer made once the element is near (or on
+  // screen) reports it at once.
+  let near = false;
+  let visible = false;
   const report = (only: (typeof observers)[number][]) => {
     for (const observer of only) {
       observer.callback(
@@ -65,6 +72,9 @@ function mockIntersectionObserver() {
     }
     observe(target: Element) {
       this.targets.push(target);
+      if (visible || (near && this.options?.rootMargin)) {
+        queueMicrotask(() => report([this]));
+      }
     }
     unobserve() {}
     disconnect() {
@@ -77,9 +87,11 @@ function mockIntersectionObserver() {
   vi.stubGlobal("IntersectionObserver", Observer);
   return {
     comeNear() {
+      near = true;
       report(observers.filter((observer) => observer.options?.rootMargin));
     },
     scrollIntoView() {
+      near = visible = true;
       report(observers);
     },
   };
@@ -133,7 +145,12 @@ function stopped({ matte, timeline }: Reveal) {
 // Strips the markers the reveal adds, to compare the layers themselves.
 function layersOf(element: HTMLElement) {
   const clone = element.cloneNode(true) as HTMLElement;
-  for (const name of ["data-animation", "data-reduced-motion", "data-reveal"]) {
+  for (const name of [
+    "data-animation",
+    "data-reduced-motion",
+    "data-reveal",
+    "data-photo-at-once",
+  ]) {
     clone.removeAttribute(name);
   }
   // The caption's own idle float (CaptionMotion, watercolor-caption-motion
@@ -250,6 +267,53 @@ describe("WatercolorImage entrance animation", () => {
     expect(reveals).toHaveLength(1);
   });
 
+  for (const [what, wide] of [
+    ["on a phone shows the hero's photo at once, painting the backdrop", false],
+    ["on a computer paints the hero's photo in as well", true],
+  ] as const) {
+    it(what, async () => {
+      mockMedia({ wide });
+      gsap.globalTimeline.timeScale(1);
+      const { reveals, wrapper } = recordReveals();
+      const { container } = render(
+        <WatercolorImage
+          {...base}
+          priority
+          animationPreset="watercolor-reveal"
+        />,
+        { wrapper },
+      );
+      const element = root(container);
+      expect(element.dataset.photoAtOnce).toBe("narrow");
+      await waitFor(() => expect(element.dataset.reveal).toBe("playing"));
+      const { matte, timeline } = reveals[0]!;
+      expect(element.style.getPropertyValue(revealProperties.backdrop)).toBe(
+        matte.backdrop.url,
+      );
+      expect(element.style.getPropertyValue(revealProperties.photo)).toBe(
+        wide ? matte.photo.url : "",
+      );
+      expect(
+        timeline
+          .getChildren(false)
+          .some((child) =>
+            (child as gsap.core.Tween).targets?.().includes(matte.photo.front),
+          ),
+      ).toBe(wide);
+      gsap.globalTimeline.timeScale(20);
+      await waitFor(() => expect(element.dataset.reveal).toBe("done"), {
+        timeout: 3000,
+      });
+    });
+  }
+
+  it("paints every other photo in on a phone too", () => {
+    const { container } = render(
+      <WatercolorImage {...base} animationPreset="watercolor-reveal" />,
+    );
+    expect(root(container)).not.toHaveAttribute("data-photo-at-once");
+  });
+
   it("ends as exactly the static markup", async () => {
     const { container } = render(
       <WatercolorImage {...base} animationPreset="watercolor-reveal" />,
@@ -260,6 +324,10 @@ describe("WatercolorImage entrance animation", () => {
     });
 
     const { container: still } = render(<WatercolorImage {...base} />);
+    // Its caption floats too, once GSAP is in (lazy-gsap.ts).
+    await act(async () => {
+      await loadGsap();
+    });
     expect(layersOf(element)).toBe(layersOf(root(still)));
   });
 

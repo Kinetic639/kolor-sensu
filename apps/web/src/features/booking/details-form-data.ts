@@ -4,7 +4,8 @@ import {
 } from "@repo/contracts/booking";
 
 // The details form as the server reads it: text fields, ticked checkboxes,
-// and a hidden field only bots fill in.
+// and a hidden field only bots fill in. "Chcę dostawać newsletter" is apart
+// from the booking's consents: the visit never depends on it.
 
 export interface DetailsFormValues {
   name: string;
@@ -13,6 +14,8 @@ export interface DetailsFormValues {
   notes: string;
   acceptTerms: boolean;
   acceptPrivacy: boolean;
+  /** Also sign up for the newsletter (shown only while it is on). */
+  newsletter?: boolean;
 }
 
 export type DetailsFormErrors = Partial<
@@ -20,7 +23,7 @@ export type DetailsFormErrors = Partial<
 >;
 
 export type DetailsFormResult =
-  | { ok: true; details: BookingDetails }
+  | { ok: true; details: BookingDetails; newsletter: boolean }
   | { ok: false; bot: true }
   | { ok: false; errors: DetailsFormErrors; values: DetailsFormValues };
 
@@ -42,9 +45,13 @@ export function readDetailsForm(form: FormData): DetailsFormResult {
     notes: String(form.get("notes") ?? ""),
     acceptTerms: form.get("acceptTerms") === "on",
     acceptPrivacy: form.get("acceptPrivacy") === "on",
+    newsletter: form.get("newsletter") === "on",
   };
-  const parsed = bookingDetailsSchema.safeParse(values);
-  if (parsed.success) return { ok: true, details: parsed.data };
+  const { newsletter, ...booking } = values;
+  const parsed = bookingDetailsSchema.safeParse(booking);
+  if (parsed.success) {
+    return { ok: true, details: parsed.data, newsletter: newsletter === true };
+  }
 
   const errors: DetailsFormErrors = {};
   for (const issue of parsed.error.issues) {

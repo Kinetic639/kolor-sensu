@@ -7,12 +7,17 @@ import {
   FileText,
   LayoutDashboard,
   Mail,
+  MailPlus,
   Megaphone,
   Settings,
   Tags,
   UserRound,
   Users,
   type LucideIcon,
+  BookOpen,
+  Newspaper,
+  TicketPercent,
+  Presentation,
 } from "lucide-react";
 import { Fragment, type ElementType, type ReactNode } from "react";
 import {
@@ -40,18 +45,23 @@ import {
 
 const portalIcons = {
   announcements: Megaphone,
+  articles: Newspaper,
+  ebooks: BookOpen,
   bookings: CalendarCheck,
   calendar: CalendarDays,
   clients: ContactRound,
   clock: Clock3,
+  discounts: TicketPercent,
   cms: FileText,
   dashboard: LayoutDashboard,
   emails: Mail,
+  newsletter: MailPlus,
   rooms: Armchair,
   services: Tags,
   settings: Settings,
   specialist: UserRound,
   specialists: Users,
+  workshops: Presentation,
 } satisfies Record<string, LucideIcon>;
 
 export type PortalNavigationIcon = keyof typeof portalIcons;

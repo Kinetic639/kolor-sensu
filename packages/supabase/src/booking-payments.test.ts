@@ -8,6 +8,8 @@ import {
   fulfillCheckoutSession,
   pendingCheckoutSession,
   pendingReservationPayment,
+  listStuckPayments,
+  recordDispute,
   recordRefund,
   releaseStripeEvent,
 } from "./booking-payments";
@@ -171,5 +173,41 @@ describe("paying a reservation later, from its link", () => {
     await expect(acceptBookingTerms(client, "link")).rejects.toMatchObject({
       code: "not_payable",
     });
+  });
+});
+
+describe("a dispute on a visit's payment", () => {
+  it("is written by the payment's intent", async () => {
+    const { client, rpc } = rpcClient("2610-004");
+    expect(
+      await recordDispute(client, {
+        paymentIntentId: "pi_1",
+        disputeId: "du_1",
+        status: "needs_response",
+        amountMinor: 25000,
+        reason: "fraudulent",
+        closed: false,
+        reference: "2610-004",
+      }),
+    ).toBe("2610-004");
+    expect(rpc).toHaveBeenCalledWith("record_dispute", {
+      p_payment_intent_id: "pi_1",
+      p_dispute_id: "du_1",
+      p_status: "needs_response",
+      p_amount_minor: 25000,
+      p_reason: "fraudulent",
+      p_closed: false,
+      p_reference: "2610-004",
+    });
+  });
+});
+
+describe("payments still pending", () => {
+  it("lists their sessions", async () => {
+    const { client } = rpcClient([
+      { checkout_session_id: "cs_1" },
+      { checkout_session_id: "cs_2" },
+    ]);
+    expect(await listStuckPayments(client)).toEqual(["cs_1", "cs_2"]);
   });
 });

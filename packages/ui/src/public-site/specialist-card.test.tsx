@@ -124,9 +124,14 @@ describe("SpecialistWatercolorCard", () => {
       'mask-image: url("/watercolor/portrait-dissolve.png")',
     );
     expect(portrait).not.toMatch(/linear-gradient/);
-    expect(rule(".ks-sp__stain")).toContain(
-      'mask-image: url("/watercolor/portrait-stain.png")',
+    // The stain: the splash's pigment over the portrait, kept to its very
+    // bottom (higher up it reads as stains on the clothes).
+    const stain = rule(".ks-sp__stain");
+    expect(stain).toContain('url("/watercolor/portrait-stain.png")');
+    expect(stain).toContain(
+      "linear-gradient(to bottom, transparent 70%, black 79%)",
     );
+    expect(stain).toContain("mask-composite: intersect");
     expect(rule(".ks-sp__stain")).toContain("mix-blend-mode: multiply");
 
     // The dissolve mask: opaque above ~67 % of the box, fully open from 80 %
