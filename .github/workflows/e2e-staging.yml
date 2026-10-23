@@ -7,7 +7,9 @@
 # so this starts on those reports and goes on only once all three apps
 # are live with the commit at the head of `staging`, and only for the last
 # of the three, so a release is tested once. It can be started by hand too
-# (Actions → Staging E2E → Run workflow).
+# (Actions → Staging E2E → Run workflow); started by hand, it can also run
+# the payment tests (tests/e2e/payments.spec.ts: card, 3D Secure, a
+# declined card, Przelewy24), which wait there until they pass once.
 #
 # Secrets (Settings → Secrets and variables → Actions):
 #   E2E_STAGING_ADMIN_EMAIL, E2E_STAGING_ADMIN_PASSWORD,
@@ -17,6 +19,11 @@ name: Staging E2E
 on:
   deployment_status:
   workflow_dispatch:
+    inputs:
+      payments:
+        description: "Also the payment tests (card, 3D Secure, declined card, Przelewy24)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -89,6 +96,7 @@ jobs:
     timeout-minutes: 20
     env:
       E2E_TARGET: staging
+      E2E_PAYMENTS: ${{ inputs.payments && '1' || '' }}
       E2E_STAGING_ADMIN_EMAIL: ${{ secrets.E2E_STAGING_ADMIN_EMAIL }}
       E2E_STAGING_ADMIN_PASSWORD: ${{ secrets.E2E_STAGING_ADMIN_PASSWORD }}
       E2E_STAGING_SPECIALIST_EMAIL: ${{ secrets.E2E_STAGING_SPECIALIST_EMAIL }}
