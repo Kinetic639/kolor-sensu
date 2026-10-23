@@ -292,6 +292,13 @@ export interface WorkshopRegistration {
     listPriceMinor: number;
     discountMinor: number;
   } | null;
+  /** After a new date: a full refund whenever the seat is given up. */
+  refundAnyTime: boolean;
+  /** Given up late: refunded once the waitlist takes the seat. */
+  refundWhenReplaced: boolean;
+  workshopCancelReason: string | null;
+  /** Paid to the centre directly: nothing to refund through the site. */
+  paidOutside: boolean;
 }
 
 /** A registration by the guest's token (their hold's or an e-mail's). */
@@ -348,6 +355,10 @@ export async function getWorkshopRegistration(
             discountMinor: row.discount_minor,
           }
         : null,
+    refundAnyTime: row.refund_any_time,
+    refundWhenReplaced: row.refund_when_replaced,
+    workshopCancelReason: row.workshop_cancel_reason,
+    paidOutside: row.paid_outside,
   };
 }
 
@@ -485,7 +496,16 @@ export async function runWorkshopJobs(secretClient: Client): Promise<number> {
 
 // ------------------------------------------------------------ e-mails
 
-export type WorkshopEmailKind = "confirmation" | "reserved" | "waitlisted";
+export type WorkshopEmailKind =
+  | "confirmation"
+  | "reserved"
+  | "waitlisted"
+  | "offered"
+  | "payment_reminder"
+  | "reminder"
+  | "cancelled"
+  | "rescheduled"
+  | "refunded";
 
 export interface ClaimedWorkshopEmail {
   reference: string;
@@ -506,6 +526,16 @@ export interface ClaimedWorkshopEmail {
   currencyCode: string;
   paymentDueAt: string | null;
   waitlistPosition: number | null;
+  offerExpiresAt: string | null;
+  cancelledBy: string | null;
+  /** The workshop's own, when the centre cancelled it. */
+  cancelReason: string | null;
+  refundDueMinor: number;
+  refundedMinor: number;
+  refundWhenReplaced: boolean;
+  /** The online meeting's link, once the seat is confirmed. */
+  meetingUrl: string | null;
+  paidOutside: boolean;
 }
 
 /** Claims an e-mail nobody sent yet: what it says and its link token. */
@@ -540,7 +570,49 @@ export async function claimWorkshopEmail(
     currencyCode: row.currency_code,
     paymentDueAt: row.payment_due_at,
     waitlistPosition: row.waitlist_position,
+    offerExpiresAt: row.offer_expires_at,
+    cancelledBy: row.cancelled_by,
+    cancelReason: row.cancel_reason,
+    refundDueMinor: row.refund_due_minor,
+    refundedMinor: row.refunded_minor,
+    refundWhenReplaced: row.refund_when_replaced,
+    meetingUrl: row.meeting_url,
+    paidOutside: row.paid_outside,
   };
+}
+
+/** The e-mails events call for and nobody sent (the scheduled job). */
+export async function listDueWorkshopEmails(
+  secretClient: Client,
+): Promise<{ reference: string; kind: WorkshopEmailKind }[]> {
+  const { data, error } = await secretClient.rpc("list_due_workshop_emails");
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    reference: row.reference,
+    kind: row.kind as WorkshopEmailKind,
+  }));
+}
+
+/** Registrations owed money not given back yet (the scheduled job). */
+export async function listOwedWorkshopRefunds(
+  secretClient: Client,
+): Promise<{ registrationId: string; reference: string; owedMinor: number }[]> {
+  const { data, error } = await secretClient.rpc("list_owed_workshop_refunds");
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    registrationId: row.registration_id,
+    reference: row.reference,
+    owedMinor: row.owed_minor,
+  }));
+}
+
+/** Tells the admins of minimums not reached in time; how many. */
+export async function remindWorkshopMinimums(
+  secretClient: Client,
+): Promise<number> {
+  const { data, error } = await secretClient.rpc("remind_workshop_minimums");
+  if (error) throw error;
+  return data;
 }
 
 export async function markWorkshopEmailSent(
@@ -583,4 +655,33 @@ export async function listWorkshopsForCodes(
     .order("starts_at");
   if (error) throw error;
   return data.map(({ id, title }) => ({ id, title }));
+}
+
+/** A registration's id by its reference (service role). */
+export async function workshopRegistrationId(
+  secretClient: Client,
+  reference: string,
+): Promise<string | null> {
+  const { data, error } = await secretClient
+    .from("workshop_registrations")
+    .select("id")
+    .eq("reference", reference)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.id ?? null;
+}
+
+/** The participant passes the seat on (no refund). */
+export async function transferWorkshopSeat(
+  secretClient: Client,
+  token: string,
+  person: { name: string; email: string; phone: string },
+) {
+  const { error } = await secretClient.rpc("transfer_workshop_seat", {
+    p_access_token: token,
+    p_name: person.name,
+    p_email: person.email,
+    p_phone: person.phone,
+  });
+  if (error) throw refusal(error);
 }

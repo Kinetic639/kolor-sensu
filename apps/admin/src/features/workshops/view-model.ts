@@ -206,3 +206,63 @@ export function inputToPayload(
     meeting_url: inPerson ? "" : input.meetingUrl,
   };
 }
+
+/** A line in the dashboard's "Do zrobienia" about a workshop. */
+export interface WorkshopTask {
+  id: string;
+  title: string;
+  detail: string;
+  tone: "warning" | "info";
+  href: string;
+}
+
+/**
+ * The dashboard's workshop tasks: one with too few paid seats near its
+ * payment time (confirm or cancel), one that ended (close it, mark who
+ * came), and the coming week's (how full).
+ */
+export function workshopTasks(
+  rows: readonly AdminWorkshopRow[],
+  now: Date,
+  timeZone: string,
+): WorkshopTask[] {
+  const day = 86_400_000;
+  const tasks: WorkshopTask[] = [];
+  for (const row of rows) {
+    if (row.status !== "published") continue;
+    const starts = new Date(row.startsAt).getTime();
+    const ends = new Date(row.endsAt).getTime();
+    const when = whenLabel(row.startsAt, row.endsAt, timeZone);
+    const href = `/warsztaty/${row.id}`;
+    if (ends <= now.getTime()) {
+      tasks.push({
+        id: `workshop-close-${row.id}`,
+        title: `Warsztat do zakończenia: ${row.title}`,
+        detail: `${when} · zaznacz obecność i zakończ`,
+        tone: "warning",
+        href,
+      });
+    } else if (
+      row.minParticipants &&
+      !row.confirmed &&
+      starts - now.getTime() <= 10 * day
+    ) {
+      tasks.push({
+        id: `workshop-minimum-${row.id}`,
+        title: `Za mało chętnych: ${row.title}`,
+        detail: `${row.confirmedCount} z min. ${row.minParticipants} · ${when}`,
+        tone: "warning",
+        href,
+      });
+    } else if (starts - now.getTime() <= 7 * day) {
+      tasks.push({
+        id: `workshop-soon-${row.id}`,
+        title: `Warsztat: ${row.title}`,
+        detail: `${when} · ${seatsLabel(row).seats} miejsc`,
+        tone: "info",
+        href,
+      });
+    }
+  }
+  return tasks;
+}

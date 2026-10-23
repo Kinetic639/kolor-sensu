@@ -36,6 +36,8 @@ export interface NotificationLike {
     amountMinor?: number | null;
     disputeStatus?: string | null;
     disputeReason?: string | null;
+    /** The workshop a workshop notification is about. */
+    workshopId?: string | null;
   };
 }
 
@@ -109,6 +111,16 @@ const PROFILE_KINDS = new Set([
   "profile_rejected",
 ]);
 const SOON_MS = 48 * 60 * 60 * 1000;
+
+const WORKSHOP_KINDS: Record<
+  string,
+  [title: string, tone: VisitTone, icon: NotificationIcon]
+> = {
+  workshop_signup: ["Nowy zapis na warsztat", "success", "new"],
+  workshop_cancelled: ["Rezygnacja z warsztatu", "warning", "cancelled"],
+  workshop_full: ["Warsztat ma komplet", "success", "paid"],
+  workshop_minimum: ["Za mało chętnych", "warning", "closing"],
+};
 
 /** Stripe's dispute reasons, as the centre reads them. */
 const DISPUTE_REASONS: Record<string, string> = {
@@ -242,6 +254,49 @@ export function notificationView(
             })
           : null,
       linkText: d.reference,
+      person: null,
+      day,
+      time: local(notification.createdAt, "HH:mm"),
+      unread: notification.readAt === null,
+    };
+  }
+
+  // A workshop: a sign-up, a seat given up, full, its minimum not reached;
+  // leading to the workshop (the admin's page of it, the specialist's list).
+  if (WORKSHOP_KINDS[kind]) {
+    const [title, tone, icon] = WORKSHOP_KINDS[kind];
+    const when = d.startsAt ? visitTime(d.startsAt, "dd.MM, HH:mm") : null;
+    return {
+      id: notification.id,
+      title,
+      reference: d.reference,
+      summary: [d.clientName, d.serviceName, when].filter(Boolean).join(" · "),
+      badges: [],
+      details: [
+        ...(d.serviceName ? [{ label: "Warsztat", value: d.serviceName }] : []),
+        ...(when ? [{ label: "Termin", value: when }] : []),
+        ...(kind === "workshop_minimum"
+          ? [
+              {
+                label: "Do decyzji",
+                value:
+                  "Zapisało się mniej osób niż minimum. Potwierdź warsztat albo go odwołaj.",
+              },
+            ]
+          : []),
+        ...(admin && kind === "workshop_signup" && d.priceMinor
+          ? [{ label: "Zapłacono", value: money(d.priceMinor) }]
+          : []),
+      ],
+      tone,
+      icon,
+      visitId: null,
+      href: d.workshopId
+        ? admin
+          ? `/warsztaty/${d.workshopId}`
+          : "/warsztaty"
+        : null,
+      linkText: d.workshopId ? "Warsztat" : null,
       person: null,
       day,
       time: local(notification.createdAt, "HH:mm"),

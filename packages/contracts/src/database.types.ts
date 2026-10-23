@@ -1956,6 +1956,36 @@ export type Database = {
           },
         ];
       };
+      workshop_messages: {
+        Row: {
+          body: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          recipients: number;
+          subject: string;
+          workshop_id: string;
+        };
+        Insert: {
+          body: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          recipients?: number;
+          subject: string;
+          workshop_id: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          recipients?: number;
+          subject?: string;
+          workshop_id?: string;
+        };
+        Relationships: [];
+      };
       workshop_online_links: {
         Row: {
           meeting_url: string;
@@ -2078,6 +2108,9 @@ export type Database = {
           reference: string;
           refund_due_minor: number;
           refund_when_replaced: boolean;
+          rescheduled_at: string | null;
+          refund_any_time: boolean;
+          paid_outside: boolean;
           refunded_minor: number;
           status: Database["public"]["Enums"]["workshop_registration_status"];
           terms_accepted_at: string | null;
@@ -2108,6 +2141,9 @@ export type Database = {
           reference: string;
           refund_due_minor?: number;
           refund_when_replaced?: boolean;
+          rescheduled_at?: string | null;
+          refund_any_time?: boolean;
+          paid_outside?: boolean;
           refunded_minor?: number;
           status?: Database["public"]["Enums"]["workshop_registration_status"];
           terms_accepted_at?: string | null;
@@ -2138,6 +2174,9 @@ export type Database = {
           reference?: string;
           refund_due_minor?: number;
           refund_when_replaced?: boolean;
+          rescheduled_at?: string | null;
+          refund_any_time?: boolean;
+          paid_outside?: boolean;
           refunded_minor?: number;
           status?: Database["public"]["Enums"]["workshop_registration_status"];
           terms_accepted_at?: string | null;
@@ -2173,6 +2212,7 @@ export type Database = {
           location_id: string | null;
           long_description: string | null;
           min_participants: number | null;
+          minimum_reminded_at: string | null;
           modality: Database["public"]["Enums"]["workshop_modality"];
           price_minor: number;
           registration_closes_at: string | null;
@@ -2205,6 +2245,7 @@ export type Database = {
           location_id?: string | null;
           long_description?: string | null;
           min_participants?: number | null;
+          minimum_reminded_at?: string | null;
           modality?: Database["public"]["Enums"]["workshop_modality"];
           price_minor: number;
           registration_closes_at?: string | null;
@@ -2237,6 +2278,7 @@ export type Database = {
           location_id?: string | null;
           long_description?: string | null;
           min_participants?: number | null;
+          minimum_reminded_at?: string | null;
           modality?: Database["public"]["Enums"]["workshop_modality"];
           price_minor?: number;
           registration_closes_at?: string | null;
@@ -2549,6 +2591,10 @@ export type Database = {
           list_price_minor: number | null;
           discount_minor: number;
           discount_code: string | null;
+          refund_any_time: boolean;
+          refund_when_replaced: boolean;
+          workshop_cancel_reason: string | null;
+          paid_outside: boolean;
         }[];
       };
       apply_workshop_discount: {
@@ -2616,6 +2662,65 @@ export type Database = {
           currency_code: string;
           payment_due_at: string | null;
           waitlist_position: number | null;
+          offer_expires_at: string | null;
+          cancelled_by: string | null;
+          cancel_reason: string | null;
+          refund_due_minor: number;
+          refunded_minor: number;
+          refund_when_replaced: boolean;
+          meeting_url: string | null;
+          paid_outside: boolean;
+        }[];
+      };
+      list_due_workshop_emails: {
+        Args: never;
+        Returns: { reference: string; kind: string }[];
+      };
+      list_owed_workshop_refunds: {
+        Args: never;
+        Returns: {
+          registration_id: string;
+          reference: string;
+          owed_minor: number;
+        }[];
+      };
+      remind_workshop_minimums: {
+        Args: never;
+        Returns: number;
+      };
+      centre_add_workshop_participant: {
+        Args: {
+          p_workshop_id: string;
+          p_name: string;
+          p_email: string;
+          p_phone: string | null;
+          p_notes: string | null;
+          p_paid_outside: boolean;
+        };
+        Returns: {
+          reference: string;
+          status: Database["public"]["Enums"]["workshop_registration_status"];
+        }[];
+      };
+      centre_cancel_workshop_participant: {
+        Args: { p_registration_id: string; p_refund_minor: number };
+        Returns: { reference: string; refund_minor: number }[];
+      };
+      set_workshop_attendance: {
+        Args: { p_registration_id: string; p_attended: boolean };
+        Returns: undefined;
+      };
+      complete_workshop: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      record_workshop_message: {
+        Args: { p_workshop_id: string; p_subject: string; p_body: string };
+        Returns: {
+          message_id: string;
+          reference: string;
+          client_name: string | null;
+          client_email: string;
         }[];
       };
       mark_workshop_email_sent: {

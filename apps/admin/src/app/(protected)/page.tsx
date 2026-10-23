@@ -2,6 +2,8 @@ import { KeepFresh } from "@/features/dashboard/keep-fresh";
 import { createClient } from "@/lib/supabase/server";
 import { unclosedVisitsSummary } from "@repo/supabase/visit-closing";
 import { loadAdminDashboard } from "@/features/dashboard/loaders";
+import { loadWorkshops } from "@/features/workshops/loaders";
+import { workshopTasks } from "@/features/workshops/view-model";
 import {
   addDays,
   awaitingPaymentSummary,
@@ -113,6 +115,8 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const unclosed = await unclosedVisitsSummary(await createClient()).catch(
     () => [],
   );
+  // The workshops: to close, a minimum to decide on, the coming week's.
+  const workshops = await loadWorkshops().catch(() => []);
   const counts = todayCounts(todayVisits);
   const reservations = awaitingPaymentSummary(waiting, { timeZone, now });
   const day = dayTimeline(dayVisits, {
@@ -194,6 +198,11 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       },
       href: `/rezerwacje?zakres=do-zamkniecia&specjalista=${one.specialistId}`,
       target: "Rezerwacje",
+    })),
+    ...workshopTasks(workshops, new Date(now), timeZone).map((task) => ({
+      ...task,
+      icon: task.tone === "warning" ? ("closing" as const) : ("new" as const),
+      target: "Warsztat",
     })),
   ];
 

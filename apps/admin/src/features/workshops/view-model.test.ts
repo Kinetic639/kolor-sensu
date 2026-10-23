@@ -171,3 +171,45 @@ describe("the form and the database", () => {
     });
   });
 });
+
+describe("the dashboard's workshop tasks", () => {
+  it("asks to close an ended one, to decide on a minimum, and shows the week's", async () => {
+    const { workshopTasks } = await import("./view-model");
+    const tasks = workshopTasks(
+      [
+        row({
+          id: "ended",
+          startsAt: "2030-10-30T16:00:00Z",
+          endsAt: "2030-10-30T18:00:00Z",
+        }),
+        row({
+          id: "few",
+          minParticipants: 10,
+          confirmed: false,
+          startsAt: "2030-11-08T16:00:00Z",
+          endsAt: "2030-11-08T18:00:00Z",
+        }),
+        row({
+          id: "soon",
+          startsAt: "2030-11-05T16:00:00Z",
+          endsAt: "2030-11-05T18:00:00Z",
+        }),
+        row({ id: "later" }),
+        row({
+          id: "draft",
+          status: "draft",
+          startsAt: "2030-11-03T16:00:00Z",
+          endsAt: "2030-11-03T18:00:00Z",
+        }),
+      ],
+      now,
+      zone,
+    );
+    expect(tasks.map((task) => task.id)).toEqual([
+      "workshop-close-ended",
+      "workshop-minimum-few",
+      "workshop-soon-soon",
+    ]);
+    expect(tasks[1]!.detail).toMatch(/^8 z min\. 10/);
+  });
+});

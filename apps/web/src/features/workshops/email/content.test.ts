@@ -21,6 +21,14 @@ const email: ClaimedWorkshopEmail = {
   currencyCode: "PLN",
   paymentDueAt: null,
   waitlistPosition: null,
+  offerExpiresAt: null,
+  cancelledBy: null,
+  cancelReason: null,
+  refundDueMinor: 0,
+  refundedMinor: 0,
+  refundWhenReplaced: false,
+  meetingUrl: null,
+  paidOutside: false,
 };
 
 const options = {
@@ -77,5 +85,69 @@ describe("a workshop's e-mails", () => {
       "Online (link do spotkania wyślemy dzień przed)",
     ]);
     expect(content.intro).toContain("24 godziny");
+  });
+
+  it("offer a freed seat until its time, and remind of the payment", () => {
+    const offered = workshopEmailContent(
+      "offered",
+      { ...email, paidMinor: 0, offerExpiresAt: "2030-11-02T10:00:00Z" },
+      options,
+    );
+    expect(offered.rows).toContainEqual([
+      "Miejsce czeka do",
+      "2 listopada 2030, godz. 11:00",
+    ]);
+    expect(offered.buttonLabel).toBe("Zapłać i zajmij miejsce");
+    const reminder = workshopEmailContent(
+      "payment_reminder",
+      { ...email, paidMinor: 0, paymentDueAt: "2030-11-05T16:00:00Z" },
+      options,
+    );
+    expect(reminder.intro).toContain("5 listopada 2030, godz. 17:00");
+  });
+
+  it("give the online link the day before", () => {
+    const content = workshopEmailContent(
+      "reminder",
+      {
+        ...email,
+        modality: "online",
+        meetingUrl: "https://meet.example.invalid/x",
+      },
+      options,
+    );
+    expect(content.intro).toContain("https://meet.example.invalid/x");
+    expect(content.subject).toBe("Jutro: Uważność");
+  });
+
+  it("say a cancellation by the centre with its reason and the refund", () => {
+    const content = workshopEmailContent(
+      "cancelled",
+      {
+        ...email,
+        cancelledBy: "centre",
+        cancelReason: "choroba prowadzącej",
+        refundDueMinor: 15000,
+      },
+      options,
+    );
+    expect(content.heading).toBe("Warsztat jest odwołany");
+    expect(content.intro).toContain("choroba prowadzącej");
+    expect(content.intro).toContain("Zwrócimy 150");
+  });
+
+  it("promise a refund when the waitlist takes a late seat", () => {
+    const content = workshopEmailContent(
+      "cancelled",
+      { ...email, cancelledBy: "client", refundWhenReplaced: true },
+      options,
+    );
+    expect(content.intro).toContain("listy rezerwowej");
+  });
+
+  it("mark a new date in the calendar file as a change", () => {
+    const content = workshopEmailContent("rescheduled", email, options);
+    expect(content.ics).toContain("SEQUENCE:1");
+    expect(content.intro).toContain("pełnym zwrotem");
   });
 });
