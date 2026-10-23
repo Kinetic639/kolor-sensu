@@ -274,6 +274,7 @@ describe("handleStripeEvent", () => {
       amountMinor: 20000,
       reason: "fraudulent",
       closed: false,
+      reference: null,
     });
     await handleStripeEvent(
       event("charge.dispute.closed", { ...dispute, status: "lost" }),
@@ -281,6 +282,30 @@ describe("handleStripeEvent", () => {
     );
     expect(d.recordDispute).toHaveBeenLastCalledWith(
       expect.objectContaining({ status: "lost", closed: true }),
+    );
+  });
+
+  it("names the visit or the seat a dispute is for (it may come before the payment is settled)", async () => {
+    const d = {
+      ...deps(),
+      paymentReference: vi.fn().mockResolvedValue("W2611-004"),
+    };
+    await handleStripeEvent(
+      event("charge.dispute.created", {
+        id: "du_2",
+        payment_intent: { id: "pi_2" },
+        amount: 8000,
+        reason: "general",
+        status: "needs_response",
+      }),
+      d,
+    );
+    expect(d.paymentReference).toHaveBeenCalledWith("pi_2");
+    expect(d.recordDispute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        paymentIntentId: "pi_2",
+        reference: "W2611-004",
+      }),
     );
   });
 
