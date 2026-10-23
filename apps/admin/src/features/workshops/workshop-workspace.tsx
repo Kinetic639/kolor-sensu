@@ -358,8 +358,10 @@ export function WorkshopWorkspace({
         {cancelled ? (
           <p className="mx-3.5 mt-3 rounded-[var(--radius-control)] border border-[var(--border)] p-3 text-sm">
             Warsztat jest odwołany
-            {state.cancelReason ? `: ${state.cancelReason}` : ""}. Zapisani
-            dostali zwrot pieniędzy.
+            {state.cancelReason
+              ? `: ${state.cancelReason.trim().replace(/\.+$/, "")}`
+              : ""}
+            . Zapisani dostali zwrot pieniędzy.
           </p>
         ) : null}
         {participants ? (
