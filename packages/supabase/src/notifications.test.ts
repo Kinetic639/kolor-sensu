@@ -53,6 +53,7 @@ describe("toPortalNotification", () => {
         disputeStatus: null,
         disputeReason: null,
         currencyCode: "PLN",
+        workshopId: null,
       },
     });
   });
