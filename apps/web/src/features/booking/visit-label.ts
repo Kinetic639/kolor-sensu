@@ -13,6 +13,9 @@ function local(
   );
 }
 
+/** An online visit's link: who sends it, and when (#177). */
+export const ONLINE_LINK_NOTE = "Link do spotkania wyślemy Ci przed wizytą.";
+
 /** `10:42` */
 export function localTime(instant: string, timeZone: string) {
   return local(instant, timeZone, { hour: "2-digit", minute: "2-digit" });

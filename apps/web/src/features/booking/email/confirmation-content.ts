@@ -1,6 +1,6 @@
 import type { ClaimedBookingEmail } from "@repo/supabase";
 import { formatPrice } from "@/lib/format";
-import { localTime, visitLabel } from "../visit-label";
+import { localTime, ONLINE_LINK_NOTE, visitLabel } from "../visit-label";
 import { visitIcs } from "./ics";
 
 // What the confirmation e-mail says (docs/product/booking-plan.md, R7),
@@ -56,6 +56,11 @@ export function place(visit: ClaimedBookingEmail) {
   return `${where || "Stacjonarnie"}${room}`;
 }
 
+/** The e-mail's "Miejsce": an online visit says how its link comes. */
+export function placeRow(visit: ClaimedBookingEmail) {
+  return visit.mode === "online" ? `Online. ${ONLINE_LINK_NOTE}` : place(visit);
+}
+
 /** `+48 600 100 200 · kontakt@kolorsensu.pl`, or null. */
 export function contactLineOf(contact: ConfirmationOptions["contact"]) {
   return [contact.phone, contact.email].filter(Boolean).join(" · ") || null;
@@ -73,7 +78,7 @@ export function confirmationContent(
       ? [["Specjalista", visit.specialistName] as [string, string]]
       : []),
     ["Termin", `${when}–${localTime(visit.endsAt, timeZone)}`],
-    ["Miejsce", place(visit)],
+    ["Miejsce", placeRow(visit)],
     ...(visit.paid
       ? [["Zapłacono", formatPrice(visit)] as [string, string]]
       : []),
