@@ -1,4 +1,4 @@
--- After signing up (20261023150000): a new date lets the seat go with a
+-- After signing up (20261023170000): a new date lets the seat go with a
 -- full refund at any time; the e-mails events call for are listed once;
 -- admins and leaders hear of sign-ups, a full workshop and a minimum not
 -- reached; the admin adds and cancels participants, writes to everyone
