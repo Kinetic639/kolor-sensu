@@ -132,8 +132,17 @@ describe("a workshop's e-mails", () => {
       options,
     );
     expect(content.heading).toBe("Warsztat jest odwołany");
-    expect(content.intro).toContain("choroba prowadzącej");
-    expect(content.intro).toContain("Zwrócimy 150");
+    expect(content.intro).toContain("choroba prowadzącej. Zwrócimy 150");
+  });
+
+  it("end the centre's reason with one full stop, typed or not", () => {
+    const content = workshopEmailContent(
+      "cancelled",
+      { ...email, cancelledBy: "centre", cancelReason: "Brak sali. " },
+      options,
+    );
+    expect(content.intro).toContain("udział: Brak sali.");
+    expect(content.intro).not.toContain("..");
   });
 
   it("promise a refund when the waitlist takes a late seat", () => {

@@ -24,6 +24,12 @@ export function workshopRegistrationUrl(siteUrl: string, token: string) {
   return `${siteUrl}/warsztaty/zapis/${token}`;
 }
 
+/** The admin's reason as one sentence: trimmed, one full stop at its end. */
+function withFullStop(reason: string) {
+  const text = reason.trim();
+  return /[.!?]$/.test(text) ? text : `${text}.`;
+}
+
 function placeOf(email: ClaimedWorkshopEmail) {
   if (email.modality === "online")
     return email.meetingUrl
@@ -95,7 +101,7 @@ export function workshopEmailContent(
     email.cancelledBy === "system"
       ? "Płatność nie dotarła w terminie, więc miejsce się zwolniło."
       : byCentre
-        ? `Musimy odwołać Twój udział${email.cancelReason ? `: ${email.cancelReason}` : "."}`
+        ? `Musimy odwołać Twój udział${email.cancelReason ? `: ${withFullStop(email.cancelReason)}` : "."}`
         : "Potwierdzamy rezygnację z warsztatu.";
   const refundIntro =
     email.refundDueMinor > 0
