@@ -15,6 +15,7 @@ const location = (id: string, sortOrder: number) => ({
   publicDescription: null,
   amenities: [],
   accessibilityNotes: null,
+  directions: null,
 });
 
 const profile = (roomId: string) => ({
@@ -24,6 +25,7 @@ const profile = (roomId: string) => ({
   longDescription: emptyRichTextDocument,
   imagePath: null,
   accessibilityNotes: null,
+  directions: null,
   amenities: [],
   published: true,
   createdAt: "",

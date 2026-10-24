@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./accordion": "./src/accordion.tsx",
     "./alert-dialog": "./src/alert-dialog.tsx",
+    "./attendance-checkbox": "./src/attendance-checkbox.tsx",
     "./app-header": "./src/app-header.tsx",
     "./avatar": "./src/avatar.tsx",
     "./auth-shell": "./src/auth-shell.tsx",

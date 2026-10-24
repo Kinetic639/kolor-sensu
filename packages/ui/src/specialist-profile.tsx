@@ -56,9 +56,17 @@ export function TagListField({
   className,
 }: TagListFieldProps) {
   const [draft, setDraft] = useState("");
+  // The form's error is about the list as it was then: once the list
+  // changes it no longer holds, and it is back if the list is so again.
+  const [errorList, setErrorList] = useState({ error, values });
+  if (errorList.error !== error) setErrorList({ error, values });
+  const shownError =
+    error && values.join("\n") === errorList.values.join("\n")
+      ? error
+      : undefined;
   const full = maxItems !== undefined && values.length >= maxItems;
   const descriptionId = description ? `${id}-description` : undefined;
-  const errorId = error ? `${id}-error` : undefined;
+  const errorId = shownError ? `${id}-error` : undefined;
 
   function add() {
     const value = draft.trim();
@@ -121,7 +129,7 @@ export function TagListField({
           aria-describedby={
             [descriptionId, errorId].filter(Boolean).join(" ") || undefined
           }
-          aria-invalid={error ? true : undefined}
+          aria-invalid={shownError ? true : undefined}
           disabled={full}
           id={id}
           maxLength={maxLength}
@@ -140,9 +148,9 @@ export function TagListField({
           Dodaj
         </Button>
       </div>
-      {error ? (
+      {shownError ? (
         <p className={fieldErrorClass} id={errorId} role="alert">
-          {error}
+          {shownError}
         </p>
       ) : null}
     </div>

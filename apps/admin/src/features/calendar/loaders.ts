@@ -1,5 +1,7 @@
 import { panelIntake } from "@/lib/visit-intake";
+import { workshopBlockLabel } from "@repo/contracts/workshops";
 import { listClosures } from "@repo/supabase/closures";
+import { listWorkshopSeats } from "@repo/supabase/workshops-admin";
 import "server-only";
 import { panelClosing } from "@/lib/visit-closing";
 
@@ -111,6 +113,23 @@ export async function loadAdminCalendar(params: CalendarParams) {
     params.przesun ? getVisit(client, params.przesun).catch(() => null) : null,
   ]);
 
+  // A workshop's time says its seats too (#198).
+  const seats = await listWorkshopSeats(
+    client,
+    [...timeOff, ...schedules.exceptions].flatMap((one) =>
+      one.workshopId ? [one.workshopId] : [],
+    ),
+  );
+  const withSeats = <T extends { reason: string | null; workshopId?: string }>(
+    one: T,
+  ): T =>
+    one.workshopId && one.reason
+      ? {
+          ...one,
+          reason: workshopBlockLabel(one.reason, seats.get(one.workshopId)),
+        }
+      : one;
+
   const people: CalendarPerson[] = active.map((one) => ({
     id: one.id,
     name:
@@ -130,12 +149,14 @@ export async function loadAdminCalendar(params: CalendarParams) {
     color: room.color,
     locationId: room.locationId,
     hours: schedules.hours.filter((one) => one.roomId === room.id),
-    exceptions: schedules.exceptions.filter((one) => one.roomId === room.id),
+    exceptions: schedules.exceptions
+      .filter((one) => one.roomId === room.id)
+      .map(withSeats),
   }));
   const expanded = calendarWindows({
     specialistIds: ids,
     rules,
-    timeOff,
+    timeOff: timeOff.map(withSeats),
     from: period.from,
     to: period.to,
     timeZone,

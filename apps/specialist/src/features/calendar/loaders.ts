@@ -1,5 +1,7 @@
 import { panelIntake } from "@/lib/visit-intake";
+import { workshopBlockLabel } from "@repo/contracts/workshops";
 import { listClosures } from "@repo/supabase/closures";
+import { listWorkshopSeats } from "@repo/supabase/workshops-admin";
 import "server-only";
 import { panelClosing } from "@/lib/visit-closing";
 
@@ -86,10 +88,22 @@ export async function loadMyCalendar(params: CalendarParams) {
     avatarUrl: avatarUrl ?? null,
     color: specialist.color,
   };
+  // The workshops they lead say their seats too (#198).
+  const seats = await listWorkshopSeats(
+    client,
+    timeOff.flatMap((one) => (one.workshopId ? [one.workshopId] : [])),
+  );
   const expanded = calendarWindows({
     specialistIds: [specialist.id],
     rules,
-    timeOff,
+    timeOff: timeOff.map((one) =>
+      one.workshopId && one.reason
+        ? {
+            ...one,
+            reason: workshopBlockLabel(one.reason, seats.get(one.workshopId)),
+          }
+        : one,
+    ),
     from: period.from,
     to: period.to,
     timeZone,

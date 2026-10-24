@@ -20,6 +20,7 @@ function registration(
     endsAt: "2030-11-12T18:00:00Z",
     locationName: null,
     locationAddress: null,
+    locationDirections: null,
     roomName: null,
     priceMinor: 15000,
     currencyCode: "PLN",

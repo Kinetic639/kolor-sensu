@@ -194,3 +194,16 @@ export function emptyWorkshopInput(specialistId: string): WorkshopInput {
     meetingUrl: "",
   };
 }
+
+/**
+ * A workshop's time in the portals' calendars (#198): its name (the
+ * block's reason, "Warsztat: …") with how many have a confirmed seat.
+ */
+export function workshopBlockLabel(
+  reason: string,
+  seats: { confirmed: number; capacity: number } | undefined,
+) {
+  return seats
+    ? `${reason} · zapisani ${seats.confirmed} z ${seats.capacity}`
+    : reason;
+}

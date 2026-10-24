@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { emptyWorkshopInput, workshopInputSchema } from "./workshops";
+import {
+  emptyWorkshopInput,
+  workshopBlockLabel,
+  workshopInputSchema,
+} from "./workshops";
 
 const leader = "4f9b6d2e-8c1a-4e3b-9f7d-2a6c5b8e1d40";
 const location = "5a1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e";
@@ -35,5 +39,19 @@ describe("a workshop's form", () => {
       "Link do spotkania zaczyna się od https://.",
     );
     expect(problem({ capacity: 0 })).toBe("Co najmniej 1 miejsce.");
+  });
+});
+
+describe("a workshop in the portals' calendars", () => {
+  it("says its seats beside its name", () => {
+    expect(
+      workshopBlockLabel("Warsztat: Uważność", { confirmed: 5, capacity: 12 }),
+    ).toBe("Warsztat: Uważność · zapisani 5 z 12");
+  });
+
+  it("keeps the name alone when the seats are not known", () => {
+    expect(workshopBlockLabel("Warsztat: Uważność", undefined)).toBe(
+      "Warsztat: Uważność",
+    );
   });
 });
