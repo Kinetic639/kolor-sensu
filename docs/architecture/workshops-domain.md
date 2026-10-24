@@ -333,6 +333,19 @@ Migration `20261023170000_workshop_after_signup.sql`.
 - **The specialist portal** shows the workshops the specialist leads, with
   the participants' contact details and attendance; no one else's.
 
+## Participants' data (#183)
+
+Migration `20261025120000_workshop_data_retention.sql`. A participant's
+name, e-mail, phone and notes are kept for 12 months after the workshop
+(the owner's decision of 24.10), then the nightly `apply_retention`
+anonymises them as a client's are: "Uczestnik usunięty", an
+`@anonim.invalid` placeholder, no phone, no notes, and the name taken out
+of the notifications; `forgotten_at` says when. The reference, the amounts
+and the status stay for the books. A seat still owed a refund waits. On
+the participant's request the admin removes the data at once ("Usuń dane"
+on the workshop's participants, `forget_workshop_participant`), once the
+seat is over: the workshop ended, or the seat cancelled or lapsed.
+
 ## Tests
 
 The SQL tests (`supabase/tests/workshop_*.sql`) run in CI. The end-to-end
