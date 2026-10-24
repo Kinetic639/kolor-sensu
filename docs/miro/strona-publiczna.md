@@ -24,8 +24,6 @@ Ramka `3458764687433197618` · plik `svg/strona-1-3.svg` · [w Miro](https://mir
 | 15. Teksty sekcji w CMS                                                                                                       | zielony              |
 | Animacja powitalna tylko za pierwszym razem                                                                                   | zielony              |
 | Najbliższe wolne terminy wybranego specjalisty w „Z kim porozmawiasz”                                                         | szary (po MVP)       |
-| Napis „Spokojnie, uważnie, z sensem” lub motto                                                                                | szary (po MVP)       |
-| Baner zapisu do newslettera: pas już jest (wyłączony w CMS), formularz po wyborze narzędzia                                   | szary (po MVP)       |
 | Najnowsze produkty Naffy                                                                                                      | szary (po MVP)       |
 | 16. Najnowsze artykuły (po MVP)                                                                                               | szary (po MVP)       |
 | Przełączniki tylko przy sekcjach, które je mają, i przy 3 nowych (Dlaczego my, Stacjonarnie i online, Gdzie jesteśmy) (16.10) | niebieski (ustalone) |
@@ -645,7 +643,6 @@ Kolumny: 1. Strona główna, 2. O nas, 3. Oferta, 4. Edukacja, 5. E-booki, 6. Na
 | Sprzedaż e-booków i kursów na stronie                                                                                         | szary (po MVP)       |
 | Dostęp do kursu po zakupie                                                                                                    | szary (po MVP)       |
 | Najbliższe wolne terminy wybranego specjalisty w „Z kim porozmawiasz”                                                         | szary (po MVP)       |
-| Napis „Spokojnie, uważnie, z sensem”                                                                                          | szary (po MVP)       |
 | Zmieniony adres profilu                                                                                                       | zielony              |
 | Dane osoby dla Google                                                                                                         | zielony              |
 | 7. Teksty strony w CMS                                                                                                        | zielony              |
@@ -654,7 +651,6 @@ Kolumny: 1. Strona główna, 2. O nas, 3. Oferta, 4. Edukacja, 5. E-booki, 6. Na
 | Kategorie w CMS                                                                                                               | zielony              |
 | Zapis e-mailem po darmowy fragment                                                                                            | szary (po MVP)       |
 | Zgoda i RODO przy zapisie                                                                                                     | szary (po MVP)       |
-| Baner zapisu do newslettera: pas już jest (wyłączony w CMS), formularz po wyborze narzędzia                                   | szary (po MVP)       |
 | Najnowsze produkty Naffy                                                                                                      | szary (po MVP)       |
 | Pusta lista i pomoc w wyborze                                                                                                 | zielony              |
 | Teksty stron Specjaliści i profil w CMS                                                                                       | zielony              |
@@ -733,7 +729,6 @@ Kolumny: 1. Strona główna, 2. O nas, 3. Oferta, 4. Edukacja, 5. E-booki, 6. Na
 | Pakiety (pokazanie, zakup, wykorzystanie) po MVP; karteczki 5 i 10–12 są przypomnieniem (19.10)                               | niebieski (ustalone) |
 | Pierwsza wizyta to zwykła usługa „Konsultacja psychologiczna”, bez osobnej strony (19.10)                                     | niebieski (ustalone) |
 | Na start bez blokady: nowy klient może umówić też inną usługę (19.10)                                                         | niebieski (ustalone) |
-| Warsztaty z zapisami                                                                                                          | szary (po MVP)       |
 | Praca                                                                                                                         | szary (po MVP)       |
 | Konto klienta                                                                                                                 | szary (po MVP)       |
 

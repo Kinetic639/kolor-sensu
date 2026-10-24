@@ -21,7 +21,7 @@ Stan na 24.10.2026, po weryfikacji kartek z kodem i testami (także po wydaniu n
   z tym samym `data-miro-id`, tylko z nowym kolorem albo tekstem.
 - [`klient-rezerwacja.md`](klient-rezerwacja.md): mapa „Klient: umawia
   wizytę” i ramki „Klient · 1–8” z „Kupony zniżkowe”, przepisane z tablicy
-  24.10 (kolory jeszcze nie sprawdzone z kodem); plik
+  24.10 (kolory sprawdzone z kodem i testami); plik
   `svg/klient-rezerwacja.svg`.
 
 Nie ma tu portali admina i specjalisty (poza warsztatami) ani ramki „Audyt
