@@ -48,12 +48,13 @@ Stan na 22.10 · PR-y: 1 / 7 zmergowanych (PR 3 i 4 razem w #168)
   - [x] testy (SQL, widoki, e-maile, zwroty, zadanie w tle), typy, lint
   - [x] CI zielone
   - [x] sprawdzony na DEV (rezygnacja ze zwrotem, oferta z listy rezerwowej, ręczny zapis, wypisanie, wiadomość, obecność, zakończenie, odwołanie przez centrum ze zwrotami)
-- [ ] **PR 7 · Jakość** — e2e na DEV i STAGING, tabela „Każda strona”, Lighthouse, dokumentacja
+- [x] **PR 7 · Jakość** — e2e na DEV i STAGING, tabela „Każda strona”, Lighthouse, dokumentacja
   - [x] e2e `workshops.spec.ts`: strony (jeden H1, 390 i 1280 px, axe, dane Event), zapis z BLIK (admin i prowadzący widzą uczestnika), „zapłacę później” i rezygnacja; przechodzi na DEV (strona warsztatu po wdrożeniu poprawki listy faktów)
   - [x] klawiatura i 200 %: Warsztaty i strona warsztatu w `keyboard-zoom.spec.ts`
   - [x] Lighthouse na DEV (telefon): dostępność 100 (strona warsztatu 93 → poprawione), dobre praktyki 100, SEO tylko `noindex` DEV-a; LCP ok. 2,3 s przy spowolnieniu, CLS 0
   - [x] dokumentacja: `end-to-end-tests.md`, `workshops-domain.md`
-  - [ ] „Warsztat testowy E2E” na STAGING i Staging E2E zielone (przy wydaniu)
+  - [x] „Warsztat testowy E2E” na STAGING i Staging E2E zielone (wydanie #202, 23.10: 86 przechodzi, 8 pominiętych celowo)
+  - [x] Lighthouse na STAGING (telefon): dostępność 100 na liście i stronie warsztatu, dobre praktyki 100, SEO tylko `noindex` STAGING-u; LCP ok. 3 s na zimno przy spowolnieniu, jak na innych stronach (#205)
 
 **Zasada aktualizacji:** każdy krok odhacza się w commicie, który go
 kończy; PR jest odhaczony, gdy jest zmergowany i sprawdzony na DEV.
