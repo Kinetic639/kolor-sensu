@@ -2111,6 +2111,7 @@ export type Database = {
           rescheduled_at: string | null;
           refund_any_time: boolean;
           paid_outside: boolean;
+          forgotten_at: string | null;
           refunded_minor: number;
           status: Database["public"]["Enums"]["workshop_registration_status"];
           terms_accepted_at: string | null;
@@ -2144,6 +2145,7 @@ export type Database = {
           rescheduled_at?: string | null;
           refund_any_time?: boolean;
           paid_outside?: boolean;
+          forgotten_at?: string | null;
           refunded_minor?: number;
           status?: Database["public"]["Enums"]["workshop_registration_status"];
           terms_accepted_at?: string | null;
@@ -2177,6 +2179,7 @@ export type Database = {
           rescheduled_at?: string | null;
           refund_any_time?: boolean;
           paid_outside?: boolean;
+          forgotten_at?: string | null;
           refunded_minor?: number;
           status?: Database["public"]["Enums"]["workshop_registration_status"];
           terms_accepted_at?: string | null;
@@ -2708,6 +2711,10 @@ export type Database = {
       };
       set_workshop_attendance: {
         Args: { p_registration_id: string; p_attended: boolean };
+        Returns: undefined;
+      };
+      forget_workshop_participant: {
+        Args: { p_registration_id: string };
         Returns: undefined;
       };
       complete_workshop: {

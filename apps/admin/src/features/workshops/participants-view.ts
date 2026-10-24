@@ -69,6 +69,20 @@ export function refundable(participant: WorkshopParticipant) {
     : participant.paidMinor - participant.refundedMinor;
 }
 
+/**
+ * "Usuń dane" on request (the database checks it too): not yet removed,
+ * the seat over (the workshop ended, or the seat cancelled or lapsed), no
+ * refund still owed.
+ */
+export function canForget(
+  participant: WorkshopParticipant,
+  { ended }: { ended: boolean },
+) {
+  if (participant.forgottenAt) return false;
+  if (participant.refundDueMinor > participant.refundedMinor) return false;
+  return ended || groupOf(participant) === "anulowani";
+}
+
 function csvCell(value: string) {
   return /[";\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }

@@ -1,6 +1,7 @@
 import type { WorkshopParticipant } from "@repo/supabase/workshops-admin";
 import { describe, expect, it } from "vitest";
 import {
+  canForget,
   participantGroups,
   participantsCsv,
   paymentLabel,
@@ -32,6 +33,7 @@ function participant(
     cancelledBy: null,
     cancelledAt: null,
     createdAt: "2030-10-01T10:00:00Z",
+    forgottenAt: null,
     ...patch,
   };
 }
@@ -82,5 +84,23 @@ describe("a workshop's participants", () => {
     expect(row).toBe(
       'W2611-001;Ola Nowak;ola@example.invalid;500600700;Potwierdzony;150,00;tak;"Wegetarianka; ""bez glutenu"""',
     );
+  });
+
+  it("may have their data removed once the seat is over and nothing is owed", () => {
+    expect(canForget(participant(), { ended: false })).toBe(false);
+    expect(canForget(participant(), { ended: true })).toBe(true);
+    expect(
+      canForget(participant({ status: "cancelled" }), { ended: false }),
+    ).toBe(true);
+    expect(
+      canForget(participant({ status: "cancelled", refundDueMinor: 15000 }), {
+        ended: false,
+      }),
+    ).toBe(false);
+    expect(
+      canForget(participant({ forgottenAt: "2031-01-01T00:00:00Z" }), {
+        ended: true,
+      }),
+    ).toBe(false);
   });
 });

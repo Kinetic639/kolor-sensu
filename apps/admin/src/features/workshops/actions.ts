@@ -10,6 +10,7 @@ import {
   completeWorkshop,
   confirmWorkshop,
   deleteWorkshop,
+  forgetWorkshopParticipant,
   publishWorkshop,
   saveWorkshop,
   setWorkshopAttendance,
@@ -331,6 +332,21 @@ export async function setAttendanceAction(
     return { ok: true };
   } catch (error) {
     return failure(error, "Nie udało się zapisać obecności.");
+  }
+}
+
+/** "Usuń dane": a participant's data, anonymised on their request. */
+export async function forgetParticipantAction(
+  workshopId: string,
+  registrationId: string,
+): Promise<ActionResult> {
+  await requirePortalRole();
+  try {
+    await forgetWorkshopParticipant(await createClient(), registrationId);
+    revalidatePath(`/warsztaty/${workshopId}`);
+    return { ok: true };
+  } catch (error) {
+    return failure(error, "Nie udało się usunąć danych.");
   }
 }
 
