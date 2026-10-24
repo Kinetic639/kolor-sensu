@@ -18,5 +18,5 @@ export default async function EbookPreviewPage({
   const { id } = await params;
   const ebook = await getEbookPreview(id);
   if (!ebook) notFound();
-  return <EbookPageView ebook={ebook} />;
+  return EbookPageView({ ebook });
 }

@@ -60,5 +60,5 @@ export default async function EbookPage({
     if (moved) permanentRedirect(ebookHref(moved));
     notFound();
   }
-  return <EbookPageView ebook={ebook} />;
+  return EbookPageView({ ebook });
 }

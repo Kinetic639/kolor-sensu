@@ -22,11 +22,9 @@ export default async function WorkshopPreviewPage({
     getBookingWindow(),
   ]);
   if (!workshop) notFound();
-  return (
-    <WorkshopPageView
-      preview
-      timeZone={window?.timeZone ?? "Europe/Warsaw"}
-      workshop={workshop}
-    />
-  );
+  return WorkshopPageView({
+    preview: true,
+    timeZone: window?.timeZone ?? "Europe/Warsaw",
+    workshop,
+  });
 }

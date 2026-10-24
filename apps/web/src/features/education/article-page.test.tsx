@@ -82,10 +82,14 @@ const ewa: ArticlePerson = {
   displayName: "Ewa Lis",
 };
 
-function open(links = { serviceIds: ["v1"], specialistIds: ["s1"] }) {
+function open(
+  links = { serviceIds: ["v1"], specialistIds: ["s1"] },
+  bookable: ReadonlySet<string> = new Set(["terapia-dzieci"]),
+) {
   render(
     <ArticlePageView
       all={[article]}
+      bookable={bookable}
       article={article}
       categories={[]}
       ebook={ebook}
@@ -119,6 +123,14 @@ describe("under an article", () => {
       within(section).getByRole("link", { name: /Umów wizytę/ }),
     ).toHaveAttribute("href", "/umow-wizyte?usluga=terapia-dzieci");
     expect(within(section).queryByText("Terapia par")).not.toBeInTheDocument();
+  });
+
+  it("asks through Kontakt for a service not booked online (#199)", () => {
+    open(undefined, new Set());
+    const section = screen.getByRole("region", { name: "Jak możemy pomóc" });
+    expect(
+      within(section).getByRole("link", { name: /Zapytaj o termin/ }),
+    ).toHaveAttribute("href", "/kontakt");
   });
 
   it("are the specialists it links, each to their profile", () => {

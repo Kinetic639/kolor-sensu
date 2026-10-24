@@ -34,6 +34,7 @@ function workshop(patch: Partial<PublicWorkshop> = {}): PublicWorkshop {
     minParticipants: null,
     locationName: "Kolor Sensu",
     locationAddress: "ul. Spokojna 1, 00-001 Warszawa",
+    locationDirections: null,
     locationCity: "Warszawa",
     roomName: "Sala duża",
     leaders: [],

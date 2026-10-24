@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
-import { defaultClosingCta } from "@repo/contracts";
+import { defaultClosingCta, defaultWorkshopsPage } from "@repo/contracts";
 import type { PublicWorkshop } from "@repo/supabase/workshops";
 import {
   afterEach,
@@ -43,6 +43,7 @@ function workshop(patch: Partial<PublicWorkshop> = {}): PublicWorkshop {
     minParticipants: null,
     locationName: "Kolor Sensu",
     locationAddress: "ul. Spokojna 1, 00-001 Warszawa",
+    locationDirections: null,
     locationCity: "Warszawa",
     roomName: "Sala duża",
     leaders: [],
@@ -63,6 +64,7 @@ vi.mock("@/lib/public-data", () => ({
   getBookingWindow: async () => ({ timeZone: "Europe/Warsaw" }),
   getClosingCta: async () => defaultClosingCta,
   getWatercolorLook: async () => ({}),
+  getWorkshopsPage: async () => defaultWorkshopsPage,
 }));
 vi.mock("@/lib/page-metadata", () => ({ pageMetadata: async () => ({}) }));
 

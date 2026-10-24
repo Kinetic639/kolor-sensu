@@ -70,11 +70,10 @@ export default async function WorkshopPage({
     notFound();
   }
 
-  return (
-    <WorkshopPageView
-      notice={notice}
-      timeZone={window?.timeZone ?? "Europe/Warsaw"}
-      workshop={workshop}
-    />
-  );
+  // Called, not rendered as an element: one server render, as before.
+  return WorkshopPageView({
+    notice,
+    timeZone: window?.timeZone ?? "Europe/Warsaw",
+    workshop,
+  });
 }
