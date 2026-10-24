@@ -6,19 +6,22 @@ sięga tylko po to, żeby coś zmienić (albo gdy kopia może być nieaktualna).
 
 ## Co jest w kopii
 
-Stan na 24.10.2026, po weryfikacji kartek z kodem i testami (także po wydaniu na STAGING, #202).
+Stan na 24.10.2026, po weryfikacji kartek z kodem i testami (także po wydaniu na STAGING, #202, i testach z PR #212).
 
 - [`strona-publiczna.md`](strona-publiczna.md): wszystkie ramki „Strona · …”
-  (1–7, z ramkami „elementy”), mapa „Klient: odkrywa stronę” oraz ramki
+  (1–8, z ramkami „elementy”; 8. Newsletter od 24.10), mapa „Klient: odkrywa stronę” oraz ramki
   warsztatów w portalach i „W tle”; przy każdej kartce kolor, a w ramkach
   „elementy” także „Co ma się dziać” i „Czym sprawdzone”.
+- [`kazda-strona.md`](kazda-strona.md): tabela „Każda strona: wspólna lista
+  przed MVP”, czyli wszystkie strony, na które może trafić klient, od A do Z,
+  z adresem i testem end-to-end (pozostałe kolumny tabeli są tylko w Miro).
 - [`svg/`](svg): te same ramki w formacie Miro (canvas-composer SVG), z
   identyfikatorami elementów (`data-miro-id`) i ich położeniem. Z nich
   buduje się zmiany wysyłane do Miro (`canvas_update_from_svg`): element
   z tym samym `data-miro-id`, tylko z nowym kolorem albo tekstem.
 
-Nie ma tu ramek klienta przy rezerwacji, portali admina i specjalisty
-(poza warsztatami) ani tabeli „Każda strona”.
+Nie ma tu ramek klienta przy rezerwacji („Klient · 1–8”, „Klient · 4 ·
+Kupony zniżkowe”) ani portali admina i specjalisty (poza warsztatami).
 
 ## Kolory
 

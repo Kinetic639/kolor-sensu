@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
+import { emptyArticleDocument } from "@repo/contracts/article-rich-text";
+import type { PublishedArticle } from "@repo/contracts/education";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import {
   afterEach,
@@ -14,7 +16,8 @@ import {
 // A specialist's profile as a visitor gets it: the photo, role, words and
 // facts, their services with prices, "Umów" with them (only while they take
 // new clients, #63), the way back to everyone, and their data for Google;
-// an address since changed sends on, an unknown one is "not found".
+// an address since changed sends on, an unknown one is "not found". Under
+// the profile: the articles they wrote, and only theirs.
 
 const anna = {
   specialistId: "6f1c2b9a-3c41-4e2b-9a55-0d3f2a7b8c10",
@@ -49,8 +52,9 @@ const offer = {
 let found: typeof anna | null = anna;
 let movedTo: string | null = null;
 let offerless = false;
+let articles: PublishedArticle[] = [];
 vi.mock("@/lib/education-data", () => ({
-  getArticles: async () => [],
+  getArticles: async () => articles,
   getServiceArticles: async () => [],
   getArticleCategories: async () => [],
   articleImageUrl: (path: string) => path,
@@ -83,8 +87,36 @@ beforeEach(() => {
   found = anna;
   movedTo = null;
   offerless = false;
+  articles = [];
 });
 afterEach(cleanup);
+
+function article(
+  slug: string,
+  patch: Partial<PublishedArticle> = {},
+): PublishedArticle {
+  return {
+    id: slug,
+    slug,
+    title: `Artykuł ${slug}`,
+    lead: "Wstęp",
+    coverPath: "",
+    coverAlt: "",
+    categoryId: "c1",
+    body: emptyArticleDocument,
+    authorKind: "team",
+    authorSpecialistId: null,
+    reviewerSpecialistId: null,
+    sources: [],
+    ebookId: null,
+    seoTitle: "",
+    seoDescription: "",
+    ogImagePath: null,
+    publishedAt: "2026-10-21T10:00:00Z",
+    contentUpdatedAt: "2026-10-21T10:00:00Z",
+    ...patch,
+  };
+}
 
 const open = async (slug = "anna-nowak") =>
   render(await Profile({ params: Promise.resolve({ slug }) }));
@@ -186,5 +218,37 @@ describe("an address that is not a profile", () => {
   it("is not found otherwise", async () => {
     found = null;
     await expect(open("nikt")).rejects.toThrow("NOT_FOUND");
+  });
+});
+
+describe("the articles under a profile", () => {
+  it("are the ones they wrote, each to its page", async () => {
+    articles = [
+      article("lek-w-pracy", {
+        authorKind: "specialist",
+        authorSpecialistId: anna.specialistId,
+      }),
+      article("od-zespolu"),
+      article("kogos-innego", {
+        authorKind: "specialist",
+        authorSpecialistId: "someone-else",
+      }),
+    ];
+    await open();
+    const section = screen.getByRole("region", {
+      name: "Artykuły: Anna Nowak",
+    });
+    expect(
+      within(section).getByRole("link", { name: /Artykuł lek-w-pracy/ }),
+    ).toHaveAttribute("href", "/edukacja/artykuly/lek-w-pracy");
+    expect(within(section).queryByText(/od-zespolu|kogos-innego/)).toBeNull();
+  });
+
+  it("are left out when they wrote none", async () => {
+    articles = [article("od-zespolu")];
+    await open();
+    expect(
+      screen.queryByRole("region", { name: /^Artykuły:/ }),
+    ).not.toBeInTheDocument();
   });
 });
