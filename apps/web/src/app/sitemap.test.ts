@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { siteUrl } from "@/content/site";
 
 // The sitemap: every public page, but those the CMS keeps out of search
-// engines.
+// engines, and Warsztaty while the portal keeps them off the site (#209).
 
 let hidden = new Set<SeoPage>();
 vi.mock("@/lib/public-data", () => ({
@@ -34,8 +34,10 @@ vi.mock("@/lib/newsletter-data", () => ({
 }));
 
 let workshops: { slug: string; status: string; updatedAt: string }[] = [];
+let inMenu = true;
 vi.mock("@/lib/workshop-data", () => ({
   getWorkshops: async () => workshops,
+  getWorkshopVisibility: async () => ({ inMenu, onHome: true }),
 }));
 
 const { default: sitemap } = await import("./sitemap");
@@ -46,6 +48,7 @@ beforeEach(() => {
   ebooks = [];
   issues = [];
   workshops = [];
+  inMenu = true;
 });
 
 const urls = async () => (await sitemap()).map((entry) => entry.url);
@@ -125,6 +128,27 @@ describe("the sitemap", () => {
     const all = await urls();
     expect(all).toContain(`${siteUrl}/warsztaty/uwaznosc`);
     expect(all).not.toContain(`${siteUrl}/warsztaty/odwolany`);
+  });
+
+  it("leaves Warsztaty out while the portal keeps them off the menu", async () => {
+    workshops = [
+      {
+        slug: "uwaznosc",
+        status: "published",
+        updatedAt: "2026-10-22T08:00:00Z",
+      },
+    ];
+    inMenu = false;
+    const all = await urls();
+    expect(all).not.toContain(`${siteUrl}/warsztaty`);
+    expect(all).not.toContain(`${siteUrl}/warsztaty/uwaznosc`);
+    inMenu = true;
+    expect(await urls()).toEqual(
+      expect.arrayContaining([
+        `${siteUrl}/warsztaty`,
+        `${siteUrl}/warsztaty/uwaznosc`,
+      ]),
+    );
   });
 
   it("lists the newsletter's archive once an issue is in it", async () => {
