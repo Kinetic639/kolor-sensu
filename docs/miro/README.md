@@ -6,7 +6,7 @@ sięga tylko po to, żeby coś zmienić (albo gdy kopia może być nieaktualna).
 
 ## Co jest w kopii
 
-Stan na 24.10.2026, po weryfikacji kartek z kodem i testami (także po wydaniu na STAGING, #202).
+Stan na 24.10.2026, po weryfikacji kartek z kodem i testami (także po wydaniu na STAGING, #202, i testach z PR #212).
 
 - [`strona-publiczna.md`](strona-publiczna.md): wszystkie ramki „Strona · …”
   (1–7, z ramkami „elementy”), mapa „Klient: odkrywa stronę” oraz ramki
