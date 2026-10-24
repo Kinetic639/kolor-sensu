@@ -71,6 +71,13 @@ A new file in `supabase/migrations/` (never edit an applied one), with tests
 in `supabase/tests/`. Redefining a function copies its current body whole;
 changing what a function returns means checking everything that uses it.
 
+## Miro
+
+The product map is the Miro board (`https://miro.com/app/board/uXjVEaKfAoo=/`).
+Reading it has a limit: read the copy in `docs/miro/` first and change the
+board in one batch; keep the copy in step with every change
+(`docs/miro/README.md`).
+
 ## Issues and the board
 
 - Every finding (bug, UX, accessibility, a product question) becomes a
