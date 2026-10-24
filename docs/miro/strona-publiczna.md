@@ -24,8 +24,6 @@ Ramka `3458764687433197618` · plik `svg/strona-1-3.svg` · [w Miro](https://mir
 | 15. Teksty sekcji w CMS                                                                                                       | zielony              |
 | Animacja powitalna tylko za pierwszym razem                                                                                   | zielony              |
 | Najbliższe wolne terminy wybranego specjalisty w „Z kim porozmawiasz”                                                         | szary (po MVP)       |
-| Napis „Spokojnie, uważnie, z sensem” lub motto                                                                                | szary (po MVP)       |
-| Baner zapisu do newslettera: pas już jest (wyłączony w CMS), formularz po wyborze narzędzia                                   | szary (po MVP)       |
 | Najnowsze produkty Naffy                                                                                                      | szary (po MVP)       |
 | 16. Najnowsze artykuły (po MVP)                                                                                               | szary (po MVP)       |
 | Przełączniki tylko przy sekcjach, które je mają, i przy 3 nowych (Dlaczego my, Stacjonarnie i online, Gdzie jesteśmy) (16.10) | niebieski (ustalone) |
@@ -501,6 +499,8 @@ Archiwum, jedno wydanie, potwierdzenie i wypisanie (24.10). Kopie kartek są na 
 
 Ramka `3458764687433275743` · plik `svg/strona-6-mapa.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764687433275743)
 
+Kolumny: 1. Strona główna, 2. O nas, 3. Oferta, 4. Edukacja, 5. E-booki, 6. Na każdej stronie (z „8. Newsletter” pod spodem) i 7. Warsztaty (od 24.10: lista, strona warsztatu, zapis i płatność, uczestnik po zapisie; kartki portali admina i specjalisty są tylko w ramkach Warsztatów).
+
 | Kartka                                                                                                                        | Kolor                |
 | ----------------------------------------------------------------------------------------------------------------------------- | -------------------- |
 | Strona główna Edukacji                                                                                                        | zielony              |
@@ -576,6 +576,44 @@ Ramka `3458764687433275743` · plik `svg/strona-6-mapa.svg` · [w Miro](https://
 | 7. Wypis i odbicia w Resend (8. Newsletter)                                                                                   | zielony              |
 | 8. Google i prywatność linków (8. Newsletter)                                                                                 | żółty                |
 | 9. Każda strona (8. Newsletter)                                                                                               | żółty                |
+| 1. Nadchodzące warsztaty (7. Warsztaty)                                                                                       | zielony              |
+| 2. Wolne miejsca (7. Warsztaty)                                                                                               | zielony              |
+| 3. Stacjonarnie czy online (7. Warsztaty)                                                                                     | zielony              |
+| 4. Brak warsztatów (7. Warsztaty)                                                                                             | żółty                |
+| 5. Minione warsztaty (7. Warsztaty)                                                                                           | zielony              |
+| 6. Odwołany warsztat (7. Warsztaty)                                                                                           | zielony              |
+| 7. Nagłówek z CMS (7. Warsztaty)                                                                                              | różowy               |
+| 8. Warsztaty na stronie głównej (7. Warsztaty)                                                                                | zielony              |
+| 1. Nagłówek warsztatu (7. Warsztaty)                                                                                          | zielony              |
+| 2. Opis i okładka (7. Warsztaty)                                                                                              | zielony              |
+| 3. Dla kogo i program (7. Warsztaty)                                                                                          | zielony              |
+| 5. Prowadzący (7. Warsztaty)                                                                                                  | żółty                |
+| 6. Miejsce (7. Warsztaty)                                                                                                     | żółty                |
+| 7. Zasady (7. Warsztaty)                                                                                                      | żółty                |
+| 8. Komplet: lista rezerwowa (7. Warsztaty)                                                                                    | zielony              |
+| 9. Zapisy zamknięte (7. Warsztaty)                                                                                            | zielony              |
+| 10. Odwołany lub zakończony (7. Warsztaty)                                                                                    | zielony              |
+| 11. Google i udostępnianie (7. Warsztaty)                                                                                     | zielony              |
+| 12. Szkic i stary adres (7. Warsztaty)                                                                                        | żółty                |
+| 13. Powiązane (7. Warsztaty)                                                                                                  | różowy               |
+| 1. Formularz zapisu (7. Warsztaty)                                                                                            | zielony              |
+| 2. Miejsce trzymane (7. Warsztaty)                                                                                            | zielony              |
+| 3. Płatność online (7. Warsztaty)                                                                                             | zielony              |
+| 4. Kod rabatowy (7. Warsztaty)                                                                                                | zielony              |
+| 5. Bezpłatny warsztat (7. Warsztaty)                                                                                          | zielony              |
+| 6. Potwierdzenie (7. Warsztaty)                                                                                               | zielony              |
+| 7. Porzucona płatność (7. Warsztaty)                                                                                          | zielony              |
+| 8. Spóźniona płatność (7. Warsztaty)                                                                                          | żółty                |
+| 9. Drugi zapis tej samej osoby (7. Warsztaty)                                                                                 | zielony              |
+| 10. Za późno na zapis (7. Warsztaty)                                                                                          | zielony              |
+| 1. Strona mojego zapisu (7. Warsztaty)                                                                                        | żółty                |
+| 2. Rezygnacja ze zwrotem (7. Warsztaty)                                                                                       | zielony              |
+| 3. Rezygnacja po oknie (7. Warsztaty)                                                                                         | zielony              |
+| 4. Przypomnienie (7. Warsztaty)                                                                                               | zielony              |
+| 5. Lista rezerwowa (7. Warsztaty)                                                                                             | zielony              |
+| 6. Centrum odwołuje (7. Warsztaty)                                                                                            | zielony              |
+| 7. Centrum zmienia termin (7. Warsztaty)                                                                                      | zielony              |
+| 8. Za mało chętnych (7. Warsztaty)                                                                                            | zielony              |
 | 12. Gdzie jesteśmy (opcjonalna)                                                                                               | zielony              |
 | 13. Baner końcowy                                                                                                             | zielony              |
 | 11. Teksty sekcji w CMS                                                                                                       | zielony              |
@@ -605,7 +643,6 @@ Ramka `3458764687433275743` · plik `svg/strona-6-mapa.svg` · [w Miro](https://
 | Sprzedaż e-booków i kursów na stronie                                                                                         | szary (po MVP)       |
 | Dostęp do kursu po zakupie                                                                                                    | szary (po MVP)       |
 | Najbliższe wolne terminy wybranego specjalisty w „Z kim porozmawiasz”                                                         | szary (po MVP)       |
-| Napis „Spokojnie, uważnie, z sensem”                                                                                          | szary (po MVP)       |
 | Zmieniony adres profilu                                                                                                       | zielony              |
 | Dane osoby dla Google                                                                                                         | zielony              |
 | 7. Teksty strony w CMS                                                                                                        | zielony              |
@@ -614,7 +651,6 @@ Ramka `3458764687433275743` · plik `svg/strona-6-mapa.svg` · [w Miro](https://
 | Kategorie w CMS                                                                                                               | zielony              |
 | Zapis e-mailem po darmowy fragment                                                                                            | szary (po MVP)       |
 | Zgoda i RODO przy zapisie                                                                                                     | szary (po MVP)       |
-| Baner zapisu do newslettera: pas już jest (wyłączony w CMS), formularz po wyborze narzędzia                                   | szary (po MVP)       |
 | Najnowsze produkty Naffy                                                                                                      | szary (po MVP)       |
 | Pusta lista i pomoc w wyborze                                                                                                 | zielony              |
 | Teksty stron Specjaliści i profil w CMS                                                                                       | zielony              |
@@ -693,7 +729,6 @@ Ramka `3458764687433275743` · plik `svg/strona-6-mapa.svg` · [w Miro](https://
 | Pakiety (pokazanie, zakup, wykorzystanie) po MVP; karteczki 5 i 10–12 są przypomnieniem (19.10)                               | niebieski (ustalone) |
 | Pierwsza wizyta to zwykła usługa „Konsultacja psychologiczna”, bez osobnej strony (19.10)                                     | niebieski (ustalone) |
 | Na start bez blokady: nowy klient może umówić też inną usługę (19.10)                                                         | niebieski (ustalone) |
-| Warsztaty z zapisami                                                                                                          | szary (po MVP)       |
 | Praca                                                                                                                         | szary (po MVP)       |
 | Konto klienta                                                                                                                 | szary (po MVP)       |
 
