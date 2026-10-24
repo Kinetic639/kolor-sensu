@@ -146,7 +146,8 @@ export function ScheduleToolbar({
           <Segmented items={perspectives} label="Kolumny" />
         ) : null}
       </div>
-      <div className="ml-auto flex items-center gap-1 lg:ml-0">
+      {/* On a phone it wraps under the rest, never wider than the screen. */}
+      <div className="ml-auto flex max-w-full min-w-0 flex-wrap items-center justify-end gap-1 lg:ml-0">
         {locations ? <ScheduleLocationSelect options={locations} /> : null}
         {search ? <ScheduleSearch /> : null}
         {menu.length ? <ScheduleViewMenu shown={menu} /> : null}

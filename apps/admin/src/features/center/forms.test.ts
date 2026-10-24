@@ -93,6 +93,7 @@ describe("location form", () => {
     publicDescription: null,
     amenities: ["Winda", "Parking"],
     accessibilityNotes: "Wejście bez progów.",
+    directions: "Wejście od podwórza.",
     createdAt: "",
     updatedAt: "",
   };
@@ -111,6 +112,7 @@ describe("location form", () => {
       publicDescription: null,
       amenities: ["Winda", "Parking"],
       accessibilityNotes: "Wejście bez progów.",
+      directions: "Wejście od podwórza.",
     });
   });
 

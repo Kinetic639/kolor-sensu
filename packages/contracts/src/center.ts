@@ -95,6 +95,9 @@ export const locationCreateSchema = z.object({
   publicDescription: z.string().trim().max(1000).nullable().default(null),
   amenities: z.array(z.string().trim().min(1).max(100)).max(30).default([]),
   accessibilityNotes: z.string().trim().max(1000).nullable().default(null),
+  // How to get there (the entrance, the floor, parking): under the address
+  // on a workshop's page and in its confirmation (#211).
+  directions: z.string().trim().max(500).nullable().default(null),
 });
 
 export const locationUpdateSchema = partialUpdateSchema(locationCreateSchema);
@@ -188,6 +191,7 @@ export interface Location {
   publicDescription: string | null;
   amenities: string[];
   accessibilityNotes: string | null;
+  directions: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -205,4 +209,5 @@ export interface PublicLocation {
   publicDescription: string | null;
   amenities: string[];
   accessibilityNotes: string | null;
+  directions: string | null;
 }

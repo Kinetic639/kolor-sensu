@@ -10,6 +10,7 @@ import {
   articleDate,
   articleReviewer,
   articleSeo,
+  articleServiceAction,
   relatedArticles,
   usedCategories,
   type ArticlePerson,
@@ -143,5 +144,28 @@ describe("an article in Google", () => {
     expect(
       articleSeo(article("a", { seoTitle: "Lęk", seoDescription: "Opis" })),
     ).toEqual({ title: "Lęk", description: "Opis" });
+  });
+});
+
+describe("a recommended service's button", () => {
+  it("books when the service is booked online, else asks through Kontakt", () => {
+    const bookable = new Set(["konsultacja"]);
+    expect(
+      articleServiceAction(
+        "konsultacja",
+        bookable,
+        "/umow-wizyte?usluga=konsultacja",
+      ),
+    ).toEqual({
+      href: "/umow-wizyte?usluga=konsultacja",
+      label: "Umów wizytę",
+    });
+    expect(
+      articleServiceAction(
+        "warsztat-firmowy",
+        bookable,
+        "/umow-wizyte?usluga=warsztat-firmowy",
+      ),
+    ).toEqual({ href: "/kontakt", label: "Zapytaj o termin" });
   });
 });

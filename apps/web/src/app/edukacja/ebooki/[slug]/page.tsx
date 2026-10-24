@@ -1,25 +1,14 @@
-import { EbookDetails, EbookHero, JsonLd } from "@repo/ui/public-site";
-import { naffyPriceView } from "@repo/app-runtime/naffy-price";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import { ClosingCta } from "@/components/closing-cta";
-import { siteUrl } from "@/content/site";
-import { ConsentVideo } from "@/features/education/consent-video";
-import {
-  ebookHref,
-  ebookSeo,
-  videoEmbed,
-} from "@/features/education/ebook-view";
+import { EbookPageView } from "@/features/education/ebook-page";
+import { ebookHref, ebookSeo } from "@/features/education/ebook-view";
 import {
   articleImageUrl,
-  ebookSampleHref,
   getEbook,
-  getEbookPrice,
   getEbookRedirect,
   getEbooks,
 } from "@/lib/education-data";
 import { baseOpenGraph } from "@/lib/page-metadata";
-import { getClosingCta } from "@/lib/public-data";
 
 // An e-book (docs/product/education-plan.md, PR 5): what it is, the way to
 // buy it on Naffy (with its price read from Naffy, if the admin shows it)
@@ -71,72 +60,5 @@ export default async function EbookPage({
     if (moved) permanentRedirect(ebookHref(moved));
     notFound();
   }
-  const [closing, price] = await Promise.all([
-    getClosingCta(),
-    ebook.showPrice ? getEbookPrice(ebook.naffyUrl) : null,
-  ]);
-  const shownPrice = price ? naffyPriceView(price) : null;
-  const coverUrl = ebook.coverPath ? articleImageUrl(ebook.coverPath) : null;
-  const video = videoEmbed(ebook.videoUrl);
-
-  return (
-    <>
-      <EbookHero
-        coverAlt={ebook.coverAlt}
-        coverUrl={coverUrl}
-        description={ebook.shortDescription}
-        format={ebook.format}
-        naffyUrl={ebook.naffyUrl || null}
-        price={shownPrice}
-        sampleHref={
-          ebook.samplePath
-            ? ebookSampleHref(ebook.samplePath, ebook.slug)
-            : null
-        }
-        title={ebook.title}
-      />
-      <EbookDetails
-        aside={
-          video ? (
-            <ConsentVideo
-              posterUrl={coverUrl}
-              title={ebook.title}
-              video={video}
-            />
-          ) : null
-        }
-        audience={ebook.audience}
-        contents={ebook.contents}
-        description={ebook.description}
-      />
-      <ClosingCta words={closing} />
-      <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "Book",
-          name: ebook.title,
-          description: ebook.shortDescription,
-          url: `${siteUrl}${ebookHref(ebook.slug)}`,
-          bookFormat: "https://schema.org/EBook",
-          inLanguage: "pl-PL",
-          ...(coverUrl && { image: coverUrl }),
-          publisher: {
-            "@type": "Organization",
-            name: "Kolor Sensu",
-            url: siteUrl,
-          },
-          ...(ebook.naffyUrl && {
-            offers: {
-              "@type": "Offer",
-              url: ebook.naffyUrl,
-              ...(shownPrice && {
-                price: shownPrice.amount,
-                priceCurrency: "PLN",
-              }),
-            },
-          }),
-        }}
-      />
-    </>
-  );
+  return <EbookPageView ebook={ebook} />;
 }

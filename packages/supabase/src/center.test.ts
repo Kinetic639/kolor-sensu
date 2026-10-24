@@ -153,6 +153,7 @@ describe("center domain mapping", () => {
         public_description: "Kamienica w centrum.",
         amenities: ["Winda"],
         accessibility_notes: "Wejście bez progów.",
+        directions: "Wejście od podwórza.",
       }),
     ).toMatchObject({
       id: "location-id",
@@ -161,6 +162,7 @@ describe("center domain mapping", () => {
       publicDescription: "Kamienica w centrum.",
       amenities: ["Winda"],
       accessibilityNotes: "Wejście bez progów.",
+      directions: "Wejście od podwórza.",
     });
   });
 });

@@ -9,8 +9,8 @@ import {
 import { requirePortalRole } from "@/lib/auth";
 
 // The CMS's "Podgląd" (a link opening a new tab): for a signed-in admin,
-// signs a token for the page's path (or, with ?artykul=<id>, the path of
-// that article's draft preview) on the site with CMS_PREVIEW_SECRET and
+// signs a token for the page's path (or, with ?artykul=, ?ebook= or
+// ?warsztat=<id>, the path of that draft's preview) on the site with CMS_PREVIEW_SECRET and
 // sends the tab to the site's /api/preview, which turns the preview on.
 // Outside (protected)/ (a route handler has no layout), so it checks the
 // admin itself: anyone else goes to the login or "no access".
@@ -33,14 +33,23 @@ export async function GET(request: Request) {
   await requirePortalRole();
 
   const query = new URL(request.url).searchParams;
-  const article = query.get("artykul");
   const page = parseCmsPreviewPage(query.get("strona"));
-  const path =
-    article && UUID.test(article)
-      ? `/edukacja/artykuly/podglad/${article}`
-      : page
-        ? CMS_PAGE_SITE_PATHS[page]
-        : null;
+  // A draft by its id: an article's, an e-book's, a workshop (#197).
+  const draft = (
+    [
+      ["artykul", "/edukacja/artykuly/podglad/"],
+      ["ebook", "/edukacja/ebooki/podglad/"],
+      ["warsztat", "/warsztaty/podglad/"],
+    ] as const
+  ).find(([key]) => query.has(key));
+  const draftId = draft ? query.get(draft[0])! : null;
+  const path = draft
+    ? draftId && UUID.test(draftId)
+      ? `${draft[1]}${draftId}`
+      : null
+    : page
+      ? CMS_PAGE_SITE_PATHS[page]
+      : null;
   if (!path) return refuse(404, "Nie ma takiej strony.");
 
   const secret = process.env.CMS_PREVIEW_SECRET;

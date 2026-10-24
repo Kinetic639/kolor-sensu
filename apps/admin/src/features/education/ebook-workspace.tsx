@@ -100,6 +100,7 @@ export function EbookWorkspace(props: EbookWorkspaceProps) {
     <div className="flex min-h-0 flex-1 flex-col">
       <WorkspaceBar
         actions={actions}
+        previewHref={`/podglad?ebook=${id}`}
         back={{ href: "/ebooki", label: "E-booki" }}
         kind="e-book"
         state={state}

@@ -33,6 +33,11 @@ import {
   type ServicePageContent,
 } from "@repo/contracts/cms-offer";
 import {
+  defaultWorkshopsPage,
+  workshopsPageContentSchema,
+  type WorkshopsPageContent,
+} from "@repo/contracts/cms-workshops";
+import {
   LEGAL_PAGES,
   legalPageContentSchema,
   type LegalPageContent,
@@ -742,6 +747,17 @@ export const getOfferPageAdmin = offerPage.admin;
 export const updateOfferPageDraft = offerPage.update;
 export const publishOfferPage = offerPage.publish;
 export const getPublishedOfferPage = offerPage.published;
+
+/** /warsztaty: its words (#210). */
+const workshopsPage = contentSection<WorkshopsPageContent>(
+  "workshops_page",
+  workshopsPageContentSchema,
+  defaultWorkshopsPage,
+);
+export const getWorkshopsPageAdmin = workshopsPage.admin;
+export const updateWorkshopsPageDraft = workshopsPage.update;
+export const publishWorkshopsPage = workshopsPage.publish;
+export const getPublishedWorkshopsPage = workshopsPage.published;
 
 /** Every service's page: "Jak pracujemy" and the line for no booking. */
 const servicePage = contentSection<ServicePageContent>(

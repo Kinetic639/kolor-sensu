@@ -349,6 +349,11 @@ export type {
   ServicePageContent,
 } from "@repo/contracts/cms-offer";
 export {
+  defaultWorkshopsPage,
+  workshopsPageContentSchema,
+} from "@repo/contracts/cms-workshops";
+export type { WorkshopsPageContent } from "@repo/contracts/cms-workshops";
+export {
   CONTACT_MESSAGE_MAX,
   contactMessageInputSchema,
 } from "@repo/contracts/contact";

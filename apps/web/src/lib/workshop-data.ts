@@ -1,10 +1,14 @@
 import {
+  getWorkshopPreview,
+  getWorkshopSlugRedirect,
   listPublicWorkshops,
   workshopImageUrl as imageUrl,
 } from "@repo/supabase/workshops";
 import { getWorkshopVisibility as readVisibility } from "@repo/supabase/workshops-admin";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
+import { createSecretClient } from "@/lib/supabase/secret";
+import { isPreview } from "./preview";
 import { load } from "./public-data";
 
 // Warsztaty's reads for the site (docs/product/workshops-plan.md): every
@@ -19,6 +23,26 @@ export const getWorkshop = cache(async (slug: string) => {
   const all = await getWorkshops();
   return all.find((workshop) => workshop.slug === slug) ?? null;
 });
+
+/** A draft workshop, in the preview only (else null; #197). */
+export const getWorkshopPreviewDraft = cache(async (id: string) => {
+  if (!(await isPreview())) return null;
+  try {
+    return await getWorkshopPreview(createSecretClient(), id);
+  } catch (error) {
+    console.error(`[workshops] preview ${id} failed:`, error);
+    return null;
+  }
+});
+
+/** The current address of a workshop whose address changed, or null. */
+export const getWorkshopRedirect = cache((slug: string) =>
+  load(
+    `workshop redirect ${slug}`,
+    (client) => getWorkshopSlugRedirect(client, slug),
+    null,
+  ),
+);
 
 /** Whether the site shows Warsztaty in its menu and on its homepage (the portal's switches). */
 export const getWorkshopVisibility = cache(() =>

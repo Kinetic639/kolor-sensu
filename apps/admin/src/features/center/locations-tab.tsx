@@ -137,6 +137,14 @@ function LocationForm({
         multiline
         registration={register("accessibilityNotes")}
       />
+      <Field
+        error={errors.directions?.message}
+        hint="Np. wejście od podwórza, 2. piętro, parking przy ul. Polnej. Pokazujemy to na stronie warsztatu i w potwierdzeniu zapisu."
+        id="location-directions"
+        label="Jak dojechać"
+        multiline
+        registration={register("directions")}
+      />
       <div className="overflow-hidden rounded-[6px] border border-[var(--border)] [&>label:last-child]:border-b-0">
         <Controller
           control={control}
