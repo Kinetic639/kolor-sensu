@@ -1622,6 +1622,116 @@
     }
   }
 
+  /* ---------------------------------------------------------- CrisisStrip */
+
+  /* Edge to edge: fresh sage, a hairline above and below. */
+  .ks-crisis {
+    border-block: 1px solid
+      color-mix(in oklab, var(--color-primary) 18%, transparent);
+    background-color: var(--color-primary-soft);
+  }
+
+  /* ----------------------------------------------------------- ClosingCta */
+
+  /* The band that closes a page, edge to edge: a blush wash with brushed
+     edges and paper grain; on its left a room (armchair and plants) whose
+     plants rise above the band's top (--ks-closing-rise, the share of the
+     picture above the paint); on its right the line and the actions, in
+     the page's column. */
+  .ks-closing {
+    --ks-closing-rise: 9vw;
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    margin-block: var(--spacing-section-sm) 0;
+  }
+
+  .ks-closing__wash {
+    position: absolute;
+    inset: var(--ks-closing-rise) 0 0;
+    z-index: -1;
+    background-color: color-mix(
+      in oklab,
+      var(--color-pink-soft) 75%,
+      var(--color-blush)
+    );
+    background-image:
+      radial-gradient(
+        ellipse 50% 75% at 80% 45%,
+        color-mix(in oklab, var(--color-blush) 85%, var(--color-pink) 15%),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 35% 55% at 52% 80%,
+        color-mix(in oklab, var(--color-blush) 70%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 30% 50% at 96% 85%,
+        color-mix(in oklab, var(--color-blush) 80%, var(--color-pink) 20%),
+        transparent 70%
+      );
+    mask-image: url("/watercolor/band.svg");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+
+  /* On phones the room sits on the band's top: its lower edge fades into
+     the paint. */
+  .ks-closing__art {
+    width: 100%;
+    height: auto;
+    mask-image: linear-gradient(to bottom, #000 80%, transparent);
+  }
+
+  .ks-closing__body {
+    display: grid;
+    gap: 1.5rem;
+    padding: 0.5rem var(--spacing-gutter) 3rem;
+  }
+
+  .ks-closing__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.5rem;
+  }
+
+  /* From tablets: the room on the left edge, the words and the actions
+     beside it, up to the page's column on the right. */
+  @media (width >= 48rem) {
+    .ks-closing__art {
+      mask-image: none;
+    }
+
+    .ks-closing {
+      --ks-closing-rise: 3.6vw;
+      grid-template-columns: minmax(0, 40%) minmax(0, 1fr);
+      align-items: end;
+    }
+
+    .ks-closing__body {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      align-self: stretch;
+      padding: var(--ks-closing-rise) 0 0;
+      padding-right: max(
+        var(--spacing-gutter),
+        calc((100vw - var(--container-page)) / 2 + var(--spacing-gutter))
+      );
+      padding-left: 2.5rem;
+    }
+
+    .ks-closing__actions {
+      flex-direction: column;
+      flex-wrap: nowrap;
+      flex-shrink: 0;
+      gap: 1.1rem;
+    }
+  }
+
   /* --------------------------------------------------------- WorkshopCard */
 
   /* The painted cover (or a wash in its shape), laid over the top of a
