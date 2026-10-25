@@ -19,6 +19,9 @@ import type { ReducedMotionMode } from "./watercolor-reveal";
 //   │                      paint), title (the link), description
 //   └── .ks-of__arrow      round arrow
 //
+// Without an href the tile is not a link (a fact, not a page): the title is
+// plain text and there is no arrow. The icon is optional too.
+//
 // The optional entrance animation (animationPreset="brush-reveal") wraps
 // the same markup in a small client component, OfferReveal: the patch is
 // painted in five quick brush strokes at the angle of its brushwork (top to
@@ -30,9 +33,10 @@ export type OfferPaint = keyof typeof offerMatte.paints;
 export interface OfferService {
   title: string;
   description?: string;
-  href: string;
+  /** Where the tile leads; without it the tile is not a link. */
+  href?: string;
   /** A line icon (lucide), drawn in paper colour: cut out of the paint. */
-  icon: ReactNode;
+  icon?: ReactNode;
   /** Which supplied watercolor patch sits behind the tile. */
   paint: OfferPaint;
 }
@@ -102,16 +106,22 @@ export function OfferTile({
         </div>
       </div>
       <div className="ks-of__content">
-        <span aria-hidden="true" className="ks-of__icon">
-          {icon}
-        </span>
+        {icon ? (
+          <span aria-hidden="true" className="ks-of__icon">
+            {icon}
+          </span>
+        ) : null}
         <Heading className="ks-of__title font-body text-ink text-balance">
-          <Link
-            href={href}
-            className="after:rounded-card-lg focus-visible:after:outline-ring after:absolute after:inset-0 after:z-10 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2"
-          >
-            {title}
-          </Link>
+          {href ? (
+            <Link
+              href={href}
+              className="after:rounded-card-lg focus-visible:after:outline-ring after:absolute after:inset-0 after:z-10 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2"
+            >
+              {title}
+            </Link>
+          ) : (
+            title
+          )}
         </Heading>
         {description ? (
           <p className="ks-of__description text-ink/80 text-balance">
@@ -119,15 +129,17 @@ export function OfferTile({
           </p>
         ) : null}
       </div>
-      <span
-        aria-hidden="true"
-        className="ks-of__arrow rounded-button bg-surface text-ink shadow-card ease-soft group-hover/of:shadow-card-hover grid place-items-center transition-shadow duration-300"
-      >
-        <ArrowRight
-          className="ease-soft size-4 transition-transform duration-200 group-hover/of:translate-x-0.5"
-          strokeWidth={1.75}
-        />
-      </span>
+      {href ? (
+        <span
+          aria-hidden="true"
+          className="ks-of__arrow rounded-button bg-surface text-ink shadow-card ease-soft group-hover/of:shadow-card-hover grid place-items-center transition-shadow duration-300"
+        >
+          <ArrowRight
+            className="ease-soft size-4 transition-transform duration-200 group-hover/of:translate-x-0.5"
+            strokeWidth={1.75}
+          />
+        </span>
+      ) : null}
     </>
   );
 
