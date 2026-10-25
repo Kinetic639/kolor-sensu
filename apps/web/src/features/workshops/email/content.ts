@@ -205,6 +205,13 @@ export function workshopEmailContent(
       button: "Zobacz szczegóły",
       note: null,
     },
+    seat_lost: {
+      subject: `Zwrot za warsztat ${email.reference}`,
+      heading: "Miejsce było już zajęte",
+      intro: `Twoja płatność dotarła po czasie, w którym czekało na Ciebie miejsce, a w międzyczasie zajęła je inna osoba. Oddaliśmy całe ${money(email.refundedMinor)} na konto, z którego przyszła płatność (zwykle kilka dni roboczych). Jeśli zwolni się miejsce albo pojawi się nowy termin, zapraszamy ponownie.`,
+      button: "Zobacz szczegóły",
+      note: null,
+    },
   };
   const words = copy[kind];
 
