@@ -94,6 +94,8 @@ export interface PublicWorkshop {
   minParticipants: number | null;
   locationName: string | null;
   locationAddress: string | null;
+  /** How to get there (the location's, #211). */
+  locationDirections: string | null;
   locationCity: string | null;
   roomName: string | null;
   leaders: WorkshopLeader[];
@@ -121,13 +123,48 @@ function leadersOf(value: Json): WorkshopLeader[] {
   });
 }
 
+/** The current address of a workshop whose address changed, or null (#184). */
+export async function getWorkshopSlugRedirect(
+  client: Client,
+  oldSlug: string,
+): Promise<string | null> {
+  const { data, error } = await client.rpc("workshop_redirect", {
+    p_slug: oldSlug,
+  });
+  if (error) throw error;
+  return data ?? null;
+}
+
 /** Every non-draft workshop, soonest first (few: the pages filter). */
 export async function listPublicWorkshops(
   client: Client,
 ): Promise<PublicWorkshop[]> {
   const { data, error } = await client.rpc("list_public_workshops");
   if (error) throw error;
-  return (data ?? []).map((row) => ({
+  return (data ?? []).map(toPublicWorkshop);
+}
+
+/**
+ * A workshop as its page shows it, any status (a draft too), for the
+ * admin's preview (#197; the site's secret client, in Draft Mode only).
+ */
+export async function getWorkshopPreview(
+  secretClient: Client,
+  id: string,
+): Promise<PublicWorkshop | null> {
+  const { data, error } = await secretClient.rpc("workshop_preview", {
+    p_id: id,
+  });
+  if (error) throw error;
+  const [row] = data ?? [];
+  return row ? toPublicWorkshop(row) : null;
+}
+
+type PublicWorkshopRow =
+  Database["public"]["Functions"]["list_public_workshops"]["Returns"][number];
+
+function toPublicWorkshop(row: PublicWorkshopRow): PublicWorkshop {
+  return {
     id: row.id,
     slug: row.slug,
     title: row.title,
@@ -149,6 +186,7 @@ export async function listPublicWorkshops(
     minParticipants: row.min_participants,
     locationName: row.location_name,
     locationAddress: row.location_address,
+    locationDirections: row.location_directions,
     locationCity: row.location_city,
     roomName: row.room_name,
     leaders: leadersOf(row.leaders),
@@ -156,7 +194,7 @@ export async function listPublicWorkshops(
     registrationOpen: row.registration_open,
     confirmed: row.confirmed,
     updatedAt: row.updated_at,
-  }));
+  };
 }
 
 /** A workshop's cover in the public site-media bucket. */
@@ -272,6 +310,8 @@ export interface WorkshopRegistration {
   endsAt: string;
   locationName: string | null;
   locationAddress: string | null;
+  /** How to get there (the location's, #211). */
+  locationDirections: string | null;
   roomName: string | null;
   priceMinor: number;
   currencyCode: string;
@@ -324,6 +364,7 @@ export async function getWorkshopRegistration(
     endsAt: row.ends_at,
     locationName: row.location_name,
     locationAddress: row.location_address,
+    locationDirections: row.location_directions,
     roomName: row.room_name,
     priceMinor: row.price_minor,
     currencyCode: row.currency_code,
@@ -505,7 +546,9 @@ export type WorkshopEmailKind =
   | "reminder"
   | "cancelled"
   | "rescheduled"
-  | "refunded";
+  | "refunded"
+  /** A payment too late for its seat, given back (#196). */
+  | "seat_lost";
 
 export interface ClaimedWorkshopEmail {
   reference: string;
@@ -519,6 +562,8 @@ export interface ClaimedWorkshopEmail {
   endsAt: string;
   locationName: string | null;
   locationAddress: string | null;
+  /** How to get there (the location's, #211). */
+  locationDirections: string | null;
   roomName: string | null;
   leaders: string | null;
   priceMinor: number;
@@ -563,6 +608,7 @@ export async function claimWorkshopEmail(
     endsAt: row.ends_at,
     locationName: row.location_name,
     locationAddress: row.location_address,
+    locationDirections: row.location_directions,
     roomName: row.room_name,
     leaders: row.leaders,
     priceMinor: row.price_minor,

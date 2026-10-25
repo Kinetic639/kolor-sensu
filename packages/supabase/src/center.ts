@@ -48,6 +48,7 @@ type PublicLocationQueryRow = Pick<
   | "public_description"
   | "amenities"
   | "accessibility_notes"
+  | "directions"
 >;
 
 function mapCenterSettings(row: CenterSettingsRow): CenterSettings {
@@ -131,6 +132,7 @@ function mapLocation(row: LocationRow): Location {
     publicDescription: row.public_description,
     amenities: row.amenities,
     accessibilityNotes: row.accessibility_notes,
+    directions: row.directions,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -150,6 +152,7 @@ function mapPublicLocation(row: PublicLocationQueryRow): PublicLocation {
     publicDescription: row.public_description,
     amenities: row.amenities,
     accessibilityNotes: row.accessibility_notes,
+    directions: row.directions,
   };
 }
 
@@ -320,6 +323,7 @@ export async function createLocation(
       public_description: location.publicDescription,
       amenities: location.amenities,
       accessibility_notes: location.accessibilityNotes,
+      directions: location.directions,
     })
     .select("*")
     .single();
@@ -350,6 +354,7 @@ export async function updateLocation(
       public_description: patch.publicDescription,
       amenities: patch.amenities,
       accessibility_notes: patch.accessibilityNotes,
+      directions: patch.directions,
     })
     .eq("id", id)
     .select("*")
@@ -378,7 +383,8 @@ const publicLocationSelection = `
   sort_order,
   public_description,
   amenities,
-  accessibility_notes
+  accessibility_notes,
+  directions
 `;
 
 export async function listPublicLocations(

@@ -17,13 +17,13 @@ import {
   getEbooks,
 } from "@/lib/education-data";
 import { getNewsletterArchive } from "@/lib/newsletter-data";
-import { getWorkshops } from "@/lib/workshop-data";
+import { getWorkshops, getWorkshopVisibility } from "@/lib/workshop-data";
 import { workshopHref } from "@/features/workshops/workshop-view";
 import { newsletterArchiveHref } from "@repo/contracts/newsletter-issue";
 
 // Every public page, including each published service, specialist and
 // article and e-book (with the date its text last changed), each published
-// workshop and each category in use,
+// workshop (while the portal shows Warsztaty, #209) and each category in use,
 // and the newsletter's archive once an issue is in it, but those the CMS
 // keeps out of search engines ("noindex").
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -36,6 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ebooks,
     issues,
     workshops,
+    workshopVisibility,
   ] = await Promise.all([
     getServices(),
     getSpecialists(),
@@ -45,6 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getEbooks(),
     getNewsletterArchive(),
     getWorkshops(),
+    getWorkshopVisibility(),
   ]);
   const page = (
     path: string,
@@ -64,13 +66,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     page("/kontakt", 0.8),
     page("/o-nas", 0.7),
     page("/gabinety", 0.6),
-    page("/warsztaty", 0.6),
-    ...workshops
-      .filter((workshop) => workshop.status === "published")
-      .map((workshop) => ({
-        ...page(workshopHref(workshop.slug), 0.6),
-        lastModified: workshop.updatedAt,
-      })),
+    ...(workshopVisibility.inMenu
+      ? [
+          page("/warsztaty", 0.6),
+          ...workshops
+            .filter((workshop) => workshop.status === "published")
+            .map((workshop) => ({
+              ...page(workshopHref(workshop.slug), 0.6),
+              lastModified: workshop.updatedAt,
+            })),
+        ]
+      : []),
     page("/edukacja", 0.6),
     ...(articles.length
       ? [

@@ -143,6 +143,7 @@ function mapTimeOff(row: TimeOffRow): SpecialistTimeOff {
     startsAt: start.toISOString(),
     endsAt: end.toISOString(),
     reason: row.reason,
+    ...(row.workshop_id ? { workshopId: row.workshop_id } : {}),
   };
 }
 

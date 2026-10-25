@@ -15,7 +15,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@repo/ui/alert-dialog";
+import { AttendanceCheckbox } from "@repo/ui/attendance-checkbox";
 import { Button } from "@repo/ui/button";
+import { toast } from "@repo/ui/toast";
 import { Tag } from "@repo/ui/visit-table";
 import { Download, Mail, UserPlus } from "lucide-react";
 import { useState } from "react";
@@ -25,10 +27,12 @@ import {
   addParticipantAction,
   cancelParticipantAction,
   completeWorkshopAction,
+  forgetParticipantAction,
   messageParticipantsAction,
   setAttendanceAction,
 } from "./actions";
 import {
+  canForget,
   participantGroups,
   participantState,
   paymentLabel,
@@ -68,6 +72,9 @@ export function ParticipantsPanel({
   const { isPending, run } = useSave();
   const [adding, setAdding] = useState(false);
   const [writing, setWriting] = useState(false);
+  const [forgetting, setForgetting] = useState<WorkshopParticipant | null>(
+    null,
+  );
   const [cancelling, setCancelling] = useState<WorkshopParticipant | null>(
     null,
   );
@@ -216,26 +223,19 @@ export function ParticipantsPanel({
                           {key === "zapisani" && started ? (
                             <td className={cell}>
                               {one.status === "confirmed" ? (
-                                <label className="flex items-center gap-1.5">
-                                  <input
-                                    checked={one.attended === true}
-                                    className="size-4 accent-[var(--primary)]"
-                                    disabled={isPending}
-                                    onChange={(event) =>
-                                      run(
-                                        () =>
-                                          setAttendanceAction(
-                                            workshopId,
-                                            one.id,
-                                            event.target.checked,
-                                          ),
-                                        "Zapisano obecność",
-                                      )
-                                    }
-                                    type="checkbox"
-                                  />
-                                  Był(a)
-                                </label>
+                                <AttendanceCheckbox
+                                  attended={one.attended === true}
+                                  name={one.name ?? one.reference}
+                                  onSave={async (next) => {
+                                    const result = await setAttendanceAction(
+                                      workshopId,
+                                      one.id,
+                                      next,
+                                    );
+                                    if (!result.ok) toast.error(result.message);
+                                    return result.ok;
+                                  }}
+                                />
                               ) : null}
                             </td>
                           ) : null}
@@ -254,6 +254,15 @@ export function ParticipantsPanel({
                                 variant="ghost"
                               >
                                 Wypisz
+                              </Button>
+                            ) : null}
+                            {canForget(one, { ended }) ? (
+                              <Button
+                                onClick={() => setForgetting(one)}
+                                size="sm"
+                                variant="ghost"
+                              >
+                                Usuń dane
                               </Button>
                             ) : null}
                           </td>
@@ -288,6 +297,42 @@ export function ParticipantsPanel({
           </ul>
         </div>
       ) : null}
+
+      <AlertDialog
+        onOpenChange={(isOpen) => setForgetting(isOpen ? forgetting : null)}
+        open={forgetting !== null}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Usunąć dane: {forgetting?.name ?? "uczestnik"}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Na prośbę tej osoby: imię, e-mail, telefon i uwagi znikną na
+              zawsze, także z powiadomień. Zostają numer zapisu i kwoty (do
+              księgowości). Bez prośby dane znikają same 12 miesięcy po
+              warsztacie.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Nie</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                if (!forgetting) return;
+                const target = forgetting;
+                run(
+                  () => forgetParticipantAction(workshopId, target.id),
+                  "Dane usunięte",
+                  () => setForgetting(null),
+                );
+              }}
+            >
+              Usuń dane
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog
         onOpenChange={(isOpen) => setCancelling(isOpen ? cancelling : null)}

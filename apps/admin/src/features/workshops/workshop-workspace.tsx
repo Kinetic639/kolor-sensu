@@ -257,6 +257,28 @@ export function WorkshopWorkspace({
                 </a>
               </Button>
             ) : null}
+            {state.id && state.status === "draft" ? (
+              <Button
+                asChild
+                className={BAR_BUTTON}
+                size="sm"
+                variant="outline"
+              >
+                <a
+                  href={`/podglad?warsztat=${state.id}`}
+                  rel="noopener"
+                  target="_blank"
+                  title={
+                    dirty
+                      ? "Podgląd pokazuje zapisany szkic: najpierw zapisz zmiany."
+                      : undefined
+                  }
+                >
+                  Podgląd
+                  <span className="sr-only"> (nowa karta)</span>
+                </a>
+              </Button>
+            ) : null}
             {!cancelled ? (
               <Button
                 className={BAR_BUTTON}

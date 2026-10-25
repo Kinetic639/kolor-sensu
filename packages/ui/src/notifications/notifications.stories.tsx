@@ -73,8 +73,9 @@ export const New: Story = {
     await userEvent.click(
       within(first).getByRole("button", { name: /Nowa rezerwacja/ }),
     );
+    // The booking's number leads to it (no separate button below).
     await expect(
-      within(first).getByRole("link", { name: "Otwórz rezerwację" }),
+      await within(first).findByRole("link", { name: "Rezerwacja 2610-027" }),
     ).toBeVisible();
     await expect(markRead).toHaveBeenCalledWith(1);
   },

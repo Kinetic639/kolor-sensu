@@ -254,6 +254,47 @@ describe("calendarWindows", () => {
       },
     ]);
   });
+
+  it("keeps a workshop whole, even outside the hours and with no rules (#198)", () => {
+    const rule = {
+      id: "r",
+      specialistId: "jan",
+      recurrence: "weekly" as const,
+      weekdays: [3],
+      intervalWeeks: 1,
+      exceptions: [],
+      startsAt: "09:00",
+      endsAt: "17:00",
+      validFrom: "2030-01-01",
+      validUntil: null,
+      mode: "in_person" as const,
+      roomId: "green",
+    };
+    const workshop = (specialistId: string) => ({
+      specialistId,
+      startsAt: at(2, "18:00").toISOString(),
+      endsAt: at(2, "20:00").toISOString(),
+      reason: "Warsztat: Uważność",
+      workshopId: "w1",
+    });
+    const result = calendarWindows({
+      specialistIds: ["jan", "ola"],
+      rules: [rule],
+      timeOff: [workshop("jan"), workshop("ola")],
+      from: "2030-10-02",
+      to: "2030-10-02",
+      timeZone,
+    });
+    expect(result.windows).toHaveLength(1);
+    expect(result.timeOff).toEqual(
+      ["jan", "ola"].map((specialistId) => ({
+        specialistId,
+        start: at(2, "18:00"),
+        end: at(2, "20:00"),
+        reason: "Warsztat: Uważność",
+      })),
+    );
+  });
 });
 
 describe("dayView by specialist", () => {

@@ -64,6 +64,26 @@ describe("GET /podglad", () => {
     expect(bad.status).toBe(404);
   });
 
+  it("previews an e-book's draft and a draft workshop by their ids", async () => {
+    const id = "22222222-2222-4222-8222-222222222222";
+    for (const [query, path] of [
+      ["ebook", `/edukacja/ebooki/podglad/${id}`],
+      ["warsztat", `/warsztaty/podglad/${id}`],
+    ] as const) {
+      const response = await GET(
+        new Request(`https://admin.example.invalid/podglad?${query}=${id}`),
+      );
+      const location = new URL(response.headers.get("location")!);
+      expect(
+        verifyPreviewToken(location.searchParams.get("token")!, { secret }),
+      ).toEqual({ ok: true, path });
+      const bad = await GET(
+        new Request(`https://admin.example.invalid/podglad?${query}=x`),
+      );
+      expect(bad.status).toBe(404);
+    }
+  });
+
   it("lets only an admin in", async () => {
     requirePortalRole.mockRejectedValue(new Error("NEXT_REDIRECT"));
     await expect(GET(open("glowna"))).rejects.toThrow("NEXT_REDIRECT");

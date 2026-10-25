@@ -214,7 +214,7 @@ export function NotificationRow({
             {item.summary}
           </span>
         </button>
-        <span className="h-[18px] text-right text-[0.71875rem] leading-[18px] text-[var(--text-subtle)] tabular-nums">
+        <span className="h-[18px] text-right text-[0.71875rem] leading-[18px] text-[var(--text-muted)] tabular-nums">
           {item.time}
         </span>
         <button

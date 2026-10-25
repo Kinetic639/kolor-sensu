@@ -4,6 +4,7 @@ import {
   getEbookSlugRedirect,
   getPublishedEbookBySlug,
   getArticleDraftPreview,
+  getEbookDraftPreview,
   getArticleSlugRedirect,
   getPublishedArticleBySlug,
   getPublishedArticleLinks,
@@ -77,6 +78,17 @@ export const getArticlePreview = cache(async (id: string) => {
     return await getArticleDraftPreview(createSecretClient(), id);
   } catch (error) {
     console.error(`[education] preview ${id} failed:`, error);
+    return null;
+  }
+});
+
+/** An e-book's draft, in the preview only (else null; #197). */
+export const getEbookPreview = cache(async (id: string) => {
+  if (!(await isPreview())) return null;
+  try {
+    return await getEbookDraftPreview(createSecretClient(), id);
+  } catch (error) {
+    console.error(`[education] ebook preview ${id} failed:`, error);
     return null;
   }
 });

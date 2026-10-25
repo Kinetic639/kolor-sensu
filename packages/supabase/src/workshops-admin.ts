@@ -325,6 +325,8 @@ export interface WorkshopParticipant {
   cancelledBy: string | null;
   cancelledAt: string | null;
   createdAt: string;
+  /** When the data was anonymised (after 12 months, or on request). */
+  forgottenAt: string | null;
 }
 
 /**
@@ -338,7 +340,7 @@ export async function listWorkshopParticipants(
   const { data, error } = await client
     .from("workshop_registrations")
     .select(
-      "id, reference, status, booked_by, client_name, client_email, client_phone, client_notes, price_minor, paid_minor, refund_due_minor, refunded_minor, paid_outside, payment_due_at, offer_expires_at, hold_expires_at, waitlisted_at, attended, cancelled_by, cancelled_at, created_at",
+      "id, reference, status, booked_by, client_name, client_email, client_phone, client_notes, price_minor, paid_minor, refund_due_minor, refunded_minor, paid_outside, payment_due_at, offer_expires_at, hold_expires_at, waitlisted_at, attended, cancelled_by, cancelled_at, created_at, forgotten_at",
     )
     .eq("workshop_id", workshopId)
     .order("created_at");
@@ -367,6 +369,7 @@ export async function listWorkshopParticipants(
       cancelledBy: row.cancelled_by,
       cancelledAt: row.cancelled_at,
       createdAt: row.created_at,
+      forgottenAt: row.forgotten_at,
     }));
 }
 
@@ -422,6 +425,17 @@ export async function setWorkshopAttendance(
   const { error } = await client.rpc("set_workshop_attendance", {
     p_registration_id: registrationId,
     p_attended: attended,
+  });
+  if (error) throw refusal(error);
+}
+
+/** "Usuń dane", on the participant's request, once the seat is over. */
+export async function forgetWorkshopParticipant(
+  client: Client,
+  registrationId: string,
+) {
+  const { error } = await client.rpc("forget_workshop_participant", {
+    p_registration_id: registrationId,
   });
   if (error) throw refusal(error);
 }
@@ -511,6 +525,38 @@ export async function setWorkshopVisibility(
     p_on_home: visibility.onHome ?? null,
   });
   if (error) throw refusal(error);
+}
+
+/**
+ * The confirmed seats and the capacity of the given workshops, by id, for
+ * the portals' calendars (#198). The database's rules let an admin read
+ * every workshop and a leader their own; the others are simply left out.
+ */
+export async function listWorkshopSeats(
+  client: Client,
+  workshopIds: readonly string[],
+): Promise<Map<string, { confirmed: number; capacity: number }>> {
+  const ids = [...new Set(workshopIds)];
+  if (!ids.length) return new Map();
+  const [workshops, seats] = await Promise.all([
+    client.from("workshops").select("id, capacity").in("id", ids),
+    client
+      .from("workshop_registrations")
+      .select("workshop_id")
+      .in("workshop_id", ids)
+      .eq("status", "confirmed"),
+  ]);
+  if (workshops.error) throw workshops.error;
+  if (seats.error) throw seats.error;
+  const confirmed = new Map<string, number>();
+  for (const seat of seats.data)
+    confirmed.set(seat.workshop_id, (confirmed.get(seat.workshop_id) ?? 0) + 1);
+  return new Map(
+    workshops.data.map((one) => [
+      one.id,
+      { confirmed: confirmed.get(one.id) ?? 0, capacity: one.capacity },
+    ]),
+  );
 }
 
 export interface LedWorkshop {

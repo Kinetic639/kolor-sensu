@@ -97,6 +97,83 @@ describe("TagListField", () => {
       screen.getByRole("textbox", { name: "Specjalizacje" }),
     ).toHaveAttribute("aria-invalid", "true");
   });
+
+  it("drops the error once the list changes, and adds on the first click", async () => {
+    const user = userEvent.setup();
+    function Field() {
+      const [values, setValues] = useState<string[]>([]);
+      return (
+        <TagListField
+          id="specs"
+          label="Specjalizacje"
+          values={values}
+          error="Dodaj co najmniej jedną specjalizację."
+          onChange={setValues}
+        />
+      );
+    }
+    render(<Field />);
+    await user.type(
+      screen.getByRole("textbox", { name: "Specjalizacje" }),
+      "Terapia par",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Dodaj: Specjalizacje" }),
+    );
+
+    expect(screen.getByText("Terapia par")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Specjalizacje" }),
+    ).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("shows the error again once the list is as it was", async () => {
+    const user = userEvent.setup();
+    function Field() {
+      const [values, setValues] = useState<string[]>([]);
+      return (
+        <TagListField
+          id="specs"
+          label="Specjalizacje"
+          values={values}
+          error="Dodaj co najmniej jedną specjalizację."
+          onChange={setValues}
+        />
+      );
+    }
+    render(<Field />);
+    await user.type(
+      screen.getByRole("textbox", { name: "Specjalizacje" }),
+      "Terapia par{Enter}",
+    );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Usuń: Terapia par" }));
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+
+  it("shows a new error from the next try", () => {
+    const { rerender } = render(
+      <TagListField
+        id="specs"
+        label="Specjalizacje"
+        values={["Terapia par"]}
+        onChange={() => {}}
+      />,
+    );
+    rerender(
+      <TagListField
+        id="specs"
+        label="Specjalizacje"
+        values={["Terapia par"]}
+        error="Za dużo specjalizacji."
+        onChange={() => {}}
+      />,
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Za dużo specjalizacji.",
+    );
+  });
 });
 
 describe("ProfilePhotoField", () => {

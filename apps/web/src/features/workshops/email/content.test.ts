@@ -14,6 +14,7 @@ const email: ClaimedWorkshopEmail = {
   endsAt: "2030-11-12T18:00:00Z",
   locationName: "Kolor Sensu",
   locationAddress: "ul. Spokojna 1, Warszawa",
+  locationDirections: null,
   roomName: "Sala duża",
   leaders: "Anna Nowak",
   priceMinor: 15000,
@@ -57,6 +58,35 @@ describe("a workshop's e-mails", () => {
     expect(content.text).toContain(
       "Zobacz swój zapis: https://site.example.invalid/warsztaty/zapis/tok",
     );
+  });
+
+  it("say how to get there, when the location says it", () => {
+    const content = workshopEmailContent(
+      "confirmation",
+      { ...email, locationDirections: "Wejście od podwórza, 2. piętro." },
+      options,
+    );
+    expect(content.rows).toContainEqual([
+      "Jak dojechać",
+      "Wejście od podwórza, 2. piętro.",
+    ]);
+    expect(
+      workshopEmailContent("confirmation", email, options).rows.some(
+        ([label]) => label === "Jak dojechać",
+      ),
+    ).toBe(false);
+  });
+
+  it("explain a payment that came too late for its seat, and give it back", () => {
+    const content = workshopEmailContent(
+      "seat_lost",
+      { ...email, paidMinor: 0, refundedMinor: 15000 },
+      options,
+    );
+    expect(content.subject).toBe("Zwrot za warsztat W2611-004");
+    expect(content.heading).toBe("Miejsce było już zajęte");
+    expect(content.intro).toContain("po czasie");
+    expect(content.intro).toContain("Oddaliśmy całe 150");
   });
 
   it("ask for the payment by its date when reserved", () => {

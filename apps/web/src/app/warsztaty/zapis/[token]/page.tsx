@@ -25,6 +25,7 @@ import {
   workshopHref,
   workshopTimeLabel,
 } from "@/features/workshops/workshop-view";
+import { WorkshopPlace } from "@/features/workshops/workshop-place";
 import { getBookingWindow } from "@/lib/public-data";
 import { createSecretClient } from "@/lib/supabase/secret";
 
@@ -172,6 +173,14 @@ export default async function RegistrationPage({
         ) : null}
 
         <div className="flex flex-wrap gap-3">
+          {registration.status === "confirmed" &&
+          registration.workshopStatus === "published" ? (
+            <SecondaryButton asChild>
+              <a download href={`/warsztaty/zapis/${token}/kalendarz.ics`}>
+                Dodaj do kalendarza
+              </a>
+            </SecondaryButton>
+          ) : null}
           <SecondaryButton asChild>
             <Link href={workshopHref(registration.workshopSlug)}>
               O warsztacie
@@ -217,7 +226,19 @@ export default async function RegistrationPage({
         <WorkshopFacts
           facts={[
             { icon: "date", label: "Termin", value: when },
-            { icon: "place", label: "Miejsce", value: place || "Stacjonarnie" },
+            {
+              icon: "place",
+              label: "Miejsce",
+              value: (
+                <WorkshopPlace
+                  locationAddress={registration.locationAddress}
+                  locationDirections={registration.locationDirections}
+                  locationName={registration.locationName}
+                  modality={registration.modality}
+                  place={place || "Stacjonarnie"}
+                />
+              ),
+            },
           ]}
         />
         {registration.details ? (

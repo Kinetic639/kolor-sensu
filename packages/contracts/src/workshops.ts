@@ -158,6 +158,9 @@ export const WORKSHOP_ADMIN_PROBLEMS: Record<string, string> = {
   refund_too_high: "Zwrot nie może być większy niż wpłata przez stronę.",
   not_started: "Obecność zaznacza się po rozpoczęciu warsztatu.",
   not_ended: "Zakończyć można warsztat, który już się odbył.",
+  participant_busy:
+    "Dane usuniesz po warsztacie albo po anulowaniu zapisu, gdy nie czeka zwrot.",
+  already_forgotten: "Dane tej osoby są już usunięte.",
   invalid_message: "Wpisz temat i treść wiadomości.",
   not_found: "Nie ma takiego warsztatu.",
 };
@@ -190,4 +193,17 @@ export function emptyWorkshopInput(specialistId: string): WorkshopInput {
     closesHoursBefore: null,
     meetingUrl: "",
   };
+}
+
+/**
+ * A workshop's time in the portals' calendars (#198): its name (the
+ * block's reason, "Warsztat: …") with how many have a confirmed seat.
+ */
+export function workshopBlockLabel(
+  reason: string,
+  seats: { confirmed: number; capacity: number } | undefined,
+) {
+  return seats
+    ? `${reason} · zapisani ${seats.confirmed} z ${seats.capacity}`
+    : reason;
 }

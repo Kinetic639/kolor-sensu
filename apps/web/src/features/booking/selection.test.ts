@@ -44,6 +44,7 @@ const location = (slug: string): PublicLocation => ({
   publicDescription: null,
   amenities: [],
   accessibilityNotes: null,
+  directions: null,
 });
 
 const catalog: BookingCatalog = {

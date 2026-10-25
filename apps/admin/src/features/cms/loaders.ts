@@ -9,6 +9,7 @@ import {
   getContactPageAdmin,
   getLegalPageAdmin,
   getOfferPageAdmin,
+  getWorkshopsPageAdmin,
   getPricesPageAdmin,
   getServicePageAdmin,
   getSiteContactAdmin,
@@ -179,6 +180,10 @@ export async function loadEducationPage() {
 
 export async function loadOfferPage() {
   return mapContentViewModel(await getOfferPageAdmin(await createClient()));
+}
+
+export async function loadWorkshopsPage() {
+  return mapContentViewModel(await getWorkshopsPageAdmin(await createClient()));
 }
 
 export async function loadServicePage() {

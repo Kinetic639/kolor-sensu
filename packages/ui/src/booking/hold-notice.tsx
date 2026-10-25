@@ -5,7 +5,7 @@ import { ShieldCheck } from "lucide-react";
 
 export function HoldNotice({
   until,
-  hint = "Przejdź dalej, aby podać swoje dane i potwierdzić wizytę.",
+  hint = "Podaj swoje dane i potwierdź wizytę przed tym czasem.",
 }: {
   until: string;
   /** What to do before then. */

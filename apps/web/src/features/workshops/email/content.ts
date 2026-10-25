@@ -91,6 +91,9 @@ export function workshopEmailContent(
     ["Warsztat", email.workshopTitle],
     ["Termin", when],
     ["Miejsce", placeOf(email)],
+    ...(email.modality !== "online" && email.locationDirections?.trim()
+      ? [["Jak dojechać", email.locationDirections.trim()] as Row]
+      : []),
     ...(email.leaders ? [["Prowadzi", email.leaders] as Row] : []),
     ...extra,
     ["Numer zapisu", email.reference],
@@ -199,6 +202,13 @@ export function workshopEmailContent(
         refund > 0
           ? `Oddaliśmy ${money(email.refundedMinor)}; pozostałą część oddamy wkrótce.`
           : `Oddaliśmy ${money(email.refundedMinor)} na konto, z którego przyszła płatność (zwykle kilka dni roboczych).`,
+      button: "Zobacz szczegóły",
+      note: null,
+    },
+    seat_lost: {
+      subject: `Zwrot za warsztat ${email.reference}`,
+      heading: "Miejsce było już zajęte",
+      intro: `Twoja płatność dotarła po czasie, w którym czekało na Ciebie miejsce, a w międzyczasie zajęła je inna osoba. Oddaliśmy całe ${money(email.refundedMinor)} na konto, z którego przyszła płatność (zwykle kilka dni roboczych). Jeśli zwolni się miejsce albo pojawi się nowy termin, zapraszamy ponownie.`,
       button: "Zobacz szczegóły",
       note: null,
     },

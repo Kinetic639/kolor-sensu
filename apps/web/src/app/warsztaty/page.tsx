@@ -3,7 +3,7 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { ClosingCta } from "@/components/closing-cta";
 import { PageIntro } from "@/components/page-intro";
-import { workshops, workshopsPage } from "@/content/site";
+import { workshops } from "@/content/site";
 import {
   readModality,
   splitWorkshops,
@@ -15,6 +15,7 @@ import {
   getBookingWindow,
   getClosingCta,
   getWatercolorLook,
+  getWorkshopsPage,
 } from "@/lib/public-data";
 import { getWorkshops, workshopImageUrl } from "@/lib/workshop-data";
 
@@ -22,7 +23,8 @@ import { getWorkshops, workshopImageUrl } from "@/lib/workshop-data";
 // soonest first, with their seats (a cancelled one labelled until its day),
 // filtered by form from the address (?forma=online|stacjonarnie); the past
 // ones below; with none coming, the word and the way to ask. Refreshed every
-// minute, as the seats change.
+// minute, as the seats change. Its top and the line for none: the CMS's
+// (workshops_page, #210).
 
 export const revalidate = 60;
 
@@ -43,11 +45,12 @@ export default async function WorkshopsPage({
   searchParams,
 }: PageProps<"/warsztaty">) {
   const filter = readModality((await searchParams).forma);
-  const [all, window, watercolor, closing] = await Promise.all([
+  const [all, window, watercolor, closing, words] = await Promise.all([
     getWorkshops(),
     getBookingWindow(),
     getWatercolorLook(),
     getClosingCta(),
+    getWorkshopsPage(),
   ]);
   const now = new Date();
   const timeZone = window?.timeZone ?? "Europe/Warsaw";
@@ -58,12 +61,7 @@ export default async function WorkshopsPage({
 
   return (
     <>
-      <PageIntro
-        eyebrow={workshops.eyebrow}
-        heading={workshopsPage.heading}
-        accent={workshopsPage.accent}
-        lead={workshopsPage.lead}
-      />
+      <PageIntro header={words.intro} />
       <section
         aria-labelledby="nadchodzace"
         className="max-w-page px-gutter mx-auto grid gap-6"
@@ -100,7 +98,7 @@ export default async function WorkshopsPage({
             <p className="text-body text-text-muted max-w-copy">
               {anyComing
                 ? "W tej formie nie mamy teraz zaplanowanych warsztatów."
-                : workshopsPage.empty}
+                : words.emptyText}
             </p>
             <p>
               <Link

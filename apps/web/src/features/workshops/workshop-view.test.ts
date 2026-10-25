@@ -11,7 +11,10 @@ import {
   workshopCard,
   workshopEventJsonLd,
   workshopPlace,
+  workshopWayThere,
   workshopPrice,
+  relatedServices,
+  relatedWorkshops,
 } from "./workshop-view";
 
 const now = new Date("2030-11-01T10:00:00Z");
@@ -40,6 +43,7 @@ function workshop(patch: Partial<PublicWorkshop> = {}): PublicWorkshop {
     locationName: "Kolor Sensu",
     locationAddress: "ul. Spokojna 1, 00-001 Warszawa",
     locationCity: "Warszawa",
+    locationDirections: null,
     roomName: "Sala duża",
     leaders: [
       { slug: "anna", name: "Anna Nowak", title: null, photoPath: null },
@@ -183,5 +187,79 @@ describe("the page", () => {
       offers: { price: "150.00", availability: "https://schema.org/SoldOut" },
       performer: [{ "@type": "Person", name: "Anna Nowak" }],
     });
+  });
+});
+
+describe("the way there", () => {
+  it("says how to get there and opens the maps at the address", () => {
+    const way = workshopWayThere(
+      workshop({ locationDirections: "Wejście od podwórza, 2. piętro." }),
+    );
+    expect(way).toEqual({
+      directions: "Wejście od podwórza, 2. piętro.",
+      mapsHref:
+        "https://www.google.com/maps/search/?api=1&query=Kolor%20Sensu%2C%20ul.%20Spokojna%201%2C%2000-001%20Warszawa",
+    });
+  });
+
+  it("has only the maps without words, and nothing online or with no address", () => {
+    expect(workshopWayThere(workshop())?.directions).toBeNull();
+    expect(workshopWayThere(workshop({ modality: "online" }))).toBeNull();
+    expect(
+      workshopWayThere(workshop({ locationName: null, locationAddress: null })),
+    ).toBeNull();
+  });
+});
+
+describe("related", () => {
+  const day = (n: number, hour: string) =>
+    `2030-11-${String(n).padStart(2, "0")}T${hour}:00:00Z`;
+  const on = (id: string, n: number, patch: Partial<PublicWorkshop> = {}) =>
+    workshop({ id, startsAt: day(n, "16"), endsAt: day(n, "18"), ...patch });
+
+  it("are the other coming workshops, soonest first, three at most", () => {
+    const all = [
+      on("this", 12),
+      on("late", 28),
+      on("soon", 5),
+      on("off", 6, { status: "cancelled" }),
+      on("mid", 15),
+      on("next", 20),
+      workshop({
+        id: "gone",
+        startsAt: "2030-10-01T16:00:00Z",
+        endsAt: "2030-10-01T18:00:00Z",
+      }),
+    ];
+    expect(relatedWorkshops(all[0]!, all, now).map((one) => one.id)).toEqual([
+      "soon",
+      "mid",
+      "next",
+    ]);
+  });
+
+  it("offer each of the leader's services once", () => {
+    const offer = (slug: string, name: string) => ({
+      serviceId: slug,
+      serviceName: name,
+      serviceSlug: slug,
+      specialistPublicSlug: "anna",
+      specialistProfessionalTitle: null,
+      priceMinor: 20000,
+      currencyCode: "PLN",
+      effectiveDurationMinutes: 50,
+      supportsInPerson: true,
+      supportsOnline: true,
+    });
+    expect(
+      relatedServices([
+        offer("konsultacja", "Konsultacja"),
+        offer("terapia", "Terapia"),
+        offer("konsultacja", "Konsultacja"),
+      ]),
+    ).toEqual([
+      { name: "Konsultacja", slug: "konsultacja" },
+      { name: "Terapia", slug: "terapia" },
+    ]);
   });
 });

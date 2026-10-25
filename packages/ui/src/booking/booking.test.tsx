@@ -212,6 +212,10 @@ describe("HoldNotice", () => {
       "Twój termin jest tymczasowo zarezerwowany",
     );
     expect(screen.getByRole("status")).toHaveTextContent("do 10:42");
+    // Shown on the details step: what to do there, not "go on".
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Podaj swoje dane i potwierdź wizytę przed tym czasem.",
+    );
   });
 
   it("can say what to do before then", () => {

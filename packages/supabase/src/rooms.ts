@@ -429,6 +429,7 @@ function mapRoomException(row: RoomExceptionRow): RoomAvailabilityException {
     startsAt: row.starts_at ? shortTime(row.starts_at) : null,
     endsAt: row.ends_at ? shortTime(row.ends_at) : null,
     reason: row.reason,
+    ...(row.workshop_id ? { workshopId: row.workshop_id } : {}),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

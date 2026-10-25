@@ -20,6 +20,7 @@
     "./cms-shared": "./src/cms-shared.ts",
     "./cms-pages": "./src/cms-pages.ts",
     "./cms-offer": "./src/cms-offer.ts",
+    "./cms-workshops": "./src/cms-workshops.ts",
     "./cms-legal": "./src/cms-legal.ts",
     "./article-rich-text": "./src/article-rich-text.ts",
     "./education": "./src/education.ts",

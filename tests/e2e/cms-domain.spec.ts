@@ -26,6 +26,28 @@ test("an arbitrary unmatched path 404s (no dynamic CMS route exists)", async ({
   expect(response.status()).toBe(404);
 });
 
+test("a wrong link shows the centre's page with a way on, kept out of Google", async ({
+  page,
+}) => {
+  const response = await page.goto(`${webUrl}/definitely-not-a-real-page`);
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "Nie znaleźliśmy jej",
+  );
+  const main = page.getByRole("main");
+  await expect(
+    main.getByRole("link", { name: /Strona główna/ }),
+  ).toHaveAttribute("href", "/");
+  await expect(main.getByRole("link", { name: "Kontakt" })).toHaveAttribute(
+    "href",
+    "/kontakt",
+  );
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    /noindex/,
+  );
+});
+
 test("/specjalisci shows every published specialist", async ({
   page,
   request,

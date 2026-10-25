@@ -218,6 +218,8 @@ export interface ArticleServiceData {
   name: string;
   href: string;
   bookHref: string;
+  /** "Umów wizytę" (booking), or e.g. "Zapytaj o termin" (Kontakt). */
+  bookLabel?: string;
 }
 
 /** The services the article recommends, each with a way to book. */
@@ -241,7 +243,9 @@ export function ArticleServices({
                   {service.name}
                 </PageLink>
               </p>
-              <ArrowLink href={service.bookHref}>Umów wizytę</ArrowLink>
+              <ArrowLink href={service.bookHref}>
+                {service.bookLabel ?? "Umów wizytę"}
+              </ArrowLink>
             </SoftCard>
           </li>
         ))}

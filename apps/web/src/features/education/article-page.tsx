@@ -35,6 +35,7 @@ import {
   articleDate,
   articleHref,
   articleReviewer,
+  articleServiceAction,
   categoryHref,
   readingLabel,
   relatedArticles,
@@ -68,6 +69,7 @@ export function ArticlePageView({
   all,
   therapyNote,
   ebook,
+  bookable,
   newsletter = null,
 }: {
   article: PublishedArticle;
@@ -82,6 +84,8 @@ export function ArticlePageView({
   therapyNote: string;
   /** The e-book it recommends (published only). */
   ebook: PublishedEbook | null;
+  /** The services booked online, by slug (the others ask through Kontakt). */
+  bookable: ReadonlySet<string>;
   /** The newsletter's sign-up, after the article (while the CMS shows it). */
   newsletter?: ReactNode;
 }) {
@@ -98,6 +102,14 @@ export function ArticlePageView({
         }
       : null;
   const url = `${siteUrl}${articleHref(article.slug)}`;
+  const bookAction = (slug: string) => {
+    const action = articleServiceAction(
+      slug,
+      bookable,
+      bookingHref({ usluga: slug }),
+    );
+    return { bookHref: action.href, bookLabel: action.label };
+  };
   const related = relatedArticles(article, all).map((one) => ({
     ...articleCard(one, categories, people),
     coverUrl: one.coverPath ? articleImageUrl(one.coverPath) : null,
@@ -171,7 +183,7 @@ export function ArticlePageView({
           .map((one) => ({
             name: one.name,
             href: serviceHref(one.slug),
-            bookHref: bookingHref({ usluga: one.slug }),
+            ...bookAction(one.slug),
           }))}
       />
       <ArticlePeople

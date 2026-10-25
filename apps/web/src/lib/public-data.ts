@@ -11,6 +11,7 @@ import {
   getPublishedContactPage,
   getPublishedLegalPage,
   getPublishedOfferPage,
+  getPublishedWorkshopsPage,
   getPublishedPricesPage,
   getPublishedServicePage,
   getPublishedCrisisHelp,
@@ -53,6 +54,7 @@ import {
   defaultClosingCta,
   defaultContactPage,
   defaultOfferPage,
+  defaultWorkshopsPage,
   defaultPricesPage,
   defaultServicePage,
   defaultCrisisHelp,
@@ -265,6 +267,11 @@ export const getLegalPage = cache((key: LegalPageKey) =>
 /** /oferta's words. */
 export const getOfferPage = cache(() =>
   load("offer page", getPublishedOfferPage, defaultOfferPage),
+);
+
+/** /warsztaty: its words (#210). */
+export const getWorkshopsPage = cache(() =>
+  load("workshops page", getPublishedWorkshopsPage, defaultWorkshopsPage),
 );
 
 /** The words every service's page shares. */

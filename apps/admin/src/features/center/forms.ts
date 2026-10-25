@@ -85,6 +85,7 @@ export const locationFormSchema = z.object({
   publicDescription: optionalText(1000),
   amenities: z.array(z.string().trim().min(1).max(100)).max(30),
   accessibilityNotes: optionalText(1000),
+  directions: optionalText(500),
   active: z.boolean(),
   publiclyVisible: z.boolean(),
 });
@@ -104,6 +105,7 @@ export function toLocationFormValues(
     publicDescription: location?.publicDescription ?? "",
     amenities: location?.amenities ?? [],
     accessibilityNotes: location?.accessibilityNotes ?? "",
+    directions: location?.directions ?? "",
     active: location?.active ?? true,
     publiclyVisible: location?.publiclyVisible ?? true,
   };
@@ -122,6 +124,7 @@ export function toLocationInput(
     publicDescription: nullIfEmpty(values.publicDescription),
     amenities: values.amenities,
     accessibilityNotes: nullIfEmpty(values.accessibilityNotes),
+    directions: nullIfEmpty(values.directions),
     active: values.active,
     publiclyVisible: values.publiclyVisible,
   };
