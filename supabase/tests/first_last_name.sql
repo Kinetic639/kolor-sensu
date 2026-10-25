@@ -113,15 +113,18 @@ BEGIN
 END;
 $$;
 
--- D: the admin edits a client's card by its parts.
+-- D: the admin edits a client's card by its parts (the card's id read
+-- first, as the owner: the portal reads clients through its functions).
+CREATE TEMP TABLE names_ids AS
+SELECT id FROM public.clients WHERE email = 'names-b@example.invalid';
+GRANT SELECT ON names_ids TO authenticated;
 SELECT set_config('request.jwt.claims',
   '{"sub":"7f200000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 SET LOCAL ROLE authenticated;
 DO $$
-DECLARE
-  v_id uuid := (SELECT id FROM public.clients WHERE email = 'names-b@example.invalid');
 BEGIN
-  PERFORM public.admin_update_client(v_id, 'Zofia', 'van der Berg', 'names-b@example.invalid', NULL, NULL);
+  PERFORM public.admin_update_client((SELECT id FROM names_ids), 'Zofia', 'van der Berg',
+    'names-b@example.invalid', NULL, NULL);
 END;
 $$;
 RESET ROLE;
