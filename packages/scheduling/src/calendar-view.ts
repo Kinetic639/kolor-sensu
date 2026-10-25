@@ -335,6 +335,8 @@ export function calendarWindows({
     startsAt: string;
     endsAt: string;
     reason: string | null;
+    /** A workshop they lead: shown whole, in or out of their hours (#198). */
+    workshopId?: string;
   }[];
   from: string;
   to: string;
@@ -343,15 +345,23 @@ export function calendarWindows({
   const windows: CalendarWindow[] = [];
   const off: CalendarTimeOff[] = [];
   for (const specialistId of specialistIds) {
+    const theirs = timeOff.filter((one) => one.specialistId === specialistId);
+    for (const workshop of theirs.filter((one) => one.workshopId)) {
+      off.push({
+        specialistId,
+        start: new Date(workshop.startsAt),
+        end: new Date(workshop.endsAt),
+        reason: workshop.reason,
+      });
+    }
     const own = rules.filter((rule) => rule.specialistId === specialistId);
     if (!own.length) continue;
-    const absences = timeOff
-      .filter((one) => one.specialistId === specialistId)
-      .map((one) => ({
-        start: new Date(one.startsAt),
-        end: new Date(one.endsAt),
-        reason: one.reason,
-      }));
+    const absences = theirs.map((one) => ({
+      start: new Date(one.startsAt),
+      end: new Date(one.endsAt),
+      reason: one.reason,
+      workshop: Boolean(one.workshopId),
+    }));
     const expand = (cut: typeof absences) =>
       expandAvailability({ rules: own, timeOff: cut, from, to, timeZone });
     for (const window of expand(absences)) {
@@ -364,8 +374,9 @@ export function calendarWindows({
         end: window.end,
       });
     }
-    for (const raw of absences.length ? expand([]) : []) {
-      for (const absence of absences) {
+    const away = absences.filter((one) => !one.workshop);
+    for (const raw of away.length ? expand([]) : []) {
+      for (const absence of away) {
         const start = Math.max(raw.start.getTime(), absence.start.getTime());
         const end = Math.min(raw.end.getTime(), absence.end.getTime());
         if (end > start) {

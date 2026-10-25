@@ -365,6 +365,9 @@ seat is over: the workshop ended, or the seat cancelled or lapsed.
   "Dodaj do kalendarza" (`/warsztaty/zapis/[token]/kalendarz.ics`, the
   confirmation's event).
 - **Attendance** (#193) shows the click at once (`AttendanceCheckbox`).
+- **A lost seat** (#196): a payment that came after its seat was lost is
+  refunded at once and the guest gets a `seat_lost` e-mail saying why,
+  with the payment's amount; it is due for the scheduled job until sent.
 
 ## Tests
 

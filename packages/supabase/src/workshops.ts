@@ -546,7 +546,9 @@ export type WorkshopEmailKind =
   | "reminder"
   | "cancelled"
   | "rescheduled"
-  | "refunded";
+  | "refunded"
+  /** A payment too late for its seat, given back (#196). */
+  | "seat_lost";
 
 export interface ClaimedWorkshopEmail {
   reference: string;

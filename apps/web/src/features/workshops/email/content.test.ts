@@ -77,6 +77,18 @@ describe("a workshop's e-mails", () => {
     ).toBe(false);
   });
 
+  it("explain a payment that came too late for its seat, and give it back", () => {
+    const content = workshopEmailContent(
+      "seat_lost",
+      { ...email, paidMinor: 0, refundedMinor: 15000 },
+      options,
+    );
+    expect(content.subject).toBe("Zwrot za warsztat W2611-004");
+    expect(content.heading).toBe("Miejsce było już zajęte");
+    expect(content.intro).toContain("po czasie");
+    expect(content.intro).toContain("Oddaliśmy całe 150");
+  });
+
   it("ask for the payment by its date when reserved", () => {
     const content = workshopEmailContent(
       "reserved",

@@ -46,6 +46,15 @@ export function workshopPaymentDeps(): WorkshopPaymentDeps {
         },
       );
       await recordWorkshopRefund(db, paymentIntentId, refunded);
+      // The guest hears why (#196); the scheduled job retries a failed send.
+      const reference = session.metadata?.workshop_reference;
+      if (reference)
+        await sendWorkshopEmail(reference, "seat_lost").catch((error) =>
+          console.error(
+            `[workshops] seat_lost e-mail ${reference} failed:`,
+            error,
+          ),
+        );
     },
     recordRefund: (paymentIntentId, refundedMinor) =>
       recordWorkshopRefund(db, paymentIntentId, refundedMinor),

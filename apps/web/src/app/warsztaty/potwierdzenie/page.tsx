@@ -37,6 +37,7 @@ export default async function SeatConfirmationPage({
     return (
       <Message
         lead="Twoje miejsce jest potwierdzone; niczego nie pobraliśmy. Potwierdzenie z plikiem do kalendarza wyślemy na Twój adres e-mail."
+        calendarHref={`/warsztaty/zapis/${seat.token}/kalendarz.ics`}
         title="Miejsce potwierdzone"
         workshop={seat.registration}
       />
@@ -72,6 +73,9 @@ export default async function SeatConfirmationPage({
     return (
       <Message
         lead="Dziękujemy! Płatność została przyjęta, a miejsce jest Twoje. Potwierdzenie z plikiem do kalendarza wyślemy na Twój adres e-mail."
+        calendarHref={
+          mine ? `/warsztaty/zapis/${mine.token}/kalendarz.ics` : null
+        }
         title="Miejsce potwierdzone"
         workshop={mine?.registration ?? null}
       />
@@ -107,10 +111,13 @@ function Message({
   title,
   lead,
   workshop,
+  calendarHref = null,
   children,
 }: {
   title: string;
   lead: string;
+  /** "Dodaj do kalendarza", for a confirmed seat in this browser (#198). */
+  calendarHref?: string | null;
   workshop: { workshopSlug: string; workshopTitle: string } | null;
   children?: ReactNode;
 }) {
@@ -120,6 +127,13 @@ function Message({
       <p className="text-body text-text-muted max-w-2xl">{lead}</p>
       {children}
       <div className="flex flex-wrap gap-3">
+        {calendarHref ? (
+          <SecondaryButton asChild>
+            <a download href={calendarHref}>
+              Dodaj do kalendarza
+            </a>
+          </SecondaryButton>
+        ) : null}
         {workshop ? (
           <SecondaryButton asChild>
             <Link href={workshopHref(workshop.workshopSlug)}>

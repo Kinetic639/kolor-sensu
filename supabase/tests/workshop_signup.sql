@@ -4,7 +4,8 @@
 -- paid, still confirmed after its hold ran out while a seat is free, else
 -- lost; refunds are recorded; each e-mail is claimed once and its link
 -- opens the registration; visitors read public workshops with their
--- leaders and seats. Everything is rolled back at the end.
+-- leaders and seats; a payment too late for its seat is refunded with its
+-- own e-mail (#196). Everything is rolled back at the end.
 
 BEGIN;
 
@@ -166,6 +167,34 @@ BEGIN
   END IF;
   IF public.record_workshop_refund('pi_test_unknown', 100) THEN
     RAISE EXCEPTION 'E: an unknown payment was refunded';
+  END IF;
+END;
+$$;
+
+-- F: the late payment of D, refunded: its e-mail says why, with the
+-- payment's amount, once; due for the scheduled job until sent (#196).
+DO $$
+DECLARE
+  v_ref text := (SELECT reference FROM public.workshop_registrations WHERE client_email = 'dora@example.invalid');
+  v_mail record;
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.claim_workshop_email(v_ref, 'seat_lost')) THEN
+    RAISE EXCEPTION 'F: the lost seat''s e-mail came before its refund';
+  END IF;
+  IF NOT public.record_workshop_refund('pi_test_ws_b2', 8000) THEN
+    RAISE EXCEPTION 'F: the late payment was not found';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.list_due_workshop_emails() WHERE reference = v_ref AND kind = 'seat_lost'
+  ) THEN
+    RAISE EXCEPTION 'F: the lost seat''s e-mail is not due';
+  END IF;
+  SELECT * INTO v_mail FROM public.claim_workshop_email(v_ref, 'seat_lost');
+  IF v_mail.refunded_minor IS DISTINCT FROM 8000 THEN
+    RAISE EXCEPTION 'F: the e-mail says % given back, not 8000', v_mail.refunded_minor;
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.claim_workshop_email(v_ref, 'seat_lost')) THEN
+    RAISE EXCEPTION 'F: the lost seat''s e-mail was claimed twice';
   END IF;
 END;
 $$;

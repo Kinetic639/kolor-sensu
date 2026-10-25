@@ -148,6 +148,12 @@ test("a guest signs up for a workshop, pays with BLIK, and the admin and the lea
   await expect(
     page.getByRole("heading", { name: "Miejsce potwierdzone" }),
   ).toBeVisible({ timeout: 90_000 });
+  // The seat into the guest's calendar, from here too (#198).
+  const calendar = page.getByRole("link", { name: "Dodaj do kalendarza" });
+  const file = await page.request.get(
+    new URL((await calendar.getAttribute("href"))!, page.url()).href,
+  );
+  expect(await file.text()).toContain("BEGIN:VCALENDAR");
 
   // The admin finds the workshop and the participant on its page.
   const context = await browser.newContext();
