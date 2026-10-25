@@ -420,6 +420,46 @@ type EbookRow = Pick<
   | "content_updated_at"
 >;
 
+/**
+ * An e-book's draft as its page shows a published one, for the admin's
+ * preview (#197; the site's secret client, in Draft Mode only), or null.
+ */
+export async function getEbookDraftPreview(
+  secretClient: Client,
+  id: string,
+): Promise<PublishedEbook | null> {
+  const { data, error } = await secretClient
+    .from("ebooks")
+    .select("id, draft")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const draft = readEbookDraft(data.draft);
+  const now = new Date().toISOString();
+  return {
+    id: data.id,
+    slug: draft.slug,
+    title: draft.title,
+    coverPath: draft.coverPath ?? "",
+    coverAlt: draft.coverAlt,
+    shortDescription: draft.shortDescription,
+    description: draft.description,
+    audience: draft.audience,
+    contents: draft.contents,
+    format: draft.format,
+    naffyUrl: draft.naffyUrl,
+    showPrice: draft.showPrice,
+    videoUrl: draft.videoUrl,
+    samplePath: draft.samplePath,
+    seoTitle: draft.seoTitle,
+    seoDescription: draft.seoDescription,
+    ogImagePath: draft.ogImagePath,
+    publishedAt: now,
+    contentUpdatedAt: now,
+  };
+}
+
 export function toPublishedEbook(row: EbookRow): PublishedEbook {
   return {
     id: row.id,

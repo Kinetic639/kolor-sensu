@@ -8,6 +8,7 @@ import {
   getEbooks,
 } from "@/lib/education-data";
 import {
+  getBookableCatalog,
   getEducationPage,
   getServices,
   getSpecialists,
@@ -28,7 +29,7 @@ export default async function ArticlePreviewPage({
   const { id } = await params;
   const preview = await getArticlePreview(id);
   if (!preview) notFound();
-  const [categories, specialists, services, all, words, ebooks] =
+  const [categories, specialists, services, all, words, ebooks, catalog] =
     await Promise.all([
       getArticleCategories(),
       getSpecialists(),
@@ -36,6 +37,7 @@ export default async function ArticlePreviewPage({
       getArticles(),
       getEducationPage(),
       getEbooks(),
+      getBookableCatalog(),
     ]);
 
   return (
@@ -46,6 +48,7 @@ export default async function ArticlePreviewPage({
       links={preview}
       people={toPeople(specialists)}
       services={services}
+      bookable={new Set(catalog.services.map((one) => one.slug))}
       therapyNote={words.therapyNote}
       ebook={ebooks.find((one) => one.id === preview.article.ebookId) ?? null}
     />

@@ -44,6 +44,7 @@ function workshop(patch: Partial<PublicWorkshop> = {}): PublicWorkshop {
     minParticipants: null,
     locationName: "Kolor Sensu",
     locationAddress: "ul. Spokojna 1, 00-001 Warszawa",
+    locationDirections: null,
     locationCity: "Warszawa",
     roomName: "Sala duża",
     leaders: [
@@ -64,16 +65,23 @@ function workshop(patch: Partial<PublicWorkshop> = {}): PublicWorkshop {
 }
 
 let found: PublicWorkshop | null = workshop();
+let moved: string | null = null;
 vi.mock("@/lib/workshop-data", () => ({
   getWorkshop: async () => found,
+  getWorkshops: async () => (found ? [found] : []),
+  getWorkshopRedirect: async () => moved,
   workshopImageUrl: (path: string) => `https://cdn.example.invalid/${path}`,
 }));
 vi.mock("@/lib/public-data", () => ({
   getBookingWindow: async () => ({ timeZone: "Europe/Warsaw" }),
+  getSpecialistOffers: async () => [],
 }));
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NOT_FOUND");
+  },
+  permanentRedirect: (to: string) => {
+    throw new Error(`REDIRECT ${to}`);
   },
   useRouter: () => ({ push: () => {}, refresh: () => {} }),
 }));
@@ -199,6 +207,16 @@ describe("the leaders", () => {
 describe("a draft or a wrong address", () => {
   it("is not found", async () => {
     found = null;
+    moved = null;
     await expect(open()).rejects.toThrow("NOT_FOUND");
+  });
+
+  it("leads from an old address to the new one (#184)", async () => {
+    found = null;
+    moved = "uwaznosc-jesienia";
+    await expect(open()).rejects.toThrow(
+      "REDIRECT /warsztaty/uwaznosc-jesienia",
+    );
+    moved = null;
   });
 });

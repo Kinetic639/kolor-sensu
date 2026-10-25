@@ -346,6 +346,26 @@ the participant's request the admin removes the data at once ("Usuń dane"
 on the workshop's participants, `forget_workshop_participant`), once the
 seat is over: the workshop ended, or the seat cancelled or lapsed.
 
+## After launch's P2 (25.10)
+
+- **The list's words** (#210): `workshops_page` in the CMS (Warsztaty tab):
+  the top of /warsztaty and the line for no workshop coming.
+- **An old address** (#184): changing a non-draft workshop's address keeps
+  the old one in `workshop_slug_redirects` (a trigger); the page redirects
+  it for good through `workshop_redirect`.
+- **The way there** (#211): `locations.directions` ("Jak dojechać", in the
+  location's form), under the address on the workshop's and the
+  registration's pages and in the e-mails, beside a plain link to the maps.
+- **Related** (#185): under a workshop, the leader's services (each once)
+  and up to three other workshops still coming.
+- **Preview** (#197): "Podgląd" on a draft opens `/warsztaty/podglad/[id]`
+  in Draft Mode; the site reads it with `workshop_preview` (secret key).
+- **Calendars** (#198): a workshop's blocked time says its confirmed seats
+  ("zapisani 5 z 12") in both portals; a confirmed seat's page offers
+  "Dodaj do kalendarza" (`/warsztaty/zapis/[token]/kalendarz.ics`, the
+  confirmation's event).
+- **Attendance** (#193) shows the click at once (`AttendanceCheckbox`).
+
 ## Tests
 
 The SQL tests (`supabase/tests/workshop_*.sql`) run in CI. The end-to-end

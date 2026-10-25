@@ -158,14 +158,6 @@ export const storyImages = [
 
 // --------------------------------------------------------------- pages
 
-export const workshopsPage = {
-  heading: "Warsztaty",
-  accent: "Rozwój w dobrym towarzystwie.",
-  lead: "Prowadzimy warsztaty, grupy rozwojowe i spotkania tematyczne. Nowe terminy ogłaszamy z wyprzedzeniem; zapytaj nas o najbliższe wydarzenia.",
-  empty:
-    "Obecnie nie mamy zaplanowanych wydarzeń. Zostaw nam wiadomość, a damy znać, gdy pojawią się nowe terminy.",
-};
-
 // Edukacja's words that are code (the rest is the CMS's, education_page).
 export const educationPage = {
   soonHeading: "Pierwsze materiały już wkrótce",

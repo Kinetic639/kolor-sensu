@@ -243,4 +243,6 @@ export interface SpecialistTimeOff {
   startsAt: string;
   endsAt: string;
   reason: string | null;
+  /** Set when the time off is a workshop the specialist leads (#198). */
+  workshopId?: string;
 }

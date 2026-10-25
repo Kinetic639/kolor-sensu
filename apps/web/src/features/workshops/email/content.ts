@@ -91,6 +91,9 @@ export function workshopEmailContent(
     ["Warsztat", email.workshopTitle],
     ["Termin", when],
     ["Miejsce", placeOf(email)],
+    ...(email.modality !== "online" && email.locationDirections?.trim()
+      ? [["Jak dojechać", email.locationDirections.trim()] as Row]
+      : []),
     ...(email.leaders ? [["Prowadzi", email.leaders] as Row] : []),
     ...extra,
     ["Numer zapisu", email.reference],

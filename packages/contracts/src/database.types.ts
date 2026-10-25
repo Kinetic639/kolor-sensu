@@ -905,6 +905,7 @@ export type Database = {
       locations: {
         Row: {
           accessibility_notes: string | null;
+          directions: string | null;
           active: boolean;
           address_line1: string | null;
           address_line2: string | null;
@@ -923,6 +924,7 @@ export type Database = {
         };
         Insert: {
           accessibility_notes?: string | null;
+          directions?: string | null;
           active?: boolean;
           address_line1?: string | null;
           address_line2?: string | null;
@@ -941,6 +943,7 @@ export type Database = {
         };
         Update: {
           accessibility_notes?: string | null;
+          directions?: string | null;
           active?: boolean;
           address_line1?: string | null;
           address_line2?: string | null;
@@ -2598,6 +2601,7 @@ export type Database = {
           refund_when_replaced: boolean;
           workshop_cancel_reason: string | null;
           paid_outside: boolean;
+          location_directions: string | null;
         }[];
       };
       apply_workshop_discount: {
@@ -2673,6 +2677,7 @@ export type Database = {
           refund_when_replaced: boolean;
           meeting_url: string | null;
           paid_outside: boolean;
+          location_directions: string | null;
         }[];
       };
       list_due_workshop_emails: {
@@ -2716,6 +2721,10 @@ export type Database = {
       forget_workshop_participant: {
         Args: { p_registration_id: string };
         Returns: undefined;
+      };
+      workshop_redirect: {
+        Args: { p_slug: string };
+        Returns: string | null;
       };
       complete_workshop: {
         Args: { p_id: string };
@@ -2769,6 +2778,41 @@ export type Database = {
           registration_open: boolean;
           confirmed: boolean;
           updated_at: string;
+          location_directions: string | null;
+        }[];
+      };
+      workshop_preview: {
+        Args: { p_id: string };
+        Returns: {
+          id: string;
+          slug: string;
+          title: string;
+          short_description: string | null;
+          body: Json | null;
+          audience: string | null;
+          agenda: string | null;
+          cover_image_path: string | null;
+          cover_alt: string | null;
+          seo_title: string | null;
+          seo_description: string | null;
+          modality: Database["public"]["Enums"]["workshop_modality"];
+          status: Database["public"]["Enums"]["workshop_status"];
+          starts_at: string;
+          ends_at: string;
+          price_minor: number;
+          currency_code: string;
+          capacity: number;
+          min_participants: number | null;
+          location_name: string | null;
+          location_address: string | null;
+          location_city: string | null;
+          room_name: string | null;
+          leaders: Json;
+          seats_left: number;
+          registration_open: boolean;
+          confirmed: boolean;
+          updated_at: string;
+          location_directions: string | null;
         }[];
       };
       admin_list_workshops: {

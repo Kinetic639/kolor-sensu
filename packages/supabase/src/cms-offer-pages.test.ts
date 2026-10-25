@@ -2,6 +2,7 @@ import {
   defaultOfferPage,
   defaultPricesPage,
   defaultServicePage,
+  defaultWorkshopsPage,
 } from "@repo/contracts";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -14,6 +15,9 @@ import {
   updateOfferPageDraft,
   updatePricesPageDraft,
   updateServicePageDraft,
+  getPublishedWorkshopsPage,
+  publishWorkshopsPage,
+  updateWorkshopsPageDraft,
 } from "./cms";
 
 // The offer pages' words added on 20.10, read and written as every CMS
@@ -61,6 +65,13 @@ describe("the offer pages' words", () => {
       publishPricesPage,
       "prices_page",
       defaultPricesPage,
+    ],
+    [
+      getPublishedWorkshopsPage,
+      updateWorkshopsPageDraft,
+      publishWorkshopsPage,
+      "workshops_page",
+      defaultWorkshopsPage,
     ],
   ] as const;
 

@@ -1,3 +1,4 @@
+import type { PublicSpecialistOffer } from "@repo/contracts";
 import { formatDate, formatWeekday } from "@repo/scheduling";
 import type { WorkshopCardData, WorkshopSeatsTone } from "@repo/ui/public-site";
 import type { PublicWorkshop } from "@repo/supabase/workshops";
@@ -100,6 +101,60 @@ export function workshopPlace(
       .filter(Boolean)
       .join(", ") || "Stacjonarnie";
   return room && workshop.roomName ? `${where} (${workshop.roomName})` : where;
+}
+
+/**
+ * "Inne warsztaty" under a workshop (#185): the others still coming and not
+ * cancelled, soonest first, `max` at most.
+ */
+export function relatedWorkshops(
+  workshop: Pick<PublicWorkshop, "id">,
+  all: readonly PublicWorkshop[],
+  now: Date,
+  max = 3,
+) {
+  return splitWorkshops(all, now)
+    .upcoming.filter(
+      (one) => one.id !== workshop.id && one.status === "published",
+    )
+    .slice(0, max);
+}
+
+/** The leader's services under a workshop (#185): each once, in order. */
+export function relatedServices(
+  offers: readonly Pick<PublicSpecialistOffer, "serviceName" | "serviceSlug">[],
+  max = 3,
+) {
+  const seen = new Set<string>();
+  const services: { name: string; slug: string }[] = [];
+  for (const offer of offers) {
+    if (seen.has(offer.serviceSlug)) continue;
+    seen.add(offer.serviceSlug);
+    services.push({ name: offer.serviceName, slug: offer.serviceSlug });
+  }
+  return services.slice(0, max);
+}
+
+/**
+ * How to get to a workshop held in place (#211): the location's words, if
+ * any, and the maps at its name and address (a plain link: no map is
+ * loaded here). Null online, or with no place to show on a map.
+ */
+export function workshopWayThere(
+  workshop: Pick<
+    PublicWorkshop,
+    "modality" | "locationName" | "locationAddress" | "locationDirections"
+  >,
+) {
+  if (workshop.modality === "online") return null;
+  const where = [workshop.locationName, workshop.locationAddress]
+    .filter(Boolean)
+    .join(", ");
+  if (!where) return null;
+  return {
+    directions: workshop.locationDirections?.trim() || null,
+    mapsHref: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(where)}`,
+  };
 }
 
 /** `150 zł` or `Bezpłatnie`. */

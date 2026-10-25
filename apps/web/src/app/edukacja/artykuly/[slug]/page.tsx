@@ -14,6 +14,7 @@ import {
 } from "@/lib/education-data";
 import { baseOpenGraph } from "@/lib/page-metadata";
 import {
+  getBookableCatalog,
   getEducationPage,
   getServices,
   getSpecialists,
@@ -71,16 +72,25 @@ export default async function ArticlePage({
     if (moved) permanentRedirect(articleHref(moved));
     notFound();
   }
-  const [categories, specialists, services, links, all, words, ebooks] =
-    await Promise.all([
-      getArticleCategories(),
-      getSpecialists(),
-      getServices(),
-      getArticleLinks(article.id),
-      getArticles(),
-      getEducationPage(),
-      getEbooks(),
-    ]);
+  const [
+    categories,
+    specialists,
+    services,
+    links,
+    all,
+    words,
+    ebooks,
+    catalog,
+  ] = await Promise.all([
+    getArticleCategories(),
+    getSpecialists(),
+    getServices(),
+    getArticleLinks(article.id),
+    getArticles(),
+    getEducationPage(),
+    getEbooks(),
+    getBookableCatalog(),
+  ]);
 
   return (
     <ArticlePageView
@@ -90,6 +100,7 @@ export default async function ArticlePage({
       links={links}
       people={toPeople(specialists)}
       services={services}
+      bookable={new Set(catalog.services.map((one) => one.slug))}
       therapyNote={words.therapyNote}
       ebook={ebooks.find((one) => one.id === article.ebookId) ?? null}
       newsletter={

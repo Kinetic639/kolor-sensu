@@ -98,6 +98,10 @@ import {
   type ServicePageContent,
 } from "@repo/contracts/cms-offer";
 import {
+  workshopsPageContentSchema,
+  type WorkshopsPageContent,
+} from "@repo/contracts/cms-workshops";
+import {
   LEGAL_PAGES,
   legalPageContentSchema,
   type LegalPageContent,
@@ -111,6 +115,7 @@ import {
   publishContactPage,
   publishLegalPage,
   publishOfferPage,
+  publishWorkshopsPage,
   publishPricesPage,
   publishServicePage,
   publishSiteContact,
@@ -122,6 +127,7 @@ import {
   updateContactPageDraft,
   updateLegalPageDraft,
   updateOfferPageDraft,
+  updateWorkshopsPageDraft,
   updatePricesPageDraft,
   updateServicePageDraft,
   updateSiteContactDraft,
@@ -388,6 +394,17 @@ export async function updateOfferPageDraftAction(values: OfferPageContent) {
   return saveDraft(offerPageContentSchema, values, updateOfferPageDraft);
 }
 
+/** Warsztaty: its top and the line for no workshop (#210). */
+export async function updateWorkshopsPageDraftAction(
+  values: WorkshopsPageContent,
+) {
+  return saveDraft(
+    workshopsPageContentSchema,
+    values,
+    updateWorkshopsPageDraft,
+  );
+}
+
 /** The words every service's page shares (edited under Oferta). */
 export async function updateServicePageDraftAction(values: ServicePageContent) {
   return saveDraft(servicePageContentSchema, values, updateServicePageDraft);
@@ -462,6 +479,14 @@ export async function publishOfferPageAction() {
       (client) => publishPageSeo(client, "offer"),
     ],
     { path: "/", type: "layout" },
+  );
+}
+
+/** Warsztaty: its words and its search settings. */
+export async function publishWorkshopsPageAction() {
+  return publishPage(
+    [publishWorkshopsPage, (client) => publishPageSeo(client, "workshops")],
+    "/warsztaty",
   );
 }
 

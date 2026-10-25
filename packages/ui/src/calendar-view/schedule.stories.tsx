@@ -340,14 +340,33 @@ export const HiddenVisits: Story = {
   },
 };
 
+/** At 390 px the toolbar wraps: nothing sticks out of the screen (#93). */
+const fitsAPhone: Story["play"] = async ({ canvasElement }) => {
+  const bar = canvasElement.querySelector("nav")?.parentElement;
+  await expect(bar).not.toBeNull();
+  await expect(bar!.scrollWidth).toBeLessThanOrEqual(bar!.clientWidth);
+};
+
+const phoneWidth: NonNullable<Story["decorators"]> = [
+  (Story) => (
+    <div style={{ width: 390, maxWidth: "100%" }}>
+      <Story />
+    </div>
+  ),
+];
+
 export const PhoneDay: Story = {
   args: { kind: "day-specialists" },
   globals: { viewport: { value: "mobile", isRotated: false } },
+  decorators: phoneWidth,
+  play: fitsAPhone,
 };
 
 export const PhoneWeek: Story = {
   args: { kind: "week-specialists" },
   globals: { viewport: { value: "mobile", isRotated: false } },
+  decorators: phoneWidth,
+  play: fitsAPhone,
 };
 
 export const AvailabilityOpen: Story = {

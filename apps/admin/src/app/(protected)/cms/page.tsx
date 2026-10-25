@@ -7,6 +7,7 @@ import {
   ServicePageSection,
 } from "@/features/cms/offer-page-section";
 import { PricesPageSection } from "@/features/cms/prices-page-section";
+import { WorkshopsPageSection } from "@/features/cms/workshops-page-section";
 import { LegalPageSection } from "@/features/cms/legal-page-section";
 import type { LegalPageKey } from "@repo/contracts/cms-legal";
 import { CrisisHelpSection } from "@/features/cms/crisis-help-section";
@@ -25,6 +26,7 @@ import {
   loadOfferPage,
   loadPricesPage,
   loadServicePage,
+  loadWorkshopsPage,
   loadSiteContact,
   loadSpecialistsPage,
   loadEducationPage,
@@ -464,6 +466,32 @@ async function SeoOnlyPage({ page }: { page: CmsPage }) {
   );
 }
 
+/** Warsztaty: its search settings and its words (the workshops: Warsztaty). */
+async function WorkshopsPage() {
+  const [page, seo] = await Promise.all([
+    settle("warsztaty", loadWorkshopsPage),
+    loadSeo("warsztaty"),
+  ]);
+  return (
+    <>
+      <PagePublishBar
+        page="warsztaty"
+        status={pageStatus([page, seo].filter((one) => one !== null))}
+      />
+      <Seo model={seo} page="warsztaty" />
+      {page ? (
+        <WorkshopsPageSection model={page} />
+      ) : (
+        <UnavailableSection title="Tytuł strony · Pusta lista" />
+      )}
+      <FixedSection title="Warsztaty">
+        Karty, terminy, ceny i miejsca są z Warsztatów (w portalu); każdy
+        warsztat ma swoją stronę.
+      </FixedSection>
+    </>
+  );
+}
+
 /** Edukacja: its search settings and its words (the articles: Artykuły). */
 async function EducationPage() {
   const [page, seo] = await Promise.all([
@@ -540,6 +568,8 @@ export default async function CmsPage({ searchParams }: PageProps<"/cms">) {
         <SpecialistsPage />
       ) : strona === "edukacja" ? (
         <EducationPage />
+      ) : strona === "warsztaty" ? (
+        <WorkshopsPage />
       ) : strona === "cennik" ? (
         <PricesPage />
       ) : strona === "kontakt" ? (

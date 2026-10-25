@@ -24,6 +24,21 @@ export const articleHref = (slug: string) =>
 export const categoryHref = (slug: string) =>
   `${ARTICLES_PATH}/kategoria/${slug}` as Route;
 
+/**
+ * A recommended service's button: booking, when the service is booked
+ * online (a specialist offers it, its booking is on), else a question
+ * through Kontakt, as its page in Oferta does.
+ */
+export function articleServiceAction(
+  slug: string,
+  bookable: ReadonlySet<string>,
+  bookHref: string,
+) {
+  return bookable.has(slug)
+    ? { href: bookHref, label: "Umów wizytę" }
+    : { href: "/kontakt", label: "Zapytaj o termin" };
+}
+
 const DATE = new Intl.DateTimeFormat("pl-PL", {
   day: "numeric",
   month: "long",

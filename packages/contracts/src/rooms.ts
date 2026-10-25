@@ -161,6 +161,8 @@ export interface RoomAvailabilityException {
   startsAt: string | null;
   endsAt: string | null;
   reason: string | null;
+  /** Set when a published workshop blocks the room (#198). */
+  workshopId?: string;
   createdAt: string;
   updatedAt: string;
 }

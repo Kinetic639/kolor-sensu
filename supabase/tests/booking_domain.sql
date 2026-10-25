@@ -1914,10 +1914,29 @@ BEGIN
 END;
 $body$;
 RESET ROLE;
--- (Moved by hand to ten hours from now.)
-UPDATE public.appointments
-SET during = tstzrange(date_trunc('hour', now()) + interval '10 hours', date_trunc('hour', now()) + interval '10 hours 50 minutes')
-WHERE id = (SELECT id FROM x_visits WHERE name = 'near');
+-- (Moved by hand to the first hour, 6 to 40 hours from now, that is free
+-- for the specialist: within 48 hours whenever the test runs, and never on
+-- another test visit; on a Sunday evening "ten hours from now" was the
+-- next Monday's 9:00, booked above (#104).)
+UPDATE public.appointments AS visit
+SET during = (
+  SELECT tstzrange(slot, slot + interval '50 minutes')
+  FROM generate_series(
+    date_trunc('hour', now()) + interval '6 hours',
+    date_trunc('hour', now()) + interval '40 hours',
+    interval '1 hour'
+  ) AS slot
+  WHERE NOT EXISTS (
+    SELECT 1 FROM public.appointments AS other
+    WHERE other.specialist_id = visit.specialist_id
+      AND other.id <> visit.id
+      -- (with room for the breaks around both: the rule compares blocks)
+      AND other.blocks && tstzrange(slot - interval '1 hour', slot + interval '2 hours')
+  )
+  ORDER BY slot
+  LIMIT 1
+)
+WHERE visit.id = (SELECT id FROM x_visits WHERE name = 'near');
 
 SET LOCAL ROLE service_role;
 DO $body$

@@ -49,6 +49,7 @@ const location = (slug: string, name: string): PublicLocation => ({
   publicDescription: null,
   amenities: [],
   accessibilityNotes: null,
+  directions: null,
 });
 
 const offers = [
