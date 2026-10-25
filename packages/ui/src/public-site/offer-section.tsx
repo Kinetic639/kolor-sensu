@@ -62,7 +62,7 @@ export function OfferSection({
       </div>
       <ul className="ks-of-list">
         {services.map((service, index) => (
-          <li key={service.href}>
+          <li key={service.href ?? service.title}>
             <OfferTile
               {...service}
               as="div"
