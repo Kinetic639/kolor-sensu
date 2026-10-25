@@ -1622,6 +1622,92 @@
     }
   }
 
+  /* --------------------------------------------------------- WorkshopCard */
+
+  /* The painted cover (or a wash in its shape), laid over the top of a
+     quiet card
+     that holds the words. The card is narrower than the cover, so the
+     painted edges and the watercolor run out past it on both sides. The
+     root is the title link's positioned ancestor, so the whole card is
+     the click target. */
+  .ks-wk {
+    --ks-wk-inset: 7%;
+    --ks-wk-pad: clamp(1.25rem, 6%, 1.75rem);
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    /* The card grows to the row's height, so cards side by side line up. */
+    grid-template-rows: auto 1fr;
+    height: 100%;
+  }
+
+  .ks-wk__art {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* No cover: a painted wash in the painted photo's place and shape (its
+     dry-brush mask, at the photo's offsets), with a line icon cut out of
+     it in paper colour. */
+  .ks-wk__wash {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 3 / 2;
+    color: var(--color-bg);
+  }
+
+  .ks-wk__wash-paint {
+    position: absolute;
+    inset: -6.4% -6.98% -9.88% -9.3%;
+    mask-image: url("/watercolor/photo-mask.png");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    opacity: 0.75;
+  }
+
+  .ks-wk__wash svg {
+    position: relative;
+    width: clamp(2.5rem, 14%, 3.5rem);
+    height: auto;
+  }
+
+  .ks-wk__status {
+    position: absolute;
+    z-index: 2;
+    top: 0.75rem;
+    left: 0.75rem;
+  }
+
+  /* The card: it slides up under the cover's lower part and is inset
+     from its sides. */
+  .ks-wk__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: -4.5rem var(--ks-wk-inset) 0;
+    overflow: hidden;
+    padding: 6rem var(--ks-wk-pad) 0;
+    border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+    border-radius: var(--radius-card-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 300ms var(--ease-soft);
+  }
+
+  .ks-wk:hover .ks-wk__body,
+  .ks-wk:focus-within .ks-wk__body {
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  /* Price and "Zapisz się" on a band of fresh sage, edge to edge along
+     the card's bottom. */
+  .ks-wk__footer {
+    margin: auto calc(-1 * var(--ks-wk-pad)) 0;
+    padding: 1rem var(--ks-wk-pad);
+    background: var(--color-primary-soft);
+  }
+
   /* ------------------------------------------------------------ First steps */
 
   /* FirstSteps (first-steps.tsx), "Pierwszy krok": four steps on a compact
