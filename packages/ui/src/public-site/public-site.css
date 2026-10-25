@@ -1631,8 +1631,8 @@
      root is the title link's positioned ancestor, so the whole card is
      the click target. */
   .ks-wk {
-    --ks-wk-inset: 7%;
-    --ks-wk-pad: clamp(1.25rem, 6%, 1.75rem);
+    --ks-wk-inset: 3.5%;
+    --ks-wk-pad: 1.5rem;
     position: relative;
     isolation: isolate;
     display: grid;
