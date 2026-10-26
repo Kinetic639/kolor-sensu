@@ -79,7 +79,10 @@ export async function bookUntilPayment(page: Page): Promise<string> {
   await details.getByRole("checkbox", { name: /polityką prywatności/ }).check();
   await details.getByRole("button", { name: "Zapłać teraz" }).click();
 
-  await expect(page.getByRole("heading", { name: "Płatność" })).toBeVisible();
+  // The payment step waits for Stripe's session: some seconds at times.
+  await expect(page.getByRole("heading", { name: "Płatność" })).toBeVisible({
+    timeout: 30_000,
+  });
   return reference;
 }
 
