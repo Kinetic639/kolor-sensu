@@ -492,7 +492,41 @@ export const defaultHomeThoughts: HomeThoughtsContent = {
 
 export const HOME_STORY_STEPS_MAX = 4;
 
+const storyCollection = <T extends "articles" | "ebooks" | "workshops">(
+  type: T,
+  max: number,
+) =>
+  z.strictObject({
+    type: z.literal(type),
+    source: z.enum(["auto", "manual"]),
+    ids: z
+      .array(z.uuid())
+      .max(max)
+      .refine(
+        (ids) => new Set(ids).size === ids.length,
+        "Nie wybieraj tego samego materiału dwa razy.",
+      ),
+  });
+
+export const homeStoryMediaSchema = z
+  .discriminatedUnion("type", [
+    z.strictObject({ type: z.literal("image") }),
+    storyCollection("articles", 3),
+    storyCollection("ebooks", 2),
+    storyCollection("workshops", 1),
+  ])
+  .refine(
+    (media) =>
+      media.type === "image" ||
+      media.source !== "manual" ||
+      media.ids.length > 0,
+    "Wybierz przynajmniej jeden materiał.",
+  );
+export type HomeStoryMedia = z.infer<typeof homeStoryMediaSchema>;
+
 export const homeStoryStepSchema = z.strictObject({
+  /** Absent on older payloads; their existing education links identify the content. */
+  media: homeStoryMediaSchema.optional(),
   heading: z.string().trim().min(1).max(80),
   text: z.string().trim().min(1).max(400),
   /** Where the step's button leads (none: no button). */
@@ -509,6 +543,20 @@ export const homeStoryStepSchema = z.strictObject({
 });
 
 export type HomeStoryStep = z.infer<typeof homeStoryStepSchema>;
+
+export function storyMediaOf(
+  step: Pick<HomeStoryStep, "media" | "cta">,
+): HomeStoryMedia {
+  if (step.media) return step.media;
+  const path = step.cta?.href;
+  if (path === "/edukacja/artykuly")
+    return { type: "articles", source: "auto", ids: [] };
+  if (path === "/edukacja/ebooki")
+    return { type: "ebooks", source: "auto", ids: [] };
+  if (path === "/warsztaty")
+    return { type: "workshops", source: "auto", ids: [] };
+  return { type: "image" };
+}
 
 /** Home → "Opowieść przy przewijaniu": one to four steps, in order. */
 export const homeStoryContentSchema = z.strictObject({
@@ -556,7 +604,7 @@ export const HOME_HEADER_SECTIONS = [
   { key: "spotlight", label: "Z kim porozmawiasz" },
   { key: "specialists", label: "Poznaj nasz zespół" },
   { key: "rooms", label: "Przestrzeń, która wspiera" },
-  { key: "story", label: "Jak zacząć" },
+  { key: "story", label: "Edukacja" },
   { key: "newsletter", label: "Newsletter" },
   { key: "location", label: "Gdzie jesteśmy" },
 ] as const;

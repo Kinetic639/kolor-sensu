@@ -84,6 +84,25 @@ describe("a hero published before its new fields", () => {
 });
 
 describe("saving and publishing", () => {
+  it("round-trips media selections through the existing draft and publication flow", async () => {
+    const content = {
+      steps: [
+        {
+          ...defaultHomeStory.steps[0]!,
+          media: {
+            type: "articles" as const,
+            source: "manual" as const,
+            ids: ["11111111-1111-4111-8111-111111111111"],
+          },
+        },
+      ],
+    };
+    const saved = saving(content);
+    expect(await updateHomeStoryDraft(saved.client, content)).toEqual(content);
+    expect(await getPublishedHomeStory(reading(content).client)).toEqual(
+      content,
+    );
+  });
   it("writes the thoughts and the story under their own keys", async () => {
     const cases = [
       [
