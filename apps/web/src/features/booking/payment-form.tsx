@@ -7,7 +7,7 @@ import {
 } from "@stripe/react-stripe-js/checkout";
 import { loadStripe } from "@stripe/stripe-js";
 import { PrimaryButton } from "@repo/ui/public-site/actions";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 // Step 6: Stripe's Payment Element inside our own step (card, BLIK,
 // Przelewy24, wallets, as set in the Stripe Dashboard). Stripe.js comes
@@ -37,16 +37,23 @@ function PayButton({ label }: { label: string }) {
   const checkout = useCheckoutElements();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A second press before the button turns off confirms nothing more.
+  const paying = useRef(false);
 
   async function pay(event: FormEvent) {
     event.preventDefault();
-    if (checkout.type !== "success") return;
+    if (checkout.type !== "success" || paying.current) return;
+    paying.current = true;
     setPending(true);
     setError(null);
-    // On success Stripe goes to the return page; we only see errors.
-    const result = await checkout.checkout.confirm();
-    if (result.type === "error") setError(result.error.message);
-    setPending(false);
+    try {
+      // On success Stripe goes to the return page; we only see errors.
+      const result = await checkout.checkout.confirm();
+      if (result.type === "error") setError(result.error.message);
+    } finally {
+      paying.current = false;
+      setPending(false);
+    }
   }
 
   if (checkout.type === "error") {

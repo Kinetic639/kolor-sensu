@@ -43,6 +43,25 @@ async function pickSlot(page: Page) {
  * specialist, a free time, the guest's details. The visit's reference.
  */
 export async function bookUntilPayment(page: Page): Promise<string> {
+  const { reference, details } = await bookUntilDetails(page);
+  await details.getByRole("button", { name: "Zapłać teraz" }).click();
+
+  // The payment step waits for Stripe's session: some seconds at times.
+  await expect(page.getByRole("heading", { name: "Płatność" })).toBeVisible({
+    timeout: 30_000,
+  });
+  return reference;
+}
+
+/**
+ * From the wizard's start to the details given, before paying (a discount
+ * code applied first, when given): the reference, the guest's e-mail and
+ * the details step.
+ */
+export async function bookUntilDetails(
+  page: Page,
+  { code }: { code?: string } = {},
+) {
   await page.goto(`${webUrl}/umow-wizyte`);
   await page
     .getByRole("region", { name: "Wybierz usługę" })
@@ -69,21 +88,31 @@ export async function bookUntilPayment(page: Page): Promise<string> {
   const reference = (await details
     .getByText(/^\d{4}-\d{3,}$/)
     .textContent())!.trim();
+  if (code) {
+    await details.getByLabel("Kod rabatowy (opcjonalnie)").fill(code);
+    await details.getByRole("button", { name: "Zastosuj" }).click();
+    await expect(
+      page.getByRole("status").filter({ hasText: `Kod ${code}: rabat` }),
+    ).toBeVisible({ timeout: 30_000 });
+  }
   await details.getByLabel("Imię", { exact: true }).fill("Gość");
   await details.getByLabel("Nazwisko", { exact: true }).fill("E2E");
   await details.getByLabel("Telefon").fill("500600700");
-  await details.getByLabel("E-mail").fill(`e2e-${Date.now()}@example.invalid`);
+  const email = `e2e-${Date.now()}@example.invalid`;
+  await details.getByLabel("E-mail").fill(email);
   await details
     .getByRole("checkbox", { name: "Akceptuję regulamin rezerwacji" })
     .check();
   await details.getByRole("checkbox", { name: /polityką prywatności/ }).check();
-  await details.getByRole("button", { name: "Zapłać teraz" }).click();
+  return { reference, email, details };
+}
 
-  // The payment step waits for Stripe's session: some seconds at times.
-  await expect(page.getByRole("heading", { name: "Płatność" })).toBeVisible({
-    timeout: 30_000,
-  });
-  return reference;
+/** BLIK in Stripe's Payment Element, test code 123456, and pay. */
+export async function payWithBlik(page: Page) {
+  const payment = paymentElement(page);
+  await payment.getByText("BLIK", { exact: true }).click();
+  await payment.getByLabel("Kod BLIK").fill("123456");
+  await payButton(page).click();
 }
 
 /** Stripe's Payment Element (its first frame, in our payment form). */

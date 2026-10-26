@@ -3,7 +3,7 @@ import { BookingSummary } from "@repo/ui/booking";
 import { PrimaryButton, SecondaryButton } from "@repo/ui/public-site";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { ContactDetails } from "@/components/contact-details";
 import { sendVisitConfirmation } from "@/features/booking/email/confirmation-server";
@@ -12,6 +12,7 @@ import { settleSession } from "@/features/booking/payment";
 import { paymentDeps } from "@/features/booking/payment-server";
 import { RefreshWhileWaiting } from "@/features/booking/refresh-while-waiting";
 import { confirmReservationAction } from "@/features/booking/visit-actions";
+import { staleLinkView } from "@/features/booking/stale-visit-link";
 import { deadlineLabel } from "@/features/booking/visit-label";
 import { stripeServer } from "@/lib/stripe";
 import { createSecretClient } from "@/lib/supabase/secret";
@@ -67,28 +68,20 @@ export default async function VisitPage({
   const { token } = await params;
   const { zmiana, sesja } = await searchParams;
   let visit = await visitByLinkToken(token);
-  if (!visit) notFound();
+  if (!visit) return <StaleLink outcome={await settleReturn(sesja, null)} />;
 
   // Back from Stripe: settle this visit's payment (idempotently).
   let pendingBank = false;
   if (typeof sesja === "string" && /^cs_/.test(sesja)) {
-    const session = await stripeServer()
-      .checkout.sessions.retrieve(sesja)
-      .catch(() => null);
-    if (session?.metadata?.appointment_reference === visit.booking.reference) {
-      if (session.status === "open") {
-        redirect(`/wizyta/${token}/platnosc` as Route);
-      }
-      if (session.status === "complete") {
-        const outcome = await settleSession(session, {
-          ...paymentDeps(),
-          onConfirmed: async (reference) => {
-            after(() => sendVisitConfirmation(reference));
-          },
-        });
-        pendingBank = outcome === "awaiting_payment";
-        visit = (await visitByLinkToken(token)) ?? visit;
-      }
+    const outcome = await settleReturn(sesja, visit.booking.reference, () =>
+      redirect(`/wizyta/${token}/platnosc` as Route),
+    );
+    if (outcome) {
+      pendingBank = outcome === "awaiting_payment";
+      // Its confirmation e-mail may give the visit a new link meanwhile.
+      const now = await visitByLinkToken(token);
+      if (!now) return <StaleLink outcome={outcome} />;
+      visit = now;
     }
   }
 
@@ -224,6 +217,53 @@ export default async function VisitPage({
           </section>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Stripe's return (?sesja=): the payment settled as the webhook does
+ * (idempotently), for the visit `reference`, or for the session's own when
+ * the link no longer finds one (null). Its outcome; null with none.
+ */
+async function settleReturn(
+  sesja: string | string[] | undefined,
+  reference: string | null,
+  onOpen?: () => never,
+) {
+  if (typeof sesja !== "string" || !/^cs_/.test(sesja)) return null;
+  const session = await stripeServer()
+    .checkout.sessions.retrieve(sesja)
+    .catch(() => null);
+  const ours = session?.metadata?.appointment_reference;
+  if (!session || !ours || (reference !== null && ours !== reference)) {
+    return null;
+  }
+  if (session.status === "open") onOpen?.();
+  if (session.status !== "complete") return null;
+  return settleSession(session, {
+    ...paymentDeps(),
+    onConfirmed: async (confirmed) => {
+      after(() => sendVisitConfirmation(confirmed));
+    },
+  });
+}
+
+/** A link an e-mail since replaced (#259): no "page does not exist". */
+function StaleLink({ outcome }: { outcome: string | null }) {
+  const view = staleLinkView(outcome);
+  return (
+    <div className="max-w-page px-gutter pb-section-sm mx-auto grid gap-8 pt-8 lg:pt-12">
+      <div className="grid gap-2">
+        <h1 className="font-display text-display text-ink">{view.title}</h1>
+        <p className="text-body text-text-muted max-w-2xl">{view.lead}</p>
+      </div>
+      <section aria-labelledby="kontakt" className="grid max-w-2xl gap-3">
+        <h2 className="text-title text-ink font-semibold" id="kontakt">
+          Kontakt z centrum
+        </h2>
+        <ContactDetails />
+      </section>
     </div>
   );
 }

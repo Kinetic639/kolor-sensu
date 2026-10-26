@@ -1,19 +1,24 @@
 # After STAGING is deployed, the end-to-end tests run against the live
 # sites (tests/e2e, E2E_TARGET=staging): a guest books and pays with BLIK,
 # the visit shows in both portals, the portals sign in and out, the public
-# API keeps its fields to itself. Each run leaves one test visit behind.
+# API keeps its fields to itself; from the e-mails' links (read back from
+# Resend), a visit paid later, moved and cancelled with a refund. Each run
+# leaves a few test visits behind.
 #
 # Vercel reports each app's deployment to GitHub (by commit, not branch),
 # so this starts on those reports and goes on only once all three apps
 # are live with the commit at the head of `staging`, and only for the last
 # of the three, so a release is tested once. It can be started by hand too
 # (Actions → Staging E2E → Run workflow); started by hand, it can also run
-# the payment tests (tests/e2e/payments.spec.ts: card, 3D Secure, a
-# declined card, Przelewy24), which wait there until they pass once.
+# the payment tests alone (tests/e2e/payments.spec.ts: card, 3D Secure, a
+# declined card, Przelewy24): with the rest they would make more than the
+# five bookings one browser may make in 15 minutes. Started by hand, it
+# runs the tests of the head of `staging`, not of the branch chosen.
 #
 # Secrets (Settings → Secrets and variables → Actions):
 #   E2E_STAGING_ADMIN_EMAIL, E2E_STAGING_ADMIN_PASSWORD,
-#   E2E_STAGING_SPECIALIST_EMAIL, E2E_STAGING_SPECIALIST_PASSWORD
+#   E2E_STAGING_SPECIALIST_EMAIL, E2E_STAGING_SPECIALIST_PASSWORD,
+#   E2E_RESEND_API_KEY (reads the sent e-mails; without it those tests skip)
 name: Staging E2E
 
 on:
@@ -101,6 +106,7 @@ jobs:
       E2E_STAGING_ADMIN_PASSWORD: ${{ secrets.E2E_STAGING_ADMIN_PASSWORD }}
       E2E_STAGING_SPECIALIST_EMAIL: ${{ secrets.E2E_STAGING_SPECIALIST_EMAIL }}
       E2E_STAGING_SPECIALIST_PASSWORD: ${{ secrets.E2E_STAGING_SPECIALIST_PASSWORD }}
+      E2E_RESEND_API_KEY: ${{ secrets.E2E_RESEND_API_KEY }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -119,7 +125,7 @@ jobs:
             fi
           done
       - name: Tests
-        run: pnpm test:e2e
+        run: pnpm test:e2e ${{ inputs.payments && 'tests/e2e/payments.spec.ts' || '' }}
       - if: failure()
         uses: actions/upload-artifact@v4
         with:

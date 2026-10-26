@@ -111,8 +111,11 @@ describe("SiteFooter", () => {
     });
     expect(screen.getByText("Linia testowa")).toBeVisible();
     expect(screen.getByText("Informacja testowa")).toBeVisible();
+    // Named as it reads, the number first (label in name).
     expect(
-      screen.getByRole("link", { name: /Linia testowa: 123 456/ }),
+      screen.getByRole("link", {
+        name: "123 456 Linia testowa Informacja testowa",
+      }),
     ).toHaveAttribute("href", "tel:123456");
     expect(strip.previousElementSibling).toHaveClass("ks-footer__main");
     expect(strip.nextElementSibling).toContainElement(

@@ -3245,4 +3245,37 @@ END;
 $body$;
 RESET ROLE;
 
+-- AC: the clocks change (Klient · 1). Anna's Monday 9–12 stays 9–12 Polish
+-- time in the weeks before and after the change, in March and in October;
+-- the same hour is then an hour further or nearer in UTC.
+DO $body$
+DECLARE
+  v_offer uuid := (
+    SELECT offer.id FROM public.specialist_services AS offer
+    JOIN public.services AS service ON service.id = offer.service_id
+    WHERE offer.specialist_id = (SELECT anna_id FROM booking_test)
+      AND service.slug = 'booking-test-consultation'
+  );
+  v_day date;
+  v_times text;
+BEGIN
+  FOREACH v_day IN ARRAY ARRAY['2027-03-22', '2027-03-29', '2027-10-25', '2027-11-01']::date[] LOOP
+    SELECT string_agg(to_char(slot.starts_at AT TIME ZONE 'Europe/Warsaw', 'HH24:MI'), ' ' ORDER BY slot.starts_at)
+    INTO v_times
+    FROM private.free_slots(v_offer, 'in_person', v_day, v_day) AS slot;
+    IF v_times IS DISTINCT FROM '09:00 10:00 11:00' THEN
+      RAISE EXCEPTION 'AC: on % the free times were %', v_day, v_times;
+    END IF;
+  END LOOP;
+  IF (SELECT min(starts_at) FROM private.free_slots(v_offer, 'in_person', '2027-03-29', '2027-03-29'))
+     - (SELECT min(starts_at) FROM private.free_slots(v_offer, 'in_person', '2027-03-22', '2027-03-22'))
+     <> interval '7 days' - interval '1 hour'
+     OR (SELECT min(starts_at) FROM private.free_slots(v_offer, 'in_person', '2027-11-01', '2027-11-01'))
+     - (SELECT min(starts_at) FROM private.free_slots(v_offer, 'in_person', '2027-10-25', '2027-10-25'))
+     <> interval '7 days' + interval '1 hour' THEN
+    RAISE EXCEPTION 'AC: 9:00 did not move with the clocks';
+  END IF;
+END;
+$body$;
+
 ROLLBACK;
