@@ -169,3 +169,5 @@ export type {
   NewsletterArchiveEntry,
   NewsletterCardData,
 } from "./newsletter-issue";
+export { ClosingBanner } from "./closing-banner";
+export type { ClosingBannerProps } from "./closing-banner";
