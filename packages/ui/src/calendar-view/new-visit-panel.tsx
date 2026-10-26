@@ -127,7 +127,8 @@ export function NewVisitPanel({
       date: defaults.date,
       time: defaults.time,
       roomId: defaults.roomId ?? (rooms.length === 1 ? rooms[0]!.id : null),
-      name: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phone: "",
       notes: "",
@@ -384,18 +385,33 @@ export function NewVisitPanel({
             <legend className="mb-1 text-[0.6875rem] font-semibold tracking-[0.03em] text-[var(--text-muted)]">
               Klient
             </legend>
-            <div className="grid gap-1.5">
-              <Label htmlFor={field("name")}>Imię i nazwisko</Label>
-              <Input
-                autoComplete="off"
-                id={field("name")}
-                {...register("name")}
-                {...invalid("name")}
-              />
-              <FieldError
-                id={field("name-error")}
-                message={errors.name?.message}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor={field("firstName")}>Imię</Label>
+                <Input
+                  autoComplete="off"
+                  id={field("firstName")}
+                  {...register("firstName")}
+                  {...invalid("firstName")}
+                />
+                <FieldError
+                  id={field("firstName-error")}
+                  message={errors.firstName?.message}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor={field("lastName")}>Nazwisko</Label>
+                <Input
+                  autoComplete="off"
+                  id={field("lastName")}
+                  {...register("lastName")}
+                  {...invalid("lastName")}
+                />
+                <FieldError
+                  id={field("lastName-error")}
+                  message={errors.lastName?.message}
+                />
+              </div>
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor={field("email")}>E-mail</Label>

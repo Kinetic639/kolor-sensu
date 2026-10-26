@@ -1,3 +1,4 @@
+import { fullName } from "@repo/contracts/person-name";
 import { getWorkshopRegistration } from "@repo/supabase/workshops";
 import {
   PrimaryButton,
@@ -243,7 +244,8 @@ export default async function RegistrationPage({
         />
         {registration.details ? (
           <p className="text-small text-text-muted">
-            Uczestnik: {registration.details.name}, {registration.details.email}
+            Uczestnik: {fullName(registration.details)},{" "}
+            {registration.details.email}
           </p>
         ) : null}
       </SoftCard>

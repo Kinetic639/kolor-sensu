@@ -61,7 +61,8 @@ export function EditClientButton({
   const form = useForm<ClientDetailsValues>({
     resolver: zodResolver(clientDetailsSchema),
     defaultValues: {
-      name: details.name,
+      firstName: details.firstName,
+      lastName: details.lastName,
       email: details.email,
       phone: details.phone ?? "",
       notes: details.notes ?? "",
@@ -135,16 +136,28 @@ export function EditClientButton({
             </DialogDescription>
           </DialogHeader>
           <div className="my-4 grid gap-3">
-            {field(
-              "name",
-              "Imię i nazwisko",
-              <Input
-                autoComplete="off"
-                id={`${id}-name`}
-                {...described("name")}
-                {...form.register("name")}
-              />,
-            )}
+            <div className="grid grid-cols-2 gap-3">
+              {field(
+                "firstName",
+                "Imię",
+                <Input
+                  autoComplete="off"
+                  id={`${id}-firstName`}
+                  {...described("firstName")}
+                  {...form.register("firstName")}
+                />,
+              )}
+              {field(
+                "lastName",
+                "Nazwisko",
+                <Input
+                  autoComplete="off"
+                  id={`${id}-lastName`}
+                  {...described("lastName")}
+                  {...form.register("lastName")}
+                />,
+              )}
+            </div>
             {field(
               "email",
               "E-mail",

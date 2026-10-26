@@ -24,6 +24,7 @@ vi.mock("../toast", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 const row: ClientRow = {
   id: "client-1",
   name: "Jan Kowalski",
+  listName: "Kowalski Jan",
   email: "jan@example.invalid",
   phone: "600 100 200",
   visits: "3",
@@ -55,7 +56,7 @@ describe("ClientTable", () => {
     const table = screen.getByRole("table", { name: "Klienci" });
     // The name opens the client in the side panel.
     expect(
-      within(table).getByRole("link", { name: "Jan Kowalski" }),
+      within(table).getByRole("link", { name: "Kowalski Jan" }),
     ).toHaveAttribute("href", "/klienci?klient=client-1");
     expect(table).toHaveTextContent("600 zł");
     // Sorted by the latest visit, latest first, by default.
@@ -63,7 +64,7 @@ describe("ClientTable", () => {
       within(table).getByRole("columnheader", { name: /Ostatnia wizyta/ }),
     ).toHaveAttribute("aria-sort", "descending");
     expect(
-      within(table).getByRole("link", { name: /^Klient/ }),
+      within(table).getByRole("link", { name: /^Nazwisko i imię/ }),
     ).toHaveAttribute("href", "/klienci?sort=nazwisko");
     expect(screen.getByText("1–1 z 1")).toBeInTheDocument();
   });
@@ -113,7 +114,7 @@ describe("ClientTable", () => {
         total={1}
       />,
     );
-    const name = screen.getByRole("link", { name: "Jan Kowalski" });
+    const name = screen.getByRole("link", { name: "Kowalski Jan" });
     expect(name).toHaveAttribute("aria-current", "true");
     expect(name).toHaveAttribute("href", "/klienci");
   });
@@ -251,7 +252,8 @@ describe("ClientCard", () => {
 
 describe("EditClientButton", () => {
   const details = {
-    name: "Jan Kowalski",
+    firstName: "Jan",
+    lastName: "Kowalski",
     email: "jan@example.invalid",
     phone: "600 100 200",
     notes: null,
@@ -295,7 +297,8 @@ describe("EditClientButton", () => {
     await userEvent.click(screen.getByRole("button", { name: "Zapisz" }));
     await vi.waitFor(() =>
       expect(action).toHaveBeenCalledWith("client-1", {
-        name: "Jan Kowalski",
+        firstName: "Jan",
+        lastName: "Kowalski",
         email: "jan@example.invalid",
         phone: "600 100 200",
         notes: "Woli popołudnia",

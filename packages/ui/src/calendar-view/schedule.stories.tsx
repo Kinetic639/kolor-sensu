@@ -399,7 +399,10 @@ export const AddingTheForm: Story = {
       within(panel).getByRole("button", { name: "Zarezerwuj wizytę" }),
     );
     await expect(
-      await within(panel).findByText("Podaj imię i nazwisko."),
+      await within(panel).findByText("Podaj imię."),
+    ).toBeInTheDocument();
+    await expect(
+      within(panel).getByText("Podaj nazwisko."),
     ).toBeInTheDocument();
     // The link to pay goes by e-mail, so the e-mail is required.
     await expect(

@@ -1,10 +1,13 @@
+import { fullName, sortName } from "@repo/contracts/person-name";
 import type { MyClient } from "@repo/supabase";
 
 // Moi klienci: the specialist's clients as the list shows them, with
-// their visits in words and the next and last in the centre's time.
+// their visits in words and the next and last in the centre's time;
+// named last name first ("Kowalska Joanna"), found in either order.
 
 export interface MyClientRow {
   id: string;
+  /** `Kowalska Joanna` */
   name: string;
   href: string;
   contact: string;
@@ -45,15 +48,36 @@ export function myClientRows(
   });
   return clients.map((client) => ({
     id: client.id,
-    name: client.name,
+    name: sortName(client),
     href: `/klienci/${client.id}`,
     contact: [client.email, client.phone].filter(Boolean).join(" · "),
     visits: visitsInWords(client.visits),
     next: client.nextVisitAt ? next.format(new Date(client.nextVisitAt)) : null,
     last: client.lastVisitAt ? day.format(new Date(client.lastVisitAt)) : null,
-    search: [client.name, client.email, client.phone]
+    search: [fullName(client), sortName(client), client.email, client.phone]
       .filter(Boolean)
       .join(" ")
       .toLowerCase(),
   }));
+}
+
+export const CLIENT_SORTS = [
+  { id: "next", label: "Najbliższa wizyta" },
+  { id: "name", label: "Nazwisko A–Z" },
+] as const;
+
+export type ClientSort = (typeof CLIENT_SORTS)[number]["id"];
+
+/** The rows the filter matches; they come the next visit first. */
+export function shownClients(
+  rows: MyClientRow[],
+  words: string,
+  sort: ClientSort,
+) {
+  const found = words ? rows.filter((row) => row.search.includes(words)) : rows;
+  return sort === "name"
+    ? [...found].sort((a, b) =>
+        a.name.localeCompare(b.name, "pl", { sensitivity: "base" }),
+      )
+    : found;
 }

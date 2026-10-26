@@ -5,13 +5,15 @@ describe("clientDetailsSchema", () => {
   it("tidies what was typed: trimmed, the address lowercase, blanks as none", () => {
     expect(
       clientDetailsSchema.parse({
-        name: "  Jan Kowalski ",
+        firstName: "  Jan ",
+        lastName: " Kowalski ",
         email: " Jan@Example.INVALID ",
         phone: "  ",
         notes: "",
       }),
     ).toEqual({
-      name: "Jan Kowalski",
+      firstName: "Jan",
+      lastName: "Kowalski",
       email: "jan@example.invalid",
       phone: null,
       notes: null,
@@ -20,7 +22,8 @@ describe("clientDetailsSchema", () => {
 
   it("says what is wrong, field by field", () => {
     const result = clientDetailsSchema.safeParse({
-      name: "",
+      firstName: "",
+      lastName: "",
       email: "not an e-mail",
       phone: "12",
       notes: "x".repeat(5001),
@@ -31,7 +34,8 @@ describe("clientDetailsSchema", () => {
         result.error!.issues.map((issue) => [issue.path[0], issue.message]),
       ),
     ).toEqual({
-      name: "Podaj imię i nazwisko.",
+      firstName: "Podaj imię.",
+      lastName: "Podaj nazwisko.",
       email: "Podaj poprawny adres e-mail.",
       phone: "Podaj numer telefonu (3–40 znaków).",
       notes: "Notatka może mieć najwyżej 5000 znaków.",

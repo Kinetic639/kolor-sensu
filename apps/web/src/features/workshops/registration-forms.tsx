@@ -93,10 +93,18 @@ export function TransferSeatForm({ token }: { token: string }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <BookingField
           autoComplete="off"
-          label="Imię i nazwisko"
-          name="name"
+          label="Imię"
+          name="firstName"
           required
         />
+        <BookingField
+          autoComplete="off"
+          label="Nazwisko"
+          name="lastName"
+          required
+        />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
         <BookingField
           autoComplete="off"
           inputMode="tel"
@@ -105,14 +113,14 @@ export function TransferSeatForm({ token }: { token: string }) {
           required
           type="tel"
         />
+        <BookingField
+          autoComplete="off"
+          label="E-mail"
+          name="email"
+          required
+          type="email"
+        />
       </div>
-      <BookingField
-        autoComplete="off"
-        label="E-mail"
-        name="email"
-        required
-        type="email"
-      />
       <div className="flex flex-wrap gap-3">
         <PrimaryButton disabled={pending} type="submit">
           Przekaż miejsce

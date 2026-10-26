@@ -20,13 +20,23 @@ export function ParticipantFields({
     <>
       <div className="grid gap-5 sm:grid-cols-2">
         <BookingField
-          autoComplete="name"
-          defaultValue={values?.name}
-          error={errors.name}
-          label="Imię i nazwisko"
-          name="name"
+          autoComplete="given-name"
+          defaultValue={values?.firstName}
+          error={errors.firstName}
+          label="Imię"
+          name="firstName"
           required
         />
+        <BookingField
+          autoComplete="family-name"
+          defaultValue={values?.lastName}
+          error={errors.lastName}
+          label="Nazwisko"
+          name="lastName"
+          required
+        />
+      </div>
+      <div className="grid gap-5 sm:grid-cols-2">
         <BookingField
           autoComplete="tel"
           defaultValue={values?.phone}
@@ -37,17 +47,17 @@ export function ParticipantFields({
           required
           type="tel"
         />
+        <BookingField
+          autoComplete="email"
+          defaultValue={values?.email}
+          error={errors.email}
+          hint="Wyślemy na niego potwierdzenie i link do Twojego zapisu."
+          label="E-mail"
+          name="email"
+          required
+          type="email"
+        />
       </div>
-      <BookingField
-        autoComplete="email"
-        defaultValue={values?.email}
-        error={errors.email}
-        hint="Wyślemy na niego potwierdzenie i link do Twojego zapisu."
-        label="E-mail"
-        name="email"
-        required
-        type="email"
-      />
       <BookingField
         defaultValue={values?.notes}
         error={errors.notes}

@@ -9,6 +9,7 @@
     "./announcements": "./src/announcements.ts",
     "./availability": "./src/availability.ts",
     "./booking": "./src/booking.ts",
+    "./person-name": "./src/person-name.ts",
     "./center": "./src/center.ts",
     "./closures": "./src/closures.ts",
     "./company": "./src/company.ts",

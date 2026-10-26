@@ -69,11 +69,18 @@ async function holdSeat(page: Page) {
 
 /** The sign-up form (not the newsletter's in the footer). */
 const signupForm = (page: Page) =>
-  page.locator("form").filter({ has: page.getByLabel("Imię i nazwisko") });
+  page
+    .locator("form")
+    .filter({ has: page.getByLabel("Nazwisko", { exact: true }) });
 
+/** `name` is the first name, a space, the last name. */
 async function fillDetails(page: Page, name: string) {
   const form = signupForm(page);
-  await form.getByLabel("Imię i nazwisko").fill(name);
+  const space = name.indexOf(" ");
+  await form.getByLabel("Imię", { exact: true }).fill(name.slice(0, space));
+  await form
+    .getByLabel("Nazwisko", { exact: true })
+    .fill(name.slice(space + 1));
   await form.getByLabel("Telefon").fill("500600700");
   await form.getByLabel("E-mail").fill(`e2e-${Date.now()}@example.invalid`);
   await form.getByRole("checkbox", { name: /^Akceptuję regulamin/ }).check();

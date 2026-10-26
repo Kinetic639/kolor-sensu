@@ -102,10 +102,8 @@ describe("NewVisitPanel", () => {
   it("asks for the client's e-mail (the link to pay goes there) before sending anything", async () => {
     const action = vi.fn();
     renderPanel({ action });
-    await userEvent.type(
-      screen.getByLabelText("Imię i nazwisko"),
-      "Ewa Klientka",
-    );
+    await userEvent.type(screen.getByLabelText("Imię"), "Ewa");
+    await userEvent.type(screen.getByLabelText("Nazwisko"), "Klientka");
     await userEvent.type(screen.getByLabelText("Telefon"), "600 100 200");
     await userEvent.click(
       screen.getByRole("button", { name: "Zarezerwuj wizytę" }),
@@ -132,10 +130,8 @@ describe("NewVisitPanel", () => {
     });
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>();
     renderPanel({ action }, onUrlUpdate);
-    await userEvent.type(
-      screen.getByLabelText("Imię i nazwisko"),
-      "Jan Telefon",
-    );
+    await userEvent.type(screen.getByLabelText("Imię"), "Jan");
+    await userEvent.type(screen.getByLabelText("Nazwisko"), "Telefon");
     await userEvent.type(screen.getByLabelText("E-mail"), "jan@example.com");
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     await userEvent.click(
@@ -148,7 +144,8 @@ describe("NewVisitPanel", () => {
       date: "2030-10-02",
       time: "12:15",
       roomId: ROOM,
-      name: "Jan Telefon",
+      firstName: "Jan",
+      lastName: "Telefon",
       email: "jan@example.com",
       phone: "",
       notes: "",
@@ -169,10 +166,8 @@ describe("NewVisitPanel", () => {
       fields: { time: "Wybierz inną godzinę." },
     });
     renderPanel({ action });
-    await userEvent.type(
-      screen.getByLabelText("Imię i nazwisko"),
-      "Ewa Klientka",
-    );
+    await userEvent.type(screen.getByLabelText("Imię"), "Ewa");
+    await userEvent.type(screen.getByLabelText("Nazwisko"), "Klientka");
     await userEvent.type(screen.getByLabelText("E-mail"), "ewa@example.com");
     await userEvent.click(
       screen.getByRole("button", { name: "Zarezerwuj wizytę" }),

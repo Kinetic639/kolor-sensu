@@ -27,7 +27,12 @@ function registration(
     paidMinor: 15000,
     refundDueMinor: 0,
     refundedMinor: 0,
-    details: { name: "Ola", email: "ola@example.invalid", phone: "500600700" },
+    details: {
+      firstName: "Ola",
+      lastName: "Nowak",
+      email: "ola@example.invalid",
+      phone: "500600700",
+    },
     holdExpiresAt: null,
     paymentDueAt: null,
     offerExpiresAt: null,

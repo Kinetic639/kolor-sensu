@@ -135,7 +135,8 @@ describe("a guest's seat", () => {
     expect(registration).toMatchObject({
       reference: "W2611-001",
       details: {
-        name: "Ola",
+        firstName: "Ola",
+        lastName: "",
         email: "ola@example.invalid",
         phone: "500600700",
       },

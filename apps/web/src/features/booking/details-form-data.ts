@@ -8,7 +8,8 @@ import {
 // from the booking's consents: the visit never depends on it.
 
 export interface DetailsFormValues {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   notes: string;
@@ -39,7 +40,8 @@ export function readDetailsForm(form: FormData): DetailsFormResult {
     return { ok: false, bot: true };
   }
   const values: DetailsFormValues = {
-    name: String(form.get("name") ?? ""),
+    firstName: String(form.get("firstName") ?? ""),
+    lastName: String(form.get("lastName") ?? ""),
     email: String(form.get("email") ?? ""),
     phone: String(form.get("phone") ?? ""),
     notes: String(form.get("notes") ?? ""),
