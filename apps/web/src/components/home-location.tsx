@@ -18,7 +18,7 @@ export function HomeLocation({
   return (
     <section
       aria-labelledby={headingId}
-      className="max-w-page px-gutter py-section-sm mx-auto grid items-start gap-10 lg:grid-cols-2 lg:gap-16"
+      className="max-w-page px-gutter mx-auto grid items-start gap-10 py-20 lg:grid-cols-2 lg:gap-16 lg:py-32"
     >
       <SectionHeader content={header} id={headingId} size="h2" />
       <ContactCard contact={contact} />
