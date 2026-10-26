@@ -1,0 +1,152 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderToString } from "react-dom/server";
+import { homeStoryStepSchema } from "@repo/contracts";
+import type {
+  PublishedArticle,
+  PublishedEbook,
+} from "@repo/contracts/education";
+import type { PublicWorkshop } from "@repo/supabase/workshops";
+import { educationStorySteps } from "./home-story";
+
+const readers = vi.hoisted(() => ({
+  articles: vi.fn(),
+  ebooks: vi.fn(),
+  workshops: vi.fn(),
+  categories: vi.fn(),
+}));
+vi.mock("@/lib/education-data", () => ({
+  getArticles: readers.articles,
+  getEbooks: readers.ebooks,
+  getArticleCategories: readers.categories,
+  articleImageUrl: (p: string) => `/${p}`,
+}));
+vi.mock("@/lib/workshop-data", () => ({
+  getWorkshops: readers.workshops,
+  workshopImageUrl: (p: string) => `/${p}`,
+}));
+vi.mock("./article-view", () => ({
+  articleHref: (slug: string) => `/edukacja/artykuly/${slug}`,
+  readingLabel: () => "2 min czytania",
+}));
+const image = { src: "/fallback.jpg", alt: "Zdjęcie zastępcze" };
+const article = (id: string, date: string) =>
+  ({
+    id,
+    title: `Artykuł ${id}`,
+    slug: id,
+    publishedAt: date,
+    lead: "Opis artykułu",
+    coverPath: "cover.jpg",
+    coverAlt: "Okładka",
+    categoryId: "cat",
+  }) as PublishedArticle;
+const step = (media: unknown) => ({
+  ...homeStoryStepSchema.parse({
+    heading: "Wiedza",
+    text: "Opis slajdu",
+    media,
+  }),
+  imageUrl: null,
+});
+beforeEach(() => {
+  vi.clearAllMocks();
+  readers.articles.mockResolvedValue([]);
+  readers.ebooks.mockResolvedValue([]);
+  readers.workshops.mockResolvedValue([]);
+  readers.categories.mockResolvedValue([]);
+});
+describe("the published education story", () => {
+  it("loads no catalogues for a photo slide", async () => {
+    const result = await educationStorySteps(
+      { steps: [step({ type: "image" })] },
+      [image],
+      {},
+    );
+    expect(result[0]?.content).toBeUndefined();
+    expect(result[0]?.image).toEqual(image);
+    expect(readers.articles).not.toHaveBeenCalled();
+    expect(readers.workshops).not.toHaveBeenCalled();
+  });
+  it("shows only the three newest published articles in order", async () => {
+    readers.articles.mockResolvedValue([
+      article("old", "2026-01-01"),
+      article("second", "2026-10-20"),
+      article("newest", "2026-10-25"),
+      article("third", "2026-10-15"),
+    ]);
+    const result = await educationStorySteps(
+      { steps: [step({ type: "articles", source: "auto", ids: [] })] },
+      [image],
+      {},
+    );
+    const html = renderToString(result[0]!.content);
+    expect(html).not.toContain("Artykuł old");
+    expect(html.indexOf("Artykuł newest")).toBeLessThan(
+      html.indexOf("Artykuł second"),
+    );
+    expect(html.indexOf("Artykuł second")).toBeLessThan(
+      html.indexOf("Artykuł third"),
+    );
+    expect(html).not.toContain("Czytaj więcej artykułów");
+  });
+  it("falls back to the saved photo when manual references are withdrawn", async () => {
+    const result = await educationStorySteps(
+      {
+        steps: [
+          step({
+            type: "ebooks",
+            source: "manual",
+            ids: ["11111111-1111-4111-8111-111111111111"],
+          }),
+        ],
+      },
+      [image],
+      {},
+    );
+    expect(result[0]?.content).toBeUndefined();
+    expect(result[0]?.image).toEqual(image);
+  });
+  it("keeps the admin's chosen ebook order", async () => {
+    const ids = [
+      "11111111-1111-4111-8111-111111111111",
+      "22222222-2222-4222-8222-222222222222",
+    ];
+    readers.ebooks.mockResolvedValue(
+      ids.map(
+        (id, i) =>
+          ({
+            id,
+            title: `Książka ${i + 1}`,
+            slug: id,
+            publishedAt: "2026-10-20",
+            coverPath: "cover.jpg",
+            coverAlt: "",
+            format: "PDF",
+          }) as PublishedEbook,
+      ),
+    );
+    const result = await educationStorySteps(
+      {
+        steps: [
+          step({ type: "ebooks", source: "manual", ids: [...ids].reverse() }),
+        ],
+      },
+      [image],
+      {},
+    );
+    const html = renderToString(result[0]!.content);
+    expect(html.indexOf("Książka 2")).toBeLessThan(html.indexOf("Książka 1"));
+  });
+  it("excludes cancelled and past workshops", async () => {
+    readers.workshops.mockResolvedValue([
+      { id: "cancelled", status: "cancelled", endsAt: "2099-01-01" },
+      { id: "past", status: "published", endsAt: "2020-01-01" },
+    ] as PublicWorkshop[]);
+    const result = await educationStorySteps(
+      { steps: [step({ type: "workshops", source: "auto", ids: [] })] },
+      [image],
+      {},
+    );
+    expect(result[0]?.content).toBeUndefined();
+  });
+});

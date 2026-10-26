@@ -1454,6 +1454,36 @@
     transition-duration: 150ms;
   }
 
+  .ks-story__media {
+    width: 100%;
+  }
+  .ks-story[data-pinned] .ks-story__picture[data-rich] {
+    align-self: stretch;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  .ks-story[data-pinned] .ks-story__picture[data-rich]:not([data-active]) {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .ks-story[data-pinned] .ks-story__media {
+    flex-shrink: 0;
+    transform: scale(var(--ks-story-media-scale, 1));
+    transform-origin: top center;
+  }
+
+  .ks-story[data-pinned] .ks-education-gallery-track {
+    padding-top: 0;
+  }
+
+  .ks-story[data-pinned] .ks-education-books {
+    padding-top: 1rem;
+  }
+
   /* --------------------------------------------------------- Support areas */
 
   /* SupportAreas (support-areas.tsx), after Talking Walls' art counseling
@@ -3029,6 +3059,402 @@
 
     .ks-closing-banner__booking {
       width: 100%;
+    }
+  }
+}
+
+/* Education story compositions, approved in the local design study. */
+@layer components {
+  .ks-education-article,
+  .ks-education-books,
+  .ks-education-workshop {
+    position: relative;
+    isolation: isolate;
+  }
+  .ks-education-article {
+    --article-inset: clamp(1rem, 2.2vw, 2rem);
+    margin-inline: var(--article-inset);
+    height: 100%;
+  }
+  .ks-education-article::before,
+  .ks-education-books::before,
+  .ks-education-workshop-ticket::before,
+  .ks-education-empty::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: url("/crisis/crisis-wash-green-1.webp") center / 100% 100%
+      no-repeat;
+    opacity: 0.75;
+    pointer-events: none;
+  }
+  .ks-education-article-photo {
+    position: relative;
+    z-index: 1;
+    aspect-ratio: 3 / 2;
+    margin: 0;
+  }
+  .ks-education-article-photo img {
+    object-fit: cover;
+  }
+  .ks-education-article-content {
+    height: 100%;
+    mask-image: url("/education/article-photo-framed-mask.svg");
+    mask-size: 100% 100%;
+    mask-position: center;
+    mask-repeat: no-repeat;
+  }
+  .ks-education-article-frame {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    color: #769471;
+    pointer-events: none;
+  }
+  .ks-education-article::before {
+    inset-inline: 0;
+    background-image: url("/crisis/crisis-fill-green-1.webp");
+    opacity: 1;
+  }
+  .ks-education-gallery {
+    min-width: 0;
+  }
+  .ks-education-gallery-track {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 100%;
+    align-items: stretch;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-block: 2rem 1rem;
+  }
+  .ks-education-gallery-track::-webkit-scrollbar {
+    display: none;
+  }
+  .ks-education-gallery-slide {
+    min-width: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    padding-inline: 0.35rem;
+  }
+  .ks-education-gallery-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0 1.5rem;
+  }
+  .ks-education-gallery-count {
+    font-family: var(--font-display);
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+  .ks-education-gallery-count span {
+    color: var(--color-primary-strong);
+    font-size: 1.3rem;
+  }
+  .ks-education-gallery-dots,
+  .ks-education-gallery-arrows {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .ks-education-gallery-controls button {
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    background: transparent;
+    color: var(--color-ink);
+    border: 0;
+    cursor: pointer;
+  }
+  .ks-education-gallery-controls button:focus-visible {
+    outline: 2px solid var(--color-primary-strong);
+    outline-offset: 2px;
+    border-radius: 5px;
+  }
+  .ks-education-gallery-controls button:hover {
+    color: var(--color-primary-strong);
+  }
+  .ks-education-gallery-controls button:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+  .ks-education-gallery-dots button {
+    min-width: 30px;
+  }
+  .ks-education-gallery-dots span {
+    width: 7px;
+    height: 7px;
+    border-radius: 45% 55% 48% 52%;
+    background: currentColor;
+    opacity: 0.25;
+  }
+  .ks-education-gallery-dots [aria-current] span {
+    opacity: 1;
+    color: var(--color-primary-strong);
+    transform: scale(1.2);
+  }
+  .ks-education-article-body {
+    display: grid;
+    gap: 0.8rem;
+    padding: 1.5rem 2rem 3rem;
+  }
+  .ks-education-kicker {
+    color: var(--color-primary-strong);
+    font-size: 0.7rem;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    margin: 0;
+  }
+  .ks-education-material-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.45rem, 2.5vw, 2rem);
+    line-height: 1.28;
+    font-weight: 400;
+    color: var(--color-ink);
+    margin: 0;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+  .ks-education-excerpt {
+    color: var(--color-text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    margin: 0;
+  }
+  .ks-education-article-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.3rem;
+  }
+  .ks-education-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8125rem;
+    color: var(--color-primary-strong);
+  }
+  .ks-education-meta svg {
+    flex-shrink: 0;
+  }
+  .ks-education-books {
+    padding: 3rem 2rem 1.5rem;
+  }
+  .ks-education-books::before {
+    inset: 13% -2% 5%;
+    background-image: url("/crisis/crisis-wash-pink-2.webp");
+    opacity: 0.65;
+  }
+  .ks-education-book-shelf {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+    gap: 1.6rem;
+  }
+  .ks-education-book {
+    min-width: 0;
+    display: grid;
+    gap: 0.8rem;
+    align-content: start;
+  }
+  .ks-education-book-tall,
+  .ks-education-book-square {
+    position: relative;
+    margin: 0 0.2rem 1.1rem;
+    filter: drop-shadow(10px 15px 10px rgb(36 56 41 / 0.16));
+  }
+  .ks-education-book-tall {
+    aspect-ratio: 2 / 3;
+    transform: rotate(-5deg);
+  }
+  .ks-education-book-square {
+    aspect-ratio: 1;
+    transform: rotate(5deg);
+    margin-bottom: 1.8rem;
+  }
+  .ks-education-book-tall img,
+  .ks-education-book-square img {
+    object-fit: contain;
+  }
+  .ks-education-book-tall::after {
+    content: "";
+    position: absolute;
+    left: 2.5%;
+    width: 1px;
+    inset-block: 0;
+    background: rgb(255 255 255 / 0.45);
+    box-shadow: 2px 0 4px rgb(0 0 0 / 0.15);
+  }
+  .ks-education-book-format {
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-pink-strong);
+    margin: 0;
+  }
+  .ks-education-book-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    line-height: 1.4;
+    font-weight: 400;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .ks-education-book .ks-hand-link {
+    font-size: 0.875rem;
+    min-height: 44px;
+  }
+  .ks-education-workshop {
+    padding: 0.75rem 0.5rem 0;
+  }
+  .ks-education-workshop-photo {
+    position: relative;
+    z-index: 2;
+    margin: 0 0.75rem;
+  }
+  .ks-education-workshop-photo .ks-wc__backdrop img {
+    object-fit: contain;
+  }
+  .ks-education-workshop-ticket {
+    position: relative;
+    isolation: isolate;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 4.25rem minmax(0, 1fr);
+    gap: 1.25rem;
+    margin: -6rem clamp(1rem, 2.8vw, 2.5rem) 0;
+    padding: 8.5rem 2rem 2.5rem;
+  }
+  .ks-education-workshop-ticket::before {
+    background-image: url("/crisis/crisis-fill-pink-1.webp");
+    inset: 0;
+    opacity: 1;
+  }
+  .ks-education-workshop-frame {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    color: #b7807e;
+    pointer-events: none;
+  }
+  .ks-education-workshop-body {
+    display: grid;
+    gap: 0.8rem;
+    min-width: 0;
+  }
+  .ks-education-workshop-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    margin-block: 0.1rem 0.25rem;
+  }
+  .ks-education-date {
+    align-self: start;
+    display: grid;
+    justify-items: center;
+    gap: 0.25rem;
+    color: var(--color-primary-strong);
+    padding-block: 0.5rem;
+    font-size: 0.875rem;
+  }
+  .ks-education-date-day {
+    font-family: var(--font-display);
+    font-size: 3.5rem;
+    line-height: 1;
+    margin-top: 0.6rem;
+  }
+  .ks-education-date-year {
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+  .ks-education-empty {
+    position: relative;
+    isolation: isolate;
+    min-height: 20rem;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 1rem;
+    padding: 3rem;
+    text-align: center;
+  }
+  @media (max-width: 39.99rem) {
+    .ks-education-article-body {
+      padding: 1.25rem 1.4rem 2.5rem;
+    }
+    .ks-education-gallery-controls {
+      padding-inline: 0.75rem;
+    }
+    .ks-education-gallery-dots button {
+      min-width: 24px;
+    }
+    .ks-education-books {
+      padding: 2rem 0.5rem 1.5rem;
+    }
+    .ks-education-book-shelf {
+      gap: 1.15rem;
+    }
+    .ks-education-book-title {
+      font-size: 1.05rem;
+    }
+    .ks-education-book .ks-hand-link {
+      font-size: 0.75rem;
+    }
+    .ks-education-workshop {
+      padding-inline: 0;
+    }
+    .ks-education-workshop-ticket {
+      grid-template-columns: 3rem minmax(0, 1fr);
+      padding: 6rem 1rem 2rem;
+      gap: 0.75rem;
+      margin-top: -3.5rem;
+    }
+    .ks-education-date {
+      font-size: 0.75rem;
+    }
+    .ks-education-date-day {
+      font-size: 2.5rem;
+    }
+    .ks-education-workshop-body .ks-education-material-title {
+      font-size: 1.4rem;
+    }
+  }
+  @media (max-width: 22rem) {
+    .ks-education-book-shelf {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .ks-education-book-tall,
+    .ks-education-book-square {
+      width: 65%;
+      margin-inline: auto;
+    }
+    .ks-education-book {
+      justify-items: start;
+    }
+    .ks-education-workshop-ticket {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .ks-education-date {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: start;
+      padding: 0;
+    }
+    .ks-education-date-day {
+      margin: 0;
+      font-size: 1.5rem;
     }
   }
 }
