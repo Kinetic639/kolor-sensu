@@ -143,6 +143,7 @@ export {
   ArticleServices,
   ArticleSources,
   ArticleTrust,
+  PersonPhoto,
 } from "./article-page";
 export type { ArticlePersonData, ArticleServiceData } from "./article-page";
 export { ArticleShare } from "./article-share";

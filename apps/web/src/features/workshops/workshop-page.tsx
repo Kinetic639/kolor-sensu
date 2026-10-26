@@ -2,6 +2,7 @@ import { ArticleRenderer } from "@repo/ui/article-renderer";
 import {
   ArticleCover,
   JsonLd,
+  PersonPhoto,
   SoftCard,
   WorkshopFacts,
   WorkshopGrid,
@@ -33,9 +34,21 @@ import {
 } from "@/features/workshops/workshop-view";
 import { specialistHref } from "@/lib/presentation";
 import { WorkshopPlace } from "@/features/workshops/workshop-place";
-import { getSpecialistOffers } from "@/lib/public-data";
+import { ArticlesSection } from "@/features/education/articles-section";
+import { toPeople } from "@/features/education/article-page";
+import { getArticleCategories, getArticles } from "@/lib/education-data";
+import {
+  getServices,
+  getSpecialistOffers,
+  getSpecialists,
+  getWorkshopsPage,
+} from "@/lib/public-data";
 import { serviceHref } from "@/lib/site-frame";
-import { getWorkshops, workshopImageUrl } from "@/lib/workshop-data";
+import {
+  getWorkshopPicks,
+  getWorkshops,
+  workshopImageUrl,
+} from "@/lib/workshop-data";
 
 // A workshop's page, the site's and the admin's preview of a draft
 // (#197): the one H1 with when, where, who leads, the price and the seats;
@@ -56,12 +69,39 @@ export async function WorkshopPageView({
 }) {
   const now = new Date();
   const state = signupState(workshop, now);
-  // Powiązane (#185): other coming workshops, and the leader's services.
+  // Powiązane (#185): the services and articles the admin picked (the
+  // leader's services when no service is picked), other coming workshops.
   const leader = workshop.leaders[0] ?? null;
-  const [all, leaderOffers] = await Promise.all([
+  const [
+    all,
+    leaderOffers,
+    specialists,
+    words,
+    picks,
+    allServices,
+    allArticles,
+    categories,
+  ] = await Promise.all([
     getWorkshops(),
     leader ? getSpecialistOffers(leader.slug) : Promise.resolve([]),
+    getSpecialists(),
+    getWorkshopsPage(),
+    getWorkshopPicks(workshop.id, preview),
+    getServices(),
+    getArticles(),
+    getArticleCategories(),
   ]);
+  const pickedServices = allServices.filter((one) =>
+    picks.serviceIds.includes(one.id),
+  );
+  const pickedArticles = allArticles.filter((one) =>
+    picks.articleIds.includes(one.id),
+  );
+  // The leaders' photos, as their profiles show them (#230).
+  const photoOf = (slug: string) => {
+    const profile = specialists.find((one) => one.publicSlug === slug);
+    return profile ? (profile.portraitUrl ?? profile.photoUrl) : null;
+  };
   const others = relatedWorkshops(workshop, all, now).map((one) =>
     workshopCard(one, { now, timeZone, imageUrl: workshopImageUrl }),
   );
@@ -245,16 +285,30 @@ export async function WorkshopPageView({
           </h2>
           <ul className="grid gap-2">
             {workshop.leaders.map((leader) => (
-              <li className="text-body" key={leader.slug}>
-                <Link
-                  className="text-primary-strong font-semibold underline"
-                  href={specialistHref(leader.slug) as Route}
-                >
-                  {leader.name}
-                </Link>
-                {leader.title ? (
-                  <span className="text-text-muted">, {leader.title}</span>
-                ) : null}
+              <li
+                className="text-body flex items-center gap-3"
+                key={leader.slug}
+              >
+                <PersonPhoto
+                  person={{
+                    name: leader.name,
+                    href: specialistHref(leader.slug),
+                    title: leader.title,
+                    photoUrl: photoOf(leader.slug),
+                  }}
+                  size="size-12"
+                />
+                <span>
+                  <Link
+                    className="text-primary-strong font-semibold underline"
+                    href={specialistHref(leader.slug) as Route}
+                  >
+                    {leader.name}
+                  </Link>
+                  {leader.title ? (
+                    <span className="text-text-muted">, {leader.title}</span>
+                  ) : null}
+                </span>
               </li>
             ))}
           </ul>
@@ -288,10 +342,35 @@ export async function WorkshopPageView({
           {workshop.modality === "online" ? (
             <li>Link do spotkania wyślemy e-mailem dzień przed warsztatem.</li>
           ) : null}
+          {/* The ones every workshop shares, from the CMS (#231). */}
+          {words.rules.map((rule) => (
+            <li key={rule}>{rule}</li>
+          ))}
         </ul>
       </section>
 
-      {leader && services.length ? (
+      {pickedServices.length ? (
+        <section
+          aria-labelledby="powiazane-uslugi"
+          className="px-gutter mx-auto grid w-full max-w-[46rem] gap-3"
+        >
+          <h2 className="font-display text-h2 text-ink" id="powiazane-uslugi">
+            Powiązane usługi
+          </h2>
+          <ul className="grid gap-2">
+            {pickedServices.map((service) => (
+              <li className="text-body" key={service.slug}>
+                <Link
+                  className="text-primary-strong font-semibold underline"
+                  href={serviceHref(service.slug) as Route}
+                >
+                  {service.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : leader && services.length ? (
         <section
           aria-labelledby="z-prowadzacym"
           className="px-gutter mx-auto grid w-full max-w-[46rem] gap-3"
@@ -313,6 +392,14 @@ export async function WorkshopPageView({
           </ul>
         </section>
       ) : null}
+
+      <ArticlesSection
+        articles={pickedArticles}
+        categories={categories}
+        heading="Warto przeczytać"
+        id="artykuly-warsztatu"
+        people={toPeople(specialists)}
+      />
 
       {others.length ? (
         <section

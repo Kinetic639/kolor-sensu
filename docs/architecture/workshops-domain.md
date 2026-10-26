@@ -356,8 +356,15 @@ seat is over: the workshop ended, or the seat cancelled or lapsed.
 - **The way there** (#211): `locations.directions` ("Jak dojechać", in the
   location's form), under the address on the workshop's and the
   registration's pages and in the e-mails, beside a plain link to the maps.
-- **Related** (#185): under a workshop, the leader's services (each once)
-  and up to three other workshops still coming.
+- **Related** (#185): under a workshop, the services and articles the admin
+  picks ("Powiązane" in its form; `workshop_services`, `workshop_articles`,
+  saved with `save_workshop`, readable once it is not a draft), the
+  leader's services (each once) when no service is picked, and up to three
+  other workshops still coming.
+- **Leaders' photos** (#230): each leader with the photo of their profile.
+- **Shared rules** (#231): `workshops_page.rules` in the CMS ("Wspólne
+  zasady"), under each workshop's own (the refund date, paying later, its
+  minimum).
 - **Preview** (#197): "Podgląd" on a draft opens `/warsztaty/podglad/[id]`
   in Draft Mode; the site reads it with `workshop_preview` (secret key).
 - **Calendars** (#198): a workshop's blocked time says its confirmed seats

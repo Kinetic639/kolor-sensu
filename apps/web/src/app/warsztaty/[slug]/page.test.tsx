@@ -64,17 +64,51 @@ function workshop(patch: Partial<PublicWorkshop> = {}): PublicWorkshop {
   };
 }
 
+let picks = { serviceIds: [] as string[], articleIds: [] as string[] };
 let found: PublicWorkshop | null = workshop();
 let moved: string | null = null;
 vi.mock("@/lib/workshop-data", () => ({
   getWorkshop: async () => found,
   getWorkshops: async () => (found ? [found] : []),
   getWorkshopRedirect: async () => moved,
+  getWorkshopPicks: async () => picks,
   workshopImageUrl: (path: string) => `https://cdn.example.invalid/${path}`,
 }));
 vi.mock("@/lib/public-data", () => ({
   getBookingWindow: async () => ({ timeZone: "Europe/Warsaw" }),
   getSpecialistOffers: async () => [],
+  getWorkshopsPage: async () => ({ rules: ["Prosimy o punktualność."] }),
+  getServices: async () => [
+    { id: "s1", name: "Psychoterapia indywidualna", slug: "psychoterapia" },
+    { id: "s2", name: "Konsultacja", slug: "konsultacja" },
+  ],
+  getSpecialists: async () => [
+    {
+      publicSlug: "anna-nowak",
+      portraitUrl: "https://cdn.example.invalid/anna.jpg",
+      photoUrl: null,
+    },
+    { publicSlug: "ewa-lis", portraitUrl: null, photoUrl: null },
+  ],
+}));
+vi.mock("@/lib/education-data", () => ({
+  getArticles: async () => [
+    {
+      id: "a1",
+      slug: "czym-jest-lek",
+      title: "Czym jest lęk",
+      lead: "Krótko",
+      coverPath: null,
+      categoryId: null,
+      authorKind: "team",
+      authorSpecialistId: null,
+      publishedAt: "2026-10-01T10:00:00Z",
+      body: { type: "doc", content: [] },
+      coverAlt: "",
+    },
+  ],
+  getArticleCategories: async () => [],
+  articleImageUrl: (path: string) => `https://cdn.example.invalid/${path}`,
 }));
 vi.mock("next/navigation", () => ({
   notFound: () => {
@@ -96,6 +130,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   found = workshop();
+  picks = { serviceIds: [], articleIds: [] };
 });
 afterEach(cleanup);
 
@@ -201,6 +236,59 @@ describe("the leaders", () => {
       "href",
       "/specjalisci/ewa-lis",
     );
+  });
+
+  it("show the profile's photo, when there is one (#230)", async () => {
+    const { container } = await open();
+    const photos = [...container.querySelectorAll("img")].filter((img) =>
+      decodeURIComponent(img.getAttribute("src") ?? "").includes("anna.jpg"),
+    );
+    expect(photos).toHaveLength(1);
+    expect(container.querySelectorAll("li img")).toHaveLength(1);
+  });
+});
+
+describe("the rules", () => {
+  it("are the workshop's own, then the ones every workshop shares (#231)", async () => {
+    await open();
+    const rules = screen
+      .getByRole("heading", { name: "Zasady" })
+      .parentElement!.querySelectorAll("li");
+    expect(rules[0]).toHaveTextContent(/pełny zwrot/);
+    expect(rules[rules.length - 1]).toHaveTextContent(
+      "Prosimy o punktualność.",
+    );
+  });
+});
+
+describe("Powiązane (#185)", () => {
+  it("are the services and articles the admin picked", async () => {
+    picks = { serviceIds: ["s2"], articleIds: ["a1"] };
+    await open();
+    expect(
+      screen.getByRole("heading", { name: "Powiązane usługi" }),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "Konsultacja" })).toHaveAttribute(
+      "href",
+      "/oferta/konsultacja",
+    );
+    expect(
+      screen.queryByRole("link", { name: "Psychoterapia indywidualna" }),
+    ).toBeNull();
+    expect(
+      screen.getByRole("heading", { name: "Warto przeczytać" }),
+    ).toBeVisible();
+    expect(screen.getByText("Czym jest lęk")).toBeVisible();
+  });
+
+  it("leave out what was not picked", async () => {
+    await open();
+    expect(
+      screen.queryByRole("heading", { name: "Powiązane usługi" }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("heading", { name: "Warto przeczytać" }),
+    ).toBeNull();
   });
 });
 

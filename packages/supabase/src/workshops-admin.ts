@@ -114,6 +114,9 @@ export interface AdminWorkshopRecord {
   seoDescription: string | null;
   specialistId: string;
   coLeaderIds: string[];
+  /** Its "Powiązane" (#185). */
+  serviceIds: string[];
+  articleIds: string[];
   modality: WorkshopModality;
   locationId: string | null;
   roomId: string | null;
@@ -140,6 +143,12 @@ export function adminWorkshopRecord(value: Json): AdminWorkshopRecord | null {
     typeof row[key] === "string" ? (row[key] as string) : null;
   const number = (key: string) =>
     typeof row[key] === "number" ? (row[key] as number) : null;
+  const ids = (key: string) => {
+    const list = row[key];
+    return Array.isArray(list)
+      ? list.filter((one): one is string => typeof one === "string")
+      : [];
+  };
   return {
     id: text("id") ?? "",
     slug: text("slug") ?? "",
@@ -154,11 +163,9 @@ export function adminWorkshopRecord(value: Json): AdminWorkshopRecord | null {
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
     specialistId: text("specialist_id") ?? "",
-    coLeaderIds: Array.isArray(row.co_leader_ids)
-      ? row.co_leader_ids.filter(
-          (one): one is string => typeof one === "string",
-        )
-      : [],
+    coLeaderIds: ids("co_leader_ids"),
+    serviceIds: ids("service_ids"),
+    articleIds: ids("article_ids"),
     modality: (text("modality") ?? "in_person") as WorkshopModality,
     locationId: text("location_id"),
     roomId: text("room_id"),
@@ -201,6 +208,8 @@ export interface WorkshopPayload {
   seo_description: string;
   specialist_id: string;
   co_leader_ids: string[];
+  service_ids: string[];
+  article_ids: string[];
   modality: WorkshopModality;
   location_id: string | null;
   room_id: string | null;
