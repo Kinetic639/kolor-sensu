@@ -77,6 +77,19 @@ describe("the newsletter form", () => {
     expect(verify).toBeDefined();
   });
 
+  it("explains the disabled button on keyboard focus until verification succeeds", async () => {
+    render(<NewsletterSignup {...props} />);
+    fireEvent.focus(
+      screen.getByRole("group", { name: "Dlaczego zapis jest niedostępny?" }),
+    );
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "Zapis będzie dostępny po zakończeniu weryfikacji bezpieczeństwa",
+    );
+    act(() => verify?.());
+    expect(screen.getByRole("button", { name: "Zapisz się" })).toBeEnabled();
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
+
   it("sends where it came from and says to check the inbox", async () => {
     render(<NewsletterSignup {...props} source="footer" compact />);
     await submit();

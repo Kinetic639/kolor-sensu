@@ -8,6 +8,12 @@ import {
 import { BookingField, ConsentCheckbox } from "@repo/ui/booking/fields";
 import { cn } from "@repo/ui/lib/utils";
 import { PrimaryButton } from "@repo/ui/public-site/actions";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@repo/ui/tooltip";
 import { useActionState, useId, useState } from "react";
 import { TurnstileWidget } from "@/features/booking/turnstile-widget";
 import { subscribeToNewsletterAction } from "./actions";
@@ -78,6 +84,43 @@ export function NewsletterSignup({
   const email = "email" in result ? result.email : undefined;
   const errors = result.status === "invalid" ? result.errors : {};
   const failure = FAILURE[result.status];
+  const disabled = pending || !verified;
+  const disabledReason = pending
+    ? "Trwa zapisywanie adresu. Poczekaj chwilę."
+    : "Zapis będzie dostępny po zakończeniu weryfikacji bezpieczeństwa. Kliknij pole e-mail, aby ją uruchomić, i poczekaj na potwierdzenie pod formularzem.";
+  const submitButton = (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            aria-label={
+              disabled ? "Dlaczego zapis jest niedostępny?" : undefined
+            }
+            className={cn(
+              "inline-flex max-w-full",
+              !compact && "w-full",
+              disabled && "cursor-help",
+            )}
+            role={disabled ? "group" : undefined}
+            tabIndex={disabled ? 0 : undefined}
+          >
+            <PrimaryButton
+              className="disabled:bg-[#dedede] disabled:text-[#606060] disabled:opacity-100 disabled:shadow-none"
+              disabled={disabled}
+              type="submit"
+            >
+              {pending ? "Zapisywanie…" : "Zapisz się"}
+            </PrimaryButton>
+          </span>
+        </TooltipTrigger>
+        {disabled ? (
+          <TooltipContent className="bg-ink text-surface font-body max-w-72 rounded-xl text-sm leading-relaxed">
+            {disabledReason}
+          </TooltipContent>
+        ) : null}
+      </Tooltip>
+    </TooltipProvider>
+  );
 
   return (
     <div className={cn("grid gap-3", className)}>
@@ -108,15 +151,7 @@ export function NewsletterSignup({
             type="email"
           />
           {!compact ? (
-            <div className="ks-newsletter-signup__submit">
-              <PrimaryButton
-                className="disabled:bg-[#dce5d9] disabled:text-[#52634e] disabled:opacity-100 disabled:shadow-none"
-                disabled={pending || !verified}
-                type="submit"
-              >
-                {pending ? "Zapisywanie…" : "Zapisz się"}
-              </PrimaryButton>
-            </div>
+            <div className="ks-newsletter-signup__submit">{submitButton}</div>
           ) : null}
         </div>
         {/* For bots only: people never see or fill it. */}
@@ -151,13 +186,7 @@ export function NewsletterSignup({
             {failure}
           </p>
         ) : null}
-        {compact ? (
-          <div>
-            <PrimaryButton disabled={pending || !verified} type="submit">
-              {pending ? "Zapisywanie…" : "Zapisz się"}
-            </PrimaryButton>
-          </div>
-        ) : null}
+        {compact ? <div>{submitButton}</div> : null}
       </form>
     </div>
   );
