@@ -2,11 +2,9 @@ import type { SectionHeaderContent } from "@repo/contracts/section-header";
 import { useId, type ReactNode } from "react";
 import { cn } from "../lib/utils";
 import { SectionHeader } from "./section-header";
-import { SoftCard } from "./surfaces";
 
 // Server-safe: the newsletter band. Its words (and an optional call to
-// action) are the CMS's header; the site puts its signing-up form under
-// them (children).
+// action) are the CMS's header; the site supplies its signing-up form.
 
 export interface NewsletterBandProps {
   header: SectionHeaderContent;
@@ -26,20 +24,21 @@ export function NewsletterBand({
   return (
     <section
       aria-labelledby={headingId}
-      className={cn("max-w-page px-gutter py-section-sm mx-auto", className)}
+      className={cn("ks-newsletter-band", className)}
       id={id}
     >
-      <SoftCard className="p-8 lg:p-12" tone="cream">
+      <div className="ks-newsletter-band__paint" aria-hidden="true" />
+      <div className="ks-newsletter-band__inner max-w-page px-gutter mx-auto">
         <SectionHeader
-          align="center"
           content={header}
           id={headingId}
-          size="h3"
+          size="h2"
+          className="ks-newsletter-band__copy"
         />
         {children ? (
-          <div className="mx-auto mt-8 w-full max-w-xl">{children}</div>
+          <div className="ks-newsletter-band__signup">{children}</div>
         ) : null}
-      </SoftCard>
+      </div>
     </section>
   );
 }

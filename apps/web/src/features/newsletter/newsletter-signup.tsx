@@ -91,20 +91,34 @@ export function NewsletterSignup({
         action={send}
         aria-labelledby={compact ? headingId : undefined}
         aria-label={compact ? undefined : "Zapis na newsletter"}
-        className="grid gap-4"
+        className={cn("grid gap-4", !compact && "ks-newsletter-signup")}
         noValidate
         onFocus={() => setArmed(true)}
       >
         <input name="source" type="hidden" value={source} />
-        <BookingField
-          autoComplete="email"
-          defaultValue={email}
-          error={errors.email}
-          label="Adres e-mail"
-          name="email"
-          required
-          type="email"
-        />
+        <div className={cn(compact ? "contents" : "ks-newsletter-signup__row")}>
+          <BookingField
+            autoComplete="email"
+            defaultValue={email}
+            error={errors.email}
+            label="Adres e-mail"
+            placeholder={compact ? undefined : "Adres e-mail"}
+            name="email"
+            required
+            type="email"
+          />
+          {!compact ? (
+            <div className="ks-newsletter-signup__submit">
+              <PrimaryButton
+                className="disabled:bg-[#dce5d9] disabled:text-[#52634e] disabled:opacity-100 disabled:shadow-none"
+                disabled={pending || !verified}
+                type="submit"
+              >
+                {pending ? "Zapisywanie…" : "Zapisz się"}
+              </PrimaryButton>
+            </div>
+          ) : null}
+        </div>
         {/* For bots only: people never see or fill it. */}
         <div aria-hidden="true" className="hidden">
           <label>
@@ -137,11 +151,13 @@ export function NewsletterSignup({
             {failure}
           </p>
         ) : null}
-        <div>
-          <PrimaryButton disabled={pending || !verified} type="submit">
-            {pending ? "Zapisywanie…" : "Zapisz się"}
-          </PrimaryButton>
-        </div>
+        {compact ? (
+          <div>
+            <PrimaryButton disabled={pending || !verified} type="submit">
+              {pending ? "Zapisywanie…" : "Zapisz się"}
+            </PrimaryButton>
+          </div>
+        ) : null}
       </form>
     </div>
   );

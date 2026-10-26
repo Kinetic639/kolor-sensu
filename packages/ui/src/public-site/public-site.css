@@ -2328,6 +2328,116 @@
   inherits: true;
   initial-value: 1.25rem;
 }
+/* Full-width newsletter paint, with the readable content on the page grid. */
+@layer components {
+  .ks-newsletter-band {
+    position: relative;
+    isolation: isolate;
+    margin-block: 2.5rem;
+    margin-bottom: var(--spacing-section);
+  }
+
+  .ks-newsletter-band__paint {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: url("/watercolor/closing-banner-paint-mobile.webp") center /
+      100% 115% no-repeat;
+    opacity: 0.85;
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      black 9%,
+      black 91%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  .ks-newsletter-band__inner {
+    display: grid;
+    align-items: start;
+    gap: 1.75rem;
+    padding-block: 2.75rem;
+  }
+
+  .ks-newsletter-band__copy,
+  .ks-newsletter-band__signup {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .ks-newsletter-band__copy > p:last-of-type {
+    font-size: 0.9375rem;
+    line-height: 1.65;
+  }
+
+  .ks-newsletter-signup__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
+  }
+
+  .ks-newsletter-signup__row label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .ks-newsletter-signup__submit button {
+    width: 100%;
+    height: auto;
+    min-height: 3rem;
+    white-space: normal;
+    padding-block: 0.75rem;
+  }
+
+  .ks-newsletter-signup input[type="email"] {
+    background-color: rgb(255 255 255 / 78%);
+    border-radius: 1.125rem 1rem 1.25rem 0.875rem;
+  }
+
+  .ks-newsletter-signup label:has(a) {
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+
+  @media (min-width: 30rem) {
+    .ks-newsletter-signup__row {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .ks-newsletter-band__paint {
+      background-image: url("/watercolor/closing-banner-paint.webp");
+      background-size: 120% 100%;
+      background-position: right center;
+    }
+
+    .ks-newsletter-band__inner {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: clamp(2rem, 5vw, 5rem);
+      padding-block: 3rem;
+    }
+
+    .ks-newsletter-band__copy {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .ks-newsletter-band__signup {
+      grid-column: 1;
+      grid-row: 1;
+    }
+  }
+}
+
 /* The artwork stays outside the paint layer so the tall plant can rise
    above it. The mobile layout keeps the scene above the readable copy. */
 @layer components {
