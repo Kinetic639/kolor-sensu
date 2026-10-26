@@ -6,7 +6,8 @@ import type {
 } from "@repo/contracts/section-header";
 import { Fragment } from "react";
 import { cn } from "../lib/utils";
-import { ArrowLink, PrimaryButton, SecondaryButton } from "./actions";
+import { PrimaryButton, SecondaryButton } from "./actions";
+import { HanddrawnLink } from "./handdrawn-link";
 import { PageLink } from "./page-link";
 import { EditorialHeading, SectionEyebrow } from "./typography";
 
@@ -169,9 +170,9 @@ function HeaderCta({
 }) {
   if (style === "arrow") {
     return (
-      <ArrowLink href={href} className={className}>
+      <HanddrawnLink href={href} className={className}>
         {label}
-      </ArrowLink>
+      </HanddrawnLink>
     );
   }
   const Button = style === "button" ? PrimaryButton : SecondaryButton;

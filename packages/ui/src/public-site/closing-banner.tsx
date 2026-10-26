@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { useId } from "react";
-import { ArrowLink, PrimaryButton } from "./actions";
+import { PrimaryButton } from "./actions";
+import { HanddrawnLink } from "./handdrawn-link";
 import { PageLink } from "./page-link";
 import { EditorialHeading, SectionEyebrow } from "./typography";
 
@@ -51,7 +52,7 @@ export function ClosingBanner({
           <PrimaryButton asChild arrow className="ks-closing-banner__booking">
             <PageLink href="/umow-wizyte">{bookingLabel}</PageLink>
           </PrimaryButton>
-          <ArrowLink href="/kontakt">{contactLabel}</ArrowLink>
+          <HanddrawnLink href="/kontakt">{contactLabel}</HanddrawnLink>
         </div>
       </div>
     </section>

@@ -85,9 +85,11 @@ describe("SectionHeader", () => {
         content={{ ...full, cta: { ...full.cta!, style: "arrow" } }}
       />,
     );
-    expect(screen.getByRole("link", { name: /Zobacz ofertę/ })).toHaveClass(
-      "underline",
-    );
+    const drawnLink = screen.getByRole("link", { name: /Zobacz ofertę/ });
+    expect(
+      drawnLink.querySelector('[data-ink-stroke="underline"]'),
+    ).not.toBeNull();
+    expect(drawnLink.querySelector('[data-ink-stroke="shaft"]')).not.toBeNull();
   });
 
   it("leaves out what is empty: no eyebrow, description or call to action", () => {

@@ -16,8 +16,8 @@ export function HanddrawnLink({
   className,
 }: HanddrawnLinkProps) {
   return (
-    <InkReveal as="span" className="ks-hand-link-wrap">
-      <PageLink href={href} className={cn("ks-hand-link", className)}>
+    <InkReveal as="span" className={cn("ks-hand-link-wrap", className)}>
+      <PageLink href={href} className="ks-hand-link">
         <span className="ks-hand-link__label">
           {children}
           <svg

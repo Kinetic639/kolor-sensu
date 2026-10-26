@@ -1,7 +1,7 @@
 import type { ImageProps } from "next/image";
 import type { ReactNode } from "react";
 import { cn } from "../lib/utils";
-import { ArrowLink } from "./actions";
+import { HanddrawnLink } from "./handdrawn-link";
 import { EditorialHeading, SectionEyebrow } from "./typography";
 import type { SectionHeaderContent } from "@repo/contracts/section-header";
 import { SectionHeader } from "./section-header";
@@ -96,9 +96,9 @@ export function FeatureSection({
             </p>
           ) : null}
           {cta ? (
-            <ArrowLink href={cta.href} className="justify-self-start">
+            <HanddrawnLink href={cta.href} className="justify-self-start">
               {cta.label}
-            </ArrowLink>
+            </HanddrawnLink>
           ) : null}
         </div>
       )}
