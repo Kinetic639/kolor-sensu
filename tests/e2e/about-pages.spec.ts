@@ -143,3 +143,15 @@ test("Kontakt's form says what is wrong at each field, keeping what was typed", 
   await expect(form.getByText("Podaj poprawny adres e-mail")).toBeVisible();
   await expect(form.getByLabel("Imię", { exact: true })).toHaveValue("Ola");
 });
+
+test("Kontakt's form starts with the message the booking page sends (#203)", async ({
+  page,
+}) => {
+  const message = "Dzień dobry, szukam terminu: Konsultacja, online.";
+  await open(
+    page,
+    `/kontakt?wiadomosc=${encodeURIComponent(message)}#formularz`,
+  );
+  await expect(page.getByLabel(/Wiadomość/)).toHaveValue(message);
+  await expect(page.locator("#formularz")).toBeInViewport();
+});

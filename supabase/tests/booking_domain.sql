@@ -356,6 +356,29 @@ BEGIN
     RAISE EXCEPTION 'L: inside the notice';
   END IF;
   UPDATE public.center_settings SET min_booking_lead_minutes = 60;
+
+  -- L2: the soonest free time (#203): the first of the list, also from a
+  -- day with nothing free; none past the horizon, nor for an unknown offer.
+  IF public.next_free_slot('booking-test-consultation', 'booking-test-anna', 'online', t.monday)
+     IS DISTINCT FROM (
+       SELECT min(starts_at) FROM public.list_free_slots(
+         'booking-test-consultation', 'booking-test-anna', 'online', t.monday, t.monday + 13)
+     ) THEN
+    RAISE EXCEPTION 'L2: not the first free time';
+  END IF;
+  IF public.next_free_slot('booking-test-consultation', 'booking-test-anna', 'online', t.monday - 1)
+     IS DISTINCT FROM public.next_free_slot('booking-test-consultation', 'booking-test-anna', 'online', t.monday) THEN
+    RAISE EXCEPTION 'L2: a Sunday did not lead on to the week';
+  END IF;
+  IF public.next_free_slot('booking-test-consultation', 'booking-test-anna', 'online', current_date + 61) IS NOT NULL
+     OR public.next_free_slot('booking-test-consultation', 'no-such-specialist', 'online', t.monday) IS NOT NULL THEN
+    RAISE EXCEPTION 'L2: a time past the horizon or for no offer';
+  END IF;
+  UPDATE public.center_settings SET max_booking_horizon_days = 1;
+  IF public.next_free_slot('booking-test-consultation', 'booking-test-anna', 'online', t.tuesday) IS NOT NULL THEN
+    RAISE EXCEPTION 'L2: past a short horizon';
+  END IF;
+  UPDATE public.center_settings SET max_booking_horizon_days = 60;
 END;
 $$;
 
