@@ -1,6 +1,7 @@
 -- The readers that fill a form or sort a list give the name's two parts
 -- too (20261026120000): a held visit and a workshop seat (their details
--- filled in again), a client's card (edited), and the two client lists,
+-- filled in again), a client's card (edited) and a visit's client (that
+-- card), and the two client lists,
 -- which now sort by the last name and find "Nowak Anna" as well as
 -- "Anna Nowak". Each is its whole current body (20261006120000,
 -- 20261025150000) with the parts last; its grants as before.
@@ -84,6 +85,26 @@ BEGIN
   FROM public.clients AS client
   LEFT JOIN private.client_totals() AS totals ON totals.client_id = client.id
   WHERE client.id = p_id;
+END;
+$$;
+
+-- A visit's client is the card above, so its columns follow.
+DROP FUNCTION public.get_visit_client(uuid);
+CREATE FUNCTION "public"."get_visit_client"("p_visit_id" "uuid") RETURNS TABLE("id" "uuid", "name" "text", "email" "text", "phone" "text", "notes" "text", "visits" integer, "upcoming" integer, "cancelled" integer, "last_visit_at" timestamp with time zone, "next_visit_at" timestamp with time zone, "paid_minor" integer, "created_at" timestamp with time zone, "updated_at" timestamp with time zone, "first_name" "text", "last_name" "text")
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+#variable_conflict use_column
+BEGIN
+  IF NOT public.has_role('admin') THEN
+    RAISE EXCEPTION 'Only the centre sees its clients'
+      USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  RETURN QUERY
+  SELECT found.*
+  FROM public.appointments AS visit
+  CROSS JOIN LATERAL public.get_client(visit.client_id) AS found
+  WHERE visit.id = p_visit_id AND visit.client_id IS NOT NULL;
 END;
 $$;
 
@@ -263,6 +284,8 @@ REVOKE ALL ON FUNCTION public.search_clients(text, boolean, timestamptz, timesta
 GRANT ALL ON FUNCTION public.search_clients(text, boolean, timestamptz, timestamptz, timestamptz, timestamptz, text, boolean, integer, integer) TO authenticated, service_role;
 REVOKE ALL ON FUNCTION public.get_client(uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.get_client(uuid) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.get_visit_client(uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_visit_client(uuid) TO authenticated, service_role;
 REVOKE ALL ON FUNCTION public.my_clients(text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.my_clients(text) TO authenticated, service_role;
 REVOKE ALL ON FUNCTION public.get_booking(text) FROM PUBLIC;
