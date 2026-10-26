@@ -52,6 +52,27 @@ describe("bookingDetailsSchema", () => {
     });
   });
 
+  it("takes names and notes with emoji and Polish letters, as written", () => {
+    const parsed = bookingDetailsSchema.parse({
+      ...valid,
+      firstName: "Zoë 🌿",
+      lastName: "Żółć-Łęcka",
+      notes: "Pierwsza wizyta 🙂",
+    });
+    expect(parsed.firstName).toBe("Zoë 🌿");
+    expect(parsed.lastName).toBe("Żółć-Łęcka");
+    expect(parsed.notes).toBe("Pierwsza wizyta 🙂");
+  });
+
+  it("keeps names short", () => {
+    expect(errors({ firstName: "a".repeat(101) })).toEqual({
+      firstName: "Imię może mieć najwyżej 100 znaków.",
+    });
+    expect(errors({ lastName: "a".repeat(101) })).toEqual({
+      lastName: "Nazwisko może mieć najwyżej 100 znaków.",
+    });
+  });
+
   it("keeps notes short", () => {
     expect(errors({ notes: "a".repeat(1001) })).toEqual({
       notes: "Uwagi mogą mieć najwyżej 1000 znaków.",
