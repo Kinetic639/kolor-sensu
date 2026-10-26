@@ -22,7 +22,9 @@ test.skip(
   !process.env.E2E_PAYMENTS,
   "The payment tests run with E2E_PAYMENTS=1 (see the top of this file).",
 );
-test.describe.configure({ mode: "serial" });
+// Not retried: with the BLIK test they make the five bookings one browser
+// may make in 15 minutes (the hold limit), so a retry would be refused.
+test.describe.configure({ mode: "serial", retries: 0 });
 
 // Stripe's test cards (docs.stripe.com/testing).
 const CARDS = {
@@ -37,12 +39,20 @@ async function payByCard(page: Page, number: string) {
   await payment.locator('input[name="number"]').fill(number);
   await payment.locator('input[name="expiry"]').fill("12 / 34");
   await payment.locator('input[name="cvc"]').fill("123");
+  // Stripe asks for a postal code where the browser seems to be in a
+  // country that uses it (CI runs in the US), not in Poland.
+  const postalCode = payment.locator('input[name="postalCode"]');
+  if (await postalCode.isVisible().catch(() => false)) {
+    await postalCode.fill("10001");
+  }
   await payButton(page).click();
 }
 
 // Stripe's test 3D Secure page opens in frames over ours (nested, their
-// names Stripe's own): whichever frame has "Complete", it is clicked.
+// names Stripe's own): whichever frame has "Complete", it is clicked, again
+// while the page stays (a click before its script is ready does nothing).
 async function completeThreeDSecure(page: Page) {
+  let clicked = false;
   await expect
     .poll(
       async () => {
@@ -50,17 +60,28 @@ async function completeThreeDSecure(page: Page) {
           const button = frame.getByRole("button", { name: /^complete$/i });
           if (
             (await button.count()) > 0 &&
-            (await button.first().isVisible())
+            (await button
+              .first()
+              .isVisible()
+              .catch(() => false))
           ) {
-            await button.first().click();
-            return true;
+            await button
+              .first()
+              .click({ timeout: 5_000 })
+              .catch(() => undefined);
+            clicked = true;
+            return "open";
           }
         }
-        return false;
+        return clicked ? "done" : "waiting";
       },
-      { timeout: 60_000, message: "Stripe's 3D Secure page did not open" },
+      {
+        timeout: 90_000,
+        intervals: [2_000],
+        message: "Stripe's 3D Secure page did not open and close",
+      },
     )
-    .toBe(true);
+    .toBe("done");
 }
 
 test.beforeEach(() => {
@@ -111,6 +132,11 @@ test("Przelewy24 confirms the visit after the bank's (test) approval", async ({
   if ((await bank.count()) > 0) {
     await bank.first().selectOption({ index: 1 });
   }
+  // Przelewy24 needs the payer's name, which Stripe is not sent from the
+  // details step (only the e-mail and the reference): typed here again.
+  await payment
+    .getByRole("textbox", { name: "Imię i nazwisko" })
+    .fill("Gość E2E");
   await payButton(page).click();
   // Stripe's test page for redirects: approve the payment.
   await page

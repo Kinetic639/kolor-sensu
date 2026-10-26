@@ -26,6 +26,12 @@ describe("the booking's details form", () => {
     expect(box!.checked).toBe(false);
   });
 
+  it("shows no error before the client sends anything (#24)", () => {
+    render(<DetailsForm payLater={null} saved={null} />);
+    expect(document.querySelectorAll('[aria-invalid="true"]')).toHaveLength(0);
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
   it("leaves it out while the newsletter is off", () => {
     render(<DetailsForm payLater={null} saved={null} />);
     expect(
