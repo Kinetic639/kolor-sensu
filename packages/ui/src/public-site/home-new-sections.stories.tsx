@@ -77,7 +77,7 @@ export const Newsletter: Story = {
     <NewsletterBand
       header={plainHeader({
         eyebrow: "Newsletter",
-        title: "Bądźmy w kontakcie",
+        title: ["Bądźmy", "w kontakcie"],
         description: "Artykuły, warsztaty i nowości z centrum, raz w miesiącu.",
       })}
     />
@@ -119,7 +119,7 @@ export const NewsletterWithForm: Story = {
     <NewsletterBand
       header={plainHeader({
         eyebrow: "Newsletter",
-        title: "Bądźmy w kontakcie",
+        title: ["Bądźmy", "w kontakcie"],
         description: "Artykuły, warsztaty i nowości z centrum, raz w miesiącu.",
       })}
     >

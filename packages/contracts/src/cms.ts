@@ -619,7 +619,7 @@ export const defaultHomeHeaders: HomeHeadersContent = {
   }),
   newsletter: plainHeader({
     eyebrow: "Newsletter",
-    title: "Bądźmy w kontakcie",
+    title: ["Bądźmy", "w kontakcie"],
     description: "Artykuły, warsztaty i nowości z centrum, raz w miesiącu.",
   }),
   location: plainHeader({
