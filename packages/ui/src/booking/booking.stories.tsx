@@ -11,6 +11,7 @@ import { expect } from "storybook/test";
 import { PrimaryButton } from "../public-site/actions";
 import {
   BookingChoiceCard,
+  BookingCrisisNote,
   BookingField,
   BookingStepper,
   ConsentCheckbox,
@@ -390,5 +391,32 @@ export const DetailsWithErrors: Story = {
     await expect(
       canvas.getByRole("checkbox", { name: "Akceptuję regulamin rezerwacji" }),
     ).toBeRequired();
+  },
+};
+
+/** Help in a crisis under every step of the wizard (#247). */
+export const CrisisNote: Story = {
+  render: () => (
+    <BookingCrisisNote
+      href="/pomoc-w-kryzysie"
+      lines={[
+        {
+          number: "112",
+          label: "Numer alarmowy",
+          detail: "gdy życie jest w bezpośrednim zagrożeniu",
+        },
+        {
+          number: "116 123",
+          label: "Kryzysowy Telefon Zaufania",
+          detail: "dla dorosłych",
+        },
+      ]}
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("link", { name: "116 123" })).toHaveAttribute(
+      "href",
+      "tel:116123",
+    );
   },
 };
