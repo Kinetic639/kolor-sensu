@@ -43,10 +43,15 @@ test("on a computer every menu item leads to a page", async ({
     }
   };
   await collect();
-  // A dropdown's pages show once it is open.
-  const triggers = nav.getByRole("button");
-  for (let at = 0; at < (await triggers.count()); at++) {
-    await triggers.nth(at).click();
+  // A dropdown's pages show once it is open. Pointed at, it opens (right
+  // after another closes, at once: a click then would close it again).
+  for (const label of await nav.getByRole("button").allInnerTexts()) {
+    const trigger = nav.getByRole("button", {
+      name: label.trim(),
+      exact: true,
+    });
+    await trigger.hover();
+    await expect(trigger).toHaveAttribute("aria-expanded", "true");
     await collect();
     await page.keyboard.press("Escape");
   }
