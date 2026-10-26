@@ -3,6 +3,7 @@ import { AnnouncementBar, type SiteAnnouncement } from "./announcement-bar";
 import { CursorRing } from "./cursor-ring";
 import { JsonLd } from "./json-ld";
 import { SiteFooter } from "./site-footer";
+import type { CrisisLine } from "./crisis-strip";
 import { SiteHeader } from "./site-header";
 import { SiteIntro } from "./site-intro";
 import { logoMarkSrc } from "./site-logo";
@@ -41,6 +42,7 @@ export interface SiteLayoutProps {
   company?: string | null;
   /** The newsletter's sign-up form, in the footer (when it is on). */
   newsletter?: ReactNode;
+  crisisLines?: readonly CrisisLine[];
   children: ReactNode;
 }
 
@@ -58,6 +60,7 @@ export function SiteLayout({
   announcement = null,
   company = null,
   newsletter = null,
+  crisisLines,
   children,
 }: SiteLayoutProps) {
   return (
@@ -87,6 +90,7 @@ export function SiteLayout({
         year={year}
         company={company}
         newsletter={newsletter}
+        crisisLines={crisisLines}
       />
       <CursorRing />
       {siteUrl ? (

@@ -2343,6 +2343,270 @@
   inherits: true;
   initial-value: 1.25rem;
 }
+/* A brushed footer with short, progressively disclosed navigation. */
+@layer components {
+  .ks-footer {
+    position: relative;
+    isolation: isolate;
+    margin-top: 1.5rem;
+  }
+  .ks-footer__paint {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    /* Slice the real painted top separately, so its bristles stay shallow
+       even when mobile content or an expanded menu makes the footer tall. */
+    border-style: solid;
+    border-color: transparent;
+    border-width: 2.75rem 0 0;
+    border-image-source: url("/watercolor/footer-paint-pink-brush-v2.webp");
+    border-image-slice: 110 0 0 fill;
+    border-image-width: 2.75rem 0 0;
+    border-image-repeat: stretch;
+    pointer-events: none;
+  }
+  .ks-footer__crisis {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    align-items: start;
+    gap: 0.75rem 2rem;
+    padding-block: 1.5rem;
+    margin-block: 0.25rem 1.5rem;
+    color: var(--color-pink-strong);
+    font-size: 0.875rem;
+  }
+  .ks-footer__crisis-rule {
+    position: absolute;
+    left: var(--spacing-gutter);
+    right: var(--spacing-gutter);
+    width: calc(100% - 2 * var(--spacing-gutter));
+    height: 22px;
+    pointer-events: none;
+  }
+  .ks-footer__crisis-rule--top {
+    top: -8px;
+  }
+  .ks-footer__crisis-rule--bottom {
+    bottom: -8px;
+  }
+  .ks-footer__crisis-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-pink-strong);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .ks-footer__crisis-title > svg {
+    width: 1.375rem;
+    height: 1.375rem;
+    flex-shrink: 0;
+  }
+  .ks-footer__crisis-numbers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 1rem 1.25rem;
+  }
+  .ks-footer__crisis-numbers a {
+    display: grid;
+    align-content: start;
+    gap: 0.25rem;
+    min-height: 1.75rem;
+    overflow-wrap: anywhere;
+  }
+  .ks-footer__crisis-number {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .ks-footer__crisis-label {
+    color: inherit;
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+  .ks-footer__crisis-detail {
+    color: inherit;
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+  @media (min-width: 48rem) {
+    .ks-footer__crisis-numbers {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 64rem) {
+    .ks-footer__crisis {
+      grid-template-columns: 10rem minmax(0, 1fr);
+    }
+  }
+  .ks-footer__crisis a:hover,
+  .ks-footer__crisis a:focus-visible {
+    color: var(--color-pink-strong);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .ks-footer__main {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.75rem 1.5rem;
+    padding-block: 3rem 1.75rem;
+  }
+  .ks-footer__main > * {
+    min-width: 0;
+  }
+  .ks-footer__brand {
+    display: grid;
+    align-content: start;
+    gap: 0.875rem;
+    grid-column: 1 / -1;
+  }
+  .ks-footer__about {
+    max-width: 26rem;
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+    line-height: 1.65;
+  }
+  .ks-footer__social {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--color-primary-strong);
+    background: rgb(255 255 255 / 40%);
+    border-radius: 47% 53% 49% 51% / 52% 46% 54% 48%;
+    transition: background-color 180ms;
+  }
+  .ks-footer__social:hover {
+    background: rgb(255 255 255 / 80%);
+  }
+  .ks-footer__title {
+    margin-bottom: 0.75rem;
+    color: var(--color-primary-strong);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .ks-footer__links {
+    display: grid;
+    gap: 0.125rem;
+  }
+  .ks-footer__links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.75rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .ks-footer__more {
+    margin-top: 0.5rem;
+  }
+  .ks-footer__more summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 1.75rem;
+    color: var(--color-primary-strong);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+  .ks-footer__more summary::-webkit-details-marker {
+    display: none;
+  }
+  .ks-footer__more summary:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 3px;
+  }
+  .ks-footer__more[open] summary {
+    margin-bottom: 0.5rem;
+  }
+  .ks-footer__more[open] summary svg {
+    transform: rotate(180deg);
+  }
+  .ks-footer__contact {
+    grid-column: 1 / -1;
+  }
+  .ks-footer__contact address {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-wrap: anywhere;
+  }
+  .ks-footer__newsletter {
+    padding-bottom: 1.5rem;
+  }
+  .ks-newsletter-compact {
+    display: grid;
+    align-items: start;
+    gap: 1rem;
+  }
+  .ks-newsletter-compact__copy {
+    display: grid;
+    gap: 0.35rem;
+  }
+  .ks-newsletter-compact__heading {
+    font-family: var(--font-display);
+    color: var(--color-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  .ks-newsletter-compact .ks-newsletter-signup__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .ks-newsletter-compact .ks-newsletter-signup__submit button {
+    min-height: 3.25rem;
+    padding-inline: 1.25rem;
+  }
+  .ks-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    padding-block: 0.75rem 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+  .ks-footer__legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+  }
+  @media (min-width: 36rem) {
+    .ks-footer__contact address {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 48rem) {
+    .ks-footer__main {
+      padding-top: 3.5rem;
+    }
+    .ks-newsletter-compact {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.5fr);
+      gap: 2rem;
+    }
+  }
+  @media (min-width: 64rem) {
+    .ks-footer__main {
+      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+      gap: 2.5rem;
+    }
+    .ks-footer__brand,
+    .ks-footer__contact {
+      grid-column: auto;
+    }
+    .ks-footer__contact address {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+
 /* The location's contact details and local map illustration share the paper palette. */
 @layer components {
   .ks-location {

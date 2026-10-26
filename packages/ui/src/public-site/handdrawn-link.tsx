@@ -20,29 +20,7 @@ export function HanddrawnLink({
       <PageLink href={href} className="ks-hand-link">
         <span className="ks-hand-link__label">
           {children}
-          <svg
-            className="ks-hand-link__underline"
-            viewBox="0 0 360 14"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-            focusable="false"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-          >
-            <path
-              data-ink-stroke="underline"
-              d="M 3 8 C 46 6.4 75 9.1 112 7.3 S 181 8.6 220 7.1 S 302 7.8 356 5.6"
-              strokeWidth="1.9"
-              strokeOpacity="0.85"
-            />
-            <path
-              data-ink-stroke="underline"
-              d="M 5 8.7 C 50 7 79 9.5 116 8 S 182 9.2 222 7.8 S 302 8.3 354 6.4"
-              strokeWidth="0.45"
-              strokeOpacity="0.28"
-            />
-          </svg>
+          <HanddrawnUnderline />
         </span>
         <svg
           className="ks-hand-link__arrow"
@@ -75,5 +53,38 @@ export function HanddrawnLink({
         </svg>
       </PageLink>
     </InkReveal>
+  );
+}
+
+/** Shared brush strokes for short link underlines. */
+export function HanddrawnUnderline({
+  className = "ks-hand-link__underline",
+}: {
+  className?: string;
+}) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 360 14"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      focusable="false"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+    >
+      <path
+        data-ink-stroke="underline"
+        d="M 3 8 C 46 6.4 75 9.1 112 7.3 S 181 8.6 220 7.1 S 302 7.8 356 5.6"
+        strokeWidth="1.9"
+        strokeOpacity="0.85"
+      />
+      <path
+        data-ink-stroke="underline"
+        d="M 5 8.7 C 50 7 79 9.5 116 8 S 182 9.2 222 7.8 S 302 8.3 354 6.4"
+        strokeWidth="0.45"
+        strokeOpacity="0.28"
+      />
+    </svg>
   );
 }

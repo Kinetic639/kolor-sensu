@@ -97,6 +97,16 @@ describe("the newsletter form", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Sprawdź skrzynkę");
   });
 
+  it("keeps the footer's consent out of the initial strip and reveals it unchecked when signing up", () => {
+    render(<NewsletterSignup {...props} source="footer" compact />);
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    fireEvent.focus(screen.getByLabelText("Adres e-mail"));
+    expect(screen.getByRole("checkbox")).not.toBeChecked();
+    expect(
+      screen.getByRole("link", { name: "polityce prywatności" }),
+    ).toHaveAttribute("href", "/polityka-prywatnosci");
+  });
+
   it("shows the errors at their fields and keeps the address", async () => {
     next = {
       status: "invalid",

@@ -63,7 +63,7 @@ export function NewsletterSignup({
   const headingId = useId();
 
   const heading = compact ? (
-    <h2 className="text-eyebrow text-text-muted uppercase" id={headingId}>
+    <h2 className="ks-newsletter-compact__heading" id={headingId}>
       Newsletter
     </h2>
   ) : null;
@@ -98,7 +98,7 @@ export function NewsletterSignup({
             }
             className={cn(
               "inline-flex max-w-full",
-              !compact && "w-full",
+              "w-full",
               disabled && "cursor-help",
             )}
             role={disabled ? "group" : undefined}
@@ -123,36 +123,43 @@ export function NewsletterSignup({
   );
 
   return (
-    <div className={cn("grid gap-3", className)}>
-      {heading}
+    <div
+      className={cn(
+        compact ? "ks-newsletter-compact" : "grid gap-3",
+        className,
+      )}
+    >
       {compact ? (
-        <p className="text-small text-text-muted">
-          Artykuły, warsztaty i nowości z centrum, mniej więcej raz w miesiącu.
-        </p>
-      ) : null}
+        <div className="ks-newsletter-compact__copy">
+          {heading}
+          <p className="text-small text-text-muted">
+            Artykuły i nowości z centrum. Raz w miesiącu.
+          </p>
+        </div>
+      ) : (
+        heading
+      )}
       <form
         action={send}
         aria-labelledby={compact ? headingId : undefined}
         aria-label={compact ? undefined : "Zapis na newsletter"}
-        className={cn("grid gap-4", !compact && "ks-newsletter-signup")}
+        className="ks-newsletter-signup grid gap-4"
         noValidate
         onFocus={() => setArmed(true)}
       >
         <input name="source" type="hidden" value={source} />
-        <div className={cn(compact ? "contents" : "ks-newsletter-signup__row")}>
+        <div className="ks-newsletter-signup__row">
           <BookingField
             autoComplete="email"
             defaultValue={email}
             error={errors.email}
             label="Adres e-mail"
-            placeholder={compact ? undefined : "Adres e-mail"}
+            placeholder="Adres e-mail"
             name="email"
             required
             type="email"
           />
-          {!compact ? (
-            <div className="ks-newsletter-signup__submit">{submitButton}</div>
-          ) : null}
+          <div className="ks-newsletter-signup__submit">{submitButton}</div>
         </div>
         {/* For bots only: people never see or fill it. */}
         <div aria-hidden="true" className="hidden">
@@ -165,14 +172,16 @@ export function NewsletterSignup({
             />
           </label>
         </div>
-        <ConsentCheckbox
-          defaultChecked={false}
-          error={errors.consent}
-          linkHref="/polityka-prywatnosci"
-          linkLabel={NEWSLETTER_CONSENT_LINK_LABEL}
-          name="consent"
-          text={newsletterConsentLead(controller)}
-        />
+        {!compact || armed ? (
+          <ConsentCheckbox
+            defaultChecked={false}
+            error={errors.consent}
+            linkHref="/polityka-prywatnosci"
+            linkLabel={NEWSLETTER_CONSENT_LINK_LABEL}
+            name="consent"
+            text={newsletterConsentLead(controller)}
+          />
+        ) : null}
         {armed ? (
           <TurnstileWidget
             onError={() => setVerified(false)}
@@ -186,7 +195,6 @@ export function NewsletterSignup({
             {failure}
           </p>
         ) : null}
-        {compact ? <div>{submitButton}</div> : null}
       </form>
     </div>
   );

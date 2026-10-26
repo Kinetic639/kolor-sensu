@@ -12,7 +12,11 @@ import { PreviewBar } from "@/components/preview-bar";
 import { NewsletterSignup } from "@/features/newsletter/newsletter-signup";
 import { newsletterSiteKey } from "@/features/newsletter/site-key";
 import { baseOpenGraph } from "@/lib/page-metadata";
-import { getCompany, getNewsletterBand } from "@/lib/public-data";
+import {
+  getCompany,
+  getCrisisHelp,
+  getNewsletterBand,
+} from "@/lib/public-data";
 import { getSiteFrame } from "@/lib/site-frame";
 import "./globals.css";
 
@@ -64,7 +68,13 @@ export default async function RootLayout({
     { navigation, cta, contact, socials, legal, about, announcement, company },
     newsletterBand,
     companyDetails,
-  ] = await Promise.all([getSiteFrame(), getNewsletterBand(), getCompany()]);
+    crisis,
+  ] = await Promise.all([
+    getSiteFrame(),
+    getNewsletterBand(),
+    getCompany(),
+    getCrisisHelp(),
+  ]);
   // The newsletter's form in the footer, once the CMS shows the newsletter
   // (and the site can check for bots).
   const turnstileSiteKey = newsletterBand.visible ? newsletterSiteKey() : null;
@@ -87,6 +97,7 @@ export default async function RootLayout({
           legal={legal}
           about={about}
           company={company}
+          crisisLines={crisis.lines}
           newsletter={
             turnstileSiteKey ? (
               <NewsletterSignup
