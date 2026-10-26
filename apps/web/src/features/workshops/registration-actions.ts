@@ -88,11 +88,16 @@ export async function transferMySeatAction(
 ): Promise<TransferState> {
   const token = tokenOf(formData);
   const person = {
-    name: String(formData.get("name") ?? "").trim(),
+    firstName: String(formData.get("firstName") ?? "").trim(),
+    lastName: String(formData.get("lastName") ?? "").trim(),
     email: String(formData.get("email") ?? "").trim(),
     phone: String(formData.get("phone") ?? "").trim(),
   };
-  if (!person.name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(person.email))
+  if (
+    !person.firstName ||
+    !person.lastName ||
+    !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(person.email)
+  )
     return { status: "invalid", message: TRANSFER_PROBLEMS.invalid_details! };
   const db = createSecretClient();
   try {

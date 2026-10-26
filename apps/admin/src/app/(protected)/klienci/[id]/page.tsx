@@ -61,7 +61,8 @@ export default async function ClientPage({
                 action={updateClientAction}
                 clientId={card.client.id}
                 details={{
-                  name: card.client.name,
+                  firstName: card.client.firstName,
+                  lastName: card.client.lastName,
                   email: card.client.email,
                   phone: card.client.phone,
                   notes: card.client.notes,

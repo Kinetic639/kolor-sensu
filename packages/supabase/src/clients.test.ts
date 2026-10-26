@@ -29,6 +29,8 @@ const row = {
 const client = {
   id: "client-1",
   name: "Jan Kowalski",
+  firstName: "Jan",
+  lastName: "Kowalski",
   email: "jan@example.invalid",
   phone: "600 100 200",
   notes: "Woli popołudnia",
@@ -116,7 +118,8 @@ describe("getClient and listClientVisits", () => {
 
 describe("updateClient", () => {
   const details = {
-    name: "Jan Kowalski",
+    firstName: "Jan",
+    lastName: "Kowalski",
     email: "jan.k@example.invalid",
     phone: null,
     notes: null,
@@ -132,7 +135,8 @@ describe("updateClient", () => {
     });
     expect(rpc).toHaveBeenCalledWith("admin_update_client", {
       p_id: "client-1",
-      p_name: "Jan Kowalski",
+      p_first_name: "Jan",
+      p_last_name: "Kowalski",
       p_email: "jan.k@example.invalid",
       p_phone: null,
       p_notes: null,

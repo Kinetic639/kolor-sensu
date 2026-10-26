@@ -2549,7 +2549,8 @@ export type Database = {
       save_workshop_registration_details: {
         Args: {
           p_access_token: string;
-          p_name: string;
+          p_first_name: string;
+          p_last_name: string;
           p_email: string;
           p_phone: string | null;
           p_notes: string | null;
@@ -2570,7 +2571,8 @@ export type Database = {
         Args: {
           p_slug: string;
           p_client_key: string;
-          p_name: string;
+          p_first_name: string;
+          p_last_name: string;
           p_email: string;
           p_phone: string | null;
           p_notes: string | null;
@@ -2620,6 +2622,8 @@ export type Database = {
           workshop_cancel_reason: string | null;
           paid_outside: boolean;
           location_directions: string | null;
+          client_first_name: string | null;
+          client_last_name: string | null;
         }[];
       };
       apply_workshop_discount: {
@@ -2717,7 +2721,8 @@ export type Database = {
       centre_add_workshop_participant: {
         Args: {
           p_workshop_id: string;
-          p_name: string;
+          p_first_name: string;
+          p_last_name: string;
           p_email: string;
           p_phone: string | null;
           p_notes: string | null;
@@ -2899,7 +2904,8 @@ export type Database = {
       transfer_workshop_seat: {
         Args: {
           p_access_token: string;
-          p_name: string;
+          p_first_name: string;
+          p_last_name: string;
           p_email: string;
           p_phone: string | null;
         };
@@ -3035,6 +3041,8 @@ export type Database = {
           phone: string | null;
           upcoming: number;
           visits: number;
+          first_name: string | null;
+          last_name: string | null;
         }[];
       };
       client_duplicates: {
@@ -3171,7 +3179,8 @@ export type Database = {
       centre_book_visit: {
         Args: {
           p_client_email: string | null;
-          p_client_name: string;
+          p_client_first_name: string;
+          p_client_last_name: string;
           p_client_notes: string | null;
           p_client_phone: string | null;
           p_mode: Database["public"]["Enums"]["visit_mode"];
@@ -3233,7 +3242,8 @@ export type Database = {
         Args: {
           p_email: string;
           p_id: string;
-          p_name: string;
+          p_first_name: string;
+          p_last_name: string;
           p_notes: string | null;
           p_phone: string | null;
         };
@@ -3343,6 +3353,8 @@ export type Database = {
           specialist_name: string;
           starts_at: string;
           status: Database["public"]["Enums"]["appointment_status"];
+          client_first_name: string | null;
+          client_last_name: string | null;
         }[];
       };
       get_visit: {
@@ -3500,6 +3512,8 @@ export type Database = {
           paid_minor: number;
           created_at: string;
           updated_at: string;
+          first_name: string | null;
+          last_name: string | null;
         }[];
       };
       mark_notification_read: {
@@ -3530,6 +3544,8 @@ export type Database = {
           paid_minor: number;
           created_at: string;
           updated_at: string;
+          first_name: string | null;
+          last_name: string | null;
         }[];
       };
       list_settlements: {
@@ -3633,6 +3649,8 @@ export type Database = {
           paid_minor: number;
           created_at: string;
           total_count: number;
+          first_name: string | null;
+          last_name: string | null;
         }[];
       };
       mark_booking_email_sent: {
@@ -3939,7 +3957,8 @@ export type Database = {
           p_accept_terms: boolean;
           p_access_token: string;
           p_email: string;
-          p_name: string;
+          p_first_name: string;
+          p_last_name: string;
           p_notes: string;
           p_phone: string;
         };

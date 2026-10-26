@@ -23,6 +23,7 @@ describe("clientRows", () => {
       {
         id: "client-1",
         name: "Jan Kowalski",
+        listName: "Kowalski Jan",
         email: "jan@example.invalid",
         phone: "600 100 200",
         notes: null,
@@ -35,6 +36,22 @@ describe("clientRows", () => {
         href: "/klienci/client-1",
       },
     ]);
+  });
+
+  it("lists by the last name, as the parts were given", () => {
+    const [row] = clientRows(
+      [
+        {
+          ...client,
+          name: "Jan de la Cruz",
+          firstName: "Jan",
+          lastName: "de la Cruz",
+        },
+      ],
+      { timeZone: "Europe/Warsaw" },
+    );
+    expect(row?.listName).toBe("de la Cruz Jan");
+    expect(row?.name).toBe("Jan de la Cruz");
   });
 
   it("no visits yet, nothing to come", () => {

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { localDateSchema } from "./availability";
+import { personNameFields } from "./person-name";
 
 // The client's details in online booking (docs/product/booking-plan.md,
 // R5): only what the visit needs. The database checks the same limits.
@@ -7,11 +8,7 @@ import { localDateSchema } from "./availability";
 const PHONE = /^\+?[\d\s()-]+$/;
 
 export const bookingDetailsSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, "Podaj imię i nazwisko.")
-    .max(200, "Imię i nazwisko mogą mieć najwyżej 200 znaków."),
+  ...personNameFields,
   email: z
     .string()
     .trim()
@@ -63,11 +60,7 @@ export const centreBookingSchema = z
       .string()
       .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Podaj godzinę (GG:MM)."),
     roomId: z.uuid("Wybierz gabinet.").nullable(),
-    name: z
-      .string()
-      .trim()
-      .min(2, "Podaj imię i nazwisko.")
-      .max(200, "Imię i nazwisko mogą mieć najwyżej 200 znaków."),
+    ...personNameFields,
     email: z
       .string()
       .trim()

@@ -164,7 +164,7 @@ export function ClientTable({
             defaults={defaultClientLayout()}
             labels={CLIENT_COLUMN_SET.labels}
             layout={layout}
-            pinnedLabel="Klient"
+            pinnedLabel={CLIENT_COLUMN_SET.pinned.label}
           />
         ) : undefined
       }
@@ -195,7 +195,7 @@ export function ClientTable({
           href={href}
           scroll={false}
         >
-          {row.name}
+          {row.listName}
         </Link>
       )}
       pinnedSort={sortOf("nazwisko")}

@@ -38,7 +38,8 @@ describe("the booking's details form", () => {
       <DetailsForm
         payLater={null}
         prefill={{
-          name: "Ola Klientka",
+          firstName: "Ola",
+          lastName: "Klientka",
           email: "ola@example.invalid",
           phone: "600 100 200",
           notes: "Pierwsza wizyta",
@@ -46,9 +47,11 @@ describe("the booking's details form", () => {
         saved={null}
       />,
     );
-    expect(screen.getByLabelText(/Imię i nazwisko/)).toHaveProperty(
+    // Apart: the first name and the last name (25.10).
+    expect(screen.getByLabelText(/^Imię/)).toHaveProperty("value", "Ola");
+    expect(screen.getByLabelText(/^Nazwisko/)).toHaveProperty(
       "value",
-      "Ola Klientka",
+      "Klientka",
     );
     expect(screen.getByDisplayValue("ola@example.invalid")).toBeTruthy();
     expect(screen.getByDisplayValue("600 100 200")).toBeTruthy();

@@ -8,7 +8,8 @@ function form(values: Record<string, string>) {
 }
 
 const filled = {
-  name: "Jan Kowalski",
+  firstName: "Jan",
+  lastName: "Kowalski",
   email: "jan@example.com",
   phone: "600 100 200",
   notes: "",
@@ -21,7 +22,8 @@ describe("readDetailsForm", () => {
     expect(readDetailsForm(form(filled))).toEqual({
       ok: true,
       details: {
-        name: "Jan Kowalski",
+        firstName: "Jan",
+        lastName: "Kowalski",
         email: "jan@example.com",
         phone: "600 100 200",
         notes: null,

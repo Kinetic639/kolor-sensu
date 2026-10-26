@@ -80,7 +80,8 @@ export interface CentreBookingInput {
   /** In person only. */
   roomId: string | null;
   client: {
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phone: string | null;
     notes: string | null;
@@ -106,7 +107,8 @@ export async function centreBookVisit(
     p_mode: input.mode,
     p_starts_at: input.startsAt,
     p_room_id: input.mode === "in_person" ? input.roomId : null,
-    p_client_name: input.client.name,
+    p_client_first_name: input.client.firstName,
+    p_client_last_name: input.client.lastName,
     p_client_email: input.client.email,
     p_client_phone: input.client.phone,
     p_client_notes: input.client.notes,

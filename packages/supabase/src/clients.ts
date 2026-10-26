@@ -1,3 +1,4 @@
+import { nameParts } from "@repo/contracts/person-name";
 import type { Database } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { toVisit, type Visit } from "./visits";
@@ -12,6 +13,8 @@ type Client = SupabaseClient<Database>;
 export interface CentreClient {
   id: string;
   name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string | null;
   /** The centre's internal note (never shown to the client or specialists). */
@@ -95,6 +98,8 @@ function clientError(error: {
 interface ClientRowLike {
   id: string;
   name: string;
+  first_name?: string | null;
+  last_name?: string | null;
   email: string;
   phone: string | null;
   notes: string | null;
@@ -111,6 +116,7 @@ function toClient(row: ClientRowLike): CentreClient {
   return {
     id: row.id,
     name: row.name,
+    ...nameParts(row.name, row.first_name, row.last_name),
     email: row.email,
     phone: row.phone,
     notes: row.notes,
@@ -186,7 +192,8 @@ export async function listClientVisits(
 }
 
 export interface ClientDetails {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string | null;
   notes: string | null;
@@ -203,7 +210,8 @@ export async function updateClient(
 ): Promise<{ upcomingUpdated: number }> {
   const { data, error } = await client.rpc("admin_update_client", {
     p_id: id,
-    p_name: details.name,
+    p_first_name: details.firstName,
+    p_last_name: details.lastName,
     p_email: details.email,
     p_phone: details.phone,
     p_notes: details.notes,
@@ -277,6 +285,8 @@ export async function mergeClients(
 export interface MyClient {
   id: string;
   name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string | null;
   /** Visits with this specialist that take place (paid or to pay). */
@@ -301,6 +311,7 @@ export async function listMyClients(
   return (data ?? []).map((row) => ({
     id: row.id,
     name: row.name,
+    ...nameParts(row.name, row.first_name, row.last_name),
     email: row.email,
     phone: row.phone,
     visits: row.visits,

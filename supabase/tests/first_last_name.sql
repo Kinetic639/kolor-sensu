@@ -139,4 +139,36 @@ BEGIN
 END;
 $$;
 
+-- E: the admin's list finds a client by either order of the name and sorts
+-- by the last name; the card gives the parts.
+INSERT INTO public.clients (email, name, first_name, last_name)
+VALUES ('names-c@example.invalid', 'ignored', 'Adam', 'Żak'),
+       ('names-d@example.invalid', 'ignored', 'Ewa', 'Abacka');
+SELECT set_config('request.jwt.claims',
+  '{"sub":"7f200000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE
+  v_order text;
+  v_card record;
+BEGIN
+  IF (SELECT count(*) FROM public.search_clients(p_query => 'berg zofia')) <> 1
+     OR (SELECT count(*) FROM public.search_clients(p_query => 'zofia van')) <> 1 THEN
+    RAISE EXCEPTION 'E: not found by either order of the name';
+  END IF;
+  SELECT string_agg(found.last_name, ', ' ORDER BY found.ordinality) INTO v_order
+  FROM public.search_clients(p_sort => 'name', p_desc => false, p_limit => 100)
+    WITH ORDINALITY AS found
+  WHERE found.email IN ('names-b@example.invalid', 'names-c@example.invalid', 'names-d@example.invalid');
+  IF v_order <> 'Abacka, van der Berg, Żak' THEN
+    RAISE EXCEPTION 'E: sorted as %', v_order;
+  END IF;
+  SELECT * INTO v_card FROM public.get_client((SELECT id FROM names_ids));
+  IF v_card.first_name <> 'Zofia' OR v_card.last_name <> 'van der Berg' THEN
+    RAISE EXCEPTION 'E: the card''s parts: % / %', v_card.first_name, v_card.last_name;
+  END IF;
+END;
+$$;
+RESET ROLE;
+
 ROLLBACK;

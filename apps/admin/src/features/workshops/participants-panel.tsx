@@ -397,7 +397,8 @@ function AddParticipant({
 }) {
   const { isPending, run } = useSave();
   const [person, setPerson] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     notes: "",
@@ -419,11 +420,18 @@ function AddParticipant({
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <TextField
-          id="add-name"
-          label="Imię i nazwisko"
-          maxLength={200}
-          onChange={(name) => change({ name })}
-          value={person.name}
+          id="add-first-name"
+          label="Imię"
+          maxLength={100}
+          onChange={(firstName) => change({ firstName })}
+          value={person.firstName}
+        />
+        <TextField
+          id="add-last-name"
+          label="Nazwisko"
+          maxLength={100}
+          onChange={(lastName) => change({ lastName })}
+          value={person.lastName}
         />
         <TextField
           id="add-email"

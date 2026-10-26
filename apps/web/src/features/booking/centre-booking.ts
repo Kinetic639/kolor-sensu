@@ -65,7 +65,8 @@ export async function bookVisitAsCentre(
       ).toISOString(),
       roomId: booking.mode === "in_person" ? booking.roomId : null,
       client: {
-        name: booking.name,
+        firstName: booking.firstName,
+        lastName: booking.lastName,
         email: booking.email,
         phone: booking.phone,
         notes: booking.notes,

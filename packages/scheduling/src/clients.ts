@@ -1,3 +1,4 @@
+import { nameParts, sortName } from "@repo/contracts/person-name";
 import { formatInTimeZone } from "date-fns-tz";
 import type { VisitLike } from "./visits";
 
@@ -9,6 +10,8 @@ import type { VisitLike } from "./visits";
 export interface ClientLike {
   id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   phone: string | null;
   notes: string | null;
@@ -24,6 +27,8 @@ export interface ClientLike {
 export interface ClientRow {
   id: string;
   name: string;
+  /** `Kowalski Jan`: the list reads and sorts by the last name. */
+  listName: string;
   email: string;
   phone: string | null;
   /** The centre's note about them. */
@@ -77,6 +82,9 @@ export function clientRows(
   return clients.map((client) => ({
     id: client.id,
     name: client.name,
+    listName: sortName(
+      nameParts(client.name, client.firstName, client.lastName),
+    ),
     email: client.email,
     phone: client.phone,
     notes: client.notes,

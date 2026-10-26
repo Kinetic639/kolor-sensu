@@ -7,7 +7,8 @@ import {
 } from "./booking";
 
 const valid = {
-  name: "  Anna Nowak ",
+  firstName: "  Anna ",
+  lastName: " Nowak ",
   email: " Anna@Example.com ",
   phone: "+48 600 100 200",
   notes: "",
@@ -27,7 +28,8 @@ function errors(input: object) {
 describe("bookingDetailsSchema", () => {
   it("tidies the details: trimmed, e-mail in lower case, no empty notes", () => {
     expect(bookingDetailsSchema.parse(valid)).toEqual({
-      name: "Anna Nowak",
+      firstName: "Anna",
+      lastName: "Nowak",
       email: "anna@example.com",
       phone: "+48 600 100 200",
       notes: null,
@@ -36,8 +38,9 @@ describe("bookingDetailsSchema", () => {
     });
   });
 
-  it("asks for a name, a real e-mail and a phone number", () => {
-    expect(errors({ name: " " })).toEqual({ name: "Podaj imię i nazwisko." });
+  it("asks for a first and a last name, a real e-mail and a phone number", () => {
+    expect(errors({ firstName: " " })).toEqual({ firstName: "Podaj imię." });
+    expect(errors({ lastName: "" })).toEqual({ lastName: "Podaj nazwisko." });
     expect(errors({ email: "anna@" })).toEqual({
       email: "Podaj poprawny adres e-mail.",
     });
@@ -71,7 +74,8 @@ describe("centreBookingSchema", () => {
     date: "2030-10-02",
     time: "12:15",
     roomId: "20000000-0000-4000-8000-000000000001",
-    name: " Ewa Klientka ",
+    firstName: " Ewa ",
+    lastName: " Klientka ",
     email: " Ewa@Example.com ",
     phone: "",
     notes: "",
@@ -88,7 +92,8 @@ describe("centreBookingSchema", () => {
   it("cleans a booking up", () => {
     expect(centreBookingSchema.parse(booking)).toEqual({
       ...booking,
-      name: "Ewa Klientka",
+      firstName: "Ewa",
+      lastName: "Klientka",
       email: "ewa@example.com",
       phone: null,
       notes: null,
@@ -108,9 +113,9 @@ describe("centreBookingSchema", () => {
       date: "Podaj poprawną datę.",
       time: "Podaj godzinę (GG:MM).",
     });
-    expect(problems({ offerId: "", name: "E" })).toEqual({
+    expect(problems({ offerId: "", lastName: "" })).toEqual({
       offerId: "Wybierz usługę.",
-      name: "Podaj imię i nazwisko.",
+      lastName: "Podaj nazwisko.",
     });
   });
 });
