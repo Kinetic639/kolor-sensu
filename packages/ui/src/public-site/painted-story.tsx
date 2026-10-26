@@ -34,6 +34,8 @@ import {
 } from "./watercolor-paint-matte";
 
 export interface PaintedStoryStep {
+  /** Server-rendered educational composition; the image remains its fallback. */
+  content?: ReactNode;
   heading: ReactNode;
   text: ReactNode;
   cta?: { href: string; label: ReactNode };
@@ -109,6 +111,7 @@ export function PaintedStory({
 }: PaintedStoryProps) {
   const ref = useRef<HTMLElement>(null);
   const total = steps.length;
+  const composed = steps.some((step) => !!step.content);
   const numbered = (value: number) => String(value).padStart(2, "0");
 
   useLazyGsap(
@@ -152,6 +155,9 @@ export function PaintedStory({
               stops.delete(at);
               delete picture.dataset.shown;
             }
+            if (at === index) picture.dataset.active = "true";
+            else delete picture.dataset.active;
+            picture.inert = at !== index;
           });
           texts.forEach((text, at) => {
             if (at === index) text.dataset.active = "true";
@@ -174,6 +180,37 @@ export function PaintedStory({
         // after that, scrolling chooses the step.
         texts[0]!.dataset.active = "true";
         texts.forEach((text, at) => (text.inert = at !== 0));
+        pictures.forEach((picture, at) => {
+          picture.inert = at !== 0;
+          if (at === 0) picture.dataset.active = "true";
+        });
+        // Every rich slide shares the same stage. Scale the entire composition
+        // uniformly when a short screen cannot fit the tallest card.
+        const resizeMedia = () => {
+          const content = pictures.flatMap((picture) => [
+            ...picture.querySelectorAll<HTMLElement>(".ks-story__media"),
+          ]);
+          const tallest = Math.max(
+            0,
+            ...content.map((node) => node.offsetHeight),
+          );
+          const available = pictures[0]?.clientHeight ?? 0;
+          root.style.setProperty(
+            "--ks-story-media-scale",
+            String(tallest && available ? Math.min(1, available / tallest) : 1),
+          );
+        };
+        const resizeObserver =
+          typeof ResizeObserver === "function"
+            ? new ResizeObserver(resizeMedia)
+            : null;
+        pictures.forEach((picture) => {
+          resizeObserver?.observe(picture);
+          picture
+            .querySelectorAll(".ks-story__media")
+            .forEach((node) => resizeObserver?.observe(node));
+        });
+        resizeMedia();
         count(0);
         let started = false;
         const stopWatch = watchReveal(root, {
@@ -197,6 +234,8 @@ export function PaintedStory({
         });
 
         return () => {
+          resizeObserver?.disconnect();
+          root.style.removeProperty("--ks-story-media-scale");
           stopWatch();
           trigger.kill();
           stops.forEach((stop) => stop());
@@ -303,14 +342,21 @@ export function PaintedStory({
                 </HanddrawnLink>
               ) : null}
             </div>
-            <div className="ks-story__picture">
-              <WatercolorImage
-                src={step.image.src}
-                alt={step.image.alt}
-                objectPosition={step.image.objectPosition}
-                {...watercolor}
-                sizes="(min-width: 1024px) 62vw, calc(117vw - 3rem)"
-              />
+            <div
+              className="ks-story__picture"
+              data-rich={composed ? "true" : undefined}
+            >
+              <div className="ks-story__media">
+                {step.content ?? (
+                  <WatercolorImage
+                    src={step.image.src}
+                    alt={step.image.alt}
+                    objectPosition={step.image.objectPosition}
+                    {...watercolor}
+                    sizes="(min-width: 1024px) 62vw, calc(117vw - 3rem)"
+                  />
+                )}
+              </div>
             </div>
           </div>
         ))}

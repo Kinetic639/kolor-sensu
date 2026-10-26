@@ -23,7 +23,8 @@ import {
   hero,
   storyImages,
 } from "@/content/site";
-import { toStorySteps, withHomeContent } from "@/lib/home-content";
+import { withHomeContent } from "@/lib/home-content";
+import { educationStorySteps } from "@/features/education/home-story";
 import { toSpecialistCard } from "@/lib/presentation";
 import {
   getCrisisHelp,
@@ -95,6 +96,7 @@ export default async function Home() {
   const newsletterKey = newsletter.visible ? newsletterSiteKey() : null;
   const spotlight = toSpotlight(sections, specialists);
   const roomPhotos = toRoomsPeekPhotos(roomGroups);
+  const storySteps = await educationStorySteps(story, storyImages, watercolor);
 
   return (
     <>
@@ -142,7 +144,7 @@ export default async function Home() {
       <HomeWorkshops />
       <PaintedStory
         header={headers.story}
-        steps={toStorySteps(story, storyImages)}
+        steps={storySteps}
         watercolor={watercolor}
       />
       {newsletterKey ? (

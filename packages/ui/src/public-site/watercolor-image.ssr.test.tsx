@@ -61,6 +61,7 @@ describe("WatercolorImage on the server", () => {
       "article-share.tsx",
       "cookie-consent.tsx",
       "cursor-ring.tsx",
+      "education-gallery.tsx",
       "first-steps.tsx",
       "ink-reveal.tsx",
       "intro-motion.tsx",

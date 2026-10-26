@@ -1,0 +1,116 @@
+.preview {
+  padding-bottom: 4rem;
+}
+.intro {
+  max-width: 60rem;
+  padding: 3.5rem var(--spacing-gutter) 2rem;
+  margin: 0 auto;
+  text-align: center;
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+.intro > p:last-of-type {
+  max-width: 42rem;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+.navigation {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 2rem;
+  margin-top: 0.75rem;
+}
+.navigation a {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.875rem;
+  padding: 0.5rem 0;
+  color: var(--color-ink);
+  text-decoration: none;
+  min-height: 44px;
+}
+.navigation a:hover {
+  color: var(--color-primary-strong);
+}
+.navigation span {
+  color: var(--color-pink-strong);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+}
+.scene {
+  max-width: var(--spacing-page, 80rem);
+  margin: 0 auto;
+  padding: 4rem var(--spacing-gutter);
+  display: grid;
+  gap: 2.5rem;
+  align-items: center;
+  scroll-margin-top: 7rem;
+}
+.copy {
+  display: grid;
+  justify-items: start;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.copy > p {
+  margin: 0;
+}
+.copy h2 {
+  max-width: 10em;
+}
+.count {
+  font-family: var(--font-display);
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  letter-spacing: 0.07em;
+}
+.count span {
+  color: var(--color-pink-strong);
+  font-size: 2.25rem;
+}
+.description {
+  max-width: 27rem;
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  color: var(--color-text-muted);
+}
+.composition {
+  min-width: 0;
+  position: relative;
+  padding: 1rem 0;
+}
+.preview a:focus-visible {
+  outline: 2px solid var(--color-primary-strong);
+  outline-offset: 5px;
+  border-radius: 3px;
+}
+@media (min-width: 64rem) {
+  .scene {
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    gap: clamp(3rem, 6vw, 7rem);
+    min-height: 44rem;
+    padding-block: 5rem;
+  }
+  .composition {
+    padding-block: 1.5rem;
+  }
+}
+@media (max-width: 39.99rem) {
+  .intro {
+    padding-top: 2.5rem;
+  }
+  .scene {
+    padding-block: 2.75rem;
+    gap: 2.25rem;
+  }
+  .copy {
+    gap: 1rem;
+  }
+  .description {
+    font-size: 1rem;
+  }
+}

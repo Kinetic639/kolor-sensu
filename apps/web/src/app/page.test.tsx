@@ -94,6 +94,16 @@ vi.mock("@/features/newsletter/newsletter-signup", () => ({
 
 // The coming workshops read on their own (an async section).
 vi.mock("@/components/home-workshops", () => ({ HomeWorkshops: () => null }));
+vi.mock("@/lib/workshop-data", () => ({
+  getWorkshops: async () => [],
+  workshopImageUrl: (path: string) => path,
+}));
+vi.mock("@/lib/education-data", () => ({
+  getArticles: async () => [],
+  getEbooks: async () => [],
+  getArticleCategories: async () => [],
+  articleImageUrl: (path: string) => path,
+}));
 
 vi.mock("@/lib/site-frame", () => ({
   getSiteFrame: async () => ({ contact: published.contact }),

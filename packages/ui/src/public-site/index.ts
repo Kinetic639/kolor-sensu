@@ -2,6 +2,18 @@
 // app stylesheet: @import "@repo/ui/public-site.css";
 export { ArrowLink, PrimaryButton, SecondaryButton } from "./actions";
 export { HanddrawnLink } from "./handdrawn-link";
+export { InkReveal } from "./ink-reveal";
+export { CrisisCardFrame } from "./crisis-card-frame";
+export {
+  EducationArticles,
+  EducationBooks,
+  EducationWorkshopCard,
+} from "./education-media";
+export type {
+  EducationArticle,
+  EducationBook,
+  EducationWorkshop,
+} from "./education-media";
 export type { HanddrawnLinkProps } from "./handdrawn-link";
 export type { ArrowLinkProps, PublicButtonProps } from "./actions";
 export { BotanicalAccent } from "./botanical-accent";

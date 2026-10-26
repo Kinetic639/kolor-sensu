@@ -76,6 +76,34 @@ afterEach(() => {
 });
 
 describe("PaintedStory", () => {
+  it("keeps its header and server-rendered cards while hiding inactive slide links", async () => {
+    mockMedia({ wide: true });
+    const { container } = render(
+      <PaintedStory
+        heading="Wiedza, która wspiera"
+        steps={steps.map((step, index) => ({
+          ...step,
+          content: <a href={`/material-${index}`}>Materiał {index + 1}</a>,
+        }))}
+      />,
+    );
+    await gsapLoaded();
+    expect(
+      screen.getByRole("heading", { name: "Wiedza, która wspiera" }),
+    ).toBeInTheDocument();
+    const pictures = [
+      ...container.querySelectorAll<HTMLElement>(".ks-story__picture"),
+    ];
+    expect(pictures.map((p) => p.inert)).toEqual([false, true, true]);
+    expect(pictures.every((p) => p.dataset.rich === "true")).toBe(true);
+    expect(
+      screen.queryByRole("img", { name: "Gabinet" }),
+    ).not.toBeInTheDocument();
+    expect(pictures[0]?.querySelector("a")).toHaveAttribute(
+      "href",
+      "/material-0",
+    );
+  });
   it("tells its steps in order: a heading, a count, text, a link and a picture each", async () => {
     const { root } = await renderStory();
     expect(
