@@ -60,6 +60,8 @@ export type Database = {
           forgotten_at: string | null;
           id: string;
           name: string;
+          first_name: string | null;
+          last_name: string | null;
           notes: string | null;
           phone: string | null;
           updated_at: string;
@@ -71,6 +73,8 @@ export type Database = {
           forgotten_at?: string | null;
           id?: string;
           name: string;
+          first_name: string | null;
+          last_name: string | null;
           notes?: string | null;
           phone?: string | null;
           updated_at?: string;
@@ -82,6 +86,8 @@ export type Database = {
           forgotten_at?: string | null;
           id?: string;
           name?: string;
+          first_name?: string | null;
+          last_name?: string | null;
           notes?: string | null;
           phone?: string | null;
           updated_at?: string;
@@ -100,6 +106,8 @@ export type Database = {
           client_id: string | null;
           client_email: string | null;
           client_name: string | null;
+          client_first_name: string | null;
+          client_last_name: string | null;
           client_notes: string | null;
           client_phone: string | null;
           confirmed_at: string | null;
@@ -141,6 +149,8 @@ export type Database = {
           client_id?: string | null;
           client_email?: string | null;
           client_name?: string | null;
+          client_first_name?: string | null;
+          client_last_name?: string | null;
           client_notes?: string | null;
           client_phone?: string | null;
           confirmed_at?: string | null;
@@ -182,6 +192,8 @@ export type Database = {
           client_id?: string | null;
           client_email?: string | null;
           client_name?: string | null;
+          client_first_name?: string | null;
+          client_last_name?: string | null;
           client_notes?: string | null;
           client_phone?: string | null;
           confirmed_at?: string | null;
@@ -2096,6 +2108,8 @@ export type Database = {
           cancelled_by: string | null;
           client_email: string | null;
           client_name: string | null;
+          client_first_name: string | null;
+          client_last_name: string | null;
           client_notes: string | null;
           client_phone: string | null;
           confirmed_at: string | null;
@@ -2130,6 +2144,8 @@ export type Database = {
           cancelled_by?: string | null;
           client_email?: string | null;
           client_name?: string | null;
+          client_first_name?: string | null;
+          client_last_name?: string | null;
           client_notes?: string | null;
           client_phone?: string | null;
           confirmed_at?: string | null;
@@ -2164,6 +2180,8 @@ export type Database = {
           cancelled_by?: string | null;
           client_email?: string | null;
           client_name?: string | null;
+          client_first_name?: string | null;
+          client_last_name?: string | null;
           client_notes?: string | null;
           client_phone?: string | null;
           confirmed_at?: string | null;
