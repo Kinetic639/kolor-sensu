@@ -12,6 +12,25 @@ const lines = [
 ];
 
 describe("CrisisStrip", () => {
+  it("keeps the details link in the intro before the CMS contact list", () => {
+    const { container } = render(
+      <CrisisStrip
+        heading="Pomoc"
+        lines={lines}
+        text="Opis"
+        more={{ href: "/pomoc-w-kryzysie", label: "Dowiedz się więcej" }}
+      />,
+    );
+    const intro = container.querySelector("header");
+    expect(intro).not.toBeNull();
+    expect(
+      within(intro!).getByRole("link", { name: "Dowiedz się więcej" }),
+    ).toHaveAttribute("href", "/pomoc-w-kryzysie");
+    expect(
+      intro!.compareDocumentPosition(screen.getByRole("list")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
   it("is a landmark named by its heading", () => {
     render(
       <CrisisStrip
@@ -63,6 +82,39 @@ describe("CrisisStrip", () => {
       <CrisisStrip heading="Pomoc" lines={lines} text="" />,
     );
     expect(container.querySelectorAll("p")).toHaveLength(0);
+  });
+
+  it("renders all six CMS contacts without substituting fixed mockup content", () => {
+    const contacts = Array.from({ length: 6 }, (_, index) => ({
+      number: `123 456 00${index}`,
+      label: `Własna nazwa kontaktu ${index + 1}`,
+      detail: `Własny opis dostępności ${index + 1}`,
+    }));
+    render(
+      <CrisisStrip
+        eyebrow="Własny napis"
+        heading="Własny nagłówek"
+        text="Własny opis"
+        lines={contacts}
+      />,
+    );
+    expect(screen.getByText("Własny napis")).toBeInTheDocument();
+    const items = within(screen.getByRole("list")).getAllByRole("listitem");
+    expect(items).toHaveLength(6);
+    contacts.forEach((contact, index) => {
+      expect(
+        within(items[index]!).getByRole("heading", {
+          level: 3,
+          name: contact.label,
+        }),
+      ).toBeInTheDocument();
+      expect(
+        within(items[index]!).getByRole("link", { name: contact.number }),
+      ).toHaveAttribute("href", `tel:12345600${index}`);
+      expect(
+        within(items[index]!).getByText(contact.detail),
+      ).toBeInTheDocument();
+    });
   });
 
   it("dials a number written with spaces and a plus", () => {

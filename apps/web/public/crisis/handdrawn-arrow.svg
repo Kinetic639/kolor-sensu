@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 26" width="34" height="26" color="#527b57">
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path data-ink-part="shaft" d="M 3 13.8 C 10.4 12.6 18.2 14.1 29 12.1" stroke-width="1.9" stroke-opacity="0.85"/>
+    <path data-ink-part="head" d="M 21.6 5.2 C 23.7 8.2 26.8 10.7 29 12.1 C 26.1 14.3 23.3 17.4 21.4 20.2" stroke-width="1.8" stroke-opacity="0.85"/>
+    <path data-ink-part="shaft" d="M 4 14.4 C 11 13.2 18.7 14.7 28 12.8" stroke-width="0.4" stroke-opacity="0.28"/>
+  </g>
+</svg>

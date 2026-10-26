@@ -35,6 +35,9 @@ describe("WatercolorImage on the server", () => {
       "skip-link.tsx",
       "social-icons.tsx",
       "json-ld.tsx",
+      "crisis-strip.tsx",
+      "crisis-card-frame.tsx",
+      "handdrawn-link.tsx",
     ]) {
       const source = readFileSync(resolve(here, file), "utf8");
       expect(source, file).not.toMatch(/^["']use client["']/m);
@@ -44,7 +47,7 @@ describe("WatercolorImage on the server", () => {
     }
   });
 
-  it("keeps client-only code to small islands: reveals, caption motion, parallax layer, intro motion, navigation, cookie notice, room gallery, rooms peek, cursor ring, first steps, painted story, support areas, thoughts lens, article sharing", () => {
+  it("keeps client-only code in the approved animation and interaction islands", () => {
     const clientFiles = readdirSync(here)
       .filter(
         (file) => /\.tsx?$/.test(file) && !/\.(test|stories)\./.test(file),
@@ -59,6 +62,7 @@ describe("WatercolorImage on the server", () => {
       "cookie-consent.tsx",
       "cursor-ring.tsx",
       "first-steps.tsx",
+      "ink-reveal.tsx",
       "intro-motion.tsx",
       "offer-reveal.tsx",
       "painted-story.tsx",
