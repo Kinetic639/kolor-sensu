@@ -2144,3 +2144,130 @@
   inherits: true;
   initial-value: 1.25rem;
 }
+/* The artwork stays outside the paint layer so the tall plant can rise
+   above it. The mobile layout keeps the scene above the readable copy. */
+@layer components {
+  .ks-closing-banner {
+    position: relative;
+    isolation: isolate;
+    margin-top: 7rem;
+    margin-bottom: 0;
+  }
+
+  .ks-closing-banner__paint {
+    position: absolute;
+    z-index: -1;
+    inset: 5rem 0 0;
+    background-image: url("/watercolor/closing-banner-paint-mobile.webp");
+    background-position: center bottom;
+    background-size: 100% 115%;
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      black 7%,
+      black 92%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  .ks-closing-banner__inner {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 1.75rem;
+    padding-top: 9rem;
+    padding-bottom: 3rem;
+    text-align: center;
+  }
+
+  .ks-closing-banner__scene {
+    position: relative;
+    width: min(85vw, 21.25rem);
+    height: 8rem;
+    pointer-events: none;
+  }
+
+  .ks-closing-banner__chair {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+    max-width: none;
+  }
+
+  .ks-closing-banner__copy {
+    min-width: 0;
+    max-width: 35rem;
+  }
+
+  .ks-closing-banner__eyebrow {
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+  }
+
+  .ks-closing-banner__description {
+    margin-top: 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+
+  .ks-closing-banner__actions {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .ks-closing-banner__booking {
+    min-height: 3.5rem;
+    height: auto;
+    max-width: 100%;
+    padding: 0.875rem 2rem;
+    white-space: normal;
+    text-align: center;
+  }
+
+  @media (min-width: 64rem) {
+    .ks-closing-banner__paint {
+      top: 0;
+      background-image: url("/watercolor/closing-banner-paint.webp");
+      background-size: 120% 100%;
+      background-position: right center;
+    }
+
+    .ks-closing-banner__inner {
+      min-height: 17rem;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.2fr) minmax(
+          12rem,
+          0.65fr
+        );
+      gap: clamp(1.5rem, 2.5vw, 3rem);
+      align-items: center;
+      justify-items: stretch;
+      padding-top: 2.5rem;
+      padding-bottom: 2.5rem;
+      text-align: left;
+    }
+
+    .ks-closing-banner__scene {
+      align-self: stretch;
+      width: 100%;
+      height: auto;
+    }
+
+    .ks-closing-banner__chair {
+      right: -1.25rem;
+      bottom: -2.5rem;
+      width: min(41vw, 28.75rem);
+    }
+
+    .ks-closing-banner__booking {
+      width: 100%;
+    }
+  }
+}
