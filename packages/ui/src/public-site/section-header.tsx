@@ -30,7 +30,8 @@ import { EditorialHeading, SectionEyebrow } from "./typography";
 
 // Each colour in the size it is used at: the eyebrow and the link are
 // small text, where the light pink and green would not read (WCAG AA), so
-// they take the strong shades; the title is large and takes the light ones.
+// they take the strong shades; the title is large and takes the light ones,
+// unless it is set as small as an h3 (on a phone under the large-text size).
 const eyebrowTones: Record<HeaderTone, string> = {
   default: "",
   green: "text-primary-strong",
@@ -188,7 +189,14 @@ export function SectionTitle({
               segment.tone === "default" ? (
                 <Fragment key={at}>{segment.text}</Fragment>
               ) : (
-                <span key={at} className={titleTones[segment.tone]}>
+                <span
+                  key={at}
+                  className={
+                    size === "h3"
+                      ? linkTones[segment.tone]
+                      : titleTones[segment.tone]
+                  }
+                >
                   {segment.text}
                 </span>
               ),

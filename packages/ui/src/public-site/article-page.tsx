@@ -94,7 +94,7 @@ export function ArticleCover({ url, alt }: { url: string; alt: string }) {
   );
 }
 
-function PersonPhoto({
+export function PersonPhoto({
   person,
   size,
 }: {

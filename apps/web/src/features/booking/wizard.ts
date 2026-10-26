@@ -38,6 +38,11 @@ export interface WizardInput {
   horizonDays: number;
   /** The shown week's free times (the time step only). */
   slots: FreeSlot[];
+  /**
+   * With an empty week: the soonest free time within the horizon, or null
+   * for none (#203); undefined when not looked for.
+   */
+  nextFree?: FreeSlot | null;
 }
 
 export interface WizardCard {
@@ -255,6 +260,42 @@ export function weekOfSlots(
   });
 }
 
+/** Kontakt, its message naming the visit sought (#203). */
+function contactHref(input: WizardInput) {
+  const { params, selection, offers } = input;
+  const specialist = offers.find(
+    (offer) => offer.specialistPublicSlug === params.specjalista,
+  )?.specialistName;
+  const parts = [
+    selection.service?.name,
+    specialist,
+    params.forma === "online" ? "online" : "w gabinecie",
+  ].filter(Boolean);
+  const message = `Dzień dobry, szukam terminu: ${parts.join(", ")}.`;
+  return `/kontakt?wiadomosc=${encodeURIComponent(message)}#formularz`;
+}
+
+function nothingFree(input: WizardInput) {
+  const { params, slots, nextFree, horizonDays } = input;
+  if (slots.length > 0 || nextFree === undefined) return undefined;
+  if (nextFree === null) {
+    return {
+      kind: "none" as const,
+      days: horizonDays,
+      contactHref: contactHref(input),
+    };
+  }
+  return {
+    kind: "later" as const,
+    label: `${formatWeekday(nextFree.date)}, ${formatDayMonth(nextFree.date)}`,
+    href: bookingHref({
+      ...params,
+      tydzien: mondayOf(nextFree.date),
+      termin: null,
+    }),
+  };
+}
+
 function slotsPanel(input: WizardInput, chosen: FreeSlot | null): WizardPanel {
   const { params, today, horizonDays, slots } = input;
   const week = bookingWeek(params, today);
@@ -285,6 +326,7 @@ function slotsPanel(input: WizardInput, chosen: FreeSlot | null): WizardPanel {
         (value) => selectBookingHref(keep, "termin", value),
         params.termin,
       ),
+      nothingFree: nothingFree(input),
     },
   };
 }

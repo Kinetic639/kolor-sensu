@@ -114,6 +114,8 @@ describe("the form and the database", () => {
         endTime: "19:30",
         closesHoursBefore: 48,
         coLeaderIds: [leader, "6b2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f"],
+        serviceIds: ["7c3e4f5a-6b7c-4d8e-9f0a-1b2c3d4e5f60"],
+        articleIds: ["8d4f5a6b-7c8d-4e9f-8a1b-2c3d4e5f6a70"],
         meetingUrl: "https://meet.example.invalid/x",
       },
       zone,
@@ -124,6 +126,8 @@ describe("the form and the database", () => {
       registration_closes_at: "2030-11-10T16:00:00.000Z",
       location_id: null,
       co_leader_ids: ["6b2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f"],
+      service_ids: ["7c3e4f5a-6b7c-4d8e-9f0a-1b2c3d4e5f60"],
+      article_ids: ["8d4f5a6b-7c8d-4e9f-8a1b-2c3d4e5f6a70"],
       meeting_url: "https://meet.example.invalid/x",
     });
   });
@@ -144,6 +148,8 @@ describe("the form and the database", () => {
       seoDescription: null,
       specialistId: leader,
       coLeaderIds: [],
+      serviceIds: ["7c3e4f5a-6b7c-4d8e-9f0a-1b2c3d4e5f60"],
+      articleIds: [],
       modality: "in_person",
       locationId: null,
       roomId: null,

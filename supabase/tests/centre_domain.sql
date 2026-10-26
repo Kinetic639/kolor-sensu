@@ -319,8 +319,9 @@ BEGIN
 END;
 $$;
 
--- D: the announcement bar. The site reads only today's, the latest
--- starting; admins manage them; links stay on the site or go to https.
+-- D: the announcement bar. The site reads only today's (not one over
+-- yesterday, nor one from tomorrow), the latest starting; admins manage
+-- them; links stay on the site or go to https.
 SELECT set_config('request.jwt.claims', '{"sub":"72000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 SET LOCAL ROLE authenticated;
 DO $$
@@ -331,7 +332,10 @@ BEGIN
   INSERT INTO public.site_announcements (message, starts_on, ends_on)
   VALUES ('Starsze ogłoszenie', t.today - 3, t.today + 3);
   INSERT INTO public.site_announcements (message, link_label, link_href, starts_on, ends_on)
-  VALUES ('Nowe godziny', 'Szczegóły', '/kontakt', t.today - 1, t.today);
+  VALUES ('Nowe godziny', 'Szczegóły', '/kontakt', t.today - 2, t.today);
+  -- Started later, but over yesterday: gone today.
+  INSERT INTO public.site_announcements (message, starts_on, ends_on)
+  VALUES ('Wczoraj się skończyło', t.today - 1, t.today - 1);
   INSERT INTO public.site_announcements (message, starts_on, ends_on)
   VALUES ('Jeszcze nie teraz', t.today + 1, t.today + 5);
 

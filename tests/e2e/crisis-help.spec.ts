@@ -35,3 +35,17 @@ test("every page's footer leads to help in a crisis, which starts with 112", asy
     .analyze();
   expect(violations.map(({ id }) => id)).toEqual([]);
 });
+
+test("the booking wizard ends with help in a crisis (#247)", async ({
+  page,
+}) => {
+  await page.goto(`${webUrl}/umow-wizyte`);
+  const note = page.getByRole("complementary", { name: "Pomoc w kryzysie" });
+  await expect(note.getByRole("link", { name: "112" })).toHaveAttribute(
+    "href",
+    "tel:112",
+  );
+  await expect(
+    note.getByRole("link", { name: "Pomoc w kryzysie" }),
+  ).toHaveAttribute("href", "/pomoc-w-kryzysie");
+});

@@ -1941,6 +1941,36 @@ export type Database = {
           },
         ];
       };
+      workshop_articles: {
+        Row: {
+          article_id: string;
+          workshop_id: string;
+        };
+        Insert: {
+          article_id: string;
+          workshop_id: string;
+        };
+        Update: {
+          article_id?: string;
+          workshop_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "workshop_articles_article_id_fkey";
+            columns: ["article_id"];
+            isOneToOne: false;
+            referencedRelation: "articles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workshop_articles_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: false;
+            referencedRelation: "workshops";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       workshop_co_leaders: {
         Row: {
           specialist_id: string;
@@ -2095,6 +2125,36 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [];
+      };
+      workshop_services: {
+        Row: {
+          service_id: string;
+          workshop_id: string;
+        };
+        Insert: {
+          service_id: string;
+          workshop_id: string;
+        };
+        Update: {
+          service_id?: string;
+          workshop_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "workshop_services_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workshop_services_workshop_id_fkey";
+            columns: ["workshop_id"];
+            isOneToOne: false;
+            referencedRelation: "workshops";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       workshop_registrations: {
         Row: {
@@ -3455,6 +3515,16 @@ export type Database = {
           ends_at: string;
           starts_at: string;
         }[];
+      };
+      next_free_slot: {
+        Args: {
+          p_from: string;
+          p_location_slug?: string;
+          p_mode: Database["public"]["Enums"]["visit_mode"];
+          p_service_slug: string;
+          p_specialist_slug: string;
+        };
+        Returns: string | null;
       };
       list_public_room_locations: {
         Args: never;

@@ -1,5 +1,5 @@
 import { addDays, toFreeSlots, type FreeSlot } from "@repo/scheduling";
-import { listFreeSlots } from "@repo/supabase";
+import { listFreeSlots, nextFreeSlot } from "@repo/supabase";
 import {
   getBookableCatalog,
   getBookingWindow,
@@ -44,6 +44,36 @@ async function weekOfFreeSlots(
   }
 }
 
+/**
+ * The soonest free time from today on within the horizon, or null for
+ * none (#203); undefined when it could not be read (the week says only
+ * that it is empty).
+ */
+async function soonestFreeSlot(
+  params: BookingParams,
+  today: string,
+  timeZone: string,
+): Promise<FreeSlot | null | undefined> {
+  try {
+    const startsAt = await nextFreeSlot(createPublicClient(), {
+      serviceSlug: params.usluga!,
+      specialistSlug: params.specjalista!,
+      mode: params.forma === "online" ? "online" : "in_person",
+      from: today,
+      locationSlug:
+        params.forma === "stacjonarnie"
+          ? (params.lokalizacja ?? undefined)
+          : undefined,
+    });
+    return startsAt
+      ? toFreeSlots([{ starts_at: startsAt, ends_at: startsAt }], timeZone)[0]!
+      : null;
+  } catch (error) {
+    console.error("[booking] the soonest free slot failed:", error);
+    return undefined;
+  }
+}
+
 export async function loadWizard(params: BookingParams) {
   const [catalog, window, locations] = await Promise.all([
     getBookableCatalog(),
@@ -75,6 +105,11 @@ export async function loadWizard(params: BookingParams) {
           window.timeZone,
         )
       : [];
+  // An empty week: when the next free time is, or that none is (#203).
+  const nextFree =
+    selection.step === "termin" && slots.length === 0
+      ? await soonestFreeSlot(resolved, today, window.timeZone)
+      : undefined;
   const photos =
     selection.step === "specjalista"
       ? new Map(
@@ -98,6 +133,7 @@ export async function loadWizard(params: BookingParams) {
       today,
       horizonDays: window.horizonDays,
       slots,
+      nextFree,
     }),
   };
 }

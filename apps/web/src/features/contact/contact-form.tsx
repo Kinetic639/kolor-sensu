@@ -47,6 +47,18 @@ export function ContactForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [armed, setArmed] = useState(false);
 
+  // A message the link brought (the booking page with nothing free,
+  // #203): written into an empty field once, the page itself static.
+  useEffect(() => {
+    const message = new URLSearchParams(window.location.search).get(
+      "wiadomosc",
+    );
+    const field = formRef.current?.elements.namedItem("message");
+    if (message && field instanceof HTMLTextAreaElement && !field.value) {
+      field.value = message.slice(0, 500);
+    }
+  }, []);
+
   useEffect(() => {
     const form = formRef.current;
     if (!form || armed) return;
@@ -83,7 +95,11 @@ export function ContactForm({
   const failure = FAILURE[result.status];
 
   return (
-    <section aria-labelledby="contact-form-heading" className="grid gap-4">
+    <section
+      aria-labelledby="contact-form-heading"
+      className="grid scroll-mt-28 gap-4"
+      id="formularz"
+    >
       <h2 className="font-display text-h3 text-ink" id="contact-form-heading">
         {heading}
       </h2>

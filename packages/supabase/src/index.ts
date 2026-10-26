@@ -258,6 +258,7 @@ export {
   holdSlot,
   listBookableCatalog,
   listFreeSlots,
+  nextFreeSlot,
   releaseHold,
   reserveHold,
   confirmReservation,

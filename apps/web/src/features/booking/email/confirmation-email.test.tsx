@@ -31,6 +31,12 @@ describe("ConfirmationEmail", () => {
     expect(html).toContain("+48 600 100 200");
   });
 
+  it("ends with help in a crisis: 112 and the site's page about it (#247)", async () => {
+    const html = await render(<ConfirmationEmail content={content} />);
+    expect(html).toContain("dzwoń pod 112");
+    expect(html).toContain('href="https://kolorsensu.pl/pomoc-w-kryzysie"');
+  });
+
   it("escapes what the client typed", async () => {
     const html = await render(<ConfirmationEmail content={content} />);
     expect(html).not.toContain("<b>Kowalski</b>");

@@ -24,7 +24,13 @@ Stan na 24.10.2026, po weryfikacji kartek z kodem i testami (także po wydaniu n
   24.10 (kolory sprawdzone z kodem i testami); plik
   `svg/klient-rezerwacja.svg`.
 
-Nie ma tu portali admina i specjalisty (poza warsztatami) ani ramki „Audyt
+- [`admin.md`](admin.md): nowa część portalu admina (od 26.10): mapa
+  „Admin: prowadzi centrum” i kolumna „Admin · 1. Newsletter”, z kolorem,
+  „Co ma się dziać” i „Czym sprawdzone” przy każdej kartce; plik
+  `svg/admin-1-newsletter.svg`. Stare ramki „Portal admina” i „Admin ·
+  1–8” (z pierwszej wersji tablicy) zostają pod nią, bez kopii.
+
+Nie ma tu portalu specjalisty (poza warsztatami) ani ramki „Audyt
 płatności 22.10”.
 
 ## Kolory

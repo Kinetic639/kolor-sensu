@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  getWorkshopPicks,
   getWorkshopRegistration,
   holdWorkshopSeat,
   listPublicWorkshops,
@@ -148,5 +149,51 @@ describe("a guest's seat", () => {
   it("reads none for an unknown token", async () => {
     const { client } = rpc([]);
     expect(await getWorkshopRegistration(client, "nope")).toBeNull();
+  });
+});
+
+describe("a workshop's picks (#185)", () => {
+  it("are the services and articles the admin chose for it", async () => {
+    const eq = vi.fn((_column: string, id: string) =>
+      Promise.resolve({
+        data: id === "w1" ? [{ service_id: "s1" }, { service_id: "s2" }] : [],
+        error: null,
+      }),
+    );
+    const tables: string[] = [];
+    const client = {
+      from: (table: string) => {
+        tables.push(table);
+        return {
+          select: () => ({
+            eq:
+              table === "workshop_services"
+                ? eq
+                : () =>
+                    Promise.resolve({
+                      data: [{ article_id: "a1" }],
+                      error: null,
+                    }),
+          }),
+        };
+      },
+    } as never;
+    expect(await getWorkshopPicks(client, "w1")).toEqual({
+      serviceIds: ["s1", "s2"],
+      articleIds: ["a1"],
+    });
+    expect(tables).toEqual(["workshop_services", "workshop_articles"]);
+    expect(eq).toHaveBeenCalledWith("workshop_id", "w1");
+  });
+
+  it("say why they could not be read", async () => {
+    const failed = () => ({
+      select: () => ({
+        eq: () => Promise.resolve({ data: null, error: new Error("down") }),
+      }),
+    });
+    await expect(
+      getWorkshopPicks({ from: failed } as never, "w1"),
+    ).rejects.toThrow("down");
   });
 });

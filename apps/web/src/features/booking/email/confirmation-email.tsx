@@ -14,7 +14,8 @@ import type { VisitEmailContent } from "./confirmation-content";
 
 // A visit e-mail's look (the confirmation, a new time, a cancellation): simple, readable in every mail client,
 // in the public site's colours (inline, as e-mail needs). The newsletter's
-// confirmation link wears it too, without the visit's details.
+// confirmation link wears it too, without the visit's details. Every one
+// ends with help in a crisis (#247).
 
 /** What the template shows: a visit e-mail's words, without its files. */
 export type EmailLook = Omit<VisitEmailContent, "subject" | "text" | "ics"> & {
@@ -31,6 +32,15 @@ const colors = {
   border: "#e3e0d8",
 };
 
+/** The site's page about help in a crisis, by the e-mail's own link (#247). */
+function crisisUrl(siteLink: string) {
+  try {
+    return new URL("/pomoc-w-kryzysie", siteLink).toString();
+  } catch {
+    return null;
+  }
+}
+
 export function ConfirmationEmail({
   content,
   company = null,
@@ -39,6 +49,7 @@ export function ConfirmationEmail({
   /** The company in one line, at the foot (Ustawienia → Centrum). */
   company?: string | null;
 }) {
+  const crisis = crisisUrl(content.manageUrl);
   return (
     <Html lang="pl">
       <Head />
@@ -133,6 +144,18 @@ export function ConfirmationEmail({
             <br />
             Kolor Sensu
           </Text>
+          {crisis ? (
+            <Text
+              style={{ color: colors.muted, fontSize: 12, lineHeight: "18px" }}
+            >
+              W kryzysie, gdy życie jest w zagrożeniu, dzwoń pod 112. Bezpłatne
+              telefony wsparcia:{" "}
+              <a href={crisis} style={{ color: colors.primary }}>
+                Pomoc w kryzysie
+              </a>
+              .
+            </Text>
+          ) : null}
           {company ? (
             <Text
               style={{ color: colors.muted, fontSize: 11, lineHeight: "16px" }}
