@@ -807,7 +807,7 @@ Ramka `3458764688047867441` · plik `svg/strona-7-warsztaty.svg` · [w Miro](htt
 | 5. Dane uczestników                                                                             | zielony              |
 | 6. Bezpieczeństwo                                                                               | zielony              |
 | 7. Testy end-to-end                                                                             | zielony              |
-| 8. Każda strona                                                                                 | żółty                |
+| 8. Każda strona                                                                                 | zielony              |
 | Certyfikat uczestnictwa                                                                         | szary (po MVP)       |
 | Materiały po warsztacie                                                                         | szary (po MVP)       |
 | Ankieta po warsztacie                                                                           | szary (po MVP)       |
@@ -947,18 +947,4 @@ Ramka `3458764688048018594` · plik `svg/strona-7-warsztaty.svg` · [w Miro](htt
 | 5. Dane uczestników      | zielony | Zakładając: warsztat się odbył / Gdy: mija okres przechowywania / Wtedy: dane uczestników są usuwane albo anonimizowane według polityki; usunięcie na żądanie                                                                           | Test bazy (12 miesięcy, zwrot w toku czeka, usunięcie na prośbę tylko przez admina); „Usuń dane” sprawdzone na DEV (#207) → zielony        |
 | 6. Bezpieczeństwo        | zielony | Zakładając: ktoś zmienia formularz albo adres / Gdy: wysyła zapis / Wtedy: cena, miejsca i terminy sprawdzane w bazie; obcy nie widzą cudzych zapisów                                                                                   | Test bazy: cena, miejsca, terminy liczone w bazie; obcy nie widzą zapisów → zielony                                                        |
 | 7. Testy end-to-end      | zielony | Zakładając: warsztat z ceną jest na DEV / Gdy: test zapisuje się z BLIK, rezygnuje, wchodzi z listy rezerwowej / Wtedy: testy przechodzą na DEV i STAGING                                                                               | Przechodzą na DEV i STAGING (BLIK, „zapłacę później”, rezygnacja, plik kalendarza); wejście z listy rezerwowej: test bazy w CI → zielony   |
-| 8. Każda strona          | żółty   | Zakładając: Warsztaty i strona warsztatu są gotowe / Gdy: sprawdzamy tabelę „Każda strona” / Wtedy: oba wiersze zielone: Google, obrazek, H1, klawiatura, 200 %, telefon, szybkość, linki, e2e                                          | Tabela uzupełniona, STAGING sprawdzony (#206); szybkość: wolne pierwsze wyświetlenie każdej strony: #205 → żółty                           |
-
-## Warsztaty · plan wdrożenia
-
-Ramka `3458764688048018595` · plik `svg/strona-7-warsztaty.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688048018595)
-
-| Kartka                        | Kolor                  |
-| ----------------------------- | ---------------------- |
-| PR 1 · Baza                   | fioletowy (historyjka) |
-| PR 2 · Portal admina          | fioletowy (historyjka) |
-| PR 3 · Strona                 | fioletowy (historyjka) |
-| PR 4 · Zapis i płatność       | fioletowy (historyjka) |
-| PR 5 · Po zapisie             | fioletowy (historyjka) |
-| PR 6 · Uczestnicy w portalach | fioletowy (historyjka) |
-| PR 7 · Jakość                 | fioletowy (historyjka) |
+| 8. Każda strona          | zielony | Zakładając: Warsztaty i strona warsztatu są gotowe / Gdy: sprawdzamy tabelę „Każda strona” / Wtedy: oba wiersze zielone: Google, obrazek, H1, klawiatura, 200 %, telefon, szybkość, linki, e2e                                          | Tabela uzupełniona, STAGING sprawdzony (#206); szybkość celowo niższa przez animacje GSAP: decyzja właściciela 26.10 (#205) → zielony      |
