@@ -1,0 +1,36 @@
+.handdrawn-link {
+  --handdrawn-ink: currentColor;
+  color: inherit;
+  transition: color 180ms;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  text-decoration: none;
+}
+.handdrawn-link:hover,
+.handdrawn-link:focus-visible {
+  color: #527b57;
+}
+.handdrawn-link__label {
+  position: relative;
+  min-width: 0;
+  padding-bottom: 8px;
+}
+.handdrawn-link__underline {
+  position: absolute;
+  left: -1%;
+  bottom: 0;
+  width: 102%;
+  height: 9px;
+  color: var(--handdrawn-ink);
+  pointer-events: none;
+}
+.handdrawn-link__arrow {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 24px;
+  margin-top: -7px;
+  color: var(--handdrawn-ink);
+  pointer-events: none;
+}

@@ -1,7 +1,12 @@
 import { Phone } from "lucide-react";
+import Image from "next/image";
 import { useId } from "react";
 import { cn } from "../lib/utils";
-import { ArrowLink } from "./actions";
+import { HanddrawnLink } from "./handdrawn-link";
+import { CrisisCardFrame } from "./crisis-card-frame";
+import { crisisCardArt } from "./crisis-card-art";
+import { InkReveal } from "./ink-reveal";
+import { EditorialHeading, SectionEyebrow } from "./typography";
 
 // Server-safe: the crisis strip, where to call right now. Its heading, its
 // sentence and the lines are the CMS's (the admin approves them; the strip
@@ -21,10 +26,11 @@ export interface CrisisLine {
 }
 
 export interface CrisisStripProps {
+  eyebrow?: string;
   heading: string;
   text: string;
   lines: readonly CrisisLine[];
-  /** A link to the page about help in a crisis, under the numbers. */
+  /** A link to the page about help in a crisis, in the intro. */
   more?: { href: string; label: string };
   id?: string;
   className?: string;
@@ -36,6 +42,7 @@ export function crisisLineHref(number: string): string {
 }
 
 export function CrisisStrip({
+  eyebrow,
   heading,
   text,
   lines,
@@ -47,43 +54,66 @@ export function CrisisStrip({
   return (
     <aside
       aria-labelledby={headingId}
-      className={cn("max-w-page px-gutter py-section-sm mx-auto", className)}
+      className={cn(
+        "ks-crisis max-w-page px-gutter py-section-sm mx-auto",
+        className,
+      )}
       id={id}
     >
-      <div className="rounded-card border-pink/40 bg-pink/10 grid gap-4 border p-6 lg:p-8">
-        <h2 className="font-display text-h3 text-ink" id={headingId}>
+      <header className="ks-crisis__intro">
+        {eyebrow ? (
+          <SectionEyebrow className="text-pink-strong">
+            {eyebrow}
+          </SectionEyebrow>
+        ) : null}
+        <EditorialHeading size="h2" id={headingId}>
           {heading}
-        </h2>
-        {text ? <p className="text-body text-ink max-w-copy">{text}</p> : null}
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {lines.map((line) => (
-            <li className="flex items-start gap-3" key={line.number}>
-              <Phone
-                aria-hidden="true"
-                className="text-pink-strong mt-1 size-5 shrink-0"
-                strokeWidth={1.75}
-              />
-              <span className="text-body">
+        </EditorialHeading>
+        {text ? <p className="ks-crisis__description">{text}</p> : null}
+        {more ? (
+          <HanddrawnLink href={more.href}>{more.label}</HanddrawnLink>
+        ) : null}
+      </header>
+      <ul className="ks-crisis__list" data-count={lines.length}>
+        {lines.map((line, index) => {
+          const art = crisisCardArt[index % crisisCardArt.length]!;
+          return (
+            <li key={line.number}>
+              <InkReveal className="ks-crisis__card" delay={(index % 4) * 0.16}>
+                <Image
+                  className="ks-crisis__fill"
+                  src={`/crisis/crisis-fill-${art.name}.webp`}
+                  width={960}
+                  height={640}
+                  sizes="(max-width: 679px) 100vw, (max-width: 1119px) 50vw, 380px"
+                  alt=""
+                />
+                <span
+                  className="ks-crisis__frame-layer"
+                  data-tone={art.name.startsWith("pink") ? "pink" : "green"}
+                >
+                  <CrisisCardFrame index={index} />
+                </span>
+                <Phone
+                  aria-hidden="true"
+                  className="ks-crisis__phone"
+                  strokeWidth={1.4}
+                />
+                <h3 className="ks-crisis__label">{line.label}</h3>
                 <a
-                  className="text-ink font-semibold underline-offset-4 hover:underline"
+                  className="ks-crisis__number"
                   href={crisisLineHref(line.number)}
                 >
                   {line.number}
                 </a>
-                <span className="text-ink"> · {line.label}</span>
                 {line.detail ? (
-                  <span className="text-text-muted"> ({line.detail})</span>
+                  <span className="ks-crisis__detail">{line.detail}</span>
                 ) : null}
-              </span>
+              </InkReveal>
             </li>
-          ))}
-        </ul>
-        {more ? (
-          <ArrowLink className="justify-self-start" href={more.href}>
-            {more.label}
-          </ArrowLink>
-        ) : null}
-      </div>
+          );
+        })}
+      </ul>
     </aside>
   );
 }

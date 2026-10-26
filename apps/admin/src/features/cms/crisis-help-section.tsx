@@ -81,6 +81,21 @@ export function CrisisHelpSection({
         }}
       >
         <div className="grid gap-1.5 px-3.5 py-3">
+          <Label htmlFor="cms-crisis-eyebrow">
+            Napis nad nagłówkiem (opcjonalnie)
+          </Label>
+          <Input
+            id="cms-crisis-eyebrow"
+            maxLength={60}
+            aria-invalid={invalid("eyebrow")}
+            value={draft.eyebrow}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                eyebrow: event.target.value,
+              }))
+            }
+          />
           <Label htmlFor="cms-crisis-heading">Nagłówek</Label>
           <Input
             aria-invalid={invalid("heading")}
@@ -104,6 +119,21 @@ export function CrisisHelpSection({
             }
             rows={2}
             value={draft.text}
+          />
+          <Label htmlFor="cms-crisis-more">
+            Tekst linku do pomocy w kryzysie
+          </Label>
+          <Input
+            id="cms-crisis-more"
+            maxLength={80}
+            aria-invalid={invalid("moreLabel")}
+            value={draft.moreLabel}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                moreLabel: event.target.value,
+              }))
+            }
           />
         </div>
         <ol className="grid gap-3.5 px-3.5 py-3">

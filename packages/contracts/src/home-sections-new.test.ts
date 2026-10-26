@@ -74,6 +74,18 @@ describe("Gdzie jesteśmy", () => {
 });
 
 describe("the crisis strip", () => {
+  it("keeps older published payloads readable with editable intro and link defaults", () => {
+    const legacy = {
+      heading: "Pomoc",
+      text: "Opis",
+      lines: [{ number: "123", label: "Linia", detail: "" }],
+    };
+    const content = crisisHelpContentSchema.parse(legacy);
+    expect(content).toMatchObject({
+      eyebrow: "Pomoc w kryzysie",
+      moreLabel: "Więcej o pomocy w kryzysie",
+    });
+  });
   it("lists one to six lines, each a number to call", () => {
     const line = { number: "116 123", label: "Telefon", detail: "" };
     expect(

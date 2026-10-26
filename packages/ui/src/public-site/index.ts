@@ -1,6 +1,8 @@
 // Public website (painted / watercolor) layer. Import the styles once in the
 // app stylesheet: @import "@repo/ui/public-site.css";
 export { ArrowLink, PrimaryButton, SecondaryButton } from "./actions";
+export { HanddrawnLink } from "./handdrawn-link";
+export type { HanddrawnLinkProps } from "./handdrawn-link";
 export type { ArrowLinkProps, PublicButtonProps } from "./actions";
 export { BotanicalAccent } from "./botanical-accent";
 export type {
