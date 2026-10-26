@@ -204,6 +204,50 @@ export const NoFreeTimesThisWeek: Story = {
   ),
 };
 
+/** This week has nothing, a later one has (#203). */
+export const NextFreeTimeLater: Story = {
+  render: () => (
+    <SlotPicker
+      days={week().map((day) => ({ ...day, slots: [] }))}
+      nextHref="?tydzien=2025-04-28"
+      nothingFree={{
+        kind: "later",
+        label: "czwartek, 8 maja",
+        href: "?tydzien=2025-05-05",
+      }}
+      previousHref="?tydzien=2025-04-14"
+      weekLabel="21–27 kwietnia 2025"
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole("link", { name: "Pokaż ten tydzień" }),
+    ).toHaveAttribute("href", "?tydzien=2025-05-05");
+  },
+};
+
+/** Nothing free in the whole horizon: the way to Kontakt (#203). */
+export const NothingFree: Story = {
+  render: () => (
+    <SlotPicker
+      days={week().map((day) => ({ ...day, slots: [] }))}
+      nextHref="?tydzien=2025-04-28"
+      nothingFree={{
+        kind: "none",
+        days: 60,
+        contactHref: "/kontakt?temat=Termin%3A%20Konsultacja",
+      }}
+      previousHref={null}
+      weekLabel="21–27 kwietnia 2025"
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole("link", { name: "Skontaktuj się z nami" }),
+    ).toBeVisible();
+  },
+};
+
 // Step 4 put together, as in the reference: the week, and the summary with
 // the held time.
 export const TimeStep: Story = {

@@ -217,6 +217,25 @@ export async function listFreeSlots(client: Client, query: FreeSlotsQuery) {
   return data ?? [];
 }
 
+/**
+ * The soonest free time of the offer from a day on, within the booking
+ * horizon (ISO), or null when nothing is free (#203).
+ */
+export async function nextFreeSlot(
+  client: Client,
+  query: Omit<FreeSlotsQuery, "to">,
+): Promise<string | null> {
+  const { data, error } = await client.rpc("next_free_slot", {
+    p_service_slug: query.serviceSlug,
+    p_specialist_slug: query.specialistSlug,
+    p_mode: query.mode,
+    p_from: query.from,
+    p_location_slug: query.locationSlug,
+  });
+  if (error) throw error;
+  return data ?? null;
+}
+
 export interface HoldSlotInput extends Omit<FreeSlotsQuery, "from" | "to"> {
   /** The slot's start, as list_free_slots gave it. */
   startsAt: string;

@@ -203,6 +203,49 @@ describe("SlotPicker", () => {
       screen.getByText("W tym tygodniu nie ma wolnych terminów."),
     ).toBeVisible();
   });
+
+  it("leads to the soonest free time when this week has none (#203)", () => {
+    render(
+      <SlotPicker
+        days={days.map((day) => ({ ...day, slots: [] }))}
+        nothingFree={{
+          kind: "later",
+          label: "czwartek, 24 stycznia",
+          href: "?tydzien=2030-01-21",
+        }}
+        weekLabel="7–13 stycznia 2030"
+      />,
+    );
+    expect(screen.getByText(/Najbliższy wolny termin/)).toHaveTextContent(
+      "Najbliższy wolny termin: czwartek, 24 stycznia.",
+    );
+    expect(
+      screen.getByRole("link", { name: "Pokaż ten tydzień" }),
+    ).toHaveAttribute("href", "?tydzien=2030-01-21");
+  });
+
+  it("offers Kontakt when nothing is free in the whole horizon (#203)", () => {
+    render(
+      <SlotPicker
+        days={days.map((day) => ({ ...day, slots: [] }))}
+        nothingFree={{
+          kind: "none",
+          days: 60,
+          contactHref: "/kontakt?temat=x",
+        }}
+        weekLabel="7–13 stycznia 2030"
+      />,
+    );
+    expect(
+      screen.getByText(/nie mamy wolnych terminów w najbliższych 60 dniach/),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "Skontaktuj się z nami" }),
+    ).toHaveAttribute("href", "/kontakt?temat=x");
+    expect(
+      screen.queryByText("W tym tygodniu nie ma wolnych terminów."),
+    ).toBeNull();
+  });
 });
 
 describe("HoldNotice", () => {

@@ -7,6 +7,7 @@ import {
   holdSlot,
   listBookableCatalog,
   listFreeSlots,
+  nextFreeSlot,
   releaseHold,
   reserveHold,
   confirmReservation,
@@ -143,6 +144,38 @@ describe("listFreeSlots", () => {
       p_location_slug: "centrum",
     });
     expect(slots).toEqual(rows);
+  });
+});
+
+describe("nextFreeSlot", () => {
+  it("asks for the soonest free time from a day on, within the horizon", async () => {
+    const { client, rpc } = rpcClient("2030-01-21T08:00:00+00:00");
+    const next = await nextFreeSlot(client, {
+      serviceSlug: "konsultacja",
+      specialistSlug: "anna",
+      mode: "online",
+      from: "2030-01-07",
+    });
+    expect(rpc).toHaveBeenCalledWith("next_free_slot", {
+      p_service_slug: "konsultacja",
+      p_specialist_slug: "anna",
+      p_mode: "online",
+      p_from: "2030-01-07",
+      p_location_slug: undefined,
+    });
+    expect(next).toBe("2030-01-21T08:00:00+00:00");
+  });
+
+  it("is null when nothing is free", async () => {
+    const { client } = rpcClient(null);
+    expect(
+      await nextFreeSlot(client, {
+        serviceSlug: "konsultacja",
+        specialistSlug: "anna",
+        mode: "online",
+        from: "2030-01-07",
+      }),
+    ).toBeNull();
   });
 });
 

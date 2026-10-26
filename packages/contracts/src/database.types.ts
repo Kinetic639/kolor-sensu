@@ -3516,6 +3516,16 @@ export type Database = {
           starts_at: string;
         }[];
       };
+      next_free_slot: {
+        Args: {
+          p_from: string;
+          p_location_slug?: string;
+          p_mode: Database["public"]["Enums"]["visit_mode"];
+          p_service_slug: string;
+          p_specialist_slug: string;
+        };
+        Returns: string | null;
+      };
       list_public_room_locations: {
         Args: never;
         Returns: {

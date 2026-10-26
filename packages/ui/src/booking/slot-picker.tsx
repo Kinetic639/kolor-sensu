@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/utils";
+import { PrimaryButton, SecondaryButton } from "../public-site/actions";
 import { PageLink as Link } from "../public-site/page-link";
 
 // The "Termin" step: a week of free visit times (list_free_slots). Only free
@@ -34,6 +35,48 @@ export interface SlotPickerProps {
   previousHref?: string | null;
   /** Null: beyond the booking horizon. */
   nextHref?: string | null;
+  /**
+   * When this week has nothing free (#203): the soonest free time later
+   * on, with the way to its week, or none in the whole horizon, with the
+   * way to Kontakt.
+   */
+  nothingFree?:
+    | { kind: "later"; label: string; href: string }
+    | { kind: "none"; days: number; contactHref: string };
+}
+
+function NothingFree({
+  help,
+}: {
+  help: NonNullable<SlotPickerProps["nothingFree"]>;
+}) {
+  return (
+    <div className="rounded-card-sm bg-bg text-small text-ink grid justify-items-center gap-4 p-6 text-center">
+      {help.kind === "later" ? (
+        <>
+          <p className="text-text-muted">
+            W tym tygodniu nie ma wolnych terminów.
+          </p>
+          <p>
+            Najbliższy wolny termin: <strong>{help.label}</strong>.
+          </p>
+          <SecondaryButton asChild>
+            <Link href={help.href}>Pokaż ten tydzień</Link>
+          </SecondaryButton>
+        </>
+      ) : (
+        <>
+          <p className="max-w-md">
+            Na tę wizytę nie mamy wolnych terminów w najbliższych {help.days}{" "}
+            dniach. Napisz do nas, a znajdziemy dla Ciebie termin.
+          </p>
+          <PrimaryButton arrow asChild>
+            <Link href={help.contactHref}>Skontaktuj się z nami</Link>
+          </PrimaryButton>
+        </>
+      )}
+    </div>
+  );
 }
 
 function WeekLink({
@@ -115,6 +158,7 @@ export function SlotPicker({
   weekLabel,
   previousHref,
   nextHref,
+  nothingFree,
 }: SlotPickerProps) {
   // The rows: every hour that has a free time on some day.
   const times = [
@@ -132,7 +176,9 @@ export function SlotPicker({
         <WeekLink direction="next" href={nextHref} />
       </div>
 
-      {times.length === 0 ? (
+      {times.length === 0 && nothingFree ? (
+        <NothingFree help={nothingFree} />
+      ) : times.length === 0 ? (
         <p className="rounded-card-sm bg-bg text-small text-text-muted p-6 text-center">
           W tym tygodniu nie ma wolnych terminów.
         </p>

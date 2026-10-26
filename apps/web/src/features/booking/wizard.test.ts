@@ -263,6 +263,38 @@ describe("the time step", () => {
     });
   });
 
+  it("leads from an empty week to the soonest free time (#203)", () => {
+    const [nextFree] = toFreeSlots(
+      [{ starts_at: "2030-01-24T09:00:00Z", ends_at: "2030-01-24T09:50:00Z" }],
+      "Europe/Warsaw",
+    );
+    const { panel } = view(chosen, { slots: [], nextFree });
+    if (panel.kind !== "slots") throw new Error(panel.kind);
+    expect(panel.picker.nothingFree).toEqual({
+      kind: "later",
+      label: "czwartek, 24 stycznia",
+      href: "/umow-wizyte?usluga=konsultacja&forma=online&specjalista=anna&tydzien=2030-01-21",
+    });
+  });
+
+  it("offers Kontakt, naming the visit, when nothing is free (#203)", () => {
+    const { panel } = view(chosen, { slots: [], nextFree: null });
+    if (panel.kind !== "slots") throw new Error(panel.kind);
+    expect(panel.picker.nothingFree).toEqual({
+      kind: "none",
+      days: 20,
+      contactHref: `/kontakt?wiadomosc=${encodeURIComponent(
+        "Dzień dobry, szukam terminu: Konsultacja, Imię anna, online.",
+      )}#formularz`,
+    });
+  });
+
+  it("says nothing more when the week has free times", () => {
+    const { panel } = view(chosen, { slots, nextFree: null });
+    if (panel.kind !== "slots") throw new Error(panel.kind);
+    expect(panel.picker.nothingFree).toBeUndefined();
+  });
+
   it("ignores a time that is not free", () => {
     const { panel } = view(
       { ...chosen, termin: "2030-01-10T15:00" },
