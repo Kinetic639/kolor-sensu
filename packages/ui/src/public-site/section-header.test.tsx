@@ -39,6 +39,13 @@ describe("SectionHeader", () => {
     expect(screen.getByText("samopoczucia")).toHaveClass("text-pink");
   });
 
+  it("colours a small title's words in the strong shades, to read on a phone", () => {
+    // An h3 title is under the large-text size on a phone (WCAG AA 4.5:1).
+    render(<SectionHeader content={full} size="h3" />);
+    expect(screen.getByText("lepszego")).toHaveClass("text-primary-strong");
+    expect(screen.getByText("samopoczucia")).toHaveClass("text-pink-strong");
+  });
+
   it("takes its heading level and size from the section, not the content", () => {
     render(<SectionHeader content={full} as="h3" size="h2" id="kroki" />);
     const heading = screen.getByRole("heading", { level: 3 });

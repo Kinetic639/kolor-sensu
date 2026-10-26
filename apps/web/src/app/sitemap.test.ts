@@ -160,5 +160,9 @@ describe("the sitemap", () => {
         `${siteUrl}/newsletter/1`,
       ]),
     );
+    // The pages behind the e-mails' links are never listed.
+    expect(
+      (await urls()).filter((url) => /potwierdz|wypisz/.test(url)),
+    ).toEqual([]);
   });
 });
