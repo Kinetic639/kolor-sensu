@@ -22,7 +22,9 @@ test.skip(
   !process.env.E2E_PAYMENTS,
   "The payment tests run with E2E_PAYMENTS=1 (see the top of this file).",
 );
-test.describe.configure({ mode: "serial" });
+// Not retried: with the BLIK test they make the five bookings one browser
+// may make in 15 minutes (the hold limit), so a retry would be refused.
+test.describe.configure({ mode: "serial", retries: 0 });
 
 // Stripe's test cards (docs.stripe.com/testing).
 const CARDS = {
@@ -37,6 +39,12 @@ async function payByCard(page: Page, number: string) {
   await payment.locator('input[name="number"]').fill(number);
   await payment.locator('input[name="expiry"]').fill("12 / 34");
   await payment.locator('input[name="cvc"]').fill("123");
+  // Stripe asks for a postal code where the browser seems to be in a
+  // country that uses it (CI runs in the US), not in Poland.
+  const postalCode = payment.locator('input[name="postalCode"]');
+  if (await postalCode.isVisible().catch(() => false)) {
+    await postalCode.fill("10001");
+  }
   await payButton(page).click();
 }
 
