@@ -39,7 +39,7 @@ export function ClosingBanner({
           <EditorialHeading
             id={headingId}
             size="h3"
-            className="text-[clamp(1.8rem,1.4rem+1vw,2.5rem)] leading-[1.2]"
+            className="text-[clamp(1.8rem,1.4rem+1vw,2.5rem)] leading-[1.2] font-semibold"
           >
             {heading}
           </EditorialHeading>

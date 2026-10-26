@@ -164,10 +164,10 @@ export default async function Home() {
           label: crisis.moreLabel,
         }}
       />
+      <ClosingCta words={closing} />
       {location.visible && frame.contact ? (
         <HomeLocation header={headers.location} contact={frame.contact} />
       ) : null}
-      <ClosingCta words={closing} />
     </>
   );
 }
