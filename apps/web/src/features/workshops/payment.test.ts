@@ -10,7 +10,12 @@ const registration = {
   priceMinor: 15000,
   currencyCode: "PLN",
   workshopTitle: "Uważność",
-  details: { name: "Ola", email: "ola@example.invalid", phone: "500600700" },
+  details: {
+    firstName: "Ola",
+    lastName: "Nowak",
+    email: "ola@example.invalid",
+    phone: "500600700",
+  },
 };
 
 describe("a workshop's Checkout Session", () => {

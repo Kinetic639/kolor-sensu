@@ -259,7 +259,8 @@ describe("a guest's visit by token", () => {
 
 describe("saveBookingDetails", () => {
   const details = {
-    name: "Jan Kowalski",
+    firstName: "Jan",
+    lastName: "Kowalski",
     email: "jan@example.com",
     phone: "600100200",
     notes: null,
@@ -272,7 +273,8 @@ describe("saveBookingDetails", () => {
     await saveBookingDetails(client, "token", details);
     expect(rpc).toHaveBeenCalledWith("save_booking_details", {
       p_access_token: "token",
-      p_name: "Jan Kowalski",
+      p_first_name: "Jan",
+      p_last_name: "Kowalski",
       p_email: "jan@example.com",
       p_phone: "600100200",
       p_notes: "",

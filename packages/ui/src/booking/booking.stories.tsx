@@ -282,12 +282,21 @@ export const DetailsWithErrors: Story = {
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <BookingField
-          autoComplete="name"
-          defaultValue="Jan Kowalski"
-          label="Imię i nazwisko"
-          name="name"
+          autoComplete="given-name"
+          defaultValue="Jan"
+          label="Imię"
+          name="firstName"
           required
         />
+        <BookingField
+          autoComplete="family-name"
+          defaultValue="Kowalski"
+          label="Nazwisko"
+          name="lastName"
+          required
+        />
+      </div>
+      <div className="grid gap-5 sm:grid-cols-2">
         <BookingField
           autoComplete="tel"
           defaultValue="600 100 200"
@@ -296,17 +305,17 @@ export const DetailsWithErrors: Story = {
           required
           type="tel"
         />
+        <BookingField
+          autoComplete="email"
+          defaultValue="jan@"
+          error="Podaj poprawny adres e-mail."
+          hint="Wyślemy na niego potwierdzenie i link do zarządzania wizytą."
+          label="E-mail"
+          name="email"
+          required
+          type="email"
+        />
       </div>
-      <BookingField
-        autoComplete="email"
-        defaultValue="jan@"
-        error="Podaj poprawny adres e-mail."
-        hint="Wyślemy na niego potwierdzenie i link do zarządzania wizytą."
-        label="E-mail"
-        name="email"
-        required
-        type="email"
-      />
       <BookingField label="Uwagi (opcjonalnie)" multiline name="notes" />
       <fieldset className="grid gap-3">
         <legend className="sr-only">Zgody</legend>

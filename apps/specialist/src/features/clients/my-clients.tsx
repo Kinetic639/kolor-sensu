@@ -5,16 +5,22 @@ import { Users } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useState } from "react";
-import type { MyClientRow } from "./view-model";
+import {
+  CLIENT_SORTS,
+  shownClients,
+  type ClientSort,
+  type MyClientRow,
+} from "./view-model";
 
-// Moi klienci: the specialist's clients, the next visit first, filtered as
-// one types (a specialist has a handful); each opens its card with the
-// visits with them.
+// Moi klienci: the specialist's clients, the next visit first or by last
+// name, filtered as one types (a specialist has a handful); each opens its
+// card with the visits with them.
 
 export function MyClients({ rows }: { rows: MyClientRow[] }) {
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<ClientSort>("next");
   const words = query.trim().toLowerCase();
-  const shown = words ? rows.filter((row) => row.search.includes(words)) : rows;
+  const shown = shownClients(rows, words, sort);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -23,10 +29,35 @@ export function MyClients({ rows }: { rows: MyClientRow[] }) {
           aria-label="Szukaj klienta"
           className="h-8 max-w-xs text-[0.8125rem]"
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Szukaj po imieniu, e-mailu, telefonie"
+          placeholder="Szukaj po nazwisku, e-mailu, telefonie"
           type="search"
           value={query}
         />
+        <div
+          aria-label="Kolejność"
+          className="flex items-center gap-1"
+          role="radiogroup"
+        >
+          {CLIENT_SORTS.map((option) => (
+            <label
+              className={
+                sort === option.id
+                  ? "inline-flex h-8 cursor-pointer items-center rounded-[var(--radius-control)] bg-[var(--surface-muted)] px-2.5 text-[0.75rem] font-semibold text-[var(--text)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--ring)]"
+                  : "inline-flex h-8 cursor-pointer items-center rounded-[var(--radius-control)] px-2.5 text-[0.75rem] text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--ring)]"
+              }
+              key={option.id}
+            >
+              <input
+                checked={sort === option.id}
+                className="sr-only"
+                name="kolejnosc"
+                onChange={() => setSort(option.id)}
+                type="radio"
+              />
+              {option.label}
+            </label>
+          ))}
+        </div>
         <span className="ml-auto text-[0.8125rem] text-[var(--text-muted)]">
           {words
             ? `${shown.length} z ${rows.length}`

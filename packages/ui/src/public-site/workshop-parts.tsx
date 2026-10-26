@@ -1,9 +1,9 @@
-import { CalendarDays, MapPin, Users } from "lucide-react";
+import { ArrowRight, CalendarDays, MapPin, Sprout, Users } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { cn } from "../lib/utils";
 import { PageLink } from "./page-link";
-import { SoftCard } from "./surfaces";
+import { WatercolorImage } from "./watercolor-image";
 
 // Warsztaty (docs/product/workshops-plan.md): a workshop's card (the list,
 // the homepage) and the facts beside its page's one H1 (when, where, who
@@ -36,85 +36,134 @@ export interface WorkshopCardData {
   statusLabel: string | null;
 }
 
+// On the card's tinted footer: paper chips, the full one in pink.
 const SEATS_TONES = {
-  few: "bg-primary-soft text-ink",
-  full: "bg-pink-soft text-ink",
+  few: "bg-surface text-ink",
+  full: "bg-surface text-pink-strong",
 } as const;
 
+// The cover as a painted photo (WatercolorImage: dry-brush edge,
+// watercolor behind), or a painted wash in the same shape when there is
+// none, with the date on a flat pill of paint, circled by hand, over its
+// lower corner; it
+// lies over the top of a quiet card, narrower than the cover, that holds
+// the words, its price and "Zapisz się" on a tinted footer. The whole card
+// is the title link's click area.
+//
+//   article.ks-wk          positioned root
+//   ├── .ks-wk__art        cover (or wash), status label
+//   └── .ks-wk__body       the card: time, title (link), description,
+//       │                  place and leaders
+//       └── .ks-wk__footer price, seats, "Zapisz się", tinted
 export function WorkshopCard({
   workshop,
   headingLevel = "h3",
+  tone = "blush",
   className,
 }: {
   workshop: WorkshopCardData;
   headingLevel?: "h2" | "h3";
+  /** The wash's paint when there is no cover; a row alternates them. */
+  tone?: "blush" | "sage";
   className?: string;
 }) {
   const Heading = headingLevel;
   const muted = workshop.statusLabel !== null;
   return (
-    <SoftCard asChild interactive>
-      <article
-        className={cn(
-          "group grid content-start gap-4 overflow-hidden",
-          className,
-        )}
-      >
-        <div className="bg-cream relative aspect-[16/9] w-full">
-          {workshop.coverUrl ? (
-            <Image
-              alt={workshop.coverAlt}
-              className={cn("object-cover", muted && "grayscale-[60%]")}
-              fill
-              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-              src={workshop.coverUrl}
+    <article
+      className={cn("ks-wk group/wk", className)}
+      data-muted={muted || undefined}
+    >
+      <div className="ks-wk__art">
+        {workshop.coverUrl ? (
+          <WatercolorImage
+            alt={workshop.coverAlt}
+            imageClassName={cn(muted && "grayscale-[60%]")}
+            sizes="(min-width: 1024px) 34vw, (min-width: 640px) 55vw, calc(117vw - 3rem)"
+            src={workshop.coverUrl}
+          />
+        ) : (
+          <div aria-hidden="true" className="ks-wk__wash">
+            <span
+              className="ks-wk__wash-paint ks-areas__paint"
+              data-paint={tone}
             />
-          ) : null}
-          {workshop.statusLabel ? (
-            <span className="bg-surface text-small text-ink absolute top-3 left-3 rounded-full px-3 py-1 font-semibold">
-              {workshop.statusLabel}
-            </span>
-          ) : null}
-        </div>
-        <div className="grid gap-3 px-5 pb-5 lg:px-6 lg:pb-6">
-          <p className="text-small text-primary-strong font-semibold">
-            <time>{workshop.dateLabel}</time> · {workshop.timeLabel}
-          </p>
-          <Heading className="font-display text-h3 text-ink text-balance">
-            <PageLink
-              className="focus-visible:outline-ring group-hover:underline after:absolute after:inset-0 after:content-[''] focus-visible:outline-2"
-              href={workshop.href}
-            >
-              {workshop.title}
-            </PageLink>
-          </Heading>
-          {workshop.description ? (
-            <p className="text-body text-text-muted line-clamp-3">
-              {workshop.description}
-            </p>
-          ) : null}
-          <ul className="text-small text-text-muted grid gap-1">
-            <li>{workshop.placeLabel}</li>
-            {workshop.leaders ? <li>Prowadzi: {workshop.leaders}</li> : null}
-          </ul>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-body text-ink font-semibold">
-              {workshop.priceLabel}
-            </span>
-            {workshop.seatsLabel && workshop.seatsTone ? (
-              <span
-                className={cn(
-                  "text-small rounded-full px-3 py-0.5 font-medium",
-                  SEATS_TONES[workshop.seatsTone],
-                )}
-              >
-                {workshop.seatsLabel}
-              </span>
-            ) : null}
+            <Sprout strokeWidth={1.4} />
           </div>
+        )}
+        {workshop.statusLabel ? (
+          <span className="ks-wk__status bg-surface text-small text-ink rounded-full px-3 py-1 font-semibold">
+            {workshop.statusLabel}
+          </span>
+        ) : null}
+      </div>
+      <div className="ks-wk__body">
+        <p className="text-small text-primary-strong grid gap-0.5 font-semibold">
+          <time className="whitespace-nowrap">{workshop.dateLabel}</time>
+          <span>{workshop.timeLabel}</span>
+        </p>
+        <Heading className="font-display text-h3 text-ink text-balance">
+          <PageLink
+            className="focus-visible:outline-ring decoration-pink underline-offset-4 group-hover/wk:underline after:absolute after:inset-0 after:z-10 after:content-[''] focus-visible:outline-2"
+            href={workshop.href}
+          >
+            {workshop.title}
+          </PageLink>
+        </Heading>
+        {workshop.description ? (
+          <p className="text-body text-text-muted line-clamp-3">
+            {workshop.description}
+          </p>
+        ) : null}
+        <ul className="text-small text-text-muted grid gap-1.5">
+          <li className="flex items-start gap-2">
+            <MapPin
+              aria-hidden="true"
+              className="text-primary mt-0.5 size-4 shrink-0"
+              strokeWidth={1.6}
+            />
+            <span>{workshop.placeLabel}</span>
+          </li>
+          {workshop.leaders ? (
+            <li className="flex items-start gap-2">
+              <Users
+                aria-hidden="true"
+                className="text-primary mt-0.5 size-4 shrink-0"
+                strokeWidth={1.6}
+              />
+              <span>Prowadzi: {workshop.leaders}</span>
+            </li>
+          ) : null}
+        </ul>
+        <div className="ks-wk__footer flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="text-body text-ink font-semibold">
+            {workshop.priceLabel}
+          </span>
+          {workshop.seatsLabel && workshop.seatsTone ? (
+            <span
+              className={cn(
+                "text-small rounded-full px-3 py-0.5 font-medium",
+                SEATS_TONES[workshop.seatsTone],
+              )}
+            >
+              {workshop.seatsLabel}
+            </span>
+          ) : null}
+          {muted ? null : (
+            <span
+              aria-hidden="true"
+              className="text-small text-ink ml-auto inline-flex items-center gap-1.5 font-semibold"
+            >
+              Zapisz się
+              <ArrowRight
+                className="ease-soft size-4 transition-transform duration-200 group-hover/wk:translate-x-0.5"
+                strokeWidth={1.75}
+              />
+            </span>
+          )}
         </div>
-      </article>
-    </SoftCard>
+      </div>
+    </article>
   );
 }
 
@@ -126,10 +175,14 @@ export function WorkshopGrid({
   headingLevel?: "h2" | "h3";
 }) {
   return (
-    <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {workshops.map((workshop) => (
+    <ul className="grid gap-x-12 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
+      {workshops.map((workshop, index) => (
         <li className="grid" key={workshop.id}>
-          <WorkshopCard headingLevel={headingLevel} workshop={workshop} />
+          <WorkshopCard
+            headingLevel={headingLevel}
+            tone={index % 2 ? "sage" : "blush"}
+            workshop={workshop}
+          />
         </li>
       ))}
     </ul>

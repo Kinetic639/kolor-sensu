@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { personNameFields } from "./person-name";
 
 // Correcting a client's details and the centre's note
 // (docs/product/booking-plan.md, R15): what the admin portal checks before
@@ -8,11 +9,7 @@ const optional = (schema: z.ZodString) =>
   schema.nullish().transform((value) => value || null);
 
 export const clientDetailsSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Podaj imię i nazwisko.")
-    .max(200, "Imię i nazwisko może mieć najwyżej 200 znaków."),
+  ...personNameFields,
   email: z
     .string()
     .trim()

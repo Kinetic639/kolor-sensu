@@ -56,7 +56,7 @@ export const CLIENT_COLUMN_SET: ColumnSet<ClientColumnId> = {
     "najblizsza",
     "zaplacono",
   ],
-  pinned: { id: "klient", label: "Klient", width: 220 },
+  pinned: { id: "klient", label: "Nazwisko i imię", width: 220 },
 };
 
 /** The column a header sorts by (none: not sortable). */

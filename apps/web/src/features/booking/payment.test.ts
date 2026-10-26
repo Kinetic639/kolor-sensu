@@ -25,6 +25,8 @@ const booking: GuestBooking = {
   currencyCode: "PLN",
   details: {
     name: "Jan Kowalski",
+    firstName: "Jan",
+    lastName: "Kowalski",
     email: "jan@example.com",
     phone: "600100200",
     notes: null,

@@ -378,7 +378,8 @@ export async function centreAddWorkshopParticipant(
   client: Client,
   workshopId: string,
   participant: {
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phone: string | null;
     notes: string | null;
@@ -390,7 +391,8 @@ export async function centreAddWorkshopParticipant(
 }> {
   const { data, error } = await client.rpc("centre_add_workshop_participant", {
     p_workshop_id: workshopId,
-    p_name: participant.name,
+    p_first_name: participant.firstName,
+    p_last_name: participant.lastName,
     p_email: participant.email,
     p_phone: participant.phone,
     p_notes: participant.notes,

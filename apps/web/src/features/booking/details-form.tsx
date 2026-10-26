@@ -36,7 +36,7 @@ export function DetailsForm({
    */
   prefill?: Pick<
     DetailsFormValues,
-    "name" | "email" | "phone" | "notes"
+    "firstName" | "lastName" | "email" | "phone" | "notes"
   > | null;
   /** A discount code covers the whole price: nothing to pay. */
   free?: boolean;
@@ -79,13 +79,23 @@ export function DetailsForm({
 
       <div className="grid gap-5 sm:grid-cols-2">
         <BookingField
-          autoComplete="name"
-          defaultValue={values?.name}
-          error={errors.name}
-          label="Imię i nazwisko"
-          name="name"
+          autoComplete="given-name"
+          defaultValue={values?.firstName}
+          error={errors.firstName}
+          label="Imię"
+          name="firstName"
           required
         />
+        <BookingField
+          autoComplete="family-name"
+          defaultValue={values?.lastName}
+          error={errors.lastName}
+          label="Nazwisko"
+          name="lastName"
+          required
+        />
+      </div>
+      <div className="grid gap-5 sm:grid-cols-2">
         <BookingField
           autoComplete="tel"
           defaultValue={values?.phone}
@@ -96,17 +106,17 @@ export function DetailsForm({
           required
           type="tel"
         />
+        <BookingField
+          autoComplete="email"
+          defaultValue={values?.email}
+          error={errors.email}
+          hint="Wyślemy na niego potwierdzenie i link do zarządzania wizytą."
+          label="E-mail"
+          name="email"
+          required
+          type="email"
+        />
       </div>
-      <BookingField
-        autoComplete="email"
-        defaultValue={values?.email}
-        error={errors.email}
-        hint="Wyślemy na niego potwierdzenie i link do zarządzania wizytą."
-        label="E-mail"
-        name="email"
-        required
-        type="email"
-      />
       <BookingField
         defaultValue={values?.notes}
         error={errors.notes}

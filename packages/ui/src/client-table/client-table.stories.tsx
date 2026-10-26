@@ -24,6 +24,7 @@ const rows: ClientRow[] = [
   {
     id: "c1",
     name: "Jan Kowalski",
+    listName: "Kowalski Jan",
     email: "jan@example.invalid",
     phone: "600 100 200",
     visits: "6",
@@ -38,6 +39,7 @@ const rows: ClientRow[] = [
   {
     id: "c2",
     name: "Ewa Nowak",
+    listName: "Nowak Ewa",
     email: "ewa.nowak@example.invalid",
     phone: null,
     visits: "1",
@@ -52,6 +54,7 @@ const rows: ClientRow[] = [
   {
     id: "c3",
     name: "Piotr Zieliński",
+    listName: "Zieliński Piotr",
     email: "piotr@example.invalid",
     phone: "+48 501 222 333",
     visits: "2",
@@ -116,7 +119,8 @@ function Clients({
                 action={save}
                 clientId={opened.id}
                 details={{
-                  name: opened.name,
+                  firstName: "Jan",
+                  lastName: "Kowalski",
                   email: opened.email,
                   phone: opened.phone,
                   notes: opened.notes,
@@ -161,7 +165,7 @@ export const List: Story = {
   play: async ({ canvas }) => {
     const table = canvas.getByRole("table", { name: "Klienci" });
     await expect(
-      within(table).getByRole("link", { name: "Jan Kowalski" }),
+      within(table).getByRole("link", { name: "Kowalski Jan" }),
     ).toHaveAttribute("href", "/klienci?klient=c1");
     await expect(
       canvas.getByRole("columnheader", { name: /Ostatnia wizyta/ }),
@@ -210,7 +214,8 @@ export const Card: Story = {
           action={save}
           clientId="c1"
           details={{
-            name: "Jan Kowalski",
+            firstName: "Jan",
+            lastName: "Kowalski",
             email: "jan@example.invalid",
             phone: "600 100 200",
             notes: "Woli popołudnia. Prosi o przypomnienie SMS.",

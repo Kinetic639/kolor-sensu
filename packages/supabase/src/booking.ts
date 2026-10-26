@@ -1,3 +1,4 @@
+import { nameParts } from "@repo/contracts/person-name";
 import type {
   PublicService,
   PublicSpecialistOffer,
@@ -280,6 +281,8 @@ export interface GuestBooking {
   /** The client's details, once saved with the consents. */
   details: {
     name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phone: string;
     notes: string | null;
@@ -327,6 +330,11 @@ export async function getBooking(
         details: row.details_saved
           ? {
               name: row.client_name,
+              ...nameParts(
+                row.client_name,
+                row.client_first_name,
+                row.client_last_name,
+              ),
               email: row.client_email,
               phone: row.client_phone,
               notes: row.client_notes ?? null,
@@ -351,7 +359,8 @@ export async function saveBookingDetails(
 ) {
   const { error } = await client.rpc("save_booking_details", {
     p_access_token: accessToken,
-    p_name: details.name,
+    p_first_name: details.firstName,
+    p_last_name: details.lastName,
     p_email: details.email,
     p_phone: details.phone,
     p_notes: details.notes ?? "",

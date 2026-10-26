@@ -1,3 +1,4 @@
+import { nameParts } from "@repo/contracts/person-name";
 import type { Database, Json } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -205,7 +206,8 @@ export function workshopImageUrl(client: Client, path: string): string {
 // ------------------------------------------------------------ the guest
 
 export interface WorkshopDetails {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   notes?: string | null;
@@ -245,7 +247,8 @@ export async function saveWorkshopDetails(
     "save_workshop_registration_details",
     {
       p_access_token: token,
-      p_name: details.name,
+      p_first_name: details.firstName,
+      p_last_name: details.lastName,
       p_email: details.email,
       p_phone: details.phone,
       p_notes: details.notes ?? null,
@@ -286,7 +289,8 @@ export async function joinWorkshopWaitlist(
   const { data, error } = await secretClient.rpc("join_workshop_waitlist", {
     p_slug: slug,
     p_client_key: clientKey,
-    p_name: details.name,
+    p_first_name: details.firstName,
+    p_last_name: details.lastName,
     p_email: details.email,
     p_phone: details.phone,
     p_notes: details.notes ?? null,
@@ -374,7 +378,11 @@ export async function getWorkshopRegistration(
     details:
       row.details_saved && row.client_email
         ? {
-            name: row.client_name ?? "",
+            ...nameParts(
+              row.client_name,
+              row.client_first_name,
+              row.client_last_name,
+            ),
             email: row.client_email,
             phone: row.client_phone ?? "",
             notes: row.client_notes ?? undefined,
@@ -721,11 +729,12 @@ export async function workshopRegistrationId(
 export async function transferWorkshopSeat(
   secretClient: Client,
   token: string,
-  person: { name: string; email: string; phone: string },
+  person: { firstName: string; lastName: string; email: string; phone: string },
 ) {
   const { error } = await secretClient.rpc("transfer_workshop_seat", {
     p_access_token: token,
-    p_name: person.name,
+    p_first_name: person.firstName,
+    p_last_name: person.lastName,
     p_email: person.email,
     p_phone: person.phone,
   });

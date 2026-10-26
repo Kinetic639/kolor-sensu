@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { personNameFields } from "./person-name";
 
 // A workshop as the admin portal's form holds it (docs/product/
 // workshops-plan.md, PR 2): its words, its date and hours in the centre's
@@ -105,7 +106,7 @@ export type WorkshopCancelRequest = z.infer<typeof workshopCancelRequestSchema>;
 
 /** The portal adds a participant (a call, a transfer). */
 export const workshopParticipantRequestSchema = z.strictObject({
-  name: z.string().trim().min(1, "Podaj imię i nazwisko.").max(200),
+  ...personNameFields,
   email: z.email("Podaj poprawny e-mail.").max(320),
   phone: z.string().trim().max(40).nullable(),
   notes: z.string().trim().max(1000).nullable(),

@@ -260,7 +260,8 @@ async function askTheSite(
 export async function addParticipantAction(
   workshopId: string,
   participant: {
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phone: string;
     notes: string;
@@ -270,7 +271,8 @@ export async function addParticipantAction(
   const result = await askTheSite(
     `/api/centrum/warsztaty/${encodeURIComponent(workshopId)}/uczestnicy`,
     {
-      name: participant.name,
+      firstName: participant.firstName,
+      lastName: participant.lastName,
       email: participant.email.trim(),
       phone: participant.phone.trim() || null,
       notes: participant.notes.trim() || null,

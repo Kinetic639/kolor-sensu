@@ -69,7 +69,8 @@ export async function bookUntilPayment(page: Page): Promise<string> {
   const reference = (await details
     .getByText(/^\d{4}-\d{3,}$/)
     .textContent())!.trim();
-  await details.getByLabel("Imię i nazwisko").fill("Gość E2E");
+  await details.getByLabel("Imię", { exact: true }).fill("Gość");
+  await details.getByLabel("Nazwisko", { exact: true }).fill("E2E");
   await details.getByLabel("Telefon").fill("500600700");
   await details.getByLabel("E-mail").fill(`e2e-${Date.now()}@example.invalid`);
   await details
