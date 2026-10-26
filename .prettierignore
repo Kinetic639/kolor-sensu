@@ -13,3 +13,5 @@ supabase/.temp
 pnpm-lock.yaml
 next-env.d.ts
 coverage
+# Preserve the upstream minified prototype runtime and its license header.
+apps/web/public/crisis/vendor/

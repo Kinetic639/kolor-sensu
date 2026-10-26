@@ -21,6 +21,7 @@ export default defineMain({
     "../public",
     { from: "../../web/public/watercolor", to: "/watercolor" },
     { from: "../../web/public/brand", to: "/brand" },
+    { from: "../../web/public/crisis", to: "/crisis" },
     { from: "../../../docs/design/references/public", to: "/references" },
   ],
   framework: {

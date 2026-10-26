@@ -341,12 +341,19 @@ describe("the newsletter band", () => {
 describe("the crisis strip", () => {
   it("is always there, the published numbers dialling", async () => {
     published.crisis = {
+      ...defaultCrisisHelp,
+      eyebrow: "Wsparcie od zaraz",
+      moreLabel: "Sprawdź dostępne wsparcie",
       heading: "Pomoc od zaraz",
       text: "",
       lines: [{ number: "116 123", label: "Telefon zaufania", detail: "" }],
     };
     await renderHome();
     const strip = screen.getByRole("complementary", { name: "Pomoc od zaraz" });
+    expect(within(strip).getByText("Wsparcie od zaraz")).toBeInTheDocument();
+    expect(
+      within(strip).getByRole("link", { name: "Sprawdź dostępne wsparcie" }),
+    ).toHaveAttribute("href", "/pomoc-w-kryzysie");
     expect(
       within(strip).getByRole("link", { name: "116 123" }),
     ).toHaveAttribute("href", "tel:116123");
@@ -367,10 +374,9 @@ describe("the crisis strip", () => {
     const strip = screen.getByRole("complementary", {
       name: "Potrzebujesz pomocy teraz?",
     });
-    expect(within(strip).getAllByRole("link")[0]).toHaveAttribute(
-      "href",
-      "tel:112",
-    );
+    expect(
+      within(within(strip).getByRole("list")).getAllByRole("link")[0],
+    ).toHaveAttribute("href", "tel:112");
   });
 });
 

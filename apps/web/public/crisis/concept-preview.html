@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="design-preview-version" content="drawn-link-1" />
+    <link rel="stylesheet" href="handdrawn-link.css" />
+    <title>Pomoc w kryzysie — porównanie koncepcji</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #f8f7f3;
+        --ink: #16302f;
+        --muted: #566461;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "Segoe UI", Arial, sans-serif;
+      }
+      .toolbar {
+        max-width: 1280px;
+        margin: 28px auto 0;
+        padding: 0 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+      .toolbar p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .modes {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+        max-width: 100%;
+      }
+      .modes button {
+        padding: 11px 18px;
+        border: 1px solid #d5ded2;
+        border-radius: 40px;
+        background: transparent;
+        color: var(--ink);
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+      }
+      .modes button[aria-pressed="true"] {
+        background: #527b57;
+        color: #fff;
+        border-color: #527b57;
+      }
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid #45684a;
+        outline-offset: 5px;
+      }
+      .section {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 75px 32px 70px;
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.65fr);
+        gap: clamp(32px, 4vw, 64px);
+        align-items: start;
+      }
+      .intro {
+        position: relative;
+        min-width: 0;
+        padding-top: 8px;
+      }
+      .eyebrow {
+        font-size: 12px;
+        font-weight: 650;
+        color: #9c5754;
+        letter-spacing: 0.23em;
+        text-transform: uppercase;
+        margin: 0 0 24px;
+      }
+      h1 {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(34px, 3.8vw, 53px);
+        font-weight: 500;
+        line-height: 1.12;
+        letter-spacing: -0.035em;
+        margin: 0 0 26px;
+      }
+      .description {
+        max-width: 355px;
+        font-size: 16px;
+        line-height: 1.8;
+        margin: 0;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px 26px;
+        grid-auto-rows: 1fr;
+      }
+      .card {
+        position: relative;
+        min-width: 0;
+        min-height: 236px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 30px 28px;
+        isolation: isolate;
+      }
+      .decoration {
+        position: absolute;
+        inset: -8px -8px;
+        z-index: -1;
+        width: calc(100% + 16px);
+        height: calc(100% + 16px);
+        pointer-events: none;
+      }
+      .phone {
+        width: 25px;
+        height: 25px;
+        margin-bottom: 15px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .card h2 {
+        font:
+          500 clamp(20px, 1.8vw, 25px)/1.25 Georgia,
+          "Times New Roman",
+          serif;
+        margin: 0 0 13px;
+      }
+      .number {
+        font-size: 20px;
+        margin: 0 0 8px;
+        font-weight: 500;
+        overflow-wrap: anywhere;
+      }
+      .detail {
+        color: var(--muted);
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .context {
+        font-size: 9px;
+        font-weight: 650;
+        color: #9c5754;
+        letter-spacing: 0.1em;
+        margin: -2px 0 10px;
+        text-transform: uppercase;
+      }
+      .more {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--ink);
+        font-size: 14px;
+        margin-top: 30px;
+        text-decoration: none;
+      }
+      .note {
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+        padding: 0 24px 32px;
+      }
+      .card-fill {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -2;
+        pointer-events: none;
+      }
+      body[data-mode="outline"] .decoration,
+      body[data-mode="combined"] .decoration {
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      body[data-mode="outline"] .card {
+        padding: 30px 28px;
+      }
+      body[data-mode="outline"] .phone {
+        padding: 0;
+      }
+      @media (max-width: 1119px) {
+        .section {
+          gap: 35px;
+          grid-template-columns: 1fr;
+          padding-top: 50px;
+        }
+        .intro {
+          max-width: 550px;
+        }
+        h1 {
+          max-width: 510px;
+        }
+        .description {
+          max-width: 510px;
+        }
+        .toolbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        .card {
+          min-height: 230px;
+        }
+      }
+      @media (max-width: 679px) {
+        .toolbar {
+          padding: 0 22px;
+          margin-top: 22px;
+        }
+        .modes button {
+          padding: 10px 13px;
+          font-size: 12px;
+        }
+        .section {
+          padding: 44px 22px;
+          gap: 32px;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+        .card {
+          min-height: 228px;
+        }
+        h1 {
+          font-size: clamp(32px, 8.8vw, 39px);
+          overflow-wrap: anywhere;
+        }
+        .card h2 {
+          font-size: 25px;
+        }
+      }
+    </style>
+  </head>
+  <body data-mode="combined">
+    <header class="toolbar">
+      <p>Kolor Sensu · pomoc w kryzysie · podgląd koncepcji</p>
+      <div class="modes" aria-label="Wygląd sekcji">
+        <button type="button" data-mode="wash" aria-pressed="false">
+          Malowane tła
+        </button>
+        <button type="button" data-mode="outline" aria-pressed="false">
+          Ręcznie rysowane karty
+        </button>
+        <button type="button" data-mode="combined" aria-pressed="true">
+          Malowane karty z ramką
+        </button>
+        <button type="button" id="replay">Odtwórz animację ↻</button>
+      </div>
+    </header>
+    <main>
+      <section class="section" aria-labelledby="heading">
+        <header class="intro">
+          <p class="eyebrow">Pomoc w kryzysie</p>
+          <h1 id="heading">Potrzebujesz pomocy teraz?</h1>
+          <p class="description">
+            Nie musisz zostawać z tym samodzielnie. Znajdź odpowiednią formę
+            wsparcia.
+          </p>
+          <a class="more handdrawn-link" href="/pomoc-w-kryzysie">
+            <span class="handdrawn-link__label"
+              >Więcej o pomocy w kryzysie<img
+                class="handdrawn-link__underline"
+                src="handdrawn-underline.svg"
+                alt=""
+                width="360"
+                height="14"
+            /></span>
+            <img
+              class="handdrawn-link__arrow"
+              src="handdrawn-arrow.svg"
+              alt=""
+              width="34"
+              height="26"
+            />
+          </a>
+        </header>
+        <div class="grid" id="contacts"></div>
+      </section>
+    </main>
+    <p class="note">
+      Podgląd graficzny — przykładowa treść zamiast rzeczywistych numerów.
+    </p>
+    <script src="vendor/gsap.min.js"></script>
+    <script src="handdrawn-link.js"></script>
+    <script>
+      const phone =
+        '<svg class="phone" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16.3v2.9a2 2 0 0 1-2.2 2 18.9 18.9 0 0 1-8.2-3 18.5 18.5 0 0 1-5.7-5.7 18.9 18.9 0 0 1-3-8.3A2 2 0 0 1 3.9 2H7a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a15.2 15.2 0 0 0 5.8 5.8l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.8.7a2 2 0 0 1 1 1.6Z"/></svg>';
+      const contacts = [
+        {
+          title: "Numer alarmowy",
+          color: "pink",
+          variant: 1,
+          context: "W nagłym zagrożeniu",
+        },
+        { title: "Wsparcie dla dorosłych", color: "green", variant: 1 },
+        { title: "Dzieci i młodzież", color: "green", variant: 2 },
+        { title: "Rozmowa i wsparcie", color: "pink", variant: 2 },
+      ];
+      const sourceCache = new Map();
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      );
+      let renderId = 0;
+      let observer;
+      let animations = [];
+      const linkReady = window.HandDrawnLink.mount(
+        document.querySelector(".handdrawn-link"),
+        { gsap: window.gsap },
+      );
+
+      function animateCard(card, index) {
+        const strokes = [...card.querySelectorAll("[data-outline-stroke]")];
+        const start = card.querySelector('[data-outline-tip="start"]');
+        const end = card.querySelector('[data-outline-tip="end"]');
+        const animation = gsap.timeline({
+          delay: window.innerWidth >= 1120 ? index * 0.16 : 0,
+          onStart: () => {
+            card.dataset.drawing = "drawing";
+          },
+          onComplete: () => {
+            card.dataset.drawing = "complete";
+          },
+        });
+        animation.to(
+          start,
+          { opacity: 1, duration: 0.12, ease: "power1.out" },
+          0,
+        );
+        animation.to(
+          strokes,
+          { strokeDashoffset: 0, duration: 1.6, ease: "power2.inOut" },
+          0.04,
+        );
+        animation.to(
+          end,
+          { opacity: 1, duration: 0.16, ease: "power1.out" },
+          1.5,
+        );
+        animations.push(animation);
+      }
+
+      async function render(mode) {
+        const id = ++renderId;
+        linkReady.then((controller) => {
+          if (id === renderId) controller.replay();
+        });
+        observer?.disconnect();
+        animations.forEach((animation) => animation.kill());
+        animations = [];
+        document.getElementById("replay").hidden =
+          mode === "wash" || reducedMotion.matches;
+        document.body.dataset.mode = mode;
+        for (const button of document.querySelectorAll(
+          '[data-mode][type="button"]',
+        ))
+          button.setAttribute(
+            "aria-pressed",
+            String(button.dataset.mode === mode),
+          );
+        document.getElementById("contacts").innerHTML = contacts
+          .map(
+            (c) =>
+              `<article class="card">${mode === "combined" ? `<img class="card-fill" src="crisis-fill-${c.color}-${c.variant}.webp" alt="" width="960" height="640" />` : ""}<img class="decoration" src="crisis-${mode === "wash" ? "wash" : "outline"}-${c.color}-${c.variant}.webp" alt="" width="960" height="640" />${phone}${c.context ? `<p class="context">${c.context}</p>` : ""}<h2>${c.title}</h2><p class="number">Numer telefonu</p><p class="detail">Opis i dostępność</p></article>`,
+          )
+          .join("");
+
+        if (mode === "wash" || !window.gsap) return;
+        try {
+          const sources = await Promise.all(
+            contacts.map((c) => {
+              const url = `crisis-outline-${c.color}-${c.variant}.svg?v=responsive-2`;
+              if (!sourceCache.has(url))
+                sourceCache.set(
+                  url,
+                  fetch(url).then((response) => {
+                    if (!response.ok) throw new Error("Outline unavailable");
+                    return response.text();
+                  }),
+                );
+              return sourceCache.get(url);
+            }),
+          );
+          if (id !== renderId) return;
+          const cards = [...document.querySelectorAll(".card")];
+          cards.forEach((card, index) => {
+            const svg = new DOMParser().parseFromString(
+              sources[index],
+              "image/svg+xml",
+            ).documentElement;
+            svg.setAttribute("class", "decoration");
+            svg.setAttribute("preserveAspectRatio", "none");
+            svg.setAttribute("aria-hidden", "true");
+            svg.setAttribute("focusable", "false");
+            card.querySelector(".decoration").replaceWith(svg);
+            if (reducedMotion.matches) {
+              card.dataset.drawing = "complete";
+              return;
+            }
+            for (const stroke of svg.querySelectorAll(
+              "[data-outline-stroke]",
+            )) {
+              const length = stroke.getTotalLength();
+              stroke.style.strokeDasharray = `${length} ${length}`;
+              stroke.style.strokeDashoffset = String(length);
+            }
+            svg.querySelectorAll("[data-outline-tip]").forEach((tip) => {
+              tip.style.opacity = "0";
+            });
+            card.dataset.drawing = "waiting";
+          });
+          if (reducedMotion.matches) return;
+          observer = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                if (!entry.isIntersecting) continue;
+                observer.unobserve(entry.target);
+                animateCard(entry.target, cards.indexOf(entry.target));
+              }
+            },
+            { threshold: 0.25 },
+          );
+          cards.forEach((card) => observer.observe(card));
+        } catch {
+          // Static WebP outlines remain visible if SVG loading fails.
+        }
+      }
+      for (const button of document.querySelectorAll(
+        '[data-mode][type="button"]',
+      ))
+        button.addEventListener("click", () => render(button.dataset.mode));
+      document
+        .getElementById("replay")
+        .addEventListener("click", () => render(document.body.dataset.mode));
+      reducedMotion.addEventListener("change", () =>
+        render(document.body.dataset.mode),
+      );
+      render("combined");
+    </script>
+  </body>
+</html>

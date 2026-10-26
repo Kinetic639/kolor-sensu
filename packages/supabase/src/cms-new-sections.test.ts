@@ -56,6 +56,25 @@ function saving(payload: unknown) {
 }
 
 describe("before anything is published", () => {
+  it("reads existing crisis payloads with backwards-compatible editable intro fields", async () => {
+    const legacy = {
+      heading: "Wsparcie",
+      text: "Opis",
+      lines: [{ number: "123", label: "Linia", detail: "" }],
+    };
+    expect(await getPublishedCrisisHelp(reading(legacy).client)).toEqual({
+      ...legacy,
+      eyebrow: "Pomoc w kryzysie",
+      moreLabel: "Więcej o pomocy w kryzysie",
+    });
+    const edited = { ...legacy, eyebrow: "Twój napis", moreLabel: "Twój link" };
+    expect(await updateCrisisHelpDraft(saving(edited).client, edited)).toEqual(
+      edited,
+    );
+    expect(await getPublishedCrisisHelp(reading(edited).client)).toEqual(
+      edited,
+    );
+  });
   it("shows the site's defaults", async () => {
     const cases = [
       [getPublishedWhyUs, "why_us", defaultWhyUs],

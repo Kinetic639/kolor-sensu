@@ -155,12 +155,13 @@ export default async function Home() {
         </NewsletterBand>
       ) : null}
       <CrisisStrip
+        eyebrow={crisis.eyebrow}
         heading={crisis.heading}
         text={crisis.text}
         lines={crisis.lines}
         more={{
           href: "/pomoc-w-kryzysie",
-          label: "Więcej o pomocy w kryzysie",
+          label: crisis.moreLabel,
         }}
       />
       {location.visible && frame.contact ? (

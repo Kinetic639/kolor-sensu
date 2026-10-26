@@ -65,6 +65,7 @@ const SECTIONS = [
   { id: "termin", label: "Termin i miejsce" },
   { id: "prowadzacy", label: "Prowadzący" },
   { id: "zapisy", label: "Cena i zapisy" },
+  { id: "powiazane", label: "Powiązane" },
   { id: "seo", label: "Google i udostępnianie" },
 ] as const;
 
@@ -99,6 +100,7 @@ export function WorkshopWorkspace({
   specialists,
   places,
   services,
+  articles,
   webUrl,
   participants,
 }: {
@@ -106,7 +108,9 @@ export function WorkshopWorkspace({
   state: WorkshopState;
   specialists: readonly { id: string; name: string }[];
   places: readonly PlaceOption[];
-  services: readonly { slug: string; name: string }[];
+  services: readonly { id: string; slug: string; name: string }[];
+  /** The published articles, for "Powiązane" (#185). */
+  articles: readonly { id: string; title: string }[];
   /** The public site's address, for "Zobacz na stronie". */
   webUrl: string;
   /** The participants' section (a saved workshop). */
@@ -692,6 +696,43 @@ export function WorkshopWorkspace({
                 ? ` Teraz: ${formatMinor(saved.priceMinor)} za miejsce.`
                 : ""}
             </p>
+          </WorkspaceSection>
+
+          <WorkspaceSection
+            id="powiazane"
+            note="pod warsztatem na stronie, z innymi nadchodzącymi warsztatami"
+            title="Powiązane"
+          >
+            <div className="grid gap-4 lg:grid-cols-2">
+              <CheckList
+                chosen={draft.serviceIds}
+                empty="Nie ma jeszcze usług."
+                legend={`Usługi (do ${WORKSHOP_LIMITS.services}; bez wyboru: usługi prowadzącego)`}
+                onChange={(serviceIds) =>
+                  change({
+                    serviceIds: serviceIds.slice(0, WORKSHOP_LIMITS.services),
+                  })
+                }
+                options={services.map((one) => ({
+                  value: one.id,
+                  label: one.name,
+                }))}
+              />
+              <CheckList
+                chosen={draft.articleIds}
+                empty="Nie ma jeszcze opublikowanych artykułów."
+                legend={`Artykuły (do ${WORKSHOP_LIMITS.articles})`}
+                onChange={(articleIds) =>
+                  change({
+                    articleIds: articleIds.slice(0, WORKSHOP_LIMITS.articles),
+                  })
+                }
+                options={articles.map((one) => ({
+                  value: one.id,
+                  label: one.title,
+                }))}
+              />
+            </div>
           </WorkspaceSection>
 
           <WorkspaceSection

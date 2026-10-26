@@ -333,8 +333,15 @@ const phoneNumberSchema = z
  * are dialled as written.
  */
 export const crisisHelpContentSchema = z.strictObject({
+  eyebrow: z.string().trim().max(60).default("Pomoc w kryzysie"),
   heading: z.string().trim().min(1).max(80),
   text: z.string().trim().max(200),
+  moreLabel: z
+    .string()
+    .trim()
+    .min(1)
+    .max(80)
+    .default("Więcej o pomocy w kryzysie"),
   lines: z
     .array(
       z.strictObject({
@@ -351,7 +358,9 @@ export type CrisisHelpContent = z.infer<typeof crisisHelpContentSchema>;
 
 /** Until anything is published: the emergency number first, then the lines. */
 export const defaultCrisisHelp: CrisisHelpContent = {
+  eyebrow: "Pomoc w kryzysie",
   heading: "Potrzebujesz pomocy teraz?",
+  moreLabel: "Więcej o pomocy w kryzysie",
   text: "Jeśli Twoje życie jest w zagrożeniu, dzwoń pod 112. Możesz też zadzwonić na bezpłatne linie wsparcia:",
   lines: [
     {
