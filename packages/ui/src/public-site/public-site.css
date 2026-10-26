@@ -2343,6 +2343,194 @@
   inherits: true;
   initial-value: 1.25rem;
 }
+/* The location's contact details and local map illustration share the paper palette. */
+@layer components {
+  .ks-location {
+    padding-block: 5rem;
+  }
+  .ks-location__layout {
+    display: grid;
+    gap: 2.75rem;
+    align-items: stretch;
+  }
+  .ks-location__copy {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: 2rem;
+    min-width: 0;
+  }
+  .ks-location__details {
+    display: grid;
+    gap: 1.5rem;
+    width: 100%;
+    font-style: normal;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+  .ks-location__detail {
+    display: grid;
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
+  }
+  .ks-location__detail > svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.2rem;
+    color: var(--color-primary);
+  }
+  .ks-location__label {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--color-primary);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .ks-location__detail-action {
+    margin-top: 1.25rem;
+  }
+  .ks-location__detail a {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    transition: color 180ms;
+  }
+  .ks-location__detail a:hover,
+  .ks-location__detail a:focus-visible {
+    color: var(--color-primary);
+    text-decoration-line: underline;
+  }
+  .ks-location__map {
+    position: relative;
+    isolation: isolate;
+    min-width: 0;
+  }
+  .ks-location__map::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: -1rem;
+    background: url("/crisis/crisis-wash-pink-1.webp") center / 100% 100%
+      no-repeat;
+    opacity: 0.65;
+    transform: rotate(2deg);
+    pointer-events: none;
+  }
+  .ks-location-map {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 29rem;
+    overflow: hidden;
+    background: #e7edde;
+    mask-image: url("/crisis/crisis-fill-green-1.webp");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+  .ks-location-map__iframe {
+    position: absolute;
+    inset: 1.25rem;
+    width: calc(100% - 2.5rem);
+    height: calc(100% - 2.5rem);
+    border: 0;
+  }
+  .ks-location-map__placeholder {
+    position: relative;
+    display: flex;
+    min-height: inherit;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 2.75rem 1.25rem 1.25rem;
+  }
+  .ks-location-map__placeholder::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("/watercolor/closing-banner-paint.webp") center / cover;
+    opacity: 0.45;
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+  }
+  .ks-location-map__sketch {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .ks-location-map__pin {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 4.25rem;
+    height: 4.25rem;
+    color: var(--color-primary-strong);
+    background: #faf8f1;
+    border-radius: 47% 53% 51% 49% / 52% 46% 54% 48%;
+    box-shadow: 0 6px 20px rgb(82 123 87 / 10%);
+  }
+  .ks-location-map__pin svg {
+    width: 2rem;
+    height: 2rem;
+  }
+  .ks-location-map__invitation {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 1.5rem clamp(1rem, 2vw, 1.75rem);
+    text-align: center;
+    background: rgb(250 248 243 / 96%);
+    border-radius: 1.75rem 1.25rem 2rem 1.375rem;
+  }
+  .ks-location-map__title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .ks-location-map__address {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .ks-location-map__consent {
+    max-width: 25rem;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+  @media (min-width: 36rem) {
+    .ks-location-map__placeholder {
+      padding: 3rem 2rem 2rem;
+    }
+  }
+  @media (min-width: 64rem) {
+    .ks-location {
+      padding-block: 8rem;
+    }
+    .ks-location__layout {
+      grid-template-columns: minmax(0, 0.65fr) minmax(0, 1.35fr);
+      gap: clamp(3rem, 5vw, 5rem);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ks-location__detail a {
+      transition: none;
+    }
+  }
+}
+
 /* Full-width newsletter paint, with the readable content on the page grid. */
 @layer components {
   .ks-newsletter-band {

@@ -157,7 +157,7 @@ function DescriptionRun({ part }: { part: DescriptionPart }) {
   );
 }
 
-function HeaderCta({
+export function HeaderCta({
   href,
   label,
   style,

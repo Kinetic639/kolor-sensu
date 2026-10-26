@@ -384,7 +384,9 @@ describe("Gdzie jesteśmy", () => {
   it("shows the company's address, phone and e-mail", async () => {
     await renderHome();
     const section = screen.getByRole("region", { name: "Odwiedź nas" });
-    expect(within(section).getByText(/ul. Testowa 1/)).toBeInTheDocument();
+    expect(
+      within(section.querySelector("address")!).getByText(/ul. Testowa 1/),
+    ).toBeInTheDocument();
     expect(
       within(section).getByRole("link", { name: "+48 600 000 000" }),
     ).toHaveAttribute("href", "tel:+48 600 000 000");

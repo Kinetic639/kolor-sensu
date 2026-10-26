@@ -228,7 +228,9 @@ describe("Kontakt", () => {
   it("shows the company's details with a link to Kontakt, and is left out without them", async () => {
     await renderAbout();
     const section = region("Jesteśmy blisko")!;
-    expect(within(section).getByText(/ul\. Testowa 1/)).toBeInTheDocument();
+    expect(
+      within(section.querySelector("address")!).getByText(/ul\. Testowa 1/),
+    ).toBeInTheDocument();
     expect(
       within(section).getByRole("link", { name: /Przejdź do kontaktu/ }),
     ).toHaveAttribute("href", "/kontakt");
