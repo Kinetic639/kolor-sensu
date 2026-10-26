@@ -75,7 +75,7 @@ export function SectionHeader({
   variant = "section",
   className,
 }: SectionHeaderProps) {
-  const { eyebrow, title, description, cta } = content;
+  const { description, cta } = content;
   const centred = align === "center";
   return (
     <header
@@ -86,35 +86,7 @@ export function SectionHeader({
         className,
       )}
     >
-      {eyebrow.text ? (
-        <SectionEyebrow className={eyebrowTones[eyebrow.tone]}>
-          {eyebrow.text}
-        </SectionEyebrow>
-      ) : null}
-      <EditorialHeading as={as} size={size} id={id}>
-        {title.map((line, index) => (
-          <Fragment key={index}>
-            {/* The space keeps the last word of one line and the first of
-                the next apart for anything that reads the text (a screen
-                reader, a search engine), which a line break alone does not. */}
-            {index > 0 ? (
-              <>
-                {" "}
-                <br />
-              </>
-            ) : null}
-            {line.map((segment, at) =>
-              segment.tone === "default" ? (
-                <Fragment key={at}>{segment.text}</Fragment>
-              ) : (
-                <span key={at} className={titleTones[segment.tone]}>
-                  {segment.text}
-                </span>
-              ),
-            )}
-          </Fragment>
-        ))}
-      </EditorialHeading>
+      <SectionTitle content={content} as={as} size={size} id={id} />
       {description.length > 0 ? (
         <p
           className={cn(
@@ -180,5 +152,50 @@ export function HeaderCta({
     <Button asChild arrow className={className}>
       <PageLink href={href}>{label}</PageLink>
     </Button>
+  );
+}
+
+/** The same CMS title rendering, without introducing a nested header landmark. */
+export function SectionTitle({
+  content,
+  as = "h2",
+  size,
+  id,
+}: Pick<SectionHeaderProps, "as" | "size" | "id"> & {
+  content: Pick<SectionHeaderContent, "eyebrow" | "title">;
+}) {
+  const { eyebrow, title } = content;
+  return (
+    <>
+      {eyebrow.text ? (
+        <SectionEyebrow className={eyebrowTones[eyebrow.tone]}>
+          {eyebrow.text}
+        </SectionEyebrow>
+      ) : null}
+      <EditorialHeading as={as} size={size} id={id}>
+        {title.map((line, index) => (
+          <Fragment key={index}>
+            {/* The space keeps the last word of one line and the first of
+                the next apart for anything that reads the text (a screen
+                reader, a search engine), which a line break alone does not. */}
+            {index > 0 ? (
+              <>
+                {" "}
+                <br />
+              </>
+            ) : null}
+            {line.map((segment, at) =>
+              segment.tone === "default" ? (
+                <Fragment key={at}>{segment.text}</Fragment>
+              ) : (
+                <span key={at} className={titleTones[segment.tone]}>
+                  {segment.text}
+                </span>
+              ),
+            )}
+          </Fragment>
+        ))}
+      </EditorialHeading>
+    </>
   );
 }

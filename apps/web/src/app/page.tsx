@@ -155,6 +155,7 @@ export default async function Home() {
         </NewsletterBand>
       ) : null}
       <CrisisStrip
+        header={crisis.header}
         eyebrow={crisis.eyebrow}
         heading={crisis.heading}
         text={crisis.text}

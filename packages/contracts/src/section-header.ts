@@ -165,7 +165,9 @@ export type CtaStyle = HeaderCta["style"];
 export type SectionHeaderContent = z.infer<typeof sectionHeaderSchema>;
 
 /** The title as plain words (both lines), e.g. for a page's outline. */
-export function headerTitleText(header: SectionHeaderContent): string {
+export function headerTitleText(
+  header: Pick<SectionHeaderContent, "title">,
+): string {
   return header.title
     .map((line) => line.map((segment) => segment.text).join(""))
     .join(" ")

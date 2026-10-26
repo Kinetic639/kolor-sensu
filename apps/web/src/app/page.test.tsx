@@ -339,6 +339,28 @@ describe("the newsletter band", () => {
 });
 
 describe("the crisis strip", () => {
+  it("uses the published word colors and eyebrow style", async () => {
+    published.crisis = {
+      ...defaultCrisisHelp,
+      header: {
+        eyebrow: { text: "Wsparcie", tone: "green" },
+        title: [
+          [
+            { text: "Potrzebujesz ", tone: "default" },
+            { text: "pomocy?", tone: "pink" },
+          ],
+        ],
+      },
+    };
+    await renderHome();
+    const strip = screen.getByRole("complementary", {
+      name: "Potrzebujesz pomocy?",
+    });
+    expect(within(strip).getByText("Wsparcie")).toHaveClass(
+      "text-primary-strong",
+    );
+    expect(within(strip).getByText("pomocy?")).toHaveClass("text-pink");
+  });
   it("is always there, the published numbers dialling", async () => {
     published.crisis = {
       ...defaultCrisisHelp,

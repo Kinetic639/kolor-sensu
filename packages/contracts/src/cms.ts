@@ -333,6 +333,8 @@ const phoneNumberSchema = z
  * are dialled as written.
  */
 export const crisisHelpContentSchema = z.strictObject({
+  /** Optional for older published payloads; shares the other sections' palette. */
+  header: sectionHeaderSchema.pick({ eyebrow: true, title: true }).optional(),
   eyebrow: z.string().trim().max(60).default("Pomoc w kryzysie"),
   heading: z.string().trim().min(1).max(80),
   text: z.string().trim().max(200),

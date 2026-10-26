@@ -271,6 +271,54 @@ export function PageHeaderFields({
   );
 }
 
+/** Shared title-only controls for sections whose body is edited separately. */
+export function SectionTitleFields({
+  id,
+  value,
+  onChange,
+  problem,
+  titleMaxLength = HEADER_LIMITS.title,
+}: {
+  id: string;
+  value: Pick<SectionHeaderContent, "eyebrow" | "title">;
+  onChange: (header: Pick<SectionHeaderContent, "eyebrow" | "title">) => void;
+  problem?: string | null;
+  titleMaxLength?: number;
+}) {
+  const [draft, setDraft] = useState<HeaderDraft>(() =>
+    headerToDraft({ ...value, description: [], cta: null }),
+  );
+  function change(patch: Partial<HeaderDraft>) {
+    const next = { ...draft, ...patch };
+    setDraft(next);
+    const header = draftToHeader(next);
+    onChange({ eyebrow: header.eyebrow, title: header.title });
+  }
+  return (
+    <div className="grid gap-3.5 px-3.5 py-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+      <div className="grid content-start gap-3.5">
+        <EyebrowField
+          id={`${id}-eyebrow`}
+          value={draft.eyebrow}
+          onChange={(eyebrow) => change({ eyebrow })}
+        />
+        <TitleField
+          id={`${id}-title`}
+          lines={draft.lines}
+          onChange={(lines) => change({ lines })}
+          maxLength={titleMaxLength}
+        />
+        {problem ? (
+          <p role="alert" className="text-[0.75rem] text-[var(--danger)]">
+            {problem}
+          </p>
+        ) : null}
+      </div>
+      <Preview header={draftToHeader(draft)} />
+    </div>
+  );
+}
+
 function ToneChoice({
   label,
   value,
@@ -342,12 +390,14 @@ function TitleField({
   lines,
   onChange,
   page = false,
+  maxLength,
 }: {
   id: string;
   lines: HeaderDraft["lines"];
   onChange: (lines: HeaderDraft["lines"]) => void;
   /** A page's title: always two lines (the second optional), none added. */
   page?: boolean;
+  maxLength?: number;
 }) {
   const setLine = (index: number, line: HeaderDraft["lines"][number]) =>
     onChange(lines.map((one, at) => (at === index ? line : one)));
@@ -375,7 +425,10 @@ function TitleField({
             </div>
             <Input
               id={`${id}-${index}`}
-              maxLength={page ? PAGE_HEADER_LIMITS.title : HEADER_LIMITS.title}
+              maxLength={
+                maxLength ??
+                (page ? PAGE_HEADER_LIMITS.title : HEADER_LIMITS.title)
+              }
               onChange={(event) =>
                 setLine(index, retone(line, event.target.value))
               }

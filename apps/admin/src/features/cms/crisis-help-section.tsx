@@ -6,6 +6,8 @@ import {
   crisisHelpContentSchema,
   type CrisisHelpContent,
 } from "@repo/contracts";
+import { headerTitleText, plainHeader } from "@repo/contracts/section-header";
+import { SectionTitleFields } from "./header-block";
 import { DETAIL_BUTTON } from "@repo/ui/detail-page";
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
@@ -80,35 +82,35 @@ export function CrisisHelpSection({
           );
         }}
       >
+        <SectionTitleFields
+          id="cms-crisis"
+          value={
+            draft.header ?? {
+              ...plainHeader({ title: draft.heading }),
+              eyebrow: { text: draft.eyebrow, tone: "pink" },
+            }
+          }
+          titleMaxLength={80}
+          onChange={(header) =>
+            setDraft((current) => ({
+              ...current,
+              header,
+              heading: headerTitleText(header),
+              eyebrow: header.eyebrow.text,
+            }))
+          }
+          problem={
+            Object.keys(problems).some(
+              (path) =>
+                path === "heading" ||
+                path === "header" ||
+                path.startsWith("header."),
+            )
+              ? "Sprawdź nagłówek. Łącznie może mieć od 1 do 80 znaków."
+              : null
+          }
+        />
         <div className="grid gap-1.5 px-3.5 py-3">
-          <Label htmlFor="cms-crisis-eyebrow">
-            Napis nad nagłówkiem (opcjonalnie)
-          </Label>
-          <Input
-            id="cms-crisis-eyebrow"
-            maxLength={60}
-            aria-invalid={invalid("eyebrow")}
-            value={draft.eyebrow}
-            onChange={(event) =>
-              setDraft((current) => ({
-                ...current,
-                eyebrow: event.target.value,
-              }))
-            }
-          />
-          <Label htmlFor="cms-crisis-heading">Nagłówek</Label>
-          <Input
-            aria-invalid={invalid("heading")}
-            id="cms-crisis-heading"
-            maxLength={80}
-            onChange={(event) =>
-              setDraft((current) => ({
-                ...current,
-                heading: event.target.value,
-              }))
-            }
-            value={draft.heading}
-          />
           <Label htmlFor="cms-crisis-text">Zdanie pod nagłówkiem</Label>
           <Textarea
             aria-invalid={invalid("text")}

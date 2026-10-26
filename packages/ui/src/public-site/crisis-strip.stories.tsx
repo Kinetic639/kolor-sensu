@@ -21,6 +21,20 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
+export const StyledHeading: Story = {
+  args: {
+    header: {
+      eyebrow: { text: "Pomoc w kryzysie", tone: "green" },
+      title: [
+        [
+          { text: "Potrzebujesz ", tone: "default" },
+          { text: "pomocy", tone: "pink" },
+        ],
+        [{ text: "teraz?", tone: "green" }],
+      ],
+    },
+  },
+};
 export const OneContact: Story = {
   args: { lines: defaultCrisisHelp.lines.slice(0, 1) },
 };
