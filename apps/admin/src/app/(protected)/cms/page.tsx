@@ -133,7 +133,7 @@ async function HomePage() {
     settle("pomoc w kryzysie", loadCrisisHelp),
     settle("gdzie jesteśmy", loadHomeLocation),
     settle("myśli", loadHomeThoughts),
-    settle("jak zacząć", loadHomeStory),
+    settle("edukacja", loadHomeStory),
     // Not a section's content: how many room photos the site shows.
     settle("zdjęcia gabinetów", loadRoomsPeek),
     loadSeo("glowna"),
@@ -209,7 +209,7 @@ async function HomePage() {
       {story ? (
         <StorySection header={header("story")} model={story} />
       ) : (
-        <UnavailableSection title="Jak zacząć" />
+        <UnavailableSection title="Edukacja" />
       )}
       {newsletter ? (
         <NewsletterBandSection

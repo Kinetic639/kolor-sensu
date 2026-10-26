@@ -37,6 +37,20 @@ describe("thoughtsProblemsOf", () => {
 
 describe("toStoryContent", () => {
   const row = { ...defaultHomeStory.steps[0]!, imageUrl: "https://x" };
+  it("keeps the selected media and its order, without copying catalogue data", () => {
+    const media = {
+      type: "articles",
+      source: "manual",
+      ids: [
+        "22222222-2222-4222-8222-222222222222",
+        "11111111-1111-4111-8111-111111111111",
+      ],
+    } as const;
+    expect(
+      toStoryContent([{ ...row, media: { ...media, ids: [...media.ids] } }])
+        .steps[0]?.media,
+    ).toEqual(media);
+  });
 
   it("drops the photo's address and a button left empty", () => {
     const content = toStoryContent([{ ...row, cta: { label: "", href: "" } }]);

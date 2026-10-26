@@ -36,6 +36,11 @@ import {
   getSiteAppearanceAdmin,
 } from "@repo/supabase";
 import type { SeoPage } from "@repo/contracts";
+import {
+  listPublishedArticles,
+  listPublishedEbooks,
+} from "@repo/supabase/education";
+import { listPublicWorkshops } from "@repo/supabase/workshops";
 import { mapRoomsPeekModel } from "./rooms-peek";
 import { mapSiteAppearanceViewModel } from "./appearance-editor";
 import { mapPageSeoViewModel } from "./seo-editor";
@@ -119,9 +124,45 @@ export async function loadHomeThoughts() {
 
 export async function loadHomeStory() {
   const client = await createClient();
-  return mapHomeStoryViewModel(await getHomeStoryAdmin(client), (path) =>
-    supportAreaImageUrl(client, path),
-  );
+  const [story, articles, ebooks, workshops] = await Promise.all([
+    getHomeStoryAdmin(client),
+    listPublishedArticles(client),
+    listPublishedEbooks(client),
+    listPublicWorkshops(client),
+  ]);
+  return {
+    ...mapHomeStoryViewModel(story, (path) =>
+      supportAreaImageUrl(client, path),
+    ),
+    mediaOptions: {
+      articles: articles.map((one) => ({
+        id: one.id,
+        title: one.title,
+        imageUrl: supportAreaImageUrl(client, one.coverPath),
+      })),
+      ebooks: ebooks.map((one) => ({
+        id: one.id,
+        title: one.title,
+        imageUrl: supportAreaImageUrl(client, one.coverPath),
+      })),
+      workshops: workshops
+        .filter(
+          (one) =>
+            one.status === "published" && new Date(one.endsAt) > new Date(),
+        )
+        .map((one) => ({
+          id: one.id,
+          title: one.title,
+          imageUrl: one.coverPath
+            ? supportAreaImageUrl(client, one.coverPath)
+            : null,
+          detail: new Intl.DateTimeFormat("pl-PL", {
+            dateStyle: "medium",
+            timeZone: "Europe/Warsaw",
+          }).format(new Date(one.startsAt)),
+        })),
+    },
+  };
 }
 
 /**
