@@ -64,6 +64,16 @@ export const loadServiceOptions = cache(async () => {
   }));
 });
 
+/** The published articles, to point to from elsewhere (a workshop, #185). */
+export const loadArticleOptions = cache(async () =>
+  (await loadArticles())
+    .filter((one) => one.status === "published")
+    .map((one) => ({
+      id: one.id,
+      title: one.draft.title.trim() || one.slug || "Bez tytułu",
+    })),
+);
+
 /** A title for the header's trail. */
 export async function articleTitle(id: string): Promise<string | null> {
   const article = await loadArticle(id);

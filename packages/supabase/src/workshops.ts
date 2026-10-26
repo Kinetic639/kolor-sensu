@@ -136,6 +136,33 @@ export async function getWorkshopSlugRedirect(
   return data ?? null;
 }
 
+/**
+ * The services and articles the admin picked for a workshop's "Powiązane"
+ * (#185): a visitor reads them once it is not a draft (the preview's
+ * secret client, a draft's too).
+ */
+export async function getWorkshopPicks(
+  client: Client,
+  workshopId: string,
+): Promise<{ serviceIds: string[]; articleIds: string[] }> {
+  const [services, articles] = await Promise.all([
+    client
+      .from("workshop_services")
+      .select("service_id")
+      .eq("workshop_id", workshopId),
+    client
+      .from("workshop_articles")
+      .select("article_id")
+      .eq("workshop_id", workshopId),
+  ]);
+  if (services.error) throw services.error;
+  if (articles.error) throw articles.error;
+  return {
+    serviceIds: (services.data ?? []).map((one) => one.service_id),
+    articleIds: (articles.data ?? []).map((one) => one.article_id),
+  };
+}
+
 /** Every non-draft workshop, soonest first (few: the pages filter). */
 export async function listPublicWorkshops(
   client: Client,

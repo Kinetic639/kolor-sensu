@@ -2,6 +2,7 @@ import { emptyWorkshopInput } from "@repo/contracts/workshops";
 import { FullBleed } from "@repo/ui/full-bleed";
 import { notFound } from "next/navigation";
 import {
+  loadArticleOptions,
   loadServiceOptions,
   loadSpecialistOptions,
 } from "@/features/education/loaders";
@@ -24,15 +25,15 @@ export default async function WorkshopPage({
 }: PageProps<"/warsztaty/[id]">) {
   const { id } = await params;
   const isNew = id === "nowy";
-  const [workshop, specialists, places, services, settings] = await Promise.all(
-    [
+  const [workshop, specialists, places, services, articles, settings] =
+    await Promise.all([
       isNew ? null : loadWorkshop(id).catch(() => null),
       loadSpecialistOptions(),
       loadPlaces(),
       loadServiceOptions(),
+      loadArticleOptions(),
       centreSettings(),
-    ],
-  );
+    ]);
   if (!isNew && !workshop) notFound();
   const [participants, messages] = workshop
     ? await Promise.all([
@@ -48,6 +49,7 @@ export default async function WorkshopPage({
   return (
     <FullBleed>
       <WorkshopWorkspace
+        articles={articles}
         initial={initial}
         participants={
           workshop && workshop.status !== "draft" ? (

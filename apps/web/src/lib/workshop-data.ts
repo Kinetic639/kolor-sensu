@@ -1,4 +1,5 @@
 import {
+  getWorkshopPicks as readPicks,
   getWorkshopPreview,
   getWorkshopSlugRedirect,
   listPublicWorkshops,
@@ -32,6 +33,27 @@ export const getWorkshopPreviewDraft = cache(async (id: string) => {
   } catch (error) {
     console.error(`[workshops] preview ${id} failed:`, error);
     return null;
+  }
+});
+
+/**
+ * The services and articles the admin picked for a workshop (#185); a
+ * draft's in the preview only (the secret client), none on a failure.
+ */
+export const getWorkshopPicks = cache(async (id: string, preview = false) => {
+  const none = { serviceIds: [], articleIds: [] };
+  if (!preview) {
+    return load(
+      `workshop picks ${id}`,
+      (client) => readPicks(client, id),
+      none,
+    );
+  }
+  try {
+    return await readPicks(createSecretClient(), id);
+  } catch (error) {
+    console.error(`[workshops] picks of ${id} failed:`, error);
+    return none;
   }
 });
 

@@ -16,6 +16,9 @@ export const WORKSHOP_LIMITS = {
   seoTitle: 70,
   seoDescription: 160,
   coLeaders: 5,
+  /** Its "Powiązane" (#185). */
+  services: 6,
+  articles: 6,
 } as const;
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -44,6 +47,8 @@ export const workshopInputSchema = z
     seoDescription: z.string().trim().max(WORKSHOP_LIMITS.seoDescription),
     specialistId: z.uuid("Wybierz prowadzącego."),
     coLeaderIds: z.array(z.uuid()).max(WORKSHOP_LIMITS.coLeaders),
+    serviceIds: z.array(z.uuid()).max(WORKSHOP_LIMITS.services),
+    articleIds: z.array(z.uuid()).max(WORKSHOP_LIMITS.articles),
     modality: z.enum(WORKSHOP_MODALITIES),
     locationId: z.uuid().nullable(),
     roomId: z.uuid().nullable(),
@@ -181,6 +186,8 @@ export function emptyWorkshopInput(specialistId: string): WorkshopInput {
     seoDescription: "",
     specialistId,
     coLeaderIds: [],
+    serviceIds: [],
+    articleIds: [],
     modality: "in_person",
     locationId: null,
     roomId: null,
