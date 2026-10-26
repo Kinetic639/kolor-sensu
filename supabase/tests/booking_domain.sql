@@ -3247,7 +3247,9 @@ RESET ROLE;
 
 -- AC: the clocks change (Klient · 1). Anna's Monday 9–12 stays 9–12 Polish
 -- time in the weeks before and after the change, in March and in October;
--- the same hour is then an hour further or nearer in UTC.
+-- the same hour is then an hour further or nearer in UTC. (2027 is past
+-- the 60 days' horizon: two years ahead here, rolled back with the rest.)
+UPDATE public.center_settings SET max_booking_horizon_days = 730;
 DO $body$
 DECLARE
   v_offer uuid := (
