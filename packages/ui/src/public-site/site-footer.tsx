@@ -259,18 +259,20 @@ export function SiteFooter({
           <ul className="ks-footer__crisis-numbers">
             {crisisLines.map((line) => (
               <li key={line.number}>
-                <a
-                  href={crisisLineHref(line.number)}
-                  aria-label={`${line.label}: ${line.number}. ${line.detail}`}
-                >
+                {/* Named by what it shows, in its order (label in name,
+                    WCAG 2.5.3): the spaces keep the parts apart. */}
+                <a href={crisisLineHref(line.number)}>
                   <span className="ks-footer__crisis-number">
                     {line.number}
-                  </span>
+                  </span>{" "}
                   <span className="ks-footer__crisis-label">{line.label}</span>
                   {line.detail ? (
-                    <span className="ks-footer__crisis-detail">
-                      {line.detail}
-                    </span>
+                    <>
+                      {" "}
+                      <span className="ks-footer__crisis-detail">
+                        {line.detail}
+                      </span>
+                    </>
                   ) : null}
                 </a>
               </li>

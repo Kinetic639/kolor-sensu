@@ -1,4 +1,5 @@
-import { test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test, type Page } from "@playwright/test";
 import {
   bookUntilPayment,
   expectConfirmed,
@@ -12,7 +13,9 @@ import {
   missingAccount,
   specialistAccount,
   specialistUrl,
+  webUrl,
 } from "./support/target";
+import { service, specialist } from "./support/booking";
 
 // A guest books, pays with BLIK and the visit shows up in both portals:
 // the path every release must keep working (the wizard's needs:
@@ -36,4 +39,46 @@ test("a guest books a visit, pays with BLIK and both portals show it", async ({
 
   await findVisit(browser, adminUrl, adminAccount!, reference);
   await findVisit(browser, specialistUrl, specialistAccount!, reference);
+});
+
+// The wizard's steps up to the free times, on a phone: one H1 each and no
+// axe violations. No time is held.
+test.describe("on a phone", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  async function accessible(page: Page) {
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    const { violations } = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(
+      violations.map(
+        ({ id, nodes }) =>
+          `${id}: ${nodes.map((node) => node.target.join(" ")).join(", ")}`,
+      ),
+    ).toEqual([]);
+  }
+
+  test("the wizard's steps are accessible", async ({ page }) => {
+    await page.goto(`${webUrl}/umow-wizyte`);
+    const services = page.getByRole("region", { name: "Wybierz usługę" });
+    await expect(services).toBeVisible();
+    await accessible(page);
+    await services.getByRole("link", { name: service }).click();
+
+    const forms = page.getByRole("region", { name: "Wybierz formę spotkania" });
+    await expect(forms).toBeVisible();
+    await accessible(page);
+    await forms.getByRole("link", { name: "Stacjonarnie" }).click();
+
+    const people = page.getByRole("region", { name: "Wybierz specjalistę" });
+    await expect(people).toBeVisible();
+    await accessible(page);
+    await people.getByRole("link", { name: specialist }).click();
+
+    await expect(
+      page.getByRole("region", { name: "Wybierz termin" }),
+    ).toBeVisible();
+    await accessible(page);
+  });
 });
