@@ -7,8 +7,7 @@ import { NewsletterBand } from "./newsletter-band";
 import { WhyUsSection } from "./why-us-section";
 
 // The homepage's sections added on 18.10, with the site's default words:
-// "Dlaczego my", the newsletter band and the crisis strip. Plain styling
-// for now; the look comes once they work end to end.
+// "Dlaczego my", the newsletter band and the crisis strip.
 
 const meta = {
   title: "Public site/Home new sections",
@@ -78,7 +77,7 @@ export const Newsletter: Story = {
     <NewsletterBand
       header={plainHeader({
         eyebrow: "Newsletter",
-        title: "Bądźmy w kontakcie",
+        title: ["Bądźmy", "w kontakcie"],
         description: "Artykuły, warsztaty i nowości z centrum, raz w miesiącu.",
       })}
     />
@@ -88,33 +87,39 @@ export const Newsletter: Story = {
 /** The site's sign-up form, as the site puts it in the band (a stand-in). */
 function SignupStandIn() {
   return (
-    <form className="grid gap-4" onSubmit={(event) => event.preventDefault()}>
-      <BookingField
-        autoComplete="email"
-        label="Adres e-mail"
-        name="email"
-        type="email"
-      />
+    <form
+      className="ks-newsletter-signup grid gap-4"
+      onSubmit={(event) => event.preventDefault()}
+    >
+      <div className="ks-newsletter-signup__row">
+        <BookingField
+          autoComplete="email"
+          label="Adres e-mail"
+          placeholder="Adres e-mail"
+          name="email"
+          type="email"
+        />
+        <div className="ks-newsletter-signup__submit">
+          <PrimaryButton type="submit">Zapisz się</PrimaryButton>
+        </div>
+      </div>
       <ConsentCheckbox
         linkHref="/polityka-prywatnosci"
         linkLabel="polityce prywatności"
         name="consent"
         text="Chcę dostawać na ten adres newsletter Kolor Sensu: artykuły, warsztaty i nowości z centrum, mniej więcej raz w miesiącu. Mogę się wypisać w każdej chwili, linkiem w każdej wiadomości. Administratorem danych jest Kolor Sensu sp. z o.o. Więcej w"
       />
-      <div>
-        <PrimaryButton type="submit">Zapisz się</PrimaryButton>
-      </div>
     </form>
   );
 }
 
-/** The newsletter band with the sign-up form under its words. */
+/** The newsletter band with the sign-up form beside its words. */
 export const NewsletterWithForm: Story = {
   render: () => (
     <NewsletterBand
       header={plainHeader({
         eyebrow: "Newsletter",
-        title: "Bądźmy w kontakcie",
+        title: ["Bądźmy", "w kontakcie"],
         description: "Artykuły, warsztaty i nowości z centrum, raz w miesiącu.",
       })}
     >

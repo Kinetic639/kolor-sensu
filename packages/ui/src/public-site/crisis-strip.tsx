@@ -7,6 +7,8 @@ import { CrisisCardFrame } from "./crisis-card-frame";
 import { crisisCardArt } from "./crisis-card-art";
 import { InkReveal } from "./ink-reveal";
 import { EditorialHeading, SectionEyebrow } from "./typography";
+import { SectionTitle } from "./section-header";
+import type { SectionHeaderContent } from "@repo/contracts/section-header";
 
 // Server-safe: the crisis strip, where to call right now. Its heading, its
 // sentence and the lines are the CMS's (the admin approves them; the strip
@@ -26,6 +28,7 @@ export interface CrisisLine {
 }
 
 export interface CrisisStripProps {
+  header?: Pick<SectionHeaderContent, "eyebrow" | "title">;
   eyebrow?: string;
   heading: string;
   text: string;
@@ -42,6 +45,7 @@ export function crisisLineHref(number: string): string {
 }
 
 export function CrisisStrip({
+  header,
   eyebrow,
   heading,
   text,
@@ -61,14 +65,20 @@ export function CrisisStrip({
       id={id}
     >
       <header className="ks-crisis__intro">
-        {eyebrow ? (
-          <SectionEyebrow className="text-pink-strong">
-            {eyebrow}
-          </SectionEyebrow>
-        ) : null}
-        <EditorialHeading size="h2" id={headingId}>
-          {heading}
-        </EditorialHeading>
+        {header ? (
+          <SectionTitle content={header} size="h2" id={headingId} />
+        ) : (
+          <>
+            {eyebrow ? (
+              <SectionEyebrow className="text-pink-strong">
+                {eyebrow}
+              </SectionEyebrow>
+            ) : null}
+            <EditorialHeading size="h2" id={headingId}>
+              {heading}
+            </EditorialHeading>
+          </>
+        )}
         {text ? <p className="ks-crisis__description">{text}</p> : null}
         {more ? (
           <HanddrawnLink href={more.href}>{more.label}</HanddrawnLink>

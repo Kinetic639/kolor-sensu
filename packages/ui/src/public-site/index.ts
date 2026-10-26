@@ -174,3 +174,6 @@ export type {
 } from "./newsletter-issue";
 export { ClosingBanner } from "./closing-banner";
 export type { ClosingBannerProps } from "./closing-banner";
+export { LocationSection } from "./location-section";
+export type { LocationSectionProps } from "./location-section";
+export { LocationMapPlaceholder } from "./location-map-placeholder";

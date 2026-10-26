@@ -155,6 +155,7 @@ export default async function Home() {
         </NewsletterBand>
       ) : null}
       <CrisisStrip
+        header={crisis.header}
         eyebrow={crisis.eyebrow}
         heading={crisis.heading}
         text={crisis.text}
@@ -164,10 +165,10 @@ export default async function Home() {
           label: crisis.moreLabel,
         }}
       />
+      <ClosingCta words={closing} />
       {location.visible && frame.contact ? (
         <HomeLocation header={headers.location} contact={frame.contact} />
       ) : null}
-      <ClosingCta words={closing} />
     </>
   );
 }

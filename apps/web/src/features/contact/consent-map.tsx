@@ -6,6 +6,7 @@ import {
   type CookieChoice,
 } from "@repo/ui/public-site/cookie-consent";
 import { MapPin } from "lucide-react";
+import { LocationMapPlaceholder } from "@repo/ui/public-site/location-map-placeholder";
 import { useEffect, useState } from "react";
 
 // Kontakt → the map (decided 19.10): Google's embedded map, which sets its
@@ -15,7 +16,13 @@ import { useEffect, useState } from "react";
 // tile stands in its place; the address and "Pokaż na mapie" stay beside
 // it either way.
 
-export function ConsentMap({ address }: { address: string }) {
+export function ConsentMap({
+  address,
+  painted = false,
+}: {
+  address: string;
+  painted?: boolean;
+}) {
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
@@ -30,15 +37,30 @@ export function ConsentMap({ address }: { address: string }) {
   const src = `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
 
   return (
-    <div className="rounded-card bg-beige relative aspect-[4/3] w-full overflow-hidden">
+    <div
+      className={
+        painted
+          ? "ks-location-map"
+          : "rounded-card bg-beige relative aspect-[4/3] w-full overflow-hidden"
+      }
+    >
       {shown ? (
         <iframe
           allowFullScreen
-          className="absolute inset-0 h-full w-full border-0"
+          className={
+            painted
+              ? "ks-location-map__iframe"
+              : "absolute inset-0 h-full w-full border-0"
+          }
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
           src={src}
           title={`Mapa: ${address}`}
+        />
+      ) : painted ? (
+        <LocationMapPlaceholder
+          address={address}
+          onShowMap={() => setShown(true)}
         />
       ) : (
         <div className="absolute inset-0 grid place-content-center justify-items-center gap-3 p-6 text-center">

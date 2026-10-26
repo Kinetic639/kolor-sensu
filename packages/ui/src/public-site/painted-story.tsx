@@ -20,7 +20,7 @@ import type { ImageProps } from "next/image";
 import { type CSSProperties, type ReactNode, useRef } from "react";
 import { type GsapInstance, useLazyGsap } from "./lazy-gsap";
 import { cn } from "../lib/utils";
-import { ArrowLink } from "./actions";
+import { HanddrawnLink } from "./handdrawn-link";
 import { matches, svgMasksSupported, watchReveal } from "./reveal-support";
 import { EditorialHeading, SectionEyebrow } from "./typography";
 import type { SectionHeaderContent } from "@repo/contracts/section-header";
@@ -295,9 +295,12 @@ export function PaintedStory({
                 {step.text}
               </p>
               {step.cta ? (
-                <ArrowLink href={step.cta.href} className="justify-self-start">
+                <HanddrawnLink
+                  href={step.cta.href}
+                  className="justify-self-start"
+                >
                   {step.cta.label}
-                </ArrowLink>
+                </HanddrawnLink>
               ) : null}
             </div>
             <div className="ks-story__picture">

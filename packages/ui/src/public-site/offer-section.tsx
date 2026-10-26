@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "../lib/utils";
-import { ArrowLink } from "./actions";
+import { HanddrawnLink } from "./handdrawn-link";
 import {
   type OfferService,
   OfferTile,
@@ -55,9 +55,9 @@ export function OfferSection({
           <p className="max-w-copy text-body text-text-muted">{description}</p>
         ) : null}
         {cta ? (
-          <ArrowLink href={cta.href} className="mt-2 justify-self-start">
+          <HanddrawnLink href={cta.href} className="mt-2 justify-self-start">
             {cta.label}
-          </ArrowLink>
+          </HanddrawnLink>
         ) : null}
       </div>
       <ul className="ks-of-list">

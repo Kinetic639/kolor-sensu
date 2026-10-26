@@ -1,7 +1,8 @@
 import type { ImageProps } from "next/image";
 import type { ReactNode } from "react";
 import { cn } from "../lib/utils";
-import { ArrowLink, PrimaryButton } from "./actions";
+import { PrimaryButton } from "./actions";
+import { HanddrawnLink } from "./handdrawn-link";
 import { PageLink } from "./page-link";
 import { type SpecialistSplash, SpecialistArtwork } from "./specialist-artwork";
 import { SpecialistReveal } from "./specialist-reveal";
@@ -160,7 +161,7 @@ export function SpecialistSpotlight({
             <PrimaryButton asChild arrow>
               <PageLink href={booking.href}>{booking.label}</PageLink>
             </PrimaryButton>
-            <ArrowLink href={specialist.href}>{profileLabel}</ArrowLink>
+            <HanddrawnLink href={specialist.href}>{profileLabel}</HanddrawnLink>
           </div>
         </div>
       </div>

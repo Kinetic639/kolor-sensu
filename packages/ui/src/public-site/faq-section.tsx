@@ -6,7 +6,7 @@ import {
   AccordionTrigger,
 } from "../accordion";
 import { cn } from "../lib/utils";
-import { ArrowLink } from "./actions";
+import { HanddrawnLink } from "./handdrawn-link";
 import { JsonLd } from "./json-ld";
 import { EditorialHeading, SectionEyebrow } from "./typography";
 import type { SectionHeaderContent } from "@repo/contracts/section-header";
@@ -69,9 +69,9 @@ export function FaqSection({
             </p>
           ) : null}
           {cta ? (
-            <ArrowLink href={cta.href} className="mt-2 justify-self-start">
+            <HanddrawnLink href={cta.href} className="mt-2 justify-self-start">
               {cta.label}
-            </ArrowLink>
+            </HanddrawnLink>
           ) : null}
         </div>
       )}

@@ -29,7 +29,7 @@ export const COOKIE_CATEGORIES = [
     key: "external",
     label: "Mapy, filmy i treści zewnętrzne",
     description:
-      "Mapa Google na stronie Kontakt i filmy z YouTube lub Vimeo na stronach e-booków. Ich dostawcy zapisują przy tym własne pliki cookies.",
+      "Mapy Google na stronie głównej i stronie Kontakt oraz filmy z YouTube lub Vimeo na stronach e-booków. Ich dostawcy zapisują przy tym własne pliki cookies.",
   },
 ] as const;
 

@@ -34,6 +34,27 @@ afterEach(() => {
 });
 
 describe("the map on Kontakt", () => {
+  it("keeps the homepage's painted map local until consent, and removes the iframe on withdrawal", () => {
+    render(<ConsentMap address={address} painted />);
+    expect(map()).not.toBeInTheDocument();
+    expect(screen.getByText(address)).toBeInTheDocument();
+    expect(screen.getByText(/podczas tej wizyty/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Pokaż mapę" }));
+    expect(map()).toHaveAttribute(
+      "src",
+      expect.stringContaining(encodeURIComponent(address)),
+    );
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent(COOKIE_CONSENT_EVENT, { detail: "necessary" }),
+      );
+    });
+    expect(map()).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Pokaż mapę" }),
+    ).toBeInTheDocument();
+  });
+
   it("waits for consent, standing in with a tile", () => {
     render(<ConsentMap address={address} />);
     expect(map()).not.toBeInTheDocument();

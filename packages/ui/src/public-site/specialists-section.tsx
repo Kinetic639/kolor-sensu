@@ -1,6 +1,6 @@
 import { type ReactNode, useId } from "react";
 import { cn } from "../lib/utils";
-import { ArrowLink } from "./actions";
+import { HanddrawnLink } from "./handdrawn-link";
 import {
   type Specialist,
   SpecialistWatercolorCard,
@@ -71,9 +71,9 @@ export function SpecialistsSection({
             </p>
           ) : null}
           {cta ? (
-            <ArrowLink href={cta.href} className="mt-2 justify-self-start">
+            <HanddrawnLink href={cta.href} className="mt-2 justify-self-start">
               {cta.label}
-            </ArrowLink>
+            </HanddrawnLink>
           ) : null}
         </div>
       )}

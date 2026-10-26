@@ -77,11 +77,34 @@ describe("the newsletter form", () => {
     expect(verify).toBeDefined();
   });
 
+  it("explains the disabled button on keyboard focus until verification succeeds", async () => {
+    render(<NewsletterSignup {...props} />);
+    fireEvent.focus(
+      screen.getByRole("group", { name: "Dlaczego zapis jest niedostępny?" }),
+    );
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "Zapis będzie dostępny po zakończeniu weryfikacji bezpieczeństwa",
+    );
+    act(() => verify?.());
+    expect(screen.getByRole("button", { name: "Zapisz się" })).toBeEnabled();
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
+
   it("sends where it came from and says to check the inbox", async () => {
     render(<NewsletterSignup {...props} source="footer" compact />);
     await submit();
     expect(action.mock.calls[0]?.[1].get("source")).toBe("footer");
     expect(screen.getByRole("status")).toHaveTextContent("Sprawdź skrzynkę");
+  });
+
+  it("keeps the footer's consent out of the initial strip and reveals it unchecked when signing up", () => {
+    render(<NewsletterSignup {...props} source="footer" compact />);
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    fireEvent.focus(screen.getByLabelText("Adres e-mail"));
+    expect(screen.getByRole("checkbox")).not.toBeChecked();
+    expect(
+      screen.getByRole("link", { name: "polityce prywatności" }),
+    ).toHaveAttribute("href", "/polityka-prywatnosci");
   });
 
   it("shows the errors at their fields and keeps the address", async () => {

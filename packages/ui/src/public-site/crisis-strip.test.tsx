@@ -12,6 +12,32 @@ const lines = [
 ];
 
 describe("CrisisStrip", () => {
+  it("renders the same word and eyebrow colors as other CMS section headings", () => {
+    render(
+      <CrisisStrip
+        heading="Starszy tekst"
+        text="Opis"
+        lines={lines}
+        header={{
+          eyebrow: { text: "Pomoc", tone: "green" },
+          title: [
+            [
+              { text: "Potrzebujesz ", tone: "default" },
+              { text: "wsparcia", tone: "pink" },
+            ],
+            [{ text: "teraz?", tone: "green" }],
+          ],
+        }}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Potrzebujesz wsparcia teraz?" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Pomoc")).toHaveClass("text-primary-strong");
+    expect(screen.getByText("wsparcia")).toHaveClass("text-pink");
+    expect(screen.getByText("teraz?")).toHaveClass("text-primary");
+    expect(screen.queryByText("Starszy tekst")).not.toBeInTheDocument();
+  });
   it("keeps the details link in the intro before the CMS contact list", () => {
     const { container } = render(
       <CrisisStrip

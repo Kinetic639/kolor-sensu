@@ -170,6 +170,21 @@
     margin-top: -7px;
     pointer-events: none;
   }
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-hand-link__underline,
+    .ks-hand-link__arrow {
+      transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .ks-hand-link__arrow {
+      transform-origin: left center;
+    }
+    .ks-hand-link:is(:hover, :focus-visible) .ks-hand-link__underline {
+      transform: translateY(-2px);
+    }
+    .ks-hand-link:is(:hover, :focus-visible) .ks-hand-link__arrow {
+      transform: translateX(2px) scaleX(1.12);
+    }
+  }
   @media (max-width: 69.999rem) {
     .ks-crisis {
       grid-template-columns: minmax(0, 1fr);
@@ -2328,6 +2343,568 @@
   inherits: true;
   initial-value: 1.25rem;
 }
+/* A brushed footer with short, progressively disclosed navigation. */
+@layer components {
+  .ks-footer {
+    position: relative;
+    isolation: isolate;
+    margin-top: 1.5rem;
+  }
+  .ks-footer__paint {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    /* Slice the real painted top separately, so its bristles stay shallow
+       even when mobile content or an expanded menu makes the footer tall. */
+    border-style: solid;
+    border-color: transparent;
+    border-width: 2.75rem 0 0;
+    border-image-source: url("/watercolor/footer-paint-pink-brush-v2.webp");
+    border-image-slice: 110 0 0 fill;
+    border-image-width: 2.75rem 0 0;
+    border-image-repeat: stretch;
+    pointer-events: none;
+  }
+  .ks-footer__crisis {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    align-items: start;
+    gap: 0.75rem 2rem;
+    padding-block: 1.5rem;
+    margin-block: 0.25rem 1.5rem;
+    color: var(--color-pink-strong);
+    font-size: 0.875rem;
+  }
+  .ks-footer__crisis-rule {
+    position: absolute;
+    left: var(--spacing-gutter);
+    right: var(--spacing-gutter);
+    width: calc(100% - 2 * var(--spacing-gutter));
+    height: 22px;
+    pointer-events: none;
+  }
+  .ks-footer__crisis-rule--top {
+    top: -8px;
+  }
+  .ks-footer__crisis-rule--bottom {
+    bottom: -8px;
+  }
+  .ks-footer__crisis-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-pink-strong);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .ks-footer__crisis-title > svg {
+    width: 1.375rem;
+    height: 1.375rem;
+    flex-shrink: 0;
+  }
+  .ks-footer__crisis-numbers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 1rem 1.25rem;
+  }
+  .ks-footer__crisis-numbers a {
+    display: grid;
+    align-content: start;
+    gap: 0.25rem;
+    min-height: 1.75rem;
+    overflow-wrap: anywhere;
+  }
+  .ks-footer__crisis-number {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .ks-footer__crisis-label {
+    color: inherit;
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+  .ks-footer__crisis-detail {
+    color: inherit;
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+  @media (min-width: 48rem) {
+    .ks-footer__crisis-numbers {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 64rem) {
+    .ks-footer__crisis {
+      grid-template-columns: 10rem minmax(0, 1fr);
+    }
+  }
+  .ks-footer__crisis a:hover,
+  .ks-footer__crisis a:focus-visible {
+    color: var(--color-pink-strong);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .ks-footer__main {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.75rem 1.5rem;
+    padding-block: 3rem 1.75rem;
+  }
+  .ks-footer__main > * {
+    min-width: 0;
+  }
+  .ks-footer__brand {
+    display: grid;
+    align-content: start;
+    gap: 0.875rem;
+    grid-column: 1 / -1;
+  }
+  .ks-footer__about {
+    max-width: 26rem;
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+    line-height: 1.65;
+  }
+  .ks-footer__social {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--color-primary-strong);
+    background: rgb(255 255 255 / 40%);
+    border-radius: 47% 53% 49% 51% / 52% 46% 54% 48%;
+    transition: background-color 180ms;
+  }
+  .ks-footer__social:hover {
+    background: rgb(255 255 255 / 80%);
+  }
+  .ks-footer__title {
+    margin-bottom: 0.75rem;
+    color: var(--color-primary-strong);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .ks-footer__links {
+    display: grid;
+    gap: 0.125rem;
+  }
+  .ks-footer__links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.75rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .ks-footer__more {
+    margin-top: 0.5rem;
+  }
+  .ks-footer__more summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 1.75rem;
+    color: var(--color-primary-strong);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+  .ks-footer__more summary::-webkit-details-marker {
+    display: none;
+  }
+  .ks-footer__more summary:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 3px;
+  }
+  .ks-footer__more[open] summary {
+    margin-bottom: 0.5rem;
+  }
+  .ks-footer__more[open] summary svg {
+    transform: rotate(180deg);
+  }
+  .ks-footer__contact {
+    grid-column: 1 / -1;
+  }
+  .ks-footer__contact address {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-wrap: anywhere;
+  }
+  .ks-footer__newsletter {
+    padding-bottom: 1.5rem;
+  }
+  .ks-newsletter-compact {
+    display: grid;
+    align-items: start;
+    gap: 1rem;
+  }
+  .ks-newsletter-compact__copy {
+    display: grid;
+    gap: 0.35rem;
+  }
+  .ks-newsletter-compact__heading {
+    font-family: var(--font-display);
+    color: var(--color-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  .ks-newsletter-compact .ks-newsletter-signup__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .ks-newsletter-compact .ks-newsletter-signup__submit button {
+    min-height: 3.25rem;
+    padding-inline: 1.25rem;
+  }
+  .ks-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    padding-block: 0.75rem 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+  .ks-footer__legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+  }
+  @media (min-width: 36rem) {
+    .ks-footer__contact address {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 48rem) {
+    .ks-footer__main {
+      padding-top: 3.5rem;
+    }
+    .ks-newsletter-compact {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.5fr);
+      gap: 2rem;
+    }
+  }
+  @media (min-width: 64rem) {
+    .ks-footer__main {
+      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+      gap: 2.5rem;
+    }
+    .ks-footer__brand,
+    .ks-footer__contact {
+      grid-column: auto;
+    }
+    .ks-footer__contact address {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+
+/* The location's contact details and local map illustration share the paper palette. */
+@layer components {
+  .ks-location {
+    padding-block: 5rem;
+  }
+  .ks-location__layout {
+    display: grid;
+    gap: 2.75rem;
+    align-items: stretch;
+  }
+  .ks-location__copy {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: 2rem;
+    min-width: 0;
+  }
+  .ks-location__details {
+    display: grid;
+    gap: 1.5rem;
+    width: 100%;
+    font-style: normal;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+  .ks-location__detail {
+    display: grid;
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
+  }
+  .ks-location__detail > svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.2rem;
+    color: var(--color-primary);
+  }
+  .ks-location__label {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--color-primary);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .ks-location__detail-action {
+    margin-top: 1.25rem;
+  }
+  .ks-location__detail a {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    transition: color 180ms;
+  }
+  .ks-location__detail a:hover,
+  .ks-location__detail a:focus-visible {
+    color: var(--color-primary);
+    text-decoration-line: underline;
+  }
+  .ks-location__map {
+    position: relative;
+    isolation: isolate;
+    min-width: 0;
+  }
+  .ks-location__map::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: -1rem;
+    background: url("/crisis/crisis-wash-pink-1.webp") center / 100% 100%
+      no-repeat;
+    opacity: 0.65;
+    transform: rotate(2deg);
+    pointer-events: none;
+  }
+  .ks-location-map {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 29rem;
+    overflow: hidden;
+    background: #e7edde;
+    mask-image: url("/crisis/crisis-fill-green-1.webp");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+  .ks-location-map__iframe {
+    position: absolute;
+    inset: 1.25rem;
+    width: calc(100% - 2.5rem);
+    height: calc(100% - 2.5rem);
+    border: 0;
+  }
+  .ks-location-map__placeholder {
+    position: relative;
+    display: flex;
+    min-height: inherit;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 2.75rem 1.25rem 1.25rem;
+  }
+  .ks-location-map__placeholder::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("/watercolor/closing-banner-paint.webp") center / cover;
+    opacity: 0.45;
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+  }
+  .ks-location-map__sketch {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .ks-location-map__pin {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 4.25rem;
+    height: 4.25rem;
+    color: var(--color-primary-strong);
+    background: #faf8f1;
+    border-radius: 47% 53% 51% 49% / 52% 46% 54% 48%;
+    box-shadow: 0 6px 20px rgb(82 123 87 / 10%);
+  }
+  .ks-location-map__pin svg {
+    width: 2rem;
+    height: 2rem;
+  }
+  .ks-location-map__invitation {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 1.5rem clamp(1rem, 2vw, 1.75rem);
+    text-align: center;
+    background: rgb(250 248 243 / 96%);
+    border-radius: 1.75rem 1.25rem 2rem 1.375rem;
+  }
+  .ks-location-map__title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .ks-location-map__address {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .ks-location-map__consent {
+    max-width: 25rem;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+  @media (min-width: 36rem) {
+    .ks-location-map__placeholder {
+      padding: 3rem 2rem 2rem;
+    }
+  }
+  @media (min-width: 64rem) {
+    .ks-location {
+      padding-block: 8rem;
+    }
+    .ks-location__layout {
+      grid-template-columns: minmax(0, 0.65fr) minmax(0, 1.35fr);
+      gap: clamp(3rem, 5vw, 5rem);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ks-location__detail a {
+      transition: none;
+    }
+  }
+}
+
+/* Full-width newsletter paint, with the readable content on the page grid. */
+@layer components {
+  .ks-newsletter-band {
+    position: relative;
+    isolation: isolate;
+    margin-block: 2.5rem;
+    margin-bottom: var(--spacing-section);
+  }
+
+  .ks-newsletter-band__paint {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: url("/watercolor/closing-banner-paint-mobile.webp") center /
+      100% 115% no-repeat;
+    opacity: 0.85;
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      black 9%,
+      black 91%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  .ks-newsletter-band__inner {
+    display: grid;
+    align-items: start;
+    gap: 1.75rem;
+    padding-block: 2.75rem;
+  }
+
+  .ks-newsletter-band__copy,
+  .ks-newsletter-band__signup {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .ks-newsletter-band__copy > p:last-of-type {
+    font-size: 0.9375rem;
+    line-height: 1.65;
+  }
+
+  .ks-newsletter-signup__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
+  }
+
+  .ks-newsletter-signup__row label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .ks-newsletter-signup__submit button {
+    width: 100%;
+    height: auto;
+    min-height: 3rem;
+    white-space: normal;
+    padding-block: 0.75rem;
+  }
+
+  .ks-newsletter-signup input[type="email"] {
+    background-color: rgb(255 255 255 / 78%);
+    border-radius: 1.125rem 1rem 1.25rem 0.875rem;
+  }
+
+  .ks-newsletter-signup label:has(a) {
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+
+  @media (min-width: 30rem) {
+    .ks-newsletter-signup__row {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .ks-newsletter-band__paint {
+      background-image: url("/watercolor/closing-banner-paint.webp");
+      background-size: 120% 100%;
+      background-position: right center;
+    }
+
+    .ks-newsletter-band__inner {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: clamp(2rem, 5vw, 5rem);
+      padding-block: 3rem;
+    }
+
+    .ks-newsletter-band__copy {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .ks-newsletter-band__signup {
+      grid-column: 1;
+      grid-row: 1;
+    }
+  }
+}
+
 /* The artwork stays outside the paint layer so the tall plant can rise
    above it. The mobile layout keeps the scene above the readable copy. */
 @layer components {
