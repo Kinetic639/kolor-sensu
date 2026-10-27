@@ -6,17 +6,17 @@ Mapa: ramka `3458764687137671334` · [w Miro](https://miro.com/app/board/uXjVEaK
 
 | Kolumna                          | MVP | Nowe 27.10 | Po MVP | Ustalone | Pytania |
 | -------------------------------- | --: | ---------: | -----: | -------: | ------: |
-| 1. Wybiera usługę i termin       |  28 |         12 |      2 |        1 |       1 |
-| 2. Blokuje termin                |   8 |          4 |      0 |        0 |       1 |
-| 3. Podaje dane i zgody           |  14 |          7 |      0 |        0 |       4 |
+| 1. Wybiera usługę i termin       |  28 |         12 |      2 |        2 |       0 |
+| 2. Blokuje termin                |   8 |          4 |      0 |        1 |       0 |
+| 3. Podaje dane i zgody           |  14 |          7 |      0 |        1 |       3 |
 | 4. Płaci od razu                 |  20 |          5 |      1 |        3 |       0 |
 | 4a. Kupon zniżkowy               |  12 |          0 |      1 |        6 |       0 |
-| 5. Płaci później                 |  13 |          1 |      0 |        0 |       1 |
+| 5. Płaci później                 |  13 |          1 |      0 |        1 |       0 |
 | 6. Potwierdzenie i strona wizyty |  10 |          7 |      1 |        0 |       0 |
-| 7. Przekłada wizytę              |   6 |          3 |      0 |        0 |       2 |
-| 8. Odwołuje wizytę               |   8 |          2 |      0 |        0 |       3 |
+| 7. Przekłada wizytę              |   6 |          3 |      0 |        2 |       0 |
+| 8. Odwołuje wizytę               |   8 |          2 |      0 |        3 |       0 |
 | 9. Próby obejścia i oszustwa     |  24 |          9 |      0 |        0 |       0 |
-| Razem                            | 143 |         50 |      5 |       10 |      12 |
+| Razem                            | 143 |         50 |      5 |       19 |       3 |
 
 ## Klient · 1. Wybiera usługę i termin
 
@@ -74,10 +74,7 @@ Ramka `3458764688511550413`
 ### Ustalone (niebieskie)
 
 - Rozpoczętą rezerwację pamiętamy przez dobę (#164)
-
-### Pytania do decyzji (pomarańczowe)
-
-- Ostrzegać przy wyjściu z kreatora, gdy termin jest zablokowany?
+- Bez ostrzeżenia przy wyjściu z kreatora: blokada mija po 10 min, a „Dokończ rezerwację” prowadzi z powrotem (27.10)
 
 ## Klient · 2. Blokuje termin
 
@@ -100,9 +97,9 @@ Ramka `3458764688511550415`
 |   7 | Kreator w dwóch kartach tej samej przeglądarki       | klient otworzył kreator w dwóch kartach / w każdej wybiera inny termin / obowiązuje jedna rezerwacja i klient wie którą; nic się nie psuje           | nowa kartka                                             |
 |   8 | Przeglądarka blokuje ciasteczka                      | przeglądarka nie zapisuje ciasteczek / klient wybiera termin / komunikat, że rezerwacja potrzebuje niezbędnych ciasteczek, i kontakt                 | nowa kartka                                             |
 
-### Pytania do decyzji (pomarańczowe)
+### Ustalone (niebieskie)
 
-- Co, gdy ochrona przed botami (Turnstile) nie odpowiada?
+- Turnstile nie odpowiada: komunikat „spróbuj za chwilę” i telefon do centrum; bez ochrony rezerwacja nie przechodzi (27.10)
 
 ## Klient · 3. Podaje dane i zgody
 
@@ -131,11 +128,14 @@ Ramka `3458764688511550417`
 |  13 | Dane z porzuconej rezerwacji są usuwane po czasie                             | klient podał dane, ale nie dokończył rezerwacji / mija ustalony czas / jego dane są usuwane z bazy                                                                   | nowa kartka                                                                             |
 |  14 | Regulamin mówi to samo co system: płatność później, odwołanie, zwroty, kupony | admin ustawił okno odwołań, czas na płatność i zasady kuponów / klient czyta regulamin przed rezerwacją / regulamin podaje te same zasady co kreator, maile i system | nowa kartka                                                                             |
 
+### Ustalone (niebieskie)
+
+- Dane z niedokończonej rezerwacji usuwamy po 30 dniach (27.10)
+
 ### Pytania do decyzji (pomarańczowe)
 
 - Rezerwacja dla dziecka: kto jest klientem, czy podajemy dane dziecka, czy potrzebna jest zgoda opiekuna?
 - Osoba niepełnoletnia rezerwuje sama: czy pozwalamy?
-- Jak długo trzymamy dane z niedokończonych rezerwacji (np. 30 dni)?
 - Prawo odstąpienia od umowy (14 dni): przy wizycie w ciągu 14 dni klient zaznacza, że chce jej wcześniej? Do sprawdzenia z prawnikiem
 
 ## Klient · 4. Płaci od razu
@@ -148,19 +148,19 @@ Historyjka: Jako klient chcę zapłacić wygodnie i bezpiecznie i od razu mieć 
 
 Ramka `3458764688511550419`
 
-|  Nr | Karteczka                                                      | Zakładając / Gdy / Wtedy                                                                                                                    | Wcześniej                                                                            |
-| --: | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-|   1 | BLIK: sukces                                                   | rezerwacja za 150 zł / klient płaci BLIK-iem / „Wizyta potwierdzona”, wizyta widoczna u admina i specjalisty                                | Test end-to-end na STAGING po każdym wydaniu; test bazy (CI)                         |
-|   2 | Karta: sukces                                                  | rezerwacja za 150 zł / klient płaci kartą / wizyta potwierdzona, mail z plikiem kalendarza                                                  | Test end-to-end na DEV i STAGING 26.10 (PR #258)                                     |
-|   3 | Karta z 3D Secure                                              | karta wymagająca potwierdzenia w banku / klient potwierdza / wizyta potwierdzona                                                            | Test end-to-end na DEV i STAGING 26.10 (PR #258)                                     |
-|   4 | Przelewy24: sukces                                             | rezerwacja za 150 zł / klient wybiera Przelewy24, bank i potwierdza w banku / wizyta potwierdzona                                           | nowa kartka                                                                          |
-|   5 | #27 · Tylko karta, BLIK, Przelewy24                            | klient otwiera płatność / wybiera metodę / do wyboru tylko karta, BLIK i Przelewy24                                                         | Test jednostkowy (CI)                                                                |
-|   6 | Strona potwierdzenia z numerem rezerwacji i plikiem kalendarza | płatność się udała / klient wraca ze Stripe / widzi „Wizyta potwierdzona”, numer rezerwacji, szczegóły i „Dodaj do kalendarza”              | nowa kartka                                                                          |
-|   7 | Potwierdzenie płatności dla klienta                            | klient zapłacił / sprawdza pocztę / ma potwierdzenie zapłaty (kwota, data, numer rezerwacji), dopóki nie ma faktur                          | nowa kartka                                                                          |
-|   8 | Cena z chwili rezerwacji, nawet gdy admin ją zmieni            | klient jest w kreatorze / admin w tym czasie zmienia cenę usługi / klient płaci cenę, którą widział przy rezerwacji                         | nowa kartka                                                                          |
-|   9 | Cena usługi co najmniej 2 zł (#256)                            | admin ustawia cenę usługi / wpisuje 0 zł albo mniej niż 2 zł / formularz odmawia z jasnym komunikatem; każdą usługę da się opłacić w Stripe | Nie zrobione (#256, decyzja 27.10: wariant A)                                        |
-|  10 | Płatność zawsze w złotówkach                                   | płatność w innej walucie / dochodzi do bazy / baza jej nie przyjmuje, pieniądze wracają                                                     | Płatność w innej walucie jest zwracana, wizyta nie potwierdzona (PR #162); bez testu |
-|  11 | Powrót przed potwierdzeniem Stripe                             | klient wrócił z płatności / potwierdzenie ze Stripe jeszcze nie dotarło / strona sama sprawdza i pokazuje wynik                             | Częściowy test jednostkowy; ręcznie 01.10                                            |
+|  Nr | Karteczka                                                      | Zakładając / Gdy / Wtedy                                                                                                                                                                                                                   | Wcześniej                                                                                          |
+| --: | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+|   1 | BLIK: sukces                                                   | rezerwacja za 150 zł / klient płaci BLIK-iem / „Wizyta potwierdzona”, wizyta widoczna u admina i specjalisty                                                                                                                               | Test end-to-end na STAGING po każdym wydaniu; test bazy (CI)                                       |
+|   2 | Karta: sukces                                                  | rezerwacja za 150 zł / klient płaci kartą / wizyta potwierdzona, mail z plikiem kalendarza                                                                                                                                                 | Test end-to-end na DEV i STAGING 26.10 (PR #258)                                                   |
+|   3 | Karta z 3D Secure                                              | karta wymagająca potwierdzenia w banku / klient potwierdza / wizyta potwierdzona                                                                                                                                                           | Test end-to-end na DEV i STAGING 26.10 (PR #258)                                                   |
+|   4 | Przelewy24: sukces                                             | rezerwacja za 150 zł / klient wybiera Przelewy24, bank i potwierdza w banku / wizyta potwierdzona                                                                                                                                          | nowa kartka                                                                                        |
+|   5 | #27 · Tylko karta, BLIK, Przelewy24                            | klient otwiera płatność / wybiera metodę / do wyboru tylko karta, BLIK i Przelewy24                                                                                                                                                        | Test jednostkowy (CI)                                                                              |
+|   6 | Strona potwierdzenia z numerem rezerwacji i plikiem kalendarza | płatność się udała / klient wraca ze Stripe / widzi „Wizyta potwierdzona”, numer rezerwacji, szczegóły i „Dodaj do kalendarza”                                                                                                             | nowa kartka                                                                                        |
+|   7 | Potwierdzenie płatności dla klienta                            | klient zapłacił / sprawdza pocztę / ma potwierdzenie zapłaty (kwota, data, numer rezerwacji), dopóki nie ma faktur                                                                                                                         | nowa kartka                                                                                        |
+|   8 | Cena z chwili rezerwacji, nawet gdy admin ją zmieni            | klient jest w kreatorze / admin w tym czasie zmienia cenę usługi / klient płaci cenę, którą widział przy rezerwacji                                                                                                                        | nowa kartka                                                                                        |
+|   9 | Cena usługi: bezpłatna (0 zł) albo co najmniej 2 zł (#256)     | admin ustawia cenę usługi / wpisuje 0 zł albo kwotę od 0,01 do 1,99 zł / 0 zł to bezpłatna wizyta: klient podaje dane i zgody, wizyta jest potwierdzona bez płatności, mail jak po opłaconej; 0,01–1,99 zł formularz odrzuca z komunikatem | Nie zrobione (#256; decyzja 27.10: 0 zł bezpłatnie albo co najmniej 2 zł, tak samo dla warsztatów) |
+|  10 | Płatność zawsze w złotówkach                                   | płatność w innej walucie / dochodzi do bazy / baza jej nie przyjmuje, pieniądze wracają                                                                                                                                                    | Płatność w innej walucie jest zwracana, wizyta nie potwierdzona (PR #162); bez testu               |
+|  11 | Powrót przed potwierdzeniem Stripe                             | klient wrócił z płatności / potwierdzenie ze Stripe jeszcze nie dotarło / strona sama sprawdza i pokazuje wynik                                                                                                                            | Częściowy test jednostkowy; ręcznie 01.10                                                          |
 
 ### Płatność nieudana lub przerwana
 
@@ -184,7 +184,7 @@ Ramka `3458764688511550420`
 
 ### Ustalone (niebieskie)
 
-- Cena usługi co najmniej 2 zł; 0 zł nie ma (#256, 27.10)
+- Cena: 0 zł znaczy bezpłatnie, płatna co najmniej 2 zł; usługi i warsztaty tak samo (#256, 27.10)
 - Przelewy24: klient sam wpisuje imię i nazwisko; do Stripe go nie wysyłamy (#257, 27.10)
 - Klient zamyka kartę w trakcie BLIK-a: wynik przychodzi ze Stripe, a po 2 h system sam pyta Stripe
 
@@ -252,9 +252,9 @@ Ramka `3458764688511550424`
 |  12 | „Zapłacę później” zamyka rozpoczętą płatność              | klient otworzył płatność i wrócił / wybiera „Zapłacę później” / stara płatność w Stripe jest wygaszona i nie da się jej opłacić                                              | Zrobione (PR #162), bez testu                                                        |
 |  13 | Zaległa rezerwacja z płatnością w toku jest anulowana     | termin zapłaty minął, sesja płatności wygasła / zdarzenie o wygaśnięciu zaginęło / rezerwacja anulowana, klient dostaje maila                                                | Test bazy (CI)                                                                       |
 
-### Pytania do decyzji (pomarańczowe)
+### Ustalone (niebieskie)
 
-- Przypomnienie SMS przy ostatnim wezwaniu?
+- Bez SMS przy ostatnim wezwaniu do zapłaty; SMS-y po MVP (27.10)
 
 ## Klient · 6. Dostaje potwierdzenie i stronę wizyty
 
@@ -302,10 +302,10 @@ Ramka `3458764688511550428`
 |   5 | Specjalistka choruje: centrum przekłada albo odwołuje wizyty | specjalistka zgłasza nieobecność po rezerwacjach / admin przekłada albo odwołuje jej wizyty / każdy klient dostaje mail; przy odwołaniu pełny zwrot | nowa kartka                                         |
 |   6 | Termin od centrum nie pasuje: odwołanie z pełnym zwrotem     | centrum przełożyło opłaconą wizytę / nowy termin nie pasuje klientowi / klient może ją odwołać z pełnym zwrotem, także poza oknem                   | nowa kartka                                         |
 
-### Pytania do decyzji (pomarańczowe)
+### Ustalone (niebieskie)
 
-- Zmiana ceny między rezerwacją a przełożeniem?
-- Przełożenie nieopłaconej rezerwacji: czy zmienia się termin płatności?
+- Przełożenie nie zmienia ceny: zostaje cena z chwili rezerwacji (27.10)
+- Przełożenie nieopłaconej rezerwacji: termin płatności liczony od nowej daty, tą samą zasadą (27.10)
 
 ## Klient · 8. Odwołuje wizytę
 
@@ -328,11 +328,11 @@ Ramka `3458764688511550430`
 |   7 | Centrum odwołuje wizytę: mail i pełny zwrot                       | centrum musi odwołać opłaconą wizytę / admin odwołuje ją w portalu / klient dostaje mail i pełny zwrot przez Stripe | nowa kartka                                                         |
 |   8 | Mail o odwołaniu podaje kwotę i czas zwrotu                       | opłacona wizyta odwołana w oknie / klient dostaje mail / kwota zwrotu i kiedy pieniądze wrócą                       | nowa kartka                                                         |
 
-### Pytania do decyzji (pomarańczowe)
+### Ustalone (niebieskie)
 
-- Zmiana okna odwołań: stare czy nowe zasady?
-- Klient nie przyszedł na wizytę: czy pieniądze przepadają i czy centrum to oznacza?
-- Odwołanie po oknie z ważnego powodu (choroba): tylko przez kontakt z centrum, zwrot według uznania admina?
+- Zmiana okna odwołań nie dotyczy wcześniejszych rezerwacji: obowiązują zasady z chwili rezerwacji (27.10)
+- Klient nie przyszedł: pieniądze przepadają jak przy odwołaniu po oknie, bez maila; zasada w regulaminie i w mailu (#268, 27.10)
+- Odwołanie po oknie z ważnego powodu: kontakt z centrum, admin może dać pełny albo częściowy zwrot (27.10)
 
 ## Klient · 9. Próby obejścia i oszustwa
 

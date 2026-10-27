@@ -40,6 +40,7 @@
 <rect data-type="sticky" x="283" y="4013" width="199" height="228" data-content="30. Wizyty cykliczne" data-color="gray" data-text-align="center" data-text-align-vertical="middle" />
 <textArea x="64" y="4281" width="418" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
 <rect data-type="sticky" x="64" y="4326" width="199" height="228" data-content="Rozpoczętą rezerwację pamiętamy przez dobę (#164)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="283" y="4326" width="199" height="228" data-content="Bez ostrzeżenia przy wyjściu z kreatora: blokada mija po 10 min, a „Dokończ rezerwację” prowadzi z powrotem (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="530" y="244" width="450" height="4370" fill="#f0f5fd" data-text-color="#1a1a1a" data-font-family="open_sans" data-font-size="14" data-text-align="left" data-text-align-vertical="top" stroke="none" />
 <rect x="546" y="260" width="418" height="96" data-content="&lt;b&gt;2. Blokuje termin&lt;/b&gt;&lt;br /&gt;→ &lt;a href=&quot;https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550414&quot;&gt;szczegóły&lt;/a&gt;" rx="12" fill="#c6dcff" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="22" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <textArea x="546" y="376" width="418" height="28" fill="#595959" font-family="noto_sans" font-size="20" text-align="left" font-weight="bold"><a href="https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550415">Blokada terminu: elementy →</a></textArea>
@@ -51,6 +52,8 @@
 <rect data-type="sticky" x="765" y="912" width="199" height="228" data-content="6. „Zmień termin” w trakcie zwalnia poprzedni" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="546" y="1160" width="199" height="228" data-content="7. Kreator w dwóch kartach tej samej przeglądarki" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="765" y="1160" width="199" height="228" data-content="8. Przeglądarka blokuje ciasteczka" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="546" y="1428" width="418" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
+<rect data-type="sticky" x="546" y="1473" width="199" height="228" data-content="Turnstile nie odpowiada: komunikat „spróbuj za chwilę” i telefon do centrum; bez ochrony rezerwacja nie przechodzi (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="1012" y="244" width="450" height="4370" fill="#f0f5fd" data-text-color="#1a1a1a" data-font-family="open_sans" data-font-size="14" data-text-align="left" data-text-align-vertical="top" stroke="none" />
 <rect x="1028" y="260" width="418" height="96" data-content="&lt;b&gt;3. Podaje dane i zgody&lt;/b&gt;&lt;br /&gt;→ &lt;a href=&quot;https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550416&quot;&gt;szczegóły&lt;/a&gt;" rx="12" fill="#c6dcff" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="22" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <textArea x="1028" y="376" width="418" height="28" fill="#595959" font-family="noto_sans" font-size="20" text-align="left" font-weight="bold"><a href="https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550417">Dane i zgody: elementy →</a></textArea>
@@ -68,6 +71,8 @@
 <rect data-type="sticky" x="1247" y="1656" width="199" height="228" data-content="12. Odpowiedzi z ankiety widzą tylko specjalista i centrum" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1028" y="1904" width="199" height="228" data-content="13. Dane z porzuconej rezerwacji są usuwane po czasie" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1247" y="1904" width="199" height="228" data-content="14. Regulamin mówi to samo co system: płatność później, odwołanie, zwroty, kupony" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="1028" y="2172" width="418" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
+<rect data-type="sticky" x="1028" y="2217" width="199" height="228" data-content="Dane z niedokończonej rezerwacji usuwamy po 30 dniach (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="1494" y="244" width="450" height="4370" fill="#f0f5fd" data-text-color="#1a1a1a" data-font-family="open_sans" data-font-size="14" data-text-align="left" data-text-align-vertical="top" stroke="none" />
 <rect x="1510" y="260" width="418" height="96" data-content="&lt;b&gt;4. Płaci od razu&lt;/b&gt;&lt;br /&gt;→ &lt;a href=&quot;https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550418&quot;&gt;szczegóły&lt;/a&gt;" rx="12" fill="#c6dcff" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="22" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <textArea x="1510" y="376" width="418" height="28" fill="#595959" font-family="noto_sans" font-size="20" text-align="left" font-weight="bold"><a href="https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550419">Płatność udana: elementy →</a></textArea>
@@ -79,7 +84,7 @@
 <rect data-type="sticky" x="1729" y="912" width="199" height="228" data-content="6. Strona potwierdzenia z numerem rezerwacji i plikiem kalendarza" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1510" y="1160" width="199" height="228" data-content="7. Potwierdzenie płatności dla klienta" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1729" y="1160" width="199" height="228" data-content="8. Cena z chwili rezerwacji, nawet gdy admin ją zmieni" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="1510" y="1408" width="199" height="228" data-content="9. Cena usługi co najmniej 2 zł (#256)" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="1510" y="1408" width="199" height="228" data-content="9. Cena usługi: bezpłatna (0 zł) albo co najmniej 2 zł (#256)" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1729" y="1408" width="199" height="228" data-content="10. Płatność zawsze w złotówkach" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1510" y="1656" width="199" height="228" data-content="11. Powrót przed potwierdzeniem Stripe" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <textArea x="1510" y="1924" width="418" height="28" fill="#595959" font-family="noto_sans" font-size="20" text-align="left" font-weight="bold"><a href="https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550420">Nieudana lub przerwana: elementy →</a></textArea>
@@ -95,7 +100,7 @@
 <textArea x="1510" y="3224" width="418" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Po MVP</textArea>
 <rect data-type="sticky" x="1510" y="3269" width="199" height="228" data-content="21. Pakiety i vouchery" data-color="gray" data-text-align="center" data-text-align-vertical="middle" />
 <textArea x="1510" y="3537" width="418" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
-<rect data-type="sticky" x="1510" y="3582" width="199" height="228" data-content="Cena usługi co najmniej 2 zł; 0 zł nie ma (#256, 27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="1510" y="3582" width="199" height="228" data-content="Cena: 0 zł znaczy bezpłatnie, płatna co najmniej 2 zł; usługi i warsztaty tak samo (#256, 27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1729" y="3582" width="199" height="228" data-content="Przelewy24: klient sam wpisuje imię i nazwisko; do Stripe go nie wysyłamy (#257, 27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1510" y="3830" width="199" height="228" data-content="Klient zamyka kartę w trakcie BLIK-a: wynik przychodzi ze Stripe, a po 2 h system sam pyta Stripe" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="1976" y="244" width="450" height="4370" fill="#f0f5fd" data-text-color="#1a1a1a" data-font-family="open_sans" data-font-size="14" data-text-align="left" data-text-align-vertical="top" stroke="none" />
@@ -138,6 +143,8 @@
 <rect data-type="sticky" x="2474" y="1656" width="199" height="228" data-content="11. Przeterminowana rezerwacja nie blokuje terminu" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="2693" y="1656" width="199" height="228" data-content="12. „Zapłacę później” zamyka rozpoczętą płatność" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="2474" y="1904" width="199" height="228" data-content="13. Zaległa rezerwacja z płatnością w toku jest anulowana" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="2474" y="2172" width="418" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
+<rect data-type="sticky" x="2474" y="2217" width="199" height="228" data-content="Bez SMS przy ostatnim wezwaniu do zapłaty; SMS-y po MVP (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="2940" y="244" width="450" height="4370" fill="#f0f5fd" data-text-color="#1a1a1a" data-font-family="open_sans" data-font-size="14" data-text-align="left" data-text-align-vertical="top" stroke="none" />
 <rect x="2956" y="260" width="418" height="96" data-content="&lt;b&gt;6. Potwierdzenie i strona wizyty&lt;/b&gt;&lt;br /&gt;→ &lt;a href=&quot;https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550425&quot;&gt;szczegóły&lt;/a&gt;" rx="12" fill="#c6dcff" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="22" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <textArea x="2956" y="376" width="418" height="28" fill="#595959" font-family="noto_sans" font-size="20" text-align="left" font-weight="bold"><a href="https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550426">Maile i strona wizyty: elementy →</a></textArea>
@@ -162,6 +169,9 @@
 <rect data-type="sticky" x="3657" y="664" width="199" height="228" data-content="4. Centrum przekłada wizytę: mail z nowym terminem" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="3438" y="912" width="199" height="228" data-content="5. Specjalistka choruje: centrum przekłada albo odwołuje wizyty" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="3657" y="912" width="199" height="228" data-content="6. Termin od centrum nie pasuje: odwołanie z pełnym zwrotem" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="3438" y="1180" width="418" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
+<rect data-type="sticky" x="3438" y="1225" width="199" height="228" data-content="Przełożenie nie zmienia ceny: zostaje cena z chwili rezerwacji (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="3657" y="1225" width="199" height="228" data-content="Przełożenie nieopłaconej rezerwacji: termin płatności liczony od nowej daty, tą samą zasadą (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="3904" y="244" width="450" height="4370" fill="#f0f5fd" data-text-color="#1a1a1a" data-font-family="open_sans" data-font-size="14" data-text-align="left" data-text-align-vertical="top" stroke="none" />
 <rect x="3920" y="260" width="418" height="96" data-content="&lt;b&gt;8. Odwołuje wizytę&lt;/b&gt;&lt;br /&gt;→ &lt;a href=&quot;https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550429&quot;&gt;szczegóły&lt;/a&gt;" rx="12" fill="#c6dcff" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="22" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <textArea x="3920" y="376" width="418" height="28" fill="#595959" font-family="noto_sans" font-size="20" text-align="left" font-weight="bold"><a href="https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550430">Odwołanie i zwrot: elementy →</a></textArea>
@@ -173,6 +183,10 @@
 <rect data-type="sticky" x="4139" y="912" width="199" height="228" data-content="6. Podwójne kliknięcie „Odwołaj”: jeden zwrot" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="3920" y="1160" width="199" height="228" data-content="7. Centrum odwołuje wizytę: mail i pełny zwrot" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="4139" y="1160" width="199" height="228" data-content="8. Mail o odwołaniu podaje kwotę i czas zwrotu" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="3920" y="1428" width="418" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
+<rect data-type="sticky" x="3920" y="1473" width="199" height="228" data-content="Zmiana okna odwołań nie dotyczy wcześniejszych rezerwacji: obowiązują zasady z chwili rezerwacji (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="4139" y="1473" width="199" height="228" data-content="Klient nie przyszedł: pieniądze przepadają jak przy odwołaniu po oknie, bez maila; zasada w regulaminie i w mailu (#268, 27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="3920" y="1721" width="199" height="228" data-content="Odwołanie po oknie z ważnego powodu: kontakt z centrum, admin może dać pełny albo częściowy zwrot (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="4386" y="244" width="450" height="4370" fill="#f0f5fd" data-text-color="#1a1a1a" data-font-family="open_sans" data-font-size="14" data-text-align="left" data-text-align-vertical="top" stroke="none" />
 <rect x="4402" y="260" width="418" height="96" data-content="&lt;b&gt;9. Próby obejścia i oszustwa&lt;/b&gt;&lt;br /&gt;→ &lt;a href=&quot;https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550445&quot;&gt;szczegóły&lt;/a&gt;" rx="12" fill="#c6dcff" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="22" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <textArea x="4402" y="376" width="418" height="28" fill="#595959" font-family="noto_sans" font-size="20" text-align="left" font-weight="bold"><a href="https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550446">Grafik i blokady: elementy →</a></textArea>
@@ -207,7 +221,7 @@
 </g>
 
 <g data-miro-id="3458764688511550411" transform="translate(4899,9817)" data-frame="Klient · 1. Wybiera usługę i termin">
-<rect data-type="frame" x="0" y="0" width="2015" height="1690" fill="#ffffff" data-title="Klient · 1. Wybiera usługę i termin" />
+<rect data-type="frame" x="0" y="0" width="2015" height="1445" fill="#ffffff" data-title="Klient · 1. Wybiera usługę i termin" />
 <textArea x="48" y="32.5" width="1900" height="57" fill="#1a1a1a" font-family="noto_sans" font-size="40" text-align="left" font-weight="bold">Klient · 1. Wybiera usługę i termin</textArea>
 <textArea x="48" y="104" width="1900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left"><a href="https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764687137671334">← wróć do mapy</a> · dokładnie te same karteczki, z tymi samymi numerami, co w tej kolumnie mapy; wyjaśnienie każdej w ramkach „elementy” poniżej</textArea>
 <textArea x="48" y="150" width="1900" height="57" fill="#595959" font-family="noto_sans" font-size="20" text-align="left" font-weight="bold">Kolory: różowy = do sprawdzenia (od 27.10 wszystko sprawdzamy od nowa) · żółty = jest, częściowo sprawdzone · zielony = sprawdzone testem · szary = po MVP · niebieski = ustalone · pomarańczowy = do decyzji</textArea>
@@ -245,12 +259,11 @@
 <textArea x="48" y="935" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Po MVP (2)</textArea>
 <rect data-type="sticky" x="48" y="980" width="140" height="160" data-content="29. Lista oczekujących na terminy" data-color="gray" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="203" y="980" width="140" height="160" data-content="30. Wizyty cykliczne" data-color="gray" data-text-align="center" data-text-align-vertical="middle" />
-<textArea x="48" y="1180" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone (1)</textArea>
+<textArea x="48" y="1180" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone (2)</textArea>
 <rect data-type="sticky" x="48" y="1225" width="140" height="160" data-content="Rozpoczętą rezerwację pamiętamy przez dobę (#164)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
-<textArea x="48" y="1425" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie (1)</textArea>
-<rect data-type="sticky" x="48" y="1470" width="140" height="160" data-content="Ostrzegać przy wyjściu z kreatora, gdy termin jest zablokowany?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="203" y="1225" width="140" height="160" data-content="Bez ostrzeżenia przy wyjściu z kreatora: blokada mija po 10 min, a „Dokończ rezerwację” prowadzi z powrotem (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 </g>
-<g data-miro-id="3458764688511550412" transform="translate(4899,11607)" data-frame="Klient · 1 · Usługa, forma i specjalista: elementy">
+<g data-miro-id="3458764688511550412" transform="translate(4899,11362)" data-frame="Klient · 1 · Usługa, forma i specjalista: elementy">
 <rect data-type="frame" x="0" y="0" width="2015" height="4236" fill="#ffffff" data-title="Klient · 1 · Usługa, forma i specjalista: elementy" />
 <textArea x="48" y="32" width="1900" height="56" fill="#1a1a1a" font-family="noto_sans" font-size="40" text-align="left" font-weight="bold">Klient · 1 · Usługa, forma i specjalista: elementy</textArea>
 <textArea x="48" y="104" width="1900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left"><a href="https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550411">← wróć do kolumny 1. Wybiera usługę i termin</a> · każda karteczka i jej wyjaśnienie; numery jak w kolumnie i na mapie</textArea>
@@ -306,8 +319,8 @@
 <rect x="271" y="3940" width="1100" height="228" data-content="&lt;b&gt;Zakładając:&lt;/b&gt; klient ma telefon, używa tylko klawiatury albo czytnika ekranu&lt;br /&gt;&lt;b&gt;Gdy:&lt;/b&gt; przechodzi wszystkie kroki kreatora&lt;br /&gt;&lt;b&gt;Wtedy:&lt;/b&gt; każdy krok ma jeden nagłówek, da się go przejść i nie ma błędów dostępności (axe)" rx="8" fill="#f5f6f8" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="20" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <rect x="1394" y="3940" width="572" height="228" data-content="Nowa kartka (27.10). Do sprawdzenia → &lt;b&gt;różowy&lt;/b&gt;" rx="8" fill="#ffcee0" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="18" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 </g>
-<g data-miro-id="3458764688511550413" transform="translate(4899,15943)" data-frame="Klient · 1 · Wolne terminy: elementy">
-<rect data-type="frame" x="0" y="0" width="2015" height="4401" fill="#ffffff" data-title="Klient · 1 · Wolne terminy: elementy" />
+<g data-miro-id="3458764688511550413" transform="translate(4899,15698)" data-frame="Klient · 1 · Wolne terminy: elementy">
+<rect data-type="frame" x="0" y="0" width="2015" height="4098" fill="#ffffff" data-title="Klient · 1 · Wolne terminy: elementy" />
 <textArea x="48" y="32" width="1900" height="56" fill="#1a1a1a" font-family="noto_sans" font-size="40" text-align="left" font-weight="bold">Klient · 1 · Wolne terminy: elementy</textArea>
 <textArea x="48" y="104" width="1900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left"><a href="https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550411">← wróć do kolumny 1. Wybiera usługę i termin</a> · każda karteczka i jej wyjaśnienie; numery jak w kolumnie i na mapie</textArea>
 <textArea x="48" y="174" width="133" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Karteczka</textArea>
@@ -358,8 +371,7 @@
 <rect x="1394" y="3499" width="572" height="228" data-content="Po MVP → &lt;b&gt;szary&lt;/b&gt;" rx="8" fill="#e6e6e6" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="18" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <textArea x="48" y="3757" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
 <rect data-type="sticky" x="48" y="3802" width="199" height="228" data-content="Rozpoczętą rezerwację pamiętamy przez dobę (#164)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
-<textArea x="48" y="4060" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie</textArea>
-<rect data-type="sticky" x="48" y="4105" width="199" height="228" data-content="Ostrzegać przy wyjściu z kreatora, gdy termin jest zablokowany?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="267" y="3802" width="199" height="228" data-content="Bez ostrzeżenia przy wyjściu z kreatora: blokada mija po 10 min, a „Dokończ rezerwację” prowadzi z powrotem (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 </g>
 
 <g data-miro-id="3458764688511550414" transform="translate(7021,9817)" data-frame="Klient · 2. Blokuje termin">
@@ -377,8 +389,8 @@
 <rect data-type="sticky" x="823" y="315" width="140" height="160" data-content="6. „Zmień termin” w trakcie zwalnia poprzedni" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="978" y="315" width="140" height="160" data-content="7. Kreator w dwóch kartach tej samej przeglądarki" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1133" y="315" width="140" height="160" data-content="8. Przeglądarka blokuje ciasteczka" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
-<textArea x="48" y="515" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie (1)</textArea>
-<rect data-type="sticky" x="48" y="560" width="140" height="160" data-content="Co, gdy ochrona przed botami (Turnstile) nie odpowiada?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="48" y="515" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone (1)</textArea>
+<rect data-type="sticky" x="48" y="560" width="140" height="160" data-content="Turnstile nie odpowiada: komunikat „spróbuj za chwilę” i telefon do centrum; bez ochrony rezerwacja nie przechodzi (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 </g>
 <g data-miro-id="3458764688511550415" transform="translate(7021,10697)" data-frame="Klient · 2 · Blokada terminu: elementy">
 <rect data-type="frame" x="0" y="0" width="2015" height="2555" fill="#ffffff" data-title="Klient · 2 · Blokada terminu: elementy" />
@@ -411,12 +423,12 @@
 <rect data-type="sticky" x="48" y="1956" width="199" height="228" data-content="8. Przeglądarka blokuje ciasteczka" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="271" y="1956" width="1100" height="228" data-content="&lt;b&gt;Zakładając:&lt;/b&gt; przeglądarka nie zapisuje ciasteczek&lt;br /&gt;&lt;b&gt;Gdy:&lt;/b&gt; klient wybiera termin&lt;br /&gt;&lt;b&gt;Wtedy:&lt;/b&gt; komunikat, że rezerwacja potrzebuje niezbędnych ciasteczek, i kontakt" rx="8" fill="#f5f6f8" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="20" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <rect x="1394" y="1956" width="572" height="228" data-content="Nowa kartka (27.10). Do sprawdzenia → &lt;b&gt;różowy&lt;/b&gt;" rx="8" fill="#ffcee0" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="18" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
-<textArea x="48" y="2214" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie</textArea>
-<rect data-type="sticky" x="48" y="2259" width="199" height="228" data-content="Co, gdy ochrona przed botami (Turnstile) nie odpowiada?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="48" y="2214" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
+<rect data-type="sticky" x="48" y="2259" width="199" height="228" data-content="Turnstile nie odpowiada: komunikat „spróbuj za chwilę” i telefon do centrum; bez ochrony rezerwacja nie przechodzi (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 </g>
 
 <g data-miro-id="3458764688511550416" transform="translate(9143,9817)" data-frame="Klient · 3. Podaje dane i zgody">
-<rect data-type="frame" x="0" y="0" width="2015" height="955" fill="#ffffff" data-title="Klient · 3. Podaje dane i zgody" />
+<rect data-type="frame" x="0" y="0" width="2015" height="1200" fill="#ffffff" data-title="Klient · 3. Podaje dane i zgody" />
 <textArea x="48" y="32.5" width="1900" height="57" fill="#1a1a1a" font-family="noto_sans" font-size="40" text-align="left" font-weight="bold">Klient · 3. Podaje dane i zgody</textArea>
 <textArea x="48" y="104" width="1900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left"><a href="https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764687137671334">← wróć do mapy</a> · dokładnie te same karteczki, z tymi samymi numerami, co w tej kolumnie mapy; wyjaśnienie każdej w ramkach „elementy” poniżej</textArea>
 <textArea x="48" y="150" width="1900" height="57" fill="#595959" font-family="noto_sans" font-size="20" text-align="left" font-weight="bold">Kolory: różowy = do sprawdzenia (od 27.10 wszystko sprawdzamy od nowa) · żółty = jest, częściowo sprawdzone · zielony = sprawdzone testem · szary = po MVP · niebieski = ustalone · pomarańczowy = do decyzji</textArea>
@@ -436,14 +448,15 @@
 <rect data-type="sticky" x="1753" y="315" width="140" height="160" data-content="12. Odpowiedzi z ankiety widzą tylko specjalista i centrum" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="48" y="490" width="140" height="160" data-content="13. Dane z porzuconej rezerwacji są usuwane po czasie" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="203" y="490" width="140" height="160" data-content="14. Regulamin mówi to samo co system: płatność później, odwołanie, zwroty, kupony" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
-<textArea x="48" y="690" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie (4)</textArea>
-<rect data-type="sticky" x="48" y="735" width="140" height="160" data-content="Rezerwacja dla dziecka: kto jest klientem, czy podajemy dane dziecka, czy potrzebna jest zgoda opiekuna?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="203" y="735" width="140" height="160" data-content="Osoba niepełnoletnia rezerwuje sama: czy pozwalamy?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="358" y="735" width="140" height="160" data-content="Jak długo trzymamy dane z niedokończonych rezerwacji (np. 30 dni)?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="513" y="735" width="140" height="160" data-content="Prawo odstąpienia od umowy (14 dni): przy wizycie w ciągu 14 dni klient zaznacza, że chce jej wcześniej? Do sprawdzenia z prawnikiem" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="48" y="690" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone (1)</textArea>
+<rect data-type="sticky" x="48" y="735" width="140" height="160" data-content="Dane z niedokończonej rezerwacji usuwamy po 30 dniach (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="48" y="935" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie (3)</textArea>
+<rect data-type="sticky" x="48" y="980" width="140" height="160" data-content="Rezerwacja dla dziecka: kto jest klientem, czy podajemy dane dziecka, czy potrzebna jest zgoda opiekuna?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="203" y="980" width="140" height="160" data-content="Osoba niepełnoletnia rezerwuje sama: czy pozwalamy?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="358" y="980" width="140" height="160" data-content="Prawo odstąpienia od umowy (14 dni): przy wizycie w ciągu 14 dni klient zaznacza, że chce jej wcześniej? Do sprawdzenia z prawnikiem" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
 </g>
-<g data-miro-id="3458764688511550417" transform="translate(9143,10872)" data-frame="Klient · 3 · Dane i zgody: elementy">
-<rect data-type="frame" x="0" y="0" width="2015" height="4043" fill="#ffffff" data-title="Klient · 3 · Dane i zgody: elementy" />
+<g data-miro-id="3458764688511550417" transform="translate(9143,11117)" data-frame="Klient · 3 · Dane i zgody: elementy">
+<rect data-type="frame" x="0" y="0" width="2015" height="4346" fill="#ffffff" data-title="Klient · 3 · Dane i zgody: elementy" />
 <textArea x="48" y="32" width="1900" height="56" fill="#1a1a1a" font-family="noto_sans" font-size="40" text-align="left" font-weight="bold">Klient · 3 · Dane i zgody: elementy</textArea>
 <textArea x="48" y="104" width="1900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left"><a href="https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550416">← wróć do kolumny 3. Podaje dane i zgody</a> · każda karteczka i jej wyjaśnienie; numery jak w kolumnie i na mapie</textArea>
 <textArea x="48" y="174" width="133" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Karteczka</textArea>
@@ -491,11 +504,12 @@
 <rect data-type="sticky" x="48" y="3444" width="199" height="228" data-content="14. Regulamin mówi to samo co system: płatność później, odwołanie, zwroty, kupony" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="271" y="3444" width="1100" height="228" data-content="&lt;b&gt;Zakładając:&lt;/b&gt; admin ustawił okno odwołań, czas na płatność i zasady kuponów&lt;br /&gt;&lt;b&gt;Gdy:&lt;/b&gt; klient czyta regulamin przed rezerwacją&lt;br /&gt;&lt;b&gt;Wtedy:&lt;/b&gt; regulamin podaje te same zasady co kreator, maile i system" rx="8" fill="#f5f6f8" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="20" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <rect x="1394" y="3444" width="572" height="228" data-content="Wcześniej: regulamin na DEV (27.10) nie ma Przelewy24, płatności później ani kuponów przy wizytach (#266). Nowa kartka (27.10). Do sprawdzenia → &lt;b&gt;różowy&lt;/b&gt;" rx="8" fill="#ffcee0" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="18" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
-<textArea x="48" y="3702" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie</textArea>
-<rect data-type="sticky" x="48" y="3747" width="199" height="228" data-content="Rezerwacja dla dziecka: kto jest klientem, czy podajemy dane dziecka, czy potrzebna jest zgoda opiekuna?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="267" y="3747" width="199" height="228" data-content="Osoba niepełnoletnia rezerwuje sama: czy pozwalamy?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="486" y="3747" width="199" height="228" data-content="Jak długo trzymamy dane z niedokończonych rezerwacji (np. 30 dni)?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="705" y="3747" width="199" height="228" data-content="Prawo odstąpienia od umowy (14 dni): przy wizycie w ciągu 14 dni klient zaznacza, że chce jej wcześniej? Do sprawdzenia z prawnikiem" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="48" y="3702" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
+<rect data-type="sticky" x="48" y="3747" width="199" height="228" data-content="Dane z niedokończonej rezerwacji usuwamy po 30 dniach (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="48" y="4005" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie</textArea>
+<rect data-type="sticky" x="48" y="4050" width="199" height="228" data-content="Rezerwacja dla dziecka: kto jest klientem, czy podajemy dane dziecka, czy potrzebna jest zgoda opiekuna?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="267" y="4050" width="199" height="228" data-content="Osoba niepełnoletnia rezerwuje sama: czy pozwalamy?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="486" y="4050" width="199" height="228" data-content="Prawo odstąpienia od umowy (14 dni): przy wizycie w ciągu 14 dni klient zaznacza, że chce jej wcześniej? Do sprawdzenia z prawnikiem" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
 </g>
 
 <g data-miro-id="3458764688511550418" transform="translate(11265,9817)" data-frame="Klient · 4. Płaci od razu">
@@ -513,7 +527,7 @@
 <rect data-type="sticky" x="823" y="315" width="140" height="160" data-content="6. Strona potwierdzenia z numerem rezerwacji i plikiem kalendarza" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="978" y="315" width="140" height="160" data-content="7. Potwierdzenie płatności dla klienta" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1133" y="315" width="140" height="160" data-content="8. Cena z chwili rezerwacji, nawet gdy admin ją zmieni" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="1288" y="315" width="140" height="160" data-content="9. Cena usługi co najmniej 2 zł (#256)" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="1288" y="315" width="140" height="160" data-content="9. Cena usługi: bezpłatna (0 zł) albo co najmniej 2 zł (#256)" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1443" y="315" width="140" height="160" data-content="10. Płatność zawsze w złotówkach" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1598" y="315" width="140" height="160" data-content="11. Powrót przed potwierdzeniem Stripe" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <textArea x="48" y="515" width="1900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold"><a href="https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688511550420">Płatność nieudana lub przerwana: elementy →</a></textArea>
@@ -529,7 +543,7 @@
 <textArea x="48" y="760" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Po MVP (1)</textArea>
 <rect data-type="sticky" x="48" y="805" width="140" height="160" data-content="21. Pakiety i vouchery" data-color="gray" data-text-align="center" data-text-align-vertical="middle" />
 <textArea x="48" y="1005" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone (3)</textArea>
-<rect data-type="sticky" x="48" y="1050" width="140" height="160" data-content="Cena usługi co najmniej 2 zł; 0 zł nie ma (#256, 27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="48" y="1050" width="140" height="160" data-content="Cena: 0 zł znaczy bezpłatnie, płatna co najmniej 2 zł; usługi i warsztaty tak samo (#256, 27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="203" y="1050" width="140" height="160" data-content="Przelewy24: klient sam wpisuje imię i nazwisko; do Stripe go nie wysyłamy (#257, 27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="358" y="1050" width="140" height="160" data-content="Klient zamyka kartę w trakcie BLIK-a: wynik przychodzi ze Stripe, a po 2 h system sam pyta Stripe" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 </g>
@@ -564,9 +578,9 @@
 <rect data-type="sticky" x="48" y="1956" width="199" height="228" data-content="8. Cena z chwili rezerwacji, nawet gdy admin ją zmieni" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="271" y="1956" width="1100" height="228" data-content="&lt;b&gt;Zakładając:&lt;/b&gt; klient jest w kreatorze&lt;br /&gt;&lt;b&gt;Gdy:&lt;/b&gt; admin w tym czasie zmienia cenę usługi&lt;br /&gt;&lt;b&gt;Wtedy:&lt;/b&gt; klient płaci cenę, którą widział przy rezerwacji" rx="8" fill="#f5f6f8" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="20" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <rect x="1394" y="1956" width="572" height="228" data-content="Nowa kartka (27.10). Do sprawdzenia → &lt;b&gt;różowy&lt;/b&gt;" rx="8" fill="#ffcee0" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="18" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
-<rect data-type="sticky" x="48" y="2204" width="199" height="228" data-content="9. Cena usługi co najmniej 2 zł (#256)" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
-<rect x="271" y="2204" width="1100" height="228" data-content="&lt;b&gt;Zakładając:&lt;/b&gt; admin ustawia cenę usługi&lt;br /&gt;&lt;b&gt;Gdy:&lt;/b&gt; wpisuje 0 zł albo mniej niż 2 zł&lt;br /&gt;&lt;b&gt;Wtedy:&lt;/b&gt; formularz odmawia z jasnym komunikatem; każdą usługę da się opłacić w Stripe" rx="8" fill="#f5f6f8" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="20" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
-<rect x="1394" y="2204" width="572" height="228" data-content="Wcześniej: Nie zrobione (#256, decyzja 27.10: wariant A). Do sprawdzenia → &lt;b&gt;różowy&lt;/b&gt;" rx="8" fill="#ffcee0" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="18" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
+<rect data-type="sticky" x="48" y="2204" width="199" height="228" data-content="9. Cena usługi: bezpłatna (0 zł) albo co najmniej 2 zł (#256)" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
+<rect x="271" y="2204" width="1100" height="228" data-content="&lt;b&gt;Zakładając:&lt;/b&gt; admin ustawia cenę usługi&lt;br /&gt;&lt;b&gt;Gdy:&lt;/b&gt; wpisuje 0 zł albo kwotę od 0,01 do 1,99 zł&lt;br /&gt;&lt;b&gt;Wtedy:&lt;/b&gt; 0 zł to bezpłatna wizyta: klient podaje dane i zgody, wizyta jest potwierdzona bez płatności, mail jak po opłaconej; 0,01–1,99 zł formularz odrzuca z komunikatem" rx="8" fill="#f5f6f8" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="20" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
+<rect x="1394" y="2204" width="572" height="228" data-content="Wcześniej: Nie zrobione (#256; decyzja 27.10: 0 zł bezpłatnie albo co najmniej 2 zł, tak samo dla warsztatów). Do sprawdzenia → &lt;b&gt;różowy&lt;/b&gt;" rx="8" fill="#ffcee0" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="18" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <rect data-type="sticky" x="48" y="2452" width="199" height="228" data-content="10. Płatność zawsze w złotówkach" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="271" y="2452" width="1100" height="228" data-content="&lt;b&gt;Zakładając:&lt;/b&gt; płatność w innej walucie&lt;br /&gt;&lt;b&gt;Gdy:&lt;/b&gt; dochodzi do bazy&lt;br /&gt;&lt;b&gt;Wtedy:&lt;/b&gt; baza jej nie przyjmuje, pieniądze wracają" rx="8" fill="#f5f6f8" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="20" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <rect x="1394" y="2452" width="572" height="228" data-content="Wcześniej: Płatność w innej walucie jest zwracana, wizyta nie potwierdzona (PR #162); bez testu. Do sprawdzenia → &lt;b&gt;różowy&lt;/b&gt;" rx="8" fill="#ffcee0" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="18" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
@@ -613,7 +627,7 @@
 <rect x="271" y="2507" width="1100" height="228" data-content="&lt;b&gt;Zakładając:&lt;/b&gt; klient ma pakiet albo voucher&lt;br /&gt;&lt;b&gt;Gdy:&lt;/b&gt; rezerwuje wizytę&lt;br /&gt;&lt;b&gt;Wtedy:&lt;/b&gt; wizyta schodzi z pakietu zamiast płatności" rx="8" fill="#f5f6f8" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="20" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <rect x="1394" y="2507" width="572" height="228" data-content="Po MVP → &lt;b&gt;szary&lt;/b&gt;" rx="8" fill="#e6e6e6" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="18" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <textArea x="48" y="2765" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
-<rect data-type="sticky" x="48" y="2810" width="199" height="228" data-content="Cena usługi co najmniej 2 zł; 0 zł nie ma (#256, 27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="48" y="2810" width="199" height="228" data-content="Cena: 0 zł znaczy bezpłatnie, płatna co najmniej 2 zł; usługi i warsztaty tak samo (#256, 27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="267" y="2810" width="199" height="228" data-content="Przelewy24: klient sam wpisuje imię i nazwisko; do Stripe go nie wysyłamy (#257, 27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="486" y="2810" width="199" height="228" data-content="Klient zamyka kartę w trakcie BLIK-a: wynik przychodzi ze Stripe, a po 2 h system sam pyta Stripe" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 </g>
@@ -723,8 +737,8 @@
 <rect data-type="sticky" x="1598" y="315" width="140" height="160" data-content="11. Przeterminowana rezerwacja nie blokuje terminu" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1753" y="315" width="140" height="160" data-content="12. „Zapłacę później” zamyka rozpoczętą płatność" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="48" y="490" width="140" height="160" data-content="13. Zaległa rezerwacja z płatnością w toku jest anulowana" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
-<textArea x="48" y="690" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie (1)</textArea>
-<rect data-type="sticky" x="48" y="735" width="140" height="160" data-content="Przypomnienie SMS przy ostatnim wezwaniu?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="48" y="690" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone (1)</textArea>
+<rect data-type="sticky" x="48" y="735" width="140" height="160" data-content="Bez SMS przy ostatnim wezwaniu do zapłaty; SMS-y po MVP (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 </g>
 <g data-miro-id="3458764688511550424" transform="translate(15509,10872)" data-frame="Klient · 5 · Rezerwacja i płatność z linku: elementy">
 <rect data-type="frame" x="0" y="0" width="2015" height="3795" fill="#ffffff" data-title="Klient · 5 · Rezerwacja i płatność z linku: elementy" />
@@ -772,8 +786,8 @@
 <rect data-type="sticky" x="48" y="3196" width="199" height="228" data-content="13. Zaległa rezerwacja z płatnością w toku jest anulowana" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="271" y="3196" width="1100" height="228" data-content="&lt;b&gt;Zakładając:&lt;/b&gt; termin zapłaty minął, sesja płatności wygasła&lt;br /&gt;&lt;b&gt;Gdy:&lt;/b&gt; zdarzenie o wygaśnięciu zaginęło&lt;br /&gt;&lt;b&gt;Wtedy:&lt;/b&gt; rezerwacja anulowana, klient dostaje maila" rx="8" fill="#f5f6f8" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="20" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <rect x="1394" y="3196" width="572" height="228" data-content="Wcześniej: Test bazy (CI). Do sprawdzenia → &lt;b&gt;różowy&lt;/b&gt;" rx="8" fill="#ffcee0" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="18" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
-<textArea x="48" y="3454" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie</textArea>
-<rect data-type="sticky" x="48" y="3499" width="199" height="228" data-content="Przypomnienie SMS przy ostatnim wezwaniu?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="48" y="3454" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
+<rect data-type="sticky" x="48" y="3499" width="199" height="228" data-content="Bez SMS przy ostatnim wezwaniu do zapłaty; SMS-y po MVP (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 </g>
 
 <g data-miro-id="3458764688511550425" transform="translate(17631,9817)" data-frame="Klient · 6. Dostaje potwierdzenie i stronę wizyty">
@@ -852,9 +866,9 @@
 <rect data-type="sticky" x="513" y="315" width="140" height="160" data-content="4. Centrum przekłada wizytę: mail z nowym terminem" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="668" y="315" width="140" height="160" data-content="5. Specjalistka choruje: centrum przekłada albo odwołuje wizyty" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="823" y="315" width="140" height="160" data-content="6. Termin od centrum nie pasuje: odwołanie z pełnym zwrotem" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
-<textArea x="48" y="515" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie (2)</textArea>
-<rect data-type="sticky" x="48" y="560" width="140" height="160" data-content="Zmiana ceny między rezerwacją a przełożeniem?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="203" y="560" width="140" height="160" data-content="Przełożenie nieopłaconej rezerwacji: czy zmienia się termin płatności?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="48" y="515" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone (2)</textArea>
+<rect data-type="sticky" x="48" y="560" width="140" height="160" data-content="Przełożenie nie zmienia ceny: zostaje cena z chwili rezerwacji (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="203" y="560" width="140" height="160" data-content="Przełożenie nieopłaconej rezerwacji: termin płatności liczony od nowej daty, tą samą zasadą (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 </g>
 <g data-miro-id="3458764688511550428" transform="translate(19753,10697)" data-frame="Klient · 7 · Przełożenie: elementy">
 <rect data-type="frame" x="0" y="0" width="2015" height="2059" fill="#ffffff" data-title="Klient · 7 · Przełożenie: elementy" />
@@ -881,9 +895,9 @@
 <rect data-type="sticky" x="48" y="1460" width="199" height="228" data-content="6. Termin od centrum nie pasuje: odwołanie z pełnym zwrotem" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="271" y="1460" width="1100" height="228" data-content="&lt;b&gt;Zakładając:&lt;/b&gt; centrum przełożyło opłaconą wizytę&lt;br /&gt;&lt;b&gt;Gdy:&lt;/b&gt; nowy termin nie pasuje klientowi&lt;br /&gt;&lt;b&gt;Wtedy:&lt;/b&gt; klient może ją odwołać z pełnym zwrotem, także poza oknem" rx="8" fill="#f5f6f8" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="20" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <rect x="1394" y="1460" width="572" height="228" data-content="Nowa kartka (27.10). Do sprawdzenia → &lt;b&gt;różowy&lt;/b&gt;" rx="8" fill="#ffcee0" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="18" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
-<textArea x="48" y="1718" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie</textArea>
-<rect data-type="sticky" x="48" y="1763" width="199" height="228" data-content="Zmiana ceny między rezerwacją a przełożeniem?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="267" y="1763" width="199" height="228" data-content="Przełożenie nieopłaconej rezerwacji: czy zmienia się termin płatności?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="48" y="1718" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
+<rect data-type="sticky" x="48" y="1763" width="199" height="228" data-content="Przełożenie nie zmienia ceny: zostaje cena z chwili rezerwacji (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="267" y="1763" width="199" height="228" data-content="Przełożenie nieopłaconej rezerwacji: termin płatności liczony od nowej daty, tą samą zasadą (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 </g>
 
 <g data-miro-id="3458764688511550429" transform="translate(21875,9817)" data-frame="Klient · 8. Odwołuje wizytę">
@@ -901,10 +915,10 @@
 <rect data-type="sticky" x="823" y="315" width="140" height="160" data-content="6. Podwójne kliknięcie „Odwołaj”: jeden zwrot" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="978" y="315" width="140" height="160" data-content="7. Centrum odwołuje wizytę: mail i pełny zwrot" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect data-type="sticky" x="1133" y="315" width="140" height="160" data-content="8. Mail o odwołaniu podaje kwotę i czas zwrotu" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
-<textArea x="48" y="515" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie (3)</textArea>
-<rect data-type="sticky" x="48" y="560" width="140" height="160" data-content="Zmiana okna odwołań: stare czy nowe zasady?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="203" y="560" width="140" height="160" data-content="Klient nie przyszedł na wizytę: czy pieniądze przepadają i czy centrum to oznacza?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="358" y="560" width="140" height="160" data-content="Odwołanie po oknie z ważnego powodu (choroba): tylko przez kontakt z centrum, zwrot według uznania admina?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="48" y="515" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone (3)</textArea>
+<rect data-type="sticky" x="48" y="560" width="140" height="160" data-content="Zmiana okna odwołań nie dotyczy wcześniejszych rezerwacji: obowiązują zasady z chwili rezerwacji (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="203" y="560" width="140" height="160" data-content="Klient nie przyszedł: pieniądze przepadają jak przy odwołaniu po oknie, bez maila; zasada w regulaminie i w mailu (#268, 27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="358" y="560" width="140" height="160" data-content="Odwołanie po oknie z ważnego powodu: kontakt z centrum, admin może dać pełny albo częściowy zwrot (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 </g>
 <g data-miro-id="3458764688511550430" transform="translate(21875,10697)" data-frame="Klient · 8 · Odwołanie i zwrot: elementy">
 <rect data-type="frame" x="0" y="0" width="2015" height="2555" fill="#ffffff" data-title="Klient · 8 · Odwołanie i zwrot: elementy" />
@@ -937,10 +951,10 @@
 <rect data-type="sticky" x="48" y="1956" width="199" height="228" data-content="8. Mail o odwołaniu podaje kwotę i czas zwrotu" data-color="light_pink" data-text-align="center" data-text-align-vertical="middle" />
 <rect x="271" y="1956" width="1100" height="228" data-content="&lt;b&gt;Zakładając:&lt;/b&gt; opłacona wizyta odwołana w oknie&lt;br /&gt;&lt;b&gt;Gdy:&lt;/b&gt; klient dostaje mail&lt;br /&gt;&lt;b&gt;Wtedy:&lt;/b&gt; kwota zwrotu i kiedy pieniądze wrócą" rx="8" fill="#f5f6f8" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="20" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
 <rect x="1394" y="1956" width="572" height="228" data-content="Wcześniej: Treść maila „Zwrócimy … tą samą metodą”; test end-to-end (PR #262). Nowa kartka (27.10). Do sprawdzenia → &lt;b&gt;różowy&lt;/b&gt;" rx="8" fill="#ffcee0" data-text-color="#1a1a1a" data-font-family="noto_sans" data-font-size="18" data-text-align="left" data-text-align-vertical="middle" stroke="none" />
-<textArea x="48" y="2214" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Pytania do Ciebie</textArea>
-<rect data-type="sticky" x="48" y="2259" width="199" height="228" data-content="Zmiana okna odwołań: stare czy nowe zasady?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="267" y="2259" width="199" height="228" data-content="Klient nie przyszedł na wizytę: czy pieniądze przepadają i czy centrum to oznacza?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
-<rect data-type="sticky" x="486" y="2259" width="199" height="228" data-content="Odwołanie po oknie z ważnego powodu (choroba): tylko przez kontakt z centrum, zwrot według uznania admina?" data-color="orange" data-text-align="center" data-text-align-vertical="middle" />
+<textArea x="48" y="2214" width="900" height="31" fill="#595959" font-family="noto_sans" font-size="22" text-align="left" font-weight="bold">Ustalone</textArea>
+<rect data-type="sticky" x="48" y="2259" width="199" height="228" data-content="Zmiana okna odwołań nie dotyczy wcześniejszych rezerwacji: obowiązują zasady z chwili rezerwacji (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="267" y="2259" width="199" height="228" data-content="Klient nie przyszedł: pieniądze przepadają jak przy odwołaniu po oknie, bez maila; zasada w regulaminie i w mailu (#268, 27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
+<rect data-type="sticky" x="486" y="2259" width="199" height="228" data-content="Odwołanie po oknie z ważnego powodu: kontakt z centrum, admin może dać pełny albo częściowy zwrot (27.10)" data-color="light_blue" data-text-align="center" data-text-align-vertical="middle" />
 </g>
 
 <g data-miro-id="3458764688511550445" transform="translate(23997,9817)" data-frame="Klient · 9. Próby obejścia i oszustwa">
