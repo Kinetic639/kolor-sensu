@@ -1,6 +1,6 @@
 # Miro: kopia ramek strony publicznej
 
-Stan na 23.10.2026; warsztaty uzupełnione 27.10.2026 (8 różowych kartek z przeglądu według listy rezerwacji, #269, #256), a linia „MVP: na start” na mapie przeniesiona między swoje podpisy. Wygenerowane z plików w `svg/`; co znaczą kolory i jak tego używać: [README](README.md).
+Stan na 23.10.2026. 27.10.2026: zapis na warsztat, płatność, uczestnik po zapisie i „W tle” przeniesione do osobnej sekcji (`klient-warsztat.md`), a kartki listy i strony warsztatu są różowe do ponownego sprawdzenia; linia „MVP: na start” na mapie przeniesiona między swoje podpisy. Wygenerowane z plików w `svg/`; co znaczą kolory i jak tego używać: [README](README.md).
 
 ## Strona · 1. Strona główna
 
@@ -591,48 +591,26 @@ Kolumny: 1. Strona główna, 2. O nas, 3. Oferta, 4. Edukacja, 5. E-booki, 6. Na
 | 7. Wypis i odbicia w Resend (8. Newsletter)                                                                                   | zielony              |
 | 8. Google i prywatność linków (8. Newsletter)                                                                                 | zielony              |
 | 9. Każda strona (8. Newsletter)                                                                                               | zielony              |
-| 1. Nadchodzące warsztaty (7. Warsztaty)                                                                                       | zielony              |
-| 2. Wolne miejsca (7. Warsztaty)                                                                                               | zielony              |
-| 3. Stacjonarnie czy online (7. Warsztaty)                                                                                     | zielony              |
-| 4. Brak warsztatów (7. Warsztaty)                                                                                             | zielony              |
-| 5. Minione warsztaty (7. Warsztaty)                                                                                           | zielony              |
-| 6. Odwołany warsztat (7. Warsztaty)                                                                                           | zielony              |
-| 7. Nagłówek z CMS (7. Warsztaty)                                                                                              | zielony              |
-| 8. Warsztaty na stronie głównej (7. Warsztaty)                                                                                | zielony              |
-| 1. Nagłówek warsztatu (7. Warsztaty)                                                                                          | zielony              |
-| 2. Opis i okładka (7. Warsztaty)                                                                                              | zielony              |
-| 3. Dla kogo i program (7. Warsztaty)                                                                                          | zielony              |
-| 5. Prowadzący (7. Warsztaty)                                                                                                  | zielony              |
-| 6. Miejsce (7. Warsztaty)                                                                                                     | zielony              |
-| 7. Zasady (7. Warsztaty)                                                                                                      | zielony              |
-| 8. Komplet: lista rezerwowa (7. Warsztaty)                                                                                    | zielony              |
-| 9. Zapisy zamknięte (7. Warsztaty)                                                                                            | zielony              |
-| 10. Odwołany lub zakończony (7. Warsztaty)                                                                                    | zielony              |
-| 11. Google i udostępnianie (7. Warsztaty)                                                                                     | zielony              |
-| 12. Szkic i stary adres (7. Warsztaty)                                                                                        | zielony              |
-| 13. Powiązane (7. Warsztaty)                                                                                                  | zielony              |
-| 1. Formularz zapisu (7. Warsztaty)                                                                                            | zielony              |
-| 2. Miejsce trzymane (7. Warsztaty)                                                                                            | zielony              |
-| 3. Płatność online (7. Warsztaty)                                                                                             | zielony              |
-| 4. Kod rabatowy (7. Warsztaty)                                                                                                | zielony              |
-| 5. Bezpłatny warsztat (7. Warsztaty)                                                                                          | zielony              |
-| 6. Potwierdzenie (7. Warsztaty)                                                                                               | zielony              |
-| 7. Porzucona płatność (7. Warsztaty)                                                                                          | zielony              |
-| 8. Spóźniona płatność (7. Warsztaty)                                                                                          | zielony              |
-| 9. Drugi zapis tej samej osoby (7. Warsztaty)                                                                                 | zielony              |
-| 10. Za późno na zapis (7. Warsztaty)                                                                                          | zielony              |
-| 11. Zmyślone adresy zajmują miejsca („Zapłacę później”, bezpłatny) (7. Warsztaty)                                             | różowy               |
-| 12. Cena warsztatu: 0 zł albo co najmniej 2 zł (7. Warsztaty)                                                                 | różowy               |
-| 1. Strona mojego zapisu (7. Warsztaty)                                                                                        | zielony              |
-| 2. Rezygnacja ze zwrotem (7. Warsztaty)                                                                                       | zielony              |
-| 3. Rezygnacja po oknie (7. Warsztaty)                                                                                         | zielony              |
-| 4. Przypomnienie (7. Warsztaty)                                                                                               | zielony              |
-| 5. Lista rezerwowa (7. Warsztaty)                                                                                             | zielony              |
-| 6. Centrum odwołuje (7. Warsztaty)                                                                                            | zielony              |
-| 7. Centrum zmienia termin (7. Warsztaty)                                                                                      | zielony              |
-| 8. Za mało chętnych (7. Warsztaty)                                                                                            | zielony              |
-| 9. Stripe odrzuca zwrot: kwota czeka i system ponawia (7. Warsztaty)                                                          | różowy               |
-| 10. Podwójne kliknięcie „Zrezygnuj”: jeden zwrot (7. Warsztaty)                                                               | różowy               |
+| 1. Nadchodzące warsztaty (7. Warsztaty)                                                                                       | różowy               |
+| 2. Wolne miejsca (7. Warsztaty)                                                                                               | różowy               |
+| 3. Stacjonarnie czy online (7. Warsztaty)                                                                                     | różowy               |
+| 4. Brak warsztatów (7. Warsztaty)                                                                                             | różowy               |
+| 5. Minione warsztaty (7. Warsztaty)                                                                                           | różowy               |
+| 6. Odwołany warsztat (7. Warsztaty)                                                                                           | różowy               |
+| 7. Nagłówek z CMS (7. Warsztaty)                                                                                              | różowy               |
+| 8. Warsztaty na stronie głównej (7. Warsztaty)                                                                                | różowy               |
+| 1. Nagłówek warsztatu (7. Warsztaty)                                                                                          | różowy               |
+| 2. Opis i okładka (7. Warsztaty)                                                                                              | różowy               |
+| 3. Dla kogo i program (7. Warsztaty)                                                                                          | różowy               |
+| 5. Prowadzący (7. Warsztaty)                                                                                                  | różowy               |
+| 6. Miejsce (7. Warsztaty)                                                                                                     | różowy               |
+| 7. Zasady (7. Warsztaty)                                                                                                      | różowy               |
+| 8. Komplet: lista rezerwowa (7. Warsztaty)                                                                                    | różowy               |
+| 9. Zapisy zamknięte (7. Warsztaty)                                                                                            | różowy               |
+| 10. Odwołany lub zakończony (7. Warsztaty)                                                                                    | różowy               |
+| 11. Google i udostępnianie (7. Warsztaty)                                                                                     | różowy               |
+| 12. Szkic i stary adres (7. Warsztaty)                                                                                        | różowy               |
+| 13. Powiązane (7. Warsztaty)                                                                                                  | różowy               |
 | 12. Gdzie jesteśmy (opcjonalna)                                                                                               | zielony              |
 | 13. Baner końcowy                                                                                                             | zielony              |
 | 11. Teksty sekcji w CMS                                                                                                       | zielony              |
@@ -755,176 +733,93 @@ Kolumny: 1. Strona główna, 2. O nas, 3. Oferta, 4. Edukacja, 5. E-booki, 6. Na
 
 Ramka `3458764688047867441` · plik `svg/strona-7-warsztaty.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688047867441)
 
-| Kartka                                                                                          | Kolor                |
-| ----------------------------------------------------------------------------------------------- | -------------------- |
-| 1. Nadchodzące warsztaty                                                                        | zielony              |
-| 2. Wolne miejsca                                                                                | zielony              |
-| 3. Stacjonarnie czy online                                                                      | zielony              |
-| 4. Brak warsztatów                                                                              | zielony              |
-| 5. Minione warsztaty                                                                            | zielony              |
-| 6. Odwołany warsztat                                                                            | zielony              |
-| 7. Nagłówek z CMS                                                                               | zielony              |
-| 8. Warsztaty na stronie głównej                                                                 | zielony              |
-| 1. Nagłówek warsztatu                                                                           | zielony              |
-| 2. Opis i okładka                                                                               | zielony              |
-| 3. Dla kogo i program                                                                           | zielony              |
-| 4. Kilka spotkań (po MVP)                                                                       | szary (po MVP)       |
-| 5. Prowadzący                                                                                   | zielony              |
-| 6. Miejsce                                                                                      | zielony              |
-| 7. Zasady                                                                                       | zielony              |
-| 8. Komplet: lista rezerwowa                                                                     | zielony              |
-| 9. Zapisy zamknięte                                                                             | zielony              |
-| 10. Odwołany lub zakończony                                                                     | zielony              |
-| 11. Google i udostępnianie                                                                      | zielony              |
-| 12. Szkic i stary adres                                                                         | zielony              |
-| 13. Powiązane                                                                                   | zielony              |
-| 1. Formularz zapisu                                                                             | zielony              |
-| 2. Miejsce trzymane                                                                             | zielony              |
-| 3. Płatność online                                                                              | zielony              |
-| 4. Kod rabatowy                                                                                 | zielony              |
-| 5. Bezpłatny warsztat                                                                           | zielony              |
-| 6. Potwierdzenie                                                                                | zielony              |
-| 7. Porzucona płatność                                                                           | zielony              |
-| 8. Spóźniona płatność                                                                           | zielony              |
-| 9. Drugi zapis tej samej osoby                                                                  | zielony              |
-| 10. Za późno na zapis                                                                           | zielony              |
-| 11. Zmyślone adresy zajmują miejsca („Zapłacę później”, bezpłatny)                              | różowy               |
-| 12. Cena warsztatu: 0 zł albo co najmniej 2 zł                                                  | różowy               |
-| 1. Strona mojego zapisu                                                                         | zielony              |
-| 2. Rezygnacja ze zwrotem                                                                        | zielony              |
-| 3. Rezygnacja po oknie                                                                          | zielony              |
-| 4. Przypomnienie                                                                                | zielony              |
-| 5. Lista rezerwowa                                                                              | zielony              |
-| 6. Centrum odwołuje                                                                             | zielony              |
-| 7. Centrum zmienia termin                                                                       | zielony              |
-| 8. Za mało chętnych                                                                             | zielony              |
-| 9. Stripe odrzuca zwrot: kwota czeka i system ponawia                                           | różowy               |
-| 10. Podwójne kliknięcie „Zrezygnuj”: jeden zwrot                                                | różowy               |
-| 1. Lista warsztatów                                                                             | zielony              |
-| 2. Nowy warsztat                                                                                | zielony              |
-| 3. Terminy                                                                                      | zielony              |
-| 4. Forma i miejsce                                                                              | zielony              |
-| 5. Sala i prowadzący zajęci                                                                     | zielony              |
-| 6. Prowadzący                                                                                   | zielony              |
-| 7. Cena i miejsca                                                                               | zielony              |
-| 8. Podgląd i publikacja                                                                         | zielony              |
-| 9. Wycofanie i usuwanie                                                                         | zielony              |
-| 10. Lista uczestników                                                                           | zielony              |
-| 11. Ręczny zapis                                                                                | zielony              |
-| 12. Rezygnacja uczestnika                                                                       | zielony              |
-| 13. Odwołanie warsztatu                                                                         | zielony              |
-| 14. Zmiana terminu                                                                              | zielony              |
-| 15. Wiadomość do uczestników                                                                    | zielony              |
-| 16. Obecność i zakończenie                                                                      | zielony              |
-| 17. Kalendarz i dashboard                                                                       | zielony              |
-| 18. Powiadomienia                                                                               | zielony              |
-| 1. Moje warsztaty                                                                               | zielony              |
-| 2. Uczestnicy                                                                                   | zielony              |
-| 3. Obecność                                                                                     | zielony              |
-| 4. Dyżury a warsztat                                                                            | zielony              |
-| 5. Tylko swoje                                                                                  | zielony              |
-| 1. Stripe w tle                                                                                 | zielony              |
-| 2. E-maile                                                                                      | zielony              |
-| 3. Regulamin warsztatów                                                                         | zielony              |
-| 4. Bez prawa odstąpienia                                                                        | zielony              |
-| 5. Dane uczestników                                                                             | zielony              |
-| 6. Bezpieczeństwo                                                                               | zielony              |
-| 7. Testy end-to-end                                                                             | zielony              |
-| 8. Każda strona                                                                                 | zielony              |
-| 9. Ochrona przed botami przy zapisie                                                            | różowy               |
-| 10. Cena z chwili zapisu, nawet gdy admin ją zmieni                                             | różowy               |
-| Certyfikat uczestnictwa                                                                         | szary (po MVP)       |
-| Materiały po warsztacie                                                                         | szary (po MVP)       |
-| Ankieta po warsztacie                                                                           | szary (po MVP)       |
-| Powiadomienia o nowych warsztatach                                                              | szary (po MVP)       |
-| Specjalista proponuje warsztat                                                                  | szary (po MVP)       |
-| Kilka miejsc w jednym zapisie                                                                   | szary (po MVP)       |
-| Płatność w ratach za cykl                                                                       | szary (po MVP)       |
-| Faktury za warsztaty                                                                            | szary (po MVP)       |
-| Admin pokazuje albo ukrywa Warsztaty w menu (16.10)                                             | niebieski (ustalone) |
-| Płatność online przez Stripe jak za wizyty                                                      | niebieski (ustalone) |
-| Opis warsztatu w edytorze artykułów                                                             | niebieski (ustalone) |
-| W MVP                                                                                           | niebieski (ustalone) |
-| Jednorazowe; cykl po MVP                                                                        | niebieski (ustalone) |
-| Pełny zwrot do 7 dni przed; później tylko gdy miejsce przejmie rezerwa; miejsce można przekazać | niebieski (ustalone) |
-| Lista rezerwowa od razu: pierwsza osoba ma 24 h na zapłatę                                      | niebieski (ustalone) |
-| Link wkleja admin; tylko w e-mailu i na stronie zapisu                                          | niebieski (ustalone) |
-| Kontakt widzi tylko prowadzący (i admin)                                                        | niebieski (ustalone) |
-| Vouchery tak; kod rabatowy ma zakres: wszystko, konsultacje, warsztaty, jeden warsztat          | niebieski (ustalone) |
-| Zapłacę później: do 7 dni przed, inaczej miejsce wolne; w ostatnim tygodniu płatność od razu    | niebieski (ustalone) |
-| Minimum w warsztacie; potwierdzony po minimum albo przez admina; nigdy sam nie odwołuje         | niebieski (ustalone) |
-| Koniec zapisów ustawia admin (domyślnie 24 h przed)                                             | niebieski (ustalone) |
+| Kartka                                                 | Kolor                |
+| ------------------------------------------------------ | -------------------- |
+| 1. Nadchodzące warsztaty                               | różowy               |
+| 2. Wolne miejsca                                       | różowy               |
+| 3. Stacjonarnie czy online                             | różowy               |
+| 4. Brak warsztatów                                     | różowy               |
+| 5. Minione warsztaty                                   | różowy               |
+| 6. Odwołany warsztat                                   | różowy               |
+| 7. Nagłówek z CMS                                      | różowy               |
+| 8. Warsztaty na stronie głównej                        | różowy               |
+| 1. Nagłówek warsztatu                                  | różowy               |
+| 2. Opis i okładka                                      | różowy               |
+| 3. Dla kogo i program                                  | różowy               |
+| 4. Kilka spotkań (po MVP)                              | szary (po MVP)       |
+| 5. Prowadzący                                          | różowy               |
+| 6. Miejsce                                             | różowy               |
+| 7. Zasady                                              | różowy               |
+| 8. Komplet: lista rezerwowa                            | różowy               |
+| 9. Zapisy zamknięte                                    | różowy               |
+| 10. Odwołany lub zakończony                            | różowy               |
+| 11. Google i udostępnianie                             | różowy               |
+| 12. Szkic i stary adres                                | różowy               |
+| 13. Powiązane                                          | różowy               |
+| 1. Lista warsztatów                                    | zielony              |
+| 2. Nowy warsztat                                       | zielony              |
+| 3. Terminy                                             | zielony              |
+| 4. Forma i miejsce                                     | zielony              |
+| 5. Sala i prowadzący zajęci                            | zielony              |
+| 6. Prowadzący                                          | zielony              |
+| 7. Cena i miejsca                                      | zielony              |
+| 8. Podgląd i publikacja                                | zielony              |
+| 9. Wycofanie i usuwanie                                | zielony              |
+| 10. Lista uczestników                                  | zielony              |
+| 11. Ręczny zapis                                       | zielony              |
+| 12. Rezygnacja uczestnika                              | zielony              |
+| 13. Odwołanie warsztatu                                | zielony              |
+| 14. Zmiana terminu                                     | zielony              |
+| 15. Wiadomość do uczestników                           | zielony              |
+| 16. Obecność i zakończenie                             | zielony              |
+| 17. Kalendarz i dashboard                              | zielony              |
+| 18. Powiadomienia                                      | zielony              |
+| 1. Moje warsztaty                                      | zielony              |
+| 2. Uczestnicy                                          | zielony              |
+| 3. Obecność                                            | zielony              |
+| 4. Dyżury a warsztat                                   | zielony              |
+| 5. Tylko swoje                                         | zielony              |
+| Specjalista proponuje warsztat                         | szary (po MVP)       |
+| Admin pokazuje albo ukrywa Warsztaty w menu (16.10)    | niebieski (ustalone) |
+| Opis warsztatu w edytorze artykułów                    | niebieski (ustalone) |
+| W MVP                                                  | niebieski (ustalone) |
+| Link wkleja admin; tylko w e-mailu i na stronie zapisu | niebieski (ustalone) |
+| Kontakt widzi tylko prowadzący (i admin)               | niebieski (ustalone) |
 
 ## Strona · 7 · Lista warsztatów: elementy
 
 Ramka `3458764688047867442` · plik `svg/strona-7-warsztaty.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688047867442)
 
-| Kartka                          | Kolor   | Co ma się dziać                                                                                                                                                                                                                           | Czym sprawdzone                                                                                                        |
-| ------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| 1. Nadchodzące warsztaty        | zielony | Zakładając: admin opublikował trzy warsztaty w przyszłości / Gdy: klient otwiera Warsztaty / Wtedy: widzi karty od najbliższego: tytuł, data i godzina, stacjonarnie (miejsce) albo online, prowadzący, cena, wolne miejsca i „Szczegóły” | Test end-to-end listy (H1, telefon i komputer, axe, klawiatura, 200 %) i test jednostkowy kolejności → zielony         |
-| 2. Wolne miejsca                | zielony | Zakładając: w warsztacie zostały 2 z 12 miejsc albo nie ma żadnego / Gdy: klient patrzy na kartę / Wtedy: widzi „Ostatnie 2 miejsca”; przy komplecie „Brak miejsc” i „Lista rezerwowa”                                                    | Test jednostkowy: „Ostatnie N miejsc”, „Brak miejsc · lista rezerwowa” → zielony                                       |
-| 3. Stacjonarnie czy online      | zielony | Zakładając: są warsztaty w obu formach / Gdy: klient wybiera „Online” / Wtedy: widzi tylko online; wybór zostaje w adresie strony                                                                                                         | Test jednostkowy filtra z adresu (?forma=online) → zielony                                                             |
-| 4. Brak warsztatów              | zielony | Zakładając: nie ma żadnego nadchodzącego warsztatu / Gdy: klient otwiera Warsztaty / Wtedy: widzi tekst z CMS i „Zapytaj o najbliższe terminy” (do Kontaktu)                                                                              | Tekst pustej listy z CMS (#210) i „Zapytaj o najbliższe terminy” do Kontaktu: test strony i treści CMS → zielony       |
-| 5. Minione warsztaty            | zielony | Zakładając: warsztat już się odbył / Gdy: klient przewija listę / Wtedy: widzi go w osobnej sekcji „Minione”, bez zapisów; jego strona dalej działa z dopiskiem „Zakończony”                                                              | Test jednostkowy: minione osobno, od najnowszych; zapisy zamknięte → zielony                                           |
-| 6. Odwołany warsztat            | zielony | Zakładając: centrum odwołało warsztat / Gdy: klient patrzy na listę / Wtedy: widzi etykietę „Odwołany” i brak zapisów do dnia terminu, potem warsztat znika z listy                                                                       | Etykieta „Odwołany” do dnia terminu, potem warsztat znika ze strony: testy strony i jednostkowe (PR #212) → zielony    |
-| 7. Nagłówek z CMS               | zielony | Zakładając: admin zmienia tytuł, wstęp i tekst pustej listy w CMS / Gdy: klient otwiera Warsztaty / Wtedy: widzi nowe teksty po publikacji; Google i udostępnianie z CMS                                                                  | Tytuł, wstęp i tekst pustej listy z CMS (#210): test treści CMS i strony; Google i udostępnianie z CMS → zielony       |
-| 8. Warsztaty na stronie głównej | zielony | Zakładając: są nadchodzące warsztaty / Gdy: klient otwiera stronę główną / Wtedy: sekcja Warsztaty pokazuje najbliższe dwa z linkiem do listy; bez warsztatów zostaje jak dziś                                                            | Dwa najbliższe opublikowane z linkiem do listy; bez warsztatów albo po wyłączeniu nic: test strony (PR #212) → zielony |
+| Kartka                          | Kolor  | Co ma się dziać                                                                                                                                                                                                                           | Czym sprawdzone                                                                                                                                  |
+| ------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. Nadchodzące warsztaty        | różowy | Zakładając: admin opublikował trzy warsztaty w przyszłości / Gdy: klient otwiera Warsztaty / Wtedy: widzi karty od najbliższego: tytuł, data i godzina, stacjonarnie (miejsce) albo online, prowadzący, cena, wolne miejsca i „Szczegóły” | Wcześniej: Test end-to-end listy (H1, telefon i komputer, axe, klawiatura, 200 %) i test jednostkowy kolejności. Do sprawdzenia → różowy         |
+| 2. Wolne miejsca                | różowy | Zakładając: w warsztacie zostały 2 z 12 miejsc albo nie ma żadnego / Gdy: klient patrzy na kartę / Wtedy: widzi „Ostatnie 2 miejsca”; przy komplecie „Brak miejsc” i „Lista rezerwowa”                                                    | Wcześniej: Test jednostkowy: „Ostatnie N miejsc”, „Brak miejsc · lista rezerwowa”. Do sprawdzenia → różowy                                       |
+| 3. Stacjonarnie czy online      | różowy | Zakładając: są warsztaty w obu formach / Gdy: klient wybiera „Online” / Wtedy: widzi tylko online; wybór zostaje w adresie strony                                                                                                         | Wcześniej: Test jednostkowy filtra z adresu (?forma=online). Do sprawdzenia → różowy                                                             |
+| 4. Brak warsztatów              | różowy | Zakładając: nie ma żadnego nadchodzącego warsztatu / Gdy: klient otwiera Warsztaty / Wtedy: widzi tekst z CMS i „Zapytaj o najbliższe terminy” (do Kontaktu)                                                                              | Wcześniej: Tekst pustej listy z CMS (#210) i „Zapytaj o najbliższe terminy” do Kontaktu: test strony i treści CMS. Do sprawdzenia → różowy       |
+| 5. Minione warsztaty            | różowy | Zakładając: warsztat już się odbył / Gdy: klient przewija listę / Wtedy: widzi go w osobnej sekcji „Minione”, bez zapisów; jego strona dalej działa z dopiskiem „Zakończony”                                                              | Wcześniej: Test jednostkowy: minione osobno, od najnowszych; zapisy zamknięte. Do sprawdzenia → różowy                                           |
+| 6. Odwołany warsztat            | różowy | Zakładając: centrum odwołało warsztat / Gdy: klient patrzy na listę / Wtedy: widzi etykietę „Odwołany” i brak zapisów do dnia terminu, potem warsztat znika z listy                                                                       | Wcześniej: Etykieta „Odwołany” do dnia terminu, potem warsztat znika ze strony: testy strony i jednostkowe (PR #212). Do sprawdzenia → różowy    |
+| 7. Nagłówek z CMS               | różowy | Zakładając: admin zmienia tytuł, wstęp i tekst pustej listy w CMS / Gdy: klient otwiera Warsztaty / Wtedy: widzi nowe teksty po publikacji; Google i udostępnianie z CMS                                                                  | Wcześniej: Tytuł, wstęp i tekst pustej listy z CMS (#210): test treści CMS i strony; Google i udostępnianie z CMS. Do sprawdzenia → różowy       |
+| 8. Warsztaty na stronie głównej | różowy | Zakładając: są nadchodzące warsztaty / Gdy: klient otwiera stronę główną / Wtedy: sekcja Warsztaty pokazuje najbliższe dwa z linkiem do listy; bez warsztatów zostaje jak dziś                                                            | Wcześniej: Dwa najbliższe opublikowane z linkiem do listy; bez warsztatów albo po wyłączeniu nic: test strony (PR #212). Do sprawdzenia → różowy |
 
 ## Strona · 7 · Strona warsztatu: elementy
 
 Ramka `3458764688047915171` · plik `svg/strona-7-warsztaty.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688047915171)
 
-| Kartka                      | Kolor          | Co ma się dziać                                                                                                                                                                                                                  | Czym sprawdzone                                                                                                                                                     |
-| --------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Nagłówek warsztatu       | zielony        | Zakładając: warsztat jest opublikowany / Gdy: klient otwiera jego stronę / Wtedy: widzi jeden H1 z tytułem, datę i godzinę, formę i miejsce, cenę, wolne miejsca, „Potwierdzony” albo „Czeka na komplet” i przycisk „Zapisz się” | Test end-to-end (jeden H1, telefon i komputer, axe) i test jednostkowy stanów → zielony                                                                             |
-| 2. Opis i okładka           | zielony        | Zakładając: admin dodał okładkę z opisem i opis w edytorze / Gdy: klient czyta stronę / Wtedy: widzi okładkę, opis ze śródtytułami, listami i zdjęciami                                                                          | Okładka i opis z edytora (śródtytuły, listy): test strony (PR #212) → zielony                                                                                       |
-| 3. Dla kogo i program       | zielony        | Zakładając: admin wpisał „Dla kogo” i punkty programu / Gdy: klient czyta stronę / Wtedy: widzi obie sekcje; puste się nie pokazują                                                                                              | Obie sekcje, puste się nie pokazują: test strony (PR #212) i test punktów programu → zielony                                                                        |
-| 4. Kilka spotkań (po MVP)   | szary (po MVP) | Zakładając: po MVP warsztat może mieć cykl spotkań / Gdy: klient otwiera stronę / Wtedy: widzi listę dat; w MVP warsztat to jedno spotkanie z datą i godzinami                                                                   | Nie zrobione → różowy                                                                                                                                               |
-| 5. Prowadzący               | zielony        | Zakładając: warsztat prowadzą dwie specjalistki / Gdy: klient czyta stronę / Wtedy: widzi ich zdjęcia, imiona i role z linkami do profili                                                                                        | Zdjęcie z profilu, imię, rola i link do profilu (#230): test strony; sprawdzone na DEV → zielony                                                                    |
-| 6. Miejsce                  | zielony        | Zakładając: warsztat jest stacjonarny albo online / Gdy: klient sprawdza, gdzie to jest / Wtedy: stacjonarny: lokalizacja, sala, adres i dojazd; online: „link wyślemy e-mailem dzień przed”, linku nie ma na stronie            | Stacjonarny (miejsce, adres, sala, dojazd i mapa: #211) i online (link tylko w e-mailu): test strony i widoku, end-to-end → zielony                                 |
-| 7. Zasady                   | zielony        | Zakładając: centrum ma wspólne zasady warsztatów w CMS / Gdy: klient czyta stronę / Wtedy: widzi: pełny zwrot do 7 dni przed, płatność później do 7 dni przed, minimum osób i co gdy się nie uzbiera, uwagi tego warsztatu       | Zasady z danych warsztatu (zwrot, płatność później, minimum) i „Wspólne zasady” z CMS pod nimi (#231): testy treści CMS i strony → zielony                          |
-| 8. Komplet: lista rezerwowa | zielony        | Zakładając: nie ma wolnych miejsc / Gdy: klient otwiera stronę / Wtedy: zamiast „Zapisz się” widzi „Zapisz się na listę rezerwową”                                                                                               | Test bazy listy rezerwowej i test jednostkowy stanu „komplet” → zielony                                                                                             |
-| 9. Zapisy zamknięte         | zielony        | Zakładając: zapisy się skończyły albo admin je wyłączył / Gdy: klient otwiera stronę / Wtedy: widzi „Zapisy zamknięte” i kontakt do centrum                                                                                      | Test jednostkowy stanu „zamknięte” i test bazy terminu zapisów → zielony                                                                                            |
-| 10. Odwołany lub zakończony | zielony        | Zakładając: warsztat odwołano albo się odbył / Gdy: klient otwiera stronę / Wtedy: widzi informację o tym, bez przycisku zapisu                                                                                                  | Test jednostkowy stanów „odwołany” i „po terminie” → zielony                                                                                                        |
-| 11. Google i udostępnianie  | zielony        | Zakładając: warsztat jest opublikowany / Gdy: Google lub Facebook czyta stronę / Wtedy: tytuł i opis z SEO, obrazek z okładki, dane Event (data, miejsce lub online, cena, dostępność, prowadzący), adres w mapie strony         | Test end-to-end danych Event i obrazka; test jednostkowy Event; mapa strony → zielony                                                                               |
-| 12. Szkic i stary adres     | zielony        | Zakładając: warsztat jest szkicem albo zmienił adres / Gdy: ktoś otwiera stary albo nieopublikowany adres / Wtedy: szkic: 404 (admin ma podgląd); stary adres przekierowuje na nowy                                              | Szkic: 404, admin ma podgląd (#197); stary adres przekierowuje na nowy (#184): test strony i bazy → zielony                                                         |
-| 13. Powiązane               | zielony        | Zakładając: warsztat ma powiązane usługi i artykuły / Gdy: klient czyta do końca / Wtedy: widzi powiązane usługi, artykuły i inne warsztaty                                                                                      | Usługi i artykuły wybrane przez admina (#185; bez wyboru usług: usługi prowadzącego) i inne nadchodzące warsztaty: testy bazy i strony; sprawdzone na DEV → zielony |
-
-## Strona · 7 · Zapis i płatność: elementy
-
-Ramka `3458764688047944285` · plik `svg/strona-7-warsztaty.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688047944285)
-
-| Kartka                                                             | Kolor   | Co ma się dziać                                                                                                                                                                                                                                                            | Czym sprawdzone                                                                                                                              |
-| ------------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Formularz zapisu                                                | zielony | Zakładając: klient klika „Zapisz się” / Gdy: podaje imię i nazwisko, e-mail, telefon, uwagi i zgody (regulamin warsztatów, prywatność) / Wtedy: dane zapisują się po sprawdzeniu, z ochroną przed botami; uwagi bez opisu stanu zdrowia                                    | Test bazy (dane, zgody, prywatność wymagana; gość nie omija serwera), ochrona przed botami jak przy wizytach; end-to-end zapisu → zielony    |
-| 2. Miejsce trzymane                                                | zielony | Zakładając: zostało jedno miejsce / Gdy: dwie osoby zaczynają zapis w tej samej chwili / Wtedy: miejsce dostaje tylko jedna; druga widzi „Brak miejsc” i listę rezerwową                                                                                                   | Test bazy: przy komplecie trzecie miejsce odrzucone; wiersz warsztatu blokowany przy każdej zmianie miejsc → zielony                         |
-| 3. Płatność online                                                 | zielony | Zakładając: miejsce jest trzymane / Gdy: klient płaci kartą, BLIK albo P24, albo wybiera „Zapłacę później” (gdy do warsztatu ponad 7 dni) / Wtedy: zapis potwierdzony albo czeka na wpłatę do 7 dni przed; w ostatnim tygodniu tylko płatność od razu; kwota zawsze z bazy | Testy bazy (kwota z bazy, „Zapłacę później” nie w ostatnim tygodniu), testy płatności; end-to-end BLIK i „zapłacę później” → zielony         |
-| 4. Kod rabatowy                                                    | zielony | Zakładając: centrum ma kod z zakresem „warsztaty” albo „ten warsztat”, albo klient ma voucher / Gdy: klient wpisuje go przy zapisie / Wtedy: płaci kwotę po rabacie; kod tylko na konsultacje jest odrzucony z wyjaśnieniem; rabat widać u admina                          | Testy bazy: zakresy kodów, kod na konsultacje odrzucony, kod także przed danymi (#190); od #186 kod zostawia co najmniej 2 zł → zielony      |
-| 5. Bezpłatny warsztat                                              | zielony | Zakładając: warsztat kosztuje 0 zł (kod rabatowy zawsze zostawia co najmniej 2 zł) / Gdy: klient wysyła formularz / Wtedy: zapis potwierdzony bez płatności                                                                                                                | Test bazy: warsztat za 0 zł potwierdzony bez płatności, płatny nigdy za darmo; kod nie robi warsztatu darmowym (#186) → zielony              |
-| 6. Potwierdzenie                                                   | zielony | Zakładając: zapis jest potwierdzony / Gdy: klient kończy zapis / Wtedy: widzi potwierdzenie z numerem i dostaje e-mail z plikiem kalendarza i linkiem do swojego zapisu                                                                                                    | Testy treści e-maila (plik kalendarza, link do zapisu), e-mail raz (test bazy), end-to-end → zielony                                         |
-| 7. Porzucona płatność                                              | zielony | Zakładając: klient nie zapłacił w czasie trzymania / Gdy: czas mija / Wtedy: miejsce wraca do puli; klient może zacząć od nowa                                                                                                                                             | Test bazy: miejsce wraca do puli po czasie trzymania → zielony                                                                               |
-| 8. Spóźniona płatność                                              | zielony | Zakładając: miejsce przepadło, a płatność dotarła później / Gdy: Stripe potwierdza płatność / Wtedy: pełny zwrot automatycznie i e-mail z wyjaśnieniem                                                                                                                     | Zwrot automatyczny i e-mail z wyjaśnieniem (#196): testy płatności, treści e-maila i bazy → zielony                                          |
-| 9. Drugi zapis tej samej osoby                                     | zielony | Zakładając: klient jest już zapisany / Gdy: zapisuje się drugi raz tym samym e-mailem / Wtedy: widzi, że jest już zapisany, i link do swojego zapisu                                                                                                                       | Test bazy: drugi zapis tym samym e-mailem odrzucony; komunikat odsyła do linku z e-maila (link tylko tam, żeby obcy go nie dostał) → zielony |
-| 10. Za późno na zapis                                              | zielony | Zakładając: admin ustawił koniec zapisów (domyślnie 24 h przed) / Gdy: klient próbuje zapisać się później / Wtedy: odmowa „Zapisy zamknięte”, bez płatności                                                                                                                | Test bazy końca zapisów i test stanu „zamknięte” → zielony                                                                                   |
-| 11. Zmyślone adresy zajmują miejsca („Zapłacę później”, bezpłatny) | różowy  | Zakładając: ktoś zapisuje się wiele razy różnymi adresami, z „Zapłacę później” albo na bezpłatny warsztat / Gdy: nikt nie potwierdza zapisów z maila / Wtedy: miejsce wraca do puli bez potwierdzenia z maila; najwyżej 2 nieopłacone zapisy na osobę; admin to widzi      | Nie zrobione: miejsce zajmuje się bez potwierdzenia adresu i bez limitu (#269); wizyty mają to od #163. Nowa kartka (27.10) → różowy         |
-| 12. Cena warsztatu: 0 zł albo co najmniej 2 zł                     | różowy  | Zakładając: admin wpisuje cenę 1 zł / Gdy: zapisuje warsztat / Wtedy: formularz odrzuca cenę z komunikatem; 0 zł zostaje bezpłatnym warsztatem                                                                                                                             | Nie zrobione: formularz i baza przyjmują 0,01–1,99 zł, a Stripe takiej kwoty nie przyjmie (#256). Nowa kartka (27.10) → różowy               |
-
-## Strona · 7 · Uczestnik po zapisie: elementy
-
-Ramka `3458764688047944286` · plik `svg/strona-7-warsztaty.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688047944286)
-
-| Kartka                                                | Kolor   | Co ma się dziać                                                                                                                                                                                                                                     | Czym sprawdzone                                                                                                                             |
-| ----------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Strona mojego zapisu                               | zielony | Zakładając: klient ma link z e-maila / Gdy: otwiera go / Wtedy: widzi warsztat, terminy, status płatności, „Dodaj do kalendarza” i „Zrezygnuj”                                                                                                      | Strona zapisu ze statusem, płatnością, rezygnacją i „Dodaj do kalendarza” (#198): test widoku, end-to-end pobiera plik kalendarza → zielony |
-| 2. Rezygnacja ze zwrotem                              | zielony | Zakładając: do warsztatu zostało więcej niż 7 dni / Gdy: klient rezygnuje / Wtedy: pełny zwrot przez Stripe (albo anulowanie, jeśli nie zapłacił), miejsce wolne, e-mail                                                                            | Test bazy (pełny zwrot do 7 dni przed), test widoku; end-to-end rezygnacji → zielony                                                        |
-| 3. Rezygnacja po oknie                                | zielony | Zakładając: do warsztatu zostało mniej niż 7 dni / Gdy: klient rezygnuje albo przekazuje miejsce innej osobie / Wtedy: bez zwrotu, chyba że miejsce przejmie ktoś z listy rezerwowej; przekazanie zmienia dane uczestnika, bez zwrotu               | Testy bazy: późna rezygnacja bez zwrotu, zwrot gdy miejsce przejmie lista, przekazanie miejsca → zielony                                    |
-| 4. Przypomnienie                                      | zielony | Zakładając: klient wybrał „Zapłacę później” albo warsztat jest jutro / Gdy: mija czas przypomnień / Wtedy: kilka dni przed terminem wpłaty e-mail z linkiem do zapłaty; po terminie miejsce wolne; dzień przed przypomnienie, przy online z linkiem | Test bazy (przypomnienie o wpłacie 3 dni przed, raz), testy treści (link online dzień przed), test zadania w tle → zielony                  |
-| 5. Lista rezerwowa                                    | zielony | Zakładając: zwolniło się miejsce przy komplecie / Gdy: system bierze pierwszą osobę z listy / Wtedy: dostaje e-mail z linkiem do zapłaty ważnym 24 h; potem miejsce dostaje następna                                                                | Testy bazy: pierwsza osoba z listy ma 24 h, potem następna; test treści e-maila z ofertą → zielony                                          |
-| 6. Centrum odwołuje                                   | zielony | Zakładając: admin odwołuje warsztat / Gdy: zapisani czekają / Wtedy: każdy dostaje e-mail i pełny zwrot automatycznie                                                                                                                               | Test odwołania: zwrot każdemu, kto zapłacił, e-mail do wszystkich; test bazy → zielony                                                      |
-| 7. Centrum zmienia termin                             | zielony | Zakładając: admin przenosi warsztat / Gdy: zapisani dostają e-mail / Wtedy: mogą zostać albo zrezygnować z pełnym zwrotem, niezależnie od okna                                                                                                      | Test bazy: nowy termin, pełny zwrot w każdej chwili, e-mail; plik kalendarza jako zmiana → zielony                                          |
-| 8. Za mało chętnych                                   | zielony | Zakładając: warsztat ma minimum osób / Gdy: minimum się uzbiera albo admin potwierdzi / Wtedy: warsztat jest „Potwierdzony”; jeśli nie, kilka dni przed terminem wpłat admin dostaje przypomnienie i decyduje; system sam nie odwołuje              | Testy bazy: minimum potwierdza warsztat, przypomnienie raz; dashboard admina prosi o decyzję → zielony                                      |
-| 9. Stripe odrzuca zwrot: kwota czeka i system ponawia | różowy  | Zakładając: uczestnik rezygnuje ze zwrotem / Gdy: Stripe odrzuca zwrot / Wtedy: rezygnacja zapisana, kwota zostaje do zwrotu, zadanie w tle próbuje ponownie, admin to widzi                                                                        | Wcześniej: kwota zostaje do zwrotu dla zadania w tle (workshops/refunds.ts); brak testu. Nowa kartka (27.10) → różowy                       |
-| 10. Podwójne kliknięcie „Zrezygnuj”: jeden zwrot      | różowy  | Zakładając: uczestnik klika „Zrezygnuj” dwa razy / Gdy: oba kliknięcia dochodzą / Wtedy: jedna rezygnacja i jeden zwrot                                                                                                                             | Wcześniej: zapis blokowany w bazie, zwrot z kluczem idempotencji Stripe; brak testu. Nowa kartka (27.10) → różowy                           |
+| Kartka                      | Kolor          | Co ma się dziać                                                                                                                                                                                                                  | Czym sprawdzone                                                                                                                                                                               |
+| --------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Nagłówek warsztatu       | różowy         | Zakładając: warsztat jest opublikowany / Gdy: klient otwiera jego stronę / Wtedy: widzi jeden H1 z tytułem, datę i godzinę, formę i miejsce, cenę, wolne miejsca, „Potwierdzony” albo „Czeka na komplet” i przycisk „Zapisz się” | Wcześniej: Test end-to-end (jeden H1, telefon i komputer, axe) i test jednostkowy stanów. Do sprawdzenia → różowy                                                                             |
+| 2. Opis i okładka           | różowy         | Zakładając: admin dodał okładkę z opisem i opis w edytorze / Gdy: klient czyta stronę / Wtedy: widzi okładkę, opis ze śródtytułami, listami i zdjęciami                                                                          | Wcześniej: Okładka i opis z edytora (śródtytuły, listy): test strony (PR #212). Do sprawdzenia → różowy                                                                                       |
+| 3. Dla kogo i program       | różowy         | Zakładając: admin wpisał „Dla kogo” i punkty programu / Gdy: klient czyta stronę / Wtedy: widzi obie sekcje; puste się nie pokazują                                                                                              | Wcześniej: Obie sekcje, puste się nie pokazują: test strony (PR #212) i test punktów programu. Do sprawdzenia → różowy                                                                        |
+| 4. Kilka spotkań (po MVP)   | szary (po MVP) | Zakładając: po MVP warsztat może mieć cykl spotkań / Gdy: klient otwiera stronę / Wtedy: widzi listę dat; w MVP warsztat to jedno spotkanie z datą i godzinami                                                                   | Nie zrobione → różowy                                                                                                                                                                         |
+| 5. Prowadzący               | różowy         | Zakładając: warsztat prowadzą dwie specjalistki / Gdy: klient czyta stronę / Wtedy: widzi ich zdjęcia, imiona i role z linkami do profili                                                                                        | Wcześniej: Zdjęcie z profilu, imię, rola i link do profilu (#230): test strony; sprawdzone na DEV. Do sprawdzenia → różowy                                                                    |
+| 6. Miejsce                  | różowy         | Zakładając: warsztat jest stacjonarny albo online / Gdy: klient sprawdza, gdzie to jest / Wtedy: stacjonarny: lokalizacja, sala, adres i dojazd; online: „link wyślemy e-mailem dzień przed”, linku nie ma na stronie            | Wcześniej: Stacjonarny (miejsce, adres, sala, dojazd i mapa: #211) i online (link tylko w e-mailu): test strony i widoku, end-to-end. Do sprawdzenia → różowy                                 |
+| 7. Zasady                   | różowy         | Zakładając: centrum ma wspólne zasady warsztatów w CMS / Gdy: klient czyta stronę / Wtedy: widzi: pełny zwrot do 7 dni przed, płatność później do 7 dni przed, minimum osób i co gdy się nie uzbiera, uwagi tego warsztatu       | Wcześniej: Zasady z danych warsztatu (zwrot, płatność później, minimum) i „Wspólne zasady” z CMS pod nimi (#231): testy treści CMS i strony. Do sprawdzenia → różowy                          |
+| 8. Komplet: lista rezerwowa | różowy         | Zakładając: nie ma wolnych miejsc / Gdy: klient otwiera stronę / Wtedy: zamiast „Zapisz się” widzi „Zapisz się na listę rezerwową”                                                                                               | Wcześniej: Test bazy listy rezerwowej i test jednostkowy stanu „komplet”. Do sprawdzenia → różowy                                                                                             |
+| 9. Zapisy zamknięte         | różowy         | Zakładając: zapisy się skończyły albo admin je wyłączył / Gdy: klient otwiera stronę / Wtedy: widzi „Zapisy zamknięte” i kontakt do centrum                                                                                      | Wcześniej: Test jednostkowy stanu „zamknięte” i test bazy terminu zapisów. Do sprawdzenia → różowy                                                                                            |
+| 10. Odwołany lub zakończony | różowy         | Zakładając: warsztat odwołano albo się odbył / Gdy: klient otwiera stronę / Wtedy: widzi informację o tym, bez przycisku zapisu                                                                                                  | Wcześniej: Test jednostkowy stanów „odwołany” i „po terminie”. Do sprawdzenia → różowy                                                                                                        |
+| 11. Google i udostępnianie  | różowy         | Zakładając: warsztat jest opublikowany / Gdy: Google lub Facebook czyta stronę / Wtedy: tytuł i opis z SEO, obrazek z okładki, dane Event (data, miejsce lub online, cena, dostępność, prowadzący), adres w mapie strony         | Wcześniej: Test end-to-end danych Event i obrazka; test jednostkowy Event; mapa strony. Do sprawdzenia → różowy                                                                               |
+| 12. Szkic i stary adres     | różowy         | Zakładając: warsztat jest szkicem albo zmienił adres / Gdy: ktoś otwiera stary albo nieopublikowany adres / Wtedy: szkic: 404 (admin ma podgląd); stary adres przekierowuje na nowy                                              | Wcześniej: Szkic: 404, admin ma podgląd (#197); stary adres przekierowuje na nowy (#184): test strony i bazy. Do sprawdzenia → różowy                                                         |
+| 13. Powiązane               | różowy         | Zakładając: warsztat ma powiązane usługi i artykuły / Gdy: klient czyta do końca / Wtedy: widzi powiązane usługi, artykuły i inne warsztaty                                                                                      | Wcześniej: Usługi i artykuły wybrane przez admina (#185; bez wyboru usług: usługi prowadzącego) i inne nadchodzące warsztaty: testy bazy i strony; sprawdzone na DEV. Do sprawdzenia → różowy |
 
 ## Admin · Warsztaty: elementy
 
@@ -962,20 +857,3 @@ Ramka `3458764688048018593` · plik `svg/strona-7-warsztaty.svg` · [w Miro](htt
 | 3. Obecność          | zielony | Zakładając: warsztat się odbył / Gdy: specjalista zaznacza obecnych / Wtedy: admin widzi obecność                                                                 | Test bazy: prowadzący zaznacza obecność, inny specjalista nie → zielony                                                   |
 | 4. Dyżury a warsztat | zielony | Zakładając: specjalista ma dyżur w czasie warsztatu / Gdy: klient szuka terminu wizyty / Wtedy: godzin warsztatu nie ma w rezerwacji                              | Testy bazy: opublikowany warsztat blokuje prowadzących, wizyty w tym czasie odrzucone → zielony                           |
 | 5. Tylko swoje       | zielony | Zakładając: specjalista nie prowadzi warsztatu / Gdy: próbuje otworzyć go w portalu / Wtedy: odmowa; widzi tylko swoje warsztaty                                  | Test bazy: specjalista nie czyta cudzego warsztatu ani jego zapisów → zielony                                             |
-
-## W tle · Warsztaty: płatności, e-maile, prawo
-
-Ramka `3458764688048018594` · plik `svg/strona-7-warsztaty.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688048018594)
-
-| Kartka                                              | Kolor   | Co ma się dziać                                                                                                                                                                                                                         | Czym sprawdzone                                                                                                                            |
-| --------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1. Stripe w tle                                     | zielony | Zakładając: płatność za warsztat / Gdy: Stripe przysyła zdarzenie / Wtedy: zapis potwierdzony raz, nawet przy powtórzeniu; zwroty i spory jak przy wizytach                                                                             | Test bazy (raz, przy powtórzeniu), testy płatności i zwrotów, test end-to-end BLIK → zielony                                               |
-| 2. E-maile                                          | zielony | Zakładając: zmienia się coś w zapisie / Gdy: system wysyła e-mail / Wtedy: potwierdzenie z plikiem kalendarza, przypomnienie, rezygnacja, odwołanie, zmiana terminu, lista rezerwowa, wiadomość admina; każdy raz                       | Test bazy (każdy e-mail raz) i testy treści e-maili → zielony                                                                              |
-| 3. Regulamin warsztatów                             | zielony | Zakładając: centrum ma regulamin warsztatów / Gdy: klient się zapisuje / Wtedy: akceptuje go przy zapisie; data zgody zapisana; treść w CMS                                                                                             | Zgoda przy zapisie z datą (test bazy); rozdział „5. Warsztaty” w Regulaminie z CMS na DEV i STAGING (test end-to-end dokumentów) → zielony |
-| 4. Bez prawa odstąpienia                            | zielony | Zakładając: klient kupuje udział w warsztacie w określonym dniu / Gdy: chce odstąpić od umowy po 14 dniach / Wtedy: regulamin mówi, że to usługa w określonym terminie (art. 38 ustawy o prawach konsumenta); zwroty według okna zwrotu | Punkt 5.8 Regulaminu (art. 38 ust. 1 pkt 12); pytanie do prawnika w projekcie #182 → zielony                                               |
-| 5. Dane uczestników                                 | zielony | Zakładając: warsztat się odbył / Gdy: mija okres przechowywania / Wtedy: dane uczestników są usuwane albo anonimizowane według polityki; usunięcie na żądanie                                                                           | Test bazy (12 miesięcy, zwrot w toku czeka, usunięcie na prośbę tylko przez admina); „Usuń dane” sprawdzone na DEV (#207) → zielony        |
-| 6. Bezpieczeństwo                                   | zielony | Zakładając: ktoś zmienia formularz albo adres / Gdy: wysyła zapis / Wtedy: cena, miejsca i terminy sprawdzane w bazie; obcy nie widzą cudzych zapisów                                                                                   | Test bazy: cena, miejsca, terminy liczone w bazie; obcy nie widzą zapisów → zielony                                                        |
-| 7. Testy end-to-end                                 | zielony | Zakładając: warsztat z ceną jest na DEV / Gdy: test zapisuje się z BLIK, rezygnuje, wchodzi z listy rezerwowej / Wtedy: testy przechodzą na DEV i STAGING                                                                               | Przechodzą na DEV i STAGING (BLIK, „zapłacę później”, rezygnacja, plik kalendarza); wejście z listy rezerwowej: test bazy w CI → zielony   |
-| 8. Każda strona                                     | zielony | Zakładając: Warsztaty i strona warsztatu są gotowe / Gdy: sprawdzamy tabelę „Każda strona” / Wtedy: oba wiersze zielone: Google, obrazek, H1, klawiatura, 200 %, telefon, szybkość, linki, e2e                                          | Tabela uzupełniona, STAGING sprawdzony (#206); szybkość celowo niższa przez animacje GSAP: decyzja właściciela 26.10 (#205) → zielony      |
-| 9. Ochrona przed botami przy zapisie                | różowy  | Zakładając: bot wysyła formularz zapisu / Gdy: bez potwierdzenia Turnstile, z wypełnionym ukrytym polem albo po 5 trzymanych miejscach w 15 minut / Wtedy: odmowa                                                                       | Wcześniej: Turnstile, ukryte pole i limit trzymanych miejsc w kodzie; brak testu odmowy dla warsztatów. Nowa kartka (27.10) → różowy       |
-| 10. Cena z chwili zapisu, nawet gdy admin ją zmieni | różowy  | Zakładając: uczestnik zapisał się za 200 zł / Gdy: admin zmienia cenę na 250 zł / Wtedy: uczestnik płaci 200 zł, a zwrot liczy się od tego, co zapłacił                                                                                 | Wcześniej: cena zapisywana przy zapisie (workshop_registrations.price_minor); brak testu. Nowa kartka (27.10) → różowy                     |
