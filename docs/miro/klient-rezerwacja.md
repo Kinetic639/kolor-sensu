@@ -8,7 +8,7 @@ Mapa: ramka `3458764687137671334` · [w Miro](https://miro.com/app/board/uXjVEaK
 | -------------------------------- | --: | ---------: | -----: | -------: | ------: |
 | 1. Wybiera usługę i termin       |  28 |         12 |      2 |        2 |       0 |
 | 2. Blokuje termin                |   8 |          4 |      0 |        1 |       0 |
-| 3. Podaje dane i zgody           |  14 |          7 |      0 |        1 |       3 |
+| 3. Podaje dane i zgody           |  16 |          9 |      0 |        4 |       0 |
 | 4. Płaci od razu                 |  20 |          5 |      1 |        3 |       0 |
 | 4a. Kupon zniżkowy               |  12 |          0 |      1 |        6 |       0 |
 | 5. Płaci później                 |  13 |          1 |      0 |        1 |       0 |
@@ -16,7 +16,7 @@ Mapa: ramka `3458764687137671334` · [w Miro](https://miro.com/app/board/uXjVEaK
 | 7. Przekłada wizytę              |   6 |          3 |      0 |        2 |       0 |
 | 8. Odwołuje wizytę               |   8 |          2 |      0 |        3 |       0 |
 | 9. Próby obejścia i oszustwa     |  24 |          9 |      0 |        0 |       0 |
-| Razem                            | 143 |         50 |      5 |       19 |       3 |
+| Razem                            | 145 |         52 |      5 |       22 |       0 |
 
 ## Klient · 1. Wybiera usługę i termin
 
@@ -111,32 +111,31 @@ Historyjka: Jako klient chcę podać tylko potrzebne dane i wiedzieć, na co si�
 
 Ramka `3458764688511550417`
 
-|  Nr | Karteczka                                                                     | Zakładając / Gdy / Wtedy                                                                                                                                             | Wcześniej                                                                               |
-| --: | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-|   1 | Dane i obie zgody zapisane                                                    | poprawne dane i obie zgody / klient przechodzi dalej / dane i czas zgód zapisane                                                                                     | Test bazy danych i test jednostkowy (CI); ręcznie 01.10                                 |
-|   2 | Bez zgody nie przejdzie                                                       | brak zgody na regulamin / klient klika „Dalej” / odmowa z komunikatem przy polu                                                                                      | Test bazy danych i test jednostkowy (CI)                                                |
-|   3 | Zły e-mail lub telefon                                                        | e-mail bez @ / klient klika „Dalej” / komunikat, wpisane pola zostają                                                                                                | Test bazy danych i test jednostkowy (CI)                                                |
-|   4 | #24 · Zgody nie świecą błędem na starcie                                      | klient otwiera krok danych / jeszcze nic nie zrobił / zgody nie są oznaczone jako błąd                                                                               | Naprawione (#24); test formularza danych (PR #258)                                      |
-|   5 | #25 · Komunikat na kroku danych pasuje do kroku                               | klient jest na kroku danych / patrzy na podsumowanie / „Podaj swoje dane i potwierdź wizytę przed tym czasem”, bez mylącego „Przejdź dalej”                          | Naprawione; test komponentu (CI); #25 zamknięte                                         |
-|   6 | Długie pola, emoji                                                            | imię ze 101 znaków albo z emoji / klient wysyła dane / limit długości z komunikatem; emoji i polskie litery zapisane tak, jak wpisane                                | Limity: imię i nazwisko po 100, e-mail 320, uwagi 1000 znaków; test kontraktu (PR #258) |
-|   7 | Dane wysłane po wygaśnięciu blokady: prośba o nowy termin                     | blokada wygasła / klient wysyła dane / prośba o wybór terminu od nowa                                                                                                | Test bazy danych (CI)                                                                   |
-|   8 | Powrót do zmiany terminu zachowuje dane, zgody od nowa                        | klient podał dane i wraca zmienić termin / wybiera nowy termin / imię, e-mail i telefon zostają, zgody trzeba zaznaczyć znowu                                        | nowa kartka                                                                             |
-|   9 | Newsletter przy rezerwacji: dobrowolny, niezaznaczony                         | newsletter jest włączony / klient podaje dane / pole zapisu jest osobne, niezaznaczone i nie blokuje rezerwacji                                                      | nowa kartka                                                                             |
-|  10 | Uwagi: ostrzeżenie przed danymi o zdrowiu                                     | klient wpisuje uwagi / patrzy na pole / widzi, żeby nie podawać tu informacji o zdrowiu                                                                              | nowa kartka                                                                             |
-|  11 | Ten sam e-mail: wizyta w kartotece tego samego klienta                        | klient był już u nas z tym samym e-mailem / rezerwuje kolejną wizytę / wizyta trafia do jego kartoteki, a nie do nowej                                               | nowa kartka                                                                             |
-|  12 | Odpowiedzi z ankiety widzą tylko specjalista i centrum                        | klient wypełnił ankietę (dane o zdrowiu) / ktoś inny próbuje je zobaczyć / widzą je tylko jego specjalista i admin centrum                                           | nowa kartka                                                                             |
-|  13 | Dane z porzuconej rezerwacji są usuwane po czasie                             | klient podał dane, ale nie dokończył rezerwacji / mija ustalony czas / jego dane są usuwane z bazy                                                                   | nowa kartka                                                                             |
-|  14 | Regulamin mówi to samo co system: płatność później, odwołanie, zwroty, kupony | admin ustawił okno odwołań, czas na płatność i zasady kuponów / klient czyta regulamin przed rezerwacją / regulamin podaje te same zasady co kreator, maile i system | nowa kartka                                                                             |
+|  Nr | Karteczka                                                                     | Zakładając / Gdy / Wtedy                                                                                                                                                          | Wcześniej                                                                               |
+| --: | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+|   1 | Dane i obie zgody zapisane                                                    | poprawne dane i obie zgody / klient przechodzi dalej / dane i czas zgód zapisane                                                                                                  | Test bazy danych i test jednostkowy (CI); ręcznie 01.10                                 |
+|   2 | Bez zgody nie przejdzie                                                       | brak zgody na regulamin / klient klika „Dalej” / odmowa z komunikatem przy polu                                                                                                   | Test bazy danych i test jednostkowy (CI)                                                |
+|   3 | Zły e-mail lub telefon                                                        | e-mail bez @ / klient klika „Dalej” / komunikat, wpisane pola zostają                                                                                                             | Test bazy danych i test jednostkowy (CI)                                                |
+|   4 | #24 · Zgody nie świecą błędem na starcie                                      | klient otwiera krok danych / jeszcze nic nie zrobił / zgody nie są oznaczone jako błąd                                                                                            | Naprawione (#24); test formularza danych (PR #258)                                      |
+|   5 | #25 · Komunikat na kroku danych pasuje do kroku                               | klient jest na kroku danych / patrzy na podsumowanie / „Podaj swoje dane i potwierdź wizytę przed tym czasem”, bez mylącego „Przejdź dalej”                                       | Naprawione; test komponentu (CI); #25 zamknięte                                         |
+|   6 | Długie pola, emoji                                                            | imię ze 101 znaków albo z emoji / klient wysyła dane / limit długości z komunikatem; emoji i polskie litery zapisane tak, jak wpisane                                             | Limity: imię i nazwisko po 100, e-mail 320, uwagi 1000 znaków; test kontraktu (PR #258) |
+|   7 | Dane wysłane po wygaśnięciu blokady: prośba o nowy termin                     | blokada wygasła / klient wysyła dane / prośba o wybór terminu od nowa                                                                                                             | Test bazy danych (CI)                                                                   |
+|   8 | Powrót do zmiany terminu zachowuje dane, zgody od nowa                        | klient podał dane i wraca zmienić termin / wybiera nowy termin / imię, e-mail i telefon zostają, zgody trzeba zaznaczyć znowu                                                     | nowa kartka                                                                             |
+|   9 | Newsletter przy rezerwacji: dobrowolny, niezaznaczony                         | newsletter jest włączony / klient podaje dane / pole zapisu jest osobne, niezaznaczone i nie blokuje rezerwacji                                                                   | nowa kartka                                                                             |
+|  10 | Uwagi: ostrzeżenie przed danymi o zdrowiu                                     | klient wpisuje uwagi / patrzy na pole / widzi, żeby nie podawać tu informacji o zdrowiu                                                                                           | nowa kartka                                                                             |
+|  11 | Ten sam e-mail: wizyta w kartotece tego samego klienta                        | klient był już u nas z tym samym e-mailem / rezerwuje kolejną wizytę / wizyta trafia do jego kartoteki, a nie do nowej                                                            | nowa kartka                                                                             |
+|  12 | Odpowiedzi z ankiety widzą tylko specjalista i centrum                        | klient wypełnił ankietę (dane o zdrowiu) / ktoś inny próbuje je zobaczyć / widzą je tylko jego specjalista i admin centrum                                                        | nowa kartka                                                                             |
+|  13 | Dane z porzuconej rezerwacji są usuwane po czasie                             | klient podał dane, ale nie dokończył rezerwacji / mija ustalony czas / jego dane są usuwane z bazy                                                                                | nowa kartka                                                                             |
+|  14 | Regulamin mówi to samo co system: płatność później, odwołanie, zwroty, kupony | admin ustawił okno odwołań, czas na płatność i zasady kuponów / klient czyta regulamin przed rezerwacją / regulamin podaje te same zasady co kreator, maile i system              | nowa kartka                                                                             |
+|  15 | Wizyta w ciągu 14 dni: zgoda na wykonanie przed upływem terminu odstąpienia   | wizyta wypada w ciągu 14 dni od rezerwacji / klient podaje dane / musi zaznaczyć, że chce wizyty przed upływem 14 dni i wie, że po niej nie odstąpi od umowy; czas zgody zapisany | nowa kartka                                                                             |
+|  16 | Usługa dla dziecka: rezerwuje rodzic lub opiekun (pole obowiązkowe)           | admin oznaczył usługę jako dla dziecka lub młodzieży / klient podaje dane / musi zaznaczyć „Rezerwuję jako rodzic lub opiekun prawny”; czas zgody zapisany                        | nowa kartka                                                                             |
 
 ### Ustalone (niebieskie)
 
 - Dane z niedokończonej rezerwacji usuwamy po 30 dniach (27.10)
-
-### Pytania do decyzji (pomarańczowe)
-
-- Rezerwacja dla dziecka: kto jest klientem, czy podajemy dane dziecka, czy potrzebna jest zgoda opiekuna?
-- Osoba niepełnoletnia rezerwuje sama: czy pozwalamy?
-- Prawo odstąpienia od umowy (14 dni): przy wizycie w ciągu 14 dni klient zaznacza, że chce jej wcześniej? Do sprawdzenia z prawnikiem
+- Usługa dla dziecka: rezerwuje rodzic albo opiekun prawny i to on jest klientem (#267, 27.10)
+- Osoba niepełnoletnia nie rezerwuje sama: rezerwacji dokonuje osoba pełnoletnia (#267, 27.10)
+- Wizyta w ciągu 14 dni: klient zaznacza zgodę na wcześniejsze wykonanie usługi; treść sprawdzi prawnik (#265, 27.10)
 
 ## Klient · 4. Płaci od razu
 
