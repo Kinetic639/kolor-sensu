@@ -514,7 +514,7 @@ Archiwum, jedno wydanie, potwierdzenie i wypisanie (24.10). Kopie kartek są na 
 
 Ramka `3458764687433275743` · plik `svg/strona-6-mapa.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764687433275743)
 
-Kolumny: 1. Strona główna, 2. O nas, 3. Oferta, 4. Edukacja, 5. E-booki, 6. Na każdej stronie (z „8. Newsletter” pod spodem) i 7. Warsztaty (od 24.10: lista, strona warsztatu, zapis i płatność, uczestnik po zapisie; kartki portali admina i specjalisty są tylko w ramkach Warsztatów).
+Kolumny idą w kolejności ramek obok mapy (od 27.10): 1. Strona główna, 2. O nas, 3. Oferta, 4. Edukacja, 5. E-booki, 7. Warsztaty (lista i strona warsztatu; zapis, płatność i rezygnacja są w osobnej mapie „Klient: zapisuje się na warsztat”; kartki portali admina i specjalisty są tylko w ramkach Warsztatów) i 6. Na każdej stronie (z „8. Newsletter” pod spodem).
 
 | Kartka                                                                                                                        | Kolor                |
 | ----------------------------------------------------------------------------------------------------------------------------- | -------------------- |
