@@ -149,4 +149,52 @@ describe("the published education story", () => {
     );
     expect(result[0]?.content).toBeUndefined();
   });
+  it("uses the standard workshop card with its price and seat availability", async () => {
+    readers.workshops.mockResolvedValue([
+      {
+        id: "upcoming",
+        slug: "spotkanie",
+        title: "Wspólne spotkanie",
+        status: "published",
+        startsAt: "2099-01-01T10:00:00Z",
+        endsAt: "2099-01-01T12:00:00Z",
+        shortDescription: "Opis spotkania",
+        modality: "online",
+        coverPath: null,
+        leaders: [],
+        priceMinor: 15000,
+        currencyCode: "PLN",
+        seatsLeft: 8,
+        capacity: 12,
+        registrationOpen: true,
+        body: null,
+        audience: null,
+        agenda: null,
+        coverAlt: null,
+        seoTitle: null,
+        seoDescription: null,
+        minParticipants: null,
+        locationName: null,
+        locationAddress: null,
+        locationDirections: null,
+        locationCity: null,
+        roomName: null,
+        confirmed: true,
+        updatedAt: "2098-12-01T10:00:00Z",
+      } as PublicWorkshop,
+    ]);
+    const result = await educationStorySteps(
+      { steps: [step({ type: "workshops", source: "auto", ids: [] })] },
+      [image],
+      {},
+    );
+    const html = renderToString(result[0]!.content);
+    expect(html).toContain("ks-wk__body");
+    expect(html).toContain('data-variant="story"');
+    expect(html).toContain("ks-wk__price");
+    expect(html).toContain("8 z 12");
+    expect(html).toContain("Wspólne spotkanie");
+    expect(html).toContain("ks-wk__wash");
+    expect(html).not.toContain("ks-education-workshop-ticket");
+  });
 });

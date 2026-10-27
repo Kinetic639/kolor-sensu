@@ -6,6 +6,7 @@ import {
   EducationWorkshopCard,
 } from "./education-media";
 import { plainHeader } from "@repo/contracts/section-header";
+import { sampleWorkshops } from "./workshop-samples";
 const photo = { src: "/kolor-sensu/room.jpg", alt: "Przestrzeń do rozmowy" };
 const meta = {
   title: "Public site/Education story",
@@ -79,14 +80,14 @@ const meta = {
         content: (
           <EducationWorkshopCard
             workshop={{
+              ...sampleWorkshops[0]!,
               title: "Bliżej siebie",
               description: "Spotkanie o emocjach, potrzebach i relacjach.",
-              image: photo,
-              day: "19",
-              month: "listopada",
-              year: "2026",
-              time: "18:00",
-              place: "Online",
+              coverUrl: photo.src,
+              coverAlt: photo.alt,
+              dateLabel: "czwartek, 19 listopada 2026",
+              timeLabel: "18:00–20:00",
+              placeLabel: "Online",
               href: "#warsztat",
             }}
           />
