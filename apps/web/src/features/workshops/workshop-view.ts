@@ -237,6 +237,7 @@ export function workshopCard(
   }: { now: Date; timeZone: string; imageUrl: (path: string) => string },
 ): WorkshopCardData {
   const seats = seatsInfo(workshop, now);
+  const state = signupState(workshop, now);
   return {
     id: workshop.id,
     href: workshopHref(workshop.slug),
@@ -246,6 +247,10 @@ export function workshopCard(
     timeLabel: workshopTimeLabel(workshop.startsAt, workshop.endsAt, timeZone),
     placeLabel: workshopPlace(workshop),
     priceLabel: workshopPrice(workshop),
+    availabilityLabel:
+      state === "past" || state === "cancelled"
+        ? null
+        : `${workshop.seatsLeft} z ${workshop.capacity}`,
     leaders: leadersLabel(workshop),
     coverUrl: workshop.coverPath ? imageUrl(workshop.coverPath) : null,
     coverAlt: workshop.coverAlt ?? "",

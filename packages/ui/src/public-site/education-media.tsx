@@ -1,7 +1,7 @@
 import Image from "next/image";
-import { BookOpen, CalendarDays, Clock3, MapPin } from "lucide-react";
+import { BookOpen, Clock3 } from "lucide-react";
 import { HanddrawnLink } from "./handdrawn-link";
-import { WatercolorImage, type WatercolorLook } from "./watercolor-image";
+import { WorkshopCard, type WorkshopCardData } from "./workshop-parts";
 import { InkReveal } from "./ink-reveal";
 import { CrisisCardFrame } from "./crisis-card-frame";
 import { EducationArticleGallery } from "./education-gallery";
@@ -27,17 +27,7 @@ export interface EducationBook {
   image: EducationImage;
   href: string;
 }
-export interface EducationWorkshop {
-  title: string;
-  description: string | null;
-  image: EducationImage;
-  day: string;
-  month: string;
-  year: string;
-  time: string;
-  place: string | null;
-  href: string;
-}
+export type EducationWorkshop = WorkshopCardData;
 
 export function EducationArticles({
   articles: latest,
@@ -110,56 +100,15 @@ export function EducationBooks({ books }: { books: readonly EducationBook[] }) {
 }
 export function EducationWorkshopCard({
   workshop,
-  watercolor,
 }: {
   workshop: EducationWorkshop | null;
-  watercolor?: WatercolorLook;
 }) {
   return workshop ? (
-    <article className={styles.workshop} key="workshop">
-      <div className={styles.workshopPhoto}>
-        <WatercolorImage
-          src={workshop.image.src}
-          alt={workshop.image.alt}
-          {...watercolor}
-          sizes="(min-width: 1024px) 520px, 90vw"
-        />
-      </div>
-      <div className={styles.workshopTicket}>
-        <InkReveal className={styles.workshopFrame}>
-          <CrisisCardFrame index={0} />
-        </InkReveal>
-        <div className={styles.date}>
-          <CalendarDays size={20} strokeWidth={1.3} aria-hidden="true" />
-          <span className={styles.dateDay}>{workshop.day}</span>
-          <span>{workshop.month}</span>
-          <span className={styles.dateYear}>{workshop.year}</span>
-        </div>
-        <div className={styles.workshopBody}>
-          <p className={styles.kicker}>Najbliższe spotkanie</p>
-          <h3 className={styles.materialTitle}>{workshop.title}</h3>
-          {workshop.description ? (
-            <p className={styles.excerpt}>{workshop.description}</p>
-          ) : null}
-          <div className={styles.workshopMeta}>
-            <span className={styles.meta}>
-              <Clock3 size={15} aria-hidden="true" />
-              {workshop.time}
-            </span>
-            <span className={styles.meta}>
-              <MapPin size={15} aria-hidden="true" />
-              {workshop.place}
-            </span>
-          </div>
-          <HanddrawnLink href={workshop.href}>Poznaj spotkanie</HanddrawnLink>
-        </div>
-      </div>
-    </article>
+    <div className={styles.workshop}>
+      <WorkshopCard workshop={workshop} animatePhoto={false} variant="story" />
+    </div>
   ) : (
-    <EmptyMaterial
-      key="workshops"
-      text="Przygotowujemy kolejne spotkania. Zapytaj nas o nowe terminy."
-    />
+    <EmptyMaterial text="Przygotowujemy kolejne spotkania. Zapytaj nas o nowe terminy." />
   );
 }
 function EmptyMaterial({ text }: { text: string }) {

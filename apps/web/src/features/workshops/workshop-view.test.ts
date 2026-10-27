@@ -104,6 +104,18 @@ describe("the list", () => {
 });
 
 describe("a card's words", () => {
+  it("always includes free and total seats for upcoming workshops", () => {
+    const card = (patch: Partial<PublicWorkshop>) =>
+      workshopCard(workshop(patch), {
+        now,
+        timeZone: "Europe/Warsaw",
+        imageUrl: (path) => path,
+      });
+    expect(card({}).availabilityLabel).toBe("8 z 12");
+    expect(card({ seatsLeft: 0 }).availabilityLabel).toBe("0 z 12");
+    expect(card({ status: "cancelled" }).availabilityLabel).toBeNull();
+    expect(card({ status: "completed" }).availabilityLabel).toBeNull();
+  });
   it("says when, where and for how much, in the centre's time", () => {
     const card = workshopCard(workshop(), {
       now,

@@ -17,6 +17,7 @@ import { toStorySteps, type HomeStory } from "@/lib/home-content";
 import { selectStoryItems } from "@/lib/education-story";
 import { articleHref, readingLabel } from "./article-view";
 import { ebookHref } from "./ebook-view";
+import { workshopCard } from "../workshops/workshop-view";
 
 /** Resolve only published material on the server; the browser receives rendered cards. */
 export async function educationStorySteps(
@@ -92,39 +93,15 @@ export async function educationStorySteps(
     if (media.type === "workshops") {
       const one = selectStoryItems(upcoming, media, 1)[0];
       if (one) {
-        const date = new Date(one.startsAt);
-        const format = (options: Intl.DateTimeFormatOptions) =>
-          new Intl.DateTimeFormat("pl-PL", {
-            ...options,
-            timeZone: "Europe/Warsaw",
-          }).format(date);
         return {
           ...step,
           content: (
             <EducationWorkshopCard
-              watercolor={{ watercolorSrc: watercolor.watercolorSrc }}
-              workshop={{
-                title: one.title,
-                description: one.shortDescription,
-                image: {
-                  src: one.coverPath
-                    ? workshopImageUrl(one.coverPath)
-                    : (step.image.src as string),
-                  alt: one.coverPath ? (one.coverAlt ?? "") : "",
-                },
-                day: format({ day: "numeric" }),
-                month: format({ day: "numeric", month: "long" }).replace(
-                  /^\d+\s*/,
-                  "",
-                ),
-                year: format({ year: "numeric" }),
-                time: format({ hour: "2-digit", minute: "2-digit" }),
-                place:
-                  one.modality === "online"
-                    ? "Online"
-                    : (one.locationCity ?? one.locationName),
-                href: `/warsztaty/${one.slug}`,
-              }}
+              workshop={workshopCard(one, {
+                now: new Date(),
+                timeZone: "Europe/Warsaw",
+                imageUrl: workshopImageUrl,
+              })}
             />
           ),
         };
