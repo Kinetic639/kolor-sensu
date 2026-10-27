@@ -20,9 +20,17 @@ Stan na 24.10.2026, po weryfikacji kartek z kodem i testami (także po wydaniu n
   buduje się zmiany wysyłane do Miro (`canvas_update_from_svg`): element
   z tym samym `data-miro-id`, tylko z nowym kolorem albo tekstem.
 - [`klient-rezerwacja.md`](klient-rezerwacja.md): mapa „Klient: umawia
-  wizytę” i ramki „Klient · 1–8” z „Kupony zniżkowe”, przepisane z tablicy
-  24.10 (kolory sprawdzone z kodem i testami); plik
-  `svg/klient-rezerwacja.svg`.
+  wizytę” i dziesięć kolumn „Klient · 1–9” z „4a. Kupon zniżkowy”, ułożone
+  od nowa 27.10 jak sekcja strony publicznej: ramka zarządzająca i ramki
+  „elementy”, karteczki numerowane w kolumnie, wszystkie MVP różowe do
+  ponownego sprawdzenia. Plik `svg/klient-rezerwacja.svg` ma identyfikatory
+  tylko ramek: przed zmianą pojedynczej kartki odczytaj jej id z tablicy.
+
+- [`klient-warsztat.md`](klient-warsztat.md): mapa „Klient: zapisuje się
+  na warsztat” i jedenaście kolumn „Warsztat · 1–10” z „4a. Kupon zniżkowy”
+  (od 27.10): zapis, płatność, uczestnik po zapisie i „W tle” przeniesione
+  ze „Strona · 7. Warsztaty”, wszystkie MVP różowe; plik
+  `svg/klient-warsztat.svg` z identyfikatorami tylko ramek.
 
 - [`admin.md`](admin.md): nowa część portalu admina (od 26.10): mapa
   „Admin: prowadzi centrum” i kolumna „Admin · 1. Newsletter”, z kolorem,
