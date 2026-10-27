@@ -8,16 +8,16 @@ Mapa: ramka `3458764688539437963` · [w Miro](https://miro.com/app/board/uXjVEaK
 | -------------------------------- | --: | ---------: | -----: | -------: | ------: |
 | 1. Wybiera warsztat              |   7 |          5 |      1 |        2 |       0 |
 | 2. Trzyma miejsce                |   5 |          3 |      0 |        0 |       0 |
-| 3. Podaje dane i zgody           |   8 |          3 |      1 |        0 |       0 |
-| 4. Płaci od razu                 |   9 |          5 |      2 |        2 |       0 |
+| 3. Podaje dane i zgody           |   9 |          4 |      1 |        0 |       1 |
+| 4. Płaci od razu                 |   9 |          5 |      1 |        3 |       0 |
 | 4a. Kupon zniżkowy               |   4 |          3 |      0 |        1 |       0 |
 | 5. Płaci później                 |   5 |          2 |      0 |        1 |       0 |
-| 6. Potwierdzenie i strona zapisu |   8 |          3 |      3 |        0 |       0 |
+| 6. Potwierdzenie i strona zapisu |  12 |          7 |      3 |        0 |       0 |
 | 7. Lista rezerwowa               |   4 |          1 |      0 |        1 |       0 |
-| 8. Rezygnuje albo przekazuje     |   6 |          3 |      0 |        1 |       0 |
-| 9. Centrum odwołuje lub zmienia  |   5 |          2 |      0 |        1 |       0 |
+| 8. Rezygnuje albo przekazuje     |   7 |          4 |      0 |        1 |       0 |
+| 9. Centrum odwołuje lub zmienia  |   6 |          3 |      0 |        1 |       0 |
 | 10. Próby obejścia i oszustwa    |   7 |          6 |      0 |        0 |       0 |
-| Razem                            |  68 |         36 |      7 |        9 |       0 |
+| Razem                            |  75 |         43 |      6 |       10 |       1 |
 
 ## Warsztat · 1. Wybiera warsztat i zaczyna zapis
 
@@ -86,10 +86,15 @@ Ramka `3458764688539437969`
 |   6 | Uwagi: ostrzeżenie przed danymi o zdrowiu                       | klient wpisuje uwagi / patrzy na pole / widzi, żeby nie podawać tu informacji o zdrowiu                                                                                          | nowa kartka                                                                                                             |
 |   7 | Warsztat dla dziecka lub młodzieży: zapisuje rodzic lub opiekun | admin oznaczył warsztat jako dla dziecka lub młodzieży / klient podaje dane / musi zaznaczyć „Zapisuję jako rodzic lub opiekun prawny”; czas zgody zapisany                      | nowa kartka                                                                                                             |
 |   8 | Newsletter przy zapisie: dobrowolny, niezaznaczony              | newsletter jest włączony / klient podaje dane / pole zapisu do newslettera jest osobne, niezaznaczone i nie blokuje zapisu                                                       | nowa kartka                                                                                                             |
+|   9 | Dane z niedokończonego zapisu usuwane po 30 dniach              | klient podał dane, ale nie dokończył zapisu / mija 30 dni / jego dane są usuwane, tak jak przy wizytach                                                                          | nowa kartka                                                                                                             |
 
 ### Po MVP (szare)
 
-- 9. Kilka miejsc w jednym zapisie
+- 10. Kilka miejsc w jednym zapisie
+
+### Pytania do decyzji (pomarańczowe)
+
+- Warsztaty bez prawa odstąpienia (usługa w określonym dniu): sprawdzić z prawnikiem razem z #265
 
 ## Warsztat · 4. Płaci od razu
 
@@ -116,10 +121,10 @@ Ramka `3458764688539437971`
 ### Po MVP (szare)
 
 - 10. Płatność w ratach za cykl
-- 11. Faktury za warsztaty
 
 ### Ustalone (niebieskie)
 
+- Faktury w MVP dla wizyt i warsztatów, przez inFakt, gdy będzie NIP (27.10)
 - Płatność online przez Stripe jak za wizyty
 - Cena: 0 zł znaczy bezpłatnie, płatna co najmniej 2 zł; usługi i warsztaty tak samo (#256, 27.10)
 
@@ -176,22 +181,26 @@ Historyjka: Jako klient chcę mieć potwierdzenie i jedno miejsce, w którym wid
 
 Ramka `3458764688539437977`
 
-|  Nr | Karteczka                                        | Zakładając / Gdy / Wtedy                                                                                                                                             | Wcześniej                                                                                                            |
-| --: | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-|   1 | Potwierdzenie z plikiem kalendarza               | zapis jest potwierdzony / klient kończy zapis / widzi potwierdzenie z numerem i dostaje e-mail z plikiem kalendarza i linkiem do swojego zapisu                      | Testy treści e-maila (plik kalendarza, link do zapisu), e-mail raz, end-to-end (było: Strona · 7, Zapis 6)           |
-|   2 | Strona mojego zapisu                             | klient ma link z e-maila / otwiera go / widzi warsztat, termin, status płatności, „Dodaj do kalendarza” i „Zrezygnuj”                                                | Status, płatność, rezygnacja i „Dodaj do kalendarza” (#198): test widoku, end-to-end (było: Strona · 7, Uczestnik 1) |
-|   3 | E-maile, każdy raz                               | zmienia się coś w zapisie / system wysyła e-mail / potwierdzenie, przypomnienie, rezygnacja, odwołanie, zmiana terminu, lista rezerwowa, wiadomość admina; każdy raz | Test bazy (każdy e-mail raz) i testy treści e-maili (było: W tle 2)                                                  |
-|   4 | Przypomnienie dzień przed; przy online z linkiem | warsztat jest jutro / nadchodzi czas przypomnienia / uczestnik dostaje maila; przy warsztacie online z linkiem do spotkania                                          | Testy treści (link online dzień przed), test zadania w tle (było: Strona · 7, Uczestnik 4)                           |
-|   5 | Link do spotkania online tylko dla zapisanych    | warsztat jest online / ktoś niezapisany otwiera stronę warsztatu / linku nie ma; widzą go tylko potwierdzeni uczestnicy w mailu i na stronie zapisu                  | nowa kartka                                                                                                          |
-|   6 | Starszy mail: link dalej prowadzi do zapisu      | klient dostał kilka maili o zapisie / otwiera link ze starszego / widzi aktualny stan swojego zapisu                                                                 | nowa kartka                                                                                                          |
-|   7 | Pomoc w kryzysie w stopce maili                  | uczestnik dostaje dowolny mail o warsztacie / patrzy na stopkę / 112 i link do strony „Pomoc w kryzysie”                                                             | nowa kartka                                                                                                          |
-|   8 | Testy end-to-end zapisu, płatności i rezygnacji  | warsztat z ceną jest na DEV / test zapisuje się z BLIK, rezygnuje, wchodzi z listy rezerwowej / testy przechodzą na DEV i STAGING                                    | Przechodzą na DEV i STAGING (BLIK, „zapłacę później”, rezygnacja, plik kalendarza) (było: W tle 7)                   |
+|  Nr | Karteczka                                                           | Zakładając / Gdy / Wtedy                                                                                                                                             | Wcześniej                                                                                                            |
+| --: | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+|   1 | Potwierdzenie z plikiem kalendarza                                  | zapis jest potwierdzony / klient kończy zapis / widzi potwierdzenie z numerem i dostaje e-mail z plikiem kalendarza i linkiem do swojego zapisu                      | Testy treści e-maila (plik kalendarza, link do zapisu), e-mail raz, end-to-end (było: Strona · 7, Zapis 6)           |
+|   2 | Strona mojego zapisu                                                | klient ma link z e-maila / otwiera go / widzi warsztat, termin, status płatności, „Dodaj do kalendarza” i „Zrezygnuj”                                                | Status, płatność, rezygnacja i „Dodaj do kalendarza” (#198): test widoku, end-to-end (było: Strona · 7, Uczestnik 1) |
+|   3 | E-maile, każdy raz                                                  | zmienia się coś w zapisie / system wysyła e-mail / potwierdzenie, przypomnienie, rezygnacja, odwołanie, zmiana terminu, lista rezerwowa, wiadomość admina; każdy raz | Test bazy (każdy e-mail raz) i testy treści e-maili (było: W tle 2)                                                  |
+|   4 | Przypomnienie dzień przed; przy online z linkiem                    | warsztat jest jutro / nadchodzi czas przypomnienia / uczestnik dostaje maila; przy warsztacie online z linkiem do spotkania                                          | Testy treści (link online dzień przed), test zadania w tle (było: Strona · 7, Uczestnik 4)                           |
+|   5 | Link do spotkania online tylko dla zapisanych                       | warsztat jest online / ktoś niezapisany otwiera stronę warsztatu / linku nie ma; widzą go tylko potwierdzeni uczestnicy w mailu i na stronie zapisu                  | nowa kartka                                                                                                          |
+|   6 | Starszy mail: link dalej prowadzi do zapisu                         | klient dostał kilka maili o zapisie / otwiera link ze starszego / widzi aktualny stan swojego zapisu                                                                 | nowa kartka                                                                                                          |
+|   7 | Pomoc w kryzysie w stopce maili                                     | uczestnik dostaje dowolny mail o warsztacie / patrzy na stopkę / 112 i link do strony „Pomoc w kryzysie”                                                             | nowa kartka                                                                                                          |
+|   8 | Uczestnik nie dostał maila: centrum wysyła link ponownie            | uczestnik dzwoni, że nie ma maila / admin klika „Wyślij link ponownie” / uczestnik dostaje mail z aktualnym linkiem do zapisu                                        | nowa kartka                                                                                                          |
+|   9 | Mail nie dotarł (zły adres): admin to widzi                         | uczestnik podał adres z literówką / mail się odbija / admin widzi przy zapisie, że mail nie dotarł                                                                   | nowa kartka                                                                                                          |
+|  10 | Warsztat online bez linku: admin dostaje alarm przed przypomnieniem | warsztat online jest jutro, a admin nie wkleił linku / zbliża się przypomnienie dla uczestników / admin dostaje alarm; przypomnienie bez linku nie wychodzi          | nowa kartka                                                                                                          |
+|  11 | Faktura do płatności (inFakt)                                       | uczestnik chce fakturę / płaci za warsztat / faktura wystawiona automatycznie, jak przy wizytach                                                                     | nowa kartka                                                                                                          |
+|  12 | Testy end-to-end zapisu, płatności i rezygnacji                     | warsztat z ceną jest na DEV / test zapisuje się z BLIK, rezygnuje, wchodzi z listy rezerwowej / testy przechodzą na DEV i STAGING                                    | Przechodzą na DEV i STAGING (BLIK, „zapłacę później”, rezygnacja, plik kalendarza) (było: W tle 7)                   |
 
 ### Po MVP (szare)
 
-- 9. Certyfikat uczestnictwa
-- 10. Materiały po warsztacie
-- 11. Ankieta po warsztacie
+- 13. Certyfikat uczestnictwa
+- 14. Materiały po warsztacie
+- 15. Ankieta po warsztacie
 
 ## Warsztat · 7. Lista rezerwowa
 
@@ -224,14 +233,15 @@ Historyjka: Jako uczestnik chcę zrezygnować albo oddać miejsce komuś innemu 
 
 Ramka `3458764688539437981`
 
-|  Nr | Karteczka                                              | Zakładając / Gdy / Wtedy                                                                                                                             | Wcześniej                                                                                                  |
-| --: | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-|   1 | Rezygnacja ze zwrotem (ponad 7 dni przed)              | do warsztatu zostało więcej niż 7 dni / uczestnik rezygnuje / pełny zwrot przez Stripe (albo anulowanie, jeśli nie zapłacił), miejsce wolne, e-mail  | Test bazy (pełny zwrot do 7 dni przed), test widoku; end-to-end rezygnacji (było: Strona · 7, Uczestnik 2) |
-|   2 | Rezygnacja po oknie: zwrot, gdy miejsce przejmie lista | do warsztatu zostało mniej niż 7 dni / uczestnik rezygnuje / bez zwrotu, chyba że miejsce przejmie ktoś z listy rezerwowej                           | Testy bazy: późna rezygnacja bez zwrotu, zwrot gdy miejsce przejmie lista (było: Strona · 7, Uczestnik 3)  |
-|   3 | Przekazanie miejsca innej osobie                       | uczestnik nie może przyjść / przekazuje miejsce innej osobie / dane uczestnika się zmieniają, bez zwrotu; nowa osoba dostaje maila                   | Test bazy: przekazanie miejsca (było: Strona · 7, Uczestnik 3)                                             |
-|   4 | Stripe odrzuca zwrot: kwota czeka i system ponawia     | uczestnik rezygnuje ze zwrotem / Stripe odrzuca zwrot / rezygnacja zapisana, kwota zostaje do zwrotu, zadanie w tle próbuje ponownie, admin to widzi | nowa kartka                                                                                                |
-|   5 | Podwójne kliknięcie „Zrezygnuj”: jeden zwrot           | uczestnik klika „Zrezygnuj” dwa razy / oba kliknięcia dochodzą / jedna rezygnacja i jeden zwrot                                                      | nowa kartka                                                                                                |
-|   6 | Mail o rezygnacji podaje kwotę i czas zwrotu           | uczestnik zrezygnował w oknie zwrotu / dostaje maila / kwota zwrotu i kiedy pieniądze wrócą                                                          | nowa kartka                                                                                                |
+|  Nr | Karteczka                                              | Zakładając / Gdy / Wtedy                                                                                                                                                                | Wcześniej                                                                                                  |
+| --: | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+|   1 | Rezygnacja ze zwrotem (ponad 7 dni przed)              | do warsztatu zostało więcej niż 7 dni / uczestnik rezygnuje / pełny zwrot przez Stripe (albo anulowanie, jeśli nie zapłacił), miejsce wolne, e-mail                                     | Test bazy (pełny zwrot do 7 dni przed), test widoku; end-to-end rezygnacji (było: Strona · 7, Uczestnik 2) |
+|   2 | Rezygnacja po oknie: zwrot, gdy miejsce przejmie lista | do warsztatu zostało mniej niż 7 dni / uczestnik rezygnuje / bez zwrotu, chyba że miejsce przejmie ktoś z listy rezerwowej                                                              | Testy bazy: późna rezygnacja bez zwrotu, zwrot gdy miejsce przejmie lista (było: Strona · 7, Uczestnik 3)  |
+|   3 | Przekazanie miejsca innej osobie                       | uczestnik nie może przyjść / przekazuje miejsce innej osobie / dane uczestnika się zmieniają, bez zwrotu; nowa osoba dostaje maila                                                      | Test bazy: przekazanie miejsca (było: Strona · 7, Uczestnik 3)                                             |
+|   4 | Nowa osoba po przekazaniu akceptuje regulamin i zgody  | uczestnik przekazał miejsce innej osobie / ta osoba dostaje maila / przed warsztatem akceptuje regulamin warsztatów i zgodę na dane; bez tego miejsce zostaje przy pierwszym uczestniku | nowa kartka                                                                                                |
+|   5 | Stripe odrzuca zwrot: kwota czeka i system ponawia     | uczestnik rezygnuje ze zwrotem / Stripe odrzuca zwrot / rezygnacja zapisana, kwota zostaje do zwrotu, zadanie w tle próbuje ponownie, admin to widzi                                    | nowa kartka                                                                                                |
+|   6 | Podwójne kliknięcie „Zrezygnuj”: jeden zwrot           | uczestnik klika „Zrezygnuj” dwa razy / oba kliknięcia dochodzą / jedna rezygnacja i jeden zwrot                                                                                         | nowa kartka                                                                                                |
+|   7 | Mail o rezygnacji podaje kwotę i czas zwrotu           | uczestnik zrezygnował w oknie zwrotu / dostaje maila / kwota zwrotu i kiedy pieniądze wrócą                                                                                             | nowa kartka                                                                                                |
 
 ### Ustalone (niebieskie)
 
@@ -247,13 +257,14 @@ Historyjka: Jako uczestnik chcę od razu wiedzieć, gdy warsztat się zmienia, i
 
 Ramka `3458764688539438012`
 
-|  Nr | Karteczka                                                        | Zakładając / Gdy / Wtedy                                                                                                                            | Wcześniej                                                                                                                    |
-| --: | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-|   1 | Centrum odwołuje: mail i pełny zwrot                             | admin odwołuje warsztat / zapisani czekają / każdy dostaje e-mail i pełny zwrot automatycznie                                                       | Test odwołania: zwrot każdemu, kto zapłacił, e-mail do wszystkich; test bazy (było: Strona · 7, Uczestnik 6)                 |
-|   2 | Centrum zmienia termin: można zostać albo zrezygnować ze zwrotem | admin przenosi warsztat / zapisani dostają e-mail / mogą zostać albo zrezygnować z pełnym zwrotem, niezależnie od okna                              | Test bazy: nowy termin, pełny zwrot w każdej chwili, e-mail; plik kalendarza jako zmiana (było: Strona · 7, Uczestnik 7)     |
-|   3 | Za mało chętnych: admin decyduje                                 | warsztat ma minimum osób / minimum się nie uzbiera / kilka dni przed terminem wpłat admin dostaje przypomnienie i decyduje; system sam nie odwołuje | Testy bazy: minimum potwierdza warsztat, przypomnienie raz; dashboard admina prosi o decyzję (było: Strona · 7, Uczestnik 8) |
-|   4 | Zmiana prowadzącego: mail do uczestników                         | prowadząca nie może poprowadzić warsztatu / admin zmienia prowadzącego / uczestnicy dostają maila; mogą zrezygnować z pełnym zwrotem                | nowa kartka                                                                                                                  |
-|   5 | Odwołanie warsztatu z kodem: co z kodem                          | uczestnik zapłacił z kodem rabatowym / centrum odwołuje warsztat / pełny zwrot zapłaconej kwoty; kod wraca, a admin może przedłużyć jego ważność    | nowa kartka                                                                                                                  |
+|  Nr | Karteczka                                                          | Zakładając / Gdy / Wtedy                                                                                                                                                    | Wcześniej                                                                                                                    |
+| --: | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+|   1 | Centrum odwołuje: mail i pełny zwrot                               | admin odwołuje warsztat / zapisani czekają / każdy dostaje e-mail i pełny zwrot automatycznie                                                                               | Test odwołania: zwrot każdemu, kto zapłacił, e-mail do wszystkich; test bazy (było: Strona · 7, Uczestnik 6)                 |
+|   2 | Centrum zmienia termin: można zostać albo zrezygnować ze zwrotem   | admin przenosi warsztat / zapisani dostają e-mail / mogą zostać albo zrezygnować z pełnym zwrotem, niezależnie od okna                                                      | Test bazy: nowy termin, pełny zwrot w każdej chwili, e-mail; plik kalendarza jako zmiana (było: Strona · 7, Uczestnik 7)     |
+|   3 | Lista rezerwowa też dostaje maila o odwołaniu albo zmianie terminu | na warsztat czekają osoby z listy rezerwowej / centrum odwołuje albo przenosi warsztat / one też dostają maila; przy zmianie terminu zostają na liście albo z niej wypadają | nowa kartka                                                                                                                  |
+|   4 | Za mało chętnych: admin decyduje                                   | warsztat ma minimum osób / minimum się nie uzbiera / kilka dni przed terminem wpłat admin dostaje przypomnienie i decyduje; system sam nie odwołuje                         | Testy bazy: minimum potwierdza warsztat, przypomnienie raz; dashboard admina prosi o decyzję (było: Strona · 7, Uczestnik 8) |
+|   5 | Zmiana prowadzącego: mail do uczestników                           | prowadząca nie może poprowadzić warsztatu / admin zmienia prowadzącego / uczestnicy dostają maila; mogą zrezygnować z pełnym zwrotem                                        | nowa kartka                                                                                                                  |
+|   6 | Odwołanie warsztatu z kodem: co z kodem                            | uczestnik zapłacił z kodem rabatowym / centrum odwołuje warsztat / pełny zwrot zapłaconej kwoty; kod wraca, a admin może przedłużyć jego ważność                            | nowa kartka                                                                                                                  |
 
 ### Ustalone (niebieskie)
 
