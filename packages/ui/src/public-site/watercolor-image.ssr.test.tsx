@@ -63,6 +63,7 @@ describe("WatercolorImage on the server", () => {
       "cursor-ring.tsx",
       "education-gallery.tsx",
       "first-steps.tsx",
+      "hover-paint.tsx",
       "ink-reveal.tsx",
       "intro-motion.tsx",
       "offer-reveal.tsx",

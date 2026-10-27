@@ -32,7 +32,7 @@ export async function HomeWorkshops() {
   return (
     <section
       aria-labelledby="najblizsze-warsztaty"
-      className="max-w-page px-gutter py-section-sm mx-auto grid gap-6"
+      className="max-w-page px-gutter py-section-sm mx-auto grid gap-12"
     >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="grid gap-2">
