@@ -20,7 +20,49 @@ describe("an article's card", () => {
     expect(
       screen.getByRole("link", { name: "Dzieci i młodzież" }),
     ).toHaveAttribute("href", "/edukacja/artykuly/kategoria/dzieci");
-    expect(screen.getByText(/6 min czytania/)).toBeInTheDocument();
+    expect(screen.getByText("6 min")).toBeInTheDocument();
+    expect(screen.queryByText(/6 min czytania/)).toBeNull();
+    expect(screen.getByRole("link", { name: "Przeczytaj" })).toHaveAttribute(
+      "href",
+      first!.href,
+    );
+    expect(screen.getByText(new RegExp(first!.author))).toBeInTheDocument();
+    expect(screen.getByText(first!.date)).toHaveAttribute(
+      "dateTime",
+      first!.dateTime,
+    );
+    expect(
+      document.querySelector(".ks-education-article-frame svg"),
+    ).not.toBeNull();
+    expect(
+      document.querySelector(".ks-education-article-foot .ks-wk__hover-paint"),
+    ).not.toBeNull();
+  });
+  it("places the author and optional portrait in the footer, and dates above the title", () => {
+    const { container, rerender } = render(
+      <ArticleCard article={{ ...first!, authorAvatarUrl: "/anna.webp" }} />,
+    );
+    const footer = container.querySelector(".ks-education-article-foot")!;
+    expect(footer.textContent).toContain(first!.author);
+    expect(footer.querySelector("img")?.getAttribute("src")).toContain(
+      "anna.webp",
+    );
+    expect(
+      container.querySelector(".ks-education-article-topline time"),
+    ).toHaveTextContent(first!.date);
+    expect(
+      container.querySelector(".ks-education-article-topline"),
+    ).toHaveTextContent("6 min");
+    expect(footer).not.toHaveTextContent("6 min");
+    const category = container.querySelector(".ks-education-kicker")!;
+    expect(
+      container
+        .querySelector(".ks-education-article-topline")!
+        .compareDocumentPosition(category) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    rerender(<ArticleCard article={{ ...first!, authorAvatarUrl: null }} />);
+    expect(footer.querySelector("img")).toBeNull();
+    expect(footer.textContent).toContain(first!.author);
   });
 });
 

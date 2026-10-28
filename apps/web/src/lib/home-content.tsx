@@ -71,6 +71,9 @@ export function toStorySteps(
   return story.steps.map(
     (step: HomeStoryStep & { imageUrl: string | null }, index) => ({
       heading: step.heading,
+      ...(step.headingSegments
+        ? { headingSegments: step.headingSegments }
+        : {}),
       text: step.text,
       cta: step.cta ?? undefined,
       image: step.imageUrl

@@ -76,6 +76,34 @@ afterEach(() => {
 });
 
 describe("PaintedStory", () => {
+  it("renders the section larger than slide titles and preserves their CMS word colours", () => {
+    mockMedia({ reduce: true });
+    render(
+      <PaintedStory
+        heading="Edukacja"
+        steps={[
+          {
+            ...steps[0]!,
+            headingSegments: [
+              { text: "Pierwsza ", tone: "green" },
+              { text: "rozmowa", tone: "pink" },
+            ],
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "Edukacja" })).toHaveClass(
+      "text-h2",
+    );
+    const heading = screen.getByRole("heading", { name: "Pierwsza rozmowa" });
+    expect(heading).toHaveClass("text-h3");
+    expect(heading.querySelector(".text-primary-strong")).toHaveTextContent(
+      "Pierwsza",
+    );
+    expect(heading.querySelector(".text-pink-strong")).toHaveTextContent(
+      "rozmowa",
+    );
+  });
   it("keeps its header and server-rendered cards while hiding inactive slide links", async () => {
     mockMedia({ wide: true });
     const { container } = render(

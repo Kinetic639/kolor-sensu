@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   plainHeader,
   sectionHeaderSchema,
+  titleLineSchema,
 } from "@repo/contracts/section-header";
 import {
   pageHeader,
@@ -524,23 +525,35 @@ export const homeStoryMediaSchema = z
   );
 export type HomeStoryMedia = z.infer<typeof homeStoryMediaSchema>;
 
-export const homeStoryStepSchema = z.strictObject({
-  /** Absent on older payloads; their existing education links identify the content. */
-  media: homeStoryMediaSchema.optional(),
-  heading: z.string().trim().min(1).max(80),
-  text: z.string().trim().min(1).max(400),
-  /** Where the step's button leads (none: no button). */
-  cta: z
-    .strictObject({
-      label: z.string().trim().min(1).max(40),
-      href: sitePathSchema,
-    })
-    .nullable()
-    .default(null),
-  /** The photo, a file in the public site-media bucket (none: the site's). */
-  imagePath: z.string().trim().min(1).max(300).nullable().default(null),
-  imageAlt: z.string().trim().max(200).default(""),
-});
+export const homeStoryStepSchema = z
+  .strictObject({
+    /** Absent on older payloads; their existing education links identify the content. */
+    media: homeStoryMediaSchema.optional(),
+    heading: z.string().trim().min(1).max(80),
+    /** Optional coloured runs; plain headings from older content still work. */
+    headingSegments: titleLineSchema.optional(),
+    text: z.string().trim().min(1).max(400),
+    /** Where the step's button leads (none: no button). */
+    cta: z
+      .strictObject({
+        label: z.string().trim().min(1).max(40),
+        href: sitePathSchema,
+      })
+      .nullable()
+      .default(null),
+    /** The photo, a file in the public site-media bucket (none: the site's). */
+    imagePath: z.string().trim().min(1).max(300).nullable().default(null),
+    imageAlt: z.string().trim().max(200).default(""),
+  })
+  .refine(
+    (step) =>
+      !step.headingSegments ||
+      step.headingSegments.map((part) => part.text).join("") === step.heading,
+    {
+      path: ["headingSegments"],
+      message: "Kolorowe słowa muszą odpowiadać tytułowi.",
+    },
+  );
 
 export type HomeStoryStep = z.infer<typeof homeStoryStepSchema>;
 

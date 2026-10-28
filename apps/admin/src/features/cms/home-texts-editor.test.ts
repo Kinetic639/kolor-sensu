@@ -36,6 +36,33 @@ describe("thoughtsProblemsOf", () => {
 });
 
 describe("toStoryContent", () => {
+  it("normalizes the editable title only when saving, without storing its draft", () => {
+    const saved = toStoryContent([
+      {
+        ...defaultHomeStory.steps[0]!,
+        imageUrl: null,
+        headingDraft: { text: "Nowa wiedza ", tones: ["green", "pink"] },
+      },
+    ]);
+    expect(saved.steps[0]?.heading).toBe("Nowa wiedza");
+    expect(saved.steps[0]?.headingSegments).toEqual([
+      { text: "Nowa ", tone: "green" },
+      { text: "wiedza", tone: "pink" },
+    ]);
+    expect(saved.steps[0]).not.toHaveProperty("headingDraft");
+  });
+  it("keeps the slide's word colours when saving the draft", () => {
+    const headingSegments = [{ text: "Edukacja", tone: "green" as const }];
+    const saved = toStoryContent([
+      {
+        ...defaultHomeStory.steps[0]!,
+        imageUrl: null,
+        heading: "Edukacja",
+        headingSegments,
+      },
+    ]);
+    expect(saved.steps[0]?.headingSegments).toEqual(headingSegments);
+  });
   const row = { ...defaultHomeStory.steps[0]!, imageUrl: "https://x" };
   it("keeps the selected media and its order, without copying catalogue data", () => {
     const media = {

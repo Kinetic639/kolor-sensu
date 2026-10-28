@@ -24,9 +24,12 @@ vi.mock("@/lib/workshop-data", () => ({
   getWorkshops: readers.workshops,
   workshopImageUrl: (p: string) => `/${p}`,
 }));
+vi.mock("@/lib/public-data", () => ({ getSpecialists: async () => [] }));
 vi.mock("./article-view", () => ({
   articleHref: (slug: string) => `/edukacja/artykuly/${slug}`,
   readingLabel: () => "2 min czytania",
+  articleAuthor: () => ({ name: "Anna Nowak", photoUrl: "/anna.webp" }),
+  articleDate: () => "25 października 2026",
 }));
 const image = { src: "/fallback.jpg", alt: "Zdjęcie zastępcze" };
 const article = (id: string, date: string) =>
@@ -88,6 +91,9 @@ describe("the published education story", () => {
       html.indexOf("Artykuł third"),
     );
     expect(html).not.toContain("Czytaj więcej artykułów");
+    expect(html).toContain("Anna Nowak");
+    expect(html).toContain("anna.webp");
+    expect(html).toContain("25 października 2026");
   });
   it("falls back to the saved photo when manual references are withdrawn", async () => {
     const result = await educationStorySteps(
@@ -190,7 +196,7 @@ describe("the published education story", () => {
     );
     const html = renderToString(result[0]!.content);
     expect(html).toContain("ks-wk__body");
-    expect(html).toContain('data-variant="story"');
+    expect(html).toContain('data-variant="grid"');
     expect(html).toContain("ks-wk__price");
     expect(html).toContain("8 z 12");
     expect(html).toContain("Wspólne spotkanie");

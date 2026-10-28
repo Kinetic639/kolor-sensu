@@ -19,6 +19,8 @@ import { addItem, moveItem, removeItem } from "./list-editor";
 import { ListItemControls } from "./list-item-controls";
 import { SiteImageField } from "./site-image-field";
 import { TextField } from "./text-field";
+import { TitleField } from "./header-block";
+import { lineToDraft } from "./header-editor";
 import type { ContentViewModel, HomeStoryStepRow } from "./types";
 
 // Home → "Jak zacząć", the story told while scrolling: its header (the
@@ -124,15 +126,32 @@ export function StorySection({
                       onRemove={() => setSteps(removeItem(steps, index, 1))}
                     />
                   </div>
-                  <TextField
-                    className="sm:col-span-2"
-                    id={`cms-story-${index}-heading`}
-                    invalid={problems[`${at}.heading`]}
-                    label="Tytuł"
-                    maxLength={80}
-                    onChange={(heading) => setStep(index, { heading })}
-                    value={step.heading}
-                  />
+                  <div className="sm:col-span-2">
+                    <TitleField
+                      id={`cms-story-${index}-heading`}
+                      singleLine
+                      maxLength={80}
+                      lines={[
+                        step.headingDraft ??
+                          (step.headingSegments
+                            ? lineToDraft(step.headingSegments)
+                            : { text: step.heading, tones: [] }),
+                      ]}
+                      onChange={([line]) => {
+                        if (!line) return;
+                        setStep(index, {
+                          heading: line.text,
+                          headingDraft: line,
+                        });
+                      }}
+                    />
+                    {problems[`${at}.heading`] ||
+                    problems[`${at}.headingSegments`] ? (
+                      <p role="alert" className="text-sm text-red-700">
+                        Uzupełnij tytuł slajdu (do 80 znaków).
+                      </p>
+                    ) : null}
+                  </div>
                   <StoryMediaFields
                     id={`cms-story-${index}-media`}
                     value={storyMediaOf(step)}
