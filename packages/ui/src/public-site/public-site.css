@@ -152,28 +152,43 @@
   .ks-hand-link__label {
     position: relative;
     min-width: 0;
-    padding-bottom: 0.5rem;
+    padding-bottom: 0;
     overflow-wrap: anywhere;
   }
   .ks-hand-link__underline {
     position: absolute;
     left: -1%;
-    bottom: 0;
+    bottom: -2px;
     width: 102%;
     height: 9px;
     pointer-events: none;
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  .ks-hand-link:is(:hover, :focus-visible) .ks-hand-link__underline,
+  .ks-wk:is(:hover, :focus-within) .ks-hand-link__underline,
+  .ks-education-book:is(:hover, :focus-within) .ks-hand-link__underline,
+  .ks-education-article:is(:hover, :focus-within) .ks-hand-link__underline {
+    opacity: 1;
+    clip-path: inset(0);
   }
   .ks-hand-link__arrow {
     flex: 0 0 30px;
     width: 30px;
     height: 24px;
-    margin-top: -7px;
+    margin-top: 0;
     pointer-events: none;
   }
   @media (prefers-reduced-motion: no-preference) {
     .ks-hand-link__underline,
     .ks-hand-link__arrow {
       transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .ks-hand-link__underline {
+      transition:
+        transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+        clip-path 650ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 150ms ease;
     }
     .ks-hand-link__arrow {
       transform-origin: left center;
@@ -1303,6 +1318,7 @@
   /* PaintedStory (painted-story.tsx). Without the script, on phones and
      under reduced motion: the steps follow one another, text then picture. */
   .ks-story {
+    container-type: inline-size;
     padding-block: var(--spacing-section);
   }
 
@@ -1464,16 +1480,35 @@
     display: flex;
     align-items: flex-start;
     justify-content: center;
-  }
-  .ks-story[data-pinned] .ks-story__picture[data-rich]:not([data-active]) {
     opacity: 0;
+    translate: 0 1.75rem;
     visibility: hidden;
     pointer-events: none;
+    transition:
+      opacity 350ms ease-out,
+      translate 350ms ease-out,
+      visibility 0s linear 350ms;
+  }
+  .ks-story[data-pinned] .ks-story__picture[data-rich][data-active] {
+    opacity: 1;
+    translate: 0 0;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      opacity 700ms var(--ease-soft) 330ms,
+      translate 900ms var(--ease-soft) 330ms,
+      visibility 0s;
   }
   .ks-story[data-pinned] .ks-story__media {
     flex-shrink: 0;
     transform: scale(var(--ks-story-media-scale, 1));
     transform-origin: top center;
+  }
+
+  /* Article cards keep the listing's physical size even when another
+     composition needs to shrink to fit a short pinned stage. */
+  .ks-story[data-pinned] .ks-story__media:has(.ks-education-gallery) {
+    transform: none;
   }
 
   .ks-story[data-pinned] .ks-education-gallery-track {
@@ -2184,6 +2219,12 @@
     }
   }
 
+  .ks-home-workshops__cards {
+    display: grid;
+    justify-items: start;
+    padding-top: clamp(2rem, 4vw, 3.5rem);
+  }
+
   /* ------------------------------------------------------------ First steps */
 
   /* FirstSteps (first-steps.tsx), "Pierwszy krok": four steps on a compact
@@ -2636,10 +2677,18 @@
     border-style: solid;
     border-color: transparent;
     border-width: 2.75rem 0 0;
-    border-image-source: url("/watercolor/footer-paint-green-brush-v1.webp");
+    border-image-source: url("/watercolor/footer-paint-brand-pastel-v2.webp");
     border-image-slice: 110 0 0 fill;
     border-image-width: 2.75rem 0 0;
     border-image-repeat: stretch;
+    mask-image:
+      url("/watercolor/footer-paint-brand-pastel-v2-edge-mask.svg"),
+      linear-gradient(white, white);
+    mask-size:
+      100% 2.75rem,
+      100% calc(100% - 2.75rem);
+    mask-position: top, bottom;
+    mask-repeat: no-repeat;
     pointer-events: none;
   }
   .ks-footer__crisis {
@@ -2650,7 +2699,7 @@
     gap: 0.75rem 2rem;
     padding-block: 1.5rem;
     margin-block: 0.25rem 1.5rem;
-    color: var(--color-pink-strong);
+    color: #813f3e;
     font-size: 0.875rem;
   }
   .ks-footer__crisis-rule {
@@ -2671,7 +2720,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--color-pink-strong);
+    color: inherit;
     font-size: 1rem;
     font-weight: 700;
   }
@@ -2721,7 +2770,7 @@
   }
   .ks-footer__crisis a:hover,
   .ks-footer__crisis a:focus-visible {
-    color: var(--color-pink-strong);
+    color: inherit;
     text-decoration: underline;
     text-underline-offset: 4px;
   }
@@ -2942,6 +2991,10 @@
   .ks-location__detail a:hover,
   .ks-location__detail a:focus-visible {
     color: var(--color-primary);
+    text-decoration-line: none;
+  }
+  .ks-location__detail a:not(.ks-hand-link):hover,
+  .ks-location__detail a:not(.ks-hand-link):focus-visible {
     text-decoration-line: underline;
   }
   .ks-location__map {
@@ -3319,11 +3372,93 @@
     isolation: isolate;
   }
   .ks-education-article {
-    --article-inset: clamp(1rem, 2.2vw, 2rem);
-    margin-inline: var(--article-inset);
+    border: 1px solid transparent;
     height: 100%;
+    min-width: 0;
+    transition:
+      transform 280ms var(--ease-soft),
+      filter 280ms ease;
   }
-  .ks-education-books::before,
+  .ks-education-article:is(:hover, :focus-within) .ks-education-article-frame {
+    color: #d29a96;
+  }
+  .ks-education-article-title {
+    color: #000;
+    text-decoration: none;
+  }
+  .ks-education-article-category {
+    position: relative;
+    z-index: 11;
+  }
+  .ks-education-article-topline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+  }
+  .ks-education-article-date {
+    margin-left: auto;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+    text-align: right;
+  }
+  .ks-education-article-author {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+    font-size: var(--text-small);
+    line-height: 1.5;
+    color: var(--color-ink);
+  }
+  .ks-education-article-avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+  .ks-education-article-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+  .ks-education-article:is(:hover, :focus-within) .ks-wk__title-label {
+    background-size: 100% 9px;
+  }
+  .ks-education-article:is(:hover, :focus-within) .ks-education-kicker,
+  .ks-education-article:is(:hover, :focus-within) .ks-education-meta {
+    color: #9c5754;
+  }
+  .ks-education-article .ks-education-kicker,
+  .ks-education-article .ks-education-meta,
+  .ks-education-article-frame {
+    transition: color 280ms ease;
+  }
+  .ks-education-article-foot .ks-hand-link,
+  .ks-education-article-foot .ks-hand-link:hover {
+    color: #000;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-education-article:is(:hover, :focus-within) {
+      transform: translateY(-4px);
+      filter: drop-shadow(0 12px 14px rgb(22 48 47 / 0.12));
+    }
+    .ks-education-article:is(:hover, :focus-within) .ks-hand-link__underline {
+      transform: translateY(-2px);
+    }
+    .ks-education-article:is(:hover, :focus-within) .ks-hand-link__arrow {
+      transform: translateX(2px) scaleX(1.12);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ks-education-article {
+      transition: none;
+    }
+  }
   .ks-education-empty::before {
     content: "";
     position: absolute;
@@ -3361,7 +3496,33 @@
     pointer-events: none;
   }
   .ks-education-gallery {
+    position: relative;
+    isolation: isolate;
     min-width: 0;
+    width: 100%;
+    margin-inline: auto;
+  }
+  @media (min-width: 40rem) {
+    .ks-education-gallery {
+      width: calc(
+        (
+            min(100cqw, var(--container-page)) - 2 * var(--spacing-gutter) -
+              1.5rem
+          ) /
+          2
+      );
+    }
+  }
+  @media (min-width: 64rem) {
+    .ks-education-gallery {
+      width: calc(
+        (
+            min(100cqw, var(--container-page)) - 2 * var(--spacing-gutter) -
+              3rem
+          ) /
+          3
+      );
+    }
   }
   .ks-education-gallery-track {
     display: grid;
@@ -3381,7 +3542,6 @@
     min-width: 0;
     scroll-snap-align: start;
     scroll-snap-stop: always;
-    padding-inline: 0.35rem;
   }
   .ks-education-gallery-controls {
     display: flex;
@@ -3444,11 +3604,11 @@
     transform: scale(1.2);
   }
   .ks-education-article-body {
-    --ks-article-pad: 2rem;
+    --ks-article-pad: 1.5rem;
     display: flex;
     flex-direction: column;
     flex: 1;
-    gap: 0.8rem;
+    gap: 0.75rem;
     padding: 1.5rem var(--ks-article-pad) 0;
   }
   .ks-education-kicker {
@@ -3469,6 +3629,25 @@
     text-wrap: balance;
     overflow-wrap: anywhere;
   }
+  .ks-education-article .ks-education-kicker {
+    font-size: var(--text-eyebrow);
+    line-height: var(--text-eyebrow--line-height);
+    font-weight: var(--text-eyebrow--font-weight);
+    letter-spacing: var(--text-eyebrow--letter-spacing);
+  }
+  .ks-education-article .ks-education-material-title {
+    font-size: var(--text-h3);
+    line-height: var(--text-h3--line-height);
+    font-weight: var(--text-h3--font-weight);
+  }
+  .ks-education-article .ks-education-excerpt {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
   .ks-education-excerpt {
     color: var(--color-text-muted);
     font-size: 0.9375rem;
@@ -3478,13 +3657,14 @@
   .ks-education-article-foot {
     position: relative;
     isolation: isolate;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
     align-items: center;
-    justify-content: space-between;
+    align-content: center;
     gap: 0.75rem;
     margin: auto calc(-1 * var(--ks-article-pad)) 0;
-    padding: 1.75rem var(--ks-article-pad) 3rem;
+    z-index: 11;
+    min-height: 7.5rem;
+    padding: 1.25rem var(--ks-article-pad) 1.75rem;
   }
   .ks-education-article-foot::before {
     content: "";
@@ -3508,10 +3688,88 @@
   .ks-education-books {
     padding: 3rem 2rem 1.5rem;
   }
-  .ks-education-books::before {
-    inset: 13% -2% 5%;
-    background-image: url("/crisis/crisis-wash-pink-2.webp");
-    opacity: 0.65;
+  .ks-education-books-paint {
+    position: absolute;
+    inset: 13% -8% 5%;
+    z-index: -1;
+    pointer-events: none;
+    mask-image: url("/crisis/crisis-wash-pink-2.webp");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    mask-position: center;
+  }
+  .ks-education-books-paint::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("/crisis/crisis-fill-green-2.webp") center / 100% 100%
+      no-repeat;
+  }
+  .ks-education-books-paint .ks-wk__hover-paint {
+    z-index: 0;
+    inset: 0;
+  }
+  .ks-education-gallery::before,
+  .ks-education-workshop::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 13% -20% 5%;
+    background: url("/crisis/crisis-fill-green-2.webp") center / 100% 100%
+      no-repeat;
+    mask: url("/crisis/crisis-wash-pink-2.webp") center / 100% 100% no-repeat;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-story[data-pinned] .ks-story__text > :not(.ks-story__count) {
+      opacity: 0;
+      translate: 0 0.5rem;
+      transition:
+        opacity 200ms ease,
+        translate 200ms ease;
+    }
+    .ks-story[data-pinned] .ks-story__text > :nth-child(3) {
+      --ks-stagger: 45ms;
+    }
+    .ks-story[data-pinned] .ks-story__text > :nth-child(4) {
+      --ks-stagger: 90ms;
+    }
+    .ks-story[data-pinned]
+      .ks-story__text[data-active]
+      > :not(.ks-story__count) {
+      opacity: 1;
+      translate: 0 0;
+      transition:
+        opacity 600ms var(--ease-soft) calc(250ms + var(--ks-stagger, 0ms)),
+        translate 700ms var(--ease-soft) calc(250ms + var(--ks-stagger, 0ms));
+    }
+    .ks-story[data-pinned] .ks-story__picture .ks-education-book,
+    .ks-story[data-pinned] .ks-story__picture .ks-education-article,
+    .ks-story[data-pinned] .ks-story__picture .ks-wk {
+      opacity: 0;
+      translate: 0 0.75rem;
+      transition:
+        opacity 200ms ease,
+        translate 200ms ease,
+        transform 280ms var(--ease-soft),
+        filter 280ms ease;
+    }
+    .ks-story[data-pinned] .ks-story__picture .ks-education-book:nth-child(2) {
+      --ks-stagger: 70ms;
+    }
+    .ks-story[data-pinned] .ks-story__picture[data-active] .ks-education-book,
+    .ks-story[data-pinned]
+      .ks-story__picture[data-active]
+      .ks-education-article,
+    .ks-story[data-pinned] .ks-story__picture[data-active] .ks-wk {
+      opacity: 1;
+      translate: 0 0;
+      transition:
+        opacity 650ms var(--ease-soft) calc(330ms + var(--ks-stagger, 0ms)),
+        translate 750ms var(--ease-soft) calc(330ms + var(--ks-stagger, 0ms)),
+        transform 280ms var(--ease-soft),
+        filter 280ms ease;
+    }
   }
   .ks-education-book-shelf {
     display: grid;
@@ -3520,15 +3778,62 @@
     gap: 1.6rem;
   }
   .ks-education-book {
+    --ks-book-overlap: clamp(8rem, 12vw, 11rem);
     min-width: 0;
     display: grid;
-    gap: 0.8rem;
+    gap: 0;
     align-content: start;
+    position: relative;
+    isolation: isolate;
+  }
+  .ks-education-book-card {
+    position: relative;
+    z-index: 1;
+    width: calc(100% - 1rem);
+    margin: calc(-1 * var(--ks-book-overlap)) auto 0;
+    padding: calc(var(--ks-book-overlap) + 1.5rem) 1.25rem 1.5rem;
+    background: var(--color-surface);
+    border-radius: 3% 4% 3% 4% / 2% 3% 4% 3%;
+  }
+  .ks-education-book-copy {
+    display: grid;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 1;
+  }
+  .ks-education-book-frame {
+    position: absolute;
+    inset: 0;
+    color: #769471;
+    pointer-events: none;
+    transition: color 280ms ease;
+  }
+  .ks-education-book:is(:hover, :focus-within) .ks-education-book-frame {
+    color: #d29a96;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-education-book {
+      transition:
+        transform 280ms var(--ease-soft),
+        filter 280ms ease;
+    }
+    .ks-education-book:is(:hover, :focus-within) {
+      transform: translateY(-4px);
+      filter: drop-shadow(0 12px 14px rgb(22 48 47 / 0.12));
+    }
+    .ks-education-book:is(:hover, :focus-within) .ks-hand-link__underline {
+      transform: translateY(-2px);
+    }
+    .ks-education-book:is(:hover, :focus-within) .ks-hand-link__arrow {
+      transform: translateX(2px) scaleX(1.12);
+    }
   }
   .ks-education-book-tall,
   .ks-education-book-square {
     position: relative;
-    margin: 0 0.2rem 1.1rem;
+    z-index: 2;
+    display: block;
+    margin: 0 0.2rem;
     filter: drop-shadow(10px 15px 10px rgb(36 56 41 / 0.16));
   }
   .ks-education-book-tall {
@@ -3536,13 +3841,12 @@
     transform: rotate(-5deg);
   }
   .ks-education-book-square {
-    aspect-ratio: 1;
+    aspect-ratio: 2 / 3;
     transform: rotate(5deg);
-    margin-bottom: 1.8rem;
   }
   .ks-education-book-tall img,
   .ks-education-book-square img {
-    object-fit: contain;
+    object-fit: cover;
   }
   .ks-education-book-tall::after {
     content: "";
@@ -3573,9 +3877,9 @@
     min-height: 44px;
   }
   .ks-education-workshop {
-    width: min(100%, 34rem);
+    width: min(100%, 23rem);
     margin-inline: auto;
-    padding: 0.75rem 0.5rem 0;
+    padding: 0.75rem 0 0;
   }
 
   .ks-wk[data-variant="story"] {
@@ -3635,7 +3939,7 @@
   }
   @media (max-width: 39.99rem) {
     .ks-education-article-body {
-      --ks-article-pad: 1.4rem;
+      --ks-article-pad: 1.25rem;
       padding-top: 1.25rem;
     }
     .ks-education-gallery-controls {
@@ -3648,7 +3952,16 @@
       padding: 2rem 0.5rem 1.5rem;
     }
     .ks-education-book-shelf {
-      gap: 1.15rem;
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+    .ks-education-book-tall,
+    .ks-education-book-square {
+      width: 80%;
+      margin-inline: auto;
+    }
+    .ks-education-book-card {
+      width: calc(80% - 1rem);
     }
     .ks-education-book-title {
       font-size: 1.05rem;
@@ -3661,13 +3974,25 @@
     }
   }
   @media (max-width: 22rem) {
+    .ks-education-article-actions {
+      gap: 0.5rem;
+    }
+    .ks-education-article-foot .ks-hand-link {
+      font-size: 0.8125rem;
+      gap: 0.375rem;
+    }
+    .ks-education-article-foot .ks-hand-link__arrow {
+      flex-basis: 24px;
+      width: 24px;
+      height: 20px;
+    }
     .ks-education-book-shelf {
       grid-template-columns: 1fr;
       gap: 2rem;
     }
     .ks-education-book-tall,
     .ks-education-book-square {
-      width: 65%;
+      width: 80%;
       margin-inline: auto;
     }
     .ks-education-book {

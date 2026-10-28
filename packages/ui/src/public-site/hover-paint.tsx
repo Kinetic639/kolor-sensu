@@ -7,9 +7,14 @@ export function HoverPaint() {
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const paint = ref.current;
-    const card = paint?.closest<HTMLElement>(".ks-wk");
+    const card = paint?.closest<HTMLElement>(
+      ".ks-wk, .ks-education-article, .ks-education-books",
+    );
     if (!paint || !card) return;
-    let hovered = card.matches(":hover");
+    const targets = card.matches(".ks-education-books")
+      ? [...card.querySelectorAll<HTMLElement>(".ks-education-book")]
+      : [card];
+    let hovered = targets.some((target) => target.matches(":hover"));
     let focused = card.contains(document.activeElement);
     const update = () => {
       if (!hovered && !focused && !paint.dataset.active) return;
@@ -34,14 +39,18 @@ export function HoverPaint() {
         card.contains(event.relatedTarget);
       update();
     };
-    card.addEventListener("mouseenter", enter);
-    card.addEventListener("mouseleave", leave);
+    targets.forEach((target) => {
+      target.addEventListener("mouseenter", enter);
+      target.addEventListener("mouseleave", leave);
+    });
     card.addEventListener("focusin", focus);
     card.addEventListener("focusout", blur);
     update();
     return () => {
-      card.removeEventListener("mouseenter", enter);
-      card.removeEventListener("mouseleave", leave);
+      targets.forEach((target) => {
+        target.removeEventListener("mouseenter", enter);
+        target.removeEventListener("mouseleave", leave);
+      });
       card.removeEventListener("focusin", focus);
       card.removeEventListener("focusout", blur);
     };

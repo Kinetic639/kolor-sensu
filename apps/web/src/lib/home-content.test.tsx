@@ -98,6 +98,21 @@ describe("withHomeContent", () => {
 });
 
 describe("toStorySteps", () => {
+  it("passes the CMS slide word colours to the public heading", () => {
+    const headingSegments = [
+      { text: "Pierwsza ", tone: "green" as const },
+      { text: "rozmowa", tone: "pink" as const },
+    ];
+    const result = toStorySteps(
+      {
+        steps: [
+          { ...defaultHomeStory.steps[0]!, headingSegments, imageUrl: null },
+        ],
+      },
+      [{ src: "/a.webp", alt: "A" }],
+    );
+    expect(result[0]?.headingSegments).toEqual(headingSegments);
+  });
   const images = [
     { src: "/a.webp", alt: "A" },
     { src: "/b.webp", alt: "B" },

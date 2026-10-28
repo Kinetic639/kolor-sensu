@@ -23,7 +23,10 @@ import { cn } from "../lib/utils";
 import { HanddrawnLink } from "./handdrawn-link";
 import { matches, svgMasksSupported, watchReveal } from "./reveal-support";
 import { EditorialHeading, SectionEyebrow } from "./typography";
-import type { SectionHeaderContent } from "@repo/contracts/section-header";
+import type {
+  SectionHeaderContent,
+  TitleSegment,
+} from "@repo/contracts/section-header";
 import { SectionHeader } from "./section-header";
 import { revealProperties } from "./watercolor-reveal";
 import { WatercolorImage, type WatercolorLook } from "./watercolor-image";
@@ -37,6 +40,7 @@ export interface PaintedStoryStep {
   /** Server-rendered educational composition; the image remains its fallback. */
   content?: ReactNode;
   heading: ReactNode;
+  headingSegments?: readonly TitleSegment[];
   text: ReactNode;
   cta?: { href: string; label: ReactNode };
   image: {
@@ -288,13 +292,13 @@ export function PaintedStory({
         {header ? (
           <SectionHeader
             content={header}
-            size="h3"
+            size="h2"
             className="ks-story__intro"
           />
         ) : (
           <div className="ks-story__intro grid gap-3">
             {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
-            <EditorialHeading size="h3">{heading}</EditorialHeading>
+            <EditorialHeading size="h2">{heading}</EditorialHeading>
           </div>
         )}
         {/* The pinned story's one counter (each step's own count, below,
@@ -327,9 +331,34 @@ export function PaintedStory({
                   {numbered(total)}
                 </span>
               </p>
-              <EditorialHeading as="h3" size="h2">
-                {step.heading}
-              </EditorialHeading>
+              {step.headingSegments?.length ? (
+                <EditorialHeading
+                  as="h3"
+                  size="h3"
+                  aria-label={step.headingSegments
+                    .map((part) => part.text)
+                    .join("")}
+                >
+                  {step.headingSegments.map((part, at) => (
+                    <span
+                      key={at}
+                      className={
+                        part.tone === "green"
+                          ? "text-primary-strong"
+                          : part.tone === "pink"
+                            ? "text-pink-strong"
+                            : undefined
+                      }
+                    >
+                      {part.text}
+                    </span>
+                  ))}
+                </EditorialHeading>
+              ) : (
+                <EditorialHeading as="h3" size="h3">
+                  {step.heading}
+                </EditorialHeading>
+              )}
               <p className="max-w-copy text-body text-text-muted">
                 {step.text}
               </p>

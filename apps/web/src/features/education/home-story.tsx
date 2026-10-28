@@ -15,7 +15,13 @@ import {
 import { getWorkshops, workshopImageUrl } from "@/lib/workshop-data";
 import { toStorySteps, type HomeStory } from "@/lib/home-content";
 import { selectStoryItems } from "@/lib/education-story";
-import { articleHref, readingLabel } from "./article-view";
+import {
+  articleHref,
+  readingLabel,
+  articleAuthor,
+  articleDate,
+} from "./article-view";
+import { getSpecialists } from "@/lib/public-data";
 import { ebookHref } from "./ebook-view";
 import { workshopCard } from "../workshops/workshop-view";
 
@@ -26,12 +32,21 @@ export async function educationStorySteps(
   watercolor: WatercolorLook,
 ): Promise<PaintedStoryStep[]> {
   const kinds = story.steps.map(storyMediaOf);
-  const [articles, ebooks, workshops, categories] = await Promise.all([
-    kinds.some((m) => m.type === "articles") ? getArticles() : [],
-    kinds.some((m) => m.type === "ebooks") ? getEbooks() : [],
-    kinds.some((m) => m.type === "workshops") ? getWorkshops() : [],
-    kinds.some((m) => m.type === "articles") ? getArticleCategories() : [],
-  ]);
+  const [articles, ebooks, workshops, categories, specialists] =
+    await Promise.all([
+      kinds.some((m) => m.type === "articles") ? getArticles() : [],
+      kinds.some((m) => m.type === "ebooks") ? getEbooks() : [],
+      kinds.some((m) => m.type === "workshops") ? getWorkshops() : [],
+      kinds.some((m) => m.type === "articles") ? getArticleCategories() : [],
+      kinds.some((m) => m.type === "articles") ? getSpecialists() : [],
+    ]);
+  const people = specialists.map((one) => ({
+    specialistId: one.specialistId,
+    publicSlug: one.publicSlug,
+    displayName: one.displayName,
+    professionalTitle: one.professionalTitle,
+    portraitUrl: one.portraitUrl ?? one.photoUrl,
+  }));
   const newest = [...articles].sort((a, b) =>
     b.publishedAt.localeCompare(a.publishedAt),
   );
@@ -66,6 +81,10 @@ export async function educationStorySteps(
                   categories.find((c) => c.id === a.categoryId)?.name ??
                   "Artykuły",
                 reading: readingLabel(a.body),
+                author: articleAuthor(a, people).name,
+                authorAvatarUrl: articleAuthor(a, people).photoUrl,
+                date: articleDate(a.publishedAt),
+                dateTime: a.publishedAt,
                 href: articleHref(a.slug),
               }))}
             />

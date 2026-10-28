@@ -385,12 +385,13 @@ function EyebrowField({
   );
 }
 
-function TitleField({
+export function TitleField({
   id,
   lines,
   onChange,
   page = false,
   maxLength,
+  singleLine = false,
 }: {
   id: string;
   lines: HeaderDraft["lines"];
@@ -398,6 +399,7 @@ function TitleField({
   /** A page's title: always two lines (the second optional), none added. */
   page?: boolean;
   maxLength?: number;
+  singleLine?: boolean;
 }) {
   const setLine = (index: number, line: HeaderDraft["lines"][number]) =>
     onChange(lines.map((one, at) => (at === index ? line : one)));
@@ -470,7 +472,7 @@ function TitleField({
         );
       })}
       <div className="flex flex-wrap items-center gap-2">
-        {lines.length < 2 && !page ? (
+        {lines.length < 2 && !page && !singleLine ? (
           <button
             className={DETAIL_BUTTON}
             onClick={() => onChange([...lines, { text: "", tones: [] }])}

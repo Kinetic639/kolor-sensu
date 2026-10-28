@@ -28,6 +28,10 @@ const meta = {
     steps: [
       {
         heading: "Pierwsza rozmowa",
+        headingSegments: [
+          { text: "Pierwsza ", tone: "default" },
+          { text: "rozmowa", tone: "green" },
+        ],
         text: "Zaczynamy od konsultacji: rozmawiamy o tym, z czym przychodzisz i czego potrzebujesz. Nie musisz się do niej specjalnie przygotowywać.",
         cta: { href: "#umow", label: "Umów wizytę" },
         image: { src: "/kolor-sensu/room.jpg", alt: "Gabinet" },

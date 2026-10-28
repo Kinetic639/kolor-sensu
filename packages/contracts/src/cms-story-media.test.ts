@@ -4,6 +4,25 @@ import { homeStoryStepSchema, storyMediaOf } from "./cms";
 const step = { heading: "Edukacja", text: "Wiedza na co dzień." };
 const id = "11111111-1111-4111-8111-111111111111";
 describe("home story media", () => {
+  it("preserves word colours while accepting older plain slide titles", () => {
+    const headingSegments = [{ text: "Edukacja", tone: "green" }];
+    expect(
+      homeStoryStepSchema.parse({ ...step, headingSegments }).headingSegments,
+    ).toEqual(headingSegments);
+    expect(homeStoryStepSchema.parse(step).headingSegments).toBeUndefined();
+    expect(
+      homeStoryStepSchema.safeParse({
+        ...step,
+        headingSegments: [{ text: "Inny tytuł", tone: "green" }],
+      }).success,
+    ).toBe(false);
+    expect(
+      homeStoryStepSchema.safeParse({
+        ...step,
+        headingSegments: [{ text: "Edukacja", tone: "red" }],
+      }).success,
+    ).toBe(false);
+  });
   it("keeps legacy photo slides and recognizes the existing education links", () => {
     expect(storyMediaOf(homeStoryStepSchema.parse(step))).toEqual({
       type: "image",
