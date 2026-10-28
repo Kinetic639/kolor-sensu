@@ -206,6 +206,16 @@ async function HomePage() {
       ) : (
         <UnavailableSection title={ROOMS_PEEK_TITLE} />
       )}
+      <CmsSection
+        title="Warsztaty"
+        note="Najbliższe wydarzenia; widoczność i wydarzenia ustawiasz w Warsztatach."
+      >
+        {headers ? (
+          header("workshops")
+        ) : (
+          <UnavailableSection title="Nagłówek warsztatów" />
+        )}
+      </CmsSection>
       {story ? (
         <StorySection header={header("story")} model={story} />
       ) : (

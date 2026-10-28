@@ -221,6 +221,12 @@ describe("first steps", () => {
 });
 
 describe("home headers", () => {
+  it("adds the workshop header when reading older published headers", () => {
+    const { workshops: _workshops, ...older } = defaultHomeHeaders;
+    expect(homeHeadersContentSchema.parse(older).workshops).toEqual(
+      defaultHomeHeaders.workshops,
+    );
+  });
   it("holds one header per homepage section, in the page's order", () => {
     expect(Object.keys(defaultHomeHeaders)).toEqual(
       HOME_HEADER_SECTIONS.map((section) => section.key),

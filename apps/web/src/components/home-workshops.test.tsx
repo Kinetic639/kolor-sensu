@@ -2,6 +2,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import type { PublicWorkshop } from "@repo/supabase/workshops";
+import { plainHeader } from "@repo/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // The homepage's coming workshops: the next two published, with the way to
@@ -109,8 +110,29 @@ describe("the homepage's workshops", () => {
     expect(shown.queryByText("Trzeci")).not.toBeInTheDocument();
     expect(shown.queryByText("Odwołany")).not.toBeInTheDocument();
     expect(
-      shown.getByRole("link", { name: "Wszystkie warsztaty" }),
+      shown.getByRole("link", { name: "Więcej warsztatów" }),
     ).toHaveAttribute("href", "/warsztaty");
+  });
+  it("uses the CMS title, eyebrow and description, with the drawn link below the cards", async () => {
+    workshops = [workshop()];
+    const header = plainHeader({
+      eyebrow: "Spotkania",
+      title: "Rozwijaj się z nami",
+      description: "Opis ustawiony w CMS",
+      cta: { label: "Więcej warsztatów", href: "/warsztaty", style: "arrow" },
+    });
+    const { container } = render(await HomeWorkshops({ header }));
+    expect(
+      screen.getByRole("region", { name: "Rozwijaj się z nami" }),
+    ).toBeVisible();
+    expect(screen.getByText("Spotkania")).toBeVisible();
+    expect(screen.getByText("Opis ustawiony w CMS")).toBeVisible();
+    const cards = container.querySelector(".ks-home-workshops__cards")!;
+    const link = screen.getByRole("link", { name: "Więcej warsztatów" });
+    expect(link).toHaveClass("ks-hand-link");
+    expect(
+      cards.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("are not there with none coming", async () => {

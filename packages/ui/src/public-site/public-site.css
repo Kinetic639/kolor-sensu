@@ -2219,6 +2219,12 @@
     }
   }
 
+  .ks-home-workshops__cards {
+    display: grid;
+    justify-items: start;
+    padding-top: clamp(2rem, 4vw, 3.5rem);
+  }
+
   /* ------------------------------------------------------------ First steps */
 
   /* FirstSteps (first-steps.tsx), "Pierwszy krok": four steps on a compact

@@ -610,6 +610,12 @@ export const defaultHomeStory: HomeStoryContent = {
  * action; @repo/contracts/section-header), one per section in the page's
  * order. Words and colours only: each section's markup is code's.
  */
+const defaultHomeWorkshopsHeader = plainHeader({
+  eyebrow: "Warsztaty",
+  title: "Najbliższe warsztaty",
+  cta: { label: "Więcej warsztatów", href: "/warsztaty", style: "arrow" },
+});
+
 export const HOME_HEADER_SECTIONS = [
   { key: "supportAreas", label: "Obszary wsparcia" },
   { key: "whyUs", label: "Dlaczego my" },
@@ -617,6 +623,7 @@ export const HOME_HEADER_SECTIONS = [
   { key: "spotlight", label: "Z kim porozmawiasz" },
   { key: "specialists", label: "Poznaj nasz zespół" },
   { key: "rooms", label: "Przestrzeń, która wspiera" },
+  { key: "workshops", label: "Warsztaty" },
   { key: "story", label: "Edukacja" },
   { key: "newsletter", label: "Newsletter" },
   { key: "location", label: "Gdzie jesteśmy" },
@@ -631,6 +638,7 @@ export const homeHeadersContentSchema = z.strictObject({
   spotlight: sectionHeaderSchema,
   specialists: sectionHeaderSchema,
   rooms: sectionHeaderSchema,
+  workshops: sectionHeaderSchema.default(defaultHomeWorkshopsHeader),
   story: sectionHeaderSchema,
   newsletter: sectionHeaderSchema,
   location: sectionHeaderSchema,
@@ -676,6 +684,7 @@ export const defaultHomeHeaders: HomeHeadersContent = {
       "Jasne, przytulne gabinety stworzone z myślą o Twoim komforcie i poczuciu bezpieczeństwa.",
     cta: { label: "Zobacz nasze gabinety", href: "/gabinety", style: "arrow" },
   }),
+  workshops: defaultHomeWorkshopsHeader,
   story: plainHeader({
     eyebrow: "Jak zacząć",
     title: "Twoja droga do lepszego samopoczucia",

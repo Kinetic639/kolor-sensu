@@ -141,7 +141,7 @@ export default async function Home() {
       {roomPhotos.length > 0 ? (
         <RoomsPeek header={headers.rooms} photos={roomPhotos} />
       ) : null}
-      <HomeWorkshops />
+      <HomeWorkshops header={headers.workshops} />
       <PaintedStory
         header={headers.story}
         steps={storySteps}
