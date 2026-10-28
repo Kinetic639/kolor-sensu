@@ -182,3 +182,30 @@ describe("the top from the CMS (#276)", () => {
     expect(within(coming()).getByText("Wkrótce nowe terminy.")).toBeVisible();
   });
 });
+
+describe("the form filter's links (#276)", () => {
+  it("keep the choice in the address and mark the one chosen", async () => {
+    workshops = [
+      workshop(),
+      workshop({
+        id: "w2",
+        slug: "oddech",
+        title: "Oddech",
+        modality: "online",
+      }),
+    ];
+    await open({ forma: "online" });
+    const filter = screen.getByRole("navigation", { name: "Forma warsztatów" });
+    expect(
+      within(filter).getByRole("link", { name: "Wszystkie" }),
+    ).toHaveAttribute("href", "/warsztaty");
+    expect(
+      within(filter).getByRole("link", { name: "Stacjonarnie" }),
+    ).toHaveAttribute("href", "/warsztaty?forma=stacjonarnie");
+    const online = within(filter).getByRole("link", { name: "Online" });
+    expect(online).toHaveAttribute("href", "/warsztaty?forma=online");
+    expect(online).toHaveAttribute("aria-current", "page");
+    expect(within(coming()).getByText("Oddech")).toBeVisible();
+    expect(within(coming()).queryByText("Uważność")).toBeNull();
+  });
+});

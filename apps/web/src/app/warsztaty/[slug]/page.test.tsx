@@ -209,6 +209,35 @@ describe("the description", () => {
       screen.queryByRole("heading", { name: "Program" }),
     ).not.toBeInTheDocument();
   });
+
+  it("shows a photo the admin put in the description, with its text (#280)", async () => {
+    found = workshop({
+      body: {
+        type: "doc",
+        content: [
+          { type: "paragraph", content: [text("Spotkamy się w sali.")] },
+          {
+            type: "articleImage",
+            attrs: {
+              src: "workshops/0b7c2a4e-1f3d-4c5b-9a8e-2d6f7e8c9b0a.webp",
+              alt: "Sala z krzesłami w kręgu",
+              width: 1600,
+              height: 900,
+              caption: "",
+              size: "wide",
+            },
+          },
+        ],
+      },
+    });
+    await open();
+    expect(screen.getByText("Spotkamy się w sali.")).toBeVisible();
+    const photo = screen.getByRole("img", { name: "Sala z krzesłami w kręgu" });
+    // Through Next's image optimiser: the address is in its `url`.
+    expect(decodeURIComponent(photo.getAttribute("src") ?? "")).toContain(
+      "cdn.example.invalid/workshops/0b7c2a4e-1f3d-4c5b-9a8e-2d6f7e8c9b0a.webp",
+    );
+  });
 });
 
 describe("the place", () => {
