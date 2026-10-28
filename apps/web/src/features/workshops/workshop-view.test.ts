@@ -13,6 +13,8 @@ import {
   workshopPlace,
   workshopWayThere,
   workshopPrice,
+  workshopRules,
+  workshopSeo,
   relatedServices,
   relatedWorkshops,
 } from "./workshop-view";
@@ -273,5 +275,87 @@ describe("related", () => {
       { name: "Konsultacja", slug: "konsultacja" },
       { name: "Terapia", slug: "terapia" },
     ]);
+  });
+});
+
+describe("the rules (#275)", () => {
+  // `now` is 2030-11-01; the workshop starts on 2030-11-12, so the week
+  // before it begins on 2030-11-05.
+  const notice = "5 listopada";
+
+  it("give a full refund and paying later until a week before", () => {
+    const rules = workshopRules(workshop(), now, notice)!;
+    expect(rules[0]).toMatch(/^Rezygnacja do 5 listopada: pełny zwrot\./);
+    expect(rules[1]).toMatch(/zapłacić do 5 listopada/);
+    expect(rules).toContain(
+      "Gdy warsztat odwołamy my, zawsze oddajemy całą wpłatę.",
+    );
+  });
+
+  it("in the last week: pay at once, a refund only when the seat is taken", () => {
+    const rules = workshopRules(
+      workshop(),
+      new Date("2030-11-08T10:00:00Z"),
+      notice,
+    )!;
+    expect(rules[0]).toBe(
+      "Do warsztatu został mniej niż tydzień: płacisz od razu, przy zapisie.",
+    );
+    expect(rules.join(" ")).not.toMatch(/pełny zwrot|zapłacić do/);
+    expect(rules[1]).toMatch(/gdy Twoje miejsce zajmie ktoś z listy/);
+  });
+
+  it("say the minimum and, online, when the link comes", () => {
+    const rules = workshopRules(
+      workshop({ minParticipants: 3, modality: "online" }),
+      now,
+      notice,
+    )!;
+    expect(rules).toContain(
+      "Warsztat odbędzie się, gdy zapisze się co najmniej 3 osoby. Gdyby nie doszedł do skutku, oddamy całą wpłatę.",
+    );
+    expect(rules).toContain(
+      "Link do spotkania wyślemy e-mailem dzień przed warsztatem.",
+    );
+  });
+
+  it("say nothing of money for a free workshop", () => {
+    const rules = workshopRules(workshop({ priceMinor: 0 }), now, notice)!;
+    expect(rules.join(" ")).not.toMatch(/Rezygnacja|zapłacić/);
+  });
+
+  it("are none once cancelled or over", () => {
+    expect(
+      workshopRules(workshop({ status: "cancelled" }), now, notice),
+    ).toBeNull();
+    expect(
+      workshopRules(workshop({ status: "completed" }), now, notice),
+    ).toBeNull();
+    expect(
+      workshopRules(workshop(), new Date("2030-11-13T10:00:00Z"), notice),
+    ).toBeNull();
+  });
+});
+
+describe("Google and link previews", () => {
+  it("use the workshop's SEO title and description", () => {
+    expect(
+      workshopSeo(
+        workshop({
+          seoTitle: "Uważność jesienią",
+          seoDescription: "Dwie godziny.",
+        }),
+      ),
+    ).toEqual({ title: "Uważność jesienią", description: "Dwie godziny." });
+  });
+
+  it("fall back to the title and the short description", () => {
+    expect(workshopSeo(workshop())).toEqual({
+      title: "Uważność · Warsztaty",
+      description: "Krótko",
+    });
+    expect(workshopSeo(workshop({ shortDescription: null })).description).toBe(
+      "Warsztat w Kolor Sensu: Uważność.",
+    );
   });
 });

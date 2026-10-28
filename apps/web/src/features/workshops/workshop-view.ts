@@ -202,6 +202,49 @@ export function signupState(workshop: PublicWorkshop, now: Date): SignupState {
   return workshop.seatsLeft > 0 ? "open" : "full";
 }
 
+/** A week before the start: the end of the full refund and of paying later. */
+export function workshopNoticeAt(workshop: Pick<PublicWorkshop, "startsAt">) {
+  return new Date(new Date(workshop.startsAt).getTime() - 7 * 86_400_000);
+}
+
+/**
+ * The workshop's own rules, as a visitor reads them (#275): none once it is
+ * cancelled or over; in its last week, pay at once and no full refund.
+ * `noticeLabel` says when the week starts, in the centre's words.
+ */
+export function workshopRules(
+  workshop: PublicWorkshop,
+  now: Date,
+  noticeLabel: string,
+): string[] | null {
+  const state = signupState(workshop, now);
+  if (state === "cancelled" || state === "past") return null;
+  const rules: string[] = [];
+  if (workshop.priceMinor > 0) {
+    if (now < workshopNoticeAt(workshop)) {
+      rules.push(
+        `Rezygnacja do ${noticeLabel}: pełny zwrot. Później zwracamy pieniądze, gdy Twoje miejsce zajmie ktoś z listy rezerwowej; możesz też przekazać miejsce innej osobie.`,
+        `Możesz zapłacić od razu albo zarezerwować miejsce i zapłacić do ${noticeLabel}; bez wpłaty miejsce się zwalnia.`,
+      );
+    } else {
+      rules.push(
+        "Do warsztatu został mniej niż tydzień: płacisz od razu, przy zapisie.",
+        "Przy rezygnacji zwracamy pieniądze, gdy Twoje miejsce zajmie ktoś z listy rezerwowej; możesz też przekazać miejsce innej osobie.",
+      );
+    }
+  }
+  if (workshop.minParticipants) {
+    rules.push(
+      `Warsztat odbędzie się, gdy zapisze się co najmniej ${peopleWord(workshop.minParticipants)}. Gdyby nie doszedł do skutku, oddamy całą wpłatę.`,
+    );
+  }
+  rules.push("Gdy warsztat odwołamy my, zawsze oddajemy całą wpłatę.");
+  if (workshop.modality === "online") {
+    rules.push("Link do spotkania wyślemy e-mailem dzień przed warsztatem.");
+  }
+  return rules;
+}
+
 /** The seats on a card: a few left (three or fewer), full, or nothing. */
 export function seatsInfo(
   workshop: PublicWorkshop,

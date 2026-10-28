@@ -312,4 +312,40 @@ BEGIN
 END;
 $$;
 
+-- K: sign-ups close at the time the admin set, by default 24 hours before
+-- the start, or when the admin turns them off; until then they are open
+-- (#276).
+INSERT INTO public.workshops (
+  slug, title, specialist_id, modality, starts_at, ends_at, price_minor,
+  capacity, registration_enabled, registration_closes_at, status
+)
+SELECT slug, title, specialist.id, 'online', at, at + interval '2 hours', 5000, 5, enabled, closes, 'published'
+FROM public.specialists AS specialist
+CROSS JOIN (VALUES
+  ('ws-close-open', 'Otwarty', now() + interval '10 days', true, NULL::timestamptz),
+  ('ws-close-set', 'Zamknięty przez admina', now() + interval '11 days', true, now() - interval '1 hour'),
+  ('ws-close-day', 'Jutro', now() + interval '20 hours', true, NULL::timestamptz),
+  ('ws-close-off', 'Wyłączony', now() + interval '12 days', false, NULL::timestamptz)
+) AS w(slug, title, at, enabled, closes)
+WHERE specialist.user_id = '7c000000-0000-4000-8000-000000000002';
+
+SELECT set_config('request.jwt.claims', '', true);
+SET LOCAL ROLE anon;
+DO $$
+DECLARE
+  v_open jsonb := (
+    SELECT jsonb_object_agg(slug, registration_open)
+    FROM public.list_public_workshops() WHERE slug LIKE 'ws-close-%'
+  );
+BEGIN
+  IF v_open IS DISTINCT FROM jsonb_build_object(
+    'ws-close-open', true, 'ws-close-set', false,
+    'ws-close-day', false, 'ws-close-off', false
+  ) THEN
+    RAISE EXCEPTION 'K: sign-ups were open or closed wrongly: %', v_open;
+  END IF;
+END;
+$$;
+RESET ROLE;
+
 ROLLBACK;
