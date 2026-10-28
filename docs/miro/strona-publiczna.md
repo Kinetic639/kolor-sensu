@@ -514,7 +514,7 @@ Archiwum, jedno wydanie, potwierdzenie i wypisanie (24.10). Kopie kartek są na 
 
 Ramka `3458764687433275743` · plik `svg/strona-6-mapa.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764687433275743)
 
-Kolumny idą w kolejności ramek obok mapy (od 27.10): 1. Strona główna, 2. O nas, 3. Oferta, 4. Edukacja, 5. E-booki, 7. Warsztaty (lista i strona warsztatu; zapis, płatność i rezygnacja są w osobnej mapie „Klient: zapisuje się na warsztat”; kartki portali admina i specjalisty są tylko w ramkach Warsztatów) i 6. Na każdej stronie (z „8. Newsletter” pod spodem).
+Mapa i ramki obok niej są 1:1 (od 28.10): osiem kolumn w mapie i osiem kolumn ramek po prawej, w tej samej kolejności: 1. Strona główna, 2. O nas, 3. Oferta, 4. Edukacja, 5. E-booki, 6. Na każdej stronie, 7. Warsztaty (lista i strona warsztatu; zapis, płatność i rezygnacja są w osobnej mapie „Klient: zapisuje się na warsztat”), 8. Newsletter. Ramki portali admina i specjalisty o warsztatach stoją w części admina.
 
 | Kartka                                                                                                                        | Kolor                |
 | ----------------------------------------------------------------------------------------------------------------------------- | -------------------- |
@@ -824,6 +824,8 @@ Ramka `3458764688047915171` · plik `svg/strona-7-warsztaty.svg` · [w Miro](htt
 ## Admin · Warsztaty: elementy
 
 Ramka `3458764688047965572` · plik `svg/strona-7-warsztaty.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688047965572)
+
+Od 28.10 stoi w części admina, obok „Admin · 1. Newsletter” (to kartki portalu, nie strony klienta); „Specjalista · Warsztaty: elementy” stoi obok niej.
 
 | Kartka                       | Kolor   | Co ma się dziać                                                                                                                                                                                                                          | Czym sprawdzone                                                                                                                      |
 | ---------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
