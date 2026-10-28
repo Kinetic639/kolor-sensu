@@ -194,30 +194,26 @@ Ramka `3458764687433197619` · plik `svg/strona-2-pomoc.svg` · [w Miro](https:/
 | Pierwsza wizyta to zwykła usługa „Konsultacja psychologiczna”, bez osobnej strony (19.10)     | niebieski (ustalone) |
 | Na start bez blokady: nowy klient może umówić też inną usługę (19.10)                         | niebieski (ustalone) |
 
-## Strona · 6 · Pomoc w kryzysie
+## Strona · 6 · Pomoc w kryzysie: elementy
 
 Ramka `3458764687433197624` · plik `svg/strona-2-pomoc.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764687433197624)
 
-| Kartka                                                                           | Kolor                  |
-| -------------------------------------------------------------------------------- | ---------------------- |
-| Jako osoba w kryzysie chcę od razu wiedzieć, gdzie szukać natychmiastowej pomocy | fioletowy (historyjka) |
-| Treść i numery zatwierdza admin strony                                           | niebieski (ustalone)   |
-| Sekcja lub pasek na stronie głównej (w designie strony) i komponent w kreatorze  | niebieski (ustalone)   |
+Od 28.10 w tym samym układzie co inne ramki „elementy”: karteczka, co ma się dziać, czym sprawdzone. Historyjka („Jako osoba w kryzysie chcę od razu wiedzieć, gdzie szukać natychmiastowej pomocy”) jest w ramce zarządzającej kolumny 6.
 
-Kryteria (pola w ramce, kolor pola):
-
-| Kryterium                                                                                                                                                                                                                                          | Kolor   |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| Zakładając: osoba jest na dowolnej stronie / Gdy: szuka pomocy / Wtedy: w nagłówku lub stopce link „Pomoc w kryzysie” (stopka każdej strony: test end-to-end → zielony)                                                                            | zielony |
-| Zakładając: osoba na telefonie / Gdy: otwiera stronę pomocy / Wtedy: numery są klikalne i od razu dzwonią (linki tel: w teście strony, paska i end-to-end na telefonie → zielony)                                                                  | zielony |
-| Zakładając: osoba jest w bezpośrednim zagrożeniu / Gdy: czyta stronę pomocy / Wtedy: pierwsze widzi: zadzwoń 112 (test strony i end-to-end → zielony)                                                                                              | zielony |
-| Zakładając: osoba jest na dowolnym kroku kreatora rezerwacji / Gdy: patrzy na dół strony / Wtedy: stopka kreatora z krótką informacją, numerem 116 123 i linkiem do pomocy (#247: testy komponentu i układu kreatora, end-to-end na DEV → zielony) | zielony |
-| Zakładając: strona pomocy / Gdy: osoba ją otwiera / Wtedy: 112, 116 123 (dorośli), 116 111 (dzieci i młodzież), 800 70 2222 (całą dobę) (domyślne numery w CMS: test treści; lista na stronie: test strony → zielony)                              | zielony |
-| Zakładając: zmienił się numer infolinii / Gdy: admin poprawia go w CMS / Wtedy: nowy numer widać na całej stronie (jedna treść w CMS dla strony pomocy i paska: testy strony i paska → zielony)                                                    | zielony |
-| Zakładając: osoba jest na stronie głównej / Gdy: przegląda stronę / Wtedy: widzi sekcję lub pasek „Pomoc w kryzysie” w stylu strony, z numerem i linkiem (malowana sekcja z CMS, #233: testy strony głównej i paska → zielony)                     | zielony |
-| Zakładając: wizyta potwierdzona / Gdy: klient dostaje mail z potwierdzeniem / Wtedy: w stopce maila krótka informacja i link do pomocy w kryzysie (#247: stopka każdego maila do klienta, test szablonu → zielony)                                 | zielony |
-| Zakładając: admin zmienia numery w CMS / Gdy: publikuje zmianę / Wtedy: nowe numery naraz na stronie pomocy, w pasku na stronie głównej i w kreatorze (jedna treść w CMS dla trzech miejsc: testy strony, paska i układu kreatora → zielony)       | zielony |
-| Zakładając: klient w ankiecie przed wizytą zaznacza nastrój 0 / Gdy: chce przejść dalej / Wtedy: zamiast rezerwacji widzi numery pomocy; przy 1–2 numery i ankieta idzie dalej (testy komponentów → zielony)                                       | zielony |
+| Kartka                                                                          | Kolor                | Co ma się dziać                                                                                                                                                                | Czym sprawdzone                                                                      |
+| ------------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| 1. Link w nagłówku i stopce                                                     | zielony              | Zakładając: osoba jest na dowolnej stronie / Gdy: szuka pomocy / Wtedy: w nagłówku lub stopce link „Pomoc w kryzysie”                                                          | Stopka każdej strony: test end-to-end → zielony                                      |
+| 2. Numery klikalne na telefonie                                                 | zielony              | Zakładając: osoba na telefonie / Gdy: otwiera stronę pomocy / Wtedy: numery są klikalne i od razu dzwonią                                                                      | Linki tel: w teście strony, paska i end-to-end na telefonie → zielony                |
+| 3. Najpierw 112                                                                 | zielony              | Zakładając: osoba jest w bezpośrednim zagrożeniu / Gdy: czyta stronę pomocy / Wtedy: pierwsze widzi: zadzwoń 112                                                               | Test strony i end-to-end → zielony                                                   |
+| 4. Stopka kreatora rezerwacji                                                   | zielony              | Zakładając: osoba jest na dowolnym kroku kreatora rezerwacji / Gdy: patrzy na dół strony / Wtedy: stopka kreatora z krótką informacją, numerem 116 123 i linkiem do pomocy     | #247: testy komponentu i układu kreatora, end-to-end na DEV → zielony                |
+| 5. Lista numerów                                                                | zielony              | Zakładając: strona pomocy / Gdy: osoba ją otwiera / Wtedy: 112, 116 123 (dorośli), 116 111 (dzieci i młodzież), 800 70 2222 (całą dobę)                                        | Domyślne numery w CMS: test treści; lista na stronie: test strony → zielony          |
+| 6. Zmiana numeru w CMS                                                          | zielony              | Zakładając: zmienił się numer infolinii / Gdy: admin poprawia go w CMS / Wtedy: nowy numer widać na całej stronie                                                              | Jedna treść w CMS dla strony pomocy i paska: testy strony i paska → zielony          |
+| 7. Sekcja na stronie głównej                                                    | zielony              | Zakładając: osoba jest na stronie głównej / Gdy: przegląda stronę / Wtedy: widzi sekcję lub pasek „Pomoc w kryzysie” w stylu strony, z numerem i linkiem                       | Malowana sekcja z CMS, #233: testy strony głównej i paska → zielony                  |
+| 8. Stopka maili                                                                 | zielony              | Zakładając: wizyta potwierdzona / Gdy: klient dostaje mail z potwierdzeniem / Wtedy: w stopce maila krótka informacja i link do pomocy w kryzysie                              | #247: stopka każdego maila do klienta, test szablonu → zielony                       |
+| 9. Jedna treść w trzech miejscach                                               | zielony              | Zakładając: admin zmienia numery w CMS / Gdy: publikuje zmianę / Wtedy: nowe numery naraz na stronie pomocy, w pasku na stronie głównej i w kreatorze                          | Jedna treść w CMS dla trzech miejsc: testy strony, paska i układu kreatora → zielony |
+| 10. Nastrój 0 w ankiecie                                                        | zielony              | Zakładając: klient w ankiecie przed wizytą zaznacza nastrój 0 / Gdy: chce przejść dalej / Wtedy: zamiast rezerwacji widzi numery pomocy; przy 1–2 numery i ankieta idzie dalej | Testy komponentów → zielony                                                          |
+| Treść i numery zatwierdza admin strony                                          | niebieski (ustalone) |                                                                                                                                                                                |                                                                                      |
+| Sekcja lub pasek na stronie głównej (w designie strony) i komponent w kreatorze | niebieski (ustalone) |                                                                                                                                                                                |                                                                                      |
 
 ## Strona · 2 · Kontakt
 
@@ -475,6 +471,12 @@ Ramka `3458764687955892812` · plik `svg/strona-4-5.svg` · [w Miro](https://mir
 
 ## Strona · 6. Na każdej stronie i strony prawne
 
+Ramka `3458764688664562179` · plik `svg/strona-6-mapa.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688664562179)
+
+Ramka zarządzająca (od 28.10): te same karteczki co kolumna 6 na mapie, w dwóch grupach: „Na każdej stronie i strony prawne: elementy” (11 i pytanie) oraz „Pomoc w kryzysie: elementy” (10 i 2 ustalone); pod nimi historyjka Pomocy w kryzysie. Opisy są w ramkach „elementy” poniżej.
+
+## Strona · 6 · Na każdej stronie i strony prawne: elementy
+
 Ramka `3458764687433197623` · plik `svg/strona-6-mapa.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764687433197623)
 
 | Kartka                                                                                      | Kolor                     | Co ma się dziać                                                                                                                                                                                                                                                                                                                                   | Czym sprawdzone                                                                                                                                                    |
@@ -494,9 +496,15 @@ Ramka `3458764687433197623` · plik `svg/strona-6-mapa.svg` · [w Miro](https://
 
 ## Strona · 8. Newsletter
 
+Ramka `3458764688664562180` · plik `svg/strona-8-newsletter.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688664562180)
+
+Ramka zarządzająca (od 28.10): te same 9 karteczek co kolumna 8 na mapie, z linkiem do „Newsletter: elementy”.
+
+## Strona · 8 · Newsletter: elementy
+
 Ramka `3458764688271356061` · plik `svg/strona-8-newsletter.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688271356061)
 
-Archiwum, jedno wydanie, potwierdzenie i wypisanie (24.10). Kopie kartek są na mapie „Klient: odkrywa stronę”, w kolumnie 6 pod nagłówkiem „8. Newsletter”.
+Archiwum, jedno wydanie, potwierdzenie i wypisanie (24.10). Kopie kartek są na mapie „Klient: odkrywa stronę”, w kolumnie 8.
 
 | Kartka                          | Kolor   | Co ma się dziać                                                                                                                                                                                                                                                                    | Czym sprawdzone                                                                                                                                                                              |
 | ------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -516,275 +524,268 @@ Ramka `3458764687433275743` · plik `svg/strona-6-mapa.svg` · [w Miro](https://
 
 Mapa i ramki obok niej są 1:1 (od 28.10): osiem kolumn w mapie i osiem kolumn ramek po prawej, w tej samej kolejności: 1. Strona główna, 2. O nas, 3. Oferta, 4. Edukacja, 5. E-booki, 6. Na każdej stronie, 7. Warsztaty (lista i strona warsztatu; zapis, płatność i rezygnacja są w osobnej mapie „Klient: zapisuje się na warsztat”), 8. Newsletter. Ramki portali admina i specjalisty o warsztatach stoją w części admina.
 
-| Kartka                                                                                                                        | Kolor                |
-| ----------------------------------------------------------------------------------------------------------------------------- | -------------------- |
-| Strona główna Edukacji                                                                                                        | zielony              |
-| Artykuły — katalog                                                                                                            | zielony              |
-| Katalog e-booków                                                                                                              | zielony              |
-| Osobna strona każdego e-booka                                                                                                 | zielony              |
-| Nagłówek i menu                                                                                                               | zielony              |
-| Warsztaty: admin pokazuje albo ukrywa                                                                                         | zielony              |
-| 1. Hero                                                                                                                       | zielony              |
-| 2. Dlaczego my (opcjonalna)                                                                                                   | zielony              |
-| 1. Nagłówek z opisem centrum                                                                                                  | zielony              |
-| 2. Nasza historia (opcjonalna)                                                                                                | zielony              |
-| 1. Nagłówek strony                                                                                                            | zielony              |
-| 2. Kafelki usług                                                                                                              | zielony              |
-| Kategorie artykułów                                                                                                           | zielony              |
-| Strona artykułu                                                                                                               | zielony              |
-| Film promocyjny                                                                                                               | zielony              |
-| Darmowy fragment do pobrania                                                                                                  | zielony              |
-| Stopka                                                                                                                        | zielony              |
-| Baner cookies                                                                                                                 | zielony              |
-| 3. Myśli, które się odmieniają                                                                                                | zielony              |
-| 4. Z czym przychodzisz                                                                                                        | zielony              |
-| 3. Wartości: trzy karty                                                                                                       | zielony              |
-| 4. Profesjonalizm: konkrety (opcjonalne)                                                                                      | zielony              |
-| 3. Katalogi usług                                                                                                             | zielony              |
-| 4. Pakiety usług (po MVP)                                                                                                     | szary (po MVP)       |
-| Autor, recenzent i źródła                                                                                                     | zielony              |
-| Zdjęcia, grafiki i wykresy w artykule                                                                                         | zielony              |
-| Produkty w artykułach                                                                                                         | zielony              |
-| SEO e-booków                                                                                                                  | zielony              |
-| Ogłoszenie na stronie                                                                                                         | zielony              |
-| Pomoc w kryzysie                                                                                                              | zielony              |
-| 6. Pierwszy krok                                                                                                              | zielony              |
-| 7. Z kim porozmawiasz                                                                                                         | zielony              |
-| 5. Z kim pracujemy (opcjonalna)                                                                                               | zielony              |
-| 6. Nasi specjaliści                                                                                                           | zielony              |
-| 5. Usługi dla firm (MVP)                                                                                                      | zielony              |
-| 6. Teksty strony w CMS                                                                                                        | zielony              |
-| Informacja o terapii i pomocy w kryzysie                                                                                      | zielony              |
-| Powiązane usługi i „Umów wizytę”                                                                                              | zielony              |
-| Nieopublikowany e-book daje 404                                                                                               | zielony              |
-| E-booki zarządzane w CMS                                                                                                      | zielony              |
-| Zapis do newslettera                                                                                                          | zielony              |
-| Strony prawne: regulamin, polityka prywatności, cookies                                                                       | zielony              |
-| 8. Nasi specjaliści                                                                                                           | zielony              |
-| 9. Gabinety „Zajrzyj do środka”                                                                                               | zielony              |
-| 7. Gabinety                                                                                                                   | zielony              |
-| 8. Kontakt                                                                                                                    | zielony              |
-| 7. FAQ znika z Oferty                                                                                                         | zielony              |
-| 8. Pusta oferta                                                                                                               | zielony              |
-| Powiązane artykuły                                                                                                            | zielony              |
-| Udostępnianie artykułu                                                                                                        | zielony              |
-| Wgrywanie pliku PDF z fragmentem                                                                                              | zielony              |
-| 1. Lista e-booków                                                                                                             | zielony              |
-| Strona nie istnieje albo wystąpił błąd                                                                                        | zielony              |
-| Metadane strony (Google i udostępnianie) ustawia admin                                                                        | zielony              |
-| 10. Opowieść przy przewijaniu                                                                                                 | zielony              |
-| 11. Pasek „Pomoc w kryzysie”                                                                                                  | zielony              |
-| 9. Baner „Zrób pierwszy krok”                                                                                                 | zielony              |
-| 10. Admin pokazuje i ukrywa sekcje                                                                                            | zielony              |
-| 9. Baner końcowy                                                                                                              | zielony              |
-| Artykuły autora na profilu specjalisty                                                                                        | zielony              |
-| Powiązane artykuły na stronie usługi                                                                                          | zielony              |
-| 2. Opis e-booka                                                                                                               | zielony              |
-| 3. Link do Naffy                                                                                                              | zielony              |
-| Podgląd strony na żywo przed opublikowaniem                                                                                   | zielony              |
-| 1. Zapis z każdego miejsca (8. Newsletter)                                                                                    | zielony              |
-| 2. Potwierdzenie zapisu (8. Newsletter)                                                                                       | zielony              |
-| 3. E-mail powitalny (8. Newsletter)                                                                                           | zielony              |
-| 4. Archiwum wydań (8. Newsletter)                                                                                             | zielony              |
-| 5. Jedno wydanie (8. Newsletter)                                                                                              | zielony              |
-| 6. Wypisanie jednym kliknięciem (8. Newsletter)                                                                               | zielony              |
-| 7. Wypis i odbicia w Resend (8. Newsletter)                                                                                   | zielony              |
-| 8. Google i prywatność linków (8. Newsletter)                                                                                 | zielony              |
-| 9. Każda strona (8. Newsletter)                                                                                               | zielony              |
-| 1. Nadchodzące warsztaty (7. Warsztaty)                                                                                       | różowy               |
-| 2. Wolne miejsca (7. Warsztaty)                                                                                               | różowy               |
-| 3. Stacjonarnie czy online (7. Warsztaty)                                                                                     | różowy               |
-| 4. Brak warsztatów (7. Warsztaty)                                                                                             | różowy               |
-| 5. Minione warsztaty (7. Warsztaty)                                                                                           | różowy               |
-| 6. Odwołany warsztat (7. Warsztaty)                                                                                           | różowy               |
-| 7. Nagłówek z CMS (7. Warsztaty)                                                                                              | różowy               |
-| 8. Warsztaty na stronie głównej (7. Warsztaty)                                                                                | różowy               |
-| 1. Nagłówek warsztatu (7. Warsztaty)                                                                                          | różowy               |
-| 2. Opis i okładka (7. Warsztaty)                                                                                              | różowy               |
-| 3. Dla kogo i program (7. Warsztaty)                                                                                          | różowy               |
-| 5. Prowadzący (7. Warsztaty)                                                                                                  | różowy               |
-| 6. Miejsce (7. Warsztaty)                                                                                                     | różowy               |
-| 7. Zasady (7. Warsztaty)                                                                                                      | różowy               |
-| 8. Komplet: lista rezerwowa (7. Warsztaty)                                                                                    | różowy               |
-| 9. Zapisy zamknięte (7. Warsztaty)                                                                                            | różowy               |
-| 10. Odwołany lub zakończony (7. Warsztaty)                                                                                    | różowy               |
-| 11. Google i udostępnianie (7. Warsztaty)                                                                                     | różowy               |
-| 12. Szkic i stary adres (7. Warsztaty)                                                                                        | różowy               |
-| 13. Powiązane (7. Warsztaty)                                                                                                  | różowy               |
-| 12. Gdzie jesteśmy (opcjonalna)                                                                                               | zielony              |
-| 13. Baner końcowy                                                                                                             | zielony              |
-| 11. Teksty sekcji w CMS                                                                                                       | zielony              |
-| 1. Nagłówek usługi                                                                                                            | zielony              |
-| 2. Opis usługi                                                                                                                | zielony              |
-| SEO artykułów                                                                                                                 | zielony              |
-| Nieopublikowany artykuł daje 404                                                                                              | zielony              |
-| 4. Film promocyjny                                                                                                            | zielony              |
-| 5. Darmowy fragment                                                                                                           | zielony              |
-| 14. FAQ znika ze strony głównej                                                                                               | zielony              |
-| 15. Teksty sekcji w CMS                                                                                                       | zielony              |
-| Lista: wszyscy opublikowani                                                                                                   | zielony              |
-| Nieopublikowany specjalista jest niewidoczny                                                                                  | zielony              |
-| 3. Kto prowadzi                                                                                                               | zielony              |
-| 4. „Umów” z wybraną usługą                                                                                                    | zielony              |
-| Zmiana adresu nie psuje linków                                                                                                | zielony              |
-| Teksty strony Edukacji w CMS                                                                                                  | zielony              |
-| 6. SEO                                                                                                                        | zielony              |
-| 7. Podgląd i publikacja                                                                                                       | zielony              |
-| Animacja powitalna tylko za pierwszym razem                                                                                   | zielony              |
-| Profil: zdjęcie, opis, fakty, kwalifikacje                                                                                    | zielony              |
-| Profil: usługi z cenami, „Umów” i „Wszyscy specjaliści”                                                                       | zielony              |
-| 5. Usługa bez specjalisty albo bez rezerwacji online                                                                          | zielony              |
-| 6. Jak pracujemy                                                                                                              | zielony              |
-| Tworzenie artykułów w CMS                                                                                                     | zielony              |
-| Podgląd i publikacja artykułu                                                                                                 | zielony              |
-| Sprzedaż e-booków i kursów na stronie                                                                                         | szary (po MVP)       |
-| Dostęp do kursu po zakupie                                                                                                    | szary (po MVP)       |
-| Najbliższe wolne terminy wybranego specjalisty w „Z kim porozmawiasz”                                                         | szary (po MVP)       |
-| Zmieniony adres profilu                                                                                                       | zielony              |
-| Dane osoby dla Google                                                                                                         | zielony              |
-| 7. Teksty strony w CMS                                                                                                        | zielony              |
-| 8. Usługa ukryta albo zły adres                                                                                               | zielony              |
-| Dane artykułu i powiązania                                                                                                    | zielony              |
-| Kategorie w CMS                                                                                                               | zielony              |
-| Zapis e-mailem po darmowy fragment                                                                                            | szary (po MVP)       |
-| Zgoda i RODO przy zapisie                                                                                                     | szary (po MVP)       |
-| Najnowsze produkty Naffy                                                                                                      | szary (po MVP)       |
-| Pusta lista i pomoc w wyborze                                                                                                 | zielony              |
-| Teksty stron Specjaliści i profil w CMS                                                                                       | zielony              |
-| 9. Usługa widoczna w Google                                                                                                   | zielony              |
-| Lista artykułów w CMS z filtrami                                                                                              | zielony              |
-| 1. Nagłówek                                                                                                                   | zielony              |
-| Wypisanie się                                                                                                                 | szary (po MVP)       |
-| 16. Najnowsze artykuły (po MVP)                                                                                               | szary (po MVP)       |
-| #63 · Widoczny, ale nieaktywny specjalista                                                                                    | zielony              |
-| 1. Nagłówek strony                                                                                                            | zielony              |
-| 2. Ceny usług                                                                                                                 | zielony              |
-| 2. Autor i daty                                                                                                               | zielony              |
-| 3. Spis treści                                                                                                                | zielony              |
-| Bez ceny u nas: przycisk „Zobacz cenę i kup na Naffy”                                                                         | niebieski (ustalone) |
-| Darmowy fragment do pobrania bez zapisu                                                                                       | niebieski (ustalone) |
-| Przełączniki tylko przy sekcjach, które je mają, i przy 3 nowych (Dlaczego my, Stacjonarnie i online, Gdzie jesteśmy) (16.10) | niebieski (ustalone) |
-| Atuty w hero zostają obok „Dlaczego my”; ich treść i ikonki ustawia admin w CMS; hero jeszcze dopracujemy (16.10)             | niebieski (ustalone) |
-| Lokalizacje: adres, opis, udogodnienia, dostępność                                                                            | zielony              |
-| Gabinet: zdjęcia, nazwa i opis                                                                                                | zielony              |
-| 3. Cennik pogrupowany jak Oferta                                                                                              | zielony              |
-| 4. Usługa bez cen                                                                                                             | zielony              |
-| 4. Treść z blokami                                                                                                            | zielony              |
-| 5. Informacja o terapii                                                                                                       | zielony              |
-| E-booki pod /edukacja/ebooki                                                                                                  | niebieski (ustalone) |
-| Przełączniki i teksty strony w CMS                                                                                            | zielony              |
-| Przycisk na końcu strony                                                                                                      | zielony              |
-| 5. Pakiety w cenniku (po MVP)                                                                                                 | szary (po MVP)       |
-| 6. Zasady płatności i odwołań                                                                                                 | zielony              |
-| 6. Źródła                                                                                                                     | zielony              |
-| 7. Usługa, specjalista, e-book                                                                                                | zielony              |
-| Brak zdjęć albo brak gabinetów                                                                                                | zielony              |
-| 7. Teksty strony w CMS                                                                                                        | zielony              |
-| 8. Pusty cennik                                                                                                               | zielony              |
-| 8. Powiązane artykuły i udostępnianie                                                                                         | zielony              |
-| 1. Lista artykułów                                                                                                            | zielony              |
-| 9. Baner końcowy                                                                                                              | zielony              |
-| 10. Zakup pakietu (po MVP)                                                                                                    | szary (po MVP)       |
-| Dane kontaktowe i godziny                                                                                                     | zielony              |
-| Formularz: wysłanie wiadomości                                                                                                | zielony              |
-| 2. Podstawy                                                                                                                   | zielony              |
-| 3. Treść w edytorze                                                                                                           | zielony              |
-| 11. Ile spotkań zostało w pakiecie (po MVP)                                                                                   | szary (po MVP)       |
-| 12. Pakiet przy rezerwacji (po MVP)                                                                                           | szary (po MVP)       |
-| Formularz: błędy w polach                                                                                                     | zielony              |
-| Formularz: ochrona przed spamem                                                                                               | zielony              |
-| 4. Ludzie i powiązania                                                                                                        | zielony              |
-| 5. SEO                                                                                                                        | zielony              |
-| Vouchery                                                                                                                      | szary (po MVP)       |
-| Formularz: zgoda i dane osobowe                                                                                               | zielony              |
-| Formularz: awaria wysyłki                                                                                                     | zielony              |
-| 6. Podgląd                                                                                                                    | zielony              |
-| 7. Publikacja i wycofanie                                                                                                     | zielony              |
-| Dojazd i mapa bez śledzenia                                                                                                   | zielony              |
-| FAQ i teksty strony                                                                                                           | zielony              |
-| Oferta, strona usługi i Cennik liczą się z usług admina i ofert specjalistów (16.10)                                          | niebieski (ustalone) |
-| Usługi dla firm przed MVP, bez osobnej strony, tylko usługi w ofercie (16.10); pakiety po MVP (19.10)                         | niebieski (ustalone) |
-| Artykuły pisane przez specjalistów                                                                                            | szary (po MVP)       |
-| RSS                                                                                                                           | szary (po MVP)       |
-| Nagłówki i teksty sekcji w CMS, tylko treść (16.10)                                                                           | niebieski (ustalone) |
-| FAQ na Kontakcie obok formularza (16.10); pierwsza wizyta to usługa, bez osobnej strony (19.10)                               | niebieski (ustalone) |
-| Wyszukiwarka artykułów                                                                                                        | szary (po MVP)       |
-| Publikacja zaplanowana na wybrany dzień                                                                                       | szary (po MVP)       |
-| Pierwsza wizyta: usługa „Konsultacja psychologiczna”                                                                          | zielony              |
-| Pakiety (w Ofercie, w Cenniku, zakup i wykorzystanie) po MVP (19.10)                                                          | niebieski (ustalone) |
-| Strona usługi bez „Dla kogo”, „Jak to wygląda” i FAQ usługi; na razie niepotrzebne (16.10)                                    | niebieski (ustalone) |
-| Same kategorie, bez tagów                                                                                                     | niebieski (ustalone) |
-| Zdjęcia, grafiki i wykresy w artykułach już w MVP                                                                             | niebieski (ustalone) |
-| Wszystkie sekcje i nagłówki stron edytowalne w CMS: tylko treść tekstu, bez HTML (16.10)                                      | niebieski (ustalone) |
-| Historia, Z kim pracujemy i konkrety Profesjonalizmu: admin decyduje, czy są widoczne (16.10)                                 | niebieski (ustalone) |
-| Cennik podsumowuje wszystkie usługi (16.10); pakiety po MVP (19.10)                                                           | niebieski (ustalone) |
-| Zasady płatności przy cenniku rozszerzone o formy płatności, faktury i online (16.10)                                         | niebieski (ustalone) |
-|                                                                                                                               | niebieski (ustalone) |
-| Recenzent opcjonalny; gdy jest, „Sprawdzone przez: …”                                                                         | niebieski (ustalone) |
-| Na O nas bez FAQ i bez opinii klientów (16.10)                                                                                | niebieski (ustalone) |
-| Formularz kontaktowy obowiązkowy przed MVP                                                                                    | niebieski (ustalone) |
-| Pakiety (pokazanie, zakup, wykorzystanie) po MVP; karteczki 5 i 10–12 są przypomnieniem (19.10)                               | niebieski (ustalone) |
-| Pierwsza wizyta to zwykła usługa „Konsultacja psychologiczna”, bez osobnej strony (19.10)                                     | niebieski (ustalone) |
-| Na start bez blokady: nowy klient może umówić też inną usługę (19.10)                                                         | niebieski (ustalone) |
-| Praca                                                                                                                         | szary (po MVP)       |
-| Konto klienta                                                                                                                 | szary (po MVP)       |
+| Kartka                                                                                                                        | Kolor                     |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| Strona główna Edukacji                                                                                                        | zielony                   |
+| Artykuły — katalog                                                                                                            | zielony                   |
+| Katalog e-booków                                                                                                              | zielony                   |
+| Osobna strona każdego e-booka                                                                                                 | zielony                   |
+| Nagłówek i menu                                                                                                               | zielony                   |
+| Warsztaty: admin pokazuje albo ukrywa                                                                                         | zielony                   |
+| 1. Hero                                                                                                                       | zielony                   |
+| 2. Dlaczego my (opcjonalna)                                                                                                   | zielony                   |
+| 1. Nagłówek z opisem centrum                                                                                                  | zielony                   |
+| 2. Nasza historia (opcjonalna)                                                                                                | zielony                   |
+| 1. Nagłówek strony                                                                                                            | zielony                   |
+| 2. Kafelki usług                                                                                                              | zielony                   |
+| Kategorie artykułów                                                                                                           | zielony                   |
+| Strona artykułu                                                                                                               | zielony                   |
+| Film promocyjny                                                                                                               | zielony                   |
+| Darmowy fragment do pobrania                                                                                                  | zielony                   |
+| Stopka                                                                                                                        | zielony                   |
+| Baner cookies                                                                                                                 | zielony                   |
+| 3. Myśli, które się odmieniają                                                                                                | zielony                   |
+| 4. Z czym przychodzisz                                                                                                        | zielony                   |
+| 3. Wartości: trzy karty                                                                                                       | zielony                   |
+| 4. Profesjonalizm: konkrety (opcjonalne)                                                                                      | zielony                   |
+| 3. Katalogi usług                                                                                                             | zielony                   |
+| 4. Pakiety usług (po MVP)                                                                                                     | szary (po MVP)            |
+| Autor, recenzent i źródła                                                                                                     | zielony                   |
+| Zdjęcia, grafiki i wykresy w artykule                                                                                         | zielony                   |
+| Produkty w artykułach                                                                                                         | zielony                   |
+| SEO e-booków                                                                                                                  | zielony                   |
+| Ogłoszenie na stronie                                                                                                         | zielony                   |
+| Pomoc w kryzysie                                                                                                              | zielony                   |
+| 6. Pierwszy krok                                                                                                              | zielony                   |
+| 7. Z kim porozmawiasz                                                                                                         | zielony                   |
+| 5. Z kim pracujemy (opcjonalna)                                                                                               | zielony                   |
+| 6. Nasi specjaliści                                                                                                           | zielony                   |
+| 5. Usługi dla firm (MVP)                                                                                                      | zielony                   |
+| 6. Teksty strony w CMS                                                                                                        | zielony                   |
+| Informacja o terapii i pomocy w kryzysie                                                                                      | zielony                   |
+| Powiązane usługi i „Umów wizytę”                                                                                              | zielony                   |
+| Nieopublikowany e-book daje 404                                                                                               | zielony                   |
+| E-booki zarządzane w CMS                                                                                                      | zielony                   |
+| Zapis do newslettera                                                                                                          | zielony                   |
+| Strony prawne: regulamin, polityka prywatności, cookies                                                                       | zielony                   |
+| 8. Nasi specjaliści                                                                                                           | zielony                   |
+| 9. Gabinety „Zajrzyj do środka”                                                                                               | zielony                   |
+| 7. Gabinety                                                                                                                   | zielony                   |
+| 8. Kontakt                                                                                                                    | zielony                   |
+| 7. FAQ znika z Oferty                                                                                                         | zielony                   |
+| 8. Pusta oferta                                                                                                               | zielony                   |
+| Powiązane artykuły                                                                                                            | zielony                   |
+| Udostępnianie artykułu                                                                                                        | zielony                   |
+| Wgrywanie pliku PDF z fragmentem                                                                                              | zielony                   |
+| 1. Lista e-booków                                                                                                             | zielony                   |
+| Strona nie istnieje albo wystąpił błąd                                                                                        | zielony                   |
+| Metadane strony (Google i udostępnianie) ustawia admin                                                                        | zielony                   |
+| 10. Opowieść przy przewijaniu                                                                                                 | zielony                   |
+| 11. Pasek „Pomoc w kryzysie”                                                                                                  | zielony                   |
+| 9. Baner „Zrób pierwszy krok”                                                                                                 | zielony                   |
+| 10. Admin pokazuje i ukrywa sekcje                                                                                            | zielony                   |
+| 9. Baner końcowy                                                                                                              | zielony                   |
+| Artykuły autora na profilu specjalisty                                                                                        | zielony                   |
+| Powiązane artykuły na stronie usługi                                                                                          | zielony                   |
+| 2. Opis e-booka                                                                                                               | zielony                   |
+| 3. Link do Naffy                                                                                                              | zielony                   |
+| Podgląd strony na żywo przed opublikowaniem                                                                                   | zielony                   |
+| 1. Zapis z każdego miejsca (8. Newsletter)                                                                                    | zielony                   |
+| 2. Potwierdzenie zapisu (8. Newsletter)                                                                                       | zielony                   |
+| 3. E-mail powitalny (8. Newsletter)                                                                                           | zielony                   |
+| 4. Archiwum wydań (8. Newsletter)                                                                                             | zielony                   |
+| 5. Jedno wydanie (8. Newsletter)                                                                                              | zielony                   |
+| 6. Wypisanie jednym kliknięciem (8. Newsletter)                                                                               | zielony                   |
+| 7. Wypis i odbicia w Resend (8. Newsletter)                                                                                   | zielony                   |
+| 8. Google i prywatność linków (8. Newsletter)                                                                                 | zielony                   |
+| 9. Każda strona (8. Newsletter)                                                                                               | zielony                   |
+| 1. Nadchodzące warsztaty (7. Warsztaty)                                                                                       | różowy                    |
+| 2. Wolne miejsca (7. Warsztaty)                                                                                               | różowy                    |
+| 3. Stacjonarnie czy online (7. Warsztaty)                                                                                     | różowy                    |
+| 4. Brak warsztatów (7. Warsztaty)                                                                                             | różowy                    |
+| 5. Minione warsztaty (7. Warsztaty)                                                                                           | różowy                    |
+| 6. Odwołany warsztat (7. Warsztaty)                                                                                           | różowy                    |
+| 7. Nagłówek z CMS (7. Warsztaty)                                                                                              | różowy                    |
+| 8. Warsztaty na stronie głównej (7. Warsztaty)                                                                                | różowy                    |
+| 1. Nagłówek warsztatu (7. Warsztaty)                                                                                          | różowy                    |
+| 2. Opis i okładka (7. Warsztaty)                                                                                              | różowy                    |
+| 3. Dla kogo i program (7. Warsztaty)                                                                                          | różowy                    |
+| 5. Prowadzący (7. Warsztaty)                                                                                                  | różowy                    |
+| 6. Miejsce (7. Warsztaty)                                                                                                     | różowy                    |
+| 7. Zasady (7. Warsztaty)                                                                                                      | różowy                    |
+| 8. Komplet: lista rezerwowa (7. Warsztaty)                                                                                    | różowy                    |
+| 9. Zapisy zamknięte (7. Warsztaty)                                                                                            | różowy                    |
+| 10. Odwołany lub zakończony (7. Warsztaty)                                                                                    | różowy                    |
+| 11. Google i udostępnianie (7. Warsztaty)                                                                                     | różowy                    |
+| 12. Szkic i stary adres (7. Warsztaty)                                                                                        | różowy                    |
+| 13. Powiązane (7. Warsztaty)                                                                                                  | różowy                    |
+| 4. Kilka spotkań (po MVP) (7. Warsztaty)                                                                                      | szary (po MVP)            |
+| Admin pokazuje albo ukrywa Warsztaty w menu (16.10) (7. Warsztaty)                                                            | niebieski (ustalone)      |
+| Opis warsztatu w edytorze artykułów (7. Warsztaty)                                                                            | niebieski (ustalone)      |
+| W MVP (7. Warsztaty)                                                                                                          | niebieski (ustalone)      |
+| Zapisy e-mail (newsletter i darmowe fragmenty): narzędzie (np. MailerLite) czy własna baza? (6. Na każdej stronie)            | pomarańczowy (do decyzji) |
+| 1. Link w nagłówku i stopce (6 · Pomoc w kryzysie)                                                                            | zielony                   |
+| 2. Numery klikalne na telefonie (6 · Pomoc w kryzysie)                                                                        | zielony                   |
+| 3. Najpierw 112 (6 · Pomoc w kryzysie)                                                                                        | zielony                   |
+| 4. Stopka kreatora rezerwacji (6 · Pomoc w kryzysie)                                                                          | zielony                   |
+| 5. Lista numerów (6 · Pomoc w kryzysie)                                                                                       | zielony                   |
+| 6. Zmiana numeru w CMS (6 · Pomoc w kryzysie)                                                                                 | zielony                   |
+| 7. Sekcja na stronie głównej (6 · Pomoc w kryzysie)                                                                           | zielony                   |
+| 8. Stopka maili (6 · Pomoc w kryzysie)                                                                                        | zielony                   |
+| 9. Jedna treść w trzech miejscach (6 · Pomoc w kryzysie)                                                                      | zielony                   |
+| 10. Nastrój 0 w ankiecie (6 · Pomoc w kryzysie)                                                                               | zielony                   |
+| Treść i numery zatwierdza admin strony (6 · Pomoc w kryzysie)                                                                 | niebieski (ustalone)      |
+| Sekcja lub pasek na stronie głównej (w designie strony) i komponent w kreatorze (6 · Pomoc w kryzysie)                        | niebieski (ustalone)      |
+| 12. Gdzie jesteśmy (opcjonalna)                                                                                               | zielony                   |
+| 13. Baner końcowy                                                                                                             | zielony                   |
+| 11. Teksty sekcji w CMS                                                                                                       | zielony                   |
+| 1. Nagłówek usługi                                                                                                            | zielony                   |
+| 2. Opis usługi                                                                                                                | zielony                   |
+| SEO artykułów                                                                                                                 | zielony                   |
+| Nieopublikowany artykuł daje 404                                                                                              | zielony                   |
+| 4. Film promocyjny                                                                                                            | zielony                   |
+| 5. Darmowy fragment                                                                                                           | zielony                   |
+| 14. FAQ znika ze strony głównej                                                                                               | zielony                   |
+| 15. Teksty sekcji w CMS                                                                                                       | zielony                   |
+| Lista: wszyscy opublikowani                                                                                                   | zielony                   |
+| Nieopublikowany specjalista jest niewidoczny                                                                                  | zielony                   |
+| 3. Kto prowadzi                                                                                                               | zielony                   |
+| 4. „Umów” z wybraną usługą                                                                                                    | zielony                   |
+| Zmiana adresu nie psuje linków                                                                                                | zielony                   |
+| Teksty strony Edukacji w CMS                                                                                                  | zielony                   |
+| 6. SEO                                                                                                                        | zielony                   |
+| 7. Podgląd i publikacja                                                                                                       | zielony                   |
+| Animacja powitalna tylko za pierwszym razem                                                                                   | zielony                   |
+| Profil: zdjęcie, opis, fakty, kwalifikacje                                                                                    | zielony                   |
+| Profil: usługi z cenami, „Umów” i „Wszyscy specjaliści”                                                                       | zielony                   |
+| 5. Usługa bez specjalisty albo bez rezerwacji online                                                                          | zielony                   |
+| 6. Jak pracujemy                                                                                                              | zielony                   |
+| Tworzenie artykułów w CMS                                                                                                     | zielony                   |
+| Podgląd i publikacja artykułu                                                                                                 | zielony                   |
+| Sprzedaż e-booków i kursów na stronie                                                                                         | szary (po MVP)            |
+| Dostęp do kursu po zakupie                                                                                                    | szary (po MVP)            |
+| Najbliższe wolne terminy wybranego specjalisty w „Z kim porozmawiasz”                                                         | szary (po MVP)            |
+| Zmieniony adres profilu                                                                                                       | zielony                   |
+| Dane osoby dla Google                                                                                                         | zielony                   |
+| 7. Teksty strony w CMS                                                                                                        | zielony                   |
+| 8. Usługa ukryta albo zły adres                                                                                               | zielony                   |
+| Dane artykułu i powiązania                                                                                                    | zielony                   |
+| Kategorie w CMS                                                                                                               | zielony                   |
+| Zapis e-mailem po darmowy fragment                                                                                            | szary (po MVP)            |
+| Zgoda i RODO przy zapisie                                                                                                     | szary (po MVP)            |
+| Najnowsze produkty Naffy                                                                                                      | szary (po MVP)            |
+| Pusta lista i pomoc w wyborze                                                                                                 | zielony                   |
+| Teksty stron Specjaliści i profil w CMS                                                                                       | zielony                   |
+| 9. Usługa widoczna w Google                                                                                                   | zielony                   |
+| Lista artykułów w CMS z filtrami                                                                                              | zielony                   |
+| 1. Nagłówek                                                                                                                   | zielony                   |
+| Wypisanie się                                                                                                                 | szary (po MVP)            |
+| 16. Najnowsze artykuły (po MVP)                                                                                               | szary (po MVP)            |
+| #63 · Widoczny, ale nieaktywny specjalista                                                                                    | zielony                   |
+| 1. Nagłówek strony                                                                                                            | zielony                   |
+| 2. Ceny usług                                                                                                                 | zielony                   |
+| 2. Autor i daty                                                                                                               | zielony                   |
+| 3. Spis treści                                                                                                                | zielony                   |
+| Bez ceny u nas: przycisk „Zobacz cenę i kup na Naffy”                                                                         | niebieski (ustalone)      |
+| Darmowy fragment do pobrania bez zapisu                                                                                       | niebieski (ustalone)      |
+| Przełączniki tylko przy sekcjach, które je mają, i przy 3 nowych (Dlaczego my, Stacjonarnie i online, Gdzie jesteśmy) (16.10) | niebieski (ustalone)      |
+| Atuty w hero zostają obok „Dlaczego my”; ich treść i ikonki ustawia admin w CMS; hero jeszcze dopracujemy (16.10)             | niebieski (ustalone)      |
+| Lokalizacje: adres, opis, udogodnienia, dostępność                                                                            | zielony                   |
+| Gabinet: zdjęcia, nazwa i opis                                                                                                | zielony                   |
+| 3. Cennik pogrupowany jak Oferta                                                                                              | zielony                   |
+| 4. Usługa bez cen                                                                                                             | zielony                   |
+| 4. Treść z blokami                                                                                                            | zielony                   |
+| 5. Informacja o terapii                                                                                                       | zielony                   |
+| E-booki pod /edukacja/ebooki                                                                                                  | niebieski (ustalone)      |
+| Przełączniki i teksty strony w CMS                                                                                            | zielony                   |
+| Przycisk na końcu strony                                                                                                      | zielony                   |
+| 5. Pakiety w cenniku (po MVP)                                                                                                 | szary (po MVP)            |
+| 6. Zasady płatności i odwołań                                                                                                 | zielony                   |
+| 6. Źródła                                                                                                                     | zielony                   |
+| 7. Usługa, specjalista, e-book                                                                                                | zielony                   |
+| Brak zdjęć albo brak gabinetów                                                                                                | zielony                   |
+| 7. Teksty strony w CMS                                                                                                        | zielony                   |
+| 8. Pusty cennik                                                                                                               | zielony                   |
+| 8. Powiązane artykuły i udostępnianie                                                                                         | zielony                   |
+| 1. Lista artykułów                                                                                                            | zielony                   |
+| 9. Baner końcowy                                                                                                              | zielony                   |
+| 10. Zakup pakietu (po MVP)                                                                                                    | szary (po MVP)            |
+| Dane kontaktowe i godziny                                                                                                     | zielony                   |
+| Formularz: wysłanie wiadomości                                                                                                | zielony                   |
+| 2. Podstawy                                                                                                                   | zielony                   |
+| 3. Treść w edytorze                                                                                                           | zielony                   |
+| 11. Ile spotkań zostało w pakiecie (po MVP)                                                                                   | szary (po MVP)            |
+| 12. Pakiet przy rezerwacji (po MVP)                                                                                           | szary (po MVP)            |
+| Formularz: błędy w polach                                                                                                     | zielony                   |
+| Formularz: ochrona przed spamem                                                                                               | zielony                   |
+| 4. Ludzie i powiązania                                                                                                        | zielony                   |
+| 5. SEO                                                                                                                        | zielony                   |
+| Vouchery                                                                                                                      | szary (po MVP)            |
+| Formularz: zgoda i dane osobowe                                                                                               | zielony                   |
+| Formularz: awaria wysyłki                                                                                                     | zielony                   |
+| 6. Podgląd                                                                                                                    | zielony                   |
+| 7. Publikacja i wycofanie                                                                                                     | zielony                   |
+| Dojazd i mapa bez śledzenia                                                                                                   | zielony                   |
+| FAQ i teksty strony                                                                                                           | zielony                   |
+| Oferta, strona usługi i Cennik liczą się z usług admina i ofert specjalistów (16.10)                                          | niebieski (ustalone)      |
+| Usługi dla firm przed MVP, bez osobnej strony, tylko usługi w ofercie (16.10); pakiety po MVP (19.10)                         | niebieski (ustalone)      |
+| Artykuły pisane przez specjalistów                                                                                            | szary (po MVP)            |
+| RSS                                                                                                                           | szary (po MVP)            |
+| Nagłówki i teksty sekcji w CMS, tylko treść (16.10)                                                                           | niebieski (ustalone)      |
+| FAQ na Kontakcie obok formularza (16.10); pierwsza wizyta to usługa, bez osobnej strony (19.10)                               | niebieski (ustalone)      |
+| Wyszukiwarka artykułów                                                                                                        | szary (po MVP)            |
+| Publikacja zaplanowana na wybrany dzień                                                                                       | szary (po MVP)            |
+| Pierwsza wizyta: usługa „Konsultacja psychologiczna”                                                                          | zielony                   |
+| Pakiety (w Ofercie, w Cenniku, zakup i wykorzystanie) po MVP (19.10)                                                          | niebieski (ustalone)      |
+| Strona usługi bez „Dla kogo”, „Jak to wygląda” i FAQ usługi; na razie niepotrzebne (16.10)                                    | niebieski (ustalone)      |
+| Same kategorie, bez tagów                                                                                                     | niebieski (ustalone)      |
+| Zdjęcia, grafiki i wykresy w artykułach już w MVP                                                                             | niebieski (ustalone)      |
+| Wszystkie sekcje i nagłówki stron edytowalne w CMS: tylko treść tekstu, bez HTML (16.10)                                      | niebieski (ustalone)      |
+| Historia, Z kim pracujemy i konkrety Profesjonalizmu: admin decyduje, czy są widoczne (16.10)                                 | niebieski (ustalone)      |
+| Cennik podsumowuje wszystkie usługi (16.10); pakiety po MVP (19.10)                                                           | niebieski (ustalone)      |
+| Zasady płatności przy cenniku rozszerzone o formy płatności, faktury i online (16.10)                                         | niebieski (ustalone)      |
+|                                                                                                                               | niebieski (ustalone)      |
+| Recenzent opcjonalny; gdy jest, „Sprawdzone przez: …”                                                                         | niebieski (ustalone)      |
+| Na O nas bez FAQ i bez opinii klientów (16.10)                                                                                | niebieski (ustalone)      |
+| Formularz kontaktowy obowiązkowy przed MVP                                                                                    | niebieski (ustalone)      |
+| Pakiety (pokazanie, zakup, wykorzystanie) po MVP; karteczki 5 i 10–12 są przypomnieniem (19.10)                               | niebieski (ustalone)      |
+| Pierwsza wizyta to zwykła usługa „Konsultacja psychologiczna”, bez osobnej strony (19.10)                                     | niebieski (ustalone)      |
+| Na start bez blokady: nowy klient może umówić też inną usługę (19.10)                                                         | niebieski (ustalone)      |
+| Praca                                                                                                                         | szary (po MVP)            |
+| Konto klienta                                                                                                                 | szary (po MVP)            |
 
 ## Strona · 7. Warsztaty
 
 Ramka `3458764688047867441` · plik `svg/strona-7-warsztaty.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688047867441)
 
-| Kartka                                                 | Kolor                |
-| ------------------------------------------------------ | -------------------- |
-| 1. Nadchodzące warsztaty                               | różowy               |
-| 2. Wolne miejsca                                       | różowy               |
-| 3. Stacjonarnie czy online                             | różowy               |
-| 4. Brak warsztatów                                     | różowy               |
-| 5. Minione warsztaty                                   | różowy               |
-| 6. Odwołany warsztat                                   | różowy               |
-| 7. Nagłówek z CMS                                      | różowy               |
-| 8. Warsztaty na stronie głównej                        | różowy               |
-| 1. Nagłówek warsztatu                                  | różowy               |
-| 2. Opis i okładka                                      | różowy               |
-| 3. Dla kogo i program                                  | różowy               |
-| 4. Kilka spotkań (po MVP)                              | szary (po MVP)       |
-| 5. Prowadzący                                          | różowy               |
-| 6. Miejsce                                             | różowy               |
-| 7. Zasady                                              | różowy               |
-| 8. Komplet: lista rezerwowa                            | różowy               |
-| 9. Zapisy zamknięte                                    | różowy               |
-| 10. Odwołany lub zakończony                            | różowy               |
-| 11. Google i udostępnianie                             | różowy               |
-| 12. Szkic i stary adres                                | różowy               |
-| 13. Powiązane                                          | różowy               |
-| 1. Lista warsztatów                                    | zielony              |
-| 2. Nowy warsztat                                       | zielony              |
-| 3. Terminy                                             | zielony              |
-| 4. Forma i miejsce                                     | zielony              |
-| 5. Sala i prowadzący zajęci                            | zielony              |
-| 6. Prowadzący                                          | zielony              |
-| 7. Cena i miejsca                                      | zielony              |
-| 8. Podgląd i publikacja                                | zielony              |
-| 9. Wycofanie i usuwanie                                | zielony              |
-| 10. Lista uczestników                                  | zielony              |
-| 11. Ręczny zapis                                       | zielony              |
-| 12. Rezygnacja uczestnika                              | zielony              |
-| 13. Odwołanie warsztatu                                | zielony              |
-| 14. Zmiana terminu                                     | zielony              |
-| 15. Wiadomość do uczestników                           | zielony              |
-| 16. Obecność i zakończenie                             | zielony              |
-| 17. Kalendarz i dashboard                              | zielony              |
-| 18. Powiadomienia                                      | zielony              |
-| 1. Moje warsztaty                                      | zielony              |
-| 2. Uczestnicy                                          | zielony              |
-| 3. Obecność                                            | zielony              |
-| 4. Dyżury a warsztat                                   | zielony              |
-| 5. Tylko swoje                                         | zielony              |
-| Specjalista proponuje warsztat                         | szary (po MVP)       |
-| Admin pokazuje albo ukrywa Warsztaty w menu (16.10)    | niebieski (ustalone) |
-| Opis warsztatu w edytorze artykułów                    | niebieski (ustalone) |
-| W MVP                                                  | niebieski (ustalone) |
-| Link wkleja admin; tylko w e-mailu i na stronie zapisu | niebieski (ustalone) |
-| Kontakt widzi tylko prowadzący (i admin)               | niebieski (ustalone) |
+Od 28.10 bez kopii kartek portali: kartki admina i specjalisty są tylko w ich ramkach (w części admina), razem z „Link wkleja admin…”, „Kontakt widzi tylko prowadzący” i „Specjalista proponuje warsztat”.
+
+| Kartka                                              | Kolor                |
+| --------------------------------------------------- | -------------------- |
+| 1. Nadchodzące warsztaty                            | różowy               |
+| 2. Wolne miejsca                                    | różowy               |
+| 3. Stacjonarnie czy online                          | różowy               |
+| 4. Brak warsztatów                                  | różowy               |
+| 5. Minione warsztaty                                | różowy               |
+| 6. Odwołany warsztat                                | różowy               |
+| 7. Nagłówek z CMS                                   | różowy               |
+| 8. Warsztaty na stronie głównej                     | różowy               |
+| 1. Nagłówek warsztatu                               | różowy               |
+| 2. Opis i okładka                                   | różowy               |
+| 3. Dla kogo i program                               | różowy               |
+| 4. Kilka spotkań (po MVP)                           | szary (po MVP)       |
+| 5. Prowadzący                                       | różowy               |
+| 6. Miejsce                                          | różowy               |
+| 7. Zasady                                           | różowy               |
+| 8. Komplet: lista rezerwowa                         | różowy               |
+| 9. Zapisy zamknięte                                 | różowy               |
+| 10. Odwołany lub zakończony                         | różowy               |
+| 11. Google i udostępnianie                          | różowy               |
+| 12. Szkic i stary adres                             | różowy               |
+| 13. Powiązane                                       | różowy               |
+| Admin pokazuje albo ukrywa Warsztaty w menu (16.10) | niebieski (ustalone) |
+| Opis warsztatu w edytorze artykułów                 | niebieski (ustalone) |
+| W MVP                                               | niebieski (ustalone) |
 
 ## Strona · 7 · Lista warsztatów: elementy
 
@@ -827,35 +828,38 @@ Ramka `3458764688047965572` · plik `svg/strona-7-warsztaty.svg` · [w Miro](htt
 
 Od 28.10 stoi w części admina, obok „Admin · 1. Newsletter” (to kartki portalu, nie strony klienta); „Specjalista · Warsztaty: elementy” stoi obok niej.
 
-| Kartka                       | Kolor   | Co ma się dziać                                                                                                                                                                                                                          | Czym sprawdzone                                                                                                                      |
-| ---------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| 1. Lista warsztatów          | zielony | Zakładając: admin otwiera Warsztaty w portalu / Gdy: przegląda listę / Wtedy: widzi nadchodzące, szkice, minione i odwołane; zapisanych do miejsc, przychód i „Nowy warsztat”                                                            | Test widoku (segmenty, szukanie, miejsca) i test listy w bazie → zielony                                                             |
-| 2. Nowy warsztat             | zielony | Zakładając: admin tworzy warsztat / Gdy: wpisuje tytuł, okładkę z opisem, opis w edytorze, dla kogo i program / Wtedy: adres tworzy się z tytułu; szkic zapisuje się bez publikacji                                                      | Testy bazy i kontraktu: warsztat zapisany w całości, adres zajęty odrzucony, szkic bez publikacji → zielony                          |
-| 3. Terminy                   | zielony | Zakładając: warsztat to jedno spotkanie (cykl po MVP) / Gdy: admin wpisuje datę, początek i koniec / Wtedy: koniec po początku, data w przyszłości                                                                                       | Testy bazy: koniec po początku, publikacja tylko w przyszłości; test zapisu dnia i godzin → zielony                                  |
-| 4. Forma i miejsce           | zielony | Zakładając: warsztat jest stacjonarny albo online / Gdy: admin wybiera lokalizację i salę albo wkleja link do spotkania / Wtedy: link do spotkania widzą tylko zapisani (e-mail), nigdy strona                                           | Testy bazy: stacjonarny z miejscem, online bez sali, link widzą tylko admin, prowadzący i potwierdzeni → zielony                     |
-| 5. Sala i prowadzący zajęci  | zielony | Zakładając: w tym czasie sala albo prowadzący mają wizytę lub inny warsztat / Gdy: admin zapisuje termin / Wtedy: odmowa z nazwą kolizji; zapisany warsztat blokuje te godziny w rezerwacji wizyt                                        | Testy bazy: sala albo prowadzący z wizytą lub innym warsztatem odrzuceni, warsztat blokuje rezerwację wizyt → zielony                |
-| 6. Prowadzący                | zielony | Zakładając: warsztat prowadzą dwie osoby / Gdy: admin wybiera specjalistów / Wtedy: obaj widzą warsztat w swoim portalu; strona pokazuje oboje                                                                                           | Test bazy: współprowadzący widzi warsztat; zmiana prowadzących zapisana → zielony                                                    |
-| 7. Cena i miejsca            | zielony | Zakładając: admin ustala warunki / Gdy: wpisuje cenę, liczbę miejsc, minimum i koniec zapisów (domyślnie 24 h przed) / Wtedy: wartości sprawdzone; zwrot i płatność później zawsze do 7 dni przed; mniej miejsc niż zapisanych odrzucone | Testy bazy: cena i liczba miejsc w granicach, mniej miejsc niż zapisanych odrzucone → zielony                                        |
-| 8. Podgląd i publikacja      | zielony | Zakładając: warsztat jest szkicem albo czeka na komplet / Gdy: admin go podgląda, publikuje albo klika „Potwierdź warsztat” / Wtedy: warsztat na liście, w mapie strony i w kalendarzu; po potwierdzeniu strona pokazuje „Potwierdzony”  | Publikacja i „Potwierdź warsztat” w testach bazy; podgląd szkicu (#197): test podglądu w portalu → zielony                           |
-| 9. Wycofanie i usuwanie      | zielony | Zakładając: warsztat ma albo nie ma zapisów / Gdy: admin go wycofuje albo usuwa / Wtedy: z zapisami: tylko odwołanie; bez zapisów: wycofanie lub usunięcie                                                                               | Test bazy: z zapisami tylko odwołanie; szkic usunięty → zielony                                                                      |
-| 10. Lista uczestników        | zielony | Zakładając: na warsztat zapisało się kilka osób / Gdy: admin otwiera warsztat / Wtedy: widzi uczestników ze statusem płatności, kontaktem i uwagami; eksport do CSV                                                                      | Test widoku: zapisani, lista rezerwowa, rezygnacje, płatności; eksport CSV → zielony                                                 |
-| 11. Ręczny zapis             | zielony | Zakładając: ktoś zapisał się telefonicznie i płaci przelewem / Gdy: admin dodaje go i oznacza wpłatę / Wtedy: miejsce zajęte, uczestnik dostaje e-mail; płatność „poza stroną”                                                           | Test bazy: płatność poza stroną potwierdza miejsce, e-mail → zielony                                                                 |
-| 12. Rezygnacja uczestnika    | zielony | Zakładając: uczestnik dzwoni, że nie przyjdzie / Gdy: admin go wypisuje / Wtedy: może dać pełny, częściowy albo żaden zwrot; e-mail do uczestnika                                                                                        | Test bazy i test zwrotu: wypisanie ze zwrotem do kwoty wpłaty, e-mail → zielony                                                      |
-| 13. Odwołanie warsztatu      | zielony | Zakładając: warsztat się nie odbędzie / Gdy: admin go odwołuje z powodem / Wtedy: wszyscy dostają e-mail i pełny zwrot; strona pokazuje „Odwołany”                                                                                       | Test odwołania: zwrot każdemu, e-mail z powodem; test bazy → zielony                                                                 |
-| 14. Zmiana terminu           | zielony | Zakładając: prowadzący jest chory / Gdy: admin przenosi warsztat / Wtedy: zapisani dostają e-mail z nowym terminem i możliwością rezygnacji ze zwrotem                                                                                   | Test bazy: nowy termin, e-mail, pełny zwrot przy rezygnacji → zielony                                                                |
-| 15. Wiadomość do uczestników | zielony | Zakładając: admin chce przypomnieć, co zabrać / Gdy: pisze wiadomość do wszystkich / Wtedy: każdy zapisany dostaje e-mail; wysyłka widoczna w historii                                                                                   | Test bazy: wiadomość trafia tylko do zapisanych → zielony                                                                            |
-| 16. Obecność i zakończenie   | zielony | Zakładając: warsztat się odbył / Gdy: admin zaznacza obecnych / Wtedy: warsztat jest „Zakończony”, obecność widać na liście                                                                                                              | Testy bazy: obecność dopiero po początku, zakończenie po terminie → zielony                                                          |
-| 17. Kalendarz i dashboard    | zielony | Zakładając: w tym tygodniu jest warsztat / Gdy: admin otwiera kalendarz albo dashboard / Wtedy: warsztat w kalendarzu sali i prowadzącego; na dashboardzie najbliższe z zapełnieniem                                                     | Najbliższe warsztaty na dashboardzie (test widoku); w kalendarzu sali i prowadzącego cały warsztat (#198): test kalendarza → zielony |
-| 18. Powiadomienia            | zielony | Zakładając: ktoś się zapisał albo zrezygnował / Gdy: dzieje się zmiana / Wtedy: admin dostaje powiadomienie w portalu; także „komplet” i „za mało chętnych”                                                                              | Test bazy: powiadomienia o zapisie, rezygnacji, komplecie i za małej liczbie chętnych → zielony                                      |
+| Kartka                                                 | Kolor                | Co ma się dziać                                                                                                                                                                                                                          | Czym sprawdzone                                                                                                                      |
+| ------------------------------------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. Lista warsztatów                                    | zielony              | Zakładając: admin otwiera Warsztaty w portalu / Gdy: przegląda listę / Wtedy: widzi nadchodzące, szkice, minione i odwołane; zapisanych do miejsc, przychód i „Nowy warsztat”                                                            | Test widoku (segmenty, szukanie, miejsca) i test listy w bazie → zielony                                                             |
+| 2. Nowy warsztat                                       | zielony              | Zakładając: admin tworzy warsztat / Gdy: wpisuje tytuł, okładkę z opisem, opis w edytorze, dla kogo i program / Wtedy: adres tworzy się z tytułu; szkic zapisuje się bez publikacji                                                      | Testy bazy i kontraktu: warsztat zapisany w całości, adres zajęty odrzucony, szkic bez publikacji → zielony                          |
+| 3. Terminy                                             | zielony              | Zakładając: warsztat to jedno spotkanie (cykl po MVP) / Gdy: admin wpisuje datę, początek i koniec / Wtedy: koniec po początku, data w przyszłości                                                                                       | Testy bazy: koniec po początku, publikacja tylko w przyszłości; test zapisu dnia i godzin → zielony                                  |
+| 4. Forma i miejsce                                     | zielony              | Zakładając: warsztat jest stacjonarny albo online / Gdy: admin wybiera lokalizację i salę albo wkleja link do spotkania / Wtedy: link do spotkania widzą tylko zapisani (e-mail), nigdy strona                                           | Testy bazy: stacjonarny z miejscem, online bez sali, link widzą tylko admin, prowadzący i potwierdzeni → zielony                     |
+| 5. Sala i prowadzący zajęci                            | zielony              | Zakładając: w tym czasie sala albo prowadzący mają wizytę lub inny warsztat / Gdy: admin zapisuje termin / Wtedy: odmowa z nazwą kolizji; zapisany warsztat blokuje te godziny w rezerwacji wizyt                                        | Testy bazy: sala albo prowadzący z wizytą lub innym warsztatem odrzuceni, warsztat blokuje rezerwację wizyt → zielony                |
+| 6. Prowadzący                                          | zielony              | Zakładając: warsztat prowadzą dwie osoby / Gdy: admin wybiera specjalistów / Wtedy: obaj widzą warsztat w swoim portalu; strona pokazuje oboje                                                                                           | Test bazy: współprowadzący widzi warsztat; zmiana prowadzących zapisana → zielony                                                    |
+| 7. Cena i miejsca                                      | zielony              | Zakładając: admin ustala warunki / Gdy: wpisuje cenę, liczbę miejsc, minimum i koniec zapisów (domyślnie 24 h przed) / Wtedy: wartości sprawdzone; zwrot i płatność później zawsze do 7 dni przed; mniej miejsc niż zapisanych odrzucone | Testy bazy: cena i liczba miejsc w granicach, mniej miejsc niż zapisanych odrzucone → zielony                                        |
+| 8. Podgląd i publikacja                                | zielony              | Zakładając: warsztat jest szkicem albo czeka na komplet / Gdy: admin go podgląda, publikuje albo klika „Potwierdź warsztat” / Wtedy: warsztat na liście, w mapie strony i w kalendarzu; po potwierdzeniu strona pokazuje „Potwierdzony”  | Publikacja i „Potwierdź warsztat” w testach bazy; podgląd szkicu (#197): test podglądu w portalu → zielony                           |
+| 9. Wycofanie i usuwanie                                | zielony              | Zakładając: warsztat ma albo nie ma zapisów / Gdy: admin go wycofuje albo usuwa / Wtedy: z zapisami: tylko odwołanie; bez zapisów: wycofanie lub usunięcie                                                                               | Test bazy: z zapisami tylko odwołanie; szkic usunięty → zielony                                                                      |
+| 10. Lista uczestników                                  | zielony              | Zakładając: na warsztat zapisało się kilka osób / Gdy: admin otwiera warsztat / Wtedy: widzi uczestników ze statusem płatności, kontaktem i uwagami; eksport do CSV                                                                      | Test widoku: zapisani, lista rezerwowa, rezygnacje, płatności; eksport CSV → zielony                                                 |
+| 11. Ręczny zapis                                       | zielony              | Zakładając: ktoś zapisał się telefonicznie i płaci przelewem / Gdy: admin dodaje go i oznacza wpłatę / Wtedy: miejsce zajęte, uczestnik dostaje e-mail; płatność „poza stroną”                                                           | Test bazy: płatność poza stroną potwierdza miejsce, e-mail → zielony                                                                 |
+| 12. Rezygnacja uczestnika                              | zielony              | Zakładając: uczestnik dzwoni, że nie przyjdzie / Gdy: admin go wypisuje / Wtedy: może dać pełny, częściowy albo żaden zwrot; e-mail do uczestnika                                                                                        | Test bazy i test zwrotu: wypisanie ze zwrotem do kwoty wpłaty, e-mail → zielony                                                      |
+| 13. Odwołanie warsztatu                                | zielony              | Zakładając: warsztat się nie odbędzie / Gdy: admin go odwołuje z powodem / Wtedy: wszyscy dostają e-mail i pełny zwrot; strona pokazuje „Odwołany”                                                                                       | Test odwołania: zwrot każdemu, e-mail z powodem; test bazy → zielony                                                                 |
+| 14. Zmiana terminu                                     | zielony              | Zakładając: prowadzący jest chory / Gdy: admin przenosi warsztat / Wtedy: zapisani dostają e-mail z nowym terminem i możliwością rezygnacji ze zwrotem                                                                                   | Test bazy: nowy termin, e-mail, pełny zwrot przy rezygnacji → zielony                                                                |
+| 15. Wiadomość do uczestników                           | zielony              | Zakładając: admin chce przypomnieć, co zabrać / Gdy: pisze wiadomość do wszystkich / Wtedy: każdy zapisany dostaje e-mail; wysyłka widoczna w historii                                                                                   | Test bazy: wiadomość trafia tylko do zapisanych → zielony                                                                            |
+| 16. Obecność i zakończenie                             | zielony              | Zakładając: warsztat się odbył / Gdy: admin zaznacza obecnych / Wtedy: warsztat jest „Zakończony”, obecność widać na liście                                                                                                              | Testy bazy: obecność dopiero po początku, zakończenie po terminie → zielony                                                          |
+| 17. Kalendarz i dashboard                              | zielony              | Zakładając: w tym tygodniu jest warsztat / Gdy: admin otwiera kalendarz albo dashboard / Wtedy: warsztat w kalendarzu sali i prowadzącego; na dashboardzie najbliższe z zapełnieniem                                                     | Najbliższe warsztaty na dashboardzie (test widoku); w kalendarzu sali i prowadzącego cały warsztat (#198): test kalendarza → zielony |
+| 18. Powiadomienia                                      | zielony              | Zakładając: ktoś się zapisał albo zrezygnował / Gdy: dzieje się zmiana / Wtedy: admin dostaje powiadomienie w portalu; także „komplet” i „za mało chętnych”                                                                              | Test bazy: powiadomienia o zapisie, rezygnacji, komplecie i za małej liczbie chętnych → zielony                                      |
+| Link wkleja admin; tylko w e-mailu i na stronie zapisu | niebieski (ustalone) |                                                                                                                                                                                                                                          |                                                                                                                                      |
 
 ## Specjalista · Warsztaty: elementy
 
 Ramka `3458764688048018593` · plik `svg/strona-7-warsztaty.svg` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764688048018593)
 
-| Kartka               | Kolor   | Co ma się dziać                                                                                                                                                   | Czym sprawdzone                                                                                                           |
-| -------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| 1. Moje warsztaty    | zielony | Zakładając: specjalista prowadzi warsztat / Gdy: otwiera swój portal / Wtedy: widzi go na liście i w kalendarzu z liczbą zapisanych                               | Lista „Moje warsztaty” z zapisanymi (test bazy, end-to-end); w kalendarzu cały warsztat (#198): test kalendarza → zielony |
-| 2. Uczestnicy        | zielony | Zakładając: specjalista prowadzi warsztat / Gdy: otwiera listę uczestników / Wtedy: widzi imiona, kontakt i uwagi; specjalista, który nie prowadzi, nic nie widzi | Test bazy: prowadzący widzi uczestników, inny specjalista nie; end-to-end → zielony                                       |
-| 3. Obecność          | zielony | Zakładając: warsztat się odbył / Gdy: specjalista zaznacza obecnych / Wtedy: admin widzi obecność                                                                 | Test bazy: prowadzący zaznacza obecność, inny specjalista nie → zielony                                                   |
-| 4. Dyżury a warsztat | zielony | Zakładając: specjalista ma dyżur w czasie warsztatu / Gdy: klient szuka terminu wizyty / Wtedy: godzin warsztatu nie ma w rezerwacji                              | Testy bazy: opublikowany warsztat blokuje prowadzących, wizyty w tym czasie odrzucone → zielony                           |
-| 5. Tylko swoje       | zielony | Zakładając: specjalista nie prowadzi warsztatu / Gdy: próbuje otworzyć go w portalu / Wtedy: odmowa; widzi tylko swoje warsztaty                                  | Test bazy: specjalista nie czyta cudzego warsztatu ani jego zapisów → zielony                                             |
+| Kartka                                   | Kolor                | Co ma się dziać                                                                                                                                                   | Czym sprawdzone                                                                                                           |
+| ---------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 1. Moje warsztaty                        | zielony              | Zakładając: specjalista prowadzi warsztat / Gdy: otwiera swój portal / Wtedy: widzi go na liście i w kalendarzu z liczbą zapisanych                               | Lista „Moje warsztaty” z zapisanymi (test bazy, end-to-end); w kalendarzu cały warsztat (#198): test kalendarza → zielony |
+| 2. Uczestnicy                            | zielony              | Zakładając: specjalista prowadzi warsztat / Gdy: otwiera listę uczestników / Wtedy: widzi imiona, kontakt i uwagi; specjalista, który nie prowadzi, nic nie widzi | Test bazy: prowadzący widzi uczestników, inny specjalista nie; end-to-end → zielony                                       |
+| 3. Obecność                              | zielony              | Zakładając: warsztat się odbył / Gdy: specjalista zaznacza obecnych / Wtedy: admin widzi obecność                                                                 | Test bazy: prowadzący zaznacza obecność, inny specjalista nie → zielony                                                   |
+| 4. Dyżury a warsztat                     | zielony              | Zakładając: specjalista ma dyżur w czasie warsztatu / Gdy: klient szuka terminu wizyty / Wtedy: godzin warsztatu nie ma w rezerwacji                              | Testy bazy: opublikowany warsztat blokuje prowadzących, wizyty w tym czasie odrzucone → zielony                           |
+| 5. Tylko swoje                           | zielony              | Zakładając: specjalista nie prowadzi warsztatu / Gdy: próbuje otworzyć go w portalu / Wtedy: odmowa; widzi tylko swoje warsztaty                                  | Test bazy: specjalista nie czyta cudzego warsztatu ani jego zapisów → zielony                                             |
+| Specjalista proponuje warsztat           | szary (po MVP)       |                                                                                                                                                                   |                                                                                                                           |
+| Kontakt widzi tylko prowadzący (i admin) | niebieski (ustalone) |                                                                                                                                                                   |                                                                                                                           |
