@@ -51,7 +51,10 @@ export const ARTICLE_LIMITS = {
   tableColumns: 8,
 } as const;
 
-const ARTICLE_IMAGE_PATH = /^(articles|ebooks)\/[0-9a-f-]{36}\.(jpg|png|webp)$/;
+// The editor's photos: an article's, an e-book's or a workshop's description
+// (#280), each in its folder of site-media.
+const ARTICLE_IMAGE_PATH =
+  /^(articles|ebooks|workshops)\/[0-9a-f-]{36}\.(jpg|png|webp)$/;
 
 const imageFileSchema = z
   .object({
