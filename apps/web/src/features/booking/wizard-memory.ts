@@ -38,6 +38,15 @@ export function memoryValue(params: BookingParams): string | null {
   return kept.toString();
 }
 
+/**
+ * The wizard with these choices (no time), for the header's "Dokończ
+ * rezerwację"; null when nothing is chosen.
+ */
+export function resumeValue(params: BookingParams): string | null {
+  const value = memoryValue(params);
+  return value ? `${WIZARD_PATH}?${value}` : null;
+}
+
 /** The remembered choices (only valid ones), from the cookie's value. */
 export function readMemory(value: string | null | undefined): Remembered {
   if (!value) return {};

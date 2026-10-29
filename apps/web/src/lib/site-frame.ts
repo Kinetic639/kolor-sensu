@@ -7,7 +7,7 @@ import {
   type SiteSocial,
 } from "@repo/ui/public-site";
 import { cache } from "react";
-import { bookingCta, footerAbout, legalLinks } from "@/content/site";
+import { footerAbout, headerCta, legalLinks } from "@/content/site";
 import { getArticles, getEbooks } from "@/lib/education-data";
 import { getWorkshopVisibility } from "./workshop-data";
 import {
@@ -164,7 +164,7 @@ export const getSiteFrame = cache(async () => {
       { articles: articles.length > 0, ebooks: ebooks.length > 0 },
       workshopVisibility.inMenu,
     ),
-    cta: bookingCta,
+    cta: headerCta,
     contact,
     socials,
     legal: legalLinks,

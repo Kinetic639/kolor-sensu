@@ -3280,4 +3280,50 @@ BEGIN
 END;
 $body$;
 
+-- AD: one service, two prices (Klient · 1, card 4). Anna asks 250 zł and
+-- Jan 180 zł for the same consultation: each hold keeps the price of the
+-- specialist chosen, which is what the summary shows and the payment asks.
+UPDATE public.center_settings SET booking_enabled = true;
+UPDATE public.specialist_services AS offer
+SET price_minor = CASE offer.specialist_id WHEN t.anna_id THEN 25000 ELSE 18000 END,
+    active = true, supports_in_person = true, supports_online = true
+FROM booking_test AS t, public.services AS service
+WHERE service.id = offer.service_id AND service.slug = 'booking-test-consultation'
+  AND offer.specialist_id IN (t.anna_id, t.jan_id);
+-- Jan: Mondays 9–12 online.
+INSERT INTO public.specialist_availability_rules (
+  specialist_id, recurrence, weekdays, starts_at, ends_at, valid_from, mode, room_id
+)
+SELECT jan_id, 'weekly', ARRAY[1]::smallint[], '09:00', '12:00', monday, 'online', NULL
+FROM booking_test;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  v_day date := (SELECT monday + 35 FROM booking_test);
+  v_anna record;
+  v_jan record;
+BEGIN
+  SELECT * INTO v_anna FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'online',
+    pg_temp.at(v_day, '13:00'), p_client_key => 'visitor-ad-anna'
+  );
+  SELECT * INTO v_jan FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-jan', 'online',
+    pg_temp.at(v_day, '09:00'), p_client_key => 'visitor-ad-jan'
+  );
+  IF (SELECT price_minor FROM public.appointments WHERE id = v_anna.appointment_id) <> 25000 THEN
+    RAISE EXCEPTION 'AD: Anna''s hold is not at her price';
+  END IF;
+  IF (SELECT price_minor FROM public.appointments WHERE id = v_jan.appointment_id) <> 18000 THEN
+    RAISE EXCEPTION 'AD: Jan''s hold is not at his price';
+  END IF;
+  -- What the guest's pages read for each (the summary and the payment).
+  IF (SELECT price_minor FROM public.get_booking(v_jan.access_token)) <> 18000
+     OR (SELECT price_minor FROM public.get_booking(v_anna.access_token)) <> 25000 THEN
+    RAISE EXCEPTION 'AD: the guest reads another price';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

@@ -23,6 +23,11 @@ export interface BookingSelection {
   location: PublicLocation | null;
   specialist: string | null;
   offer: PublicSpecialistOffer | null;
+  /**
+   * The form the address asked for that the service (with the chosen
+   * specialist) is not given in: dropped, and the visitor told why.
+   */
+  droppedMode: BookingMode | null;
   /** The options of the current and earlier steps. */
   services: PublicService[];
   modes: BookingMode[];
@@ -80,6 +85,8 @@ export function resolveBookingSelection(
   );
   const mode =
     params.forma && modes.includes(params.forma) ? params.forma : null;
+  const droppedMode =
+    params.forma && !mode && modes.length > 0 ? params.forma : null;
 
   const locations = mode === "stacjonarnie" ? catalog.locations : [];
   const location =
@@ -112,6 +119,7 @@ export function resolveBookingSelection(
     location,
     specialist,
     offer,
+    droppedMode,
     services,
     modes,
     locations,

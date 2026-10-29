@@ -8,6 +8,7 @@ import { sendVisitConfirmation } from "@/features/booking/email/confirmation-ser
 import { settleSession } from "@/features/booking/payment";
 import { paymentDeps } from "@/features/booking/payment-server";
 import { RefreshWhileWaiting } from "@/features/booking/refresh-while-waiting";
+import { ResumeBooking } from "@/features/booking/remember-choices";
 import { bookingHref } from "@/features/booking/search-params";
 import { stripeServer } from "@/lib/stripe";
 
@@ -112,6 +113,8 @@ export default async function BookingConfirmationPage({
       visit={visit}
     >
       {waiting ? <RefreshWhileWaiting /> : null}
+      {/* Booked: nothing is left to finish (card 11). */}
+      {confirmed ? <ResumeBooking href={null} /> : null}
       <div className="flex flex-wrap gap-3">
         {confirmed ? (
           <PrimaryButton arrow asChild>
@@ -138,6 +141,7 @@ async function FreeConfirmation() {
       title="Wizyta potwierdzona"
       visit={visit}
     >
+      <ResumeBooking href={null} />
       <PrimaryButton arrow asChild>
         <Link href="/">Wróć na stronę główną</Link>
       </PrimaryButton>
@@ -166,6 +170,7 @@ function CheckEmail() {
           wiadomości? Zajrzyj do folderu spam albo oferty.
         </p>
       </div>
+      <ResumeBooking href={null} />
       <PrimaryButton arrow asChild className="justify-self-start">
         <Link href="/">Wróć na stronę główną</Link>
       </PrimaryButton>

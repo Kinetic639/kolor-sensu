@@ -7,6 +7,7 @@ import {
 import { CalendarDays, FileText, House, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { HoldTimeForm } from "./hold-time-form";
+import { StartOverForm } from "./start-over-form";
 import type { BookingNotice, BookingParams } from "./search-params";
 import type { WizardSummaryRow, WizardView } from "./wizard";
 
@@ -43,6 +44,9 @@ export function BookingWizard({
 }) {
   const { panel } = view;
   const chosen = panel.kind === "slots" ? panel.chosen : null;
+  const begun = Boolean(
+    params.usluga || params.forma || params.lokalizacja || params.specjalista,
+  );
 
   return (
     <div className="max-w-page px-gutter pb-section-sm mx-auto grid gap-8 pt-8 lg:pt-12">
@@ -61,6 +65,14 @@ export function BookingWizard({
           role="alert"
         >
           {NOTICES[params.uwaga]}
+        </p>
+      ) : null}
+      {view.notice ? (
+        <p
+          className="rounded-card-sm bg-pink-soft text-small text-ink p-4"
+          role="status"
+        >
+          {view.notice}
         </p>
       ) : null}
 
@@ -127,6 +139,9 @@ export function BookingWizard({
               Jeśli nie widzisz dogodnego terminu, zadzwoń lub napisz do nas.
             </p>
           )}
+          {begun ? (
+            <StartOverForm className="border-border/70 border-t pt-4" />
+          ) : null}
         </BookingSummary>
       </div>
     </div>

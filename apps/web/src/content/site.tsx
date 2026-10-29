@@ -6,6 +6,7 @@ import {
 import type { PublicSupportArea } from "@repo/supabase";
 import { Heart, House, Leaf, Users } from "lucide-react";
 import type { ReactNode } from "react";
+import { RESUME_COOKIE } from "@/features/booking/wizard-memory-cookie";
 
 // The site's own content: what the database does not hold (yet). Services,
 // specialists, the address and the centre's contact details come from
@@ -36,6 +37,16 @@ export const footerAbout =
   "Centrum psychoterapii i rozwoju. Psychoterapia indywidualna, par, dzieci i młodzieży w spokojnej, bezpiecznej przestrzeni.";
 
 export const bookingCta = { label: "Umów wizytę", href: "/umow-wizyte" };
+
+// The header's action, leading back to a booking begun and left (card 11).
+export const headerCta = {
+  ...bookingCta,
+  resume: {
+    cookie: RESUME_COOKIE,
+    under: "/umow-wizyte",
+    label: "Dokończ rezerwację",
+  },
+};
 
 // The footer's bottom row, on every page; help in a crisis first.
 export const legalLinks = [

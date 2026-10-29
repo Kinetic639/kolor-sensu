@@ -79,6 +79,8 @@ export type WizardPanel =
 
 export interface WizardView {
   stepIndex: number;
+  /** Why an earlier choice was dropped, e.g. a form the specialist lacks. */
+  notice?: string;
   steps: StepperStep[];
   summary: WizardSummaryRow[];
   panel: WizardPanel;
@@ -306,7 +308,7 @@ function slotsPanel(input: WizardInput, chosen: FreeSlot | null): WizardPanel {
   return {
     kind: "slots",
     title: "Wybierz termin",
-    lead: "Poniżej znajdziesz wolne terminy u wybranego specjalisty.",
+    lead: "Poniżej znajdziesz wolne terminy u wybranego specjalisty. Godziny podajemy w czasie polskim.",
     chosen: chosen
       ? { startsAt: chosen.start.toISOString(), label: slotLabel(chosen) }
       : null,
@@ -371,6 +373,10 @@ export function buildWizardView(input: WizardInput): WizardView {
       key: "usluga",
       label: "Usługa",
       value: selection.service?.name,
+      // The chosen specialist's price and length (card 4).
+      detail: chosenOffer
+        ? `${formatPrice(chosenOffer)} · ${formatDuration(chosenOffer.effectiveDurationMinutes)}`
+        : undefined,
       placeholder: "Wybierz usługę",
       changeHref: changeBookingHref(params, "usluga"),
     },
@@ -426,5 +432,23 @@ export function buildWizardView(input: WizardInput): WizardView {
           ? specialistsPanel(input)
           : slotsPanel(input, chosenSlot);
 
-  return { stepIndex, steps, summary, panel };
+  return { stepIndex, steps, summary, panel, notice: droppedNotice(input) };
+}
+
+const MODE_PHRASES: Record<BookingMode, string> = {
+  stacjonarnie: "stacjonarnie, w gabinecie",
+  online: "online",
+};
+
+/** Why the form asked for is gone, and what to choose (card 13). */
+function droppedNotice({ selection, offers }: WizardInput) {
+  const { droppedMode, service, specialist } = selection;
+  if (!droppedMode || !service) return undefined;
+  const name = offers.find(
+    (offer) => offer.specialistPublicSlug === specialist,
+  )?.specialistName;
+  const why = name
+    ? `${name} nie prowadzi usługi „${service.name}” ${MODE_PHRASES[droppedMode]}.`
+    : `Usługa „${service.name}” nie odbywa się ${MODE_PHRASES[droppedMode]}.`;
+  return `${why} Wybierz, proszę, formę spotkania ponownie.`;
 }

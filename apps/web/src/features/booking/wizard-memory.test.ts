@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { EXPIRED_HREF } from "./booking-step";
 import { loadBookingParams } from "./search-params";
 import {
   memoryValue,
   readMemory,
   rememberedHref,
+  resumeValue,
   type WizardRequest,
 } from "./wizard-memory";
 
@@ -128,5 +130,51 @@ describe("rememberedHref", () => {
     expect(
       rememberedHref(request("", saved, "https://example.com/umow-wizyte")),
     ).not.toBeNull();
+  });
+});
+
+describe("back after the hold expired (card 14)", () => {
+  it("the details step sends to the wizard, which gets the choices back and asks for a time anew", () => {
+    // Where the details and payment steps send a guest whose hold expired.
+    const expired = new URL(EXPIRED_HREF, "https://kolorsensu.pl");
+    expect(expired.pathname).toBe("/umow-wizyte");
+    expect(expired.searchParams.get("uwaga")).toBe("rezerwacja-wygasla");
+    // The redirect comes from the details step, not from the wizard.
+    const href = rememberedHref(
+      request(
+        expired.search.slice(1),
+        saved,
+        "https://kolorsensu.pl/umow-wizyte/dane",
+      ),
+    );
+    const back = loadBookingParams(
+      new URL(href!, "https://kolorsensu.pl").searchParams,
+    );
+    expect(back).toMatchObject({
+      usluga: "konsultacja",
+      forma: "stacjonarnie",
+      lokalizacja: "centrum",
+      specjalista: "anna",
+      tydzien: "2030-10-07",
+      termin: null,
+      uwaga: "rezerwacja-wygasla",
+    });
+  });
+});
+
+describe("resumeValue (card 11)", () => {
+  it("the wizard with the choices, without the time; nothing without a choice", () => {
+    expect(
+      resumeValue(
+        loadBookingParams(
+          new URLSearchParams(
+            "usluga=konsultacja&forma=online&specjalista=anna&termin=2030-10-07T10:00",
+          ),
+        ),
+      ),
+    ).toBe(
+      "/umow-wizyte?usluga=konsultacja&forma=online&specjalista=anna&tydzien=2030-10-07",
+    );
+    expect(resumeValue(loadBookingParams(new URLSearchParams()))).toBeNull();
   });
 });
