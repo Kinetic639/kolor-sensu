@@ -1,6 +1,6 @@
 # Miro: kopia ramek „Klient: umawia wizytę”
 
-Mapa rezerwacji i jej dziesięć kolumn (1–9 i 4a), stan na 27.10.2026. Każda kolumna ma ramkę zarządzającą i ramki „elementy”, jak sekcja strony publicznej. Karteczki są numerowane w obrębie kolumny, przez wszystkie jej ramki, a mapa ma kopię każdej z tym samym numerem. Wszystkie karteczki MVP są różowe: 27.10 sprawdzamy je od nowa, kartka po kartce. Plik `svg/klient-rezerwacja.svg`.
+Mapa rezerwacji i jej dziesięć kolumn (1–9 i 4a), stan na 29.10.2026 (plik SVG to dokładny odczyt tablicy z tego dnia, z identyfikatorami wszystkich elementów). Każda kolumna ma ramkę zarządzającą i ramki „elementy”, jak sekcja strony publicznej. Karteczki są numerowane w obrębie kolumny, przez wszystkie jej ramki, a mapa ma kopię każdej z tym samym numerem. Wszystkie karteczki MVP są różowe: 27.10 sprawdzamy je od nowa, kartka po kartce. Plik `svg/klient-rezerwacja.svg`.
 
 Mapa: ramka `3458764687137671334` · [w Miro](https://miro.com/app/board/uXjVEaKfAoo=/?moveToWidget=3458764687137671334)
 
