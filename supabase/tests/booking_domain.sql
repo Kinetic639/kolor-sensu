@@ -122,11 +122,11 @@ CREATE FUNCTION pg_temp.save_details(
 )
 RETURNS void
 LANGUAGE sql
-AS $
+AS $$
   SELECT public.save_booking_details(p_token, split_part(p_name, ' ', 1),
     nullif(substr(p_name, length(split_part(p_name, ' ', 1)) + 2), ''),
     p_email, p_phone, p_notes, p_terms, p_privacy, true, true);
-$;
+$$;
 GRANT EXECUTE ON FUNCTION pg_temp.save_details(text, text, text, text, text, boolean, boolean) TO anon, service_role;
 
 -- A–B: anyone sees the free times, on the grid, fitting the window.
