@@ -127,7 +127,8 @@ describe("the legal routes", () => {
   });
 
   it("the Regulamin adds the booking's rules from the settings (Klient · 3, card 14)", async () => {
-    const { default: Page } = (await import("../app/regulamin/page.tsx")) as {
+    const route = "regulamin";
+    const { default: Page } = (await import(`../app/${route}/page.tsx`)) as {
       default: () => ReactElement<{ after: ReactElement }>;
     };
     const { BookingRulesSection } =

@@ -21,16 +21,6 @@ COMMENT ON COLUMN public.appointments.guardian_confirmed_at IS
 GRANT SELECT (early_start_accepted_at, guardian_confirmed_at)
   ON public.appointments TO authenticated;
 
--- Its phone as digits, the last nine (a Polish number with or without +48).
-CREATE FUNCTION private.phone_key(p_phone text)
-RETURNS text
-LANGUAGE sql
-IMMUTABLE
-SET search_path TO ''
-AS $$
-  SELECT nullif(right(regexp_replace(coalesce(p_phone, ''), '\D', '', 'g'), 9), '');
-$$;
-
 -- What a held visit asks of the client before its details are saved.
 CREATE FUNCTION private.visit_requirements(p_visit public.appointments)
 RETURNS TABLE (early_start boolean, guardian boolean)
@@ -84,6 +74,7 @@ DECLARE
   v_early boolean;
   v_guardian boolean;
   v_email text := lower(nullif(trim(p_email), ''));
+  -- The last nine digits (private.phone_key, 20261022200000_pay_later_limits).
   v_phone text := private.phone_key(p_phone);
 BEGIN
   PERFORM private.remember_name_parts(p_first_name, p_last_name);
@@ -119,7 +110,7 @@ BEGIN
       AND (other.status IN ('confirmed', 'awaiting_payment')
            OR (other.status = 'held' AND other.hold_expires_at > now()))
       AND ((v_email IS NOT NULL AND lower(other.client_email) = v_email)
-           OR (v_phone IS NOT NULL AND private.phone_key(other.client_phone) = v_phone))
+           OR (v_phone <> '' AND private.phone_key(other.client_phone) = v_phone))
   ) THEN
     RAISE EXCEPTION 'The client has another visit at this time'
       USING HINT = 'client_overlap';
@@ -195,7 +186,6 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION private.phone_key(text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION private.visit_requirements(public.appointments) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION private.forget_abandoned_bookings() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.booking_requirements(text) FROM PUBLIC, anon, authenticated;
