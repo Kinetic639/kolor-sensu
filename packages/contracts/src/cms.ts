@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { homeRoomsGallerySchema } from "@repo/contracts/rooms-peek";
 import {
   plainHeader,
   sectionHeaderSchema,
@@ -190,6 +191,8 @@ export const homeSpotlightSchema = z
 export type HomeSpotlight = z.infer<typeof homeSpotlightSchema>;
 
 export const homeSectionsContentSchema = z.strictObject({
+  /** Home room banner; absent in older content. */
+  roomsPeek: homeRoomsGallerySchema.optional(),
   /** "Poznaj nasz zespół": the specialists' cards. */
   showSpecialists: z.boolean(),
   /** "Z kim porozmawiasz": one specialist. */

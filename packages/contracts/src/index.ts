@@ -217,6 +217,7 @@ export {
   roomOpeningHoursIntervalSchema,
   roomOpeningHoursReplaceSchema,
   roomPublicProfileSchema,
+  roomImageCaptionSchema,
   roomSlugSchema,
   roomTimeSchema,
   roomUpdateSchema,

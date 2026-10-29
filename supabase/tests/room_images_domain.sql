@@ -108,13 +108,13 @@ BEGIN
     RAISE EXCEPTION 'E: removing the main photo left a gap or no main photo';
   END IF;
 
-  FOR step IN 1..3 LOOP
+  FOR step IN 1..1 LOOP
     PERFORM public.add_room_image(room, room::text || '/x' || step || '.webp');
   END LOOP;
 
   BEGIN
-    PERFORM public.add_room_image(room, room::text || '/sixth.webp');
-    RAISE EXCEPTION 'F: a sixth photo was accepted';
+    PERFORM public.add_room_image(room, room::text || '/fourth.webp');
+    RAISE EXCEPTION 'F: a fourth photo was accepted';
   EXCEPTION
     WHEN check_violation THEN NULL;
   END;
@@ -160,7 +160,7 @@ BEGIN
   IF (
     SELECT count(*) FROM public.room_images
     WHERE room_id = (SELECT room_id FROM room_images_test)
-  ) <> 5 THEN
+  ) <> 3 THEN
     RAISE EXCEPTION 'J: photos of a published room were not visible';
   END IF;
 END;

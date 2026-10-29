@@ -1154,6 +1154,7 @@ export type Database = {
       };
       room_images: {
         Row: {
+          caption: string;
           created_at: string;
           id: string;
           is_main: boolean;
@@ -1163,6 +1164,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          caption?: string;
           created_at?: string;
           id?: string;
           is_main?: boolean;
@@ -1172,6 +1174,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          caption?: string;
           created_at?: string;
           id?: string;
           is_main?: boolean;
@@ -4114,6 +4117,10 @@ export type Database = {
           changed_at: string;
           total_count: number;
         }[];
+      };
+      update_room_image_caption: {
+        Args: { p_room_id: string; p_image_id: string; p_caption: string };
+        Returns: undefined;
       };
       set_room_main_image: { Args: { p_image_id: string }; Returns: undefined };
       set_specialist_color: {

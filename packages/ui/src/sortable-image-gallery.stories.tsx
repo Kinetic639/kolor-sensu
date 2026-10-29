@@ -122,7 +122,7 @@ export const Saving: Story = {
   render: () => (
     <div className="max-w-xs">
       <SortableImageGallery
-        error="Gabinet może mieć najwyżej 5 zdjęć."
+        error="Gabinet może mieć najwyżej 3 zdjęcia."
         images={photos}
         label="Zdjęcia gabinetu"
         onAdd={() => {}}
@@ -150,4 +150,29 @@ export const Preview: Story = {
     await userEvent.keyboard("{ArrowRight}");
     await expect(dialog).toHaveTextContent("2 z 3");
   },
+};
+
+export const WithCaptions: Story = {
+  render: () => (
+    <div className="max-w-xs">
+      <SortableImageGallery
+        images={photos}
+        label="Zdjęcia gabinetu"
+        onAdd={() => {}}
+        onRemove={() => {}}
+        onReorder={() => {}}
+        onSetMain={() => {}}
+        renderCaption={(_, index) => (
+          <label className="grid gap-1 p-2 text-sm">
+            Podpis zdjęcia {index + 1}
+            <textarea
+              maxLength={200}
+              className="rounded border p-2"
+              defaultValue="Fotele przy oknie"
+            />
+          </label>
+        )}
+      />
+    </div>
+  ),
 };
