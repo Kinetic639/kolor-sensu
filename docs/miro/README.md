@@ -36,7 +36,9 @@ Stan na 24.10.2026, po weryfikacji kartek z kodem i testami (także po wydaniu n
   „Admin: prowadzi centrum” i kolumna „Admin · 1. Newsletter”, z kolorem,
   „Co ma się dziać” i „Czym sprawdzone” przy każdej kartce; plik
   `svg/admin-1-newsletter.svg`. Stare ramki „Portal admina” i „Admin ·
-  1–8” (z pierwszej wersji tablicy) zostają pod nią, bez kopii.
+  1–8” (z pierwszej wersji tablicy) zostają pod nią, bez kopii. Od 29.10
+  także ramka „Admin · Kupony zniżkowe: elementy”, plik
+  `svg/admin-kupony.svg`.
 
 Nie ma tu portalu specjalisty (poza warsztatami) ani ramki „Audyt
 płatności 22.10”.
