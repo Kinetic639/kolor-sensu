@@ -7,6 +7,7 @@ import {
 import { CalendarDays, FileText, House, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { HoldTimeForm } from "./hold-time-form";
+import { ReleaseOnReturn } from "./release-on-return";
 import { StartOverForm } from "./start-over-form";
 import type { BookingNotice, BookingParams } from "./search-params";
 import type { WizardSummaryRow, WizardView } from "./wizard";
@@ -67,6 +68,7 @@ export function BookingWizard({
           {NOTICES[params.uwaga]}
         </p>
       ) : null}
+      <ReleaseOnReturn />
       {view.notice ? (
         <p
           className="rounded-card-sm bg-pink-soft text-small text-ink p-4"

@@ -63,4 +63,24 @@ describe("HoldTimeForm", () => {
       termin: "2030-01-07T10:00",
     });
   });
+
+  it("without cookies, holds nothing and says how to book instead (card 8)", () => {
+    const enabled = vi
+      .spyOn(navigator, "cookieEnabled", "get")
+      .mockReturnValue(false);
+    render(
+      <HoldTimeForm
+        fields={{ usluga: "konsultacja", termin: "2030-01-07T10:00" }}
+        turnstileSiteKey="test-key"
+      />,
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Rezerwacja online potrzebuje niezbędnych plików cookies",
+    );
+    expect(
+      screen.getByRole("link", { name: "Kontakt z centrum" }),
+    ).toHaveAttribute("href", "/kontakt");
+    expect(screen.queryByRole("button", { name: "Przejdź dalej" })).toBeNull();
+    enabled.mockRestore();
+  });
 });

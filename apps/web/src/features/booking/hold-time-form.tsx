@@ -1,7 +1,8 @@
 "use client";
 
 import { PrimaryButton } from "@repo/ui/public-site/actions";
-import { useState } from "react";
+import Link from "next/link";
+import { useState, useSyncExternalStore } from "react";
 import { useFormStatus } from "react-dom";
 import { holdTimeAction } from "./actions";
 import { TurnstileWidget } from "./turnstile-widget";
@@ -35,6 +36,13 @@ function Submit({ ready }: { ready: boolean }) {
   );
 }
 
+// Card 8 (Klient · 2): the held visit is found by a cookie, so without
+// cookies a time would be held for nobody. Read in the browser; the
+// server's HTML assumes they work.
+const noChanges = () => () => {};
+const cookiesWork = () => navigator.cookieEnabled;
+const assumeCookies = () => true;
+
 export function HoldTimeForm({
   fields,
   turnstileSiteKey,
@@ -44,6 +52,22 @@ export function HoldTimeForm({
   turnstileSiteKey: string;
 }) {
   const [check, setCheck] = useState<Check>("checking");
+  const cookies = useSyncExternalStore(noChanges, cookiesWork, assumeCookies);
+
+  if (!cookies) {
+    return (
+      <p className="text-small text-ink grid gap-2" role="alert">
+        <span>
+          Rezerwacja online potrzebuje niezbędnych plików cookies, a ta
+          przeglądarka ich nie zapisuje. Włącz je i odśwież stronę albo umów się
+          z nami telefonicznie lub mailowo.
+        </span>
+        <Link className="font-semibold underline" href="/kontakt">
+          Kontakt z centrum
+        </Link>
+      </p>
+    );
+  }
 
   return (
     <form action={holdTimeAction} className="grid gap-3">

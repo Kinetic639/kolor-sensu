@@ -1,10 +1,28 @@
-import { expect, type Browser, type Page } from "@playwright/test";
+import {
+  expect,
+  type Browser,
+  type BrowserContext,
+  type Page,
+} from "@playwright/test";
 import { signIn, type Credentials, webUrl } from "./target";
 
 // A guest's way through the booking wizard, shared by the booking and the
 // payment tests. It needs, in the target's database, a bookable service led
 // by the test specialist, with their hours in a room that is open; DEV and
 // STAGING have "Konsultacja testowa E2E" with "Test Specjalista".
+
+/**
+ * The browser as a visitor of its own: an address (from TEST-NET-2) the
+ * site counts holds by. Taken only by a site without a proxy in front
+ * (@holds tests, see playwright.config.ts); a deployed site counts the
+ * real address.
+ */
+export async function newVisitor(context: BrowserContext) {
+  const part = () => 1 + Math.floor(Math.random() * 254);
+  await context.setExtraHTTPHeaders({
+    "x-forwarded-for": `198.51.${part()}.${part()}`,
+  });
+}
 
 export const service =
   process.env.E2E_BOOKING_SERVICE ?? "Konsultacja testowa E2E";

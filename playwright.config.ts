@@ -16,7 +16,15 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   // Tests that leave lasting changes (catalogue, CMS drafts) run only locally.
-  grepInvert: remote ? /@writes-data/ : undefined,
+  // Tests that hold many times (@holds) need a site of their own: the
+  // database lets one address hold 5 times in 15 minutes, and only a site
+  // without a proxy in front (Playwright's, or E2E_WEB_URL) takes each
+  // test's own address (newVisitor in support/booking.ts).
+  grepInvert: remote
+    ? process.env.E2E_WEB_URL
+      ? /@writes-data/
+      : /@writes-data|@holds/
+    : undefined,
   use: {
     trace: "retain-on-failure",
     locale: "pl-PL",

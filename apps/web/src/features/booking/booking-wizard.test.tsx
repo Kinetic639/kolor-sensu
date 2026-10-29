@@ -16,6 +16,7 @@ vi.mock("./actions", () => ({
   startOverAction: vi.fn(),
 }));
 vi.mock("./turnstile-widget", () => ({ TurnstileWidget: () => null }));
+vi.mock("./release-on-return", () => ({ ReleaseOnReturn: () => null }));
 
 const { BookingWizard } = await import("./booking-wizard");
 
