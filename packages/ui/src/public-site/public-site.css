@@ -2677,8 +2677,9 @@
     border-style: solid;
     border-color: transparent;
     border-width: 2.75rem 0 0;
-    border-image-source: url("/watercolor/footer-paint-brand-pastel-v2.webp");
-    border-image-slice: 110 0 0 fill;
+    background-color: #e7ebdc;
+    border-image-source: url("/crisis/crisis-fill-green-2.webp");
+    border-image-slice: 110 40 40 fill;
     border-image-width: 2.75rem 0 0;
     border-image-repeat: stretch;
     mask-image:
