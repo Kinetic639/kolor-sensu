@@ -57,6 +57,7 @@ import {
 } from "./search-params";
 import { visitLabel } from "./visit-label";
 import { MEMORY_COOKIE, readMemory } from "./wizard-memory";
+import { RESUME_COOKIE } from "./wizard-memory-cookie";
 import { signUpForNewsletter } from "@/features/newsletter/signup-server";
 
 // The booking steps that write. The forms carry only the wizard's choices
@@ -151,6 +152,26 @@ export async function releaseHoldAction() {
   redirect(
     bookingHref(readMemory((await cookies()).get(MEMORY_COOKIE)?.value)),
   );
+}
+
+/**
+ * "Zacznij od nowa" (Klient · 1, card 15): the held time goes back at once
+ * (a payment started for it stops too), and every choice is forgotten, so
+ * the wizard starts empty and the header no longer offers to resume.
+ */
+export async function startOverAction() {
+  const token = await readHoldToken();
+  if (token) {
+    const db = createSecretClient();
+    const session = await pendingCheckoutSession(db, token).catch(() => null);
+    if (session) await expireSession(session);
+    await releaseHold(db, token).catch(() => false);
+    await clearHoldToken();
+  }
+  const jar = await cookies();
+  jar.delete({ name: MEMORY_COOKIE, path: "/umow-wizyte" });
+  jar.delete({ name: RESUME_COOKIE, path: "/" });
+  redirect(bookingHref({}));
 }
 
 /** The site's own address, for Stripe's return link. */

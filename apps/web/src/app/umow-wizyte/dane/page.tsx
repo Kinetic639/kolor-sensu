@@ -6,6 +6,8 @@ import { releaseHoldAction } from "@/features/booking/actions";
 import { BookingStep, requireLiveHold } from "@/features/booking/booking-step";
 import { DetailsForm } from "@/features/booking/details-form";
 import { DiscountForm } from "@/features/booking/discount-form";
+import { ResumeBooking } from "@/features/booking/remember-choices";
+import { StartOverForm } from "@/features/booking/start-over-form";
 import { readFormerHoldToken } from "@/features/booking/hold-cookie";
 import { payLaterUntil } from "@/features/booking/pay-later";
 import { deadlineLabel, localTime } from "@/features/booking/visit-label";
@@ -61,14 +63,15 @@ export default async function BookingDetailsPage() {
             : null
         }
       />
-      <form
-        action={releaseHoldAction}
-        className="border-border/70 mt-8 border-t pt-6"
-      >
-        <SecondaryButton size="sm" type="submit">
-          Zmień termin
-        </SecondaryButton>
-      </form>
+      <div className="border-border/70 mt-8 flex flex-wrap gap-3 border-t pt-6">
+        <form action={releaseHoldAction}>
+          <SecondaryButton size="sm" type="submit">
+            Zmień termin
+          </SecondaryButton>
+        </form>
+        <StartOverForm />
+      </div>
+      <ResumeBooking href="/umow-wizyte/dane" />
     </BookingStep>
   );
 }

@@ -60,6 +60,7 @@ describe("WatercolorImage on the server", () => {
     expect(clientFiles).toEqual([
       "article-share.tsx",
       "cookie-consent.tsx",
+      "cta-link.tsx",
       "cursor-ring.tsx",
       "education-gallery.tsx",
       "first-steps.tsx",

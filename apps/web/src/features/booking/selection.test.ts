@@ -169,6 +169,33 @@ describe("resolveBookingSelection", () => {
     expect(selection.step).toBe("forma");
   });
 
+  it("drops a form the specialist does not give, and says which (card 13)", () => {
+    // Jan sees clients only in person.
+    const selection = resolveBookingSelection(
+      { ...empty, usluga: "konsultacja", forma: "online", specjalista: "jan" },
+      catalog,
+    );
+    expect(selection.specialist).toBe("jan");
+    expect(selection.mode).toBeNull();
+    expect(selection.droppedMode).toBe("online");
+    expect(selection.modes).toEqual(["stacjonarnie"]);
+    expect(selection.step).toBe("forma");
+  });
+
+  it("drops nothing when the form fits, or no service is chosen yet", () => {
+    for (const params of [
+      {
+        ...empty,
+        usluga: "konsultacja",
+        forma: "online" as const,
+        specjalista: "anna",
+      },
+      { ...empty, forma: "online" as const, specjalista: "jan" },
+    ]) {
+      expect(resolveBookingSelection(params, catalog).droppedMode).toBeNull();
+    }
+  });
+
   it("ignores unknown services and specialists", () => {
     const selection = resolveBookingSelection(
       { ...empty, usluga: "nie-ma", specjalista: "nikt" },

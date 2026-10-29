@@ -62,27 +62,8 @@ export async function bookUntilDetails(
   page: Page,
   { code }: { code?: string } = {},
 ) {
-  await page.goto(`${webUrl}/umow-wizyte`);
-  await page
-    .getByRole("region", { name: "Wybierz usługę" })
-    .getByRole("link", { name: service })
-    .click();
-  await page
-    .getByRole("region", { name: "Wybierz formę spotkania" })
-    .getByRole("link", { name: "Stacjonarnie" })
-    .click();
-  await page
-    .getByRole("region", { name: "Wybierz specjalistę" })
-    .getByRole("link", { name: specialist })
-    .click();
-
-  await pickSlot(page);
-  const proceed = page.getByRole("button", { name: "Przejdź dalej" });
-  await expect(page.getByText("Gotowe. Możesz przejść dalej.")).toBeVisible({
-    timeout: 30_000,
-  });
-  await proceed.click();
-
+  const timeHref = await chooseTime(page);
+  await holdChosenTime(page);
   const details = page.getByRole("region", { name: "Twoje dane" });
   await expect(details).toBeVisible();
   const reference = (await details
@@ -104,7 +85,48 @@ export async function bookUntilDetails(
     .getByRole("checkbox", { name: "Akceptuję regulamin rezerwacji" })
     .check();
   await details.getByRole("checkbox", { name: /polityką prywatności/ }).check();
-  return { reference, email, details };
+  return { reference, email, details, timeHref };
+}
+
+/** From the wizard's start to the free times (in person, the test specialist). */
+export async function goToTimes(page: Page) {
+  await page.goto(`${webUrl}/umow-wizyte`);
+  await page
+    .getByRole("region", { name: "Wybierz usługę" })
+    .getByRole("link", { name: service })
+    .click();
+  await page
+    .getByRole("region", { name: "Wybierz formę spotkania" })
+    .getByRole("link", { name: "Stacjonarnie" })
+    .click();
+  await page
+    .getByRole("region", { name: "Wybierz specjalistę" })
+    .getByRole("link", { name: specialist })
+    .click();
+  await expect(
+    page.getByRole("region", { name: "Wybierz termin" }),
+  ).toBeVisible();
+}
+
+/** To a free time, chosen but not held: the wizard's address with it. */
+export async function chooseTime(page: Page) {
+  await goToTimes(page);
+  return pickTime(page);
+}
+
+/** On the time step: a free time chosen; the address with it. */
+export async function pickTime(page: Page) {
+  await pickSlot(page);
+  await page.waitForURL(/termin=/);
+  return page.url();
+}
+
+/** "Przejdź dalej", once the check that a person books has passed. */
+export async function holdChosenTime(page: Page) {
+  await expect(page.getByText("Gotowe. Możesz przejść dalej.")).toBeVisible({
+    timeout: 30_000,
+  });
+  await page.getByRole("button", { name: "Przejdź dalej" }).click();
 }
 
 /** BLIK in Stripe's Payment Element, test code 123456, and pay. */

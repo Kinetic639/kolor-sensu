@@ -74,6 +74,37 @@ export const HeaderOfferOpen: Story = {
   },
 };
 
+/**
+ * A booking begun and left: the action leads back to it ("Dokończ
+ * rezerwację"), read from the wizard's cookie in the browser.
+ */
+export const HeaderResumeBooking: Story = {
+  name: "Header · Dokończ rezerwację",
+  globals: { viewport: { value: "desktop", isRotated: false } },
+  args: {
+    cta: {
+      ...sampleCta,
+      resume: {
+        cookie: "ks_rezerwacja_story",
+        under: "/umow-wizyte",
+        label: "Dokończ rezerwację",
+      },
+    },
+  },
+  beforeEach: () => {
+    document.cookie = `ks_rezerwacja_story=${encodeURIComponent("/umow-wizyte/dane")}; Path=/`;
+    return () => {
+      document.cookie = "ks_rezerwacja_story=; Path=/; Max-Age=0";
+    };
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      await canvas.findByRole("link", { name: "Dokończ rezerwację" }),
+    ).toHaveAttribute("href", "/umow-wizyte/dane");
+  },
+};
+
 /** Tablet: logo, booking action and the menu button. */
 export const HeaderTablet: Story = {
   name: "Header · Tablet",

@@ -1,10 +1,11 @@
 import { PageLink as Link } from "./page-link";
 import { cn } from "../lib/utils";
 import { PrimaryButton } from "./actions";
+import { CtaLink } from "./cta-link";
 import { brandTagline, SiteLogo } from "./site-logo";
 import { SiteMobileNav } from "./site-mobile-nav";
 import { SiteNavigation } from "./site-navigation";
-import type { SiteContact, SiteLink, SiteNavItem } from "./site-types";
+import type { SiteContact, SiteCta, SiteNavItem } from "./site-types";
 
 // Server-safe: the header is server HTML; only the desktop dropdown and the
 // mobile sheet hydrate (SiteNavigation, SiteMobileNav).
@@ -17,7 +18,7 @@ import type { SiteContact, SiteLink, SiteNavItem } from "./site-types";
 
 export interface SiteHeaderProps {
   navigation: readonly SiteNavItem[];
-  cta?: SiteLink;
+  cta?: SiteCta;
   contact?: SiteContact;
   /** The page's path, to mark its navigation item (aria-current). */
   currentPath?: string;
@@ -52,7 +53,11 @@ export function SiteHeader({
             size="sm"
             className="ml-auto hidden sm:inline-flex lg:ml-2"
           >
-            <Link href={cta.href}>{cta.label}</Link>
+            {cta.resume ? (
+              <CtaLink cta={cta} />
+            ) : (
+              <Link href={cta.href}>{cta.label}</Link>
+            )}
           </PrimaryButton>
         ) : null}
         <SiteMobileNav

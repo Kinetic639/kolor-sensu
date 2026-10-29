@@ -9,6 +9,7 @@ import { SiteIntro } from "./site-intro";
 import { logoMarkSrc } from "./site-logo";
 import type {
   SiteContact,
+  SiteCta,
   SiteLink,
   SiteNavItem,
   SiteSocial,
@@ -25,7 +26,7 @@ import { SkipLink } from "./skip-link";
 
 export interface SiteLayoutProps {
   navigation: readonly SiteNavItem[];
-  cta?: SiteLink;
+  cta?: SiteCta;
   contact?: SiteContact;
   socials?: readonly SiteSocial[];
   legal?: readonly SiteLink[];

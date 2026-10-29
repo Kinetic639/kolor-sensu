@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 import { releaseHoldAction } from "@/features/booking/actions";
 import { BookingStep, requireLiveHold } from "@/features/booking/booking-step";
 import { PaymentForm } from "@/features/booking/payment-form";
+import { ResumeBooking } from "@/features/booking/remember-choices";
+import { StartOverForm } from "@/features/booking/start-over-form";
 import { localTime } from "@/features/booking/visit-label";
 import { formatPrice } from "@/lib/format";
 import { stripeServer } from "@/lib/stripe";
@@ -73,7 +75,9 @@ export default async function BookingPaymentPage({
             Zmień termin
           </SecondaryButton>
         </form>
+        <StartOverForm />
       </div>
+      <ResumeBooking href="/umow-wizyte/platnosc" />
     </BookingStep>
   );
 }

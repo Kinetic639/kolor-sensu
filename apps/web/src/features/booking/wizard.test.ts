@@ -189,6 +189,64 @@ describe("the specialist step", () => {
   });
 });
 
+describe("one service, two prices (card 4)", () => {
+  it("each specialist with their own price; the chosen one's in the summary", () => {
+    const list = view({ usluga: "konsultacja", forma: "stacjonarnie" });
+    if (list.panel.kind !== "choices") throw new Error(list.panel.kind);
+    expect(list.panel.cards.map((card) => [card.title, card.facts[0]])).toEqual(
+      [
+        ["Imię anna", zl(250)],
+        ["Imię jan", zl(200)],
+      ],
+    );
+    expect(list.summary[0]!.detail).toBeUndefined();
+
+    for (const [specjalista, price] of [
+      ["anna", 250],
+      ["jan", 200],
+    ] as const) {
+      const { summary } = view({
+        usluga: "konsultacja",
+        forma: "stacjonarnie",
+        specjalista,
+      });
+      expect(summary[0]).toMatchObject({
+        value: "Konsultacja",
+        detail: `${zl(price)} · 50 min`,
+      });
+    }
+  });
+});
+
+describe("a form the new specialist does not give (card 13)", () => {
+  it("is dropped with a word on why and what to choose again", () => {
+    const { stepIndex, notice, panel } = view({
+      usluga: "konsultacja",
+      forma: "online",
+      specjalista: "jan",
+    });
+    expect(stepIndex).toBe(1);
+    expect(notice).toBe(
+      "Imię jan nie prowadzi usługi „Konsultacja” online. Wybierz, proszę, formę spotkania ponownie.",
+    );
+    if (panel.kind !== "choices") throw new Error(panel.kind);
+    expect(panel.cards.map((card) => card.title)).toEqual(["Stacjonarnie"]);
+  });
+
+  it("names the service when no specialist is chosen", () => {
+    expect(view({ usluga: "terapia", forma: "stacjonarnie" }).notice).toBe(
+      "Usługa „Terapia par” nie odbywa się stacjonarnie, w gabinecie. Wybierz, proszę, formę spotkania ponownie.",
+    );
+  });
+
+  it("says nothing while the choices fit", () => {
+    expect(
+      view({ usluga: "konsultacja", forma: "online" }).notice,
+    ).toBeUndefined();
+    expect(view({}).notice).toBeUndefined();
+  });
+});
+
 const chosen: Partial<BookingParams> = {
   usluga: "konsultacja",
   forma: "online",
@@ -232,6 +290,14 @@ describe("the time step", () => {
       },
     ]);
     expect(panel.chosen).toBeNull();
+  });
+
+  it("says the times are Polish time (card 27)", () => {
+    const { panel } = view(chosen, { slots });
+    if (panel.kind !== "slots") throw new Error(panel.kind);
+    expect(panel.lead).toContain("Godziny podajemy w czasie polskim.");
+    // 09:00 UTC in January is 10:00 in Warsaw, whatever the visitor's zone.
+    expect(panel.picker.days[2]!.slots[0]!.time).toBe("10:00");
   });
 
   it("cannot go back before this week, nor past the horizon", () => {

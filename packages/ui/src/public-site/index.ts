@@ -111,7 +111,9 @@ export { SiteLogo } from "./site-logo";
 export type { SiteLogoProps } from "./site-logo";
 export type {
   SiteContact,
+  SiteCta,
   SiteLink,
+  SiteResume,
   SiteNavItem,
   SiteSocial,
   SocialNetwork,
