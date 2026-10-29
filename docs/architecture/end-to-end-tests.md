@@ -79,6 +79,18 @@ description, canonical address and link preview.
 Tests that would leave lasting changes (a service in the catalogue, the
 home page's draft) carry the `@writes-data` tag and run only locally.
 
+Tests that hold many times (`booking-hold.spec.ts`, most of
+`booking-wizard.spec.ts`) carry `@holds`. The database lets one address
+hold 5 times in 15 minutes, and a deployed site counts the real address,
+so they run only against a site without a proxy in front: Playwright's own,
+or one started by hand and given as `E2E_WEB_URL` (with `E2E_TARGET=dev`
+for DEV's database), where each test is a visitor of its own
+(`newVisitor`). Start that site with Cloudflare's Turnstile test keys
+(`NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA`,
+`TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA`), and better as a
+production build (`next build`, `next start --port 3010`): in `next dev`
+the first visit to each page compiles it, too slowly for some tests.
+
 ## After every STAGING deployment
 
 `.github/workflows/e2e-staging.yml` runs the whole suite against STAGING

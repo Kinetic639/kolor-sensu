@@ -31,6 +31,7 @@ import {
   INTENT_FIELD,
   PAY_LATER,
   readDetailsForm,
+  VISIT_FIELD,
   type DetailsFormErrors,
   type DetailsFormValues,
 } from "./details-form-data";
@@ -57,7 +58,7 @@ import {
 } from "./search-params";
 import { visitLabel } from "./visit-label";
 import { MEMORY_COOKIE, readMemory } from "./wizard-memory";
-import { RESUME_COOKIE } from "./wizard-memory-cookie";
+import { MEMORY_MAX_AGE_SECONDS, RESUME_COOKIE } from "./wizard-memory-cookie";
 import { signUpForNewsletter } from "@/features/newsletter/signup-server";
 
 // The booking steps that write. The forms carry only the wizard's choices
@@ -66,6 +67,8 @@ import { signUpForNewsletter } from "@/features/newsletter/signup-server";
 
 const DETAILS_PATH = "/umow-wizyte/dane" as Route;
 const PAYMENT_PATH = "/umow-wizyte/platnosc" as Route;
+// The details step again, after another tab held another time.
+const OTHER_TAB_PATH = "/umow-wizyte/dane?inna-karta=1" as Route;
 // Paid at once although "Zapłacę później" was chosen: the step says why.
 const PAY_NOW_PATH = "/umow-wizyte/platnosc?limit=1" as Route;
 // A reservation waits for the client to confirm it from the e-mail.
@@ -101,9 +104,10 @@ export async function holdTimeAction(formData: FormData) {
 
   const client = createSecretClient();
   // One visitor, one held time: choosing again gives the earlier one back.
+  // Its payment, if one was begun (in another tab), stops too (card 7).
   const previous = await readHoldToken();
   if (previous) {
-    await releaseHold(client, previous).catch(() => false);
+    await giveBack(client, previous);
     await saveFormerHoldToken(previous);
   }
 
@@ -120,6 +124,14 @@ export async function holdTimeAction(formData: FormData) {
       clientKey: visitorKey(ip, process.env.SUPABASE_SECRET_KEY ?? ""),
     });
     await saveHoldToken(held.accessToken);
+    // "Dokończ rezerwację" leads to the details from now on, even if the
+    // visitor leaves before the page has written it (card 11).
+    (await cookies()).set(RESUME_COOKIE, DETAILS_PATH, {
+      path: "/",
+      maxAge: MEMORY_MAX_AGE_SECONDS,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
   } catch (error) {
     if (error instanceof BookingError && error.code === "too_many_holds") {
       redirect(bookingNoticeHref(wizard.params, "za-duzo-prob"));
@@ -132,6 +144,36 @@ export async function holdTimeAction(formData: FormData) {
   redirect(DETAILS_PATH);
 }
 
+/** A held time given back; a payment begun for it stops too. */
+async function giveBack(
+  db: ReturnType<typeof createSecretClient>,
+  token: string,
+) {
+  const session = await pendingCheckoutSession(db, token).catch(() => null);
+  if (session) await expireSession(session);
+  return releaseHold(db, token).catch(() => false);
+}
+
+/**
+ * Back in the wizard with a time held (Klient · 2, card 5): "Wstecz" in
+ * the browser, or "Umów wizytę" again. The time goes back at once, so it
+ * shows free again, and the details given for it are kept for the next.
+ * Nothing held (back twice): nothing happens. The label of the time given
+ * back, or null.
+ */
+export async function releaseOnReturnAction(): Promise<string | null> {
+  const token = await readHoldToken();
+  if (!token) return null;
+  const db = createSecretClient();
+  const booking = await getBooking(db, token).catch(() => null);
+  if (booking?.status !== "held") return null;
+  await giveBack(db, token);
+  await clearHoldToken();
+  await saveFormerHoldToken(token);
+  const timeZone = (await getBookingWindow())?.timeZone ?? "Europe/Warsaw";
+  return visitLabel(booking.startsAt, timeZone);
+}
+
 /**
  * "Zmień termin": gives the held time back and returns to the wizard, with
  * the same service, specialist, form and week (#164); only the time is
@@ -140,11 +182,7 @@ export async function holdTimeAction(formData: FormData) {
 export async function releaseHoldAction() {
   const token = await readHoldToken();
   if (token) {
-    const db = createSecretClient();
-    // A payment started for this time stops too.
-    const session = await pendingCheckoutSession(db, token).catch(() => null);
-    if (session) await expireSession(session);
-    await releaseHold(db, token).catch(() => false);
+    await giveBack(createSecretClient(), token);
     await clearHoldToken();
     // The details given for it are filled in for the next time chosen.
     await saveFormerHoldToken(token);
@@ -162,10 +200,7 @@ export async function releaseHoldAction() {
 export async function startOverAction() {
   const token = await readHoldToken();
   if (token) {
-    const db = createSecretClient();
-    const session = await pendingCheckoutSession(db, token).catch(() => null);
-    if (session) await expireSession(session);
-    await releaseHold(db, token).catch(() => false);
+    await giveBack(createSecretClient(), token);
     await clearHoldToken();
   }
   const jar = await cookies();
@@ -272,6 +307,16 @@ export async function saveDetailsAction(
 ): Promise<DetailsFormState> {
   const token = await readHoldToken();
   if (!token) redirect(EXPIRED);
+
+  // Another tab held another time meanwhile (card 7): the details go to
+  // no visit the page did not show; it is shown again, with a word on why.
+  const shown = formData.get(VISIT_FIELD);
+  if (typeof shown === "string" && shown) {
+    const current = await getBooking(createSecretClient(), token).catch(
+      () => null,
+    );
+    if (current && current.reference !== shown) redirect(OTHER_TAB_PATH);
+  }
 
   const form = readDetailsForm(formData);
   if (!form.ok && "bot" in form) {
