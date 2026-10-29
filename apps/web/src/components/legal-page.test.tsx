@@ -122,7 +122,16 @@ describe("the legal routes", () => {
       const { default: Page } = (await import(`../app/${route}/page.tsx`)) as {
         default: () => ReactElement;
       };
-      expect(Page().props).toEqual({ page: key });
+      expect(Page().props).toMatchObject({ page: key });
     }
+  });
+
+  it("the Regulamin adds the booking's rules from the settings (Klient · 3, card 14)", async () => {
+    const { default: Page } = (await import("../app/regulamin/page.tsx")) as {
+      default: () => ReactElement<{ after: ReactElement }>;
+    };
+    const { BookingRulesSection } =
+      await import("@/features/booking/booking-rules-section");
+    expect(Page().props.after.type).toBe(BookingRulesSection);
   });
 });

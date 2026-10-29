@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
+import { BookingRulesSection } from "@/features/booking/booking-rules-section";
 import { pageMetadata } from "@/lib/page-metadata";
 
 // Title, description and link preview: the CMS's over the page's own.
@@ -8,5 +9,5 @@ export function generateMetadata(): Promise<Metadata> {
 }
 
 export default function TermsPage() {
-  return <LegalPage page="legal_terms" />;
+  return <LegalPage after={<BookingRulesSection />} page="legal_terms" />;
 }

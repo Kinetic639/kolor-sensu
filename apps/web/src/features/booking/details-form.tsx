@@ -14,6 +14,7 @@ import {
   PAY_LATER,
   VISIT_FIELD,
   type DetailsFormValues,
+  type DetailsNeeds,
 } from "./details-form-data";
 
 // Step 5: the client's details and consents. A plain form posted to the
@@ -25,6 +26,7 @@ import {
 
 export function DetailsForm({
   reference,
+  needs = { earlyStart: false, guardian: false },
   saved,
   prefill = null,
   payLater,
@@ -33,6 +35,8 @@ export function DetailsForm({
 }: {
   /** The visit shown: its details go to no other (card 7). */
   reference?: string;
+  /** What the visit asks besides the two consents (cards 15, 16). */
+  needs?: DetailsNeeds;
   saved: DetailsFormValues | null;
   /**
    * What the client gave for a time they changed ("Zmień termin"): filled
@@ -160,6 +164,28 @@ export function DetailsForm({
           name="acceptPrivacy"
           text="Zapoznałem(-am) się z"
         />
+        {needs.earlyStart ? (
+          // Card 15; working wording, for a lawyer to check (#265).
+          <ConsentCheckbox
+            defaultChecked={values?.acceptEarlyStart}
+            error={errors.acceptEarlyStart}
+            linkHref="/regulamin"
+            linkLabel="regulaminem rezerwacji"
+            name="acceptEarlyStart"
+            text="Wizyta wypada w ciągu 14 dni od rezerwacji. Chcę, żeby odbyła się przed upływem 14 dni na odstąpienie od umowy, i wiem, że po jej odbyciu nie mogę od umowy odstąpić, zgodnie z"
+          />
+        ) : null}
+        {needs.guardian ? (
+          // Card 16; working wording, for a lawyer to check (#267).
+          <ConsentCheckbox
+            defaultChecked={values?.confirmGuardian}
+            error={errors.confirmGuardian}
+            linkHref="/regulamin"
+            linkLabel="regulaminu rezerwacji"
+            name="confirmGuardian"
+            text="Rezerwuję jako rodzic lub opiekun prawny osoby niepełnoletniej, która przyjdzie na wizytę, i to ja jestem klientem, na zasadach z"
+          />
+        ) : null}
       </fieldset>
 
       {newsletterController ? (

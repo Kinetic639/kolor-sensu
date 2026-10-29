@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   BookingError,
   getBooking,
+  getBookingRequirements,
   saveBookingDetails,
   getBookingWindow,
   holdSlot,
@@ -299,6 +300,8 @@ describe("saveBookingDetails", () => {
     notes: null,
     acceptTerms: true as const,
     acceptPrivacy: true as const,
+    acceptEarlyStart: true,
+    confirmGuardian: false,
   };
 
   it("saves the details and consents to the held visit", async () => {
@@ -313,6 +316,8 @@ describe("saveBookingDetails", () => {
       p_notes: "",
       p_accept_terms: true,
       p_accept_privacy: true,
+      p_accept_early_start: true,
+      p_confirm_guardian: false,
     });
   });
 
@@ -399,5 +404,23 @@ describe("reservationConfirmBy", () => {
     expect(rpc).toHaveBeenCalledWith("reservation_confirm_by", {
       p_manage_token: "link",
     });
+  });
+});
+
+describe("getBookingRequirements (Klient · 3, cards 15, 16)", () => {
+  it("what the held visit asks of its client", async () => {
+    const { client, rpc } = rpcClient([{ early_start: true, guardian: false }]);
+    expect(await getBookingRequirements(client, "token")).toEqual({
+      earlyStart: true,
+      guardian: false,
+    });
+    expect(rpc).toHaveBeenCalledWith("booking_requirements", {
+      p_access_token: "token",
+    });
+  });
+
+  it("nothing held: null", async () => {
+    const { client } = rpcClient([]);
+    expect(await getBookingRequirements(client, "token")).toBeNull();
   });
 });

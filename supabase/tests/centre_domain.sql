@@ -133,6 +133,21 @@ GRANT EXECUTE ON FUNCTION pg_temp.at(date, time) TO anon, authenticated, service
 GRANT EXECUTE ON FUNCTION pg_temp.hint_of(text) TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION pg_temp.refusal_of(text) TO anon, authenticated, service_role;
 
+-- The guest's details as the site sends them (the consents a visit within
+-- 14 days or for minors asks for, given).
+CREATE FUNCTION pg_temp.save_details(
+  p_token text, p_name text, p_email text, p_phone text, p_notes text,
+  p_terms boolean, p_privacy boolean
+)
+RETURNS void
+LANGUAGE sql
+AS $
+  SELECT public.save_booking_details(p_token, split_part(p_name, ' ', 1),
+    nullif(substr(p_name, length(split_part(p_name, ' ', 1)) + 2), ''),
+    p_email, p_phone, p_notes, p_terms, p_privacy, true, true);
+$;
+GRANT EXECUTE ON FUNCTION pg_temp.save_details(text, text, text, text, text, boolean, boolean) TO anon, authenticated, service_role;
+
 -- A paid visit on Monday at 9 (booked while the centre is open).
 CREATE TEMP TABLE centre_visit (id uuid, reference text);
 GRANT ALL ON centre_visit TO service_role;
@@ -144,7 +159,7 @@ BEGIN
   SELECT * INTO held FROM public.hold_slot(
     'centre-test-consultation', 'centre-test-anna', 'in_person',
     pg_temp.at((SELECT monday FROM centre_test), '09:00'), p_client_key => 'visitor-centre');
-  PERFORM public.save_booking_details(held.access_token, 'Ola Centrum', 'ola-centre@example.invalid',
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Centrum', 'ola-centre@example.invalid',
     '600100200', NULL, true, true);
   PERFORM public.attach_checkout_session(held.access_token, 'cs_test_centre',
     now() + interval '30 minutes', 25000, 'PLN');

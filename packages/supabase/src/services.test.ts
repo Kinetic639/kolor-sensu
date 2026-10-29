@@ -130,6 +130,7 @@ describe("service domain mapping", () => {
         default_duration_minutes: 50,
         after_minutes: 10,
         requires_intake: false,
+        for_minors: false,
         active: true,
         publicly_visible: true,
         booking_enabled: false,

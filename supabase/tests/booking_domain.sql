@@ -114,6 +114,21 @@ AS $$ SELECT (p_day + p_time) AT TIME ZONE 'Europe/Warsaw'; $$;
 GRANT EXECUTE ON FUNCTION pg_temp.free_times(public.visit_mode, date, text) TO anon, service_role;
 GRANT EXECUTE ON FUNCTION pg_temp.at(date, time) TO anon, service_role;
 
+-- The guest's details as the site sends them (the whole name split, and
+-- the consents a visit within 14 days or for minors asks for, given).
+CREATE FUNCTION pg_temp.save_details(
+  p_token text, p_name text, p_email text, p_phone text, p_notes text,
+  p_terms boolean, p_privacy boolean
+)
+RETURNS void
+LANGUAGE sql
+AS $
+  SELECT public.save_booking_details(p_token, split_part(p_name, ' ', 1),
+    nullif(substr(p_name, length(split_part(p_name, ' ', 1)) + 2), ''),
+    p_email, p_phone, p_notes, p_terms, p_privacy, true, true);
+$;
+GRANT EXECUTE ON FUNCTION pg_temp.save_details(text, text, text, text, text, boolean, boolean) TO anon, service_role;
+
 -- A–B: anyone sees the free times, on the grid, fitting the window.
 SET LOCAL ROLE anon;
 DO $$
@@ -520,7 +535,7 @@ BEGIN
 
   -- Both consents are needed.
   BEGIN
-    PERFORM public.save_booking_details(held.access_token, 'Jan Kowalski',
+    PERFORM pg_temp.save_details(held.access_token, 'Jan Kowalski',
       'jan@example.com', '600100200', NULL, true, false);
     RAISE EXCEPTION 'P: saved without the privacy consent';
   EXCEPTION WHEN raise_exception THEN
@@ -530,7 +545,7 @@ BEGIN
   END;
   -- Details the database would not keep.
   BEGIN
-    PERFORM public.save_booking_details(held.access_token, 'Jan Kowalski',
+    PERFORM pg_temp.save_details(held.access_token, 'Jan Kowalski',
       'not-an-email', '600100200', NULL, true, true);
     RAISE EXCEPTION 'P: saved a wrong e-mail';
   EXCEPTION WHEN raise_exception THEN
@@ -539,7 +554,7 @@ BEGIN
     IF hint <> 'invalid_details' THEN RAISE EXCEPTION 'P: expected invalid_details, got %', hint; END IF;
   END;
 
-  PERFORM public.save_booking_details(held.access_token, 'Jan Kowalski',
+  PERFORM pg_temp.save_details(held.access_token, 'Jan Kowalski',
     'jan@example.com', '+48 600 100 200', 'Pierwsza wizyta', true, true);
   SELECT * INTO visit FROM public.appointments WHERE id = held.appointment_id;
   IF (visit.client_name, visit.client_email, visit.client_phone, visit.client_notes, visit.status)
@@ -557,7 +572,7 @@ BEGIN
   UPDATE public.appointments SET hold_expires_at = now() - interval '1 second'
   WHERE id = held.appointment_id;
   BEGIN
-    PERFORM public.save_booking_details(held.access_token, 'Jan Kowalski',
+    PERFORM pg_temp.save_details(held.access_token, 'Jan Kowalski',
       'jan@example.com', '600100200', NULL, true, true);
     RAISE EXCEPTION 'P: saved on an expired hold';
   EXCEPTION WHEN raise_exception THEN
@@ -573,7 +588,7 @@ SET LOCAL ROLE anon;
 DO $body$
 BEGIN
   BEGIN
-    PERFORM public.save_booking_details('x', 'a', 'a@b.pl', '600100200', NULL, true, true);
+    PERFORM pg_temp.save_details('x', 'a', 'a@b.pl', '600100200', NULL, true, true);
     RAISE EXCEPTION 'P: anon saved details';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
@@ -609,7 +624,7 @@ BEGIN
     GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
     IF hint <> 'details_required' THEN RAISE EXCEPTION 'Q: expected details_required, got %', hint; END IF;
   END;
-  PERFORM public.save_booking_details(held.access_token, 'Ewa Test', 'ewa@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Ewa Test', 'ewa@example.com',
     '600100200', NULL, true, true);
 
   -- Not for another amount than the visit's.
@@ -675,7 +690,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', 'in_person',
     pg_temp.at(t.tuesday, '10:00'), p_client_key => 'visitor-6'
   );
-  PERFORM public.save_booking_details(held.access_token, 'Ola Test', 'ola@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Test', 'ola@example.com',
     '600100200', NULL, true, true);
   PERFORM public.attach_checkout_session(held.access_token, 'cs_test_2', now() + interval '30 minutes', 25000, 'PLN');
   outcome := public.fulfill_checkout_session('cs_test_2', false, NULL);
@@ -696,7 +711,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', 'in_person',
     pg_temp.at(t.tuesday, '10:00'), p_client_key => 'visitor-7'
   );
-  PERFORM public.save_booking_details(held.access_token, 'Piotr Test', 'piotr@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Piotr Test', 'piotr@example.com',
     '600100200', NULL, true, true);
   PERFORM public.attach_checkout_session(held.access_token, 'cs_test_3', now() + interval '30 minutes', 25000, 'PLN');
   UPDATE public.appointments SET hold_expires_at = now() - interval '1 second'
@@ -732,7 +747,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', 'in_person',
     pg_temp.at(t.tuesday, '10:00'), p_client_key => 'visitor-q9'
   );
-  PERFORM public.save_booking_details(held.access_token, 'Ewa Test', 'ewa@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Ewa Test', 'ewa@example.com',
     '600100200', NULL, true, true);
   PERFORM public.attach_checkout_session(held.access_token, 'cs_test_4', now() + interval '30 minutes', 25000, 'PLN');
   -- A second session for the same visit (another tab): both get paid.
@@ -756,7 +771,7 @@ BEGIN
     pg_temp.at(t.monday, (regexp_match(pg_temp.free_times('in_person', t.monday), '(\S+)$'))[1]::time),
     p_client_key => 'visitor-q10'
   );
-  PERFORM public.save_booking_details(held.access_token, 'Jan Test', 'jan@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Jan Test', 'jan@example.com',
     '600100200', NULL, true, true);
   PERFORM public.attach_checkout_session(held.access_token, 'cs_test_6', now() + interval '30 minutes', 25000, 'PLN');
   UPDATE public.appointments SET price_minor = 30000 WHERE id = held.appointment_id;
@@ -815,7 +830,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', 'in_person',
     pg_temp.at(t.monday, '09:00'), p_client_key => 'visitor-9'
   );
-  PERFORM public.save_booking_details(held.access_token, 'Marta Test', 'marta@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Marta Test', 'marta@example.com',
     '600100200', NULL, true, true);
 
   -- Not before the visit is confirmed.
@@ -910,7 +925,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', 'in_person',
     pg_temp.at((SELECT monday + 2 FROM booking_test), p_time), p_client_key => 'visitor-' || p_name
   );
-  PERFORM public.save_booking_details(held.access_token, 'Ola Test', 'ola@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Test', 'ola@example.com',
     '600100200', NULL, true, true);
   PERFORM public.attach_checkout_session(held.access_token, 'cs_test_' || p_name,
     now() + interval '30 minutes', 25000, 'PLN');
@@ -1886,7 +1901,7 @@ BEGIN
   IF pg_temp.hint_of(format('SELECT public.reserve_hold(%L)', held.access_token)) <> 'details_required' THEN
     RAISE EXCEPTION 'Y: reserved without the details';
   END IF;
-  PERFORM public.save_booking_details(held.access_token, 'Ola Później',
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Później',
     'ola@example.invalid', '600100200', NULL, true, true);
   SELECT * INTO r FROM public.reserve_hold(held.access_token);
   SELECT * INTO v FROM public.appointments WHERE id = held.appointment_id;
@@ -1931,7 +1946,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', 'online',
     pg_temp.at(x.day + 7, '14:00'), p_client_key => 'visitor-y'
   );
-  PERFORM public.save_booking_details(near.access_token, 'Ola Później',
+  PERFORM pg_temp.save_details(near.access_token, 'Ola Później',
     'ola@example.invalid', '600100200', NULL, true, true);
   INSERT INTO x_visits VALUES ('near', near.appointment_id, near.reference, near.access_token);
 END;
@@ -2953,7 +2968,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', p_mode, p_at,
     p_client_key => p_hold_key
   );
-  PERFORM public.save_booking_details(held.access_token, p_name, p_email,
+  PERFORM pg_temp.save_details(held.access_token, p_name, p_email,
     p_phone, NULL, true, true);
   SELECT * INTO r FROM public.reserve_hold(held.access_token, p_reserve_key);
   RETURN QUERY SELECT held.appointment_id, held.reference, r.outcome;
@@ -3325,5 +3340,241 @@ BEGIN
 END;
 $body$;
 RESET ROLE;
+
+-- AF–AI: the details step (Klient · 3). The consents a visit asks for,
+-- one visit for one person at a time, who reads a questionnaire, and a
+-- booking left unfinished. (Bookings are on and the horizon long, AC–AD.)
+CREATE TEMP TABLE col3 (name text PRIMARY KEY, token text, appointment_id uuid);
+GRANT SELECT, INSERT ON col3 TO service_role;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  near record;
+  far record;
+  need record;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+
+  -- AF (card 15): a visit within 14 days of booking waits for the client's
+  -- request to have it before the 14 days to withdraw are over.
+  SELECT * INTO near FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-jan', 'online', pg_temp.at(t.monday, '10:00'),
+    p_client_key => 'visitor-af-near'
+  );
+  INSERT INTO col3 VALUES ('near', near.access_token, near.appointment_id);
+  SELECT * INTO need FROM public.booking_requirements(near.access_token);
+  IF NOT need.early_start OR need.guardian THEN
+    RAISE EXCEPTION 'AF: what a visit next week asks: %', row_to_json(need);
+  END IF;
+  BEGIN
+    PERFORM public.save_booking_details(near.access_token, 'Ala', 'Nowak', 'ala@example.invalid',
+      '600700800', NULL, true, true);
+    RAISE EXCEPTION 'AF: saved without the request to start early';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'A visit within 14 days needs the client''s request' THEN RAISE; END IF;
+  END;
+  PERFORM public.save_booking_details(near.access_token, 'Ala', 'Nowak', 'ala@example.invalid',
+    '600700800', NULL, true, true, p_accept_early_start => true);
+  IF (SELECT early_start_accepted_at IS NULL OR guardian_confirmed_at IS NOT NULL
+      FROM public.appointments WHERE id = near.appointment_id) THEN
+    RAISE EXCEPTION 'AF: the time of the request was not saved';
+  END IF;
+
+  -- Eight weeks ahead: no such request asked, none saved.
+  SELECT * INTO far FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person', pg_temp.at(t.monday + 56, '09:00'),
+    p_client_key => 'visitor-af-far'
+  );
+  INSERT INTO col3 VALUES ('far', far.access_token, far.appointment_id);
+  IF (SELECT early_start FROM public.booking_requirements(far.access_token)) THEN
+    RAISE EXCEPTION 'AF: a visit eight weeks ahead asked to start early';
+  END IF;
+  PERFORM public.save_booking_details(far.access_token, 'Ala', 'Nowak', 'ala@example.invalid',
+    '600700800', NULL, true, true);
+  IF (SELECT early_start_accepted_at FROM public.appointments WHERE id = far.appointment_id) IS NOT NULL THEN
+    RAISE EXCEPTION 'AF: a request saved that was not asked for';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- AF (card 16): a service for minors is booked by a parent or guardian.
+UPDATE public.services SET for_minors = true WHERE slug = 'booking-test-consultation';
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person', pg_temp.at(t.monday + 63, '09:00'),
+    p_client_key => 'visitor-af-minor'
+  );
+  IF NOT (SELECT guardian FROM public.booking_requirements(held.access_token)) THEN
+    RAISE EXCEPTION 'AF: a service for minors did not ask for the guardian';
+  END IF;
+  BEGIN
+    PERFORM public.save_booking_details(held.access_token, 'Ola', 'Rodzic', 'rodzic@example.invalid',
+      '600700801', NULL, true, true);
+    RAISE EXCEPTION 'AF: saved without the guardian''s confirmation';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'A service for minors is booked by a parent or guardian' THEN RAISE; END IF;
+  END;
+  PERFORM public.save_booking_details(held.access_token, 'Ola', 'Rodzic', 'rodzic@example.invalid',
+    '600700801', NULL, true, true, p_confirm_guardian => true);
+  IF (SELECT guardian_confirmed_at FROM public.appointments WHERE id = held.appointment_id) IS NULL THEN
+    RAISE EXCEPTION 'AF: the guardian''s confirmation was not saved';
+  END IF;
+  PERFORM public.release_hold(held.access_token);
+END;
+$body$;
+RESET ROLE;
+UPDATE public.services SET for_minors = false WHERE slug = 'booking-test-consultation';
+
+-- AG (card 17): one person, one visit at a time, by e-mail or by phone.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  first record;
+  second record;
+  v_day date;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  v_day := t.monday + 42;
+  -- Anna at 10:00 in the room, details given.
+  SELECT * INTO first FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person', pg_temp.at(v_day, '10:00'),
+    p_client_key => 'visitor-ag-1'
+  );
+  PERFORM public.save_booking_details(first.access_token, 'Ewa', 'Raz', 'ewa.raz@example.invalid',
+    '+48 600 700 900', NULL, true, true);
+  -- Jan online at the same time, for the same person: by e-mail, by phone.
+  SELECT * INTO second FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-jan', 'online', pg_temp.at(v_day, '10:00'),
+    p_client_key => 'visitor-ag-2'
+  );
+  BEGIN
+    PERFORM public.save_booking_details(second.access_token, 'Ewa', 'Raz', 'EWA.RAZ@example.invalid',
+      '500100100', NULL, true, true);
+    RAISE EXCEPTION 'AG: the same e-mail got a second visit at the same time';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'The client has another visit at this time' THEN RAISE; END IF;
+  END;
+  BEGIN
+    PERFORM public.save_booking_details(second.access_token, 'Ewa', 'Raz', 'inny@example.invalid',
+      '600700900', NULL, true, true);
+    RAISE EXCEPTION 'AG: the same phone got a second visit at the same time';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'The client has another visit at this time' THEN RAISE; END IF;
+  END;
+  -- Someone else may.
+  PERFORM public.save_booking_details(second.access_token, 'Adam', 'Inny', 'adam@example.invalid',
+    '500200300', NULL, true, true);
+  PERFORM public.release_hold(second.access_token);
+  -- The same person at another time may.
+  SELECT * INTO second FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-jan', 'online', pg_temp.at(v_day, '11:00'),
+    p_client_key => 'visitor-ag-3'
+  );
+  PERFORM public.save_booking_details(second.access_token, 'Ewa', 'Raz', 'ewa.raz@example.invalid',
+    '600700900', NULL, true, true);
+  PERFORM public.release_hold(second.access_token);
+  -- A time given back no longer counts.
+  PERFORM public.release_hold(first.access_token);
+  SELECT * INTO second FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-jan', 'online', pg_temp.at(v_day, '10:00'),
+    p_client_key => 'visitor-ag-4'
+  );
+  PERFORM public.save_booking_details(second.access_token, 'Ewa', 'Raz', 'ewa.raz@example.invalid',
+    '600700900', NULL, true, true);
+  PERFORM public.release_hold(second.access_token);
+END;
+$body$;
+RESET ROLE;
+
+-- AH (card 12): a questionnaire is read by the visit's specialist and the
+-- centre's admin, by nobody else. (The visit is Jan's, from AF.)
+INSERT INTO public.visit_intakes (token_hash, service_id, appointment_id, mood, answers, health_consent_at)
+SELECT extensions.digest('col3-intake', 'sha256'), visit.service_id, visit.id, 6, '{"q1":"tak"}', now()
+FROM public.appointments AS visit WHERE visit.id = (SELECT appointment_id FROM col3 WHERE name = 'near');
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF (SELECT count(*) FROM public.visit_intakes) <> 1 THEN
+    RAISE EXCEPTION 'AH: the visit''s specialist does not see its questionnaire';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.visit_intakes AS intake
+             WHERE intake.token_hash = extensions.digest('col3-intake', 'sha256')) THEN
+    RAISE EXCEPTION 'AH: another specialist read the questionnaire';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.visit_intakes AS intake
+                 WHERE intake.token_hash = extensions.digest('col3-intake', 'sha256')) THEN
+    RAISE EXCEPTION 'AH: the admin does not see the questionnaire';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  PERFORM 1 FROM public.visit_intakes LIMIT 1;
+  RAISE EXCEPTION 'AH: the public read a questionnaire';
+EXCEPTION WHEN insufficient_privilege THEN NULL;
+END;
+$body$;
+RESET ROLE;
+
+-- AI (card 13): the details of a booking never finished go after 30 days;
+-- younger ones, and real visits, stay; the nightly clean-up does it too.
+DO $body$
+DECLARE
+  v_old uuid := (SELECT appointment_id FROM col3 WHERE name = 'near');
+  v_young uuid := (SELECT appointment_id FROM col3 WHERE name = 'far');
+  v_kept integer := (SELECT count(*) FROM public.appointments AS visit
+                     WHERE private.shown_as_visit(visit) AND visit.client_email IS NOT NULL);
+BEGIN
+  DELETE FROM public.visit_intakes WHERE token_hash = extensions.digest('col3-intake', 'sha256');
+  UPDATE public.appointments SET status = 'expired', hold_expires_at = now() - interval '31 days'
+  WHERE id = v_old;
+  UPDATE public.appointments SET status = 'expired', hold_expires_at = now() - interval '29 days'
+  WHERE id = v_young;
+  PERFORM private.forget_abandoned_bookings();
+  IF (SELECT num_nonnulls(client_name, client_first_name, client_last_name, client_email,
+                          client_phone, client_notes)
+      FROM public.appointments WHERE id = v_old) <> 0 THEN
+    RAISE EXCEPTION 'AI: a booking left 31 days ago kept its details';
+  END IF;
+  IF (SELECT client_email FROM public.appointments WHERE id = v_young) IS NULL THEN
+    RAISE EXCEPTION 'AI: a booking left 29 days ago lost its details';
+  END IF;
+  IF (SELECT count(*) FROM public.appointments AS visit
+      WHERE private.shown_as_visit(visit) AND visit.client_email IS NOT NULL) <> v_kept THEN
+    RAISE EXCEPTION 'AI: a real visit lost its details';
+  END IF;
+  UPDATE public.appointments SET hold_expires_at = now() - interval '31 days' WHERE id = v_young;
+  PERFORM private.apply_retention();
+  IF (SELECT client_email FROM public.appointments WHERE id = v_young) IS NOT NULL THEN
+    RAISE EXCEPTION 'AI: the nightly clean-up left an unfinished booking''s details';
+  END IF;
+END;
+$body$;
 
 ROLLBACK;

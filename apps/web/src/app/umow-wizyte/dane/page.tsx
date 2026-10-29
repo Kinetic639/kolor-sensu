@@ -1,4 +1,4 @@
-import { getBooking } from "@repo/supabase";
+import { getBooking, getBookingRequirements } from "@repo/supabase";
 import { HoldNotice } from "@repo/ui/booking";
 import { SecondaryButton } from "@repo/ui/public-site";
 import type { Metadata } from "next";
@@ -35,10 +35,12 @@ export default async function BookingDetailsPage({
   const otherTab = (await searchParams)["inna-karta"] === "1";
   const visit = await requireLiveHold();
   const { booking, timeZone, discount } = visit;
-  const [window, newsletter, former] = await Promise.all([
+  const [window, newsletter, former, needs] = await Promise.all([
     getBookingWindow(),
     getNewsletterBand(),
     booking.details ? null : formerDetails(),
+    // The consents this visit asks for besides the two (Klient · 3).
+    getBookingRequirements(createSecretClient(), visit.token).catch(() => null),
   ]);
   const until = payLaterUntil(booking.startsAt, window?.paymentDueHours);
 
@@ -65,6 +67,7 @@ export default async function BookingDetailsPage({
       </div>
       <DetailsForm
         reference={booking.reference}
+        needs={needs ?? undefined}
         free={booking.priceMinor === 0}
         newsletterController={
           newsletter.visible ? await newsletterController() : null

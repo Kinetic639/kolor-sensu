@@ -415,6 +415,7 @@ describe("toSpecialistOffers", () => {
     publiclyVisible: true,
     bookingEnabled: true,
     requiresIntake: false,
+    forMinors: false,
     sortOrder: 1,
     catalogId: null,
     createdAt: "",
