@@ -23,6 +23,7 @@ export interface ArticleCardData {
   category: { name: string; href: string } | null;
   author: string;
   authorAvatarUrl?: string | null;
+  authorTitle?: string | null;
   /** `21 października 2026` */
   date: string;
   /** The ISO date, for <time>. */
@@ -107,12 +108,21 @@ export function ArticleCard({
                   <Image
                     src={article.authorAvatarUrl}
                     alt=""
-                    width={36}
-                    height={36}
+                    width={44}
+                    height={44}
                     className="ks-education-article-avatar"
                   />
                 ) : null}
-                <span>{article.author}</span>
+                <span className="ks-education-article-author-copy">
+                  <span className="ks-education-article-author-name">
+                    {article.author}
+                  </span>
+                  {article.authorTitle ? (
+                    <span className="ks-education-article-author-title">
+                      {article.authorTitle}
+                    </span>
+                  ) : null}
+                </span>
               </div>
             ) : null}
             <div className="ks-education-article-actions">

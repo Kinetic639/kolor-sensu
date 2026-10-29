@@ -1,4 +1,8 @@
 "use server";
+import {
+  homeRoomsGallerySchema,
+  type HomeRoomsGallery,
+} from "@repo/contracts/rooms-peek";
 
 import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -56,6 +60,7 @@ import {
   updateNewsletterBandDraft,
   updateWhyUsDraft,
   getHomeHeadersAdmin,
+  getHomeSectionsAdmin,
   publishFirstSteps,
   publishHomeContent,
   publishHomeHeaders,
@@ -192,7 +197,24 @@ export async function updateSupportAreasDraftAction(
 export async function updateHomeSectionsDraftAction(
   values: HomeSectionsContent,
 ) {
-  return saveDraft(homeSectionsContentSchema, values, updateHomeSectionsDraft);
+  return saveDraft(
+    homeSectionsContentSchema,
+    values,
+    async (client, content) => {
+      const { draft } = await getHomeSectionsAdmin(client);
+      return updateHomeSectionsDraft(client, {
+        ...content,
+        roomsPeek: draft.roomsPeek,
+      });
+    },
+  );
+}
+
+export async function updateHomeRoomsDraftAction(values: HomeRoomsGallery) {
+  return saveDraft(homeRoomsGallerySchema, values, async (client, content) => {
+    const { draft } = await getHomeSectionsAdmin(client);
+    return updateHomeSectionsDraft(client, { ...draft, roomsPeek: content });
+  });
 }
 
 export async function updateFirstStepsDraftAction(values: FirstStepsContent) {

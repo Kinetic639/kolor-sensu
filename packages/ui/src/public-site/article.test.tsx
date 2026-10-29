@@ -40,10 +40,22 @@ describe("an article's card", () => {
   });
   it("places the author and optional portrait in the footer, and dates above the title", () => {
     const { container, rerender } = render(
-      <ArticleCard article={{ ...first!, authorAvatarUrl: "/anna.webp" }} />,
+      <ArticleCard
+        article={{
+          ...first!,
+          authorAvatarUrl: "/anna.webp",
+          authorTitle: "Psycholożka",
+        }}
+      />,
     );
     const footer = container.querySelector(".ks-education-article-foot")!;
     expect(footer.textContent).toContain(first!.author);
+    expect(
+      footer.querySelector(".ks-education-article-author-name"),
+    ).toHaveTextContent(first!.author);
+    expect(
+      footer.querySelector(".ks-education-article-author-title"),
+    ).toHaveTextContent("Psycholożka");
     expect(footer.querySelector("img")?.getAttribute("src")).toContain(
       "anna.webp",
     );

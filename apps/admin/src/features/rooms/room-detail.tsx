@@ -22,6 +22,7 @@ import {
   removeRoomImageAction,
   reorderRoomImagesAction,
   roomImagesChangedAction,
+  saveRoomImageCaptionAction,
   saveRoomDetailsAction,
   saveRoomProfileAction,
   setRoomMainImageAction,
@@ -130,7 +131,7 @@ export function RoomPhotos({ model }: { model: AdminRoomDetailModel }) {
           : null;
       setError(
         code === "23514"
-          ? "Gabinet może mieć najwyżej 5 zdjęć."
+          ? "Gabinet może mieć najwyżej 3 zdjęcia."
           : "Nie udało się dodać zdjęcia. Spróbuj ponownie.",
       );
       closeCrop();
@@ -166,6 +167,18 @@ export function RoomPhotos({ model }: { model: AdminRoomDetailModel }) {
             "Ustawiono zdjęcie główne",
           )
         }
+        renderCaption={(image, index) => (
+          <RoomPhotoCaption
+            key={image.id}
+            roomId={model.room.id}
+            imageId={image.id}
+            initial={
+              model.images.find((one) => one.id === image.id)?.caption ?? ""
+            }
+            number={index + 1}
+            disabled={isPending || uploading}
+          />
+        )}
         pending={isPending || uploading}
       />
       <ImageCropDialog
@@ -180,6 +193,58 @@ export function RoomPhotos({ model }: { model: AdminRoomDetailModel }) {
         title="Dopasuj zdjęcie gabinetu"
       />
     </DetailSection>
+  );
+}
+
+function RoomPhotoCaption({
+  roomId,
+  imageId,
+  initial,
+  number,
+  disabled,
+}: {
+  roomId: string;
+  imageId: string;
+  initial: string;
+  number: number;
+  disabled: boolean;
+}) {
+  const [caption, setCaption] = useState(initial);
+  const [saved, setSaved] = useState(initial);
+  const { isPending, run } = useSave();
+  const id = "room-photo-caption-" + imageId;
+  return (
+    <form
+      className="grid gap-2 p-2.5"
+      onSubmit={(event) => {
+        event.preventDefault();
+        run(
+          () => saveRoomImageCaptionAction(roomId, imageId, caption),
+          "Zapisano podpis zdjęcia",
+          () => setSaved(caption),
+        );
+      }}
+    >
+      <Label htmlFor={id}>Podpis zdjęcia {number}</Label>
+      <Textarea
+        id={id}
+        value={caption}
+        maxLength={200}
+        rows={2}
+        placeholder="Np. Fotele do rozmowy przy oknie"
+        disabled={disabled || isPending}
+        onChange={(event) => setCaption(event.target.value)}
+      />
+      <Button
+        type="submit"
+        size="sm"
+        variant="outline"
+        loading={isPending}
+        disabled={disabled || caption === saved}
+      >
+        Zapisz podpis
+      </Button>
+    </form>
   );
 }
 

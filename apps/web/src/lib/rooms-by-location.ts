@@ -7,7 +7,7 @@ import type {
 
 export interface RoomsPageRoom extends RoomPublicProfile {
   /** The main photo first, then the others in the admin's order. */
-  photos: Array<{ url: string; alt: string }>;
+  photos: Array<{ url: string; alt: string; caption?: string }>;
 }
 
 export interface RoomsPageLocation {
@@ -43,6 +43,7 @@ export function groupRoomsByLocation({
       );
     return own.map((image, index) => ({
       url: image.url,
+      caption: image.caption ?? "",
       alt: `${profile.displayName}, zdjęcie ${index + 1} z ${own.length}`,
     }));
   };

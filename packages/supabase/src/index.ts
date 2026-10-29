@@ -226,6 +226,7 @@ export {
   reorderRoomImages,
   setRoomMainImage,
   uploadRoomImage,
+  updateRoomImageCaption,
   roomMappers,
   updateRoom,
   upsertRoomPublicProfile,

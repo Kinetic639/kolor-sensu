@@ -1,4 +1,5 @@
 import "server-only";
+import { defaultHomeRoomsGallery } from "@repo/contracts/rooms-peek";
 import type { LegalPageKey } from "@repo/contracts/cms-legal";
 
 import { createClient } from "@/lib/supabase/server";
@@ -175,7 +176,18 @@ export async function loadRoomsPeek() {
   const images = await Promise.all(
     placements.map((placement) => listRoomImages(client, placement.roomId)),
   );
-  return mapRoomsPeekModel(images.map((own) => own.length));
+  const state = await getHomeSectionsAdmin(client);
+  const content = state.draft.roomsPeek ?? defaultHomeRoomsGallery;
+  return {
+    ...mapRoomsPeekModel(images.map((own) => own.length)),
+    ...mapContentViewModel({
+      ...state,
+      draft: content,
+      published: state.published
+        ? (state.published.roomsPeek ?? defaultHomeRoomsGallery)
+        : null,
+    }),
+  };
 }
 
 export async function loadPageSeo(page: SeoPage) {

@@ -55,7 +55,7 @@ export const Photos: Story = {
       canvas.getByRole("list", { name: "Zdjęcia gabinetów" }),
     ).toBeInTheDocument();
     await userEvent.click(
-      canvas.getByRole("button", { name: "Następne zdjęcia" }),
+      canvas.getByRole("button", { name: "Następny gabinet" }),
     );
   },
 };
@@ -64,7 +64,23 @@ export const OnePhoto: Story = {
   args: { photos: photos.slice(0, 1) },
   play: async ({ canvas }) => {
     await expect(
-      canvas.queryByRole("button", { name: "Następne zdjęcia" }),
+      canvas.queryByRole("button", { name: "Następny gabinet" }),
     ).not.toBeInTheDocument();
+  },
+};
+
+export const OneRoomManyPhotos: Story = {
+  args: {
+    photos: photos.slice(0, 3).map((photo) => ({
+      ...photo,
+      roomId: "one-room",
+      room: "Gabinet Zielony",
+    })),
+  },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.queryByRole("button", { name: "Następny gabinet" }),
+    ).not.toBeInTheDocument();
+    await expect(canvas.getAllByRole("img")).toHaveLength(3);
   },
 };

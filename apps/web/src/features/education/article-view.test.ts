@@ -92,6 +92,19 @@ describe("an article's byline", () => {
 });
 
 describe("an article's card", () => {
+  it("passes the specialist's professional title and portrait to the card", () => {
+    expect(
+      articleCard(
+        article("a", { authorKind: "specialist", authorSpecialistId: "s1" }),
+        categories,
+        [anna],
+      ),
+    ).toMatchObject({
+      author: "Anna Nowak",
+      authorTitle: "Psycholożka",
+      authorAvatarUrl: anna.portraitUrl,
+    });
+  });
   it("says the category, author, date and reading time", () => {
     expect(articleCard(article("lek"), categories, [anna])).toMatchObject({
       href: "/edukacja/artykuly/lek",

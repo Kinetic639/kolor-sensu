@@ -134,7 +134,7 @@ async function HomePage() {
     settle("gdzie jesteśmy", loadHomeLocation),
     settle("myśli", loadHomeThoughts),
     settle("edukacja", loadHomeStory),
-    // Not a section's content: how many room photos the site shows.
+    // The room banner's gallery settings and available published room photos.
     settle("zdjęcia gabinetów", loadRoomsPeek),
     loadSeo("glowna"),
   ]);
@@ -150,6 +150,7 @@ async function HomePage() {
     location,
     thoughts,
     story,
+    roomsPeek,
     seo,
   ].filter((one) => one !== null);
   // A section's header block, when the headers loaded. Keyed: it is made

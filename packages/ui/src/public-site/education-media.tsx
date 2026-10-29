@@ -23,6 +23,7 @@ export interface EducationArticle {
   reading: string;
   author?: string;
   authorAvatarUrl?: string | null;
+  authorTitle?: string | null;
   date?: string;
   dateTime?: string;
   href: string;
@@ -61,6 +62,7 @@ export function EducationArticles({
               reading: article.reading,
               author: article.author,
               authorAvatarUrl: article.authorAvatarUrl,
+              authorTitle: article.authorTitle,
               date: article.date,
               dateTime: article.dateTime,
             }}

@@ -20,7 +20,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, ImagePlus, Star, Trash2 } from "lucide-react";
-import { useId, useRef, useState } from "react";
+import { type ReactNode, useId, useRef, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,6 +54,8 @@ export interface SortableImageGalleryProps {
   /** Every image id in the new order, first to last. */
   onReorder: (ids: string[]) => void;
   onSetMain: (id: string) => void;
+  /** Optional per-image caption editor below its preview. */
+  renderCaption?: (image: GalleryImage, index: number) => ReactNode;
   className?: string;
 }
 
@@ -89,7 +91,9 @@ function SortablePhoto({
   onSetMain,
   onOpen,
   onRemove,
+  caption,
 }: {
+  caption?: ReactNode;
   image: GalleryImage;
   index: number;
   total: number;
@@ -186,6 +190,7 @@ function SortablePhoto({
           </button>
         </div>
       </div>
+      {caption}
     </li>
   );
 }
@@ -208,6 +213,7 @@ export function SortableImageGallery({
   onRemove,
   onReorder,
   onSetMain,
+  renderCaption,
   className,
 }: SortableImageGalleryProps) {
   const instructionsId = useId();
@@ -307,6 +313,7 @@ export function SortableImageGallery({
               {ordered.map((image, index) => (
                 <SortablePhoto
                   image={image}
+                  caption={renderCaption?.(image, index)}
                   index={index}
                   instructionsId={instructionsId}
                   key={image.id}

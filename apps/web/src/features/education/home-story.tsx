@@ -83,6 +83,7 @@ export async function educationStorySteps(
                 reading: readingLabel(a.body),
                 author: articleAuthor(a, people).name,
                 authorAvatarUrl: articleAuthor(a, people).photoUrl,
+                authorTitle: articleAuthor(a, people).title,
                 date: articleDate(a.publishedAt),
                 dateTime: a.publishedAt,
                 href: articleHref(a.slug),
