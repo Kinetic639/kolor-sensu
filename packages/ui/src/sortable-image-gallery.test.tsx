@@ -31,6 +31,26 @@ function renderGallery(props: Partial<SortableImageGalleryProps> = {}) {
 }
 
 describe("SortableImageGallery", () => {
+  it("keeps each caption editor with its own photo", () => {
+    renderGallery({
+      renderCaption: (image, index) => (
+        <label>
+          Podpis {index + 1}
+          <input defaultValue={image.id} />
+        </label>
+      ),
+    });
+    const items = within(
+      screen.getByRole("list", { name: "Zdjęcia gabinetu" }),
+    ).getAllByRole("listitem");
+    expect(
+      within(items[0]!).getByRole("textbox", { name: "Podpis 1" }),
+    ).toHaveValue("a");
+    expect(
+      within(items[1]!).getByRole("textbox", { name: "Podpis 2" }),
+    ).toHaveValue("b");
+  });
+
   it("lists the photos in order and marks the main one", () => {
     renderGallery();
 

@@ -1,5 +1,6 @@
 "use server";
 
+import { roomImageCaptionSchema } from "@repo/contracts";
 import { requirePortalRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { revalidateWeb } from "@repo/app-runtime/revalidate-web";
@@ -13,6 +14,7 @@ import {
   replaceRoomOpeningHours,
   setRoomMainImage,
   updateRoom,
+  updateRoomImageCaption,
   upsertRoomPublicProfile,
 } from "@repo/supabase";
 import { revalidatePath, updateTag } from "next/cache";
@@ -66,7 +68,7 @@ function failure(
         "Godziny zaczynają się i kończą o pełnej godzinie, tak jak terminy wizyt.",
     };
   if (code === "23514")
-    return { ok: false, message: "Gabinet może mieć najwyżej 5 zdjęć." };
+    return { ok: false, message: "Gabinet może mieć najwyżej 3 zdjęcia." };
   return { ok: false, message: fallback };
 }
 
@@ -75,7 +77,7 @@ async function refresh(roomId: string) {
   revalidatePath("/gabinety");
   updateTag(CACHE_TAGS.rooms);
   revalidatePath(`/gabinety/${roomId}`);
-  await revalidateWeb([{ path: "/gabinety" }]);
+  await revalidateWeb([{ path: "/gabinety" }, { path: "/" }]);
 }
 
 export async function saveRoomDetailsAction(
@@ -247,5 +249,28 @@ export async function deleteRoomExceptionAction(
     return { ok: true };
   } catch (error) {
     return failure(error, "Nie udało się usunąć wyjątku.");
+  }
+}
+
+export async function saveRoomImageCaptionAction(
+  roomId: string,
+  imageId: string,
+  caption: string,
+): Promise<ActionResult> {
+  await requirePortalRole();
+  const parsed = roomImageCaptionSchema.safeParse(caption);
+  if (!parsed.success)
+    return { ok: false, message: "Podpis może mieć najwyżej 200 znaków." };
+  try {
+    await updateRoomImageCaption(
+      await createClient(),
+      roomId,
+      imageId,
+      parsed.data,
+    );
+    await refresh(roomId);
+    return { ok: true };
+  } catch (error) {
+    return failure(error, "Nie udało się zapisać podpisu zdjęcia.");
   }
 }

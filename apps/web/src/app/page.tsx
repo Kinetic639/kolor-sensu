@@ -95,7 +95,7 @@ export default async function Home() {
   ]);
   const newsletterKey = newsletter.visible ? newsletterSiteKey() : null;
   const spotlight = toSpotlight(sections, specialists);
-  const roomPhotos = toRoomsPeekPhotos(roomGroups);
+  const roomPhotos = toRoomsPeekPhotos(roomGroups, sections.roomsPeek);
   const storySteps = await educationStorySteps(story, storyImages, watercolor);
 
   return (

@@ -22,6 +22,7 @@ import {
   roomMappers,
   setRoomMainImage,
   uploadRoomImage,
+  updateRoomImageCaption,
   upsertRoomPublicProfile,
 } from "./rooms";
 
@@ -244,6 +245,7 @@ describe("room public profiles", () => {
 describe("room images", () => {
   const roomId = "30000000-0000-4000-8000-000000000001";
   const imageRow = {
+    caption: "Fotele przy oknie",
     id: "image-1",
     room_id: roomId,
     storage_path: `${roomId}/abc.webp`,
@@ -329,6 +331,7 @@ describe("room images", () => {
     expect(chain.order).toHaveBeenCalledWith("position");
     expect(images).toEqual([
       {
+        caption: "Fotele przy oknie",
         id: "image-1",
         roomId,
         storagePath: `${roomId}/abc.webp`,
@@ -352,6 +355,26 @@ describe("room images", () => {
       p_image_id: "image-1",
     });
     expect(storage.remove).toHaveBeenCalledWith([`${roomId}/abc.webp`]);
+  });
+
+  it("saves a caption for the exact room and photo and rejects long text", async () => {
+    const rpc = vi.fn().mockResolvedValue({ error: null });
+    const client = { rpc } as never;
+    await updateRoomImageCaption(
+      client,
+      roomId,
+      "photo-a",
+      "  Fotele przy oknie  ",
+    );
+    expect(rpc).toHaveBeenCalledWith("update_room_image_caption", {
+      p_room_id: roomId,
+      p_image_id: "photo-a",
+      p_caption: "Fotele przy oknie",
+    });
+    await expect(
+      updateRoomImageCaption(client, roomId, "photo-a", "x".repeat(201)),
+    ).rejects.toThrow();
+    expect(rpc).toHaveBeenCalledTimes(1);
   });
 
   it("saves a new order and the main photo", async () => {

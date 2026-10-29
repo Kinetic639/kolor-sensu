@@ -1,6 +1,7 @@
 import {
   roomAvailabilityExceptionCreateSchema,
   roomCreateSchema,
+  roomImageCaptionSchema,
   roomOpeningHoursIntervalSchema,
   roomPublicProfileSchema,
   roomUpdateSchema,
@@ -282,6 +283,7 @@ type RoomImageRow = Database["public"]["Tables"]["room_images"]["Row"];
 
 function mapRoomImage(row: RoomImageRow, url: string): RoomImage {
   return {
+    caption: row.caption ?? "",
     id: row.id,
     roomId: row.room_id,
     storagePath: row.storage_path,
@@ -562,3 +564,18 @@ export const roomMappers = {
   adminRoomSummary: mapAdminRoomSummary,
   publicProfile: mapRoomPublicProfile,
 };
+
+/** Only an admin may edit a caption; the image must belong to this room. */
+export async function updateRoomImageCaption(
+  client: SupabaseClient<Database>,
+  roomId: string,
+  imageId: string,
+  caption: string,
+): Promise<void> {
+  const { error } = await client.rpc("update_room_image_caption", {
+    p_room_id: roomId,
+    p_image_id: imageId,
+    p_caption: roomImageCaptionSchema.parse(caption),
+  });
+  if (error) throw error;
+}

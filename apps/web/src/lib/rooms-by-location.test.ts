@@ -41,6 +41,7 @@ const image = (
   id,
   roomId,
   storagePath: `${roomId}/${id}.webp`,
+  caption: `Widok ${id}`,
   position,
   isMain,
   url: `https://cdn/${id}.webp`,
@@ -80,6 +81,7 @@ describe("groupRoomsByLocation", () => {
       "https://cdn/x.webp",
       "https://cdn/y.webp",
     ]);
+    expect(group!.rooms[0]!.photos[0]!.caption).toBe("Widok main");
     expect(group!.rooms[0]!.photos[0]!.alt).toBe("Gabinet r1, zdjęcie 1 z 3");
   });
 
