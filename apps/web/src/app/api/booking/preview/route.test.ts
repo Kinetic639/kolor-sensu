@@ -9,6 +9,55 @@ const request = () =>
   );
 beforeEach(() => vi.resetAllMocks());
 describe("homepage booking preview", () => {
+  it("opens the soonest bookable week when the current week is empty", async () => {
+    const empty = {
+      days: [],
+      nothingFree: {
+        kind: "later",
+        href: "/umow-wizyte?tydzien=2026-11-02",
+        label: "2 listopada",
+      },
+    };
+    const available = {
+      days: [
+        {
+          date: "2026-11-02",
+          slots: [
+            { time: "09:00", href: "/umow-wizyte?termin=2026-11-02T09:00" },
+          ],
+        },
+      ],
+    };
+    load.mockResolvedValueOnce({
+      view: { panel: { kind: "slots", picker: empty } },
+    } as unknown as Awaited<ReturnType<typeof loadWizard>>);
+    load.mockResolvedValueOnce({
+      view: { panel: { kind: "slots", picker: available } },
+    } as unknown as Awaited<ReturnType<typeof loadWizard>>);
+    const response = await GET(new Request(`${request().url}&najblizszy=1`));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ picker: available });
+    expect(load).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ tydzien: "2026-11-02", termin: null }),
+    );
+  });
+
+  it("keeps a manually selected empty week instead of jumping forward", async () => {
+    const picker = {
+      days: [],
+      nothingFree: { kind: "later", href: "/umow-wizyte?tydzien=2026-11-02" },
+    };
+    load.mockResolvedValue({
+      view: { panel: { kind: "slots", picker } },
+    } as unknown as Awaited<ReturnType<typeof loadWizard>>);
+    const response = await GET(
+      new Request(`${request().url}&tydzien=2026-10-26`),
+    );
+    expect(response.status).toBe(200);
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ picker });
+  });
   it("returns the existing wizard's live times with caching disabled", async () => {
     const picker = {
       days: [],
