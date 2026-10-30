@@ -80,6 +80,34 @@ describe("SpecialistSpotlight", () => {
     ).toHaveAttribute("href", "/specjalisci/anna-nowak");
   });
 
+  it("groups portrait and facts beside the biography and booking panel", () => {
+    const region = renderSpotlight({
+      bookingPanel: (
+        <section aria-label="Kalendarz wizyt">Wybierz termin</section>
+      ),
+    });
+    expect(region).toHaveClass("ks-spotlight--booking");
+    expect(
+      within(region).getByRole("region", { name: "Kalendarz wizyt" }),
+    ).toBeInTheDocument();
+    expect(
+      within(region).queryByRole("link", { name: /Umów wizytę/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(region).getByRole("link", { name: /Poznaj mnie bliżej/ }),
+    ).toBeInTheDocument();
+    expect(
+      region.querySelector(".ks-spotlight__rail")?.querySelector("dl"),
+    ).not.toBeNull();
+    expect(
+      region
+        .querySelector(".ks-spotlight__main")
+        ?.querySelector(".ks-spotlight__booking"),
+    ).not.toBeNull();
+    expect(
+      region.querySelector(".ks-spotlight__main")?.querySelector("dl"),
+    ).toBeNull();
+  });
   it("uses the cards' artwork, larger", () => {
     const region = renderSpotlight();
     const art = region.querySelector(".ks-spotlight__art");

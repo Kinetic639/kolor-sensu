@@ -52,6 +52,8 @@ export interface SpecialistArtworkProps {
   portraitSrc: ImageProps["src"];
   portraitAlt: string;
   splash: SpecialistSplash;
+  /** Optional brush artwork, shared by the background and pigment overlay. */
+  backdropSrc?: ImageProps["src"];
   sizes: string;
   priority?: boolean;
 }
@@ -60,13 +62,14 @@ export function SpecialistArtwork({
   portraitSrc,
   portraitAlt,
   splash,
+  backdropSrc,
   sizes,
   priority = false,
 }: SpecialistArtworkProps) {
   const loading = priority ? "eager" : "lazy";
   const splashImage = (
     <Image
-      src={specialistSplashes[splash]}
+      src={backdropSrc ?? specialistSplashes[splash]}
       alt=""
       fill
       sizes={sizes}

@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { SpecialistBooking } from "@/features/booking/specialist-booking";
 import {
   CrisisStrip,
   FirstSteps,
@@ -127,6 +129,20 @@ export default async function Home() {
         <SpecialistSpotlight
           {...spotlight}
           header={headers.spotlight}
+          bookingPanel={
+            <Suspense
+              fallback={
+                <div className="ks-booking-mini__message">
+                  Przygotowujemy kalendarz…
+                </div>
+              }
+            >
+              <SpecialistBooking
+                specialistSlug={spotlight.specialist.href.split("/").pop()!}
+                specialistName={spotlight.specialist.name}
+              />
+            </Suspense>
+          }
           booking={bookingCta}
           animationPreset="splash-reveal"
         />

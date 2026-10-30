@@ -1,3 +1,9 @@
+import { CompactBookingCalendar } from "./compact-booking-calendar";
+import { AvailabilityCalendar } from "./availability-calendar";
+import {
+  compactBookingSample,
+  availabilityCalendarSample,
+} from "./compact-booking-samples";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect } from "storybook/test";
 import { SpecialistSpotlight } from "./specialist-spotlight";
@@ -57,4 +63,23 @@ export const Default: Story = {
 /** With the cards' entrance: the portrait lifts in, the splash blooms. */
 export const Animated: Story = {
   args: { animationPreset: "splash-reveal" },
+};
+
+export const WithCalendar: Story = {
+  args: {
+    bookingPanel: (
+      <CompactBookingCalendar
+        {...compactBookingSample}
+        onChange={() => {}}
+        calendar={
+          <AvailabilityCalendar
+            {...availabilityCalendarSample}
+            onViewChange={() => {}}
+            onNavigate={() => {}}
+            onRetry={() => {}}
+          />
+        }
+      />
+    ),
+  },
 };
