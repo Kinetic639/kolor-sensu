@@ -12,6 +12,7 @@ import {
   HONEYPOT_FIELD,
   INTENT_FIELD,
   PAY_LATER,
+  VISIT_FIELD,
   type DetailsFormValues,
 } from "./details-form-data";
 
@@ -23,12 +24,15 @@ import {
 // own consent; a link to confirm it follows by e-mail).
 
 export function DetailsForm({
+  reference,
   saved,
   prefill = null,
   payLater,
   free = false,
   newsletterController = null,
 }: {
+  /** The visit shown: its details go to no other (card 7). */
+  reference?: string;
   saved: DetailsFormValues | null;
   /**
    * What the client gave for a time they changed ("Zmień termin"): filled
@@ -60,6 +64,9 @@ export function DetailsForm({
 
   return (
     <form action={action} className="grid gap-5" noValidate>
+      {reference ? (
+        <input name={VISIT_FIELD} type="hidden" value={reference} />
+      ) : null}
       {state.status === "saved" ? (
         <p
           className="rounded-card-sm bg-primary-soft text-small text-ink p-4"

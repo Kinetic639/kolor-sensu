@@ -35,6 +35,9 @@ export const HONEYPOT_FIELD = "website";
 export const INTENT_FIELD = "zamiar";
 export const PAY_LATER = "pozniej";
 
+/** The reference of the visit the page showed (card 7: two tabs). */
+export const VISIT_FIELD = "rezerwacja";
+
 export function readDetailsForm(form: FormData): DetailsFormResult {
   if (String(form.get(HONEYPOT_FIELD) ?? "").trim()) {
     return { ok: false, bot: true };

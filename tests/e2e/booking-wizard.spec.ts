@@ -5,6 +5,7 @@ import {
   goToTimes,
   holdChosenTime,
   pickTime,
+  newVisitor,
 } from "./support/booking";
 import { webUrl } from "./support/target";
 
@@ -13,10 +14,13 @@ import { webUrl } from "./support/target";
 // hours in Polish time. Every time held here is given back at the end; the
 // details step is never sent.
 
+// Each test a visitor of its own (the hold limit, @holds).
+test.beforeEach(({ context }) => newVisitor(context));
+
 const header = (page: import("@playwright/test").Page) =>
   page.getByRole("banner");
 
-test("Dokończ rezerwację leads back to where the booking was left (card 11)", async ({
+test("Dokończ rezerwację leads back to where the booking was left (card 11) @holds", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -60,7 +64,7 @@ test("Dokończ rezerwację leads back to where the booking was left (card 11)", 
   ).toBeVisible();
 });
 
-test("Zacznij od nowa clears the choices and gives the time back at once (card 15)", async ({
+test("Zacznij od nowa clears the choices and gives the time back at once (card 15) @holds", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -80,7 +84,7 @@ test("Zacznij od nowa clears the choices and gives the time back at once (card 1
   ).toBeVisible();
 });
 
-test("a time taken while the client looked at it (card 28)", async ({
+test("a time taken while the client looked at it (card 28) @holds", async ({
   page,
   browser,
 }) => {
@@ -88,6 +92,7 @@ test("a time taken while the client looked at it (card 28)", async ({
   // Another guest has the same time chosen, not yet held.
   const timeHref = await chooseTime(page);
   const other = await browser.newContext();
+  await newVisitor(other);
   const late = await other.newPage();
   await late.goto(timeHref);
   await expect(late.getByText("Gotowe. Możesz przejść dalej.")).toBeVisible({
