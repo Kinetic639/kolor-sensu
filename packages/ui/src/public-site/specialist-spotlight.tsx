@@ -8,6 +8,10 @@ import { type SpecialistSplash, SpecialistArtwork } from "./specialist-artwork";
 import { SpecialistReveal } from "./specialist-reveal";
 import { EditorialHeading, SectionEyebrow } from "./typography";
 import type { SectionHeaderContent } from "@repo/contracts/section-header";
+import type {
+  SpecialistBackground,
+  SpotlightFraming,
+} from "@repo/contracts/cms";
 import { SectionHeader } from "./section-header";
 
 // Server-safe: "Z kim porozmawiasz", one specialist presented at length,
@@ -51,6 +55,9 @@ export interface SpecialistSpotlightProps {
   };
   booking: { href: string; label: ReactNode };
   bookingPanel?: ReactNode;
+  background?: SpecialistBackground;
+  portraitFraming?: SpotlightFraming;
+  backgroundFraming?: SpotlightFraming;
   profileLabel?: ReactNode;
   animationPreset?: "none" | "splash-reveal";
   id?: string;
@@ -65,6 +72,9 @@ export function SpecialistSpotlight({
   specialist,
   booking,
   bookingPanel,
+  background = "06b",
+  portraitFraming,
+  backgroundFraming,
   profileLabel = "Poznaj mnie bliżej",
   animationPreset = "none",
   id,
@@ -82,9 +92,12 @@ export function SpecialistSpotlight({
         `${specialist.name}, ${specialist.role.toLowerCase()}`
       }
       splash={specialist.splash}
+      portraitFraming={portraitFraming}
+      backgroundFraming={backgroundFraming}
+      professionalHover={!!bookingPanel}
       backdropSrc={
         bookingPanel
-          ? "/watercolor/specialist-brush-green-pink.webp"
+          ? `/watercolor/specialist-variant-${background}.webp`
           : undefined
       }
       sizes={
@@ -116,11 +129,14 @@ export function SpecialistSpotlight({
           <dt className="text-small text-text-muted font-semibold">
             {fact.label}
           </dt>
-          <dd className="m-0 flex flex-wrap gap-2">
+          <dd className={cn("m-0 flex flex-wrap", !bookingPanel && "gap-2")}>
             {fact.items.map((item) => (
               <span
                 key={item}
-                className="ks-spotlight__chip text-small text-ink"
+                className={cn(
+                  "ks-spotlight__chip text-ink",
+                  !bookingPanel && "text-small",
+                )}
               >
                 {item}
               </span>
@@ -147,6 +163,7 @@ export function SpecialistSpotlight({
       className={cn(
         "ks-spotlight py-section",
         bookingPanel && "ks-spotlight--booking",
+        bookingPanel && background === "06b" && "ks-spotlight--raised-paint",
         className,
       )}
     >

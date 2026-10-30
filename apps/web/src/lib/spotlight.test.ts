@@ -32,6 +32,33 @@ const sections = (
 });
 
 describe("toSpotlight", () => {
+  it("uses 06b for older content and preserves the CMS background choice", () => {
+    const content = sections({
+      visible: true,
+      specialistId: anna.specialistId,
+    });
+    expect(toSpotlight(content, [anna])?.background).toBe("06b");
+    expect(
+      toSpotlight(
+        { ...content, spotlight: { ...content.spotlight, background: "03" } },
+        [anna],
+      )?.background,
+    ).toBe("03");
+  });
+  it("passes both independently saved framing settings to the artwork", () => {
+    const portraitFraming = { x: 3, y: -2, zoom: 1.1 };
+    const backgroundFraming = { x: -4, y: -5, zoom: 0.95 };
+    const result = toSpotlight(
+      sections({
+        visible: true,
+        specialistId: anna.specialistId,
+        portraitFraming,
+        backgroundFraming,
+      }),
+      [anna],
+    );
+    expect(result).toMatchObject({ portraitFraming, backgroundFraming });
+  });
   it("shows nothing while the section is hidden", () => {
     expect(
       toSpotlight(sections({ specialistId: anna.specialistId }), [anna]),

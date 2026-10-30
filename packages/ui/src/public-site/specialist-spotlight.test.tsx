@@ -33,6 +33,47 @@ function renderSpotlight(extra = {}) {
 }
 
 describe("SpecialistSpotlight", () => {
+  it("keeps a clean unmasked copy for professional hover with the same portrait framing", () => {
+    const region = renderSpotlight({
+      bookingPanel: <div>Kalendarz</div>,
+      portraitFraming: { x: 2, y: -3, zoom: 1.1 },
+      backgroundFraming: { x: -1, y: -2, zoom: 0.9 },
+    });
+    const art = region.querySelector(
+      ".ks-sp__art--professional",
+    ) as HTMLElement;
+    expect(art.style.getPropertyValue("--ks-portrait-y")).toBe("-3%");
+    expect(art.style.getPropertyValue("--ks-paint-zoom")).toBe("0.9");
+    expect(
+      art.querySelector(".ks-sp__professional .ks-sp__portrait-img"),
+    ).toBeInTheDocument();
+    expect(
+      art.querySelector(".ks-sp__professional .ks-sp__portrait"),
+    ).toBeNull();
+    expect(art).toHaveAttribute("tabindex", "0");
+  });
+  it("uses the selected paint in both layers and only raises 06b", () => {
+    const region = renderSpotlight({
+      bookingPanel: <div>Kalendarz</div>,
+      background: "03",
+    });
+    const paintImages = region.querySelectorAll(
+      ".ks-sp__splash img, .ks-sp__stain img",
+    );
+    expect(paintImages).toHaveLength(2);
+    for (const image of paintImages) {
+      expect(image.getAttribute("src")).toContain("specialist-variant-03.webp");
+    }
+    expect(region).not.toHaveClass("ks-spotlight--raised-paint");
+  });
+
+  it("raises the default 06b paint without moving the portrait", () => {
+    const region = renderSpotlight({ bookingPanel: <div>Kalendarz</div> });
+    expect(region).toHaveClass("ks-spotlight--raised-paint");
+    expect(
+      region.querySelector(".ks-sp__portrait img")?.getAttribute("src"),
+    ).toContain("anna-nowak.png");
+  });
   it("is a section under its heading, with the eyebrow above and the caption below", () => {
     const region = renderSpotlight();
     const heading = within(region).getByRole("heading", {

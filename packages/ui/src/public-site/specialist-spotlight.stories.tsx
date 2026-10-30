@@ -23,6 +23,12 @@ const meta = {
     ),
   ],
   parameters: { layout: "fullscreen" },
+  argTypes: {
+    background: {
+      control: "select",
+      options: ["01", "02", "03", "04", "05", "06", "06b"],
+    },
+  },
   args: {
     eyebrow: "Poznaj nasz zespół",
     heading: "Z kim porozmawiasz",

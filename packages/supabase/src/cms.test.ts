@@ -294,6 +294,7 @@ describe("home sections", () => {
       visible: true,
       specialistId: "6f1c2b9a-3c41-4e2b-9a55-0d3f2a7b8c10",
       imagePath: "spotlight/a.webp",
+      background: "04" as const,
       imageAlt: "Anna",
     },
   };

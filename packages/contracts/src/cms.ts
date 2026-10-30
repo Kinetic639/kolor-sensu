@@ -175,6 +175,35 @@ export type SupportAreasContent = z.infer<typeof supportAreasContentSchema>;
  * profile photo). Its header (eyebrow, title, description) is among the
  * homepage's headers (homeHeadersContentSchema).
  */
+export const specialistBackgroundIds = [
+  "01",
+  "02",
+  "03",
+  "04",
+  "05",
+  "06",
+  "06b",
+] as const;
+export const spotlightFramingSchema = z.strictObject({
+  x: z.number().min(-25).max(25),
+  y: z.number().min(-25).max(25),
+  zoom: z.number().min(0.65).max(1.6),
+});
+export type SpotlightFraming = z.infer<typeof spotlightFramingSchema>;
+export type SpecialistBackground = (typeof specialistBackgroundIds)[number];
+export const specialistBackgroundOptions: readonly {
+  id: SpecialistBackground;
+  label: string;
+}[] = [
+  { id: "01", label: "01 · Miękki obrys ramion" },
+  { id: "02", label: "02 · Asymetryczna plama" },
+  { id: "03", label: "03 · Lekko przechylona kompozycja" },
+  { id: "04", label: "04 · Łagodne pociągnięcia" },
+  { id: "05", label: "05 · Lekki, nieregularny obrys" },
+  { id: "06", label: "06 · Faktura płaskiego pędzla" },
+  { id: "06b", label: "06b · Bez górnego wcięcia" },
+];
+
 export const homeSpotlightSchema = z
   .strictObject({
     visible: z.boolean(),
@@ -182,6 +211,10 @@ export const homeSpotlightSchema = z
     /** A photo for this section, in the public site-media bucket. */
     imagePath: z.string().trim().min(1).max(300).nullable().default(null),
     imageAlt: z.string().trim().max(200).default(""),
+    /** Omitted in older content; the site uses 06b. */
+    background: z.enum(specialistBackgroundIds).optional(),
+    portraitFraming: spotlightFramingSchema.optional(),
+    backgroundFraming: spotlightFramingSchema.optional(),
   })
   .refine((spotlight) => !spotlight.visible || spotlight.specialistId, {
     message: "Wybierz specjalistę, aby pokazać sekcję",
