@@ -10,12 +10,20 @@ export const compactBookingSample: Omit<
       slug: "konsultacja",
       name: "Konsultacja psychologiczna",
       detail: "50 min · 210 zł",
+      price: "210 zł",
+      duration: "50 min",
+      description:
+        "Pierwsza rozmowa o Twojej sytuacji i potrzebach. Wspólnie ustalimy dalszą formę wsparcia.",
       modes: ["stacjonarnie", "online"],
     },
     {
       slug: "wsparcie",
       name: "Spotkanie wspierające",
       detail: "50 min · 190 zł",
+      price: "190 zł",
+      duration: "50 min",
+      description:
+        "Wsparcie w trudnym momencie, w bezpiecznej i spokojnej atmosferze.",
       modes: ["online"],
     },
   ],

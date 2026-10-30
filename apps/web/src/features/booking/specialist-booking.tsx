@@ -38,6 +38,9 @@ export async function SpecialistBooking({
             slug: service.slug,
             name: service.name,
             detail: `${formatDuration(offer.effectiveDurationMinutes)} · ${formatPrice(offer)}`,
+            price: formatPrice(offer),
+            duration: formatDuration(offer.effectiveDurationMinutes),
+            description: service.description ?? service.shortDescription,
             modes,
           },
         ]

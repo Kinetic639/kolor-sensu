@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn } from "storybook/test";
+import { expect, fn } from "storybook/test";
 import { CompactBookingCalendar } from "./compact-booking-calendar";
 import { AvailabilityCalendar } from "./availability-calendar";
 import {
@@ -32,3 +32,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Available: Story = {};
+export const Services: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole("tab", { name: "Usługi" }));
+    await expect(
+      canvas.getByRole("tabpanel", { name: "Usługi" }),
+    ).toBeVisible();
+  },
+};
