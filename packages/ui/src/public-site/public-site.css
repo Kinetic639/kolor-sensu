@@ -4400,7 +4400,7 @@
     grid-area: header;
     text-align: center;
     justify-items: center;
-    margin-bottom: 2.5rem;
+    margin-bottom: 3.5rem;
   }
   .ks-spotlight--booking .ks-spotlight__art {
     grid-area: art;
@@ -4473,6 +4473,9 @@
       grid-template-areas: "header header" "rail main";
       column-gap: clamp(2rem, 4vw, 4rem);
       row-gap: 2.5rem;
+    }
+    .ks-spotlight--booking .ks-spotlight__header {
+      margin-bottom: 5rem;
     }
     .ks-spotlight__rail {
       grid-area: rail;
