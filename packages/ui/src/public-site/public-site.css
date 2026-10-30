@@ -2674,6 +2674,8 @@
     min-width: 0;
   }
   .ks-peek__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x proximity;
@@ -2694,6 +2696,7 @@
     outline-offset: 4px;
   }
   .ks-peek__list {
+    grid-area: 1 / 1;
     margin-left: auto;
     position: relative;
     display: flex;
@@ -2701,11 +2704,21 @@
     width: max-content;
     padding: 3rem 2rem 2.5rem;
   }
+  /* Every room contributes its height, even while another room is shown.
+     Hide inactive groups from interaction and horizontal scrolling only. */
+  .ks-peek__list[data-active="false"] {
+    visibility: hidden;
+    pointer-events: none;
+    width: 0;
+    padding-inline: 0;
+    overflow: hidden;
+  }
   .ks-peek__item {
     --ks-peek-angle: -3deg;
     --ks-peek-y: -0.9rem;
     position: relative;
     width: min(62vw, 14rem);
+    flex-shrink: 0;
     scroll-snap-align: center;
     z-index: 1;
     translate: 0 var(--ks-peek-y);

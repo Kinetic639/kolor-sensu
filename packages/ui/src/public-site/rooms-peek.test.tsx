@@ -18,6 +18,25 @@ const photos = [
   { url: "/c.webp", alt: "Różowy, regał", room: "Różowy", roomId: "b" },
 ];
 describe("RoomsPeek", () => {
+  it("keeps inactive room dimensions available without exposing their photos or focus targets", () => {
+    const { container } = render(<RoomsPeek header={header} photos={photos} />);
+    expect(container.querySelectorAll(".ks-peek__list")).toHaveLength(2);
+    const inactive = container.querySelector(
+      '.ks-peek__list[data-active="false"]',
+    );
+    expect(inactive).toHaveAttribute("aria-hidden", "true");
+    expect(inactive).toHaveAttribute("inert");
+    expect(
+      screen.getAllByRole("list", { name: "Zdjęcia gabinetów" }),
+    ).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Następny gabinet" }));
+    expect(
+      screen.getAllByRole("list", { name: "Zdjęcia gabinetów" }),
+    ).toHaveLength(1);
+    expect(
+      screen.queryByRole("img", { name: "Zielony, fotel" }),
+    ).not.toBeInTheDocument();
+  });
   it("switches complete rooms using buttons and arrow keys", () => {
     render(<RoomsPeek header={header} photos={photos} />);
     const row = screen.getByRole("list", {
