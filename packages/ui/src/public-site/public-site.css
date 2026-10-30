@@ -3964,10 +3964,6 @@
     background: url("/crisis/crisis-fill-green-2.webp") center / 100% 100%
       no-repeat;
   }
-  .ks-education-books-paint .ks-wk__hover-paint {
-    z-index: 0;
-    inset: 0;
-  }
   .ks-education-gallery::before,
   .ks-education-workshop::before {
     content: "";
