@@ -103,6 +103,11 @@ export async function bookUntilDetails(
     .getByRole("checkbox", { name: "Akceptuję regulamin rezerwacji" })
     .check();
   await details.getByRole("checkbox", { name: /polityką prywatności/ }).check();
+  // A visit within 14 days asks for the request to start early (card 15).
+  const early = details.getByRole("checkbox", {
+    name: /Wizyta wypada w ciągu 14 dni/,
+  });
+  if ((await early.count()) > 0) await early.check();
   return { reference, email, details, timeHref };
 }
 

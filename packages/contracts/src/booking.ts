@@ -36,6 +36,14 @@ export const bookingDetailsSchema = z.object({
   acceptPrivacy: z.literal(true, {
     error: "Zaakceptuj politykę prywatności, aby zarezerwować wizytę.",
   }),
+  /**
+   * A visit within 14 days of booking (Klient · 3, card 15): the client asks
+   * for it before the 14 days to withdraw are over. Asked only then; the
+   * database says when (booking_requirements) and checks it again.
+   */
+  acceptEarlyStart: z.boolean().default(false),
+  /** A service for minors (card 16): booked by a parent or legal guardian. */
+  confirmGuardian: z.boolean().default(false),
 });
 
 export type BookingDetailsInput = z.input<typeof bookingDetailsSchema>;

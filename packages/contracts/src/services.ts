@@ -37,6 +37,8 @@ export const serviceCreateSchema = z.object({
   bookingEnabled: z.boolean().default(false),
   /** The client fills in the questionnaire when booking it online. */
   requiresIntake: z.boolean().default(false),
+  /** For a child or a teenager: booked by a parent or guardian (card 16). */
+  forMinors: z.boolean().default(false),
   sortOrder: z.number().int().min(0).max(10_000).default(0),
 });
 
@@ -113,6 +115,8 @@ export interface Service {
   bookingEnabled: boolean;
   /** The client fills in the questionnaire when booking it online. */
   requiresIntake: boolean;
+  /** For a child or a teenager: booked by a parent or guardian (card 16). */
+  forMinors: boolean;
   /** Its place: in its catalogue, or (none) among the catalogues. */
   sortOrder: number;
   catalogId: string | null;

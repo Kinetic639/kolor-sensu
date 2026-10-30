@@ -12,6 +12,10 @@ const db = vi.hoisted(() => ({
   getBooking: vi.fn(async (): Promise<unknown> => null),
   holdSlot: vi.fn(async () => ({ accessToken: "new-token" })),
   saveBookingDetails: vi.fn(),
+  getBookingRequirements: vi.fn(async () => ({
+    earlyStart: false,
+    guardian: false,
+  })),
 }));
 const hold = vi.hoisted(() => ({
   readHoldToken: vi.fn(async (): Promise<string | null> => null),
@@ -226,5 +230,74 @@ describe("details sent from a tab showing another visit (card 7)", () => {
     );
     // Nothing filled in: the form's own errors, not another visit.
     expect(state.status).toBe("invalid");
+  });
+});
+
+const valid = {
+  rezerwacja: "2610-001",
+  firstName: "Ewa",
+  lastName: "Raz",
+  email: "ewa@example.invalid",
+  phone: "600 700 900",
+  notes: "",
+  acceptTerms: "on",
+  acceptPrivacy: "on",
+};
+
+describe("the details step, the database refusing (Klient · 3)", () => {
+  it("one visit at a time: the same person is told and asked for another time (card 17)", async () => {
+    hold.readHoldToken.mockResolvedValue("hold-token");
+    db.getBooking.mockResolvedValue(held);
+    const { BookingError } = await import("@repo/supabase");
+    db.saveBookingDetails.mockRejectedValueOnce(
+      Object.assign(new BookingError("client_overlap" as never, "x"), {
+        code: "client_overlap",
+      }),
+    );
+    const state = await saveDetailsAction({ status: "idle" }, form(valid));
+    expect(state).toMatchObject({
+      status: "invalid",
+      message:
+        "Masz już wizytę w tym czasie (na ten sam e-mail albo telefon). Wybierz, proszę, inny termin albo napisz do nas.",
+      values: { email: "ewa@example.invalid" },
+    });
+  });
+
+  it("a visit within 14 days: the request is asked for before anything is saved (card 15)", async () => {
+    hold.readHoldToken.mockResolvedValue("hold-token");
+    db.getBooking.mockResolvedValue(held);
+    db.getBookingRequirements.mockResolvedValueOnce({
+      earlyStart: true,
+      guardian: false,
+    });
+    const state = await saveDetailsAction({ status: "idle" }, form(valid));
+    expect(state).toMatchObject({
+      status: "invalid",
+      errors: { acceptEarlyStart: expect.stringContaining("14 dni") },
+    });
+    expect(db.saveBookingDetails).not.toHaveBeenCalled();
+  });
+
+  it("with the request ticked, it is saved with the details (card 15)", async () => {
+    hold.readHoldToken.mockResolvedValue("hold-token");
+    db.getBooking.mockResolvedValue(held);
+    db.getBookingRequirements.mockResolvedValueOnce({
+      earlyStart: true,
+      guardian: false,
+    });
+    await redirected(() =>
+      saveDetailsAction(
+        { status: "idle" },
+        form({ ...valid, acceptEarlyStart: "on" }),
+      ),
+    ).catch(() => undefined);
+    expect(db.saveBookingDetails).toHaveBeenCalledWith(
+      {},
+      "hold-token",
+      expect.objectContaining({
+        acceptEarlyStart: true,
+        confirmGuardian: false,
+      }),
+    );
   });
 });

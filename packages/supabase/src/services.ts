@@ -78,6 +78,7 @@ function mapService(row: ServiceRow): Service {
     publiclyVisible: row.publicly_visible,
     bookingEnabled: row.booking_enabled,
     requiresIntake: row.requires_intake,
+    forMinors: row.for_minors,
     sortOrder: row.sort_order,
     catalogId: row.catalog_id,
     createdAt: row.created_at,
@@ -199,6 +200,7 @@ export async function createService(
       publicly_visible: service.publiclyVisible,
       booking_enabled: service.bookingEnabled,
       requires_intake: service.requiresIntake,
+      for_minors: service.forMinors,
       sort_order: service.sortOrder,
     })
     .select("*")
@@ -228,6 +230,7 @@ export async function updateService(
       publicly_visible: patch.publiclyVisible,
       booking_enabled: patch.bookingEnabled,
       requires_intake: patch.requiresIntake,
+      for_minors: patch.forMinors,
       sort_order: patch.sortOrder,
     })
     .eq("id", id)

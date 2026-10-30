@@ -271,6 +271,7 @@ describe("mapHomeHeadersViewModel", () => {
     publiclyVisible: true,
     bookingEnabled: true,
     requiresIntake: true,
+    forMinors: false,
     sortOrder: 0,
     catalogId: null,
     createdAt: "2026-10-01T00:00:00Z",

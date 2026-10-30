@@ -15,6 +15,10 @@ export interface DetailsFormValues {
   notes: string;
   acceptTerms: boolean;
   acceptPrivacy: boolean;
+  /** Asked for a visit within 14 days of booking (Klient · 3, card 15). */
+  acceptEarlyStart?: boolean;
+  /** Asked for a service for minors (card 16). */
+  confirmGuardian?: boolean;
   /** Also sign up for the newsletter (shown only while it is on). */
   newsletter?: boolean;
 }
@@ -38,7 +42,21 @@ export const PAY_LATER = "pozniej";
 /** The reference of the visit the page showed (card 7: two tabs). */
 export const VISIT_FIELD = "rezerwacja";
 
-export function readDetailsForm(form: FormData): DetailsFormResult {
+/** What the held visit asks of the client, besides the two consents. */
+export interface DetailsNeeds {
+  earlyStart: boolean;
+  guardian: boolean;
+}
+
+export const EARLY_START_REQUIRED =
+  "Zaznacz, że chcesz wizyty przed upływem 14 dni od rezerwacji, albo wybierz późniejszy termin.";
+export const GUARDIAN_REQUIRED =
+  "Tę usługę rezerwuje rodzic lub opiekun prawny: potwierdź to, aby zarezerwować wizytę.";
+
+export function readDetailsForm(
+  form: FormData,
+  needs: DetailsNeeds = { earlyStart: false, guardian: false },
+): DetailsFormResult {
   if (String(form.get(HONEYPOT_FIELD) ?? "").trim()) {
     return { ok: false, bot: true };
   }
@@ -50,18 +68,26 @@ export function readDetailsForm(form: FormData): DetailsFormResult {
     notes: String(form.get("notes") ?? ""),
     acceptTerms: form.get("acceptTerms") === "on",
     acceptPrivacy: form.get("acceptPrivacy") === "on",
+    acceptEarlyStart: needs.earlyStart && form.get("acceptEarlyStart") === "on",
+    confirmGuardian: needs.guardian && form.get("confirmGuardian") === "on",
     newsletter: form.get("newsletter") === "on",
   };
   const { newsletter, ...booking } = values;
   const parsed = bookingDetailsSchema.safeParse(booking);
-  if (parsed.success) {
-    return { ok: true, details: parsed.data, newsletter: newsletter === true };
-  }
 
   const errors: DetailsFormErrors = {};
-  for (const issue of parsed.error.issues) {
+  for (const issue of parsed.success ? [] : parsed.error.issues) {
     const field = issue.path[0] as keyof DetailsFormValues;
     errors[field] ??= issue.message;
+  }
+  if (needs.earlyStart && !values.acceptEarlyStart) {
+    errors.acceptEarlyStart = EARLY_START_REQUIRED;
+  }
+  if (needs.guardian && !values.confirmGuardian) {
+    errors.confirmGuardian = GUARDIAN_REQUIRED;
+  }
+  if (parsed.success && Object.keys(errors).length === 0) {
+    return { ok: true, details: parsed.data, newsletter: newsletter === true };
   }
   return { ok: false, errors, values };
 }

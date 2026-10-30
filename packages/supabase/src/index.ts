@@ -255,6 +255,7 @@ export type {
 export {
   BookingError,
   getBooking,
+  getBookingRequirements,
   getBookingWindow,
   holdSlot,
   listBookableCatalog,
@@ -271,6 +272,7 @@ export type {
   BookableCatalog,
   BookableOffer,
   BookingErrorCode,
+  BookingRequirements,
   BookingWindow,
   FreeSlotsQuery,
   GuestBooking,

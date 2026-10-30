@@ -20,6 +20,7 @@ function service(id: string, name: string, minutes = 50): Service {
     publiclyVisible: true,
     bookingEnabled: false,
     requiresIntake: false,
+    forMinors: false,
     catalogId: null,
     sortOrder: 0,
     createdAt: "2026-09-01T00:00:00Z",

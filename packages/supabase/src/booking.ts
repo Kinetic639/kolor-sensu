@@ -65,6 +65,12 @@ export type BookingErrorCode =
   | "recently_settled"
   /** The service asks for the questionnaire first, and there is none. */
   | "intake_required"
+  /** A visit within 14 days, without the client's request (card 15). */
+  | "early_start_required"
+  /** A service for minors, not confirmed by a parent or guardian (card 16). */
+  | "guardian_required"
+  /** The same person (e-mail or phone) has a visit at that time (card 17). */
+  | "client_overlap"
   | "unknown";
 
 const BOOKING_ERROR_CODES = new Set<string>([
@@ -96,6 +102,9 @@ const BOOKING_ERROR_CODES = new Set<string>([
   "nothing_owed",
   "recently_settled",
   "intake_required",
+  "early_start_required",
+  "guardian_required",
+  "client_overlap",
 ]);
 
 export class BookingError extends Error {
@@ -385,8 +394,30 @@ export async function saveBookingDetails(
     p_notes: details.notes ?? "",
     p_accept_terms: details.acceptTerms,
     p_accept_privacy: details.acceptPrivacy,
+    p_accept_early_start: details.acceptEarlyStart,
+    p_confirm_guardian: details.confirmGuardian,
   });
   if (error) throw bookingError(error);
+}
+
+/** What the held visit asks of its client (cards 15, 16); null: no hold. */
+export interface BookingRequirements {
+  /** Within 14 days of booking: the request to start early. */
+  earlyStart: boolean;
+  /** A service for minors: a parent's or guardian's confirmation. */
+  guardian: boolean;
+}
+
+export async function getBookingRequirements(
+  client: Client,
+  accessToken: string,
+): Promise<BookingRequirements | null> {
+  const { data, error } = await client.rpc("booking_requirements", {
+    p_access_token: accessToken,
+  });
+  if (error) throw error;
+  const row = data?.[0];
+  return row ? { earlyStart: row.early_start, guardian: row.guardian } : null;
 }
 
 export function cancelledByOf(value: string | null | undefined) {

@@ -136,6 +136,8 @@ export type Database = {
           specialist_service_id: string;
           status: Database["public"]["Enums"]["appointment_status"];
           terms_accepted_at: string | null;
+          early_start_accepted_at: string | null;
+          guardian_confirmed_at: string | null;
           updated_at: string;
         };
         Insert: {
@@ -179,6 +181,8 @@ export type Database = {
           specialist_service_id: string;
           status?: Database["public"]["Enums"]["appointment_status"];
           terms_accepted_at?: string | null;
+          early_start_accepted_at?: string | null;
+          guardian_confirmed_at?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -222,6 +226,8 @@ export type Database = {
           specialist_service_id?: string;
           status?: Database["public"]["Enums"]["appointment_status"];
           terms_accepted_at?: string | null;
+          early_start_accepted_at?: string | null;
+          guardian_confirmed_at?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -1372,6 +1378,7 @@ export type Database = {
           name: string;
           publicly_visible: boolean;
           requires_intake: boolean;
+          for_minors: boolean;
           short_description: string | null;
           slug: string;
           sort_order: number;
@@ -1390,6 +1397,7 @@ export type Database = {
           name: string;
           publicly_visible?: boolean;
           requires_intake?: boolean;
+          for_minors?: boolean;
           short_description?: string | null;
           slug: string;
           sort_order?: number;
@@ -1408,6 +1416,7 @@ export type Database = {
           name?: string;
           publicly_visible?: boolean;
           requires_intake?: boolean;
+          for_minors?: boolean;
           short_description?: string | null;
           slug?: string;
           sort_order?: number;
@@ -3212,6 +3221,13 @@ export type Database = {
         };
         Returns: undefined;
       };
+      booking_requirements: {
+        Args: { p_access_token: string };
+        Returns: {
+          early_start: boolean;
+          guardian: boolean;
+        }[];
+      };
       booking_window: {
         Args: never;
         Returns: {
@@ -4026,9 +4042,11 @@ export type Database = {
       };
       save_booking_details: {
         Args: {
+          p_accept_early_start?: boolean;
           p_accept_privacy: boolean;
           p_accept_terms: boolean;
           p_access_token: string;
+          p_confirm_guardian?: boolean;
           p_email: string;
           p_first_name: string;
           p_last_name: string;

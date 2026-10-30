@@ -4,6 +4,7 @@ import {
   attachCheckoutSession,
   BookingError,
   getBooking,
+  getBookingRequirements,
   holdSlot,
   pendingCheckoutSession,
   releaseHold,
@@ -30,6 +31,8 @@ import { createSecretClient } from "@/lib/supabase/secret";
 import {
   INTENT_FIELD,
   PAY_LATER,
+  EARLY_START_REQUIRED,
+  GUARDIAN_REQUIRED,
   readDetailsForm,
   VISIT_FIELD,
   type DetailsFormErrors,
@@ -318,7 +321,12 @@ export async function saveDetailsAction(
     if (current && current.reference !== shown) redirect(OTHER_TAB_PATH);
   }
 
-  const form = readDetailsForm(formData);
+  // What the visit asks besides the two consents (Klient · 3, cards 15, 16).
+  const needs = (await getBookingRequirements(
+    createSecretClient(),
+    token,
+  ).catch(() => null)) ?? { earlyStart: false, guardian: false };
+  const form = readDetailsForm(formData, needs);
   if (!form.ok && "bot" in form) {
     // Say nothing useful to a bot.
     return { status: "idle" };
@@ -359,6 +367,43 @@ export async function saveDetailsAction(
     }
     if (error instanceof BookingError && error.code === "hold_expired") {
       redirect(EXPIRED);
+    }
+    if (error instanceof BookingError && error.code === "client_overlap") {
+      // Card 17: one person, one visit at a time.
+      return {
+        status: "invalid",
+        errors: {},
+        values: {
+          ...form.details,
+          notes: form.details.notes ?? "",
+          acceptTerms: true,
+          acceptPrivacy: true,
+          newsletter: form.newsletter,
+        },
+        message:
+          "Masz już wizytę w tym czasie (na ten sam e-mail albo telefon). Wybierz, proszę, inny termin albo napisz do nas.",
+      };
+    }
+    if (
+      error instanceof BookingError &&
+      (error.code === "early_start_required" ||
+        error.code === "guardian_required")
+    ) {
+      // The page asked for less than the database (the visit changed).
+      return {
+        status: "invalid",
+        errors:
+          error.code === "early_start_required"
+            ? { acceptEarlyStart: EARLY_START_REQUIRED }
+            : { confirmGuardian: GUARDIAN_REQUIRED },
+        values: {
+          ...form.details,
+          notes: form.details.notes ?? "",
+          acceptTerms: true,
+          acceptPrivacy: true,
+          newsletter: form.newsletter,
+        },
+      };
     }
     if (error instanceof BookingError) {
       return {

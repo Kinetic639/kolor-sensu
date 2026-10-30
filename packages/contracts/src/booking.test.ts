@@ -35,6 +35,8 @@ describe("bookingDetailsSchema", () => {
       notes: null,
       acceptTerms: true,
       acceptPrivacy: true,
+      acceptEarlyStart: false,
+      confirmGuardian: false,
     });
   });
 
