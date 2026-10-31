@@ -2501,6 +2501,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      specialist_availability: {
+        Args: {
+          p_specialist_slug: string;
+          p_service_slug?: string;
+          p_from?: string;
+          p_to?: string;
+          p_nearest?: boolean;
+        };
+        Returns: Json;
+      };
       claim_newsletter_issue: {
         Args: { p_id: string; p_send_at: string };
         Returns: undefined;

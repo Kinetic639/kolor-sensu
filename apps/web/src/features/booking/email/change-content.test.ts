@@ -145,6 +145,33 @@ describe("the centre's own way (R12)", () => {
     ]);
     expect(content.ics).toContain("SEQUENCE:2");
   });
+
+  it("the centre changed it (maybe only its form or room): the time and the place, not 'a new time' (Klient · 6, card 13)", () => {
+    const content = rescheduledContent(
+      {
+        ...visit,
+        mode: "in_person",
+        roomName: "Gabinet 3",
+        locationName: "Kolor Sensu",
+        locationAddress: "ul. Długa 1, Gdańsk",
+      },
+      { ...options, sequence: 1, byCentre: true },
+    );
+    expect(content.subject).toBe(
+      "Zmiana wizyty KS-20301002-1534 – czwartek, 3 października 2030, godz. 11:00",
+    );
+    expect(content.heading).toBe("Zmieniliśmy Twoją wizytę");
+    expect(content.intro).not.toContain("nowy termin");
+    expect(content.rows).toContainEqual([
+      "Termin",
+      "czwartek, 3 października 2030, godz. 11:00–11:50",
+    ]);
+    expect(content.rows).toContainEqual([
+      "Miejsce",
+      "Kolor Sensu, ul. Długa 1, Gdańsk (Gabinet 3)",
+    ]);
+    expect(content.manageUrl).toBe("https://kolorsensu.pl/wizyta/link-token");
+  });
 });
 
 describe("refundedContent", () => {

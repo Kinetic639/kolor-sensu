@@ -176,6 +176,29 @@ function form(values: Record<string, string>) {
 }
 
 describe("another time held over an earlier one (card 6, card 7)", () => {
+  it("never creates a hold when changed choices no longer resolve to a free time", async () => {
+    for (const panel of [
+      { kind: "choices" },
+      { kind: "slots", chosen: null },
+    ]) {
+      wizard.loadWizard.mockResolvedValue({
+        params: {
+          usluga: "konsultacja",
+          forma: "online",
+          specjalista: "anna",
+          termin: "2030-01-10T10:00",
+        },
+        view: { panel },
+      });
+      const href = await redirected(() =>
+        holdTimeAction(
+          form({ usluga: "konsultacja", termin: "2030-01-10T10:00" }),
+        ),
+      );
+      expect(href).toContain("uwaga=termin-zajety");
+      expect(db.holdSlot).not.toHaveBeenCalled();
+    }
+  });
   it("gives the earlier one back with its payment, and holds the new one", async () => {
     wizard.loadWizard.mockResolvedValue({
       params: {

@@ -24,18 +24,18 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 .views {
   display: flex;
   gap: 3px;
-  padding: 4px;
+  padding: 2px;
   border-radius: 8px;
-  background: #edf1e8;
+  background: #e9e8e2;
 }
 .views button {
-  padding: 7px 14px;
+  padding: 5px 10px;
   font-size: 12px;
   border-radius: 6px;
 }
@@ -46,25 +46,29 @@
 .navigation {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   margin-left: auto;
+  background: #fffdf9;
+  border-radius: 8px;
+  padding: 2px;
+  box-shadow: 0 1px 4px #20492915;
 }
 .navigation h4 {
-  font-size: 13px;
+  font-size: 12px;
   white-space: nowrap;
   font-weight: 600;
 }
 .navigation button {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 34px;
+  width: 28px;
+  height: 30px;
   border-radius: 50%;
   color: var(--green);
 }
 .navigation button > svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
 }
 .navigation button:hover:not(:disabled) {
   background: #e9eedf;
@@ -72,6 +76,9 @@
 .stage {
   position: relative;
   isolation: isolate;
+}
+.stage > [inert] {
+  opacity: 0.55;
 }
 .content {
   padding: 3px;
@@ -86,11 +93,14 @@
   min-width: 0;
 }
 .weekColumns h4 {
-  display: grid;
-  justify-items: center;
-  gap: 5px;
-  margin-bottom: 14px;
-  padding: 6px 2px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px 5px;
+  min-height: 26px;
+  margin-bottom: 8px;
+  padding: 2px;
 }
 .weekColumns h4 > span {
   font-size: 10px;
@@ -126,7 +136,7 @@
   min-height: 31px;
   padding: 5px 2px;
   border: 1px solid #a7c7a2;
-  background: #f1f5eb;
+  background: #fffdf9;
   border-radius: 6px 8px 7px 5px;
   font-size: 11px;
   font-weight: 600;
@@ -136,8 +146,8 @@
     border-color 0.18s;
 }
 .time:hover {
-  background: #f9e1db;
-  border-color: #dca9a2;
+  background: #dcebd8;
+  border-color: #7fa87a;
 }
 .time[aria-pressed="true"] {
   background: var(--green);
@@ -161,13 +171,13 @@
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 .weekdays {
-  height: 28px;
-  margin-bottom: 9px;
+  height: 24px;
+  margin-bottom: 5px;
   align-items: center;
   text-align: center;
   font-size: 9px;
   text-transform: uppercase;
-  color: #768077;
+  color: var(--color-ink, #193c36);
 }
 .days > :is(button, span) {
   aspect-ratio: 1;
@@ -196,16 +206,18 @@
     transform 0.18s;
 }
 .days button:not(:disabled) {
-  background: #e9efdf;
+  background: #fffdf9;
   color: #396441;
   font-weight: 600;
 }
 .days button:hover:not(:disabled) {
-  background: #f8d8d1;
+  background: #dcebd8;
   transform: translateY(-1px);
 }
-.days button[aria-pressed="true"] {
+.days button[aria-pressed="true"],
+.days button[aria-pressed="true"]:hover {
   background: var(--green);
+  border-color: var(--green);
   color: white;
 }
 .days > button.today {
@@ -230,8 +242,8 @@
 .dayTimes > h4 {
   display: grid;
   align-items: center;
-  height: 28px;
-  margin-bottom: 9px;
+  height: 24px;
+  margin-bottom: 5px;
   font-size: 11px;
   line-height: 1.3;
   font-weight: 600;
@@ -246,10 +258,10 @@
   min-height: 39px;
   font-size: 13px;
   padding: 7px 4px;
-  background: transparent;
+  background: #fffdf9;
 }
 .dayTimes .time:hover {
-  background: #f9e1db;
+  background: #dcebd8;
 }
 .dayTimes .time[aria-pressed="true"] {
   background: var(--green);
@@ -263,31 +275,6 @@
   padding-top: 10px;
   border-top: 1px solid #527b5722;
   font-size: 12px;
-}
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  column-gap: 22px;
-  row-gap: 8px;
-  color: #697969;
-  font-size: 9px;
-  margin: 0;
-}
-.legend > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-.legend i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--green);
-}
-.legend > span:last-child > i {
-  background: #b6bdb0;
 }
 .chosen {
   display: flex;
@@ -312,8 +299,6 @@
   gap: 12px;
   padding: 24px;
   text-align: center;
-  border-radius: 10px;
-  background: #fffdf9d9;
 }
 .overlay strong {
   font-size: 14px;
@@ -347,19 +332,20 @@
 .skeletonSlot,
 .skeletonGrid > span {
   display: block;
-  background: #dfe7d9;
+  background: rgb(255 253 249 / 0.8);
+  border: 1px solid rgb(167 199 162 / 0.45);
   border-radius: 6px;
 }
 .skeletonHeading {
-  height: 44px;
-  margin-bottom: 14px;
+  height: 26px;
+  margin-bottom: 2px;
 }
 .skeletonSlot {
   height: 31px;
 }
 .skeletonGrid {
   grid-auto-rows: 48px;
-  padding-top: 37px;
+  padding-top: 29px;
   align-content: start;
 }
 .skeletonGrid > span {
@@ -374,25 +360,31 @@
 }
 .skeletonTimes > .skeletonHeading {
   grid-column: 1 / -1;
-  height: 28px;
-  margin-bottom: 9px;
+  height: 24px;
+  margin-bottom: 5px;
 }
 @media (max-width: 450px) {
   .header {
-    gap: 12px;
+    gap: 5px;
   }
   .views button {
     font-size: 11px;
-    padding: 6px 8px;
+    padding: 5px 6px;
   }
   .navigation {
     gap: 3px;
   }
   .navigation h4 {
-    font-size: 12px;
+    font-size: 11px;
   }
   .weekColumns {
     gap: 4px;
+  }
+  .weekColumns h4 {
+    height: 36px;
+  }
+  .weekSkeleton .skeletonHeading {
+    height: 36px;
   }
   .weekColumns h4 > strong,
   .weekColumns .time {

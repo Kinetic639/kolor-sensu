@@ -100,6 +100,23 @@ const timeStep: Partial<BookingParams> = {
   tydzien: "2030-01-07",
 };
 
+describe("a time chosen before the meeting form", () => {
+  it("keeps the fourth step checked and offers continuing instead of choosing the time again", () => {
+    renderWizard({ ...timeStep, termin: "2030-01-09T10:00" });
+    expect(
+      screen.getByRole("heading", { name: "Termin wybrany" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "Krok 4: Termin (ukończony)" }),
+    ).toHaveAttribute("aria-current", "step");
+    expect(
+      screen.queryByRole("heading", { name: "Wybierz termin" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Przejdź dalej" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Zmień: Termin" })).toBeVisible();
+  });
+});
+
 describe("a time taken before the client chose it (card 28)", () => {
   it("says so and shows the week's free times again, none chosen", () => {
     renderWizard({ ...timeStep, uwaga: "termin-zajety" });

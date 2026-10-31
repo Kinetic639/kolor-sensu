@@ -10,6 +10,8 @@ export interface BookingStep {
   label: string;
   /** Where a done step goes back to. */
   href?: string;
+  /** A choice supplied out of order, e.g. a specialist selected on their profile. */
+  completed?: boolean;
 }
 
 export interface BookingStepperProps {
@@ -31,7 +33,11 @@ export function BookingStepper({
       <ol className="flex items-start">
         {steps.map((step, index) => {
           const state =
-            index < current ? "done" : index === current ? "current" : "ahead";
+            step.completed || index < current
+              ? "done"
+              : index === current
+                ? "current"
+                : "ahead";
           const name = `Krok ${index + 1}: ${step.label}${
             state === "done" ? " (ukończony)" : ""
           }`;
@@ -41,9 +47,11 @@ export function BookingStepper({
                 aria-hidden="true"
                 className={cn(
                   "text-small flex size-9 items-center justify-center rounded-full border font-semibold sm:size-10",
-                  state === "ahead"
-                    ? "border-border-strong bg-surface text-text-muted"
-                    : "border-primary bg-primary text-on-primary",
+                  state === "done"
+                    ? "border-primary bg-primary text-on-primary"
+                    : state === "current"
+                      ? "border-ink bg-surface text-ink"
+                      : "border-border-strong bg-surface text-text-muted",
                 )}
               >
                 {state === "done" ? (
@@ -56,9 +64,11 @@ export function BookingStepper({
                 aria-hidden="true"
                 className={cn(
                   "mt-1.5 text-center text-[0.6875rem] leading-tight sm:text-sm",
-                  state === "ahead"
-                    ? "text-text-muted"
-                    : "text-primary-strong font-semibold",
+                  state === "done"
+                    ? "text-primary-strong font-semibold"
+                    : state === "current"
+                      ? "text-ink font-semibold"
+                      : "text-text-muted",
                 )}
               >
                 {step.label}
@@ -83,6 +93,7 @@ export function BookingStepper({
               {state === "done" && step.href ? (
                 <Link
                   aria-label={name}
+                  aria-current={index === current ? "step" : undefined}
                   className="focus-visible:outline-ring flex flex-col items-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2"
                   href={step.href}
                 >

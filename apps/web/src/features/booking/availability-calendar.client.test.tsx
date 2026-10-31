@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
+import { focusManager } from "@tanstack/react-query";
+import { getAvailabilityQueryClient } from "./availability-query";
 import {
   cleanup,
   fireEvent,
@@ -7,10 +9,15 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AvailabilityCalendarClient } from "./availability-calendar.client";
 
+beforeEach(() => {
+  getAvailabilityQueryClient().clear();
+  focusManager.setFocused(true);
+});
 afterEach(() => {
+  getAvailabilityQueryClient().clear();
   cleanup();
   vi.unstubAllGlobals();
 });
@@ -42,6 +49,84 @@ const props = {
 };
 
 describe("initial availability calendar period", () => {
+  it("shares an in-flight request between calendar instances", async () => {
+    const fetch = mockAvailability();
+    render(
+      <>
+        <AvailabilityCalendarClient {...props} />
+        <AvailabilityCalendarClient {...props} />
+      </>,
+    );
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole("button", { name: /09:00, wolny termin/ }),
+      ).toHaveLength(2),
+    );
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("loads a whole month once and reuses visited views without extra requests", async () => {
+    const fetch = vi.fn(async () =>
+      Response.json({
+        picker: { days: [nextDay] },
+        from: "2026-11-01",
+        to: "2026-11-30",
+      }),
+    );
+    vi.stubGlobal("fetch", fetch);
+    render(
+      <AvailabilityCalendarClient
+        {...props}
+        endpoint="/api/booking/specialist-preview"
+        rangeRequests
+      />,
+    );
+    await screen.findByRole("button", { name: /09:00, wolny termin/ });
+    expect(fetch).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "Miesiąc" }));
+    await screen.findByRole("button", { name: /09:00, wolny termin/ });
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenLastCalledWith(
+      expect.stringContaining("miesiac=2026-11-01"),
+      expect.anything(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Tydzień" }));
+    await screen.findByRole("button", { name: /09:00, wolny termin/ });
+    fireEvent.click(screen.getByRole("button", { name: "Miesiąc" }));
+    await screen.findByRole("button", { name: /09:00, wolny termin/ });
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("ignores a response from the previous specialist", async () => {
+    let resolveOld!: (response: Response) => void;
+    const fetch = vi.fn((url: string) =>
+      url.includes("specjalista=anna")
+        ? new Promise<Response>((resolve) => {
+            resolveOld = resolve;
+          })
+        : Promise.resolve(Response.json({ picker: { days: [nextDay] } })),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const { rerender } = render(<AvailabilityCalendarClient {...props} />);
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    rerender(<AvailabilityCalendarClient {...props} query="specjalista=jan" />);
+    await screen.findByRole("button", { name: /09:00, wolny termin/ });
+    resolveOld(
+      Response.json({
+        picker: {
+          days: [
+            { ...nextDay, slots: [{ time: "15:00", href: "/old-specialist" }] },
+          ],
+        },
+      }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: /15:00, wolny termin/ }),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
   it("opens November and its first free workweek on the last Saturday of October", async () => {
     mockAvailability();
     render(<AvailabilityCalendarClient {...props} />);
@@ -76,7 +161,12 @@ describe("initial availability calendar period", () => {
         expect.anything(),
       ),
     );
-    fireEvent.focus(window);
+    await getAvailabilityQueryClient().invalidateQueries({
+      queryKey: ["availability"],
+      refetchType: "none",
+    });
+    focusManager.setFocused(false);
+    focusManager.setFocused(true);
     await waitFor(() =>
       expect(
         fetch.mock.calls.filter(([url]) => url.includes("tydzien=2026-10-26")),
@@ -91,6 +181,7 @@ describe("initial availability calendar period", () => {
     const fetch = vi
       .fn()
       .mockRejectedValueOnce(new Error("offline"))
+      .mockRejectedValueOnce(new Error("offline"))
       .mockResolvedValue(
         Response.json({ picker: { days: [], nothingFree: { kind: "none" } } }),
       );
@@ -99,7 +190,7 @@ describe("initial availability calendar period", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: "Spróbuj ponownie" }),
     );
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
     await waitFor(() =>
       expect(
         screen.queryByRole("button", { name: "Spróbuj ponownie" }),

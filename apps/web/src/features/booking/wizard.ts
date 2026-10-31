@@ -120,7 +120,7 @@ export function bookingWeek(params: BookingParams, today: string) {
 }
 
 /** `czwartek, 10 stycznia 2030, godz. 13:00` */
-function slotLabel(slot: FreeSlot) {
+function slotLabel(slot: Pick<FreeSlot, "date" | "localTime">) {
   return `${formatWeekday(slot.date)}, ${formatDate(slot.date)}, godz. ${slot.localTime}`;
 }
 
@@ -153,14 +153,14 @@ function servicesPanel({
           priceLabel(ofService),
         ],
         tags: modeTags(ofService),
-        selected: false,
+        selected: params.usluga === service.slug,
       };
     }),
   };
 }
 
 function modesPanel({ params, selection }: WizardInput): WizardPanel {
-  if (selection.mode === "stacjonarnie") {
+  if (selection.step === "lokalizacja") {
     return {
       kind: "choices",
       title: "Wybierz miejsce",
@@ -174,7 +174,7 @@ function modesPanel({ params, selection }: WizardInput): WizardPanel {
           undefined,
         facts: [],
         tags: [],
-        selected: false,
+        selected: selection.location?.slug === location.slug,
       })),
     };
   }
@@ -192,7 +192,7 @@ function modesPanel({ params, selection }: WizardInput): WizardPanel {
           : "Spotkanie przez internet, z dowolnego miejsca.",
       facts: [],
       tags: [],
-      selected: false,
+      selected: selection.mode === mode,
     })),
   };
 }
@@ -228,7 +228,7 @@ function specialistsPanel({
           formatDuration(choice.effectiveDurationMinutes),
         ],
         tags: [],
-        selected: false,
+        selected: selection.specialist === choice.specialistPublicSlug,
       };
     }),
   };
@@ -307,8 +307,14 @@ function slotsPanel(input: WizardInput, chosen: FreeSlot | null): WizardPanel {
 
   return {
     kind: "slots",
-    title: "Wybierz termin",
-    lead: "Poniżej znajdziesz wolne terminy u wybranego specjalisty. Godziny podajemy w czasie polskim.",
+    title: chosen
+      ? params.dalej === "auto" && !params.uwaga
+        ? "Przechodzimy do Twoich danych"
+        : "Termin wybrany"
+      : "Wybierz termin",
+    lead: chosen
+      ? "Sprawdź podsumowanie wizyty i przejdź dalej do swoich danych."
+      : "Poniżej znajdziesz wolne terminy u wybranego specjalisty. Godziny podajemy w czasie polskim.",
     chosen: chosen
       ? { startsAt: chosen.start.toISOString(), label: slotLabel(chosen) }
       : null,
@@ -351,13 +357,18 @@ export function buildWizardView(input: WizardInput): WizardView {
           (slot) => `${slot.date}T${slot.localTime}` === params.termin,
         ) ?? null)
       : null;
-  const chosenOffer = selection.offer
-    ? offers.find(
-        (one) =>
-          one.serviceSlug === selection.offer!.serviceSlug &&
-          one.specialistPublicSlug === selection.offer!.specialistPublicSlug,
-      )
-    : undefined;
+  const chosenOffer = offers.find(
+    (one) =>
+      one.serviceSlug === selection.service?.slug &&
+      one.specialistPublicSlug === selection.specialist,
+  );
+  const pendingTime =
+    step !== "termin" && params.termin
+      ? slotLabel({
+          date: params.termin.slice(0, 10),
+          localTime: params.termin.slice(11),
+        })
+      : undefined;
 
   const formValue = selection.mode
     ? [
@@ -383,7 +394,7 @@ export function buildWizardView(input: WizardInput): WizardView {
     {
       key: "forma",
       label: "Forma",
-      value: stepIndex > 1 ? formValue : undefined,
+      value: formValue,
       placeholder: "Wybierz formę spotkania",
       changeHref: changeBookingHref(params, "forma"),
     },
@@ -398,9 +409,12 @@ export function buildWizardView(input: WizardInput): WizardView {
     {
       key: "termin",
       label: "Termin",
-      value: chosenSlot ? slotLabel(chosenSlot) : undefined,
+      value: chosenSlot ? slotLabel(chosenSlot) : pendingTime,
+      detail: pendingTime
+        ? "Dostępność potwierdzimy po uzupełnieniu wyborów."
+        : undefined,
       placeholder: "Wybierz termin",
-      changeHref: bookingHref({ ...params, termin: null }),
+      changeHref: changeBookingHref(params, "termin"),
     },
   ];
 
@@ -416,11 +430,20 @@ export function buildWizardView(input: WizardInput): WizardView {
     changeBookingHref(params, "usluga"),
     changeBookingHref(params, "forma"),
     changeBookingHref(params, "specjalista"),
+    changeBookingHref(params, "termin"),
   ];
   const steps = labels.map((label, index) => ({
     key: label,
     label,
     href: back[index],
+    completed:
+      [
+        !!selection.service,
+        !!selection.mode &&
+          (selection.mode === "online" || !!selection.location),
+        !!selection.specialist,
+        step === "termin" ? !!chosenSlot : !!params.termin,
+      ][index] ?? false,
   }));
 
   const panel =
@@ -432,7 +455,17 @@ export function buildWizardView(input: WizardInput): WizardView {
           ? specialistsPanel(input)
           : slotsPanel(input, chosenSlot);
 
-  return { stepIndex, steps, summary, panel, notice: droppedNotice(input) };
+  return {
+    stepIndex,
+    steps,
+    summary,
+    panel,
+    notice:
+      droppedNotice(input) ??
+      (step === "termin" && params.termin && !chosenSlot
+        ? "Wybrany termin nie jest już dostępny dla tych ustawień wizyty. Wybierz inną godzinę lub zmień wcześniejsze wybory."
+        : undefined),
+  };
 }
 
 const MODE_PHRASES: Record<BookingMode, string> = {

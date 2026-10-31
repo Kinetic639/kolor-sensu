@@ -3,6 +3,7 @@ import { toFreeSlots } from "@repo/scheduling";
 import type { BookableOffer } from "@repo/supabase";
 import { describe, expect, it } from "vitest";
 import type { BookingParams } from "./search-params";
+import { changeBookingHref, loadBookingParams } from "./search-params";
 import { resolveBookingSelection, type BookingCatalog } from "./selection";
 import { bookingWeek, buildWizardView, type WizardInput } from "./wizard";
 
@@ -142,9 +143,9 @@ describe("the form step", () => {
     ]);
     expect(summary[0]).toMatchObject({
       value: "Konsultacja",
-      changeHref: "/umow-wizyte",
+      changeHref: "/umow-wizyte?usluga=konsultacja&krok=usluga",
     });
-    expect(steps[0]!.href).toBe("/umow-wizyte");
+    expect(steps[0]!.href).toBe("/umow-wizyte?usluga=konsultacja&krok=usluga");
   });
 
   it("asks for the place when there are several", () => {
@@ -261,6 +262,125 @@ const slots = toFreeSlots(
   ],
   "Europe/Warsaw",
 );
+
+describe("a preselected visit and editing individual steps", () => {
+  it("does not confirm an old hour when the new specialist has no availability at that time", () => {
+    const result = view(
+      {
+        usluga: "konsultacja",
+        forma: "stacjonarnie",
+        specjalista: "jan",
+        termin: "2030-01-10T13:00",
+        dalej: "auto",
+      },
+      { slots: [] },
+    );
+    expect(result.summary[2]!.value).toBe("Imię jan");
+    expect(result.summary[0]!.detail).toContain(zl(200));
+    expect(result.panel.kind === "slots" && result.panel.chosen).toBeNull();
+    expect(result.steps[3]!.completed).toBe(false);
+    expect(result.notice).toContain("nie jest już dostępny");
+  });
+
+  it("asks for a compatible form when the new specialist does not support the retained form", () => {
+    const result = view({
+      usluga: "konsultacja",
+      forma: "online",
+      specjalista: "jan",
+      termin: "2030-01-10T13:00",
+      dalej: "auto",
+    });
+    expect(result.panel.kind).toBe("choices");
+    expect(result.panel.title).toBe("Wybierz formę spotkania");
+    if (result.panel.kind !== "choices")
+      throw new Error("Missing compatible forms");
+    expect(result.panel.cards.map((card) => card.key)).toEqual([
+      "stacjonarnie",
+    ]);
+    expect(result.summary[2]!.value).toBe("Imię jan");
+    expect(result.notice).toContain("nie prowadzi");
+  });
+
+  it("rejects a specialist/service combination that is no longer bookable", () => {
+    const result = view({
+      usluga: "terapia",
+      forma: "online",
+      specjalista: "jan",
+      termin: "2030-01-10T13:00",
+      dalej: "auto",
+    });
+    expect(result.panel.kind).toBe("choices");
+    expect(result.panel.title).toBe("Wybierz specjalistę");
+    expect(result.summary[2]!.value).toBeUndefined();
+    if (result.panel.kind !== "choices")
+      throw new Error("Missing compatible specialists");
+    expect(result.panel.cards.map((card) => card.key)).toEqual(["anna"]);
+  });
+
+  it("shows the specialist and requested time while asking only for the missing form", () => {
+    const input = {
+      usluga: "konsultacja",
+      specjalista: "anna",
+      termin: "2030-01-10T13:00",
+    };
+    const first = view(input);
+    expect(first.panel.kind).toBe("choices");
+    expect(first.panel.title).toBe("Wybierz formę spotkania");
+    expect(first.summary[2]!.value).toBe("Imię anna");
+    expect(first.steps[2]!.completed).toBe(true);
+    expect(first.steps[3]!.completed).toBe(true);
+    expect(first.summary[3]!.value).toContain("13:00");
+    if (first.panel.kind !== "choices") throw new Error("Missing form choices");
+    const url = new URL(
+      first.panel.cards.find((card) => card.key === "online")!.href,
+      "http://booking.local",
+    );
+    expect(url.searchParams.get("termin")).toBe(input.termin);
+    const complete = view(loadBookingParams(url.searchParams), { slots });
+    expect(
+      complete.panel.kind === "slots" && complete.panel.chosen?.startsAt,
+    ).toBe("2030-01-10T12:00:00.000Z");
+  });
+
+  it("can edit every selection while retaining the others, including the requested time", () => {
+    const complete = { ...empty, ...chosen, termin: "2030-01-10T13:00" };
+    for (const key of ["usluga", "forma", "specjalista", "termin"] as const) {
+      const url = new URL(
+        changeBookingHref(complete, key),
+        "http://booking.local",
+      );
+      const params = loadBookingParams(url.searchParams);
+      const edited = view(params, { slots });
+      expect(params.usluga).toBe(complete.usluga);
+      expect(params.specjalista).toBe(complete.specjalista);
+      expect(params.termin).toBe(key === "termin" ? null : complete.termin);
+      expect(edited.panel.title).toBe(
+        {
+          usluga: "Wybierz usługę",
+          forma: "Wybierz formę spotkania",
+          specjalista: "Wybierz specjalistę",
+          termin: "Wybierz termin",
+        }[key],
+      );
+      if (edited.panel.kind === "choices") {
+        const card = edited.panel.cards.find((card) => card.selected)!;
+        expect(card).toBeDefined();
+        const next = loadBookingParams(
+          new URL(card.href, "http://booking.local").searchParams,
+        );
+        expect(next.krok).toBeNull();
+        expect(next.termin).toBe(complete.termin);
+      }
+    }
+  });
+
+  it("rechecks the requested time after a change and never allows holding an unavailable hour", () => {
+    const result = view({ ...chosen, termin: "2030-01-10T15:00" }, { slots });
+    expect(result.panel.kind === "slots" && result.panel.chosen).toBeNull();
+    expect(result.notice).toContain("nie jest już dostępny");
+    expect(result.steps[3]!.completed).toBe(false);
+  });
+});
 
 describe("the time step", () => {
   it("shows the week of free times, each a link keeping the choices", () => {

@@ -147,3 +147,114 @@ test.describe("abroad", () => {
     expect(label).toContain(href.searchParams.get("termin")!.slice(11));
   });
 });
+
+for (const preferredMode of ["online", "stacjonarnie"] as const) {
+  test(
+    "a preselected visit continues automatically to details after choosing " +
+      preferredMode +
+      " @holds",
+    async ({ page }) => {
+      test.setTimeout(120_000);
+      const services = (await (
+        await page.request.get(webUrl + "/api/services")
+      ).json()) as { name: string; slug: string }[];
+      const service = services.find(
+        (one) =>
+          one.name ===
+          (process.env.E2E_BOOKING_SERVICE ?? "Konsultacja testowa E2E"),
+      )!;
+      const offers = (await (
+        await page.request.get(
+          webUrl + "/api/services/" + service.slug + "/offers",
+        )
+      ).json()) as { specialistPublicSlug: string }[];
+      const query = new URLSearchParams({
+        specjalista: offers[0]!.specialistPublicSlug,
+        usluga: service.slug,
+        najblizszy: "1",
+      });
+      const preview = (await (
+        await page.request.get(
+          webUrl + "/api/booking/specialist-preview?" + query,
+        )
+      ).json()) as {
+        picker: {
+          days: {
+            slots: {
+              options: { service: string; mode: string; href: string }[];
+            }[];
+          }[];
+        };
+      };
+      const options = preview.picker.days
+        .flatMap((day) => day.slots)
+        .flatMap((slot) => slot.options)
+        .filter((option) => option.service === service.slug);
+      const complete = new URL(
+        options.find((option) => option.mode === preferredMode)!.href,
+        webUrl,
+      );
+      const values = Object.fromEntries(
+        ["usluga", "specjalista", "termin"].map((key) => [
+          key,
+          complete.searchParams.get(key)!,
+        ]),
+      );
+      await page.goto(webUrl + "/umow-wizyte?" + new URLSearchParams(values));
+      const summary = page.getByRole("region", { name: "Twoja rezerwacja" });
+      await expect(
+        page.getByRole("region", { name: "Wybierz formę spotkania" }),
+      ).toBeVisible();
+      await expect(summary.getByText(/godz\./)).toContainText(
+        values.termin!.slice(11),
+      );
+      await expect(
+        page.getByRole("link", { name: "Krok 3: Specjalista (ukończony)" }),
+      ).toBeVisible();
+      await page
+        .getByRole("region", { name: "Wybierz formę spotkania" })
+        .getByRole("link", {
+          name:
+            complete.searchParams.get("forma") === "online"
+              ? "Online"
+              : "Stacjonarnie",
+          exact: true,
+        })
+        .click();
+      if (
+        new URL(page.url()).searchParams.get("forma") === "stacjonarnie" &&
+        (await page
+          .getByRole("region", { name: "Wybierz miejsce" })
+          .isVisible())
+      ) {
+        const hrefs = await page
+          .getByRole("region", { name: "Wybierz miejsce" })
+          .getByRole("link")
+          .evaluateAll((links) =>
+            links.map((link) => (link as HTMLAnchorElement).href),
+          );
+        await page.goto(
+          hrefs.find(
+            (href) =>
+              new URL(href).searchParams.get("lokalizacja") ===
+              complete.searchParams.get("lokalizacja"),
+          ) ?? hrefs[0]!,
+        );
+      }
+      try {
+        await expect(page).toHaveURL(/\/umow-wizyte\/dane$/, {
+          timeout: 45_000,
+        });
+        await expect(
+          page.getByRole("region", { name: "Twoje dane" }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("group", { name: "Krok 5: Dane" }),
+        ).toHaveAttribute("aria-current", "step");
+      } finally {
+        const restart = page.getByRole("button", { name: "Zacznij od nowa" });
+        if (await restart.isVisible()) await restart.click();
+      }
+    },
+  );
+}

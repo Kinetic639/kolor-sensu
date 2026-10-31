@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { CompactBookingCalendar } from "./compact-booking-calendar";
 import { compactBookingSample } from "./compact-booking-samples";
 describe("CompactBookingCalendar", () => {
-  it("shows the specialist's service descriptions and prices, then chooses the service in the retained calendar", () => {
+  it("expands full service descriptions while keeping service selection in the retained calendar", () => {
     const change = vi.fn();
     render(
       <CompactBookingCalendar
@@ -18,17 +18,32 @@ describe("CompactBookingCalendar", () => {
       name: "Zachowany wybór dnia",
     });
     fireEvent.click(screen.getByRole("tab", { name: "Usługi" }));
+    expect(
+      screen.getByRole("region", { name: "Umów wizytę — Anna Nowak" }),
+    ).toHaveAttribute("data-active-tab", "services");
     expect(screen.getByRole("tabpanel", { name: "Usługi" })).toBeVisible();
     expect(screen.getByText("210 zł")).toBeVisible();
     expect(
+      screen.queryByText(compactBookingSample.services[0]!.description!),
+    ).not.toBeInTheDocument();
+    const expand = screen.getByRole("button", {
+      name: "Konsultacja psychologiczna",
+    });
+    fireEvent.click(expand);
+    expect(expand).toHaveAttribute("aria-expanded", "true");
+    expect(
       screen.getByText(compactBookingSample.services[0]!.description!),
     ).toBeVisible();
+    fireEvent.click(expand);
+    expect(
+      screen.queryByText(compactBookingSample.services[0]!.description!),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("combobox", { name: "Wybierz usługę" }),
     ).not.toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", {
-        name: "Sprawdź terminy: Spotkanie wspierające →",
+        name: "Wybierz: Spotkanie wspierające",
       }),
     );
     expect(change).toHaveBeenCalledWith({ service: "wsparcie" });
@@ -36,6 +51,9 @@ describe("CompactBookingCalendar", () => {
       "aria-selected",
       "true",
     );
+    expect(
+      screen.getByRole("region", { name: "Umów wizytę — Anna Nowak" }),
+    ).toHaveAttribute("data-active-tab", "calendar");
     expect(screen.getByRole("textbox", { name: "Zachowany wybór dnia" })).toBe(
       calendar,
     );
@@ -59,21 +77,29 @@ describe("CompactBookingCalendar", () => {
     expect(calendarTab).toHaveFocus();
     expect(calendarTab).toHaveAttribute("aria-selected", "true");
   });
-  it("changes the selected service and visit mode while retaining its calendar slot", () => {
-    const change = vi.fn();
+  it("keeps the calendar free of service controls and disables incompatible offers", () => {
     render(
       <CompactBookingCalendar
         {...compactBookingSample}
-        onChange={change}
+        hasSelectedTime
+        availableServiceSlugs={["konsultacja"]}
+        onChange={vi.fn()}
         calendar={<p>Live calendar</p>}
       />,
     );
-    fireEvent.change(screen.getByRole("combobox", { name: "Wybierz usługę" }), {
-      target: { value: "wsparcie" },
-    });
-    expect(change).toHaveBeenCalledWith({ service: "wsparcie" });
-    fireEvent.click(screen.getByRole("button", { name: "Online" }));
-    expect(change).toHaveBeenCalledWith({ mode: "online" });
-    expect(screen.getByText("Live calendar")).toBeInTheDocument();
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Usługi" }));
+    expect(
+      screen.getByRole("button", { name: "Wybierz: Spotkanie wspierające" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", {
+        name: "Wybierz: Konsultacja psychologiczna",
+      }),
+    ).toBeEnabled();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Konsultacja psychologiczna" }),
+    );
+    expect(screen.getByText("Stacjonarnie / Online")).toBeVisible();
   });
 });

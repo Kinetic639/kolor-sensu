@@ -72,6 +72,26 @@ describe("sendChangeEmail", () => {
     );
   });
 
+  it("the centre's change (its claim brings the link): what the visit is now (Klient · 6, card 13)", async () => {
+    const d = deps({
+      claim: vi
+        .fn()
+        .mockResolvedValue({ ...claimed, manageToken: "new-token" }),
+    });
+    const change = {
+      kind: "rescheduled" as const,
+      reference: "KS-20301002-1534",
+      manageToken: null,
+      sequence: 2,
+      reason: "Remont gabinetu",
+    };
+    expect(await sendChangeEmail(change, d)).toBe("sent");
+    const [message] = vi.mocked(d.send).mock.calls[0]!;
+    expect(message.subject).toMatch(/^Zmiana wizyty KS-20301002-1534/);
+    expect(message.text).toContain("https://kolorsensu.pl/wizyta/new-token");
+    expect(message.html).toContain("Zmieniliśmy Twoją wizytę");
+  });
+
   it("sends the cancellation with what is given back", async () => {
     const d = deps();
     await sendChangeEmail(

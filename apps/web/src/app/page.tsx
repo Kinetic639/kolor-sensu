@@ -110,6 +110,9 @@ export default async function Home() {
         animationPreset="watercolor-reveal"
       />
       <ThoughtsLens {...thoughts} />
+      {whyUs.visible ? (
+        <WhyUsSection header={headers.whyUs} facts={whyUs.facts} />
+      ) : null}
       <SupportAreas
         header={headers.supportAreas}
         areas={toSupportAreaItems(
@@ -119,9 +122,6 @@ export default async function Home() {
         )}
         cta={{ href: "/oferta", label: "Zobacz całą ofertę" }}
       />
-      {whyUs.visible ? (
-        <WhyUsSection header={headers.whyUs} facts={whyUs.facts} />
-      ) : null}
       {firstSteps.visible ? (
         <FirstSteps header={headers.firstSteps} steps={firstSteps.steps} />
       ) : null}
