@@ -4,7 +4,7 @@ import { deadlineLabel, localTime, visitLabel } from "../visit-label";
 import {
   contactLineOf,
   place,
-  placeRow,
+  placeRows,
   type ConfirmationOptions,
   type VisitEmailContent,
 } from "./confirmation-content";
@@ -87,7 +87,7 @@ export function rescheduledContent(
       ? [["Specjalista", visit.specialistName] as [string, string]]
       : []),
     ["Nowy termin", span],
-    ["Miejsce", placeRow(visit)],
+    ...placeRows(visit),
     ...(!visit.paid && visit.paymentDueAt
       ? [
           [

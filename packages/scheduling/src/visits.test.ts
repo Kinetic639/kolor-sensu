@@ -140,6 +140,24 @@ describe("a reservation not paid yet (R11)", () => {
       resendable: false,
     });
   });
+
+  it("a confirmed visit still ahead can get its link again; one gone by, a reservation or no e-mail cannot (Klient · 6, card 7)", () => {
+    const before = { ...options, now: new Date("2030-09-29T08:00:00Z") };
+    expect(visitRows([visit], before)[0]!.linkResendable).toBe(true);
+    expect(
+      visitRows([visit], {
+        ...options,
+        now: new Date("2031-01-01T08:00:00Z"),
+      })[0]!.linkResendable,
+    ).toBe(false);
+    expect(visitRows([reserved], before)[0]!.linkResendable).toBe(false);
+    expect(
+      visitRows(
+        [{ ...visit, client: { ...visit.client, email: null } }],
+        before,
+      )[0]!.linkResendable,
+    ).toBe(false);
+  });
 });
 
 describe("bookingHref", () => {

@@ -49,6 +49,7 @@ const SAMPLE: ClaimedBookingEmail & { manageToken: string } = {
   roomName: "Gabinet Zielony",
   locationName: "Kolor Sensu",
   locationAddress: "ul. Przykładowa 1, 61-001 Poznań",
+  locationDirections: "Wejście od podwórza, domofon 18",
   priceMinor: 24_000,
   currencyCode: "PLN",
   clientName: "Joanna Kowalska",

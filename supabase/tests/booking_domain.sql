@@ -3839,4 +3839,170 @@ RESET ROLE;
 UPDATE public.specialist_services SET price_minor = 25000
 WHERE specialist_id = (SELECT anna_id FROM booking_test);
 
+-- AO: the centre helps a client with no e-mail about their visit (Klient ·
+-- 6). The e-mail gives the place's directions (card 11); the link goes
+-- again, for a confirmed visit too (card 7); a bounced e-mail shows in the
+-- history (card 8).
+UPDATE public.locations SET directions = 'Wejście od podwórza, drugie piętro'
+WHERE slug = 'booking-test-location';
+CREATE TEMP TABLE ao_visits (name text PRIMARY KEY, id uuid, reference text);
+GRANT ALL ON ao_visits TO service_role, authenticated;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  mail record;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.monday + 98, '09:00'), p_client_key => 'visitor-ao'
+  );
+  PERFORM pg_temp.save_details(held.access_token, 'Olga Link', 'olga.link@example.invalid',
+    '600700106', NULL, true, true);
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_ao', now() + interval '30 minutes', 25000, 'PLN');
+  IF public.fulfill_checkout_session('cs_ao', true, 'pi_ao') <> 'confirmed' THEN
+    RAISE EXCEPTION 'AO: the visit was not confirmed';
+  END IF;
+  INSERT INTO ao_visits VALUES ('paid', held.appointment_id, held.reference);
+
+  -- Card 11: the confirmation gives the directions (an online one none).
+  SELECT * INTO mail FROM public.claim_booking_email(held.reference, 'confirmation');
+  IF mail.location_directions IS DISTINCT FROM 'Wejście od podwórza, drugie piętro' THEN
+    RAISE EXCEPTION 'AO: the e-mail has no directions: %', row_to_json(mail);
+  END IF;
+  PERFORM public.mark_booking_email_sent(held.reference, 'confirmation', 'msg_ao');
+
+  INSERT INTO ao_visits SELECT 'reserved', appointment_id, reference
+  FROM pg_temp.reserve_new('online', pg_temp.at(t.monday + 98, '13:00'),
+    'Oskar Rezerwa', 'oskar.rezerwa@example.invalid', '600700107',
+    'visitor-ao-2-hold', 'visitor-ao-2');
+  SELECT * INTO mail FROM public.claim_booking_email(
+    (SELECT reference FROM ao_visits WHERE name = 'reserved'), 'reserved');
+  IF mail.manage_token IS NULL OR mail.location_directions IS NOT NULL THEN
+    RAISE EXCEPTION 'AO: an online reservation''s e-mail: %', row_to_json(mail);
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Card 7: the admin sends the link again: the confirmation for a confirmed
+-- visit, the link to pay for a reservation; not again within five minutes,
+-- not for a cancelled visit.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  r record;
+BEGIN
+  SELECT * INTO r FROM public.centre_resend_visit_link((SELECT id FROM ao_visits WHERE name = 'paid'));
+  IF (r.reference, r.kind) IS DISTINCT FROM ((SELECT reference FROM ao_visits WHERE name = 'paid'), 'confirmation'::text) THEN
+    RAISE EXCEPTION 'AO: the confirmed visit''s link: %', row_to_json(r);
+  END IF;
+  SELECT * INTO r FROM public.centre_resend_visit_link((SELECT id FROM ao_visits WHERE name = 'reserved'));
+  IF r.kind IS DISTINCT FROM 'reserved' THEN
+    RAISE EXCEPTION 'AO: the reservation''s link: %', row_to_json(r);
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  mail record;
+BEGIN
+  SELECT * INTO mail FROM public.claim_booking_email(
+    (SELECT reference FROM ao_visits WHERE name = 'paid'), 'confirmation');
+  IF mail.manage_token IS NULL THEN
+    RAISE EXCEPTION 'AO: the confirmation could not go again';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF pg_temp.hint_of(format('SELECT public.centre_resend_visit_link(%L)',
+       (SELECT id FROM ao_visits WHERE name = 'paid'))) <> 'recently_sent' THEN
+    RAISE EXCEPTION 'AO: the link went twice in five minutes';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+UPDATE public.booking_emails SET claimed_at = now() - interval '6 minutes'
+WHERE appointment_id = (SELECT id FROM ao_visits WHERE name = 'paid');
+UPDATE public.appointments SET status = 'cancelled', cancelled_at = now(), cancelled_by = 'client'
+WHERE id = (SELECT id FROM ao_visits WHERE name = 'reserved');
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF pg_temp.hint_of(format('SELECT public.centre_resend_visit_link(%L)',
+       (SELECT id FROM ao_visits WHERE name = 'reserved'))) <> 'nothing_to_send' THEN
+    RAISE EXCEPTION 'AO: a link for a cancelled visit';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Jan, another specialist, cannot; Anna can, for her own.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.centre_resend_visit_link((SELECT id FROM ao_visits WHERE name = 'paid'));
+    RAISE EXCEPTION 'AO: Jan sent the link for Anna''s visit';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  r record;
+BEGIN
+  SELECT * INTO r FROM public.centre_resend_visit_link((SELECT id FROM ao_visits WHERE name = 'paid'));
+  IF r.kind IS DISTINCT FROM 'confirmation' THEN
+    RAISE EXCEPTION 'AO: Anna could not send her client the link';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Card 8: the confirmation bounced: the history says so, once; a message
+-- not about a visit changes nothing.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  v_id uuid := (SELECT id FROM ao_visits WHERE name = 'paid');
+BEGIN
+  IF public.mark_booking_email_bounced('msg_ao') IS DISTINCT FROM (SELECT reference FROM ao_visits WHERE name = 'paid') THEN
+    RAISE EXCEPTION 'AO: the bounce was not about the visit';
+  END IF;
+  IF public.mark_booking_email_bounced('msg_ao') IS NOT NULL
+     OR public.mark_booking_email_bounced('msg_newsletter') IS NOT NULL THEN
+    RAISE EXCEPTION 'AO: a bounce counted twice, or for another e-mail';
+  END IF;
+  IF (SELECT array_agg(details ->> 'email') FROM public.appointment_events
+      WHERE appointment_id = v_id AND kind = 'email_bounced') IS DISTINCT FROM ARRAY['confirmation'] THEN
+    RAISE EXCEPTION 'AO: the history does not say the confirmation bounced';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.mark_booking_email_bounced('msg_ao');
+    RAISE EXCEPTION 'AO: anon marked a bounce';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

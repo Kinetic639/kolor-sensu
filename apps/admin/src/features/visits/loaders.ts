@@ -75,6 +75,16 @@ export async function loadAdminVisits(params: VisitTableParams) {
             ? {
                 row: clientRows([booker], { timeZone })[0]!,
                 notes: booker.notes,
+                // To correct the e-mail or phone from the visit (Klient · 6,
+                // card 14): the visits still to come follow it.
+                details: {
+                  id: booker.id,
+                  firstName: booker.firstName,
+                  lastName: booker.lastName,
+                  email: booker.email,
+                  phone: booker.phone,
+                  notes: booker.notes,
+                },
               }
             : null,
           intake,

@@ -141,14 +141,13 @@ export function centreBookingMessage(code: string | undefined) {
 const RESEND_LINK_MESSAGES: Record<string, string> = {
   recently_sent: "Link wysłano przed chwilą. Spróbuj ponownie za kilka minut.",
   not_payable: "Tej rezerwacji nie można już opłacić.",
+  nothing_to_send:
+    "Do tej wizyty nie można już wysłać linku: minęła, jest odwołana albo nie ma adresu e-mail.",
   forbidden: "Nie możesz wysłać linku do tej wizyty.",
   not_found: "Nie znaleziono wizyty.",
 };
 
-/** Why the link to pay could not go again, in Polish. */
+/** Why the visit's link (to pay, or to the visit) could not go again, in Polish. */
 export function resendLinkMessage(code: string | undefined) {
-  return (
-    RESEND_LINK_MESSAGES[code ?? ""] ??
-    "Nie udało się wysłać linku do płatności."
-  );
+  return RESEND_LINK_MESSAGES[code ?? ""] ?? "Nie udało się wysłać linku.";
 }

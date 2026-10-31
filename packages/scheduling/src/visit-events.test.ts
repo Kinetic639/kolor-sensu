@@ -283,6 +283,37 @@ describe("the centre's own way (R12)", () => {
     expect(rows[0]!.title).toBe("Wysłano e-mail: Zwrot pieniędzy");
   });
 
+  it("an e-mail that did not arrive (Klient · 6, card 8)", () => {
+    const rows = visitEventRows(
+      [
+        {
+          id: 1,
+          occurredAt: "2026-10-13T08:01:00+00:00",
+          kind: "email_bounced",
+          actor: "system",
+          actorName: null,
+          details: { email: "confirmation" },
+        },
+      ],
+      options,
+    );
+    expect(
+      rows.map(({ title, detail, tone, actor }) => [
+        title,
+        detail,
+        tone,
+        actor,
+      ]),
+    ).toEqual([
+      [
+        "E-mail nie dotarł: Potwierdzenie rezerwacji",
+        "Adres odrzucił wiadomość. Sprawdź e-mail klienta.",
+        "danger",
+        "System",
+      ],
+    ]);
+  });
+
   it("pay later: confirmed from the e-mail, then paid by its time", () => {
     const rows = visitEventRows(
       [
