@@ -150,4 +150,14 @@ describe("visitPageCopy", () => {
     );
     expect(visitPageCopy({ ...input, now }).notice).toBeNull();
   });
+
+  it("the link to pay opened after paying: already paid (Klient · 5, card 10)", () => {
+    const now = at("2030-10-01T09:00:00Z");
+    const copy = visitPageCopy({ ...input, now, change: "oplacona" });
+    expect(copy.notice).toBe(
+      "Ta wizyta jest już opłacona. Nie musisz płacić ponownie.",
+    );
+    // Nothing more to pay from the page.
+    expect(copy.pay).toBeNull();
+  });
 });

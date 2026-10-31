@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import {
@@ -6,6 +7,7 @@ import {
   findVisit,
   payButton,
   paymentElement,
+  newVisitor,
 } from "./support/booking";
 import {
   adminAccount,
@@ -23,6 +25,10 @@ import { service, specialist } from "./support/booking";
 // 123456) and Turnstile uses its always-pass test keys there. Each run
 // leaves one confirmed test visit behind.
 
+// Each test a visitor of its own: a site without a proxy (E2E_WEB_URL)
+// counts holds by it; a deployed one by the real address.
+test.beforeEach(({ context }) => newVisitor(context));
+
 test("a guest books a visit, pays with BLIK and both portals show it", async ({
   page,
   browser,
@@ -36,6 +42,17 @@ test("a guest books a visit, pays with BLIK and both portals show it", async ({
   await payment.getByLabel("Kod BLIK").fill("123456");
   await payButton(page).click();
   await expectConfirmed(page, reference);
+
+  // The visit as a calendar file, from the confirmation page (Klient · 4,
+  // card 6).
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("link", { name: "Dodaj do kalendarza" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe(`wizyta-${reference}.ics`);
+  const calendar = await readFile((await download.path())!, "utf8");
+  expect(calendar).toContain("BEGIN:VEVENT");
+  expect(calendar).toContain(`Numer rezerwacji: ${reference}`);
 
   await findVisit(browser, adminUrl, adminAccount!, reference);
   await findVisit(browser, specialistUrl, specialistAccount!, reference);

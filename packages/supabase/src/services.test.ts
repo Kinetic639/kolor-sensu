@@ -40,6 +40,14 @@ describe("service domain schemas", () => {
     expect(priceMinorSchema.safeParse(25000).success).toBe(true);
     expect(priceMinorSchema.safeParse(-1).success).toBe(false);
     expect(priceMinorSchema.safeParse(25.5).success).toBe(false);
+    // 0 zł is free, a paid price at least 2 zł (Klient · 4, card 9; #256).
+    expect(priceMinorSchema.safeParse(0).success).toBe(true);
+    expect(priceMinorSchema.safeParse(200).success).toBe(true);
+    const cheap = priceMinorSchema.safeParse(199);
+    expect(cheap.success).toBe(false);
+    expect(cheap.error?.issues[0]?.message).toBe(
+      "Cena to 0 zł (bezpłatnie) albo co najmniej 2 zł.",
+    );
   });
 
   it("applies service defaults for optional fields", () => {

@@ -89,6 +89,14 @@ export interface PaymentDeps {
   ) => Promise<unknown>;
   /** The visit is confirmed (again, possibly): send its e-mail, once. */
   onConfirmed?: (reference: string) => Promise<unknown>;
+  /** The time was taken before the money came: tell the client (card 17). */
+  onSlotLost?: (payment: {
+    reference: string;
+    amountMinor: number;
+    currencyCode: string;
+    to: string;
+    sessionId: string;
+  }) => Promise<unknown>;
   /**
    * A workshop seat's payments (features/workshops/payment.ts): a session
    * whose metadata names a workshop registration is settled there; a
@@ -136,9 +144,18 @@ function paymentIntentId(value: string | { id: string } | null) {
 export async function settleSession(
   session: Pick<
     Stripe.Checkout.Session,
-    "id" | "payment_status" | "payment_intent" | "metadata" | "amount_total"
+    | "id"
+    | "payment_status"
+    | "payment_intent"
+    | "metadata"
+    | "amount_total"
+    | "currency"
+    | "customer_email"
   >,
-  deps: Pick<PaymentDeps, "fulfill" | "refundPayment" | "onConfirmed">,
+  deps: Pick<
+    PaymentDeps,
+    "fulfill" | "refundPayment" | "onConfirmed" | "onSlotLost"
+  >,
 ) {
   const paid =
     session.payment_status === "paid" ||
@@ -160,6 +177,17 @@ export async function settleSession(
       session.amount_total,
       reference ?? session.id,
     );
+    // The time was taken meanwhile: the client is told why the money went
+    // back (card 17). A second payment for a visit paid is not news to them.
+    if (outcome === "slot_lost" && session.customer_email) {
+      await deps.onSlotLost?.({
+        reference: reference ?? session.id,
+        amountMinor: session.amount_total,
+        currencyCode: session.currency ?? "pln",
+        to: session.customer_email,
+        sessionId: session.id,
+      });
+    }
   }
   if (
     reference &&

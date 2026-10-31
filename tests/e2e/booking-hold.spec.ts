@@ -54,10 +54,11 @@ async function pickAnother(page: Page, not: string) {
 }
 
 async function startOver(page: Page) {
+  // From the payment step it also stops the payment at Stripe: a while.
   await page.getByRole("button", { name: "Zacznij od nowa" }).click();
   await expect(
     page.getByRole("region", { name: "Wybierz usługę" }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 30_000 });
 }
 
 /** Whether another guest can choose this time now. */
@@ -259,7 +260,12 @@ test.describe("a browser that keeps no cookies", () => {
     await goToTimes(page);
     const step = page.getByRole("region", { name: "Wybierz termin" });
     const slot = step.getByRole("link", { name: /, \d{2}:\d{2}$/ }).first();
-    test.skip((await slot.count()) === 0, "No free time this week.");
+    // The first week with a free time (none is held here).
+    for (let week = 0; week < 6 && (await slot.count()) === 0; week += 1) {
+      const before = page.url();
+      await step.getByRole("link", { name: "Następny tydzień" }).click();
+      await page.waitForURL((url) => url.href !== before);
+    }
     await slot.click();
     await expect(
       page.getByRole("alert").filter({ hasText: "plików cookies" }),

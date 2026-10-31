@@ -3577,4 +3577,266 @@ BEGIN
 END;
 $body$;
 
+-- AJ–AL: paying at once (Klient · 4). The price of the moment of booking,
+-- money in another currency, and a price of 0 zł or at least 2 zł.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  outcome text;
+  hint text;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+
+  -- AJ (card 8): the admin changes the price while the client books; the
+  -- client pays the price the time was held at.
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.monday + 70, '09:00'), p_client_key => 'visitor-aj'
+  );
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Cena', 'ola.cena@example.invalid',
+    '600700100', NULL, true, true);
+  UPDATE public.specialist_services SET price_minor = 30000
+  WHERE specialist_id = t.anna_id;
+  BEGIN
+    PERFORM public.attach_checkout_session(held.access_token, 'cs_aj_new', now() + interval '30 minutes', 30000, 'PLN');
+    RAISE EXCEPTION 'AJ: a session at the new price';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'AJ:%' THEN RAISE; END IF;
+    GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
+    IF hint <> 'amount_mismatch' THEN RAISE EXCEPTION 'AJ: expected amount_mismatch, got %', hint; END IF;
+  END;
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_aj', now() + interval '30 minutes', 25000, 'PLN');
+  outcome := public.fulfill_checkout_session('cs_aj', true, 'pi_aj');
+  IF outcome <> 'confirmed'
+     OR (SELECT price_minor FROM public.appointments WHERE id = held.appointment_id) <> 25000 THEN
+    RAISE EXCEPTION 'AJ: paid % at the held price: %', outcome,
+      (SELECT price_minor FROM public.appointments WHERE id = held.appointment_id);
+  END IF;
+  UPDATE public.specialist_services SET price_minor = 25000
+  WHERE specialist_id = t.anna_id;
+END;
+$body$;
+RESET ROLE;
+
+-- AK (card 10): money in another currency than the visit's goes back and
+-- confirms nothing.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.monday + 70, '10:00'), p_client_key => 'visitor-ak'
+  );
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Waluta', 'ola.waluta@example.invalid',
+    '600700101', NULL, true, true);
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_ak', now() + interval '30 minutes', 25000, 'PLN');
+  INSERT INTO col3 VALUES ('ak', held.access_token, held.appointment_id);
+END;
+$body$;
+RESET ROLE;
+-- What Stripe reported came in euro (as the owner: the site never writes it).
+UPDATE public.payments SET currency_code = 'EUR' WHERE checkout_session_id = 'cs_ak';
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  outcome text;
+BEGIN
+  outcome := public.fulfill_checkout_session('cs_ak', true, 'pi_ak');
+  IF outcome <> 'refund_payment' THEN
+    RAISE EXCEPTION 'AK: money in euro was %, not to be refunded', outcome;
+  END IF;
+  IF (SELECT status FROM public.appointments WHERE id = (SELECT appointment_id FROM col3 WHERE name = 'ak'))
+     = 'confirmed' THEN
+    RAISE EXCEPTION 'AK: money in euro confirmed the visit';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- AL (card 9): a price is 0 zł (free) or at least 2 zł; a free visit is
+-- confirmed without a payment, with no code.
+DO $body$
+BEGIN
+  BEGIN
+    UPDATE public.specialist_services SET price_minor = 150
+    WHERE specialist_id = (SELECT anna_id FROM booking_test);
+    RAISE EXCEPTION 'AL: an offer at 1,50 zł';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  UPDATE public.specialist_services SET price_minor = 200
+  WHERE specialist_id = (SELECT anna_id FROM booking_test);
+  UPDATE public.specialist_services SET price_minor = 0
+  WHERE specialist_id = (SELECT anna_id FROM booking_test);
+END;
+$body$;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.monday + 70, '11:00'), p_client_key => 'visitor-al'
+  );
+  IF (SELECT price_minor FROM public.appointments WHERE id = held.appointment_id) <> 0 THEN
+    RAISE EXCEPTION 'AL: the free visit has a price';
+  END IF;
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Darmo', 'ola.darmo@example.invalid',
+    '600700102', NULL, true, true);
+  PERFORM public.confirm_free_booking(held.access_token);
+  IF (SELECT (status, discount_code_id IS NULL) FROM public.appointments WHERE id = held.appointment_id)
+     IS DISTINCT FROM ('confirmed'::public.appointment_status, true) THEN
+    RAISE EXCEPTION 'AL: a free visit was not confirmed without a payment';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+UPDATE public.specialist_services SET price_minor = 25000
+WHERE specialist_id = (SELECT anna_id FROM booking_test);
+-- A paid visit is still not confirmed that way.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  hint text;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.monday + 77, '09:00'), p_client_key => 'visitor-al-2'
+  );
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Płaci', 'ola.placi@example.invalid',
+    '600700103', NULL, true, true);
+  BEGIN
+    PERFORM public.confirm_free_booking(held.access_token);
+    RAISE EXCEPTION 'AL: a paid visit confirmed as free';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'AL:%' THEN RAISE; END IF;
+    GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
+    IF hint <> 'not_free' THEN RAISE EXCEPTION 'AL: expected not_free, got %', hint; END IF;
+  END;
+  PERFORM public.release_hold(held.access_token);
+END;
+$body$;
+RESET ROLE;
+
+-- AM: a visit paid with a discount code (Klient · 4a). Moving it keeps the
+-- code and the price paid (card 3); cancelling it in the window gives back
+-- what was paid, not the list price (card 8).
+UPDATE public.center_settings
+SET cancellation_window_hours = 24, reschedule_window_hours = 24, max_self_reschedules = 1;
+INSERT INTO public.discount_codes (code, kind, value) VALUES ('KUPONAM', 'percent', 20);
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  mail record;
+  moved record;
+  cancelled record;
+  v_day date;
+  v_code uuid;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  v_day := t.monday + 84;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(v_day, '09:00'), p_client_key => 'visitor-am'
+  );
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Kupon', 'ola.kupon@example.invalid',
+    '600700104', NULL, true, true);
+  PERFORM public.apply_discount_code(held.access_token, 'KUPONAM');
+  IF (SELECT (price_minor, list_price_minor, discount_minor) FROM public.appointments WHERE id = held.appointment_id)
+     IS DISTINCT FROM (20000, 25000, 5000) THEN
+    RAISE EXCEPTION 'AM: 20 %% off 250 zł: %',
+      (SELECT row_to_json(a) FROM (SELECT price_minor, list_price_minor, discount_minor
+        FROM public.appointments WHERE id = held.appointment_id) AS a);
+  END IF;
+  SELECT discount_code_id INTO v_code FROM public.appointments WHERE id = held.appointment_id;
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_am', now() + interval '30 minutes', 20000, 'PLN');
+  IF public.fulfill_checkout_session('cs_am', true, 'pi_am') <> 'confirmed' THEN
+    RAISE EXCEPTION 'AM: the visit paid with a code was not confirmed';
+  END IF;
+  SELECT * INTO mail FROM public.claim_booking_email(held.reference, 'confirmation');
+
+  -- Card 3: moved, it keeps its code and the price paid.
+  SELECT * INTO moved FROM public.reschedule_booking(mail.manage_token, pg_temp.at(v_day, '10:00'));
+  IF (SELECT (status, starts_at, price_minor) FROM public.get_booking(mail.manage_token))
+     IS DISTINCT FROM ('confirmed'::public.appointment_status, pg_temp.at(v_day, '10:00'), 20000) THEN
+    RAISE EXCEPTION 'AM: the moved visit lost its price';
+  END IF;
+  IF (SELECT (discount_code_id, discount_minor) FROM public.appointments WHERE id = held.appointment_id)
+     IS DISTINCT FROM (v_code, 5000) THEN
+    RAISE EXCEPTION 'AM: the moved visit lost its code';
+  END IF;
+
+  -- Card 8: cancelled in the window, it gives back what was paid (200 zł),
+  -- not the list price (250 zł).
+  SELECT * INTO cancelled FROM public.cancel_booking(mail.manage_token);
+  IF (cancelled.refund_minor, cancelled.payment_intent_id) IS DISTINCT FROM (20000, 'pi_am'::text) THEN
+    RAISE EXCEPTION 'AM: the refund of a visit paid with a code: %', row_to_json(cancelled);
+  END IF;
+  IF (SELECT (status, refund_due_minor) FROM public.get_booking(mail.manage_token))
+     IS DISTINCT FROM ('cancelled'::public.appointment_status, 20000) THEN
+    RAISE EXCEPTION 'AM: the cancelled visit owes another amount';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- AN: a reservation keeps the price it was made at (Klient · 5, card 14).
+-- The centre raises the offer's price after the client chose "zapłacę
+-- później"; the link still asks for the old amount, and the visit is
+-- confirmed at it.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  INSERT INTO z_visits SELECT 'an1', * FROM pg_temp.reserve_new('in_person',
+    pg_temp.at(t.monday + 91, '09:00'), 'Nina Cena', 'nina.cena@example.invalid',
+    '600700105', 'visitor-an-hold', 'visitor-an');
+  IF (SELECT outcome FROM z_visits WHERE name = 'an1') <> 'reserved' THEN
+    RAISE EXCEPTION 'AN: the visit was not reserved';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+UPDATE public.specialist_services SET price_minor = 30000
+WHERE specialist_id = (SELECT anna_id FROM booking_test);
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  c record;
+BEGIN
+  SELECT * INTO c FROM public.claim_booking_email((SELECT reference FROM z_visits WHERE name = 'an1'), 'reserved');
+  PERFORM public.accept_booking_terms(c.manage_token);
+  IF pg_temp.hint_of(format('SELECT public.attach_reservation_payment(%L, %L, 30000, %L)',
+       c.manage_token, 'cs_an_new', 'PLN')) <> 'amount_mismatch' THEN
+    RAISE EXCEPTION 'AN: the link asked for the new price';
+  END IF;
+  PERFORM public.attach_reservation_payment(c.manage_token, 'cs_an', 25000, 'PLN');
+  IF public.fulfill_checkout_session('cs_an', true, 'pi_an') <> 'confirmed' THEN
+    RAISE EXCEPTION 'AN: paid at the old price, the visit was not confirmed';
+  END IF;
+  IF (SELECT (status, price_minor) FROM public.get_booking(c.manage_token))
+     IS DISTINCT FROM ('confirmed'::public.appointment_status, 25000) THEN
+    RAISE EXCEPTION 'AN: the confirmed visit changed its price';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+UPDATE public.specialist_services SET price_minor = 25000
+WHERE specialist_id = (SELECT anna_id FROM booking_test);
+
 ROLLBACK;

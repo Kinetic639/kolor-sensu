@@ -3,6 +3,7 @@ import { SecondaryButton } from "@repo/ui/public-site";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { centrePhone } from "@/features/booking/centre-phone";
 import { PaymentForm } from "@/features/booking/payment-form";
 import { requireHeldSeat, SeatStep } from "@/features/workshops/seat-step";
 import { seatDetailsPath } from "@/features/workshops/signup-paths";
@@ -49,6 +50,7 @@ export default async function SeatPaymentPage({
       <PaymentForm
         clientSecret={session.client_secret}
         payLabel={`Zapłać ${formatPrice(seat.registration)}`}
+        phone={await centrePhone()}
       />
       <div className="border-border/70 border-t pt-6">
         <SecondaryButton asChild size="sm">

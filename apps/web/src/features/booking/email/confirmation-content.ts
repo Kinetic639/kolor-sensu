@@ -1,6 +1,11 @@
 import type { ClaimedBookingEmail } from "@repo/supabase";
 import { formatPrice } from "@/lib/format";
-import { localTime, ONLINE_LINK_NOTE, visitLabel } from "../visit-label";
+import {
+  dayLabel,
+  localTime,
+  ONLINE_LINK_NOTE,
+  visitLabel,
+} from "../visit-label";
 import { visitIcs } from "./ics";
 
 // What the confirmation e-mail says (docs/product/booking-plan.md, R7),
@@ -15,6 +20,8 @@ export interface ConfirmationOptions {
   contact: { phone?: string; email?: string };
   /** The company in one line (its name, address, NIP), at the foot. */
   company?: string | null;
+  /** When it is sent: as soon as the payment is confirmed, its day. */
+  now?: Date;
 }
 
 /** The plain text with the company at its foot (when it is set). */
@@ -68,7 +75,7 @@ export function contactLineOf(contact: ConfirmationOptions["contact"]) {
 
 export function confirmationContent(
   visit: ClaimedBookingEmail & { manageToken: string },
-  { siteUrl, timeZone, contact }: ConfirmationOptions,
+  { siteUrl, timeZone, contact, now = new Date() }: ConfirmationOptions,
 ): ConfirmationContent {
   const when = visitLabel(visit.startsAt, timeZone);
   const manageUrl = `${siteUrl}/wizyta/${visit.manageToken}`;
@@ -80,7 +87,13 @@ export function confirmationContent(
     ["Termin", `${when}–${localTime(visit.endsAt, timeZone)}`],
     ["Miejsce", placeRow(visit)],
     ...(visit.paid
-      ? [["Zapłacono", formatPrice(visit)] as [string, string]]
+      ? [
+          // The amount and the day it was paid (Klient · 4, card 7).
+          [
+            "Zapłacono",
+            `${formatPrice(visit)}, ${dayLabel(now.toISOString(), timeZone)}`,
+          ] as [string, string],
+        ]
       : []),
     ["Numer rezerwacji", visit.reference],
   ];

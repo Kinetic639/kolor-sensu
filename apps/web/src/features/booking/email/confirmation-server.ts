@@ -10,6 +10,8 @@ import { getBookingWindow } from "@/lib/public-data";
 import { getSiteFrame } from "@/lib/site-frame";
 import { createSecretClient } from "@/lib/supabase/secret";
 import { sendChangeEmail, type VisitChange } from "./send-change";
+import { sendSlotLostEmail } from "./send-slot-lost";
+import type { SlotLostEmail } from "./slot-lost-content";
 import {
   deliverVisitEmail,
   sendVisitEmail,
@@ -129,6 +131,22 @@ export async function sendVisitChangeEmail(change: VisitChange) {
       `[booking] ${change.kind} e-mail ${change.reference}:`,
       error,
     );
+    return "failed" as const;
+  }
+}
+
+/**
+ * Tells the client their payment came after the time was taken and went
+ * back (Klient · 4, card 17); never throws.
+ */
+export async function sendSlotLostNotice(
+  payment: SlotLostEmail & { to: string; sessionId: string },
+) {
+  try {
+    await sendSlotLostEmail(payment, await emailBasics());
+    return "sent" as const;
+  } catch (error) {
+    console.error(`[booking] slot-lost e-mail ${payment.reference}:`, error);
     return "failed" as const;
   }
 }

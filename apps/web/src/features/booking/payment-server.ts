@@ -8,7 +8,10 @@ import {
 import type Stripe from "stripe";
 import { createSecretClient } from "@/lib/supabase/secret";
 import { stripeServer } from "@/lib/stripe";
-import { sendVisitConfirmation } from "./email/confirmation-server";
+import {
+  sendSlotLostNotice,
+  sendVisitConfirmation,
+} from "./email/confirmation-server";
 import { settleSession, stuckSessionAction, type PaymentDeps } from "./payment";
 import { refundThroughStripe, type RefundingStripe } from "./stripe-refund";
 
@@ -38,6 +41,7 @@ export function paymentDeps(): PaymentDeps {
     recordRefund: (paymentIntentId, refundedMinor) =>
       recordRefund(db, paymentIntentId, refundedMinor),
     onConfirmed: sendVisitConfirmation,
+    onSlotLost: sendSlotLostNotice,
     recordDispute: (dispute) => recordDispute(db, dispute),
     paymentReference: async (paymentIntentId) => {
       try {
