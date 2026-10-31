@@ -117,9 +117,12 @@ export default async function BookingConfirmationPage({
       {confirmed ? <ResumeBooking href={null} /> : null}
       <div className="flex flex-wrap gap-3">
         {confirmed ? (
-          <PrimaryButton arrow asChild>
-            <Link href="/">Wróć na stronę główną</Link>
-          </PrimaryButton>
+          <>
+            <PrimaryButton arrow asChild>
+              <Link href="/">Wróć na stronę główną</Link>
+            </PrimaryButton>
+            <CalendarButton />
+          </>
         ) : waiting ? null : (
           <SecondaryButton asChild>
             <Link href={bookingHref({})}>Wybierz termin</Link>
@@ -130,21 +133,42 @@ export default async function BookingConfirmationPage({
   );
 }
 
-/** A visit confirmed without a payment: its code covered the whole price. */
+/** The visit as a calendar file (Klient · 4, card 6). */
+function CalendarButton() {
+  return (
+    <SecondaryButton asChild>
+      <a download href="/umow-wizyte/potwierdzenie/kalendarz.ics">
+        Dodaj do kalendarza
+      </a>
+    </SecondaryButton>
+  );
+}
+
+/**
+ * A visit confirmed without a payment: a free service (0 zł, card 9), or
+ * a code that covered the whole price.
+ */
 async function FreeConfirmation() {
   const visit = await readGuestVisit();
   if (!visit || visit.booking.status !== "confirmed") redirect(bookingHref({}));
   return (
     <BookingStep
       current={6}
-      lead="Kod rabatowy pokrył całą cenę, więc niczego nie pobraliśmy. Potwierdzenie wyślemy na Twój adres e-mail."
+      lead={
+        visit.discount
+          ? "Kod rabatowy pokrył całą cenę, więc niczego nie pobraliśmy. Potwierdzenie wyślemy na Twój adres e-mail."
+          : "Ta wizyta jest bezpłatna, więc niczego nie pobraliśmy. Potwierdzenie wyślemy na Twój adres e-mail."
+      }
       title="Wizyta potwierdzona"
       visit={visit}
     >
       <ResumeBooking href={null} />
-      <PrimaryButton arrow asChild>
-        <Link href="/">Wróć na stronę główną</Link>
-      </PrimaryButton>
+      <div className="flex flex-wrap gap-3">
+        <PrimaryButton arrow asChild>
+          <Link href="/">Wróć na stronę główną</Link>
+        </PrimaryButton>
+        <CalendarButton />
+      </div>
     </BookingStep>
   );
 }

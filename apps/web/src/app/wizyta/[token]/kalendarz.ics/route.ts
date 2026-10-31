@@ -1,6 +1,6 @@
-import { visitIcs } from "@/features/booking/email/ics";
 import { siteUrl } from "@/features/booking/email/confirmation-server";
 import { visitByLinkToken } from "@/features/booking/guest-visit";
+import { visitIcsResponse } from "@/features/booking/visit-ics";
 
 // The confirmed visit as a calendar file, from the e-mail link's page.
 
@@ -15,32 +15,5 @@ export async function GET(
   if (!visit || visit.booking.status !== "confirmed") {
     return new Response("Not found", { status: 404 });
   }
-  const { booking } = visit;
-  const place =
-    booking.mode === "online"
-      ? "Online"
-      : [booking.locationName, booking.roomName].filter(Boolean).join(", ");
-  const body = visitIcs({
-    uid: `${booking.reference}@kolorsensu.pl`,
-    startsAt: booking.startsAt,
-    endsAt: booking.endsAt,
-    summary: `${booking.serviceName} – Kolor Sensu`,
-    location: place,
-    description: [
-      `Numer rezerwacji: ${booking.reference}`,
-      booking.specialistName ? `Specjalista: ${booking.specialistName}` : null,
-    ]
-      .filter(Boolean)
-      .join("\n"),
-    url: `${siteUrl()}/wizyta/${token}`,
-    sequence: booking.rescheduleCount,
-  });
-  return new Response(body, {
-    headers: {
-      "Content-Type": "text/calendar; charset=utf-8",
-      "Content-Disposition": `attachment; filename="wizyta-${booking.reference}.ics"`,
-      "Cache-Control": "private, no-store",
-      "Referrer-Policy": "no-referrer",
-    },
-  });
+  return visitIcsResponse(visit.booking, `${siteUrl()}/wizyta/${token}`);
 }

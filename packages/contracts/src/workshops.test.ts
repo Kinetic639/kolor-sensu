@@ -38,6 +38,12 @@ describe("a workshop's form", () => {
     expect(problem({ meetingUrl: "http://example.invalid" })).toBe(
       "Link do spotkania zaczyna się od https://.",
     );
+    // 0 zł is free, a paid price at least 2 zł (Klient · 4, card 9; #256).
+    expect(problem({ priceMinor: 150 })).toBe(
+      "Cena to 0 zł (bezpłatnie) albo co najmniej 2 zł.",
+    );
+    expect(problem({ priceMinor: 0 })).toBeNull();
+    expect(problem({ priceMinor: 200 })).toBeNull();
     expect(problem({ capacity: 0 })).toBe("Co najmniej 1 miejsce.");
   });
 });

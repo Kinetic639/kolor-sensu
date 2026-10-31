@@ -5,6 +5,7 @@ import {
   findVisit,
   payButton,
   paymentElement,
+  newVisitor,
 } from "./support/booking";
 import { adminAccount, adminUrl, missingAccount } from "./support/target";
 
@@ -35,7 +36,8 @@ const CARDS = {
 
 async function payByCard(page: Page, number: string) {
   const payment = paymentElement(page);
-  await payment.getByText("Karta", { exact: true }).click();
+  // The option's name; Stripe may repeat the word in its own labels.
+  await payment.getByText("Karta", { exact: true }).first().click();
   await payment.locator('input[name="number"]').fill(number);
   await payment.locator('input[name="expiry"]').fill("12 / 34");
   await payment.locator('input[name="cvc"]').fill("123");
@@ -58,13 +60,15 @@ async function completeThreeDSecure(page: Page) {
       async () => {
         for (const frame of page.frames()) {
           const button = frame.getByRole("button", { name: /^complete$/i });
-          if (
-            (await button.count()) > 0 &&
+          // A frame Stripe closed meanwhile (its page approved) counts as
+          // none, not as a failure.
+          const shown =
+            (await button.count().catch(() => 0)) > 0 &&
             (await button
               .first()
               .isVisible()
-              .catch(() => false))
-          ) {
+              .catch(() => false));
+          if (shown) {
             await button
               .first()
               .click({ timeout: 5_000 })
@@ -83,6 +87,10 @@ async function completeThreeDSecure(page: Page) {
     )
     .toBe("done");
 }
+
+// Each test a visitor of its own: a site without a proxy (E2E_WEB_URL)
+// counts holds by it; a deployed one by the real address.
+test.beforeEach(({ context }) => newVisitor(context));
 
 test.beforeEach(() => {
   test.skip(!adminAccount, missingAccount);
