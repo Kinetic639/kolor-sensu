@@ -57,6 +57,10 @@ const STATUS: Record<string, { title: string; lead: string }> = {
     title: "Wizyta została odwołana",
     lead: "Jeśli chcesz umówić nowy termin, zapraszamy ponownie.",
   },
+  past: {
+    title: "Ta wizyta już się odbyła",
+    lead: "Nie można jej już przełożyć ani odwołać. Jeśli chcesz przyjść ponownie, umów nową wizytę.",
+  },
 };
 
 const CHANGES: VisitChangeDone[] = [
@@ -99,12 +103,6 @@ export default async function VisitPage({
   const confirmBy = reserved
     ? await reservationConfirmBy(createSecretClient(), token).catch(() => null)
     : null;
-  const status = STATUS[
-    confirmBy ? "unconfirmed" : reserved ? "reserved" : booking.status
-  ] ?? {
-    title: "Ta rezerwacja nie jest aktywna",
-    lead: "Jeśli masz pytania, skontaktuj się z nami.",
-  };
   const copy = visitPageCopy({
     token,
     booking,
@@ -112,6 +110,18 @@ export default async function VisitPage({
     timeZone,
     change: CHANGES.find((change) => change === zmiana) ?? null,
   });
+  const status = STATUS[
+    confirmBy
+      ? "unconfirmed"
+      : reserved
+        ? "reserved"
+        : copy.past
+          ? "past"
+          : booking.status
+  ] ?? {
+    title: "Ta rezerwacja nie jest aktywna",
+    lead: "Jeśli masz pytania, skontaktuj się z nami.",
+  };
 
   return (
     <div className="max-w-page px-gutter pb-section-sm mx-auto grid gap-8 pt-8 lg:pt-12">
@@ -135,7 +145,7 @@ export default async function VisitPage({
           items={visitSummaryItems(booking, timeZone)}
           title={`Rezerwacja ${booking.reference}`}
         >
-          {booking.status === "confirmed" ? (
+          {booking.status === "confirmed" && !copy.past ? (
             <SecondaryButton asChild size="sm">
               <a href={`/wizyta/${token}/kalendarz.ics` as Route} download>
                 Dodaj do kalendarza

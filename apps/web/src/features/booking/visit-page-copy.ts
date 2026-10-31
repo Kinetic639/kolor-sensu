@@ -16,6 +16,8 @@ export interface VisitPageCopy {
   notice: string | null;
   /** A cancelled visit: what happens with the money. */
   cancelledLead: string | null;
+  /** A confirmed visit whose time has come: it took place (card 9). */
+  past: boolean;
   /** A reservation not paid yet: pay it by its time. */
   pay: { text: string; href: Route } | null;
   /** Null: nothing to change (past, cancelled, not paid yet). */
@@ -134,6 +136,9 @@ export function visitPageCopy({
   return {
     notice: change ? NOTICES[change] : null,
     cancelledLead,
+    past:
+      booking.status === "confirmed" &&
+      now.getTime() >= Date.parse(booking.startsAt),
     pay: payCopy,
     reschedule: rescheduleCopy,
     cancel: cancelCopy,
