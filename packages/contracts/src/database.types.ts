@@ -271,6 +271,7 @@ export type Database = {
       booking_emails: {
         Row: {
           appointment_id: string;
+          bounced_at: string | null;
           claimed_at: string;
           kind: string;
           provider_message_id: string | null;
@@ -278,6 +279,7 @@ export type Database = {
         };
         Insert: {
           appointment_id: string;
+          bounced_at?: string | null;
           claimed_at?: string;
           kind: string;
           provider_message_id?: string | null;
@@ -285,6 +287,7 @@ export type Database = {
         };
         Update: {
           appointment_id?: string;
+          bounced_at?: string | null;
           claimed_at?: string;
           kind?: string;
           provider_message_id?: string | null;
@@ -3344,6 +3347,13 @@ export type Database = {
           reference: string;
         }[];
       };
+      centre_resend_visit_link: {
+        Args: { p_appointment_id: string };
+        Returns: {
+          kind: string;
+          reference: string;
+        }[];
+      };
       centre_settle_visit: {
         Args: { p_appointment_id: string };
         Returns: {
@@ -3365,6 +3375,7 @@ export type Database = {
           currency_code: string;
           ends_at: string;
           location_address: string;
+          location_directions: string | null;
           location_name: string;
           manage_token: string | null;
           mode: Database["public"]["Enums"]["visit_mode"];
@@ -3751,6 +3762,10 @@ export type Database = {
           first_name: string | null;
           last_name: string | null;
         }[];
+      };
+      mark_booking_email_bounced: {
+        Args: { p_message_id: string };
+        Returns: string | null;
       };
       mark_booking_email_sent: {
         Args: { p_kind: string; p_message_id: string; p_reference: string };

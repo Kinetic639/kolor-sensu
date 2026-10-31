@@ -161,8 +161,7 @@ describe("centreBookingMessage", () => {
 describe("resendLinkMessage", () => {
   it("says why in Polish, with a fallback", () => {
     expect(resendLinkMessage("recently_sent")).toMatch(/przed chwilą/);
-    expect(resendLinkMessage(undefined)).toBe(
-      "Nie udało się wysłać linku do płatności.",
-    );
+    expect(resendLinkMessage("nothing_to_send")).toMatch(/minęła/);
+    expect(resendLinkMessage(undefined)).toBe("Nie udało się wysłać linku.");
   });
 });

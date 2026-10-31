@@ -17,6 +17,7 @@ const visit = {
   roomName: "Gabinet Zielony",
   locationName: "Siedziba Główna",
   locationAddress: "Plac Wolności 18/518, 61-739 Poznań",
+  locationDirections: null,
   priceMinor: 20000,
   currencyCode: "PLN",
   clientName: "Jan Kowalski",
@@ -120,5 +121,19 @@ describe("visitReminderContent", () => {
     );
     expect(content.manageUrl).toBe("https://kolorsensu.pl/wizyta/link-token");
     expect(content.rows).toContainEqual(["Numer rezerwacji", "3010-004"]);
+  });
+
+  it("says how to get there (Klient · 6, card 11)", () => {
+    const content = visitReminderContent(
+      {
+        ...visit,
+        paid: true,
+        paymentDueAt: null,
+        locationDirections: "Wejście od podwórza",
+      },
+      options,
+    );
+    expect(content.rows).toContainEqual(["Dojazd", "Wejście od podwórza"]);
+    expect(content.text).toContain("Dojazd: Wejście od podwórza");
   });
 });

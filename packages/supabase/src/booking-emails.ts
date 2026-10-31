@@ -31,6 +31,8 @@ export interface ClaimedBookingEmail {
   roomName: string | null;
   locationName: string | null;
   locationAddress: string | null;
+  /** How to get there (an in-person visit's place), or null. */
+  locationDirections: string | null;
   priceMinor: number;
   currencyCode: string;
   clientName: string;
@@ -76,6 +78,7 @@ export async function claimBookingEmail(
         roomName: row.room_name ?? null,
         locationName: row.location_name ?? null,
         locationAddress: row.location_address ?? null,
+        locationDirections: row.location_directions ?? null,
         priceMinor: row.price_minor,
         currencyCode: row.currency_code,
         clientName: row.client_name,
@@ -102,6 +105,21 @@ export async function markBookingEmailSent(
     p_message_id: messageId,
   });
   if (error) throw error;
+}
+
+/**
+ * Resend says this message bounced: if it was about a visit, its history
+ * says so (once). The visit's reference, or null.
+ */
+export async function markBookingEmailBounced(
+  client: Client,
+  messageId: string,
+): Promise<string | null> {
+  const { data, error } = await client.rpc("mark_booking_email_bounced", {
+    p_message_id: messageId,
+  });
+  if (error) throw error;
+  return data ?? null;
 }
 
 /** Sending failed: someone may claim it again at once. */

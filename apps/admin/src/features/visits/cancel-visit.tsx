@@ -1,6 +1,8 @@
 "use client";
 
+import type { ClientDetailsValues } from "@repo/contracts/clients";
 import type { SettlementView, VisitRow } from "@repo/scheduling";
+import { EditClientButton } from "@repo/ui/client-table";
 import { SettleButton } from "@repo/ui/settlement-list";
 import {
   CancelVisitButton,
@@ -9,6 +11,7 @@ import {
   ResendPaymentLinkButton,
 } from "@repo/ui/visit-table";
 import { resendPaymentLinkAction } from "@/features/calendar/actions";
+import { updateClientAction } from "@/features/clients/actions";
 import {
   cancelVisitAsCentreAction,
   refundVisitAsCentreAction,
@@ -16,9 +19,10 @@ import {
 } from "./actions";
 
 // What the centre does with a visit from its side panel (R9, R11, R12):
-// send the link to pay again, move it (in the calendar), give money back
-// (or a refund still owed, again), cancel it with the refund the admin
-// chooses.
+// send the link to pay (or a confirmed visit's link) again, correct the
+// client's e-mail or phone first (Klient · 6, cards 7 and 14), move it (in
+// the calendar), give money back (or a refund still owed, again), cancel it
+// with the refund the admin chooses.
 
 /** The refund a visit still owes, as the settling button shows it. */
 function owedOf(row: VisitRow): SettlementView {
@@ -43,10 +47,13 @@ function owedOf(row: VisitRow): SettlementView {
 export function CentreVisitToolbar({
   row,
   label,
+  client = null,
 }: {
   row: VisitRow;
   /** `Jan Kowalski, czwartek, 1 października 2026, 09:00–09:50` */
   label: string;
+  /** The client who booked it, to correct their details (bookings table). */
+  client?: (ClientDetailsValues & { id: string }) | null;
 }) {
   const visit = {
     id: row.id,
@@ -58,9 +65,19 @@ export function CentreVisitToolbar({
   };
   return (
     <>
-      {row.resendable ? (
+      {client &&
+      row.cancellable &&
+      !client.email.endsWith("@anonim.invalid") ? (
+        <EditClientButton
+          action={updateClientAction}
+          clientId={client.id}
+          details={client}
+        />
+      ) : null}
+      {row.resendable || row.linkResendable ? (
         <ResendPaymentLinkButton
           action={resendPaymentLinkAction}
+          confirmed={row.linkResendable}
           visitId={row.id}
         />
       ) : null}

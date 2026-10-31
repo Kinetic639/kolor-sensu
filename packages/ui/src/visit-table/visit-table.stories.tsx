@@ -128,9 +128,10 @@ function BookingsTable({
             toolbar={
               admin ? (
                 <>
-                  {opened.resendable ? (
+                  {opened.resendable || opened.linkResendable ? (
                     <ResendPaymentLinkButton
                       action={resend}
+                      confirmed={opened.linkResendable}
                       visitId={opened.id}
                     />
                   ) : null}

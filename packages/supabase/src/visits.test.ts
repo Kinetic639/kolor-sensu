@@ -3,7 +3,7 @@ import {
   centreCancelVisit,
   centreRefundVisit,
   centreRescheduleVisit,
-  centreResendPaymentLink,
+  centreResendVisitLink,
   getVisit,
   listVisitEvents,
   listVisits,
@@ -306,23 +306,28 @@ describe("listVisitEvents", () => {
   });
 });
 
-describe("centreResendPaymentLink", () => {
-  it("lets the reservation's e-mail go once more", async () => {
-    const { client, rpc } = rpcClient([{ reference: "2610-004" }]);
-    expect(await centreResendPaymentLink(client, "visit-1")).toBe("2610-004");
-    expect(rpc).toHaveBeenCalledWith("centre_resend_payment_link", {
+describe("centreResendVisitLink (Klient · 6, card 7)", () => {
+  it("lets the visit's e-mail with its link go once more: a reservation's or a confirmation", async () => {
+    const { client, rpc } = rpcClient([
+      { reference: "2610-004", kind: "confirmation" },
+    ]);
+    expect(await centreResendVisitLink(client, "visit-1")).toEqual({
+      reference: "2610-004",
+      kind: "confirmation",
+    });
+    expect(rpc).toHaveBeenCalledWith("centre_resend_visit_link", {
       p_appointment_id: "visit-1",
     });
   });
 
-  it("says why not: sent a moment ago, nothing to pay, not theirs", async () => {
+  it("says why not: sent a moment ago, nothing to send, not theirs", async () => {
     for (const [error, code] of [
       [{ message: "x", hint: "recently_sent" }, "recently_sent"],
-      [{ message: "x", hint: "not_payable" }, "not_payable"],
+      [{ message: "x", hint: "nothing_to_send" }, "nothing_to_send"],
       [{ message: "x", code: "42501" }, "forbidden"],
     ] as const) {
       await expect(
-        centreResendPaymentLink(rpcClient(null, error).client, "v"),
+        centreResendVisitLink(rpcClient(null, error).client, "v"),
       ).rejects.toMatchObject({ code });
     }
   });

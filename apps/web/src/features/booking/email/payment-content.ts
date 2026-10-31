@@ -4,7 +4,7 @@ import { deadlineLabel, localTime, visitLabel } from "../visit-label";
 import {
   contactLineOf,
   place,
-  placeRow,
+  placeRows,
   type ConfirmationOptions,
   type VisitEmailContent,
 } from "./confirmation-content";
@@ -50,7 +50,7 @@ function visitRows(
       "Termin",
       `${visitLabel(visit.startsAt, timeZone)}–${localTime(visit.endsAt, timeZone)}`,
     ],
-    ["Miejsce", placeRow(visit)],
+    ...placeRows(visit),
   ];
 }
 
@@ -165,7 +165,9 @@ export function unpaidCancelledContent(
 ): VisitEmailContent {
   const manageUrl = `${siteUrl}/umow-wizyte`;
   const rows: [string, string][] = [
-    ...visitRows(visit, timeZone).filter(([label]) => label !== "Miejsce"),
+    ...visitRows(visit, timeZone).filter(
+      ([label]) => label !== "Miejsce" && label !== "Dojazd",
+    ),
     ["Numer rezerwacji", visit.reference],
   ];
   const greeting = `Dzień dobry, ${visit.clientName}!`;

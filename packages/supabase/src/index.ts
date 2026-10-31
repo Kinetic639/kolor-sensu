@@ -302,6 +302,7 @@ export {
   cancelUnpaidVisits,
   claimBookingEmail,
   listDueBookingEmails,
+  markBookingEmailBounced,
   markBookingEmailSent,
   releaseBookingEmail,
 } from "./booking-emails";
@@ -322,7 +323,7 @@ export {
   centreSettleVisit,
   listSettlements,
   centreRescheduleVisit,
-  centreResendPaymentLink,
+  centreResendVisitLink,
   getVisit,
   listVisitEvents,
   listVisits,
