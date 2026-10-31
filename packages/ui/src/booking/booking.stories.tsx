@@ -50,6 +50,24 @@ const steps = [
   { key: "potwierdzenie", label: "Potwierdzenie" },
 ];
 
+export const PreselectedSpecialist: Story = {
+  render: () => (
+    <BookingStepper
+      current={1}
+      steps={steps.map((step, index) => ({
+        ...step,
+        completed: [0, 2, 3].includes(index),
+        href: step.href ?? (index === 3 ? "#termin" : undefined),
+      }))}
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole("link", { name: "Krok 3: Specjalista (ukończony)" }),
+    ).toBeVisible();
+  },
+};
+
 export const Stepper: Story = {
   render: () => (
     <div className="grid gap-10">

@@ -26,6 +26,8 @@ describe("booking search params", () => {
       tydzien: "2026-10-05",
       termin: "2026-10-07T10:00",
       uwaga: null,
+      krok: null,
+      dalej: null,
     });
   });
 
@@ -42,6 +44,8 @@ describe("booking search params", () => {
       tydzien: null,
       termin: null,
       uwaga: null,
+      krok: null,
+      dalej: null,
     });
   });
 
@@ -63,12 +67,12 @@ describe("booking search params", () => {
     ).toBe("/umow-wizyte/test?usluga=konsultacja-psychologiczna&forma=online");
   });
 
-  it("selecting a choice keeps the others but drops the chosen time", () => {
+  it("selecting a choice preserves a preselected time for live revalidation", () => {
     const params = load(
       "usluga=konsultacja&forma=online&specjalista=anna-nowak&termin=2026-10-07T10:00",
     );
     expect(selectBookingHref(params, "forma", "stacjonarnie")).toBe(
-      "/umow-wizyte?usluga=konsultacja&forma=stacjonarnie&specjalista=anna-nowak",
+      "/umow-wizyte?usluga=konsultacja&forma=stacjonarnie&specjalista=anna-nowak&termin=2026-10-07T10:00",
     );
   });
 
@@ -79,12 +83,12 @@ describe("booking search params", () => {
     );
   });
 
-  it("changing a choice removes it and the chosen time", () => {
+  it("editing one choice retains the other choices and the requested time", () => {
     const params = load(
       "usluga=konsultacja&forma=online&specjalista=a-b&tydzien=2026-10-05&termin=2026-10-07T10:00",
     );
     expect(changeBookingHref(params, "specjalista")).toBe(
-      "/umow-wizyte?usluga=konsultacja&forma=online",
+      "/umow-wizyte?usluga=konsultacja&forma=online&specjalista=a-b&tydzien=2026-10-05&termin=2026-10-07T10:00&krok=specjalista",
     );
   });
 });

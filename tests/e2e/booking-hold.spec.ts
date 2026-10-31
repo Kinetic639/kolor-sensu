@@ -33,6 +33,9 @@ async function heldLabel(page: Page) {
  * after one visit does not touch the other), chosen.
  */
 async function pickAnother(page: Page, not: string) {
+  if (await page.getByRole("region", { name: "Termin wybrany" }).isVisible()) {
+    await summary(page).getByRole("link", { name: "Zmień: Termin" }).click();
+  }
   const step = page.getByRole("region", { name: "Wybierz termin" });
   for (let week = 0; week < 8; week += 1) {
     const links = step.getByRole("link", { name: /, \d{2}:\d{2}$/ });

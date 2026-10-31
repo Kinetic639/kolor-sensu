@@ -30,6 +30,30 @@ function renderForm() {
 }
 
 describe("HoldTimeForm", () => {
+  it("automatically submits a preselected visit exactly once after verification", () => {
+    const submit = vi
+      .spyOn(HTMLFormElement.prototype, "requestSubmit")
+      .mockImplementation(() => {});
+    render(
+      <HoldTimeForm
+        autoContinue
+        fields={{ usluga: "konsultacja", termin: "2030-01-07T10:00" }}
+        turnstileSiteKey="test-key"
+      />,
+    );
+    expect(submit).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("button", { name: "Przejdź dalej" }),
+    ).not.toBeInTheDocument();
+    act(() => events.onError?.());
+    expect(submit).not.toHaveBeenCalled();
+    act(() => events.onVerify?.());
+    expect(submit).toHaveBeenCalledTimes(1);
+    act(() => events.onExpire?.());
+    act(() => events.onVerify?.());
+    expect(submit).toHaveBeenCalledTimes(1);
+    submit.mockRestore();
+  });
   it("waits for the bot check before it goes on", () => {
     const button = renderForm();
     expect(button).toBeDisabled();

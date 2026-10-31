@@ -208,8 +208,8 @@ describe("the homepage", () => {
     const position = (text: string) =>
       headings.findIndex((heading) => heading.includes(text));
     const order = [
-      "W czym możemy pomóc",
       "Bezpieczna przestrzeń i doświadczony zespół",
+      "W czym możemy pomóc",
       "Od pierwszego kontaktu do wsparcia na dłużej",
       "Przestrzeń, która wspiera",
       "Twoja droga do lepszego samopoczucia",
