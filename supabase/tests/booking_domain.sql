@@ -3729,4 +3729,68 @@ END;
 $body$;
 RESET ROLE;
 
+-- AM: a visit paid with a discount code (Klient · 4a). Moving it keeps the
+-- code and the price paid (card 3); cancelling it in the window gives back
+-- what was paid, not the list price (card 8).
+UPDATE public.center_settings
+SET cancellation_window_hours = 24, reschedule_window_hours = 24, max_self_reschedules = 1;
+INSERT INTO public.discount_codes (code, kind, value) VALUES ('KUPONAM', 'percent', 20);
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  mail record;
+  moved record;
+  cancelled record;
+  v_day date;
+  v_code uuid;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  v_day := t.monday + 84;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(v_day, '09:00'), p_client_key => 'visitor-am'
+  );
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Kupon', 'ola.kupon@example.invalid',
+    '600700104', NULL, true, true);
+  PERFORM public.apply_discount_code(held.access_token, 'KUPONAM');
+  IF (SELECT (price_minor, list_price_minor, discount_minor) FROM public.appointments WHERE id = held.appointment_id)
+     IS DISTINCT FROM (20000, 25000, 5000) THEN
+    RAISE EXCEPTION 'AM: 20 %% off 250 zł: %',
+      (SELECT row_to_json(a) FROM (SELECT price_minor, list_price_minor, discount_minor
+        FROM public.appointments WHERE id = held.appointment_id) AS a);
+  END IF;
+  SELECT discount_code_id INTO v_code FROM public.appointments WHERE id = held.appointment_id;
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_am', now() + interval '30 minutes', 20000, 'PLN');
+  IF public.fulfill_checkout_session('cs_am', true, 'pi_am') <> 'confirmed' THEN
+    RAISE EXCEPTION 'AM: the visit paid with a code was not confirmed';
+  END IF;
+  SELECT * INTO mail FROM public.claim_booking_email(held.reference, 'confirmation');
+
+  -- Card 3: moved, it keeps its code and the price paid.
+  SELECT * INTO moved FROM public.reschedule_booking(mail.manage_token, pg_temp.at(v_day, '10:00'));
+  IF (SELECT (status, starts_at, price_minor) FROM public.get_booking(mail.manage_token))
+     IS DISTINCT FROM ('confirmed'::public.appointment_status, pg_temp.at(v_day, '10:00'), 20000) THEN
+    RAISE EXCEPTION 'AM: the moved visit lost its price';
+  END IF;
+  IF (SELECT (discount_code_id, discount_minor) FROM public.appointments WHERE id = held.appointment_id)
+     IS DISTINCT FROM (v_code, 5000) THEN
+    RAISE EXCEPTION 'AM: the moved visit lost its code';
+  END IF;
+
+  -- Card 8: cancelled in the window, it gives back what was paid (200 zł),
+  -- not the list price (250 zł).
+  SELECT * INTO cancelled FROM public.cancel_booking(mail.manage_token);
+  IF (cancelled.refund_minor, cancelled.payment_intent_id) IS DISTINCT FROM (20000, 'pi_am'::text) THEN
+    RAISE EXCEPTION 'AM: the refund of a visit paid with a code: %', row_to_json(cancelled);
+  END IF;
+  IF (SELECT (status, refund_due_minor) FROM public.get_booking(mail.manage_token))
+     IS DISTINCT FROM ('cancelled'::public.appointment_status, 20000) THEN
+    RAISE EXCEPTION 'AM: the cancelled visit owes another amount';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;
