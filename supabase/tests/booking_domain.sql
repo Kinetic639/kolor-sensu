@@ -3883,6 +3883,9 @@ BEGIN
   IF mail.manage_token IS NULL OR mail.location_directions IS NOT NULL THEN
     RAISE EXCEPTION 'AO: an online reservation''s e-mail: %', row_to_json(mail);
   END IF;
+  -- Both e-mails went out yesterday.
+  UPDATE public.booking_emails SET claimed_at = now() - interval '1 day'
+  WHERE appointment_id IN (SELECT id FROM ao_visits);
 END;
 $body$;
 RESET ROLE;
@@ -3929,9 +3932,10 @@ BEGIN
   END IF;
 END;
 $body$;
-RESET ROLE;
+SET LOCAL ROLE service_role;
 UPDATE public.booking_emails SET claimed_at = now() - interval '6 minutes'
 WHERE appointment_id = (SELECT id FROM ao_visits WHERE name = 'paid');
+RESET ROLE;
 UPDATE public.appointments SET status = 'cancelled', cancelled_at = now(), cancelled_by = 'client'
 WHERE id = (SELECT id FROM ao_visits WHERE name = 'reserved');
 SET LOCAL ROLE authenticated;
