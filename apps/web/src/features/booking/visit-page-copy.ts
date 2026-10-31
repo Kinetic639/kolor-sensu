@@ -55,6 +55,7 @@ export function visitPageCopy({
     | "refundedMinor"
     | "paid"
     | "paymentDueAt"
+    | "movedByCentre"
   >;
   policy: ChangePolicy;
   timeZone: string;
@@ -124,11 +125,13 @@ export function visitPageCopy({
     ? {
         text: pay.allowed
           ? "Jeśli nie możesz przyjść, odwołaj rezerwację. Nie jest opłacona, więc nie ma nic do zwrotu."
-          : cancel.refund
-            ? `Odwołując wizytę do ${deadlineLabel(cancel.refundUntil, timeZone)}, otrzymasz pełny zwrot (${money(booking.priceMinor)}). Później odwołanie jest możliwe już bez zwrotu.`
-            : booking.paid && booking.priceMinor > 0
-              ? `Do wizyty zostało mniej niż ${policy.cancellationWindowHours} godz., więc odwołanie jest możliwe już bez zwrotu opłaty.`
-              : "Możesz odwołać wizytę, jeśli nie możesz przyjść.",
+          : cancel.refund && booking.movedByCentre
+            ? `Termin tej wizyty zmieniło centrum. Jeśli Ci nie pasuje, możesz ją odwołać do jej rozpoczęcia i otrzymasz pełny zwrot (${money(booking.priceMinor)}).`
+            : cancel.refund
+              ? `Odwołując wizytę do ${deadlineLabel(cancel.refundUntil, timeZone)}, otrzymasz pełny zwrot (${money(booking.priceMinor)}). Później odwołanie jest możliwe już bez zwrotu.`
+              : booking.paid && booking.priceMinor > 0
+                ? `Do wizyty zostało mniej niż ${policy.cancellationWindowHours} godz., więc odwołanie jest możliwe już bez zwrotu opłaty.`
+                : "Możesz odwołać wizytę, jeśli nie możesz przyjść.",
         href: `/wizyta/${token}/odwolaj` as Route,
       }
     : null;

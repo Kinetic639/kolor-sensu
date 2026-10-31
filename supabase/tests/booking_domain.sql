@@ -4012,4 +4012,90 @@ END;
 $body$;
 RESET ROLE;
 
+-- AP: the centre moved a paid visit and the new time does not suit the
+-- client (Klient · 7, card 6): cancelling from the link gives all the money
+-- back, even inside the window. A move of the client's own after the
+-- centre's ends that. Every visit here is inside the 720-hour window.
+UPDATE public.center_settings
+SET cancellation_window_hours = 720, reschedule_window_hours = 0, max_self_reschedules = 1;
+CREATE TEMP TABLE ap_visits (name text PRIMARY KEY, id uuid, reference text, link_token text);
+GRANT ALL ON ap_visits TO service_role, authenticated;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  mail record;
+  v_name text;
+  v_time time;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  FOR v_name, v_time IN VALUES ('centre', '09:00'::time), ('client', '10:00'::time) LOOP
+    SELECT * INTO held FROM public.hold_slot(
+      'booking-test-consultation', 'booking-test-anna', 'in_person',
+      pg_temp.at(t.monday + 21, v_time), p_client_key => 'visitor-ap-' || v_name
+    );
+    PERFORM pg_temp.save_details(held.access_token, 'Piotr Przełożony', 'piotr.ap@example.invalid',
+      '600700108', NULL, true, true);
+    PERFORM public.attach_checkout_session(held.access_token, 'cs_ap_' || v_name,
+      now() + interval '30 minutes', 25000, 'PLN');
+    IF public.fulfill_checkout_session('cs_ap_' || v_name, true, 'pi_ap_' || v_name) <> 'confirmed' THEN
+      RAISE EXCEPTION 'AP: the % visit was not confirmed', v_name;
+    END IF;
+    SELECT * INTO mail FROM public.claim_booking_email(held.reference, 'confirmation');
+    INSERT INTO ap_visits VALUES (v_name, held.appointment_id, held.reference, mail.manage_token);
+  END LOOP;
+  IF EXISTS (SELECT 1 FROM ap_visits AS v, public.get_booking(v.link_token) AS b WHERE b.moved_by_centre) THEN
+    RAISE EXCEPTION 'AP: a visit nobody moved counts as moved by the centre';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- The admin moves both: 9:00 to 11:00, 10:00 to 12:00.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  day date := (SELECT monday + 21 FROM booking_test);
+  room uuid := (SELECT room_id FROM booking_test);
+BEGIN
+  PERFORM public.centre_reschedule_visit((SELECT id FROM ap_visits WHERE name = 'centre'),
+    pg_temp.at(day, '11:00'), 'in_person', room, 'Specjalistka choruje');
+  PERFORM public.centre_reschedule_visit((SELECT id FROM ap_visits WHERE name = 'client'),
+    pg_temp.at(day, '12:00'), 'in_person', room, 'Specjalistka choruje');
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  day date := (SELECT monday + 21 FROM booking_test);
+  c record;
+BEGIN
+  IF NOT (SELECT b.moved_by_centre FROM ap_visits AS v, public.get_booking(v.link_token) AS b WHERE v.name = 'centre') THEN
+    RAISE EXCEPTION 'AP: the visit page does not know the centre moved the visit';
+  END IF;
+  -- The other client moves theirs again themselves, to 10:00.
+  PERFORM public.reschedule_booking((SELECT link_token FROM ap_visits WHERE name = 'client'), pg_temp.at(day, '10:00'));
+  IF (SELECT b.moved_by_centre FROM ap_visits AS v, public.get_booking(v.link_token) AS b WHERE v.name = 'client') THEN
+    RAISE EXCEPTION 'AP: the client''s own move still counts as the centre''s';
+  END IF;
+
+  SELECT * INTO c FROM public.cancel_booking((SELECT link_token FROM ap_visits WHERE name = 'centre'));
+  IF (c.refund_minor, c.payment_intent_id) IS DISTINCT FROM (25000, 'pi_ap_centre'::text) THEN
+    RAISE EXCEPTION 'AP: the centre''s new time, cancelled: %', row_to_json(c);
+  END IF;
+  SELECT * INTO c FROM public.cancel_booking((SELECT link_token FROM ap_visits WHERE name = 'client'));
+  IF c.refund_minor <> 0 THEN
+    RAISE EXCEPTION 'AP: the client''s own time, cancelled inside the window: %', row_to_json(c);
+  END IF;
+  IF (SELECT refund_due_minor FROM public.appointments WHERE id = (SELECT id FROM ap_visits WHERE name = 'centre')) <> 25000 THEN
+    RAISE EXCEPTION 'AP: the refund owed was not recorded';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

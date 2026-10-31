@@ -18,6 +18,7 @@ const booking = {
   refundedMinor: 0,
   paid: true,
   paymentDueAt: null,
+  movedByCentre: false,
 };
 const input = { token, booking, policy, timeZone: "Europe/Warsaw" };
 const at = (iso: string) => new Date(iso);
@@ -33,6 +34,17 @@ describe("visitPageCopy", () => {
       text: "Odwołując wizytę do 8 października 2030, godz. 11:00, otrzymasz pełny zwrot (200 zł). Później odwołanie jest możliwe już bez zwrotu.",
       href: `/wizyta/${token}/odwolaj`,
     });
+  });
+
+  it("the centre moved it: cancelling with the money back until the visit", () => {
+    const copy = visitPageCopy({
+      ...input,
+      booking: { ...booking, movedByCentre: true },
+      now: at("2030-10-09T09:00:00Z"),
+    });
+    expect(copy.cancel?.text).toBe(
+      "Termin tej wizyty zmieniło centrum. Jeśli Ci nie pasuje, możesz ją odwołać do jej rozpoczęcia i otrzymasz pełny zwrot (200 zł).",
+    );
   });
 
   it("inside 48 hours: moving through the centre, cancelling without a refund", () => {
