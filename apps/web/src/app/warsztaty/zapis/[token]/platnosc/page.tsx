@@ -6,6 +6,7 @@ import { SecondaryButton } from "@repo/ui/public-site";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { centrePhone } from "@/features/booking/centre-phone";
 import { PaymentForm } from "@/features/booking/payment-form";
 import { formatPrice } from "@/lib/format";
 import { stripeServer } from "@/lib/stripe";
@@ -55,6 +56,7 @@ export default async function ReservedSeatPaymentPage({
       <PaymentForm
         clientSecret={session.client_secret}
         payLabel={`Zapłać ${formatPrice(registration)}`}
+        phone={await centrePhone()}
       />
       <div>
         <SecondaryButton asChild size="sm">

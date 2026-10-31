@@ -58,13 +58,15 @@ async function completeThreeDSecure(page: Page) {
       async () => {
         for (const frame of page.frames()) {
           const button = frame.getByRole("button", { name: /^complete$/i });
-          if (
-            (await button.count()) > 0 &&
+          // A frame Stripe closed meanwhile (its page approved) counts as
+          // none, not as a failure.
+          const shown =
+            (await button.count().catch(() => 0)) > 0 &&
             (await button
               .first()
               .isVisible()
-              .catch(() => false))
-          ) {
+              .catch(() => false));
+          if (shown) {
             await button
               .first()
               .click({ timeout: 5_000 })

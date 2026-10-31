@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import {
@@ -36,6 +37,17 @@ test("a guest books a visit, pays with BLIK and both portals show it", async ({
   await payment.getByLabel("Kod BLIK").fill("123456");
   await payButton(page).click();
   await expectConfirmed(page, reference);
+
+  // The visit as a calendar file, from the confirmation page (Klient · 4,
+  // card 6).
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("link", { name: "Dodaj do kalendarza" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe(`wizyta-${reference}.ics`);
+  const calendar = await readFile((await download.path())!, "utf8");
+  expect(calendar).toContain("BEGIN:VEVENT");
+  expect(calendar).toContain(`Numer rezerwacji: ${reference}`);
 
   await findVisit(browser, adminUrl, adminAccount!, reference);
   await findVisit(browser, specialistUrl, specialistAccount!, reference);

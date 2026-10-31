@@ -22,7 +22,20 @@ export const durationMinutesSchema = z.number().int().min(15).max(300);
 /** The time after a visit its service holds (notes, getting ready). */
 export const afterMinutesSchema = z.number().int().min(0).max(120);
 
-export const priceMinorSchema = z.number().int().min(0).max(10_000_000);
+/**
+ * 0 zł is free; a paid price is at least 2 zł (Klient · 4, card 9; #256).
+ * The database checks the same (…_price_free_or_two).
+ */
+export const FREE_OR_TWO_ZLOTY =
+  "Cena to 0 zł (bezpłatnie) albo co najmniej 2 zł.";
+export const isFreeOrTwoZloty = (minor: number) => minor === 0 || minor >= 200;
+
+export const priceMinorSchema = z
+  .number()
+  .int()
+  .min(0)
+  .max(10_000_000)
+  .refine(isFreeOrTwoZloty, FREE_OR_TWO_ZLOTY);
 
 export const serviceCreateSchema = z.object({
   name: z.string().trim().min(1).max(200),
