@@ -3872,7 +3872,7 @@ BEGIN
   IF mail.location_directions IS DISTINCT FROM 'Wejście od podwórza, drugie piętro' THEN
     RAISE EXCEPTION 'AO: the e-mail has no directions: %', row_to_json(mail);
   END IF;
-  PERFORM public.mark_booking_email_sent(held.reference, 'confirmation', 'msg_ao');
+  PERFORM public.mark_booking_email_sent(held.reference, 'confirmation', 'msg_ao_first');
 
   INSERT INTO ao_visits SELECT 'reserved', appointment_id, reference
   FROM pg_temp.reserve_new('online', pg_temp.at(t.monday + 98, '13:00'),
@@ -3983,6 +3983,9 @@ DO $body$
 DECLARE
   v_id uuid := (SELECT id FROM ao_visits WHERE name = 'paid');
 BEGIN
+  -- The confirmation Anna sent again goes out as message msg_ao.
+  PERFORM public.claim_booking_email((SELECT reference FROM ao_visits WHERE name = 'paid'), 'confirmation');
+  PERFORM public.mark_booking_email_sent((SELECT reference FROM ao_visits WHERE name = 'paid'), 'confirmation', 'msg_ao');
   IF public.mark_booking_email_bounced('msg_ao') IS DISTINCT FROM (SELECT reference FROM ao_visits WHERE name = 'paid') THEN
     RAISE EXCEPTION 'AO: the bounce was not about the visit';
   END IF;
