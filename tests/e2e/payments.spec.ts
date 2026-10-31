@@ -5,6 +5,7 @@ import {
   findVisit,
   payButton,
   paymentElement,
+  newVisitor,
 } from "./support/booking";
 import { adminAccount, adminUrl, missingAccount } from "./support/target";
 
@@ -35,7 +36,8 @@ const CARDS = {
 
 async function payByCard(page: Page, number: string) {
   const payment = paymentElement(page);
-  await payment.getByText("Karta", { exact: true }).click();
+  // The option's name; Stripe may repeat the word in its own labels.
+  await payment.getByText("Karta", { exact: true }).first().click();
   await payment.locator('input[name="number"]').fill(number);
   await payment.locator('input[name="expiry"]').fill("12 / 34");
   await payment.locator('input[name="cvc"]').fill("123");
@@ -85,6 +87,10 @@ async function completeThreeDSecure(page: Page) {
     )
     .toBe("done");
 }
+
+// Each test a visitor of its own: a site without a proxy (E2E_WEB_URL)
+// counts holds by it; a deployed one by the real address.
+test.beforeEach(({ context }) => newVisitor(context));
 
 test.beforeEach(() => {
   test.skip(!adminAccount, missingAccount);

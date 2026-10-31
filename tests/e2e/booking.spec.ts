@@ -7,6 +7,7 @@ import {
   findVisit,
   payButton,
   paymentElement,
+  newVisitor,
 } from "./support/booking";
 import {
   adminAccount,
@@ -23,6 +24,10 @@ import { service, specialist } from "./support/booking";
 // ./support/booking.ts). Payments are Stripe's test mode (BLIK code
 // 123456) and Turnstile uses its always-pass test keys there. Each run
 // leaves one confirmed test visit behind.
+
+// Each test a visitor of its own: a site without a proxy (E2E_WEB_URL)
+// counts holds by it; a deployed one by the real address.
+test.beforeEach(({ context }) => newVisitor(context));
 
 test("a guest books a visit, pays with BLIK and both portals show it", async ({
   page,
