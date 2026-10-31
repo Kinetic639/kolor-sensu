@@ -59,7 +59,12 @@ const STATUS: Record<string, { title: string; lead: string }> = {
   },
 };
 
-const CHANGES: VisitChangeDone[] = ["przelozona", "odwolana", "potwierdzona"];
+const CHANGES: VisitChangeDone[] = [
+  "przelozona",
+  "odwolana",
+  "potwierdzona",
+  "oplacona",
+];
 
 export default async function VisitPage({
   params,

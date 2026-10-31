@@ -8,7 +8,8 @@ import { visitChanges, type ChangePolicy } from "./visit-changes";
 // R8): what the client may still do themselves, until when, and what
 // happens with the money. Pure, so every case is tested.
 
-export type VisitChangeDone = "przelozona" | "odwolana" | "potwierdzona";
+export type VisitChangeDone =
+  "przelozona" | "odwolana" | "potwierdzona" | "oplacona";
 
 export interface VisitPageCopy {
   /** What just changed (after a move or a cancellation). */
@@ -27,6 +28,8 @@ const NOTICES: Record<VisitChangeDone, string> = {
   odwolana: "Wizyta została odwołana. Wysłaliśmy potwierdzenie e-mailem.",
   potwierdzona:
     "Rezerwacja potwierdzona. Termin czeka na Ciebie do czasu płatności.",
+  // The link to pay, opened again after paying (Klient · 5, card 10).
+  oplacona: "Ta wizyta jest już opłacona. Nie musisz płacić ponownie.",
 };
 
 export function visitPageCopy({

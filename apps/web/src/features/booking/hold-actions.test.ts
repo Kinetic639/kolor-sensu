@@ -16,6 +16,10 @@ const db = vi.hoisted(() => ({
     earlyStart: false,
     guardian: false,
   })),
+  reserveHold: vi.fn(async (): Promise<unknown> => ({
+    reference: "2610-001",
+    outcome: "reserved",
+  })),
 }));
 const hold = vi.hoisted(() => ({
   readHoldToken: vi.fn(async (): Promise<string | null> => null),
@@ -33,7 +37,6 @@ vi.mock("@repo/supabase", () => ({
   BookingError: class extends Error {
     code = "unknown";
   },
-  reserveHold: vi.fn(),
 }));
 vi.mock("@repo/supabase/discount-codes", () => ({}));
 vi.mock("@repo/supabase/intakes", () => ({ attachVisitIntake: vi.fn() }));
@@ -53,7 +56,10 @@ vi.mock("@/lib/public-data", () => ({
 }));
 vi.mock("@/lib/stripe", () => ({ stripeServer: vi.fn() }));
 vi.mock("@/lib/supabase/secret", () => ({ createSecretClient: () => ({}) }));
-vi.mock("./email/confirmation-server", () => ({}));
+const reservationEmail = vi.hoisted(() => vi.fn(async () => "link-token"));
+vi.mock("./email/confirmation-server", () => ({
+  claimReservationEmail: reservationEmail,
+}));
 vi.mock("./guards", () => ({
   clientIp: () => "203.0.113.1",
   turnstileKeys: () => ({ siteKey: "site", secretKey: "secret" }),
@@ -61,7 +67,10 @@ vi.mock("./guards", () => ({
   visitorKey: () => "visitor",
 }));
 vi.mock("./hold-cookie", () => hold);
-vi.mock("./intake-cookie", () => ({ readIntake: async () => null }));
+vi.mock("./intake-cookie", () => ({
+  readIntake: async () => null,
+  clearIntake: async () => {},
+}));
 vi.mock("./load-wizard", () => wizard);
 vi.mock("./payment-server", () => ({ expireSession }));
 vi.mock("@/features/newsletter/signup-server", () => ({}));
@@ -299,5 +308,46 @@ describe("the details step, the database refusing (Klient · 3)", () => {
         confirmGuardian: false,
       }),
     );
+  });
+});
+
+describe("„Zarezerwuj, zapłacę później” (Klient · 5, card 12)", () => {
+  it("gives up a payment begun before, once the visit is reserved", async () => {
+    hold.readHoldToken.mockResolvedValue("hold-token");
+    db.getBooking.mockResolvedValue({ ...held, priceMinor: 25000 });
+    db.pendingCheckoutSession.mockResolvedValue("cs_begun");
+    const order: string[] = [];
+    db.reserveHold.mockImplementationOnce(async () => {
+      order.push("reserved");
+      return { reference: "2610-001", outcome: "reserved" };
+    });
+    expireSession.mockImplementationOnce(async () => {
+      order.push("payment given up");
+    });
+
+    expect(
+      await redirected(() =>
+        saveDetailsAction(
+          { status: "idle" },
+          form({ ...valid, zamiar: "pozniej" }),
+        ),
+      ),
+    ).toBe("/umow-wizyte/potwierdzenie?zarezerwowana=1");
+    // Only once the database no longer counts it, so Stripe frees nothing.
+    expect(order).toEqual(["reserved", "payment given up"]);
+    expect(expireSession).toHaveBeenCalledWith("cs_begun");
+    expect(reservationEmail).toHaveBeenCalledWith("2610-001");
+  });
+
+  it("with no payment begun, there is nothing to give up", async () => {
+    hold.readHoldToken.mockResolvedValue("hold-token");
+    db.getBooking.mockResolvedValue({ ...held, priceMinor: 25000 });
+    await redirected(() =>
+      saveDetailsAction(
+        { status: "idle" },
+        form({ ...valid, zamiar: "pozniej" }),
+      ),
+    );
+    expect(expireSession).not.toHaveBeenCalled();
   });
 });

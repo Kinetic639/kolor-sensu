@@ -33,6 +33,10 @@ export default async function ReservationPaymentPage({
   const { booking, timeZone, policy } = visit;
   const back = `/wizyta/${token}` as Route;
   const { pay } = visitChanges(booking, policy);
+  // Paid already (the e-mail's link again): the visit's page says so.
+  if (booking.paid && booking.status === "confirmed") {
+    redirect(`${back}?zmiana=oplacona` as Route);
+  }
   if (!pay.allowed || !pay.until) redirect(back);
 
   const sessionId = await pendingReservationPayment(
