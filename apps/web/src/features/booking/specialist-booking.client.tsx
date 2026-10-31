@@ -8,7 +8,8 @@ import {
 } from "@repo/ui/public-site/compact-booking-calendar";
 import type { AvailabilityChoice } from "@repo/ui/public-site/availability-calendar";
 import { dateLabel } from "@repo/ui/public-site/availability-calendar-dates";
-import { HanddrawnLink } from "@repo/ui/public-site/handdrawn-link";
+import { useRouter } from "next/navigation";
+import { bookingHandoffHref } from "./booking-handoff";
 import { AvailabilityCalendarClient } from "./availability-calendar.client";
 
 export function SpecialistBookingClient({
@@ -27,23 +28,16 @@ export function SpecialistBookingClient({
   lastDay: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
-  const summary = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const [active, setActive] = useState(false);
   const [tab, setTab] = useState<"calendar" | "services">("calendar");
   const [serviceSlug, setServiceSlug] = useState("");
   const [choice, setChoice] = useState<AvailabilityChoice | null>(null);
-  const [optionHref, setOptionHref] = useState("");
   const service = services.find((one) => one.slug === serviceSlug);
-  const options =
-    choice?.slot.options?.filter((one) => one.service === serviceSlug) ?? [];
-  const option =
-    options.length === 1
-      ? options[0]
-      : options.find((one) => one.href === optionHref);
   const selection: CompactBookingSelection = {
     service: serviceSlug,
-    mode: option?.mode ?? "stacjonarnie",
-    location: option?.location ?? "",
+    mode: "stacjonarnie",
+    location: "",
   };
   const query = new URLSearchParams({
     specjalista: specialistSlug,
@@ -64,30 +58,20 @@ export function SpecialistBookingClient({
     return () => observer.disconnect();
   }, []);
   useEffect(() => {
-    if (choice && service) {
-      summary.current?.focus({ preventScroll: true });
-      summary.current?.scrollIntoView?.({
-        behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")
-          .matches
-          ? "instant"
-          : "smooth",
-        block: "nearest",
-      });
-    }
-  }, [choice, service]);
-  useEffect(() => {
     root.current
       ?.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')
       ?.focus({ preventScroll: true });
   }, [tab]);
-  const optionLabel = (one: (typeof options)[number]) =>
-    one.mode === "online"
-      ? "Online"
-      : `Stacjonarnie · ${locations.find((location) => location.slug === one.location)?.name ?? "Gabinet"}`;
+  const openWizard = (slug: string, chosen: AvailabilityChoice) => {
+    if (chosen.slot.options?.some((option) => option.service === slug))
+      router.push(
+        bookingHandoffHref(specialistSlug, slug, chosen.date, chosen.slot.time),
+      );
+  };
   const change = (patch: Partial<CompactBookingSelection>) => {
     if (patch.service !== undefined) {
       setServiceSlug(patch.service);
-      setOptionHref("");
+      if (choice) openWizard(patch.service, choice);
     }
   };
   return (
@@ -112,16 +96,14 @@ export function SpecialistBookingClient({
             active={active && tab === "calendar"}
             onChoose={(next) => {
               setChoice(next);
-              setOptionHref("");
-              if (!serviceSlug) setTab("services");
+              if (serviceSlug) openWizard(serviceSlug, next);
+              else setTab("services");
             }}
           />
         }
         bookingSummary={
           choice || service ? (
             <div
-              ref={summary}
-              tabIndex={-1}
               className="ks-booking-mini__summary"
               aria-label="Wybrana wizyta"
             >
@@ -130,77 +112,32 @@ export function SpecialistBookingClient({
                 aria-live="polite"
               >
                 {service ? (
-                  <p>
-                    <strong>{service.name}</strong> ·{" "}
-                    {service.price ?? service.detail}
-                    {service.duration ? ` · ${service.duration}` : ""}
-                  </p>
-                ) : (
-                  <p>Wybierz usługę dla tego terminu.</p>
-                )}
-                {choice ? (
-                  <p>
-                    {dateLabel(choice.date, {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}{" "}
-                    · {choice.slot.time}
-                  </p>
-                ) : (
-                  <p>Wybierz dostępną datę i godzinę w terminarzu.</p>
-                )}
-              </div>
-              {choice && service && options.length > 1 ? (
-                <label className="ks-booking-mini__summary-format">
-                  Forma i miejsce spotkania
-                  <select
-                    value={option?.href ?? ""}
-                    onChange={(event) => setOptionHref(event.target.value)}
-                  >
-                    <option value="" disabled>
-                      Wybierz formę spotkania
-                    </option>
-                    {options.map((one) => (
-                      <option key={one.href} value={one.href}>
-                        {optionLabel(one)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : option ? (
-                <p>{optionLabel(option)}</p>
-              ) : null}
-              <div className="ks-booking-mini__summary-actions">
-                {choice ? (
                   <button
                     type="button"
-                    onClick={() => {
-                      setChoice(null);
-                      setOptionHref("");
-                      setTab("calendar");
-                    }}
-                  >
-                    Zmień termin
-                  </button>
-                ) : null}
-                {service ? (
-                  <button
-                    type="button"
+                    aria-label="Zmień usługę"
                     onClick={() => {
                       setServiceSlug("");
                       setChoice(null);
-                      setOptionHref("");
                       setTab("services");
                     }}
                   >
-                    Zmień usługę
+                    <strong>{service.name}</strong>
+                    <span aria-hidden="true"> · zmień</span>
                   </button>
                 ) : null}
-                {option ? (
-                  <HanddrawnLink href={option.href}>
-                    Przejdź do rezerwacji
-                  </HanddrawnLink>
+                {choice ? (
+                  <button
+                    type="button"
+                    aria-label="Zmień termin"
+                    onClick={() => {
+                      setChoice(null);
+                      setTab("calendar");
+                    }}
+                  >
+                    {dateLabel(choice.date, { day: "numeric", month: "short" })}{" "}
+                    · {choice.slot.time}
+                    <span aria-hidden="true"> · zmień</span>
+                  </button>
                 ) : null}
               </div>
             </div>

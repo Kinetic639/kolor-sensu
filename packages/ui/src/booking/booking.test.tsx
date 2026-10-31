@@ -19,6 +19,28 @@ const steps = [
 ];
 
 describe("BookingStepper", () => {
+  it("marks a preselected specialist complete even while the form step is still current", () => {
+    render(
+      <BookingStepper
+        current={1}
+        steps={steps.map((step, index) =>
+          index === 2
+            ? {
+                ...step,
+                completed: true,
+                href: "/umow-wizyte?krok=specjalista",
+              }
+            : step,
+        )}
+      />,
+    );
+    expect(
+      screen.getByRole("link", { name: "Krok 3: Specjalista (ukończony)" }),
+    ).toHaveAttribute("href", "/umow-wizyte?krok=specjalista");
+    expect(
+      screen.getByRole("group", { name: "Krok 2: Forma" }),
+    ).toHaveAttribute("aria-current", "step");
+  });
   it("marks steps done, current and ahead; done steps link back", () => {
     render(<BookingStepper current={2} steps={steps} />);
     const nav = screen.getByRole("navigation", { name: "Kroki rezerwacji" });

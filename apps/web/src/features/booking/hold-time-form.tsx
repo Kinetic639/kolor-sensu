@@ -2,7 +2,7 @@
 
 import { PrimaryButton } from "@repo/ui/public-site/actions";
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useFormStatus } from "react-dom";
 import { holdTimeAction } from "./actions";
 import { TurnstileWidget } from "./turnstile-widget";
@@ -46,13 +46,29 @@ const assumeCookies = () => true;
 export function HoldTimeForm({
   fields,
   turnstileSiteKey,
+  autoContinue = false,
 }: {
   /** The wizard's choices, sent with the hold. */
   fields: Record<string, string>;
   turnstileSiteKey: string;
+  autoContinue?: boolean;
 }) {
   const [check, setCheck] = useState<Check>("checking");
   const cookies = useSyncExternalStore(noChanges, cookiesWork, assumeCookies);
+  const form = useRef<HTMLFormElement>(null);
+  const sent = useRef(false);
+  useEffect(() => {
+    if (
+      autoContinue &&
+      cookies &&
+      check === "verified" &&
+      !sent.current &&
+      form.current
+    ) {
+      sent.current = true;
+      form.current.requestSubmit();
+    }
+  }, [autoContinue, cookies, check]);
 
   if (!cookies) {
     return (
@@ -70,7 +86,7 @@ export function HoldTimeForm({
   }
 
   return (
-    <form action={holdTimeAction} className="grid gap-3">
+    <form ref={form} action={holdTimeAction} className="grid gap-3">
       {Object.entries(fields).map(([key, value]) => (
         <input key={key} name={key} type="hidden" value={value} />
       ))}
@@ -90,9 +106,11 @@ export function HoldTimeForm({
         id="hold-time-status"
         role={check === "failed" ? "alert" : undefined}
       >
-        {STATUS[check]}
+        {autoContinue && check !== "failed"
+          ? "Przygotowujemy wizytę i przechodzimy do Twoich danych…"
+          : STATUS[check]}
       </p>
-      <Submit ready={check === "verified"} />
+      {!autoContinue ? <Submit ready={check === "verified"} /> : null}
     </form>
   );
 }

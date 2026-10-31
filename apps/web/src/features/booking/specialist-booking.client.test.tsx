@@ -1,16 +1,11 @@
-import { getAvailabilityQueryClient } from "./availability-query";
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getAvailabilityQueryClient } from "./availability-query";
 import { SpecialistBookingClient } from "./specialist-booking.client";
-
+const navigation = vi.hoisted(() => ({ push: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
 const options = [
   {
     service: "konsultacja",
@@ -23,6 +18,12 @@ const options = [
     mode: "stacjonarnie",
     location: "centrum",
     href: "/umow-wizyte?usluga=konsultacja&forma=stacjonarnie&lokalizacja=centrum&termin=2030-01-07T09:00",
+  },
+  {
+    service: "inna",
+    mode: "online",
+    location: "",
+    href: "/umow-wizyte?usluga=inna&forma=online&termin=2030-01-07T09:00",
   },
 ];
 const props = {
@@ -44,10 +45,17 @@ const props = {
       detail: "90 min · 300 zł",
       modes: ["online"] as ("online" | "stacjonarnie")[],
     },
+    {
+      slug: "inna",
+      name: "Inna konsultacja",
+      detail: "50 min · 180 zł",
+      modes: ["online"] as ("online" | "stacjonarnie")[],
+    },
   ],
   locations: [{ slug: "centrum", name: "Centrum" }],
 };
 beforeEach(() => {
+  navigation.push.mockClear();
   getAvailabilityQueryClient().clear();
   vi.stubGlobal("IntersectionObserver", undefined);
   vi.stubGlobal(
@@ -55,7 +63,6 @@ beforeEach(() => {
     vi.fn(async () =>
       Response.json({
         picker: {
-          weekLabel: "7–13 stycznia",
           days: [
             {
               date: "2030-01-07",
@@ -71,56 +78,62 @@ beforeEach(() => {
   );
 });
 afterEach(() => {
-  getAvailabilityQueryClient().clear();
   cleanup();
+  getAvailabilityQueryClient().clear();
   vi.unstubAllGlobals();
 });
+function expectHandoff(service: string) {
+  const href = navigation.push.mock.calls.at(-1)![0] as string;
+  const url = new URL(href, "http://booking.local");
+  expect(url.pathname).toBe("/umow-wizyte");
+  expect(Object.fromEntries(url.searchParams)).toEqual({
+    specjalista: "anna-nowak",
+    usluga: service,
+    termin: "2030-01-07T09:00",
+    dalej: "auto",
+  });
+}
 async function chooseTime() {
   fireEvent.click(
     await screen.findByRole("button", { name: /09:00, wolny termin/ }),
   );
 }
-describe("specialist appointment selection", () => {
-  it("keeps other compatible services enabled after starting with one service", async () => {
-    const alternative = {
-      service: "inna",
-      mode: "online",
-      location: "",
-      href: "/umow-wizyte?usluga=inna&forma=online&termin=2030-01-07T09:00",
-    };
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () =>
-        Response.json({
-          picker: {
-            days: [
-              {
-                date: "2030-01-07",
-                weekday: "Pon.",
-                label: "7 stycznia",
-                fullLabel: "poniedziałek, 7 stycznia",
-                slots: [
-                  {
-                    time: "09:00",
-                    href: options[0]!.href,
-                    options: [...options, alternative],
-                  },
-                ],
-              },
-            ],
-          },
-        }),
-      ),
+describe("specialist panel hands incomplete appointments to the wizard", () => {
+  it("supports time first and opens the wizard after choosing a compatible service without asking for a form", async () => {
+    render(<SpecialistBookingClient {...props} />);
+    await chooseTime();
+    expect(navigation.push).not.toHaveBeenCalled();
+    expect(screen.getByRole("tab", { name: "Usługi" })).toHaveAttribute(
+      "aria-selected",
+      "true",
     );
-    render(
-      <SpecialistBookingClient
-        {...props}
-        services={[
-          ...props.services,
-          { ...props.services[0]!, slug: "inna", name: "Inna konsultacja" },
-        ]}
-      />,
+    expect(
+      screen.getByRole("button", { name: "Wybierz: Dłuższa rozmowa" }),
+    ).toBeDisabled();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Wybierz: Konsultacja" }),
     );
+    expectHandoff("konsultacja");
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+  });
+  it("supports service first and opens the wizard after choosing a time", async () => {
+    render(<SpecialistBookingClient {...props} />);
+    await screen.findByRole("button", { name: /09:00, wolny termin/ });
+    fireEvent.click(screen.getByRole("tab", { name: "Usługi" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Wybierz: Konsultacja" }),
+    );
+    expect(navigation.push).not.toHaveBeenCalled();
+    expect(screen.getByRole("tab", { name: "Terminarz" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await chooseTime();
+    expectHandoff("konsultacja");
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+  it("preserves other compatible services when the calendar was filtered by a service", async () => {
+    render(<SpecialistBookingClient {...props} />);
     await screen.findByRole("button", { name: /09:00, wolny termin/ });
     fireEvent.click(screen.getByRole("tab", { name: "Usługi" }));
     fireEvent.click(
@@ -132,70 +145,8 @@ describe("specialist appointment selection", () => {
       name: "Wybierz: Inna konsultacja",
     });
     expect(other).toBeEnabled();
-    expect(
-      screen.getByRole("button", { name: "Wybierz: Dłuższa rozmowa" }),
-    ).toBeDisabled();
     fireEvent.click(other);
-    expect(
-      screen.getByRole("link", { name: "Przejdź do rezerwacji" }),
-    ).toHaveAttribute("href", alternative.href);
+    expectHandoff("inna");
     expect(fetch).toHaveBeenCalledTimes(1);
-  });
-  it("starts with only a calendar, then filters services for the chosen hour and requires a form before booking", async () => {
-    render(<SpecialistBookingClient {...props} />);
-    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", { name: "Przejdź do rezerwacji" }),
-    ).not.toBeInTheDocument();
-    await chooseTime();
-    expect(screen.getByRole("tab", { name: "Usługi" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-    expect(
-      screen.getByRole("button", { name: "Wybierz: Dłuższa rozmowa" }),
-    ).toBeDisabled();
-    fireEvent.click(
-      screen.getByRole("button", { name: "Wybierz: Konsultacja" }),
-    );
-    expect(
-      screen.queryByRole("link", { name: "Przejdź do rezerwacji" }),
-    ).not.toBeInTheDocument();
-    fireEvent.change(
-      screen.getByRole("combobox", { name: "Forma i miejsce spotkania" }),
-      { target: { value: options[1]!.href } },
-    );
-    expect(
-      screen.getByRole("link", { name: "Przejdź do rezerwacji" }),
-    ).toHaveAttribute("href", options[1]!.href);
-    fireEvent.click(screen.getByRole("button", { name: "Zmień termin" }));
-    expect(screen.getByRole("tab", { name: "Terminarz" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-    expect(
-      screen.queryByRole("link", { name: "Przejdź do rezerwacji" }),
-    ).not.toBeInTheDocument();
-  });
-  it("supports service first, then opens the calendar for that service and finishes with the chosen time", async () => {
-    render(<SpecialistBookingClient {...props} />);
-    await screen.findByRole("button", { name: /09:00, wolny termin/ });
-    fireEvent.click(screen.getByRole("tab", { name: "Usługi" }));
-    fireEvent.click(
-      screen.getByRole("button", { name: "Wybierz: Konsultacja" }),
-    );
-    expect(screen.getByRole("tab", { name: "Terminarz" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
-    await chooseTime();
-    fireEvent.change(
-      screen.getByRole("combobox", { name: "Forma i miejsce spotkania" }),
-      { target: { value: options[0]!.href } },
-    );
-    expect(
-      screen.getByRole("link", { name: "Przejdź do rezerwacji" }),
-    ).toHaveAttribute("href", options[0]!.href);
   });
 });

@@ -31,6 +31,7 @@ export default async function BookingPage({
   searchParams,
 }: PageProps<"/umow-wizyte">) {
   const params = await loadBookingParams(searchParams);
+  if (params.termin && !params.forma && !params.dalej) params.dalej = "auto";
   const wizard = await loadWizard(params);
   if (!wizard) return <BookingContact specjalista={params.specjalista} />;
   // A service that asks for the questionnaire: it first, then the rest.

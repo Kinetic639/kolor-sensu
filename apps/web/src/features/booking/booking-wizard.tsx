@@ -115,6 +115,8 @@ export function BookingWizard({
                 />
               ))}
             </ul>
+          ) : panel.chosen ? (
+            <p className="text-body text-ink">{panel.chosen.label}</p>
           ) : (
             <SlotPicker {...panel.picker} />
           )}
@@ -128,6 +130,8 @@ export function BookingWizard({
         >
           {chosen ? (
             <HoldTimeForm
+              key={`${params.usluga}|${params.specjalista}|${params.forma}|${params.lokalizacja}|${params.termin}|${params.uwaga ?? ""}`}
+              autoContinue={params.dalej === "auto" && !params.uwaga}
               fields={Object.fromEntries(
                 Object.entries(params).filter(
                   (entry): entry is [string, string] =>

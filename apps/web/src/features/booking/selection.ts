@@ -69,9 +69,10 @@ export function resolveBookingSelection(
       ? params.specjalista
       : null;
 
-  const ofSpecialist = specialist
-    ? bookable.filter((offer) => offer.specialistPublicSlug === specialist)
-    : bookable;
+  const ofSpecialist =
+    specialist && params.krok !== "specjalista"
+      ? bookable.filter((offer) => offer.specialistPublicSlug === specialist)
+      : bookable;
 
   const services = catalog.services.filter((one) =>
     ofSpecialist.some((offer) => offer.serviceSlug === one.slug),
@@ -96,13 +97,15 @@ export function resolveBookingSelection(
 
   const offers = mode
     ? forService.filter((offer) => supports(offer, mode))
-    : [];
+    : params.krok === "specjalista"
+      ? forService
+      : [];
   const offer =
     (specialist &&
       offers.find((one) => one.specialistPublicSlug === specialist)) ||
     null;
 
-  const step: BookingStep = !service
+  const requiredStep: BookingStep = !service
     ? "usluga"
     : !mode
       ? "forma"
@@ -111,6 +114,15 @@ export function resolveBookingSelection(
         : !offer
           ? "specjalista"
           : "termin";
+  const editable: Record<BookingStep, boolean> = {
+    usluga: true,
+    forma: !!service,
+    lokalizacja: !!service && mode === "stacjonarnie",
+    specjalista: !!service,
+    termin: !!offer && (mode === "online" || !!location),
+  };
+  const step =
+    params.krok && editable[params.krok] ? params.krok : requiredStep;
 
   return {
     step,
