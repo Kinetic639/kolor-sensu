@@ -71,6 +71,8 @@ export type BookingErrorCode =
   | "guardian_required"
   /** The same person (e-mail or phone) has a visit at that time (card 17). */
   | "client_overlap"
+  /** No link to send again: the visit is past, cancelled or has no e-mail. */
+  | "nothing_to_send"
   | "unknown";
 
 const BOOKING_ERROR_CODES = new Set<string>([
@@ -105,6 +107,7 @@ const BOOKING_ERROR_CODES = new Set<string>([
   "early_start_required",
   "guardian_required",
   "client_overlap",
+  "nothing_to_send",
 ]);
 
 export class BookingError extends Error {

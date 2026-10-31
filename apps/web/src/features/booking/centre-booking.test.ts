@@ -1,6 +1,6 @@
 import { BookingError } from "@repo/supabase";
 import { describe, expect, it, vi } from "vitest";
-import { bookVisitAsCentre, resendPaymentLink } from "./centre-booking";
+import { bookVisitAsCentre, resendVisitLink } from "./centre-booking";
 
 const OFFER = "10000000-0000-4000-8000-000000000001";
 const ROOM = "20000000-0000-4000-8000-000000000001";
@@ -88,19 +88,21 @@ describe("bookVisitAsCentre", () => {
   });
 });
 
-describe("resendPaymentLink", () => {
-  it("lets the reservation's e-mail go again, then sends it", async () => {
+describe("resendVisitLink", () => {
+  it("lets the visit's e-mail with its link go again, then sends that one (Klient · 6, card 7)", async () => {
     const deps = {
-      allow: vi.fn().mockResolvedValue("3010-001"),
+      allow: vi
+        .fn()
+        .mockResolvedValue({ reference: "3010-001", kind: "confirmation" }),
       send: vi.fn().mockResolvedValue("sent" as const),
     };
-    expect(await resendPaymentLink("visit-1", deps)).toEqual({
+    expect(await resendVisitLink("visit-1", deps)).toEqual({
       ok: true,
       reference: "3010-001",
       emailed: "sent",
     });
     expect(deps.allow).toHaveBeenCalledWith("visit-1");
-    expect(deps.send).toHaveBeenCalledWith("3010-001");
+    expect(deps.send).toHaveBeenCalledWith("3010-001", "confirmation");
   });
 
   it("passes on why not, and sends nothing", async () => {
@@ -108,7 +110,7 @@ describe("resendPaymentLink", () => {
       allow: vi.fn().mockRejectedValue(new BookingError("recently_sent", "x")),
       send: vi.fn(),
     };
-    expect(await resendPaymentLink("visit-1", deps)).toEqual({
+    expect(await resendVisitLink("visit-1", deps)).toEqual({
       ok: false,
       code: "recently_sent",
     });

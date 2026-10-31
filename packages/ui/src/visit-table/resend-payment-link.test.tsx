@@ -21,6 +21,22 @@ describe("ResendPaymentLinkButton", () => {
     );
   });
 
+  it("a confirmed visit: its confirmation with the visit's link (Klient · 6, card 7)", async () => {
+    const action = vi.fn().mockResolvedValue({ ok: true, emailed: "sent" });
+    render(
+      <ResendPaymentLinkButton action={action} confirmed visitId="visit-1" />,
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Wyślij link do wizyty" }),
+    );
+    expect(action).toHaveBeenCalledWith("visit-1");
+    await vi.waitFor(() =>
+      expect(toast.success).toHaveBeenCalledWith(
+        "Wysłaliśmy klientowi potwierdzenie z linkiem do wizyty.",
+      ),
+    );
+  });
+
   it("says why not", async () => {
     const action = vi
       .fn()

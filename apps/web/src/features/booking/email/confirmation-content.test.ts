@@ -12,6 +12,7 @@ const visit = {
   roomName: "Gabinet Zielony",
   locationName: "Siedziba Główna",
   locationAddress: "Plac Wolności 18/518, 61-739 Poznań",
+  locationDirections: null,
   priceMinor: 20000,
   currencyCode: "PLN",
   clientName: "Jan Kowalski",
@@ -51,6 +52,24 @@ describe("confirmationContent", () => {
       ["Zapłacono", "200 zł, 1 października 2030"],
       ["Numer rezerwacji", "KS-20301002-1534"],
     ]);
+  });
+
+  it("says how to get there, for a visit in person only (Klient · 6, card 11)", () => {
+    const directions = "Wejście od podwórza, domofon 18";
+    const rows = confirmationContent(
+      { ...visit, locationDirections: directions },
+      options,
+    ).rows;
+    expect(rows[rows.findIndex(([label]) => label === "Miejsce") + 1]).toEqual([
+      "Dojazd",
+      directions,
+    ]);
+    expect(
+      confirmationContent(
+        { ...visit, mode: "online", locationDirections: directions },
+        options,
+      ).rows.map(([label]) => label),
+    ).not.toContain("Dojazd");
   });
 
   it("is sent once paid, also for a visit the centre booked", () => {

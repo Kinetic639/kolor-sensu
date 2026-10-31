@@ -68,6 +68,19 @@ export function placeRow(visit: ClaimedBookingEmail) {
   return visit.mode === "online" ? `Online. ${ONLINE_LINK_NOTE}` : place(visit);
 }
 
+/**
+ * The e-mail's place, and how to get there for a visit in person, as the
+ * centre wrote it for the place (Klient · 6, card 11).
+ */
+export function placeRows(visit: ClaimedBookingEmail): [string, string][] {
+  return [
+    ["Miejsce", placeRow(visit)],
+    ...(visit.mode === "in_person" && visit.locationDirections
+      ? [["Dojazd", visit.locationDirections] as [string, string]]
+      : []),
+  ];
+}
+
 /** `+48 600 100 200 · kontakt@kolorsensu.pl`, or null. */
 export function contactLineOf(contact: ConfirmationOptions["contact"]) {
   return [contact.phone, contact.email].filter(Boolean).join(" · ") || null;
@@ -85,7 +98,7 @@ export function confirmationContent(
       ? [["Specjalista", visit.specialistName] as [string, string]]
       : []),
     ["Termin", `${when}–${localTime(visit.endsAt, timeZone)}`],
-    ["Miejsce", placeRow(visit)],
+    ...placeRows(visit),
     ...(visit.paid
       ? [
           // The amount and the day it was paid (Klient · 4, card 7).

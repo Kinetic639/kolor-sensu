@@ -12,6 +12,7 @@ const reserved: ClaimedBookingEmail = {
   roomName: null,
   locationName: null,
   locationAddress: null,
+  locationDirections: null,
   priceMinor: 20000,
   currencyCode: "PLN",
   clientName: "Jan Kowalski",
