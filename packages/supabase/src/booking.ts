@@ -332,6 +332,8 @@ export interface GuestBooking {
   paid: boolean;
   /** A reservation: to be paid by then, or it is cancelled. */
   paymentDueAt: string | null;
+  /** The last change of its time, room or form was the centre's. */
+  movedByCentre: boolean;
 }
 
 /** A guest's visit by its token, or null. */
@@ -378,6 +380,7 @@ export async function getBooking(
         bookedBy: row.booked_by === "centre" ? "centre" : "client",
         paid: row.paid,
         paymentDueAt: row.payment_due_at ?? null,
+        movedByCentre: row.moved_by_centre,
       }
     : null;
 }

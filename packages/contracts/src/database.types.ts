@@ -3441,6 +3441,7 @@ export type Database = {
           hold_expires_at: string;
           location_name: string;
           mode: Database["public"]["Enums"]["visit_mode"];
+          moved_by_centre: boolean;
           paid: boolean;
           payment_due_at: string | null;
           price_minor: number;

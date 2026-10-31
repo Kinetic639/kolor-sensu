@@ -38,6 +38,7 @@ const booking: GuestBooking = {
   bookedBy: "client",
   paid: true,
   paymentDueAt: null,
+  movedByCentre: false,
 };
 
 describe("checkoutSessionParams", () => {

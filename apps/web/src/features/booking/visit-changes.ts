@@ -2,7 +2,8 @@ import type { BookingWindow, GuestBooking } from "@repo/supabase";
 
 // What the client may still change themselves (docs/product/booking-plan.md,
 // R8), by the centre's settings: cancelling is always possible before the
-// visit, with the money back only until cancellationWindowHours before it;
+// visit, with the money back only until cancellationWindowHours before it,
+// or until the visit when the centre made its last change (Klient · 7);
 // moving until rescheduleWindowHours before, at most maxSelfReschedules
 // times. A reservation not paid yet (R11) is paid from here by its time,
 // or cancelled with nothing to give back; it moves only once paid. The
@@ -42,6 +43,7 @@ export function visitChanges(
     | "priceMinor"
     | "paid"
     | "paymentDueAt"
+    | "movedByCentre"
   >,
   policy: ChangePolicy,
   now = new Date(),
@@ -74,7 +76,7 @@ export function visitChanges(
         upcoming &&
         visit.paid &&
         visit.priceMinor > 0 &&
-        now.getTime() <= refundUntil,
+        (now.getTime() <= refundUntil || visit.movedByCentre),
       refundUntil: new Date(refundUntil).toISOString(),
     },
     reschedule: {
