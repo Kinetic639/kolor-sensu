@@ -234,7 +234,9 @@ export function AvailabilityCalendar({
                                 aria-pressed={choice?.slot.href === slot.href}
                                 onClick={() => pick(day, slot)}
                               >
-                                {slot.time}
+                                <span className={styles.timeLabel}>
+                                  {slot.time}
+                                </span>
                               </button>
                             ))}
                             {!day ? <p>Brak godzin</p> : null}
@@ -307,7 +309,9 @@ export function AvailabilityCalendar({
                             aria-pressed={choice?.slot.href === slot.href}
                             onClick={() => pick(chosen, slot)}
                           >
-                            {slot.time}
+                            <span className={styles.timeLabel}>
+                              {slot.time}
+                            </span>
                           </button>
                         ))}
                       </div>

@@ -17,7 +17,14 @@
 
 import type { ScrollTrigger as ScrollTriggerInstance } from "gsap/ScrollTrigger";
 import type { ImageProps } from "next/image";
-import { type CSSProperties, type ReactNode, useRef } from "react";
+import {
+  type CSSProperties,
+  type ReactNode,
+  useId,
+  useRef,
+  useState,
+} from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { type GsapInstance, useLazyGsap } from "./lazy-gsap";
 import { cn } from "../lib/utils";
 import { HanddrawnLink } from "./handdrawn-link";
@@ -114,9 +121,24 @@ export function PaintedStory({
   className,
 }: PaintedStoryProps) {
   const ref = useRef<HTMLElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const trackId = useId();
+  const [mobileStep, setMobileStep] = useState(0);
   const total = steps.length;
   const composed = steps.some((step) => !!step.content);
   const numbered = (value: number) => String(value).padStart(2, "0");
+  const goToSlide = (index: number) => {
+    const track = trackRef.current;
+    const first = track?.children[0] as HTMLElement | undefined;
+    const next = track?.children[index] as HTMLElement | undefined;
+    if (!track || !first || !next) return;
+    track.scrollTo({
+      left: next.offsetLeft - first.offsetLeft,
+      behavior: matches("(prefers-reduced-motion: reduce)")
+        ? "instant"
+        : "smooth",
+    });
+  };
 
   useLazyGsap(
     ({ gsap, ScrollTrigger }) => {
@@ -318,77 +340,133 @@ export function PaintedStory({
             {numbered(total)}
           </span>
         </div>
-        {steps.map((step, index) => (
-          <div key={index} className="ks-story__step">
-            <div className="ks-story__text grid gap-4">
-              <p
-                className="ks-story__count font-display text-pink-strong"
-                aria-hidden="true"
-              >
-                {numbered(index + 1)}
-                <span className="text-text-muted">
-                  {" / "}
-                  {numbered(total)}
-                </span>
-              </p>
-              {step.headingSegments?.length ? (
-                <EditorialHeading
-                  as="h3"
-                  size="h3"
-                  aria-label={step.headingSegments
-                    .map((part) => part.text)
-                    .join("")}
+        <div
+          className="ks-story__track"
+          id={trackId}
+          ref={trackRef}
+          onScroll={(event) => {
+            const track = event.currentTarget;
+            const first = track.children[0] as HTMLElement | undefined;
+            const second = track.children[1] as HTMLElement | undefined;
+            if (!first || !second) return;
+            const distance = second.offsetLeft - first.offsetLeft;
+            if (distance > 0)
+              setMobileStep(
+                Math.max(
+                  0,
+                  Math.min(total - 1, Math.round(track.scrollLeft / distance)),
+                ),
+              );
+          }}
+        >
+          {steps.map((step, index) => (
+            <div key={index} className="ks-story__step">
+              <div className="ks-story__text grid gap-4">
+                <p
+                  className="ks-story__count font-display text-pink-strong"
+                  aria-hidden="true"
                 >
-                  {step.headingSegments.map((part, at) => (
-                    <span
-                      key={at}
-                      className={
-                        part.tone === "green"
-                          ? "text-primary-strong"
-                          : part.tone === "pink"
-                            ? "text-pink-strong"
-                            : undefined
-                      }
-                    >
-                      {part.text}
-                    </span>
-                  ))}
-                </EditorialHeading>
-              ) : (
-                <EditorialHeading as="h3" size="h3">
-                  {step.heading}
-                </EditorialHeading>
-              )}
-              <p className="max-w-copy text-body text-text-muted">
-                {step.text}
-              </p>
-              {step.cta ? (
-                <HanddrawnLink
-                  href={step.cta.href}
-                  className="justify-self-start"
-                >
-                  {step.cta.label}
-                </HanddrawnLink>
-              ) : null}
-            </div>
-            <div
-              className="ks-story__picture"
-              data-rich={composed ? "true" : undefined}
-            >
-              <div className="ks-story__media">
-                {step.content ?? (
-                  <WatercolorImage
-                    src={step.image.src}
-                    alt={step.image.alt}
-                    objectPosition={step.image.objectPosition}
-                    {...watercolor}
-                    sizes="(min-width: 1024px) 62vw, calc(117vw - 3rem)"
-                  />
+                  {numbered(index + 1)}
+                  <span className="text-text-muted">
+                    {" / "}
+                    {numbered(total)}
+                  </span>
+                </p>
+                {step.headingSegments?.length ? (
+                  <EditorialHeading
+                    as="h3"
+                    size="h3"
+                    aria-label={step.headingSegments
+                      .map((part) => part.text)
+                      .join("")}
+                  >
+                    {step.headingSegments.map((part, at) => (
+                      <span
+                        key={at}
+                        className={
+                          part.tone === "green"
+                            ? "text-primary-strong"
+                            : part.tone === "pink"
+                              ? "text-pink-strong"
+                              : undefined
+                        }
+                      >
+                        {part.text}
+                      </span>
+                    ))}
+                  </EditorialHeading>
+                ) : (
+                  <EditorialHeading as="h3" size="h3">
+                    {step.heading}
+                  </EditorialHeading>
                 )}
+                <p className="max-w-copy text-body text-text-muted">
+                  {step.text}
+                </p>
+                {step.cta ? (
+                  <HanddrawnLink
+                    href={step.cta.href}
+                    className="justify-self-start"
+                  >
+                    {step.cta.label}
+                  </HanddrawnLink>
+                ) : null}
+              </div>
+              <div
+                className="ks-story__picture"
+                data-rich={composed ? "true" : undefined}
+              >
+                <div className="ks-story__media">
+                  {step.content ?? (
+                    <WatercolorImage
+                      src={step.image.src}
+                      alt={step.image.alt}
+                      objectPosition={step.image.objectPosition}
+                      {...watercolor}
+                      sizes="(min-width: 1024px) 62vw, calc(117vw - 3rem)"
+                    />
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+        {total > 1 ? (
+          <nav className="ks-story__gallery-nav" aria-label="Slajdy edukacji">
+            <button
+              type="button"
+              aria-label="Poprzedni slajd edukacji"
+              aria-controls={trackId}
+              disabled={mobileStep === 0}
+              onClick={() => goToSlide(mobileStep - 1)}
+            >
+              <ChevronLeft size={18} aria-hidden="true" />
+            </button>
+            <div className="ks-story__gallery-dots">
+              {steps.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  aria-label={`Pokaż slajd ${index + 1} z ${total}`}
+                  aria-current={mobileStep === index ? "true" : undefined}
+                  aria-controls={trackId}
+                  onClick={() => goToSlide(index)}
+                >
+                  <span />
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              aria-label="Następny slajd edukacji"
+              aria-controls={trackId}
+              disabled={mobileStep === total - 1}
+              onClick={() => goToSlide(mobileStep + 1)}
+            >
+              <ChevronRight size={18} aria-hidden="true" />
+            </button>
+          </nav>
+        ) : null}
       </div>
     </section>
   );

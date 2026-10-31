@@ -13,8 +13,19 @@ BEGIN
   payload := jsonb_set(payload,'{steps,0,media}',valid);
   UPDATE public.site_content SET draft_payload=payload WHERE key='home_story';
   UPDATE public.site_content SET published_payload=payload,published_at=now() WHERE key='home_story';
+  valid := '{"type":"ebooks","source":"manual","ids":["11111111-1111-4111-8111-111111111111"],"mobilePrimaryId":"11111111-1111-4111-8111-111111111111"}';
+  UPDATE public.site_content SET draft_payload=jsonb_set(payload,'{steps,0,media}',valid),
+    published_payload=jsonb_set(payload,'{steps,0,media}',valid) WHERE key='home_story';
+  IF NOT private.home_story_media_is_valid(jsonb_set(payload,'{steps,0,media}', '{"type":"ebooks","source":"auto","ids":[],"mobilePrimaryId":null}'))
+    OR NOT private.home_story_media_is_valid(jsonb_set(payload,'{steps,0,media}', '{"type":"ebooks","source":"auto","ids":[],"mobilePrimaryId":"22222222-2222-4222-8222-222222222222"}')) THEN
+    RAISE EXCEPTION 'Optional automatic mobile primary ebook must be valid';
+  END IF;
   FOR invalid IN SELECT value FROM jsonb_array_elements('[
     {"type":"unknown"},
+    {"type":"ebooks","source":"manual","ids":["11111111-1111-4111-8111-111111111111"],"mobilePrimaryId":"22222222-2222-4222-8222-222222222222"},
+    {"type":"ebooks","source":"auto","ids":[],"mobilePrimaryId":"invalid"},
+    {"type":"ebooks","source":"auto","ids":[],"mobilePrimaryId":123},
+    {"type":"articles","source":"auto","ids":[],"mobilePrimaryId":null},
     {"type":"articles","source":"manual","ids":[]},
     {"type":"articles","source":"manual","ids":["11111111-1111-4111-8111-111111111111","11111111-1111-4111-8111-111111111111"]},
     {"type":"ebooks","source":"manual","ids":["invalid"]},

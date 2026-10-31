@@ -1389,6 +1389,100 @@
     gap: clamp(2.5rem, 6vw, 4.5rem);
   }
 
+  .ks-story__track {
+    display: contents;
+  }
+  .ks-story__gallery-nav {
+    display: none;
+  }
+  @media (max-width: 63.99rem) {
+    .ks-story__stage {
+      min-width: 0;
+      gap: 1.5rem;
+    }
+    .ks-story__track {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 100%;
+      align-items: start;
+      gap: 1.5rem;
+      min-width: 0;
+      width: calc(100% + 2rem);
+      margin-inline: -1rem;
+      padding: 1rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: 1rem;
+      scrollbar-width: none;
+    }
+    .ks-story__track::-webkit-scrollbar {
+      display: none;
+    }
+    /* A shared intrinsic row reserves the tallest slide's height, keeping
+       navigation still while the content stays aligned at the top. */
+    .ks-story__track > .ks-story__step {
+      min-width: 0;
+      align-items: start;
+      align-content: start;
+      gap: 1.5rem;
+      scroll-snap-align: start;
+    }
+    .ks-story[data-flowing] .ks-story__picture[data-rich] {
+      opacity: 1;
+    }
+    .ks-story .ks-education-book[data-mobile-primary="false"] {
+      display: none;
+    }
+    .ks-story .ks-education-book-shelf {
+      grid-template-columns: minmax(0, 1fr);
+      width: min(100%, 22rem);
+      margin-inline: auto;
+    }
+    .ks-story .ks-education-gallery-track {
+      overscroll-behavior-x: auto;
+    }
+    .ks-story__gallery-nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .ks-story__gallery-nav button {
+      display: grid;
+      place-items: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      color: var(--color-primary);
+      cursor: pointer;
+      border-radius: 50%;
+    }
+    .ks-story__gallery-nav button:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+    .ks-story__gallery-nav button:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+    .ks-story__gallery-dots {
+      display: flex;
+    }
+    .ks-story__gallery-dots button {
+      width: 2rem;
+    }
+    .ks-story__gallery-dots span {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background: var(--color-border-strong);
+      opacity: 0.45;
+    }
+    .ks-story__gallery-dots [aria-current] span {
+      background: var(--color-primary);
+      opacity: 1;
+    }
+  }
+
   .ks-story__step {
     display: grid;
     gap: 2.5rem;
@@ -4647,8 +4741,8 @@
   }
   .ks-spotlight__booking {
     grid-area: calendar;
-    max-width: none;
-    justify-self: stretch;
+    max-width: 32rem;
+    justify-self: center;
   }
   .ks-spotlight__bio-row {
     display: grid;

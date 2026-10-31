@@ -42,6 +42,22 @@ export function StoryMediaFields({
   const [query, setQuery] = useState("");
   const collection = value.type === "image" ? null : value;
   const available = collection ? options[collection.type] : [];
+  const setIds = (ids: string[]) => {
+    if (!collection) return;
+    onChange(
+      collection.type === "ebooks"
+        ? {
+            ...collection,
+            ids,
+            mobilePrimaryId:
+              collection.mobilePrimaryId &&
+              ids.includes(collection.mobilePrimaryId)
+                ? collection.mobilePrimaryId
+                : null,
+          }
+        : { ...collection, ids },
+    );
+  };
   return (
     <div className="grid gap-2.5 sm:col-span-2">
       <Label htmlFor={`${id}-type`}>Zawartość slajdu</Label>
@@ -74,6 +90,12 @@ export function StoryMediaFields({
               onChange({
                 ...collection,
                 source: e.target.value as "auto" | "manual",
+                ...(collection.type === "ebooks" &&
+                e.target.value === "manual" &&
+                collection.mobilePrimaryId &&
+                !collection.ids.includes(collection.mobilePrimaryId)
+                  ? { mobilePrimaryId: null }
+                  : {}),
               })
             }
           >
@@ -129,12 +151,11 @@ export function StoryMediaFields({
                           collection.ids.length >= limits[collection.type]
                         }
                         onChange={(e) =>
-                          onChange({
-                            ...collection,
-                            ids: e.target.checked
+                          setIds(
+                            e.target.checked
                               ? [...collection.ids, item.id]
                               : collection.ids.filter((one) => one !== item.id),
-                          })
+                          )
                         }
                       />
                       {item.imageUrl ? (
@@ -182,16 +203,10 @@ export function StoryMediaFields({
                         canMoveDown={index < collection.ids.length - 1}
                         canRemove
                         onMove={(by) =>
-                          onChange({
-                            ...collection,
-                            ids: [...moveItem(collection.ids, index, by)],
-                          })
+                          setIds([...moveItem(collection.ids, index, by)])
                         }
                         onRemove={() =>
-                          onChange({
-                            ...collection,
-                            ids: collection.ids.filter((one) => one !== chosen),
-                          })
+                          setIds(collection.ids.filter((one) => one !== chosen))
                         }
                       />
                     </li>
@@ -203,6 +218,51 @@ export function StoryMediaFields({
                   Wybierz od 1 do {limits[collection.type]} materiałów.
                 </p>
               ) : null}
+            </>
+          ) : null}
+          {collection.type === "ebooks" ? (
+            <>
+              <Label htmlFor={`${id}-mobile-primary`}>
+                Główny e-book na telefonie
+              </Label>
+              <select
+                id={`${id}-mobile-primary`}
+                className={selectClass}
+                value={collection.mobilePrimaryId ?? ""}
+                onChange={(event) =>
+                  onChange({
+                    ...collection,
+                    mobilePrimaryId: event.target.value || null,
+                  })
+                }
+              >
+                <option value="">Pierwszy dostępny e-book</option>
+                {available
+                  .filter(
+                    (book) =>
+                      collection.source === "auto" ||
+                      collection.ids.includes(book.id),
+                  )
+                  .map((book) => (
+                    <option key={book.id} value={book.id}>
+                      {book.title}
+                    </option>
+                  ))}
+                {collection.mobilePrimaryId &&
+                !available.some(
+                  (book) => book.id === collection.mobilePrimaryId,
+                ) ? (
+                  <option value={collection.mobilePrimaryId}>
+                    Wybrany e-book jest niedostępny — na stronie pojawi się
+                    pierwszy dostępny
+                  </option>
+                ) : null}
+              </select>
+              <p className="text-xs text-[var(--text-muted)]">
+                Na telefonie pokazujemy tylko ten e-book. Na komputerze
+                pozostają dwa; w trybie automatycznym główny e-book będzie
+                jednym z nich.
+              </p>
             </>
           ) : null}
           <p className="text-xs text-[var(--text-muted)]">

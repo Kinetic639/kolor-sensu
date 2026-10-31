@@ -549,7 +549,9 @@ export const homeStoryMediaSchema = z
   .discriminatedUnion("type", [
     z.strictObject({ type: z.literal("image") }),
     storyCollection("articles", 3),
-    storyCollection("ebooks", 2),
+    storyCollection("ebooks", 2).extend({
+      mobilePrimaryId: z.uuid().nullable().optional(),
+    }),
     storyCollection("workshops", 1),
   ])
   .refine(
@@ -558,6 +560,14 @@ export const homeStoryMediaSchema = z
       media.source !== "manual" ||
       media.ids.length > 0,
     "Wybierz przynajmniej jeden materiał.",
+  )
+  .refine(
+    (media) =>
+      media.type !== "ebooks" ||
+      media.source !== "manual" ||
+      !media.mobilePrimaryId ||
+      media.ids.includes(media.mobilePrimaryId),
+    "Główny e-book musi należeć do wybranych materiałów.",
   );
 export type HomeStoryMedia = z.infer<typeof homeStoryMediaSchema>;
 
