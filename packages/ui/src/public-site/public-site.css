@@ -4755,45 +4755,52 @@
   cursor: not-allowed;
 }
 .ks-booking-mini__summary {
-  margin-top: 1rem;
-  padding: 1rem;
-  border-radius: 0.75rem;
-  background: #fffdf9c9;
-  display: grid;
-  gap: 0.65rem;
-  font-size: 0.8125rem;
-  line-height: 1.5;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
 }
 .ks-booking-mini__summary:focus {
   outline: none;
 }
 .ks-booking-mini__summary-selections {
-  display: grid;
-  gap: 0.25rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  flex: 1 1 15rem;
+  min-width: 0;
+}
+.ks-booking-mini__summary-selections button {
+  text-align: left;
+  padding-block: 0.35rem;
+  cursor: pointer;
+}
+.ks-booking-mini__summary-selections button span {
+  color: #527b57;
+  white-space: nowrap;
+}
+.ks-booking-mini__summary-selections button:focus-visible {
+  outline: 2px solid #527b57;
+  outline-offset: 2px;
 }
 .ks-booking-mini__summary-format {
-  display: grid;
-  gap: 0.3rem;
-  font-weight: 600;
+  flex: 1 1 12rem;
+  max-width: 22rem;
+  min-width: 0;
 }
 .ks-booking-mini__summary-format select {
   width: 100%;
   min-width: 0;
-  min-height: 2.25rem;
+  min-height: 2rem;
   background: #fffdf9;
   border: 1px solid #a7c7a2;
-  border-radius: 0.5rem;
-  padding: 0.4rem 0.6rem;
-  font-weight: 400;
+  border-radius: 0.4rem;
+  padding: 0.3rem 0.5rem;
 }
 .ks-booking-mini__summary-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-}
-.ks-booking-mini__summary-actions > button {
-  color: #527b57;
-  padding-block: 0.4rem;
-  cursor: pointer;
+  margin-left: auto;
 }

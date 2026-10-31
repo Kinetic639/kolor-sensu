@@ -317,35 +317,21 @@ export function AvailabilityCalendar({
               </>
             )}
           </div>
-          <footer className={styles.footer}>
-            <p className={styles.legend}>
-              <span>
-                <i aria-hidden="true" />
-                Wolne terminy
+          {choice && !onChoose ? (
+            <footer className={styles.footer}>
+              <span className={styles.chosen}>
+                <Check size={14} aria-hidden="true" />
+                {dateLabel(choice.date, {
+                  day: "numeric",
+                  month: "long",
+                })}{" "}
+                · {choice.slot.time}
               </span>
-              <span>
-                <i aria-hidden="true" />
-                Dni niedostępne
-              </span>
-            </p>
-            {choice ? (
-              <>
-                <span className={styles.chosen}>
-                  <Check size={14} aria-hidden="true" />
-                  {dateLabel(choice.date, {
-                    day: "numeric",
-                    month: "long",
-                  })}{" "}
-                  · {choice.slot.time}
-                </span>
-                {!onChoose ? (
-                  <HanddrawnLink href={choice.slot.href}>
-                    Przejdź do rezerwacji
-                  </HanddrawnLink>
-                ) : null}
-              </>
-            ) : null}
-          </footer>
+              <HanddrawnLink href={choice.slot.href}>
+                Przejdź do rezerwacji
+              </HanddrawnLink>
+            </footer>
+          ) : null}
         </div>
         {status !== "ready" ? (
           <div

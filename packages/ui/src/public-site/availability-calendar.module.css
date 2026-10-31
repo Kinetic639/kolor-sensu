@@ -276,31 +276,6 @@
   border-top: 1px solid #527b5722;
   font-size: 12px;
 }
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  column-gap: 22px;
-  row-gap: 8px;
-  color: #697969;
-  font-size: 9px;
-  margin: 0;
-}
-.legend > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-.legend i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--green);
-}
-.legend > span:last-child > i {
-  background: #b6bdb0;
-}
 .chosen {
   display: flex;
   align-items: center;
