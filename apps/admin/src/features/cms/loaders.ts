@@ -27,6 +27,8 @@ import {
   getHomeHeadersAdmin,
   listServicesAdmin,
   getHomeSectionsAdmin,
+  getSpecialistPublicProfileAdmin,
+  createSpecialistMediaSignedUrl,
   listSpecialistSummariesForAdmin,
   getRoomsPageContentAdmin,
   getSupportAreasAdmin,
@@ -81,11 +83,29 @@ export async function loadHomeSections() {
     getHomeSectionsAdmin(client),
     listSpecialistSummariesForAdmin(client),
   ]);
-  return mapHomeSectionsViewModel(
+  const model = mapHomeSectionsViewModel(
     sections,
     (path) => supportAreaImageUrl(client, path),
     specialists,
   );
+  return {
+    ...model,
+    specialists: await Promise.all(
+      model.specialists.map(async (specialist) => {
+        const profile = await getSpecialistPublicProfileAdmin(
+          client,
+          specialist.id,
+        );
+        return {
+          ...specialist,
+          portraitUrl: await createSpecialistMediaSignedUrl(
+            client,
+            profile?.portraitPhotoUrl ?? profile?.profilePhotoUrl ?? null,
+          ),
+        };
+      }),
+    ),
+  };
 }
 
 export async function loadHomeHeaders() {

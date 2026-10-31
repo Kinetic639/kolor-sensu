@@ -1,0 +1,54 @@
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.header h1 {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin-block: 0.5rem 1rem;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 3rem 2rem;
+}
+.variant {
+  min-width: 0;
+}
+.variant h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #527b57;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.art {
+  width: 100%;
+  max-width: 350px;
+  margin-inline: auto;
+}
+.art :global(.ks-sp__splash) img,
+.art :global(.ks-sp__stain) img {
+  transform: scaleY(0.94);
+  transform-origin: top center;
+}
+.variant summary {
+  cursor: pointer;
+  padding-block: 0.7rem;
+  text-align: center;
+}
+.raised :global(.ks-sp__splash) img,
+.raised :global(.ks-sp__stain) img {
+  transform: translateY(-4%) scaleY(0.94);
+}
+.raw {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+}

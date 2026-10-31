@@ -517,6 +517,68 @@
   .ks-sp__portrait-img {
     object-fit: contain;
     object-position: 50% 0;
+    transform: translate(var(--ks-portrait-x, 0%), var(--ks-portrait-y, 0%))
+      scale(var(--ks-portrait-zoom, 1));
+    transform-origin: center center;
+  }
+
+  .ks-sp__painted,
+  .ks-sp__professional {
+    position: absolute;
+    inset: 0;
+  }
+  .ks-sp__professional {
+    transition: opacity 550ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity: 0;
+    pointer-events: none;
+    clip-path: inset(8% 2% 16% round 14px);
+  }
+  .ks-sp__professional::before {
+    content: "";
+    position: absolute;
+    inset: 8% 2% 16%;
+    background: #f1f0eb;
+    border-radius: 14px;
+  }
+  .ks-sp__art--professional:focus-visible {
+    outline: 2px solid #527b57;
+    outline-offset: 5px;
+    border-radius: 14px;
+  }
+  .ks-sp__art--professional .ks-sp__splash img {
+    opacity: var(--ks-paint-visible, 1);
+    transition: opacity 550ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .ks-sp__art--professional .ks-sp__stain img {
+    opacity: calc(0.55 * var(--ks-paint-visible, 1));
+    transition: opacity 550ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  :is(.ks-sp[data-reveal="done"], .ks-sp:not([data-animation]))
+    .ks-sp__art--professional:focus-visible {
+    --ks-paint-visible: 0;
+  }
+  :is(.ks-sp[data-reveal="done"], .ks-sp:not([data-animation]))
+    .ks-sp__art--professional:focus-visible
+    .ks-sp__professional {
+    opacity: 1;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    :is(.ks-sp[data-reveal="done"], .ks-sp:not([data-animation]))
+      .ks-sp__art--professional:hover {
+      --ks-paint-visible: 0;
+    }
+    :is(.ks-sp[data-reveal="done"], .ks-sp:not([data-animation]))
+      .ks-sp__art--professional:hover
+      .ks-sp__professional {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ks-sp__professional,
+    .ks-sp__art--professional .ks-sp__splash img,
+    .ks-sp__art--professional .ks-sp__stain img {
+      transition: none;
+    }
   }
 
   /* The splash's pigment soaking into the portrait's very bottom: the same
@@ -2612,6 +2674,8 @@
     min-width: 0;
   }
   .ks-peek__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x proximity;
@@ -2632,6 +2696,7 @@
     outline-offset: 4px;
   }
   .ks-peek__list {
+    grid-area: 1 / 1;
     margin-left: auto;
     position: relative;
     display: flex;
@@ -2639,11 +2704,21 @@
     width: max-content;
     padding: 3rem 2rem 2.5rem;
   }
+  /* Every room contributes its height, even while another room is shown.
+     Hide inactive groups from interaction and horizontal scrolling only. */
+  .ks-peek__list[data-active="false"] {
+    visibility: hidden;
+    pointer-events: none;
+    width: 0;
+    padding-inline: 0;
+    overflow: hidden;
+  }
   .ks-peek__item {
     --ks-peek-angle: -3deg;
     --ks-peek-y: -0.9rem;
     position: relative;
     width: min(62vw, 14rem);
+    flex-shrink: 0;
     scroll-snap-align: center;
     z-index: 1;
     translate: 0 var(--ks-peek-y);
@@ -3889,10 +3964,6 @@
     background: url("/crisis/crisis-fill-green-2.webp") center / 100% 100%
       no-repeat;
   }
-  .ks-education-books-paint .ks-wk__hover-paint {
-    z-index: 0;
-    inset: 0;
-  }
   .ks-education-gallery::before,
   .ks-education-workshop::before {
     content: "";
@@ -4181,6 +4252,367 @@
     }
     .ks-education-book {
       justify-items: start;
+    }
+  }
+}
+@layer components {
+  .ks-spotlight--booking .ks-spotlight__body {
+    gap: 1.25rem;
+  }
+  .ks-spotlight--booking .ks-spotlight__art {
+    max-width: 25rem;
+  }
+  .ks-spotlight__booking {
+    min-width: 0;
+    width: 100%;
+  }
+  .ks-booking-mini {
+    position: relative;
+    isolation: isolate;
+    padding: 2.25rem 1.75rem;
+    width: 100%;
+    color: var(--color-ink);
+  }
+  .ks-booking-mini::before {
+    content: "";
+    position: absolute;
+    inset: 0.25rem;
+    z-index: -1;
+    background: url("/crisis/crisis-fill-green-2.webp") center / 100% 100%
+      no-repeat;
+    opacity: 0.24;
+    pointer-events: none;
+  }
+  .ks-booking-mini > .ks-crisis__frame {
+    color: var(--color-primary);
+    opacity: 0.55;
+  }
+  .ks-booking-mini__content {
+    position: relative;
+    display: grid;
+    gap: 1rem;
+  }
+  .ks-booking-mini--selected {
+    padding: 24px;
+    border: 1px solid #87a58a;
+    border-radius: 19px 15px 22px 17px;
+    background: #fffdf9;
+    box-shadow: 0 12px 38px #24472d09;
+  }
+  .ks-booking-mini--selected::before {
+    inset: 0;
+    opacity: 0.15;
+  }
+  .ks-booking-mini__heading {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .ks-booking-mini__eyebrow {
+    color: var(--color-primary);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+  }
+  .ks-booking-mini h3 {
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    line-height: 1.25;
+  }
+  .ks-booking-mini__service {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .ks-booking-mini__service label {
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .ks-booking-mini select {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.6rem 1.75rem 0.6rem 0.7rem;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    border-radius: 0.4rem 0.55rem 0.45rem 0.5rem;
+    background-color: var(--color-surface);
+    font-size: 0.875rem;
+    text-overflow: ellipsis;
+  }
+  .ks-booking-mini__service p,
+  .ks-booking-mini__format {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+  .ks-booking-mini svg:not(.ks-crisis__frame) {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+  }
+  .ks-booking-mini__modes {
+    display: flex;
+    gap: 0.4rem;
+  }
+  .ks-booking-mini__modes button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 0.4rem;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    min-height: 2.5rem;
+    font-size: 0.75rem;
+    border: 1px solid transparent;
+  }
+  .ks-booking-mini__modes button[aria-pressed="true"] {
+    background: var(--color-surface);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+  .ks-booking-mini__message {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 0.75rem;
+    min-height: 10rem;
+    padding: 1rem 0;
+    font-size: 0.8125rem;
+    text-align: center;
+  }
+  .ks-booking-mini button,
+  .ks-booking-mini select {
+    cursor: pointer;
+  }
+  .ks-booking-mini :is(a, button, select):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+  }
+  .ks-booking-mini--contact {
+    display: grid;
+    gap: 1rem;
+    font-size: 0.875rem;
+  }
+  .ks-booking-mini__tabs {
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.25rem;
+    border-radius: 999px;
+    background: rgb(167 199 162 / 0.18);
+  }
+  .ks-booking-mini__tabs [role="tab"] {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    transition:
+      background-color 180ms ease,
+      color 180ms ease;
+  }
+  .ks-booking-mini__tabs [aria-selected="true"] {
+    background: #527b57;
+    color: white;
+  }
+  .ks-booking-mini__calendar-content {
+    display: grid;
+    gap: 1rem;
+  }
+  .ks-booking-mini__offers {
+    display: grid;
+    gap: 1.5rem;
+    max-height: 34rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    margin: 0;
+    padding: 0.25rem 0.5rem 0.5rem 0;
+    list-style: none;
+  }
+  .ks-booking-mini__offer {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .ks-booking-mini__offer-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .ks-booking-mini__offer-heading h4 {
+    font-family: var(--font-display);
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 1.25rem;
+    line-height: 1.3;
+    margin: 0;
+  }
+  .ks-booking-mini__offer-heading strong {
+    flex-shrink: 0;
+    font-size: 1rem;
+    color: #527b57;
+  }
+  .ks-booking-mini__offer-meta {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+  .ks-booking-mini__offer-description {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+  .ks-booking-mini__choose {
+    justify-self: start;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #527b57;
+    padding-block: 0.35rem;
+  }
+  .ks-booking-mini__choose:hover {
+    color: var(--color-ink);
+  }
+
+  .ks-spotlight--booking .ks-spotlight__grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "header" "art" "summary" "facts" "calendar";
+    row-gap: 1.75rem;
+    align-items: start;
+  }
+  .ks-spotlight__rail,
+  .ks-spotlight__main {
+    display: contents;
+  }
+  .ks-spotlight--booking .ks-spotlight__header {
+    grid-area: header;
+    text-align: center;
+    justify-items: center;
+    margin-bottom: 3.5rem;
+  }
+  .ks-spotlight--booking .ks-spotlight__art {
+    grid-area: art;
+    width: 100%;
+    max-width: 20rem;
+    justify-self: center;
+  }
+  .ks-spotlight--booking .ks-spotlight__facts {
+    grid-area: facts;
+    padding-inline: 1.25rem;
+  }
+  /* The brush panel ends at the portrait's dissolve, before the facts.
+     Keep both pigment layers aligned without trimming their painted edge. */
+  .ks-spotlight--booking :is(.ks-sp__splash, .ks-sp__stain) img {
+    transform: translate(
+        var(--ks-paint-x, 0%),
+        calc(var(--ks-paint-y, 0%) + var(--ks-spotlight-paint-shift, 0%))
+      )
+      scale(var(--ks-paint-zoom, 1)) scaleY(0.94);
+    transform-origin: top center;
+  }
+  .ks-spotlight--raised-paint {
+    --ks-spotlight-paint-shift: -4%;
+  }
+  .ks-spotlight--booking .ks-spotlight__facts dd {
+    padding-left: 0.65rem;
+    gap: 0.35rem;
+  }
+  .ks-spotlight--booking .ks-spotlight__chip {
+    font-size: 0.75rem;
+    line-height: 1.35;
+    padding: 0.3rem 0.55rem;
+  }
+  .ks-spotlight--booking .ks-spotlight__body {
+    grid-area: summary;
+    padding: 0;
+  }
+  .ks-spotlight__booking {
+    grid-area: calendar;
+    max-width: none;
+    justify-self: stretch;
+  }
+  .ks-spotlight__bio-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: start;
+  }
+  .ks-spotlight__bio-row .ks-hand-link-wrap {
+    white-space: nowrap;
+    justify-self: end;
+    margin-inline-end: clamp(1rem, 3vw, 2.5rem);
+  }
+  @media (min-width: 40rem) and (max-width: 63.99rem) {
+    .ks-spotlight--booking .ks-spotlight__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+      grid-template-areas: "header header" "art summary" "facts facts" "calendar calendar";
+      column-gap: 2rem;
+    }
+    .ks-spotlight--booking .ks-spotlight__facts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .ks-spotlight__bio-row {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (min-width: 64rem) {
+    .ks-spotlight--booking .ks-spotlight__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      grid-template-areas: "header header" "rail main";
+      column-gap: clamp(2rem, 4vw, 4rem);
+      row-gap: 2.5rem;
+    }
+    .ks-spotlight--booking .ks-spotlight__header {
+      margin-bottom: 5rem;
+    }
+    .ks-spotlight__rail {
+      grid-area: rail;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+    .ks-spotlight__rail .ks-spotlight__art {
+      /* The source portrait has headroom; lift its canvas so the visible
+         crown aligns with the name while the paint can extend above it. */
+      margin-top: -15%;
+      margin-bottom: -3rem;
+    }
+    .ks-spotlight--booking .ks-spotlight__rail .ks-spotlight__facts {
+      width: 88%;
+      max-width: 18rem;
+      margin-inline: auto;
+      padding-inline: 0;
+    }
+    .ks-spotlight__main {
+      grid-area: main;
+      display: grid;
+      gap: 1.75rem;
+      min-width: 0;
+    }
+    .ks-spotlight--booking .ks-spotlight__body,
+    .ks-spotlight__booking {
+      grid-area: auto;
+    }
+    .ks-spotlight--booking .ks-spotlight__art {
+      max-width: 25rem;
+    }
+  }
+  @media (max-width: 39.99rem) {
+    .ks-spotlight--booking .ks-spotlight__facts {
+      padding-inline: 0.5rem;
+    }
+    .ks-booking-mini.ks-booking-mini--selected {
+      padding: 1.1rem;
+    }
+    .ks-spotlight__bio-row {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    .ks-spotlight--booking .ks-spotlight__chip {
+      font-size: 0.75rem;
     }
   }
 }

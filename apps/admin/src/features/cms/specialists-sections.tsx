@@ -8,6 +8,7 @@ import {
   type HomeSectionsContent,
 } from "@repo/contracts";
 import { supportAreaImageUrl, uploadSiteImage } from "@repo/supabase";
+import { specialistBackgroundOptions } from "@repo/contracts/cms";
 import { DETAIL_BUTTON } from "@repo/ui/detail-page";
 import { CmsSection } from "./cms-section";
 import { Input } from "@repo/ui/input";
@@ -22,7 +23,9 @@ import {
 } from "@repo/ui/select";
 import { toast } from "@repo/ui/toast";
 import { ImagePlus } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useState, useEffect } from "react";
+import { ImageCropDialog } from "@repo/ui/image-crop-dialog";
+import { SpotlightFramingEditor } from "./spotlight-framing-editor";
 import { updateHomeSectionsDraftAction } from "./actions";
 import type { HomeSectionsViewModel } from "./types";
 
@@ -40,7 +43,10 @@ function toContent({
   imageUrl: _preview,
   ...spotlight
 }: Draft): HomeSectionsContent {
-  return { showSpecialists, spotlight };
+  return {
+    showSpecialists,
+    spotlight: { ...spotlight, background: spotlight.background ?? "06b" },
+  };
 }
 
 export function SpecialistsSections({
@@ -62,6 +68,14 @@ export function SpecialistsSections({
   const [saved, setSaved] = useState<Draft>(initial);
   const [problem, setProblem] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [cropUrl, setCropUrl] = useState<string | null>(null);
+  const [framingOpen, setFramingOpen] = useState(false);
+  useEffect(
+    () => () => {
+      if (cropUrl) URL.revokeObjectURL(cropUrl);
+    },
+    [cropUrl],
+  );
   const dirty =
     JSON.stringify(toContent(draft)) !== JSON.stringify(toContent(saved));
   const chosen = content.specialists.find(
@@ -78,7 +92,12 @@ export function SpecialistsSections({
     try {
       const client = createClient();
       const path = await uploadSiteImage(client, file, "spotlight");
-      change({ imagePath: path, imageUrl: supportAreaImageUrl(client, path) });
+      change({
+        imagePath: path,
+        imageUrl: supportAreaImageUrl(client, path),
+        portraitFraming: undefined,
+      });
+      setCropUrl(null);
     } catch (error) {
       toast.error(
         error instanceof Error && error.message
@@ -164,6 +183,67 @@ export function SpecialistsSections({
               {hint}
             </p>
           </div>
+          <fieldset className="grid gap-2 sm:col-span-2" disabled={isPending}>
+            <legend className="mb-1 text-sm font-medium">
+              Malowane tło portretu
+            </legend>
+            <p
+              className="text-xs text-[var(--text-muted)]"
+              id="cms-spotlight-background-note"
+            >
+              Wybierz tło, zapisz szkic i opublikuj stronę. Możesz zmienić je w
+              dowolnym momencie. Wariant 06b jest lekko podniesiony, aby
+              zostawić miejsce nad tagami.
+            </p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {specialistBackgroundOptions.map((option) => (
+                <label
+                  key={option.id}
+                  className={cn(
+                    "grid cursor-pointer gap-1 rounded-lg border p-2 text-xs",
+                    (draft.background ?? "06b") === option.id
+                      ? "border-[var(--primary)] bg-[var(--surface)] ring-1 ring-[var(--primary)]"
+                      : "border-[var(--border)]",
+                  )}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- small local CMS thumbnails */}
+                  <img
+                    src={`/specialist-backgrounds/${option.id}.webp`}
+                    alt=""
+                    width={120}
+                    height={160}
+                    className="mx-auto h-28 w-full object-contain"
+                  />
+                  <span className="flex items-start gap-1.5">
+                    <input
+                      type="radio"
+                      name="spotlight-background"
+                      value={option.id}
+                      checked={(draft.background ?? "06b") === option.id}
+                      aria-describedby="cms-spotlight-background-note"
+                      onChange={() => change({ background: option.id })}
+                      className="mt-0.5 accent-[var(--primary)]"
+                    />
+                    {option.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <div className="sm:col-span-2">
+            <button
+              type="button"
+              className={DETAIL_BUTTON}
+              onClick={() => setFramingOpen(true)}
+              disabled={uploading || isPending}
+            >
+              Dopasuj portret i tło
+            </button>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              Przesuwanie i skala obu warstw z podglądem na żywo. Oryginały
+              pozostają bez zmian.
+            </p>
+          </div>
           <div className="grid content-start gap-1.5 sm:col-span-2">
             <Label>Własne zdjęcie (opcjonalnie)</Label>
             <div className="flex flex-wrap items-center gap-2">
@@ -185,7 +265,7 @@ export function SpecialistsSections({
                   onChange={(event) => {
                     const file = event.target.files?.[0];
                     event.target.value = "";
-                    if (file) void upload(file);
+                    if (file) setCropUrl(URL.createObjectURL(file));
                   }}
                   type="file"
                 />
@@ -242,6 +322,38 @@ export function SpecialistsSections({
           </SaveRow>
         </div>
       </CmsSection>
+      <ImageCropDialog
+        open={cropUrl !== null}
+        imageUrl={cropUrl}
+        aspect="portrait"
+        title="Wykadruj portret specjalisty"
+        pending={uploading}
+        onOpenChange={(open) => {
+          if (!open && !uploading) setCropUrl(null);
+        }}
+        onConfirm={(blob) =>
+          void upload(
+            new File(
+              [blob],
+              blob.type === "image/png" ? "portrait.png" : "portrait.webp",
+              { type: blob.type },
+            ),
+          )
+        }
+      />
+      {framingOpen ? (
+        <SpotlightFramingEditor
+          imageUrl={draft.imageUrl ?? chosen?.portraitUrl ?? null}
+          background={draft.background ?? "06b"}
+          portraitFraming={draft.portraitFraming}
+          backgroundFraming={draft.backgroundFraming}
+          onClose={() => setFramingOpen(false)}
+          onConfirm={(values) => {
+            change(values);
+            setFramingOpen(false);
+          }}
+        />
+      ) : null}
     </form>
   );
 }

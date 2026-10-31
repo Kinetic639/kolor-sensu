@@ -3,7 +3,6 @@ import { BookOpen } from "lucide-react";
 import { HanddrawnLink } from "./handdrawn-link";
 import { WorkshopCard, type WorkshopCardData } from "./workshop-parts";
 import { ArticleCard } from "./article-cards";
-import { HoverPaint } from "./hover-paint";
 import { InkReveal } from "./ink-reveal";
 import { CrisisCardFrame } from "./crisis-card-frame";
 import { PageLink } from "./page-link";
@@ -77,9 +76,7 @@ export function EducationArticles({
 export function EducationBooks({ books }: { books: readonly EducationBook[] }) {
   return books.length ? (
     <div className={styles.books} key="books">
-      <div className="ks-education-books-paint" aria-hidden="true">
-        <HoverPaint />
-      </div>
+      <div className="ks-education-books-paint" aria-hidden="true" />
       <div className={styles.bookShelf}>
         {books.map((book, index) => (
           <article className={styles.book} key={book.id}>

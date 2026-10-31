@@ -33,6 +33,9 @@ export function toSpotlight(
 
   const role = specialistRole(chosen);
   return {
+    background: spotlight.background ?? "06b",
+    portraitFraming: spotlight.portraitFraming,
+    backgroundFraming: spotlight.backgroundFraming,
     specialist: {
       name: chosen.displayName,
       role,

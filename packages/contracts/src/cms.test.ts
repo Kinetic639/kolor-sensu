@@ -116,6 +116,29 @@ describe("support areas content", () => {
 });
 
 describe("home sections", () => {
+  it("preserves independent portrait and paint framing and rejects unsafe transforms", () => {
+    const data = {
+      showSpecialists: true,
+      spotlight: {
+        ...defaultHomeSections.spotlight,
+        portraitFraming: { x: 3, y: -4, zoom: 1.1 },
+        backgroundFraming: { x: -2, y: -5, zoom: 0.9 },
+      },
+    };
+    expect(homeSectionsContentSchema.parse(data)).toEqual(data);
+    for (const framing of [
+      { x: 26, y: 0, zoom: 1 },
+      { x: 0, y: -26, zoom: 1 },
+      { x: 0, y: 0, zoom: 3 },
+    ]) {
+      expect(
+        homeSectionsContentSchema.safeParse({
+          ...data,
+          spotlight: { ...data.spotlight, portraitFraming: framing },
+        }).success,
+      ).toBe(false);
+    }
+  });
   const spotlight = {
     visible: true,
     specialistId: "6f1c2b9a-3c41-4e2b-9a55-0d3f2a7b8c10",
@@ -135,6 +158,22 @@ describe("home sections", () => {
     );
     expect(defaultHomeSections.showSpecialists).toBe(true);
     expect(defaultHomeSections.spotlight.visible).toBe(false);
+  });
+
+  it("keeps each approved portrait background and rejects the discarded variant", () => {
+    for (const background of ["01", "02", "03", "04", "05", "06", "06b"]) {
+      const parsed = homeSectionsContentSchema.parse({
+        showSpecialists: true,
+        spotlight: { ...spotlight, background },
+      });
+      expect(parsed.spotlight.background).toBe(background);
+    }
+    expect(
+      homeSectionsContentSchema.safeParse({
+        showSpecialists: true,
+        spotlight: { ...spotlight, background: "07" },
+      }).success,
+    ).toBe(false);
   });
 
   it("shows the spotlight only with a specialist chosen", () => {

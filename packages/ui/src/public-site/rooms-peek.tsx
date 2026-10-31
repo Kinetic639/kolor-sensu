@@ -165,7 +165,9 @@ export function RoomsPeek({ header, photos, className }: RoomsPeekProps) {
     )
       return;
     row.current
-      ?.querySelectorAll<HTMLElement>(".ks-peek__item")
+      ?.querySelectorAll<HTMLElement>(
+        '.ks-peek__list[data-active="true"] .ks-peek__item',
+      )
       .forEach((item, index) => {
         item.animate(
           [
@@ -188,7 +190,7 @@ export function RoomsPeek({ header, photos, className }: RoomsPeekProps) {
     exitAnimation.current?.cancel();
     lowerPhoto();
     pendingRoom.current = index;
-    const list = row.current?.querySelector("ul");
+    const list = row.current?.querySelector('ul[data-active="true"]');
     const show = () => {
       if (version !== transitionVersion.current) return;
       for (const returningPhoto of returning.current.values()) {
@@ -274,47 +276,61 @@ export function RoomsPeek({ header, photos, className }: RoomsPeekProps) {
             // Focusable so the arrow keys move it (its list is named).
             tabIndex={0}
           >
-            <ul aria-label="Zdjęcia gabinetów" className="ks-peek__list">
-              {current.map((photo, index) => (
-                <li className="ks-peek__item" key={`${photo.url}-${index}`}>
-                  <figure
-                    className="ks-peek__print"
-                    tabIndex={0}
-                    aria-label={photo.room}
-                    title={photo.room}
-                    onPointerEnter={(event) => {
-                      if (event.pointerType === "mouse")
-                        liftPhoto(event.currentTarget);
-                    }}
-                    onPointerLeave={(event) => {
-                      if (!event.currentTarget.matches(":focus-within"))
-                        lowerPhoto();
-                    }}
-                    onFocus={(event) => liftPhoto(event.currentTarget)}
-                    onBlur={lowerPhoto}
-                  >
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-[0.25rem]">
-                      <Image
-                        alt={photo.alt}
-                        className="object-cover"
-                        draggable={false}
-                        fill
-                        sizes="(min-width: 1024px) 14rem, 70vw"
-                        src={photo.url}
-                      />
-                    </div>
-                    <figcaption className="ks-peek__photo-caption text-small text-text-muted pt-2 text-center">
-                      {photo.description ? (
-                        <span className="ks-peek__description">
-                          {photo.description}
-                        </span>
-                      ) : null}
-                      <span className="ks-peek__photo-room">{photo.room}</span>
-                    </figcaption>
-                  </figure>
-                </li>
-              ))}
-            </ul>
+            {groups.map((group, groupIndex) => {
+              const active = groupIndex === activeRoom % groups.length;
+              return (
+                <ul
+                  key={group[0]?.roomId ?? group[0]?.room}
+                  aria-label="Zdjęcia gabinetów"
+                  className="ks-peek__list"
+                  data-active={active ? "true" : "false"}
+                  aria-hidden={active ? undefined : true}
+                  inert={!active}
+                >
+                  {group.map((photo, index) => (
+                    <li className="ks-peek__item" key={`${photo.url}-${index}`}>
+                      <figure
+                        className="ks-peek__print"
+                        tabIndex={0}
+                        aria-label={photo.room}
+                        title={photo.room}
+                        onPointerEnter={(event) => {
+                          if (event.pointerType === "mouse")
+                            liftPhoto(event.currentTarget);
+                        }}
+                        onPointerLeave={(event) => {
+                          if (!event.currentTarget.matches(":focus-within"))
+                            lowerPhoto();
+                        }}
+                        onFocus={(event) => liftPhoto(event.currentTarget)}
+                        onBlur={lowerPhoto}
+                      >
+                        <div className="relative aspect-[4/5] overflow-hidden rounded-[0.25rem]">
+                          <Image
+                            alt={photo.alt}
+                            className="object-cover"
+                            draggable={false}
+                            fill
+                            sizes="(min-width: 1024px) 14rem, 70vw"
+                            src={photo.url}
+                          />
+                        </div>
+                        <figcaption className="ks-peek__photo-caption text-small text-text-muted pt-2 text-center">
+                          {photo.description ? (
+                            <span className="ks-peek__description">
+                              {photo.description}
+                            </span>
+                          ) : null}
+                          <span className="ks-peek__photo-room">
+                            {photo.room}
+                          </span>
+                        </figcaption>
+                      </figure>
+                    </li>
+                  ))}
+                </ul>
+              );
+            })}
           </div>
           {groups.length > 1 ? (
             <div className="ks-peek__controls">

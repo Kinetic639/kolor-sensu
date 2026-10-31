@@ -1,3 +1,9 @@
+import { CompactBookingCalendar } from "./compact-booking-calendar";
+import { AvailabilityCalendar } from "./availability-calendar";
+import {
+  compactBookingSample,
+  availabilityCalendarSample,
+} from "./compact-booking-samples";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect } from "storybook/test";
 import { SpecialistSpotlight } from "./specialist-spotlight";
@@ -17,6 +23,12 @@ const meta = {
     ),
   ],
   parameters: { layout: "fullscreen" },
+  argTypes: {
+    background: {
+      control: "select",
+      options: ["01", "02", "03", "04", "05", "06", "06b"],
+    },
+  },
   args: {
     eyebrow: "Poznaj nasz zespół",
     heading: "Z kim porozmawiasz",
@@ -57,4 +69,23 @@ export const Default: Story = {
 /** With the cards' entrance: the portrait lifts in, the splash blooms. */
 export const Animated: Story = {
   args: { animationPreset: "splash-reveal" },
+};
+
+export const WithCalendar: Story = {
+  args: {
+    bookingPanel: (
+      <CompactBookingCalendar
+        {...compactBookingSample}
+        onChange={() => {}}
+        calendar={
+          <AvailabilityCalendar
+            {...availabilityCalendarSample}
+            onViewChange={() => {}}
+            onNavigate={() => {}}
+            onRetry={() => {}}
+          />
+        }
+      />
+    ),
+  },
 };
