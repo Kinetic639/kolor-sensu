@@ -16,18 +16,35 @@ import {
 import styles from "./availability-calendar.module.css";
 
 export type AvailabilityView = "week" | "month";
+export interface AvailabilitySlotOption {
+  service: string;
+  mode: "online" | "stacjonarnie";
+  location: string;
+  href: string;
+}
+export interface AvailabilitySlot extends SlotPickerSlot {
+  options?: AvailabilitySlotOption[];
+}
+export interface AvailabilityDay extends Omit<SlotPickerDay, "slots"> {
+  slots: AvailabilitySlot[];
+}
+export interface AvailabilityChoice {
+  date: string;
+  slot: AvailabilitySlot;
+}
 export interface AvailabilityCalendarProps {
   view: AvailabilityView;
   month: string;
   week: string;
   today: string;
   lastDay: string;
-  days: SlotPickerDay[];
+  days: AvailabilityDay[];
   status: "loading" | "ready" | "error";
   skeletonRows?: number;
   onViewChange: (view: AvailabilityView) => void;
   onNavigate: (direction: number) => void;
   onRetry: () => void;
+  onChoose?: (choice: AvailabilityChoice) => void;
 }
 
 /** Variant 11. Controlled availability; choosing a time never creates a hold. */
@@ -43,12 +60,13 @@ export function AvailabilityCalendar({
   onViewChange,
   onNavigate,
   onRetry,
+  onChoose,
 }: AvailabilityCalendarProps) {
   const [chosenDay, setDay] = useState("");
   const [storedChoice, setChoice] = useState<{
     context: string;
     date: string;
-    slot: SlotPickerSlot;
+    slot: AvailabilitySlot;
   } | null>(null);
   const context = `${view}|${month}|${week}`;
   const weekView = view === "week";
@@ -72,8 +90,10 @@ export function AvailabilityCalendar({
   );
   const cells = weekdaysOnly ? workdayMonthCells(month) : monthCells(month);
   const dates = Array.from({ length: 5 }, (_, i) => shiftDay(week, i));
-  const pick = (day: SlotPickerDay, slot: SlotPickerSlot) =>
+  const pick = (day: AvailabilityDay, slot: AvailabilitySlot) => {
     setChoice({ context, date: day.date, slot });
+    onChoose?.({ date: day.date, slot });
+  };
   const previousDisabled = weekView
     ? week <= monday(today)
     : month <= monthStart(today);
@@ -138,7 +158,7 @@ export function AvailabilityCalendar({
         <div inert={status !== "ready" ? true : undefined}>
           <div
             className={styles.content}
-            style={weekView ? { minHeight: rows * 37 + 70 } : undefined}
+            style={weekView ? { minHeight: rows * 37 + 50 } : undefined}
           >
             {status === "loading" ? (
               <div
@@ -318,9 +338,11 @@ export function AvailabilityCalendar({
                   })}{" "}
                   · {choice.slot.time}
                 </span>
-                <HanddrawnLink href={choice.slot.href}>
-                  Przejdź do rezerwacji
-                </HanddrawnLink>
+                {!onChoose ? (
+                  <HanddrawnLink href={choice.slot.href}>
+                    Przejdź do rezerwacji
+                  </HanddrawnLink>
+                ) : null}
               </>
             ) : null}
           </footer>
