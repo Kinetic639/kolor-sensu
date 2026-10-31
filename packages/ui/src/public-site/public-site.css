@@ -4647,8 +4647,8 @@
   }
   .ks-spotlight__booking {
     grid-area: calendar;
-    max-width: none;
-    justify-self: stretch;
+    max-width: 32rem;
+    justify-self: center;
   }
   .ks-spotlight__bio-row {
     display: grid;

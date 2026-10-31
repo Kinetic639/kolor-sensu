@@ -129,21 +129,26 @@
   padding-top: 7px;
 }
 .time {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: grid;
+  place-items: center;
   min-width: 0;
-  min-height: 31px;
-  padding: 5px 2px;
+  min-height: 33px;
+  padding: 0 2px;
   border: 1px solid #a7c7a2;
   background: #fffdf9;
   border-radius: 6px 8px 7px 5px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #355c3b;
   transition:
     background 0.18s,
     border-color 0.18s;
+}
+.timeLabel {
+  display: block;
+  line-height: 1;
+  /* Figtree's digits sit high in their line box; centre the visible numerals. */
+  transform: translateY(1px);
 }
 .time:hover {
   background: #dcebd8;
@@ -256,8 +261,8 @@
 }
 .dayTimes .time {
   min-height: 39px;
-  font-size: 13px;
-  padding: 7px 4px;
+  font-size: 14px;
+  padding: 0 4px;
   background: #fffdf9;
 }
 .dayTimes .time:hover {
@@ -341,7 +346,7 @@
   margin-bottom: 2px;
 }
 .skeletonSlot {
-  height: 31px;
+  height: 33px;
 }
 .skeletonGrid {
   grid-auto-rows: 48px;
@@ -386,9 +391,11 @@
   .weekSkeleton .skeletonHeading {
     height: 36px;
   }
-  .weekColumns h4 > strong,
-  .weekColumns .time {
+  .weekColumns h4 > strong {
     font-size: 10px;
+  }
+  .weekColumns .time {
+    font-size: 12px;
   }
   .monthBody {
     grid-template-columns: minmax(0, 1.4fr) minmax(100px, 1fr);
@@ -405,7 +412,7 @@
     font-size: 10px;
   }
   .dayTimes .time {
-    font-size: 11px;
+    font-size: 12px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
