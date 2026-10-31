@@ -16,10 +16,14 @@ const earlyStart = (page: Page) =>
 /** On the time step: the first free time, from `weeks` weeks on. */
 async function pickFrom(page: Page, weeks: number) {
   const step = page.getByRole("region", { name: "Wybierz termin" });
-  for (let week = 0; week < weeks; week += 1) {
+  // The next week's page, once it is there (its address changes).
+  const nextWeek = async () => {
+    const before = page.url();
     await step.getByRole("link", { name: "Następny tydzień" }).click();
+    await page.waitForURL((url) => url.href !== before);
     await expect(step).toBeVisible();
-  }
+  };
+  for (let week = 0; week < weeks; week += 1) await nextWeek();
   for (let week = 0; week < 6; week += 1) {
     const slot = step.getByRole("link", { name: /, \d{2}:\d{2}$/ }).first();
     if ((await slot.count()) > 0) {
@@ -27,7 +31,7 @@ async function pickFrom(page: Page, weeks: number) {
       await page.waitForURL(/termin=/);
       return new URL(page.url()).searchParams.get("termin")!;
     }
-    await step.getByRole("link", { name: "Następny tydzień" }).click();
+    await nextWeek();
   }
   throw new Error("No free time in six weeks.");
 }
@@ -71,10 +75,11 @@ test("a visit within 14 days asks for the request to start early (card 15) @hold
   await expect(page.getByRole("heading", { name: "Płatność" })).toBeVisible({
     timeout: 30_000,
   });
+  // From the payment step it also stops the payment at Stripe: a while.
   await page.getByRole("button", { name: "Zacznij od nowa" }).click();
   await expect(
     page.getByRole("region", { name: "Wybierz usługę" }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 30_000 });
 });
 
 test("a visit further ahead does not ask for it (card 15) @holds", async ({
