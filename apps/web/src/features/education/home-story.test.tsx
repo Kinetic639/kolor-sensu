@@ -59,6 +59,49 @@ beforeEach(() => {
   readers.categories.mockResolvedValue([]);
 });
 describe("the published education story", () => {
+  it("includes an older primary ebook in auto mode and marks only it for mobile", async () => {
+    const ids = [
+      "11111111-1111-4111-8111-111111111111",
+      "22222222-2222-4222-8222-222222222222",
+      "33333333-3333-4333-8333-333333333333",
+    ];
+    readers.ebooks.mockResolvedValue(
+      ids.map(
+        (id, index) =>
+          ({
+            id,
+            title: `Książka ${index + 1}`,
+            slug: id,
+            publishedAt: `2026-10-${25 - index}`,
+            coverPath: "cover.jpg",
+            coverAlt: "",
+            format: "PDF",
+          }) as PublishedEbook,
+      ),
+    );
+    const result = await educationStorySteps(
+      {
+        steps: [
+          step({
+            type: "ebooks",
+            source: "auto",
+            ids: [],
+            mobilePrimaryId: ids[2],
+          }),
+        ],
+      },
+      [image],
+      {},
+    );
+    const html = renderToString(result[0]!.content);
+    expect(html).toContain("Książka 3");
+    expect(html).toContain("Książka 1");
+    expect(html).not.toContain("Książka 2");
+    expect(html.match(/data-mobile-primary="true"/g)).toHaveLength(1);
+    expect(html.indexOf('data-mobile-primary="true"')).toBeLessThan(
+      html.indexOf("Książka 3"),
+    );
+  });
   it("loads no catalogues for a photo slide", async () => {
     const result = await educationStorySteps(
       { steps: [step({ type: "image" })] },
@@ -134,7 +177,12 @@ describe("the published education story", () => {
     const result = await educationStorySteps(
       {
         steps: [
-          step({ type: "ebooks", source: "manual", ids: [...ids].reverse() }),
+          step({
+            type: "ebooks",
+            source: "manual",
+            ids: [...ids].reverse(),
+            mobilePrimaryId: ids[0],
+          }),
         ],
       },
       [image],
@@ -142,6 +190,39 @@ describe("the published education story", () => {
     );
     const html = renderToString(result[0]!.content);
     expect(html.indexOf("Książka 2")).toBeLessThan(html.indexOf("Książka 1"));
+    expect(html).toMatch(
+      /data-mobile-primary="false"[\s\S]*Książka 2[\s\S]*data-mobile-primary="true"[\s\S]*Książka 1/,
+    );
+  });
+  it("falls back to the first published ebook when the primary is withdrawn", async () => {
+    readers.ebooks.mockResolvedValue([
+      {
+        id: "11111111-1111-4111-8111-111111111111",
+        title: "Dostępny e-book",
+        slug: "dostepny",
+        publishedAt: "2026-10-25",
+        coverPath: "cover.jpg",
+        coverAlt: "",
+        format: "PDF",
+      } as PublishedEbook,
+    ]);
+    const result = await educationStorySteps(
+      {
+        steps: [
+          step({
+            type: "ebooks",
+            source: "auto",
+            ids: [],
+            mobilePrimaryId: "22222222-2222-4222-8222-222222222222",
+          }),
+        ],
+      },
+      [image],
+      {},
+    );
+    expect(renderToString(result[0]!.content)).toMatch(
+      /data-mobile-primary="true"[\s\S]*Dostępny e-book/,
+    );
   });
   it("excludes cancelled and past workshops", async () => {
     readers.workshops.mockResolvedValue([

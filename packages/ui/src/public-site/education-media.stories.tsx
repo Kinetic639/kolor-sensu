@@ -99,6 +99,39 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const AllCompositions: Story = {};
+export const MobilePrimaryEbook: Story = {
+  globals: { viewport: { value: "mobile", isRotated: false } },
+  args: {
+    steps: [
+      {
+        heading: "E-booki na spokojnie",
+        text: "Na telefonie pokazujemy wybraną książkę, na komputerze obie.",
+        image: photo,
+        content: (
+          <EducationBooks
+            mobilePrimaryId="2"
+            books={[
+              {
+                id: "1",
+                title: "Poznaj swoje emocje",
+                format: "PDF",
+                href: "#ebook",
+                image: photo,
+              },
+              {
+                id: "2",
+                title: "Ćwiczenia na co dzień",
+                format: "PDF",
+                href: "#ebook2",
+                image: photo,
+              },
+            ]}
+          />
+        ),
+      },
+    ],
+  },
+};
 export const OneArticle: Story = {
   args: {
     steps: [

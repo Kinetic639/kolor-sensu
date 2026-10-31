@@ -93,12 +93,21 @@ export async function educationStorySteps(
         };
     }
     if (media.type === "ebooks") {
-      const chosen = selectStoryItems(books, media, 2);
+      const selected = selectStoryItems(books, media, 2);
+      const primary =
+        media.source === "auto"
+          ? books.find((book) => book.id === media.mobilePrimaryId)
+          : undefined;
+      const chosen =
+        primary && !selected.some((book) => book.id === primary.id)
+          ? [primary, ...selected].slice(0, 2)
+          : selected;
       if (chosen.length)
         return {
           ...step,
           content: (
             <EducationBooks
+              mobilePrimaryId={media.mobilePrimaryId}
               books={chosen.map((b) => ({
                 id: b.id,
                 title: b.title,

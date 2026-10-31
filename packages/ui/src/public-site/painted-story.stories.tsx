@@ -6,8 +6,8 @@ import { PaintedStory } from "./painted-story";
 // Experience). From 64 rem up, with motion welcome, one screen stays pinned
 // while you scroll through the steps: the text changes, the counter's numbers roll,
 // and each picture is painted over the previous one with the watercolour
-// brush. On phones the steps follow one another, each picture painted in
-// as it comes into view; under reduced motion everything simply shows.
+// brush. On phones a swipe gallery shows one step at a time; each picture
+// paints in as it comes into view. Reduced motion keeps the gallery still.
 
 const meta = {
   title: "Public site/Painted story",
@@ -72,4 +72,8 @@ export const Default: Story = {
       expect(canvas.getAllByRole("heading", { level: 3 })).toHaveLength(3),
     );
   },
+};
+
+export const MobileGallery: Story = {
+  globals: { viewport: { value: "mobile", isRotated: false } },
 };

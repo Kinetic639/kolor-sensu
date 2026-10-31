@@ -4,6 +4,42 @@ import { homeStoryStepSchema, storyMediaOf } from "./cms";
 const step = { heading: "Edukacja", text: "Wiedza na co dzień." };
 const id = "11111111-1111-4111-8111-111111111111";
 describe("home story media", () => {
+  it("validates an optional mobile primary ebook and its manual membership", () => {
+    const media = {
+      type: "ebooks",
+      source: "manual",
+      ids: [id],
+      mobilePrimaryId: id,
+    };
+    expect(homeStoryStepSchema.parse({ ...step, media }).media).toEqual(media);
+    expect(
+      homeStoryStepSchema.safeParse({
+        ...step,
+        media: {
+          ...media,
+          mobilePrimaryId: "22222222-2222-4222-8222-222222222222",
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      homeStoryStepSchema.safeParse({
+        ...step,
+        media: { ...media, mobilePrimaryId: "invalid" },
+      }).success,
+    ).toBe(false);
+    expect(
+      homeStoryStepSchema.safeParse({
+        ...step,
+        media: { ...media, type: "articles" },
+      }).success,
+    ).toBe(false);
+    expect(
+      homeStoryStepSchema.safeParse({
+        ...step,
+        media: { ...media, source: "auto", ids: [] },
+      }).success,
+    ).toBe(true);
+  });
   it("preserves word colours while accepting older plain slide titles", () => {
     const headingSegments = [{ text: "Edukacja", tone: "green" }];
     expect(

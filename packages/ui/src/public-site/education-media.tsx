@@ -73,13 +73,24 @@ export function EducationArticles({
     <EmptyMaterial key="articles" text="Pierwsze artykuły już wkrótce." />
   );
 }
-export function EducationBooks({ books }: { books: readonly EducationBook[] }) {
+export function EducationBooks({
+  books,
+  mobilePrimaryId,
+}: {
+  books: readonly EducationBook[];
+  mobilePrimaryId?: string | null;
+}) {
+  const primary = books.find((book) => book.id === mobilePrimaryId) ?? books[0];
   return books.length ? (
     <div className={styles.books} key="books">
       <div className="ks-education-books-paint" aria-hidden="true" />
       <div className={styles.bookShelf}>
         {books.map((book, index) => (
-          <article className={styles.book} key={book.id}>
+          <article
+            className={styles.book}
+            key={book.id}
+            data-mobile-primary={book.id === primary?.id ? "true" : "false"}
+          >
             <PageLink
               href={book.href}
               tabIndex={-1}
