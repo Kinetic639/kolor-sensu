@@ -3729,4 +3729,50 @@ END;
 $body$;
 RESET ROLE;
 
+-- AN: a reservation keeps the price it was made at (Klient · 5, card 14).
+-- The centre raises the offer's price after the client chose "zapłacę
+-- później"; the link still asks for the old amount, and the visit is
+-- confirmed at it.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  INSERT INTO z_visits SELECT 'an1', * FROM pg_temp.reserve_new('in_person',
+    pg_temp.at(t.monday + 91, '09:00'), 'Nina Cena', 'nina.cena@example.invalid',
+    '600700105', 'visitor-an-hold', 'visitor-an');
+  IF (SELECT outcome FROM z_visits WHERE name = 'an1') <> 'reserved' THEN
+    RAISE EXCEPTION 'AN: the visit was not reserved';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+UPDATE public.specialist_services SET price_minor = 30000
+WHERE specialist_id = (SELECT anna_id FROM booking_test);
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  c record;
+BEGIN
+  SELECT * INTO c FROM public.claim_booking_email((SELECT reference FROM z_visits WHERE name = 'an1'), 'reserved');
+  PERFORM public.accept_booking_terms(c.manage_token);
+  IF pg_temp.hint_of(format('SELECT public.attach_reservation_payment(%L, %L, 30000, %L)',
+       c.manage_token, 'cs_an_new', 'PLN')) <> 'amount_mismatch' THEN
+    RAISE EXCEPTION 'AN: the link asked for the new price';
+  END IF;
+  PERFORM public.attach_reservation_payment(c.manage_token, 'cs_an', 25000, 'PLN');
+  IF public.fulfill_checkout_session('cs_an', true, 'pi_an') <> 'confirmed' THEN
+    RAISE EXCEPTION 'AN: paid at the old price, the visit was not confirmed';
+  END IF;
+  IF (SELECT (status, price_minor) FROM public.get_booking(c.manage_token))
+     IS DISTINCT FROM ('confirmed'::public.appointment_status, 25000) THEN
+    RAISE EXCEPTION 'AN: the confirmed visit changed its price';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+UPDATE public.specialist_services SET price_minor = 25000
+WHERE specialist_id = (SELECT anna_id FROM booking_test);
+
 ROLLBACK;
