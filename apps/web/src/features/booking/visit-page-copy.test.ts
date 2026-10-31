@@ -46,6 +46,16 @@ describe("visitPageCopy", () => {
     );
   });
 
+  it("its time has come: it took place, nothing to change (Klient · 6, card 9)", () => {
+    const copy = visitPageCopy({ ...input, now: at("2030-10-10T09:00:00Z") });
+    expect(copy.past).toBe(true);
+    expect(copy.reschedule).toBeNull();
+    expect(copy.cancel).toBeNull();
+    expect(
+      visitPageCopy({ ...input, now: at("2030-10-10T08:59:00Z") }).past,
+    ).toBe(false);
+  });
+
   it("moved once already: the next move through the centre", () => {
     const copy = visitPageCopy({
       ...input,

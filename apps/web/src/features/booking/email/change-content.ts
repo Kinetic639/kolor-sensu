@@ -22,6 +22,8 @@ export interface ChangeOptions extends ConfirmationOptions {
   sequence: number;
   /** Why the centre changed it, told to the client (R12). */
   reason?: string | null;
+  /** The centre changed it (its time, form or room), not the client. */
+  byCentre?: boolean;
 }
 
 function frame(
@@ -81,12 +83,15 @@ export function rescheduledContent(
     options,
     false,
   );
+  // The centre may change only its form or room, the time staying: the
+  // e-mail says what the visit is now, not that it moved (Klient · 6, 13).
+  const byCentre = options.byCentre === true;
   const rows: [string, string][] = [
     ["Usługa", visit.serviceName],
     ...(visit.specialistName
       ? [["Specjalista", visit.specialistName] as [string, string]]
       : []),
-    ["Nowy termin", span],
+    [byCentre ? "Termin" : "Nowy termin", span],
     ["Miejsce", placeRow(visit)],
     ...(!visit.paid && visit.paymentDueAt
       ? [
@@ -99,17 +104,25 @@ export function rescheduledContent(
     ["Numer rezerwacji", visit.reference],
     ...(options.reason ? [["Powód", options.reason] as [string, string]] : []),
   ];
-  const intro = "Twoja wizyta została przełożona na nowy termin.";
+  const intro = byCentre
+    ? "Zmieniliśmy Twoją wizytę. Poniżej jej aktualny termin i miejsce."
+    : "Twoja wizyta została przełożona na nowy termin.";
   return {
-    subject: `Nowy termin wizyty ${visit.reference} – ${when}`,
+    subject: byCentre
+      ? `Zmiana wizyty ${visit.reference} – ${when}`
+      : `Nowy termin wizyty ${visit.reference} – ${when}`,
     preview: `${visit.serviceName}, ${when}`,
-    heading: "Twoja wizyta ma nowy termin",
+    heading: byCentre
+      ? "Zmieniliśmy Twoją wizytę"
+      : "Twoja wizyta ma nowy termin",
     greeting,
     intro,
     rows,
     manageUrl,
     buttonLabel: "Zobacz swoją wizytę",
-    note: "W załączniku jest plik, który przeniesie wizytę w Twoim kalendarzu na nowy termin.",
+    note: byCentre
+      ? "W załączniku jest plik, który zaktualizuje wizytę w Twoim kalendarzu."
+      : "W załączniku jest plik, który przeniesie wizytę w Twoim kalendarzu na nowy termin.",
     contactLine,
     text: plainText({ greeting, intro, rows, manageUrl, contactLine }),
     ics,
