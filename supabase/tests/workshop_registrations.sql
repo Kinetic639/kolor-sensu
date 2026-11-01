@@ -523,4 +523,57 @@ END;
 $$;
 RESET ROLE;
 
+-- S: starting a sign-up past the page (Warsztat · 1, card 3; · 2, cards 4
+-- and 5). A draft is not there, a cancelled workshop is closed; one visitor
+-- holds at most five seats in 15 minutes; a seat given back ("Zmień
+-- zdanie") is free again at once.
+SELECT set_config('request.jwt.claims',
+  '{"sub":"7b000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+INSERT INTO public.workshops (
+  slug, title, specialist_id, modality, starts_at, ends_at, price_minor,
+  capacity, registration_enabled, status
+)
+SELECT v.slug, v.title, ws.other, 'online', ws.t3 + v.later, ws.t3 + v.later + interval '1 hour',
+  5000, 10, true, v.status::public.workshop_status
+FROM ws
+CROSS JOIN (VALUES
+  ('ws-reg-draft', 'Szkic', interval '20 days', 'draft'),
+  ('ws-reg-big', 'Dużo miejsc', interval '21 days', 'published')
+) AS v(slug, title, later, status);
+RESET ROLE;
+
+DO $$
+DECLARE
+  v_big uuid := (SELECT id FROM public.workshops WHERE slug = 'ws-reg-big');
+  v_token text;
+BEGIN
+  IF pg_temp.hint_of($sql$SELECT public.hold_workshop_seat('ws-reg-draft', 'visitor-s-1')$sql$) <> 'not_found'
+     OR pg_temp.hint_of($sql$SELECT public.hold_workshop_seat('ws-reg-main', 'visitor-s-1')$sql$) <> 'registration_closed' THEN
+    RAISE EXCEPTION 'S: a seat in a draft or a cancelled workshop';
+  END IF;
+
+  -- Given back, the seat is free at once.
+  SELECT access_token INTO v_token FROM public.hold_workshop_seat('ws-reg-big', 'visitor-s-2');
+  IF private.workshop_seats_taken(v_big) <> 1 THEN
+    RAISE EXCEPTION 'S: the held seat was not taken';
+  END IF;
+  PERFORM public.cancel_workshop_registration(v_token);
+  IF private.workshop_seats_taken(v_big) <> 0 THEN
+    RAISE EXCEPTION 'S: a seat given back stayed taken';
+  END IF;
+
+  -- Five holds in 15 minutes, then no more.
+  FOR i IN 1..4 LOOP
+    PERFORM public.hold_workshop_seat('ws-reg-big', 'visitor-s-2');
+  END LOOP;
+  IF pg_temp.hint_of($sql$SELECT public.hold_workshop_seat('ws-reg-big', 'visitor-s-2')$sql$) <> 'too_many_holds' THEN
+    RAISE EXCEPTION 'S: a sixth hold in 15 minutes';
+  END IF;
+  IF pg_temp.hint_of($sql$SELECT public.hold_workshop_seat('ws-reg-big', 'visitor-s-3')$sql$) <> 'ok' THEN
+    RAISE EXCEPTION 'S: another visitor could not hold a seat';
+  END IF;
+END;
+$$;
+
 ROLLBACK;

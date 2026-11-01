@@ -113,9 +113,12 @@ export function SeatDetailsForm({
   saved,
   payLater,
   free,
+  newsletterController = null,
 }: {
   slug: string;
   saved: DetailsFormValues | null;
+  /** Who handles the newsletter's data; none: the newsletter is off. */
+  newsletterController?: string | null;
   /** "5 listopada 2030, godz. 17:00", or null: pay now only. */
   payLater: string | null;
   free: boolean;
@@ -132,7 +135,11 @@ export function SeatDetailsForm({
     <form action={action} className="grid gap-5" noValidate>
       <input name="slug" type="hidden" value={slug} />
       <FormMessage state={state} />
-      <ParticipantFields errors={errors} values={values} />
+      <ParticipantFields
+        errors={errors}
+        newsletterController={newsletterController}
+        values={values}
+      />
       <div className="grid gap-3">
         <div className="flex flex-wrap gap-3">
           <PrimaryButton arrow disabled={pending} type="submit">

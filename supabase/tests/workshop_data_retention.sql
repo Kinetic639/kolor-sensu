@@ -3,7 +3,8 @@
 -- keeps the amounts, takes the name out of the notifications, and spares
 -- a seat still owed a refund; an admin removes a participant's data on
 -- request once the seat is over, not before, and only once; no one else
--- can. Rolled back at the end.
+-- can; a sign-up never finished loses its details after 30 days. Rolled
+-- back at the end.
 
 BEGIN;
 
@@ -164,5 +165,46 @@ BEGIN
 END;
 $$;
 RESET ROLE;
+
+-- D: a sign-up never finished (Warsztat · 3, card 9): its details go 30
+-- days after its hold ran out; one held a month ago that became a seat,
+-- and one given up only 10 days ago, keep theirs.
+DO $$
+DECLARE
+  v_token text;
+  v_seat record;
+BEGIN
+  FOR v_seat IN
+    SELECT * FROM (VALUES ('ewa', 31), ('fela', 10), ('gosia', 31)) AS s(name, days)
+  LOOP
+    SELECT access_token INTO v_token FROM public.hold_workshop_seat('ws-ret-future', 'ws-ret-' || v_seat.name);
+    PERFORM public.save_workshop_registration_details(v_token, initcap(v_seat.name),
+      v_seat.name || '-ret@example.invalid', '500600700', 'Uwagi', true, true);
+    UPDATE public.workshop_registrations
+    SET hold_expires_at = now() - make_interval(days => v_seat.days),
+        created_at = now() - make_interval(days => v_seat.days)
+    WHERE access_token_hash = extensions.digest(v_token, 'sha256');
+  END LOOP;
+  -- Ewa's and Fela's holds ran out; Gosia's seat was paid back then.
+  UPDATE public.workshop_registrations SET status = 'expired'
+  WHERE client_email IN ('ewa-ret@example.invalid', 'fela-ret@example.invalid');
+  UPDATE public.workshop_registrations
+  SET status = 'confirmed', paid_minor = 10000, confirmed_at = now() - interval '31 days', hold_expires_at = NULL
+  WHERE client_email = 'gosia-ret@example.invalid';
+
+  PERFORM private.apply_retention();
+  IF EXISTS (SELECT 1 FROM public.workshop_registrations WHERE client_email = 'ewa-ret@example.invalid')
+     OR (SELECT client_name FROM public.workshop_registrations
+         WHERE reference = (SELECT reference FROM public.workshop_registrations
+                            WHERE status = 'expired' AND hold_expires_at < now() - interval '30 days'
+                            ORDER BY created_at LIMIT 1)) IS NOT NULL THEN
+    RAISE EXCEPTION 'D: an unfinished sign-up kept its details after 30 days';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.workshop_registrations WHERE client_email = 'fela-ret@example.invalid')
+     OR NOT EXISTS (SELECT 1 FROM public.workshop_registrations WHERE client_email = 'gosia-ret@example.invalid') THEN
+    RAISE EXCEPTION 'D: a recent sign-up or a real seat lost its details';
+  END IF;
+END;
+$$;
 
 ROLLBACK;
