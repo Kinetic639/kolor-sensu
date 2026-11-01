@@ -8,13 +8,15 @@ import type { WebhookEventPayload } from "resend";
 // complaints count only for the newsletter's own e-mails (a broadcast, or
 // the confirmation link, tagged "newsletter"), not for the visits' e-mails.
 // A visit's e-mail that bounced for good is told to its history instead
-// (Klient · 6, card 8). Handling an event twice changes nothing.
+// (Klient · 6, card 8), a workshop's to its participant (Warsztat · 6,
+// card 9). Handling an event twice changes nothing.
 
 export const NEWSLETTER_TAG = { name: "category", value: "newsletter" };
 
 export interface WebhookDeps {
   stop: (email: string, reason: NewsletterStopReason) => Promise<boolean>;
-  /** A message that bounced: a visit's e-mail is marked (its reference). */
+  /** A message that bounced: a visit's or a workshop seat's e-mail is
+   * marked (its reference). */
   bounced: (messageId: string) => Promise<string | null>;
 }
 

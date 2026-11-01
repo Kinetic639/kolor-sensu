@@ -2,6 +2,7 @@ import { cancelUnpaidVisits, listDueBookingEmails } from "@repo/supabase";
 import {
   listDueWorkshopEmails,
   listOwedWorkshopRefunds,
+  remindMissingWorkshopLinks,
   remindWorkshopMinimums,
   runWorkshopJobs as expireWorkshopSeats,
 } from "@repo/supabase/workshops";
@@ -18,7 +19,8 @@ import { createSecretClient } from "@/lib/supabase/secret";
 // payment_schedule): payments stuck pending are asked of Stripe, unpaid
 // reservations are cancelled and the payment and visit reminders go out
 // (R11). Then the workshops' part (features/workshops/jobs.ts): seats that
-// ran out, minimums, owed refunds and the e-mails events call for.
+// ran out, minimums, missing online links, owed refunds and the e-mails
+// events call for.
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +38,7 @@ export async function GET(request: Request) {
   const workshops = await runWorkshopJobs({
     expire: () => expireWorkshopSeats(db),
     remindMinimums: () => remindWorkshopMinimums(db),
+    remindLinks: () => remindMissingWorkshopLinks(db),
     listOwed: () => listOwedWorkshopRefunds(db),
     refund: (owed) =>
       refundRegistration(

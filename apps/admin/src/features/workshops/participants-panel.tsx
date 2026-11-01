@@ -29,10 +29,12 @@ import {
   completeWorkshopAction,
   forgetParticipantAction,
   messageParticipantsAction,
+  resendParticipantLinkAction,
   setAttendanceAction,
 } from "./actions";
 import {
   canForget,
+  canResendLink,
   participantGroups,
   participantState,
   paymentLabel,
@@ -43,7 +45,8 @@ import {
 // PR 6): those signed up, the waitlist in its order and those who left;
 // each with contact, how they paid, and (once it began) whether they came.
 // The admin adds someone (paid outside the site, or with the link to pay),
-// cancels one (giving back what they choose), writes to everyone, takes
+// cancels one (giving back what they choose), sends one their link again
+// (and sees whose e-mail bounced), writes to everyone, takes
 // the list as a CSV file and closes the workshop once it ended.
 
 const GROUPS = [
@@ -213,7 +216,12 @@ export function ParticipantsPanel({
                               .join(" · ") || "—"}
                           </td>
                           <td className={cell}>
-                            <Tag tone={state.tone}>{state.label}</Tag>
+                            <span className="inline-flex flex-wrap gap-1">
+                              <Tag tone={state.tone}>{state.label}</Tag>
+                              {one.emailBouncedAt ? (
+                                <Tag tone="danger">Mail nie dotarł</Tag>
+                              ) : null}
+                            </span>
                           </td>
                           <td
                             className={`${cell} hidden tabular-nums sm:table-cell`}
@@ -240,6 +248,25 @@ export function ParticipantsPanel({
                             </td>
                           ) : null}
                           <td className={`${cell} text-right`}>
+                            {open && canResendLink(one, { ended }) ? (
+                              <Button
+                                disabled={isPending}
+                                onClick={() =>
+                                  run(
+                                    () =>
+                                      resendParticipantLinkAction(
+                                        workshopId,
+                                        one.id,
+                                      ),
+                                    "Link wysłany ponownie",
+                                  )
+                                }
+                                size="sm"
+                                variant="ghost"
+                              >
+                                Wyślij link ponownie
+                              </Button>
+                            ) : null}
                             {key !== "anulowani" && open && !started ? (
                               <Button
                                 onClick={() => {

@@ -2078,8 +2078,10 @@ export type Database = {
           id: number;
           kind: string;
           message_id: string | null;
+          bounced_at: string | null;
           registration_id: string;
           sent_at: string | null;
+          superseded_at: string | null;
           token_hash: string;
         };
         Insert: {
@@ -2087,8 +2089,10 @@ export type Database = {
           id?: never;
           kind: string;
           message_id?: string | null;
+          bounced_at?: string | null;
           registration_id: string;
           sent_at?: string | null;
+          superseded_at?: string | null;
           token_hash: string;
         };
         Update: {
@@ -2096,8 +2100,10 @@ export type Database = {
           id?: never;
           kind?: string;
           message_id?: string | null;
+          bounced_at?: string | null;
           registration_id?: string;
           sent_at?: string | null;
+          superseded_at?: string | null;
           token_hash?: string;
         };
         Relationships: [];
@@ -2187,6 +2193,7 @@ export type Database = {
           client_last_name: string | null;
           client_notes: string | null;
           client_phone: string | null;
+          email_bounced_at: string | null;
           confirmed_at: string | null;
           created_at: string;
           currency_code: string;
@@ -2223,6 +2230,7 @@ export type Database = {
           client_last_name?: string | null;
           client_notes?: string | null;
           client_phone?: string | null;
+          email_bounced_at?: string | null;
           confirmed_at?: string | null;
           created_at?: string;
           currency_code: string;
@@ -2259,6 +2267,7 @@ export type Database = {
           client_last_name?: string | null;
           client_notes?: string | null;
           client_phone?: string | null;
+          email_bounced_at?: string | null;
           confirmed_at?: string | null;
           created_at?: string;
           currency_code?: string;
@@ -2312,6 +2321,7 @@ export type Database = {
           long_description: string | null;
           min_participants: number | null;
           minimum_reminded_at: string | null;
+          link_reminded_at: string | null;
           modality: Database["public"]["Enums"]["workshop_modality"];
           price_minor: number;
           registration_closes_at: string | null;
@@ -2345,6 +2355,7 @@ export type Database = {
           long_description?: string | null;
           min_participants?: number | null;
           minimum_reminded_at?: string | null;
+          link_reminded_at?: string | null;
           modality?: Database["public"]["Enums"]["workshop_modality"];
           price_minor: number;
           registration_closes_at?: string | null;
@@ -2378,6 +2389,7 @@ export type Database = {
           long_description?: string | null;
           min_participants?: number | null;
           minimum_reminded_at?: string | null;
+          link_reminded_at?: string | null;
           modality?: Database["public"]["Enums"]["workshop_modality"];
           price_minor?: number;
           registration_closes_at?: string | null;
@@ -2800,6 +2812,10 @@ export type Database = {
         }[];
       };
       remind_workshop_minimums: {
+        Args: never;
+        Returns: number;
+      };
+      remind_missing_workshop_links: {
         Args: never;
         Returns: number;
       };
@@ -3354,6 +3370,13 @@ export type Database = {
           reference: string;
         }[];
       };
+      centre_resend_workshop_link: {
+        Args: { p_registration_id: string };
+        Returns: {
+          kind: string;
+          reference: string;
+        }[];
+      };
       centre_settle_visit: {
         Args: { p_appointment_id: string };
         Returns: {
@@ -3765,6 +3788,10 @@ export type Database = {
         }[];
       };
       mark_booking_email_bounced: {
+        Args: { p_message_id: string };
+        Returns: string | null;
+      };
+      mark_workshop_email_bounced: {
         Args: { p_message_id: string };
         Returns: string | null;
       };

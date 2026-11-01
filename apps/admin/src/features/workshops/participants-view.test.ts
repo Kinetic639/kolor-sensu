@@ -2,6 +2,7 @@ import type { WorkshopParticipant } from "@repo/supabase/workshops-admin";
 import { describe, expect, it } from "vitest";
 import {
   canForget,
+  canResendLink,
   participantGroups,
   participantsCsv,
   paymentLabel,
@@ -34,6 +35,7 @@ function participant(
     cancelledAt: null,
     createdAt: "2030-10-01T10:00:00Z",
     forgottenAt: null,
+    emailBouncedAt: null,
     ...patch,
   };
 }
@@ -102,5 +104,24 @@ describe("a workshop's participants", () => {
         ended: true,
       }),
     ).toBe(false);
+  });
+
+  it("may get their link again while the seat or the waitlist place lasts (Warsztat · 6, card 8)", () => {
+    for (const status of [
+      "confirmed",
+      "awaiting_payment",
+      "waitlisted",
+      "offered",
+    ] as const)
+      expect(canResendLink(participant({ status }), { ended: false })).toBe(
+        true,
+      );
+    expect(canResendLink(participant(), { ended: true })).toBe(false);
+    expect(
+      canResendLink(participant({ status: "cancelled" }), { ended: false }),
+    ).toBe(false);
+    expect(canResendLink(participant({ email: null }), { ended: false })).toBe(
+      false,
+    );
   });
 });

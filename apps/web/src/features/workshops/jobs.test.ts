@@ -5,6 +5,7 @@ function deps(patch: Partial<WorkshopJobDeps> = {}): WorkshopJobDeps {
   return {
     expire: vi.fn().mockResolvedValue(2),
     remindMinimums: vi.fn().mockResolvedValue(1),
+    remindLinks: vi.fn().mockResolvedValue(1),
     listOwed: vi.fn().mockResolvedValue([]),
     refund: vi.fn().mockResolvedValue(0),
     listDue: vi.fn().mockResolvedValue([]),
@@ -14,7 +15,7 @@ function deps(patch: Partial<WorkshopJobDeps> = {}): WorkshopJobDeps {
 }
 
 describe("the workshops' scheduled job", () => {
-  it("ends what ran out, reminds of minimums and sends what is due", async () => {
+  it("ends what ran out, reminds of minimums and missing links, and sends what is due", async () => {
     const d = deps({
       listDue: vi.fn().mockResolvedValue([
         { reference: "W1", kind: "offered" },
@@ -24,6 +25,7 @@ describe("the workshops' scheduled job", () => {
     expect(await runWorkshopJobs(d)).toEqual({
       expired: 2,
       minimums: 1,
+      missingLinks: 1,
       refunds: 0,
       refundsFailed: 0,
       emails: { sent: 2, skipped: 0, failed: 0 },
