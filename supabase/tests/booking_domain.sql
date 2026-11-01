@@ -4098,4 +4098,49 @@ END;
 $body$;
 RESET ROLE;
 
+-- AQ: the old page Stripe returns to, opened again after the centre
+-- cancelled the visit with part of the money back (Klient · 9, card 20):
+-- nothing is confirmed or given back a second time; the part stays a part.
+CREATE TEMP TABLE aq_visit (id uuid, reference text);
+GRANT ALL ON aq_visit TO service_role, authenticated;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  held record;
+BEGIN
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at((SELECT monday + 21 FROM booking_test), '09:00'), p_client_key => 'visitor-aq'
+  );
+  PERFORM pg_temp.save_details(held.access_token, 'Ewa Powrót', 'ewa.aq@example.invalid',
+    '600700109', NULL, true, true);
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_aq', now() + interval '30 minutes', 25000, 'PLN');
+  IF public.fulfill_checkout_session('cs_aq', true, 'pi_aq') <> 'confirmed' THEN
+    RAISE EXCEPTION 'AQ: the visit was not confirmed';
+  END IF;
+  INSERT INTO aq_visit VALUES (held.appointment_id, held.reference);
+END;
+$body$;
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+SELECT public.centre_cancel_visit((SELECT id FROM aq_visit), 10000, 'Późne odwołanie');
+RESET ROLE;
+
+SET LOCAL ROLE service_role;
+DO $body$
+BEGIN
+  IF public.fulfill_checkout_session('cs_aq', true, 'pi_aq') <> 'already_settled' THEN
+    RAISE EXCEPTION 'AQ: the return page settled the payment again';
+  END IF;
+  IF (SELECT (status, cancelled_by, refund_due_minor) FROM public.appointments WHERE id = (SELECT id FROM aq_visit))
+     IS DISTINCT FROM ('cancelled'::public.appointment_status, 'centre'::text, 10000) THEN
+    RAISE EXCEPTION 'AQ: the visit after the return page: %',
+      (SELECT row_to_json(a) FROM public.appointments AS a WHERE id = (SELECT id FROM aq_visit));
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
 ROLLBACK;

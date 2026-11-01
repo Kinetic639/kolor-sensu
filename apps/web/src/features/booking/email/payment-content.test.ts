@@ -77,6 +77,10 @@ describe("reservationContent", () => {
     expect(content.buttonLabel).toBe("Potwierdź rezerwację");
     expect(content.intro).toContain("29 września 2030, godz. 11:30");
     expect(content.intro).toContain("30 września 2030, godz. 11:00");
+    // Someone booked on another person's address (Klient · 9, card 9).
+    expect(content.intro).toContain(
+      "Jeśli to nie Ty rezerwujesz tę wizytę, nic nie rób: bez potwierdzenia rezerwacja przepadnie, a Ty nic nie zapłacisz.",
+    );
     expect(content.rows).toContainEqual([
       "Potwierdź do",
       "29 września 2030, godz. 11:30",

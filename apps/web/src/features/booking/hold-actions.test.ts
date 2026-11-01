@@ -30,6 +30,7 @@ const hold = vi.hoisted(() => ({
 const jar = vi.hoisted(() => ({ delete: vi.fn(), get: vi.fn(), set: vi.fn() }));
 const expireSession = vi.hoisted(() => vi.fn(async () => {}));
 const wizard = vi.hoisted(() => ({ loadWizard: vi.fn() }));
+const human = vi.hoisted(() => vi.fn(async () => true));
 
 vi.mock("@repo/supabase", () => ({
   ...db,
@@ -63,7 +64,7 @@ vi.mock("./email/confirmation-server", () => ({
 vi.mock("./guards", () => ({
   clientIp: () => "203.0.113.1",
   turnstileKeys: () => ({ siteKey: "site", secretKey: "secret" }),
-  verifyTurnstile: async () => true,
+  verifyTurnstile: human,
   visitorKey: () => "visitor",
 }));
 vi.mock("./hold-cookie", () => hold);
@@ -103,6 +104,7 @@ beforeEach(() => {
   hold.readHoldToken.mockResolvedValue(null);
   db.getBooking.mockResolvedValue(null);
   db.pendingCheckoutSession.mockResolvedValue(null);
+  human.mockResolvedValue(true);
 });
 
 describe("startOverAction (Klient · 1, card 15)", () => {
@@ -372,5 +374,27 @@ describe("„Zarezerwuj, zapłacę później” (Klient · 5, card 12)", () => {
       ),
     );
     expect(expireSession).not.toHaveBeenCalled();
+  });
+});
+
+describe("a bot without Turnstile's check (Klient · 9, card 4)", () => {
+  it("holds nothing and sends the visitor back to prove they are human", async () => {
+    wizard.loadWizard.mockResolvedValue({
+      params: { usluga: "konsultacja", forma: "online", specjalista: "anna" },
+      view: {
+        panel: {
+          kind: "slots",
+          chosen: { startsAt: "2030-01-10T10:00:00.000Z", label: "" },
+        },
+      },
+    });
+    human.mockResolvedValue(false);
+
+    const href = await redirected(() =>
+      holdTimeAction(form({ usluga: "konsultacja", termin: "x" })),
+    );
+    expect(href).toContain("uwaga=weryfikacja");
+    expect(db.holdSlot).not.toHaveBeenCalled();
+    expect(hold.saveHoldToken).not.toHaveBeenCalled();
   });
 });
