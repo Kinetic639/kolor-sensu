@@ -36,6 +36,7 @@ import {
   visitorKey,
 } from "@/features/booking/guards";
 import { expireSession } from "@/features/booking/payment-server";
+import { signUpForNewsletter } from "@/features/newsletter/signup-server";
 import { createSecretClient } from "@/lib/supabase/secret";
 import { claimWorkshopEmailLink, sendWorkshopEmail } from "./email/send";
 import { workshopCheckout } from "./payment-server";
@@ -183,6 +184,17 @@ export async function saveSeatDetailsAction(
       return invalid(form, "Sprawdź, proszę, swoje dane i spróbuj ponownie.");
     }
     throw error;
+  }
+  if (form.newsletter) {
+    // Its own consent, confirmed by its own link; the seat goes on
+    // whatever happens to it (Warsztat · 3, card 8).
+    const ip = clientIp(await headers());
+    const { email } = form.details;
+    after(() =>
+      signUpForNewsletter(email, "booking", ip).catch((error: unknown) => {
+        console.error("[workshops] the newsletter sign-up failed:", error);
+      }),
+    );
   }
 
   const registration = await getWorkshopRegistration(db, token);

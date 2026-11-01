@@ -32,25 +32,30 @@ async function open(page: Page, path: string) {
   expect(response?.status(), path).toBe(200);
 }
 
+/** The page as it is now: one h1, no sideways scroll, no axe violations. */
+async function checkCurrent(page: Page, label: string) {
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - window.innerWidth,
+  );
+  expect(overflow, label).toBeLessThanOrEqual(0);
+  const { violations } = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    .analyze();
+  expect(
+    violations.map(({ id, nodes }) => ({
+      id,
+      targets: nodes.map((node) => node.target.join(" ")),
+    })),
+    label,
+  ).toEqual([]);
+}
+
 async function checkPage(page: Page, path: string) {
   for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     await open(page, path);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - window.innerWidth,
-    );
-    expect(overflow, `${path} at ${width} px`).toBeLessThanOrEqual(0);
-    const { violations } = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
-    expect(
-      violations.map(({ id, nodes }) => ({
-        id,
-        targets: nodes.map((node) => node.target.join(" ")),
-      })),
-      `${path} at ${width} px`,
-    ).toEqual([]);
+    await checkCurrent(page, `${path} at ${width} px`);
   }
 }
 
@@ -64,6 +69,12 @@ async function holdSeat(page: Page) {
   await signup.getByRole("button", { name: "Zapisz się" }).click();
   await expect(
     page.getByRole("heading", { level: 1, name: "Twoje dane" }),
+  ).toBeVisible();
+  // Until when the seat waits (Warsztat · 2, card 2).
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: /Dokończ zapis do \d{1,2}:\d{2}/ }),
   ).toBeVisible();
 }
 
@@ -189,7 +200,11 @@ test("a guest reserves a seat to pay later and gives it up from its page", async
   page,
 }) => {
   test.setTimeout(180_000);
+  // On a phone, each step of the sign-up as accessible as the pages
+  // (Warsztat · 1, card 5).
+  await page.setViewportSize({ width: 390, height: 900 });
   await holdSeat(page);
+  await checkCurrent(page, "the details step on a phone");
   await fillDetails(page, "Rezygnacja E2E");
   await page
     .getByRole("button", { name: "Zarezerwuj, zapłacę później" })
@@ -203,6 +218,7 @@ test("a guest reserves a seat to pay later and gives it up from its page", async
   await expect(
     page.getByRole("button", { name: "Zapłać teraz" }),
   ).toBeVisible();
+  await checkCurrent(page, "the seat's page on a phone");
 
   await page.getByRole("button", { name: "Zrezygnuj z warsztatu" }).click();
   await expect(
