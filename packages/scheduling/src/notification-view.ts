@@ -120,6 +120,7 @@ const WORKSHOP_KINDS: Record<
   workshop_cancelled: ["Rezygnacja z warsztatu", "warning", "cancelled"],
   workshop_full: ["Warsztat ma komplet", "success", "paid"],
   workshop_minimum: ["Za mało chętnych", "warning", "closing"],
+  workshop_no_link: ["Brak linku do spotkania", "warning", "closing"],
 };
 
 /** Stripe's dispute reasons, as the centre reads them. */
@@ -261,8 +262,8 @@ export function notificationView(
     };
   }
 
-  // A workshop: a sign-up, a seat given up, full, its minimum not reached;
-  // leading to the workshop (the admin's page of it, the specialist's list).
+  // A workshop: a sign-up, a seat given up, full, its minimum not reached,
+  // online without its link; leading to the workshop (the admin's page of it, the specialist's list).
   if (WORKSHOP_KINDS[kind]) {
     const [title, tone, icon] = WORKSHOP_KINDS[kind];
     const when = d.startsAt ? visitTime(d.startsAt, "dd.MM, HH:mm") : null;
@@ -281,6 +282,15 @@ export function notificationView(
                 label: "Do decyzji",
                 value:
                   "Zapisało się mniej osób niż minimum. Potwierdź warsztat albo go odwołaj.",
+              },
+            ]
+          : []),
+        ...(kind === "workshop_no_link"
+          ? [
+              {
+                label: "Do zrobienia",
+                value:
+                  "Wklej link do spotkania w warsztacie. Przypomnienie dla uczestników wyjdzie dopiero z linkiem.",
               },
             ]
           : []),

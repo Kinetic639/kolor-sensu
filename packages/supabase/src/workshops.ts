@@ -696,6 +696,36 @@ export async function remindWorkshopMinimums(
   return data;
 }
 
+/**
+ * An online workshop soon with no meeting link: tells the admins and the
+ * leaders, once (Warsztat · 6, card 10); how many.
+ */
+export async function remindMissingWorkshopLinks(
+  secretClient: Client,
+): Promise<number> {
+  const { data, error } = await secretClient.rpc(
+    "remind_missing_workshop_links",
+  );
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Resend says this message bounced: if it was a workshop's e-mail, its
+ * participant is marked (once). The seat's reference, or null.
+ */
+export async function markWorkshopEmailBounced(
+  secretClient: Client,
+  messageId: string,
+): Promise<string | null> {
+  const { data, error } = await secretClient.rpc(
+    "mark_workshop_email_bounced",
+    { p_message_id: messageId },
+  );
+  if (error) throw error;
+  return data ?? null;
+}
+
 export async function markWorkshopEmailSent(
   secretClient: Client,
   reference: string,

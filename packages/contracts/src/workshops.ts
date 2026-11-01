@@ -170,6 +170,9 @@ export const WORKSHOP_ADMIN_PROBLEMS: Record<string, string> = {
     "Dane usuniesz po warsztacie albo po anulowaniu zapisu, gdy nie czeka zwrot.",
   already_forgotten: "Dane tej osoby są już usunięte.",
   invalid_message: "Wpisz temat i treść wiadomości.",
+  recently_sent: "Link poszedł przed chwilą. Spróbuj za kilka minut.",
+  nothing_to_send:
+    "Nie ma czego wysłać: zapis jest anulowany, minął albo warsztat już się odbył.",
   not_found: "Nie ma takiego warsztatu.",
 };
 

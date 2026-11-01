@@ -304,6 +304,25 @@ export async function cancelParticipantAction(
   return { ok: true };
 }
 
+/** "Wyślij link ponownie" (Warsztat · 6, card 8): the site sends it. */
+export async function resendParticipantLinkAction(
+  workshopId: string,
+  registrationId: string,
+): Promise<ActionResult> {
+  const result = await askTheSite(
+    `/api/centrum/warsztaty/zapisy/${encodeURIComponent(registrationId)}/link`,
+    {},
+  );
+  if (!result.ok) return result;
+  revalidatePath(`/warsztaty/${workshopId}`);
+  if (result.answer.emailed === "failed")
+    return {
+      ok: false,
+      message: "Nie udało się wysłać maila. Spróbuj za kilka minut.",
+    };
+  return { ok: true };
+}
+
 export async function messageParticipantsAction(
   workshopId: string,
   message: { subject: string; body: string },

@@ -1,7 +1,11 @@
 import type { Database, Json } from "@repo/contracts/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { uploadSiteImage } from "./cms";
-import type { WorkshopModality, WorkshopStatus } from "./workshops";
+import type {
+  WorkshopEmailKind,
+  WorkshopModality,
+  WorkshopStatus,
+} from "./workshops";
 
 // Workshops in the admin portal (docs/product/workshops-plan.md, PR 2;
 // migration 20261023130000_workshop_admin.sql): the list with seats and
@@ -336,6 +340,8 @@ export interface WorkshopParticipant {
   createdAt: string;
   /** When the data was anonymised (after 12 months, or on request). */
   forgottenAt: string | null;
+  /** When an e-mail to them bounced (until the address changes). */
+  emailBouncedAt: string | null;
 }
 
 /**
@@ -349,7 +355,7 @@ export async function listWorkshopParticipants(
   const { data, error } = await client
     .from("workshop_registrations")
     .select(
-      "id, reference, status, booked_by, client_name, client_email, client_phone, client_notes, price_minor, paid_minor, refund_due_minor, refunded_minor, paid_outside, payment_due_at, offer_expires_at, hold_expires_at, waitlisted_at, attended, cancelled_by, cancelled_at, created_at, forgotten_at",
+      "id, reference, status, booked_by, client_name, client_email, client_phone, client_notes, price_minor, paid_minor, refund_due_minor, refunded_minor, paid_outside, payment_due_at, offer_expires_at, hold_expires_at, waitlisted_at, attended, cancelled_by, cancelled_at, created_at, forgotten_at, email_bounced_at",
     )
     .eq("workshop_id", workshopId)
     .order("created_at");
@@ -379,6 +385,7 @@ export async function listWorkshopParticipants(
       cancelledAt: row.cancelled_at,
       createdAt: row.created_at,
       forgottenAt: row.forgotten_at,
+      emailBouncedAt: row.email_bounced_at,
     }));
 }
 
@@ -425,6 +432,25 @@ export async function centreCancelWorkshopParticipant(
   if (error) throw refusal(error);
   const row = data![0]!;
   return { reference: row.reference, refundMinor: row.refund_minor };
+}
+
+/**
+ * "Wyślij link ponownie" (Warsztat · 6, card 8): the e-mail of the seat's
+ * state may be claimed once more; the site sends it, with a new link (the
+ * earlier ones still work). Admins; refusals: recently_sent,
+ * nothing_to_send, not_found, forbidden.
+ */
+export async function centreResendWorkshopLink(
+  client: Client,
+  registrationId: string,
+): Promise<{ reference: string; kind: WorkshopEmailKind }> {
+  const { data, error } = await client.rpc("centre_resend_workshop_link", {
+    p_registration_id: registrationId,
+  });
+  if (error) throw refusal(error);
+  const row = data?.[0];
+  if (!row) throw new WorkshopAdminError("nothing_to_send", "Nothing to send");
+  return { reference: row.reference, kind: row.kind as WorkshopEmailKind };
 }
 
 /** Who came (the admin or the workshop's leaders, once it began). */
