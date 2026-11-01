@@ -123,6 +123,9 @@ BEGIN
 END;
 $$;
 
+-- The e-mails above went an hour ago (now() is the transaction's start).
+UPDATE public.workshop_emails SET claimed_at = claimed_at - interval '1 hour';
+
 -- ------------------------------------------------------------ the admin
 
 SELECT set_config('request.jwt.claims',
