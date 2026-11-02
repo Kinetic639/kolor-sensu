@@ -105,7 +105,7 @@ AS $$
   JOIN public.workshop_registrations AS r ON r.id = t.registration_id
   JOIN public.workshops AS w ON w.id = r.workshop_id
   WHERE t.token_hash = extensions.digest(coalesce(p_token, ''), 'sha256');
-$;
+$$;
 
 -- The new person accepts: the seat is theirs, with the rules and the
 -- privacy notice accepted now; their invitation's link is the seat's.
@@ -166,12 +166,12 @@ RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path TO ''
-AS $
+AS $$
 BEGIN
   DELETE FROM public.workshop_transfers AS t WHERE t.registration_id = NEW.id;
   RETURN NULL;
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION private.workshop_seat_left() FROM PUBLIC, anon, authenticated;
 
