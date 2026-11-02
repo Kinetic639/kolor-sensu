@@ -16,7 +16,7 @@ const publicDir = resolve(here, "../../../../apps/web/public");
 const [individual, couples] = sampleServices;
 
 function rule(selector: string) {
-  const start = css.indexOf(`${selector} {`);
+  const start = css.indexOf(`\n  ${selector} {`);
   expect(start, `${selector} is defined`).toBeGreaterThan(-1);
   return css.slice(start, css.indexOf("}", start));
 }

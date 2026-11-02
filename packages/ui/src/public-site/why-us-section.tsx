@@ -4,6 +4,9 @@ import { cn } from "../lib/utils";
 import { OfferTile } from "./offer-tile";
 import { SectionHeader } from "./section-header";
 import { offerPaintAt } from "./service-look";
+import type { WhyUsIcon } from "@repo/contracts/cms";
+import { DEFAULT_WHY_US_ICONS, WhyUsIconMark } from "./why-us-icons";
+import { PaintDropletAccents } from "./paint-droplet-accents";
 
 // Server-safe: "Dlaczego my", under the areas of help. The header and the
 // two to four facts are the CMS's (title and one sentence each); the
@@ -21,6 +24,7 @@ import { offerPaintAt } from "./service-look";
 export interface WhyUsFact {
   title: string;
   text: string;
+  icon?: WhyUsIcon;
 }
 
 export interface WhyUsSectionProps {
@@ -57,7 +61,22 @@ export function WhyUsSection({
             <OfferTile
               title={fact.title}
               description={fact.text}
+              icon={
+                <WhyUsIconMark
+                  name={
+                    fact.icon ??
+                    DEFAULT_WHY_US_ICONS[index % DEFAULT_WHY_US_ICONS.length]!
+                  }
+                />
+              }
+              staggerContent
               paint={offerPaintAt(index)}
+              paintSrc={`/watercolor/why-us-${offerPaintAt(index)}-clean-v2.webp`}
+              paintMaskSrc={`/watercolor/why-us-${offerPaintAt(index)}-base-mask.svg`}
+              paintAccents={
+                <PaintDropletAccents paint={offerPaintAt(index)} seed={index} />
+              }
+              className={`ks-why-us__tile ks-why-us__tile--${index % 2 ? "pink" : "green"}`}
               as="div"
               headingLevel="h3"
               animationPreset="brush-reveal"

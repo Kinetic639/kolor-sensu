@@ -243,10 +243,14 @@ export function createOfferTimeline({
   }
 
   if (content) {
+    const staggered = content.hasAttribute("data-stagger-content");
+    if (staggered) timeline.set(content, { opacity: 1 }, timing.content.at);
     timeline.fromTo(
-      content,
-      { opacity: 0 },
-      { opacity: 1, duration: timing.content.duration, ease: "power2.out" },
+      staggered ? Array.from(content.children) : content,
+      staggered ? { opacity: 0, y: 5 } : { opacity: 0 },
+      staggered
+        ? { opacity: 1, y: 0, duration: 0.3, stagger: 0.09, ease: "power2.out" }
+        : { opacity: 1, duration: timing.content.duration, ease: "power2.out" },
       timing.content.at,
     );
   }

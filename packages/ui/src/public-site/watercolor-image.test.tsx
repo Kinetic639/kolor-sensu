@@ -269,7 +269,7 @@ describe("WatercolorImage", () => {
       if (!/--ks-reveal|animation\b/.test(body)) continue;
       if (context.some((at) => at.startsWith("@keyframes"))) continue;
       expect(selector).toMatch(
-        /\[data-(animation|reduced-motion|reveal|intro)[=\]]|\.ks-thoughts|\.ks-areas|\.ks-steps/,
+        /\[data-(animation|reduced-motion|reveal|intro)[=\]]|\.ks-thoughts|\.ks-areas|\.ks-steps|\.ks-why-us__droplet/,
       );
     }
   });

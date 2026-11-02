@@ -191,6 +191,26 @@ describe("offer reveal timeline", () => {
     timeline.kill();
   });
 
+  it("reveals the icon, title and description in order for opted-in cards", () => {
+    const { layers } = build();
+    layers.content!.setAttribute("data-stagger-content", "true");
+    const children = ["span", "h3", "p"].map((tag) =>
+      layers.content!.appendChild(document.createElement(tag)),
+    );
+    const timeline = createOfferTimeline({ gsap, ...layers, paused: true });
+    timeline.time(offerRevealTiming.content.at + 0.05);
+    expect(Number((children[0] as HTMLElement).style.opacity)).toBeGreaterThan(
+      0,
+    );
+    expect((children[1] as HTMLElement).style.opacity).toBe("0");
+    expect((children[2] as HTMLElement).style.opacity).toBe("0");
+    timeline.progress(1);
+    children.forEach((child) =>
+      expect((child as HTMLElement).style.opacity).toBe("1"),
+    );
+    timeline.kill();
+  });
+
   it("ends with every stroke fully painted and unfiltered", () => {
     const { layers, matte } = build();
     const timeline = createOfferTimeline({

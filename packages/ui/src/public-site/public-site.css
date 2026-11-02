@@ -748,6 +748,79 @@
     position: absolute;
   }
 
+  .ks-why-us__tile .ks-of__ink-text {
+    padding: 0.05em 0.12em;
+    background: color-mix(in oklab, var(--color-surface) 18%, transparent);
+    backdrop-filter: blur(2.5px);
+    border-radius: 0.2em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  .ks-why-us__tile .ks-of__description {
+    color: var(--color-ink);
+  }
+
+  .ks-why-us__droplets {
+    position: absolute;
+    inset: 1.5%;
+    pointer-events: none;
+    color: var(--ks-why-icon-color, var(--color-primary));
+  }
+
+  .ks-why-us__droplet {
+    position: absolute;
+    overflow: hidden;
+    translate: -50% -50%;
+    pointer-events: none;
+    opacity: var(--droplet-opacity, 1);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-why-us__droplet {
+      animation: ks-why-droplets var(--droplet-duration) ease-in-out
+        var(--droplet-delay) infinite alternate;
+    }
+  }
+
+  @keyframes ks-why-droplets {
+    from {
+      transform: translate(
+        calc(var(--droplet-x) * -1),
+        calc(var(--droplet-y) * -1)
+      );
+    }
+    to {
+      transform: translate(var(--droplet-x), var(--droplet-y));
+    }
+  }
+
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    .ks-of[data-animation="brush-reveal"]:not([data-reveal="done"])
+      .ks-why-us__droplet {
+      opacity: 0;
+    }
+
+    .ks-of[data-animation="brush-reveal"][data-reveal="done"]
+      .ks-why-us__droplet {
+      animation:
+        ks-why-droplet-enter 140ms ease-out var(--droplet-enter-delay) both,
+        ks-why-droplets var(--droplet-duration) ease-in-out var(--droplet-delay)
+          infinite alternate;
+    }
+  }
+
+  @keyframes ks-why-droplet-enter {
+    from {
+      opacity: 0;
+      scale: 0.8;
+    }
+    to {
+      opacity: var(--droplet-opacity, 1);
+      scale: 1;
+    }
+  }
+
   /* A tile grown by a long title (taller than 5 : 8) keeps the patch's
      proportions instead of stretching its brushwork (#118). */
   .ks-of__paint-frame img {
@@ -782,6 +855,33 @@
     font-size: clamp(0.9375rem, 11.5cqi, 1.0625rem);
     font-weight: 600;
     line-height: 1.3;
+  }
+
+  .ks-why-us__tile .ks-of__icon {
+    position: relative;
+    isolation: isolate;
+    color: var(--ks-why-icon-color, var(--color-primary));
+  }
+
+  .ks-why-us__tile .ks-of__icon::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: -0.3rem;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--color-surface) 18%, transparent);
+    backdrop-filter: blur(2.5px);
+    mask-image: radial-gradient(ellipse, black 55%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .ks-why-us__tile--pink {
+    --ks-why-icon-color: #a05d66;
+  }
+
+  .ks-why-us__tile .ks-of__icon svg {
+    width: 1.8rem;
+    height: 1.8rem;
   }
 
   /* Ink, not muted grey: this is text on paint (≥ 7:1 on every patch). */
