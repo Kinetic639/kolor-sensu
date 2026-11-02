@@ -18,6 +18,24 @@ import {
 const fact = (title: string) => ({ title, text: `${title}: krótko.` });
 
 describe("Dlaczego my", () => {
+  it("accepts supported icons without requiring them on older facts", () => {
+    const payload = {
+      visible: true,
+      facts: [
+        { ...fact("Superwizja"), icon: "shield-check" },
+        fact("Poufność"),
+      ],
+    };
+    expect(whyUsContentSchema.parse(payload).facts[0]?.icon).toBe(
+      "shield-check",
+    );
+    expect(
+      whyUsContentSchema.safeParse({
+        ...payload,
+        facts: [{ ...fact("Superwizja"), icon: "invalid" }, fact("Poufność")],
+      }).success,
+    ).toBe(false);
+  });
   it("holds two to four facts", () => {
     for (const count of [2, 3, 4]) {
       const facts = Array.from({ length: count }, (_, i) => fact(`F${i}`));
