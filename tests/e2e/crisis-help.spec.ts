@@ -3,7 +3,8 @@ import { expect, test } from "@playwright/test";
 import { webUrl } from "./support/target";
 
 // Help in a crisis: one click from any page (the footer), 112 first on its
-// page, every number dialling, and no axe violations on a phone.
+// page, every number dialling, and no axe violations on a phone. The
+// footer has its own crisis block too, so the checks below look in main.
 
 test.use({ reducedMotion: "reduce", viewport: { width: 390, height: 844 } });
 
@@ -14,6 +15,7 @@ test("every page's footer leads to help in a crisis, which starts with 112", asy
   await page
     .getByRole("contentinfo")
     .getByRole("link", { name: "Pomoc w kryzysie" })
+    .first()
     .click();
   await expect(page).toHaveURL(/\/pomoc-w-kryzysie$/);
   await expect(
@@ -40,7 +42,9 @@ test("the booking wizard ends with help in a crisis (#247)", async ({
   page,
 }) => {
   await page.goto(`${webUrl}/umow-wizyte`);
-  const note = page.getByRole("complementary", { name: "Pomoc w kryzysie" });
+  const note = page
+    .getByRole("main")
+    .getByRole("complementary", { name: "Pomoc w kryzysie" });
   await expect(note.getByRole("link", { name: "112" })).toHaveAttribute(
     "href",
     "tel:112",

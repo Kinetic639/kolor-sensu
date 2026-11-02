@@ -98,7 +98,7 @@ jobs:
       group: e2e-staging
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       E2E_TARGET: staging
       E2E_PAYMENTS: ${{ inputs.payments && '1' || '' }}
