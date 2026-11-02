@@ -5,6 +5,7 @@ import { cn } from "../lib/utils";
 import { CaptionMotion } from "./watercolor-caption-motion";
 import { ParallaxLayer } from "./watercolor-parallax";
 import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
+import type { CircularPaintOptions } from "./circular-paint-matte";
 
 // Server-safe on purpose: no hooks, no browser APIs, no "use client" here.
 // The painted look is a static composition of two layers, so the server
@@ -47,10 +48,16 @@ import { type ReducedMotionMode, WatercolorReveal } from "./watercolor-reveal";
 /** The approved painted backdrop: dusty pink left, sage green right. */
 /** The photo layer's dry-brush mask (public-site.css, .ks-wc__photo). */
 export const photoMaskSrc = "/watercolor/photo-mask.png";
+export const circularPhotoMaskSrc =
+  "/watercolor/circle-concepts/photo-edge-mask-v6.png";
 
 export const defaultWatercolorSrc = "/watercolor/watercolor-background.webp";
 
 export interface WatercolorImageProps {
+  revealDelay?: number;
+  circularPaint?: CircularPaintOptions;
+  /** Circular photos keep a solid centre and a narrow curved brush edge. */
+  shape?: "landscape" | "circle";
   /**
    * Any ordinary rectangular photo, as uploaded. The component crops and
    * masks it; the file itself never needs editing.
@@ -126,6 +133,9 @@ export type WatercolorLook = Pick<
 >;
 
 export function WatercolorImage({
+  revealDelay,
+  circularPaint,
+  shape = "landscape",
   src,
   alt,
   watercolorSrc = defaultWatercolorSrc,
@@ -149,7 +159,7 @@ export function WatercolorImage({
   // fetched from the start. CSS masks are fetched in CORS mode: the preload
   // must be too, or the browser fetches the mask a second time.
   if (priority) {
-    preload(photoMaskSrc, {
+    preload(shape === "circle" ? circularPhotoMaskSrc : photoMaskSrc, {
       as: "image",
       fetchPriority: "high",
       crossOrigin: "anonymous",
@@ -158,7 +168,7 @@ export function WatercolorImage({
   const Root = caption ? "figure" : "div";
   const loading = priority ? undefined : "lazy";
   const rootProps = {
-    className: cn("ks-wc", className),
+    className: cn("ks-wc", shape === "circle" && "ks-wc--circle", className),
     style: {
       ...(aspectRatio && { "--ks-wc-ratio": aspectRatio }),
       ...style,
@@ -218,6 +228,8 @@ export function WatercolorImage({
 
   return animationPreset === "watercolor-reveal" ? (
     <WatercolorReveal
+      delay={revealDelay}
+      circularPaint={circularPaint}
       as={Root}
       reducedMotionMode={reducedMotionMode}
       photoAtOnceOnPhones={priority}

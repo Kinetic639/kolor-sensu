@@ -334,7 +334,7 @@ describe("WatercolorImage reveal styles", () => {
       expect(body).not.toMatch(
         /clip-path|filter|blur|mask-(size|position|composite)|transform|translate|scale|url\(/,
       );
-      if (!/\.ks-wc__(caption|mark)$/.test(selector)) {
+      if (!/\.(ks-wc__(caption|mark)|ks-areas__paint-label)$/.test(selector)) {
         expect(body).not.toContain("opacity");
       }
     }

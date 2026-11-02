@@ -1,0 +1,50 @@
+.preview {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  overflow: auto;
+  overflow-x: clip;
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  padding: 0.8rem clamp(1rem, 3vw, 3rem);
+  background: color-mix(in srgb, var(--color-bg) 94%, transparent);
+  backdrop-filter: blur(12px);
+  font-size: 0.875rem;
+}
+.controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.25rem;
+}
+.controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+.replay {
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+.replay:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 3px;
+}
+:global(body):has(.preview) {
+  overflow: hidden;
+}

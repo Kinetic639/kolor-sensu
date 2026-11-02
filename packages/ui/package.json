@@ -39,6 +39,8 @@
     "./portal-shell": "./src/portal-shell.tsx",
     "./full-bleed": "./src/full-bleed.tsx",
     "./public-site": "./src/public-site/index.ts",
+    "./public-site/watercolor-reveal": "./src/public-site/watercolor-reveal.tsx",
+    "./public-site/support-areas": "./src/public-site/support-areas.tsx",
     "./public-site/compact-booking-calendar": "./src/public-site/compact-booking-calendar.tsx",
     "./public-site/actions": "./src/public-site/actions.tsx",
     "./public-site/cookie-consent": "./src/public-site/cookie-consent.tsx",

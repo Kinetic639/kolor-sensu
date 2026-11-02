@@ -1,6 +1,11 @@
 import type { GsapInstance } from "./lazy-gsap";
 import { paintMatte } from "./watercolor-paint-matte.data";
 import { watercolorSplash } from "./watercolor-splash-matte.data";
+import {
+  circularPaintMap,
+  circularPaintSettings,
+  type CircularPaintOptions,
+} from "./circular-paint-matte";
 
 // The matte of WatercolorImage's entrance animation: the backdrop and the
 // photo are not faded or wiped in. The backdrop is painted in, stroke by
@@ -94,6 +99,7 @@ export const paintMatteUrls = [
 ];
 
 export interface PaintStroke {
+  timing?: StrokeTiming;
   id: string;
   /** The stroke's image, hidden until its brush sets down. */
   group: SVGGElement;
@@ -114,6 +120,7 @@ export interface BackdropMatte extends PaintMatteLayer {
 }
 
 export interface PhotoSplashMatte extends PaintMatteLayer {
+  sharpness?: number;
   /** The time map, filtered by `front`. */
   group: SVGGElement;
   /** Its threshold (the filter's colour matrix). */
@@ -121,6 +128,8 @@ export interface PhotoSplashMatte extends PaintMatteLayer {
 }
 
 export interface PaintMatte {
+  photoTiming?: { at: number; duration: number };
+  captionTiming?: { at: number; duration: number };
   svg: SVGSVGElement;
   backdrop: BackdropMatte;
   photo: PhotoSplashMatte;
@@ -146,7 +155,10 @@ const frontRange = (sharpness: number) => [-1 / sharpness, 1 + 1 / sharpness];
  * Builds the matte (hidden: nothing painted yet) inside `host`. The layers
  * are then masked with `matte.backdrop.url` and `matte.photo.url`.
  */
-export function createPaintMatte(host: Element): PaintMatte {
+export function createPaintMatte(
+  host: Element,
+  circular?: CircularPaintOptions,
+): PaintMatte {
   const document = host.ownerDocument;
   const id = `ks-paint-matte-${++matteCount}`;
   const element = <K extends keyof SVGElementTagNameMap>(
@@ -193,6 +205,26 @@ export function createPaintMatte(host: Element): PaintMatte {
   };
 
   const backdrop = (): BackdropMatte => {
+    if (circular) {
+      const layer = photo("backdrop");
+      return {
+        mask: layer.mask,
+        url: layer.url,
+        strokes: [
+          {
+            id: "circle",
+            group: layer.group,
+            front: layer.front,
+            sharpness: layer.sharpness!,
+            timing: {
+              at: 0,
+              duration: circularPaintSettings(circular).backdropDuration,
+              ease: "none",
+            },
+          },
+        ],
+      };
+    }
     const data = paintMatte.backdrop;
     const { mask, paint, url } = layerMask("backdrop", data.width, data.height);
     const strokes = data.strokes.map((stroke): PaintStroke => {
@@ -250,12 +282,21 @@ export function createPaintMatte(host: Element): PaintMatte {
     return { mask, url, strokes };
   };
 
-  const photo = (): PhotoSplashMatte => {
-    const { width, height, time } = watercolorSplash.photo;
-    const { mask, paint, url } = layerMask("photo", width, height);
+  const photo = (name: "photo" | "backdrop" = "photo"): PhotoSplashMatte => {
+    const { width, height, time } = circular
+      ? {
+          width: 512,
+          height: 512,
+          time: {
+            src: circularPaintMap(circular, name),
+            sharpness: circularPaintSettings(circular).sharpness,
+          },
+        }
+      : watercolorSplash.photo;
+    const { mask, paint, url } = layerMask(name, width, height);
     // The map covers the whole layer, opaque: the threshold alone decides.
     const filter = element("filter", {
-      id: `${id}-photo-front`,
+      id: `${id}-${name}-front`,
       filterUnits: "userSpaceOnUse",
       x: 0,
       y: 0,
@@ -268,6 +309,13 @@ export function createPaintMatte(host: Element): PaintMatte {
       values: paintFront(time.sharpness, frontRange(time.sharpness)[0]!),
     });
     filter.append(front);
+    // Soften only the moving alpha edge, after the time-map threshold.
+    // The existing timeline drops this filter when the layer is complete.
+    if (circular?.variant === "star-trails") {
+      filter.append(
+        element("feGaussianBlur", { stdDeviation: circular.edgeBlur ?? 1.8 }),
+      );
+    }
     defs.append(filter);
     const group = element("g", { filter: `url(#${filter.id})` });
     group.append(
@@ -279,10 +327,29 @@ export function createPaintMatte(host: Element): PaintMatte {
       }),
     );
     paint.append(group);
-    return { mask, url, group, front };
+    return { mask, url, group, front, sharpness: time.sharpness };
   };
 
-  const matte = { svg, backdrop: backdrop(), photo: photo() };
+  const matte: PaintMatte = {
+    svg,
+    backdrop: backdrop(),
+    photo: photo(),
+    ...(circular
+      ? {
+          photoTiming: {
+            at: circularPaintSettings(circular).photoAt,
+            duration: circularPaintSettings(circular).photoDuration,
+          },
+          captionTiming: {
+            at:
+              circularPaintSettings(circular).captionAt ??
+              circularPaintSettings(circular).photoAt +
+                circularPaintSettings(circular).photoDuration,
+            duration: circularPaintSettings(circular).captionDuration ?? 0.05,
+          },
+        }
+      : {}),
+  };
   host.append(svg);
   return matte;
 }
@@ -344,14 +411,15 @@ export function createPaintTimeline(
     defaults: { lazy: false },
   });
   for (const stroke of matte.backdrop.strokes) {
-    const timing = strokeTiming(stroke.id);
+    const timing = stroke.timing ?? strokeTiming(stroke.id);
     timeline.add(strokeTimeline(gsap, stroke, timing), timing.at);
   }
 
   if (photo) {
-    const { sharpness } = watercolorSplash.photo.time;
+    const sharpness =
+      matte.photo.sharpness ?? watercolorSplash.photo.time.sharpness;
     const [from, to] = frontRange(sharpness);
-    const { at, duration } = photoSplashTiming;
+    const { at, duration } = matte.photoTiming ?? photoSplashTiming;
     timeline.fromTo(
       matte.photo.front,
       { attr: { values: paintFront(sharpness, from!) } },
@@ -368,11 +436,12 @@ export function createPaintTimeline(
   }
 
   if (caption) {
+    const timing = matte.captionTiming ?? captionTiming;
     timeline.fromTo(
       caption,
       { opacity: 0 },
-      { opacity: 1, duration: captionTiming.duration, ease: "power1.out" },
-      captionTiming.at,
+      { opacity: 1, duration: timing.duration, ease: "power1.out" },
+      timing.at,
     );
   }
   return timeline;

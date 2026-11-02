@@ -1,0 +1,82 @@
+.page {
+  max-width: 80rem;
+  margin: auto;
+  padding: 3rem var(--spacing-gutter) 6rem;
+  overflow-x: clip;
+}
+.header,
+.section {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+.header {
+  margin-bottom: 4.5rem;
+}
+.header h1,
+.section h2,
+.item h2 {
+  font-family: var(--font-display);
+  color: var(--color-ink);
+}
+.header h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.2;
+}
+.header > p,
+.section > p {
+  max-width: 42rem;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+}
+.eyebrow {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-primary);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4rem;
+  width: 100%;
+  padding-inline: 1.5rem;
+}
+.spiralGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5rem;
+  max-width: 62rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+.item {
+  display: grid;
+  gap: 2rem;
+  min-width: 0;
+  text-align: center;
+}
+.item h2,
+.section h2 {
+  font-size: 1.5rem;
+}
+.section {
+  margin-top: 5rem;
+}
+.section .grid {
+  margin-top: 3rem;
+}
+.edge {
+  width: min(100%, 35rem);
+  margin-top: 1.5rem;
+}
+@media (max-width: 63.99rem) {
+  .grid,
+  .spiralGrid {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 27rem;
+    margin-inline: auto;
+    gap: 4rem;
+  }
+}

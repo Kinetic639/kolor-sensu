@@ -13,6 +13,7 @@ describe("WatercolorImage on the server", () => {
   it("has no client-only code", () => {
     for (const file of [
       "watercolor-image.tsx",
+      "watercolor-circle.tsx",
       "botanical-accent.tsx",
       "typography.tsx",
       "actions.tsx",

@@ -14,13 +14,26 @@
 
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
-import { type CSSProperties, type ReactNode, useId, useState } from "react";
+import {
+  type CSSProperties,
+  type ReactNode,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "../lib/utils";
 import { HanddrawnLink } from "./handdrawn-link";
 import { PageLink } from "./page-link";
 import { EditorialHeading, SectionEyebrow } from "./typography";
 import type { SectionHeaderContent } from "@repo/contracts/section-header";
 import { SectionHeader } from "./section-header";
+import {
+  CircularWatercolorImage,
+  circularPaintAppearance,
+} from "./watercolor-circle";
+import { WatercolorReveal } from "./watercolor-reveal";
 
 export interface SupportAreaItem {
   id: string;
@@ -55,7 +68,7 @@ export interface SupportAreasProps {
  */
 export const SUPPORT_AREA_SLOTS = [
   { x: 76, y: 20, size: 8, depth: "near" },
-  { x: 23, y: 30, size: 9.5, depth: "far" },
+  { x: 23, y: 23, size: 9.5, depth: "far" },
   { x: 84, y: 56, size: 6.5, depth: "far" },
   { x: 15, y: 64, size: 7.5, depth: "near" },
   { x: 72, y: 86, size: 9, depth: "near" },
@@ -65,6 +78,14 @@ export const SUPPORT_AREA_SLOTS = [
   { x: 92, y: 80, size: 5.5, depth: "far" },
   { x: 10, y: 88, size: 5, depth: "near" },
 ] as const;
+
+// Stable per CMS item: irregular starts without server/client randomness.
+function revealDelay(id: string) {
+  let seed = 2166136261;
+  for (const character of id)
+    seed = Math.imul(seed ^ character.charCodeAt(0), 16777619) >>> 0;
+  return 0.04 + (seed % 261) / 1000;
+}
 
 export function SupportAreas({
   header,
@@ -77,7 +98,71 @@ export function SupportAreas({
   className,
 }: SupportAreasProps) {
   const headingId = useId();
+  const stageRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);
+  const [paintAngles, setPaintAngles] = useState<number[]>([]);
+  useLayoutEffect(() => {
+    const count = areas.length;
+    if (!count) return;
+    const values = crypto.getRandomValues(new Uint32Array(count * 2));
+    // Spread random angles across the entire turn, then shuffle assignments.
+    // The server's stable appearance is replaced before the first paint.
+    const angles = Array.from(
+      { length: count },
+      (_, index) => ((index + values[index]! / 4294967296) * 360) / count,
+    );
+    for (let index = count - 1; index > 0; index--) {
+      const target = values[count + index]! % (index + 1);
+      [angles[index], angles[target]] = [angles[target]!, angles[index]!];
+    }
+    setPaintAngles(angles);
+  }, [areas]);
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage || !window.matchMedia) return;
+    const enabled = window.matchMedia(
+      "(min-width: 64rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)",
+    );
+    let frame = 0;
+    let x = 0;
+    let y = 0;
+    const paint = () => {
+      frame = 0;
+      stage.style.setProperty("--ks-pointer-x", String(x));
+      stage.style.setProperty("--ks-pointer-y", String(y));
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(paint);
+    };
+    const reset = () => {
+      x = y = 0;
+      schedule();
+    };
+    const move = (event: PointerEvent) => {
+      if (!enabled.matches || event.pointerType === "touch") return;
+      const bounds = stage.getBoundingClientRect();
+      x = Math.max(
+        -1,
+        Math.min(1, ((event.clientX - bounds.left) / bounds.width - 0.5) * 2),
+      );
+      y = Math.max(
+        -1,
+        Math.min(1, ((event.clientY - bounds.top) / bounds.height - 0.5) * 2),
+      );
+      schedule();
+    };
+    stage.addEventListener("pointermove", move, { passive: true });
+    stage.addEventListener("pointerleave", reset);
+    enabled.addEventListener("change", reset);
+    return () => {
+      cancelAnimationFrame(frame);
+      stage.removeEventListener("pointermove", move);
+      stage.removeEventListener("pointerleave", reset);
+      enabled.removeEventListener("change", reset);
+      stage.style.removeProperty("--ks-pointer-x");
+      stage.style.removeProperty("--ks-pointer-y");
+    };
+  }, [areas.length]);
   const area = areas[selected] ?? areas[0];
   if (!area) return null;
 
@@ -105,34 +190,52 @@ export function SupportAreas({
           </header>
         )}
 
-        <div className="ks-areas__stage">
+        <div ref={stageRef} className="ks-areas__stage">
           <PageLink href={area.href} className="ks-areas__center">
             <span className="ks-areas__pictures">
               {areas.map((one, index) => {
                 const shown = index === selected;
                 return one.image ? (
-                  <Image
+                  <span
                     key={one.id}
-                    src={one.image.src}
-                    alt={shown ? one.image.alt : ""}
                     aria-hidden={shown ? undefined : true}
                     data-shown={shown || undefined}
                     className="ks-areas__picture"
-                    fill
-                    sizes="(min-width: 64rem) 32rem, 90vw"
-                  />
+                  >
+                    <CircularWatercolorImage
+                      src={one.image.src}
+                      alt={shown ? one.image.alt : ""}
+                      variationKey={one.id}
+                      rotation={paintAngles[index]}
+                      circularPaint={{
+                        variant: "star-trails",
+                        edgeBlur: 0.8,
+                        direction: index % 2 ? "counterclockwise" : "clockwise",
+                      }}
+                      animationPreset={
+                        index === 0 ? "watercolor-reveal" : "none"
+                      }
+                      sizes="(min-width: 64rem) 32rem, 90vw"
+                    />
+                  </span>
                 ) : (
                   <span
                     key={one.id}
                     aria-hidden="true"
                     data-shown={shown || undefined}
-                    className="ks-areas__picture ks-areas__paint"
-                    data-paint={index % 2 === 0 ? "sage" : "blush"}
-                  />
+                    className="ks-areas__picture"
+                  >
+                    <PaintedAreaCircle
+                      index={index}
+                      variationKey={one.id}
+                      rotation={paintAngles[index]}
+                      animate={index === 0}
+                      edgeBlur={0.8}
+                    />
+                  </span>
                 );
               })}
             </span>
-            <span className="ks-areas__ring" aria-hidden="true" />
             <span
               key={area.id}
               className="ks-areas__text"
@@ -147,6 +250,12 @@ export function SupportAreas({
             </span>
           </PageLink>
 
+          {cta ? (
+            <HanddrawnLink href={cta.href} className="ks-areas__cta">
+              {cta.label}
+            </HanddrawnLink>
+          ) : null}
+
           <ul className="ks-areas__orbit">
             {areas.map((one, index) => {
               const slot =
@@ -156,11 +265,13 @@ export function SupportAreas({
                   key={one.id}
                   className="ks-areas__item"
                   data-depth={slot.depth}
+                  data-photo={one.image ? true : undefined}
                   style={
                     {
                       "--ks-area-x": `${slot.x}%`,
                       "--ks-area-y": `${slot.y}%`,
                       "--ks-area-size": `${slot.size}rem`,
+                      "--ks-pointer-distance": `${(6 + (index % 4) + (slot.depth === "far" ? 3 : 0)) / 4}px`,
                     } as CSSProperties
                   }
                 >
@@ -174,20 +285,53 @@ export function SupportAreas({
                     onClick={() => setSelected(index)}
                   >
                     {one.image ? (
-                      <Image
-                        src={one.image.src}
-                        alt=""
-                        fill
-                        sizes="10rem"
-                        className="ks-areas__dot-picture"
-                      />
+                      <>
+                        <CircularWatercolorImage
+                          src={one.image.src}
+                          alt=""
+                          variationKey={one.id}
+                          rotation={paintAngles[index]}
+                          circularPaint={{
+                            variant: "star-trails",
+                            direction:
+                              index % 2 ? "counterclockwise" : "clockwise",
+                          }}
+                          animationPreset="watercolor-reveal"
+                          revealDelay={revealDelay(one.id)}
+                          sizes="10rem"
+                          className="ks-areas__dot-picture"
+                          mark={
+                            <span className="ks-areas__photo-caption">
+                              <svg
+                                className="ks-areas__caption-paper"
+                                viewBox="0 0 200 76"
+                                preserveAspectRatio="none"
+                                aria-hidden="true"
+                                focusable="false"
+                              >
+                                <path
+                                  d="M10 6 Q91 2 187 6 Q197 7 196 18 L197 60 Q198 70 187 70 Q98 74 12 70 Q3 69 5 58 L3 17 Q2 8 10 6 Z"
+                                  fill="var(--color-surface)"
+                                  stroke="currentColor"
+                                  strokeWidth="0.8"
+                                  vectorEffect="non-scaling-stroke"
+                                />
+                              </svg>
+                              <span className="ks-areas__caption-text">
+                                {one.title}
+                              </span>
+                            </span>
+                          }
+                        />
+                      </>
                     ) : (
-                      <span
-                        className="ks-areas__paint ks-areas__dot-paint"
-                        data-paint={index % 2 === 0 ? "sage" : "blush"}
-                      >
-                        <span className="ks-areas__dot-label">{one.title}</span>
-                      </span>
+                      <PaintedAreaCircle
+                        index={index}
+                        variationKey={one.id}
+                        rotation={paintAngles[index]}
+                        label={one.title}
+                        delay={revealDelay(one.id)}
+                      />
                     )}
                   </button>
                 </li>
@@ -195,13 +339,69 @@ export function SupportAreas({
             })}
           </ul>
         </div>
-
-        {cta ? (
-          <HanddrawnLink href={cta.href} className="justify-self-center">
-            {cta.label}
-          </HanddrawnLink>
-        ) : null}
       </div>
     </section>
+  );
+}
+
+/** A photo-free composition uses the same paint matte and reveal lifecycle. */
+function PaintedAreaCircle({
+  index,
+  variationKey,
+  rotation,
+  label,
+  animate = true,
+  delay = 0,
+  edgeBlur,
+}: {
+  index: number;
+  variationKey: string;
+  rotation?: number;
+  label?: string;
+  animate?: boolean;
+  delay?: number;
+  edgeBlur?: number;
+}) {
+  const className = "ks-wc ks-wc--circle ks-areas__paint-circle";
+  const appearance = circularPaintAppearance(variationKey);
+  const style = {
+    "--ks-circle-rotation": `${rotation ?? appearance.rotation}deg`,
+  } as CSSProperties;
+  const layers = (
+    <>
+      <div className="ks-wc__backdrop" aria-hidden="true">
+        <Image
+          src={`/watercolor/circle-concepts/painted-circle-0${appearance.variant}.webp`}
+          alt=""
+          fill
+          sizes="(min-width: 64rem) 10rem, 5rem"
+        />
+      </div>
+      {label ? (
+        <span className="ks-areas__dot-label ks-areas__paint-label">
+          {label}
+        </span>
+      ) : null}
+    </>
+  );
+  return animate ? (
+    <WatercolorReveal
+      as="div"
+      reducedMotionMode="static"
+      delay={delay}
+      className={className}
+      style={style}
+      circularPaint={{
+        variant: "star-trails",
+        edgeBlur,
+        direction: index % 2 ? "counterclockwise" : "clockwise",
+      }}
+    >
+      {layers}
+    </WatercolorReveal>
+  ) : (
+    <div className={className} style={style}>
+      {layers}
+    </div>
   );
 }
