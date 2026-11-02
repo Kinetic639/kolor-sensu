@@ -287,6 +287,7 @@ DO $$
 DECLARE
   v_cancel record;
   v_reg record;
+  v_invite text;
 BEGIN
   -- J: Ola cancels 30 days before: a full refund; Ewa is offered the seat.
   SELECT * INTO v_cancel FROM public.cancel_workshop_registration((SELECT token FROM tokens WHERE name = 'r2'));
@@ -315,15 +316,18 @@ BEGIN
     RAISE EXCEPTION 'K: the minimum did not confirm the workshop';
   END IF;
 
-  -- L: Anna passes her seat to Basia, but not to someone registered.
-  IF pg_temp.hint_of(format('SELECT public.transfer_workshop_seat(%L, %L, %L, NULL)',
-      (SELECT token FROM tokens WHERE name = 'r1'), 'Ewa', 'ewa@example.invalid')) <> 'already_registered' THEN
+  -- L: Anna passes her seat to Basia, but not to someone registered;
+  -- it is Basia's once she accepts (20261102090000), her link the seat's.
+  IF pg_temp.hint_of(format('SELECT public.transfer_workshop_seat(%L, %L, %L, %L, NULL)',
+      (SELECT token FROM tokens WHERE name = 'r1'), 'Ewa', 'Nowak', 'ewa@example.invalid')) <> 'already_registered' THEN
     RAISE EXCEPTION 'L: a seat went to someone already registered';
   END IF;
-  PERFORM public.transfer_workshop_seat((SELECT token FROM tokens WHERE name = 'r1'), 'Basia', 'basia@example.invalid', NULL);
-  IF (SELECT client_email FROM public.get_workshop_registration((SELECT token FROM tokens WHERE name = 'r1'))) <> 'basia@example.invalid' THEN
+  v_invite := public.transfer_workshop_seat((SELECT token FROM tokens WHERE name = 'r1'), 'Basia', 'Kowalska', 'basia@example.invalid', NULL);
+  PERFORM public.accept_workshop_transfer(v_invite, true, true);
+  IF (SELECT client_email FROM public.get_workshop_registration(v_invite)) <> 'basia@example.invalid' THEN
     RAISE EXCEPTION 'L: the seat was not passed on';
   END IF;
+  UPDATE tokens SET token = v_invite WHERE name = 'r1';
 
   -- M: fewer seats than people registered is refused.
   IF pg_temp.hint_of($sql$UPDATE public.workshops SET capacity = 1 WHERE slug = 'ws-reg-main'$sql$) <> 'capacity_below_taken' THEN

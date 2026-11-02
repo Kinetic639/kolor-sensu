@@ -583,7 +583,9 @@ export type WorkshopEmailKind =
   | "rescheduled"
   | "refunded"
   /** A payment too late for its seat, given back (#196). */
-  | "seat_lost";
+  | "seat_lost"
+  /** Someone else leads the workshop now: anyone may leave, refunded. */
+  | "leader_changed";
 
 export interface ClaimedWorkshopEmail {
   reference: string;
@@ -782,13 +784,17 @@ export async function workshopRegistrationId(
   return data?.id ?? null;
 }
 
-/** The participant passes the seat on (no refund). */
+/**
+ * The participant offers the seat to someone else (no refund): the
+ * invitation's token, for its e-mail. The seat stays theirs until the new
+ * person accepts the rules.
+ */
 export async function transferWorkshopSeat(
   secretClient: Client,
   token: string,
   person: { firstName: string; lastName: string; email: string; phone: string },
-) {
-  const { error } = await secretClient.rpc("transfer_workshop_seat", {
+): Promise<string> {
+  const { data, error } = await secretClient.rpc("transfer_workshop_seat", {
     p_access_token: token,
     p_first_name: person.firstName,
     p_last_name: person.lastName,
@@ -796,4 +802,68 @@ export async function transferWorkshopSeat(
     p_phone: person.phone,
   });
   if (error) throw refusal(error);
+  return data;
+}
+
+export interface WorkshopTransfer {
+  reference: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  /** Who offers the seat. */
+  fromName: string | null;
+  workshopTitle: string;
+  workshopSlug: string;
+  modality: WorkshopModality;
+  startsAt: string;
+  endsAt: string;
+  /** Whether it can still be accepted (the seat booked, not started). */
+  open: boolean;
+}
+
+/** An invitation to take a seat, by its token; null for a wrong one. */
+export async function getWorkshopTransfer(
+  secretClient: Client,
+  token: string,
+): Promise<WorkshopTransfer | null> {
+  const { data, error } = await secretClient.rpc("workshop_transfer", {
+    p_token: token,
+  });
+  if (error) throw error;
+  const row = data?.[0];
+  return row
+    ? {
+        reference: row.reference,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        email: row.email,
+        fromName: row.from_name,
+        workshopTitle: row.workshop_title,
+        workshopSlug: row.workshop_slug,
+        modality: row.modality,
+        startsAt: row.starts_at,
+        endsAt: row.ends_at,
+        open: row.open,
+      }
+    : null;
+}
+
+/**
+ * The new person accepts the rules and the privacy notice: the seat is
+ * theirs, and the invitation's token is the seat's link.
+ */
+export async function acceptWorkshopTransfer(
+  secretClient: Client,
+  token: string,
+  consents: { terms: boolean; privacy: boolean },
+): Promise<{ reference: string; status: WorkshopRegistrationStatus }> {
+  const { data, error } = await secretClient.rpc("accept_workshop_transfer", {
+    p_token: token,
+    p_terms: consents.terms,
+    p_privacy: consents.privacy,
+  });
+  if (error) throw refusal(error);
+  const row = data?.[0];
+  if (!row) throw new WorkshopError("not_found", "No such invitation");
+  return { reference: row.reference, status: row.status };
 }

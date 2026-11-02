@@ -342,6 +342,8 @@ export interface WorkshopParticipant {
   forgottenAt: string | null;
   /** When an e-mail to them bounced (until the address changes). */
   emailBouncedAt: string | null;
+  /** A card payment's dispute (chargeback): Stripe's state, or null. */
+  paymentDisputeStatus: string | null;
 }
 
 /**
@@ -355,7 +357,7 @@ export async function listWorkshopParticipants(
   const { data, error } = await client
     .from("workshop_registrations")
     .select(
-      "id, reference, status, booked_by, client_name, client_email, client_phone, client_notes, price_minor, paid_minor, refund_due_minor, refunded_minor, paid_outside, payment_due_at, offer_expires_at, hold_expires_at, waitlisted_at, attended, cancelled_by, cancelled_at, created_at, forgotten_at, email_bounced_at",
+      "id, reference, status, booked_by, client_name, client_email, client_phone, client_notes, price_minor, paid_minor, refund_due_minor, refunded_minor, paid_outside, payment_due_at, offer_expires_at, hold_expires_at, waitlisted_at, attended, cancelled_by, cancelled_at, created_at, forgotten_at, email_bounced_at, payment_dispute_status",
     )
     .eq("workshop_id", workshopId)
     .order("created_at");
@@ -386,6 +388,7 @@ export async function listWorkshopParticipants(
       createdAt: row.created_at,
       forgottenAt: row.forgotten_at,
       emailBouncedAt: row.email_bounced_at,
+      paymentDisputeStatus: row.payment_dispute_status,
     }));
 }
 

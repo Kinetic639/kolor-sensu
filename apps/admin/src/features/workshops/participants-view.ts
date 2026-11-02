@@ -101,8 +101,24 @@ export function canResendLink(
   );
 }
 
+/**
+ * A cell as text: quoted where needed, and never a formula (a leading =,
+ * +, -, @, tab or return gets an apostrophe), but a phone number stays as
+ * it is (Warsztat · 10, card 7).
+ */
 function csvCell(value: string) {
-  return /[";\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+  const text =
+    /^[=+\-@\t\r]/.test(value) && !/^\+?[\d\s()-]+$/.test(value)
+      ? `'${value}`
+      : value;
+  return /[";\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+/** A disputed card payment (chargeback), unless the centre won it. */
+export function disputeLabel(participant: WorkshopParticipant) {
+  const status = participant.paymentDisputeStatus;
+  if (!status || status === "won") return null;
+  return status === "lost" ? "Spór przegrany" : "Płatność sporna";
 }
 
 /** The list for a spreadsheet: one row each, semicolons (as Excel in Polish reads). */

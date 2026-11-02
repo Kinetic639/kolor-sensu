@@ -2177,6 +2177,39 @@ export type Database = {
           },
         ];
       };
+      workshop_transfers: {
+        Row: {
+          id: string;
+          registration_id: string;
+          first_name: string;
+          last_name: string;
+          email: string;
+          phone: string | null;
+          token_hash: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          registration_id: string;
+          first_name: string;
+          last_name: string;
+          email: string;
+          phone?: string | null;
+          token_hash: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          registration_id?: string;
+          first_name?: string;
+          last_name?: string;
+          email?: string;
+          phone?: string | null;
+          token_hash?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       workshop_registrations: {
         Row: {
           discount_code_id: string | null;
@@ -2194,6 +2227,9 @@ export type Database = {
           client_notes: string | null;
           client_phone: string | null;
           email_bounced_at: string | null;
+          leader_changed_at: string | null;
+          payment_disputed_at: string | null;
+          payment_dispute_status: string | null;
           confirmed_at: string | null;
           created_at: string;
           currency_code: string;
@@ -2231,6 +2267,9 @@ export type Database = {
           client_notes?: string | null;
           client_phone?: string | null;
           email_bounced_at?: string | null;
+          leader_changed_at?: string | null;
+          payment_disputed_at?: string | null;
+          payment_dispute_status?: string | null;
           confirmed_at?: string | null;
           created_at?: string;
           currency_code: string;
@@ -2268,6 +2307,9 @@ export type Database = {
           client_notes?: string | null;
           client_phone?: string | null;
           email_bounced_at?: string | null;
+          leader_changed_at?: string | null;
+          payment_disputed_at?: string | null;
+          payment_dispute_status?: string | null;
           confirmed_at?: string | null;
           created_at?: string;
           currency_code?: string;
@@ -3010,7 +3052,30 @@ export type Database = {
           p_email: string;
           p_phone: string | null;
         };
-        Returns: undefined;
+        Returns: string;
+      };
+      workshop_transfer: {
+        Args: { p_token: string };
+        Returns: {
+          reference: string;
+          first_name: string;
+          last_name: string;
+          email: string;
+          from_name: string | null;
+          workshop_title: string;
+          workshop_slug: string;
+          modality: Database["public"]["Enums"]["workshop_modality"];
+          starts_at: string;
+          ends_at: string;
+          open: boolean;
+        }[];
+      };
+      accept_workshop_transfer: {
+        Args: { p_token: string; p_terms: boolean; p_privacy: boolean };
+        Returns: {
+          reference: string;
+          status: Database["public"]["Enums"]["workshop_registration_status"];
+        }[];
       };
       run_workshop_jobs: {
         Args: Record<PropertyKey, never>;

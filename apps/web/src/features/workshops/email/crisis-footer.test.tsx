@@ -8,7 +8,8 @@ import { ConfirmationEmail } from "@/features/booking/email/confirmation-email";
 import { workshopEmailContent } from "./content";
 
 // Every e-mail about a workshop ends with help in a crisis: 112 and the
-// site's page about it (Warsztat · 6, card 7), as the visits' do.
+// site's page about it (Warsztat · 6, card 7), as the visits' do; what a
+// guest typed shows as text, never as markup (Warsztat · 10, card 7).
 
 const email: ClaimedWorkshopEmail = {
   reference: "W2611-004",
@@ -51,6 +52,7 @@ const KINDS: WorkshopEmailKind[] = [
   "rescheduled",
   "refunded",
   "seat_lost",
+  "leader_changed",
 ];
 
 describe("a workshop's e-mails, at their foot", () => {
@@ -67,4 +69,21 @@ describe("a workshop's e-mails, at their foot", () => {
       expect(html).toContain('href="https://kolorsensu.pl/pomoc-w-kryzysie"');
     },
   );
+});
+
+describe("what a guest typed, in an e-mail", () => {
+  it("shows as text, not as markup", async () => {
+    const content = workshopEmailContent(
+      "confirmation",
+      { ...email, clientName: '<b onmouseover="x()">Ola</b>' },
+      {
+        siteUrl: "https://kolorsensu.pl",
+        timeZone: "Europe/Warsaw",
+        contact: {},
+      },
+    );
+    const html = await render(<ConfirmationEmail content={content} />);
+    expect(html).not.toContain("<b onmouseover");
+    expect(html).toContain("&lt;b");
+  });
 });
