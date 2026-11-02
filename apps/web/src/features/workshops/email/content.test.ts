@@ -1,6 +1,10 @@
 import type { ClaimedWorkshopEmail } from "@repo/supabase/workshops";
 import { describe, expect, it } from "vitest";
-import { workshopEmailContent } from "./content";
+import {
+  workshopEmailContent,
+  workshopTransferContent,
+  workshopTransferUrl,
+} from "./content";
 
 const email: ClaimedWorkshopEmail = {
   reference: "W2611-004",
@@ -188,5 +192,74 @@ describe("a workshop's e-mails", () => {
     const content = workshopEmailContent("rescheduled", email, options);
     expect(content.ics).toContain("SEQUENCE:1");
     expect(content.intro).toContain("pełnym zwrotem");
+  });
+});
+
+describe("a workshop's e-mails, columns 8 to 10", () => {
+  it("tell of a new leader: anyone may leave, with a full refund (Warsztat · 9, card 5)", () => {
+    const content = workshopEmailContent(
+      "leader_changed",
+      { ...email, waitlistPosition: null, offerExpiresAt: null },
+      options,
+    );
+    expect(content.subject).toBe("Zmiana prowadzenia warsztatu – Uważność");
+    expect(content.intro).toContain("oddamy całą wpłatę");
+    expect(content.rows).toContainEqual(["Prowadzi", email.leaders]);
+    const waiting = workshopEmailContent(
+      "leader_changed",
+      { ...email, waitlistPosition: 2 },
+      options,
+    );
+    expect(waiting.intro).toContain("zostać na liście rezerwowej");
+  });
+
+  it("let whoever did not sign up walk away when nothing is paid (Warsztat · 10, card 6)", () => {
+    const notYou = "Jeśli to nie Ty zapisujesz się na ten warsztat";
+    const unpaid = { ...email, paidMinor: 0 };
+    for (const kind of ["reserved", "waitlisted", "offered"] as const)
+      expect(workshopEmailContent(kind, unpaid, options).intro).toContain(
+        notYou,
+      );
+    expect(
+      workshopEmailContent("confirmation", unpaid, options).intro,
+    ).toContain(notYou);
+    expect(
+      workshopEmailContent(
+        "confirmation",
+        { ...email, paidMinor: 15000 },
+        options,
+      ).intro,
+    ).not.toContain(notYou);
+  });
+
+  it("invite whoever a seat is passed on to, to accept the rules first (Warsztat · 8, card 4)", () => {
+    const content = workshopTransferContent(
+      {
+        reference: "W2611-004",
+        firstName: "Ewa",
+        lastName: "Nowak",
+        email: "ewa@example.invalid",
+        fromName: "Ola Lis",
+        workshopTitle: "Uważność",
+        workshopSlug: "uwaznosc",
+        modality: "online",
+        startsAt: "2030-11-12T16:00:00Z",
+        endsAt: "2030-11-12T18:00:00Z",
+        open: true,
+      },
+      "invite-token",
+      options,
+    );
+    expect(content.subject).toBe("Ola Lis przekazuje Ci miejsce – Uważność");
+    expect(content.greeting).toBe("Dzień dobry, Ewa Nowak!");
+    expect(content.intro).toContain("zaakceptuj przed warsztatem regulamin");
+    expect(content.intro).toContain("miejsce zostaje przy osobie");
+    expect(content.manageUrl).toBe(
+      workshopTransferUrl(options.siteUrl, "invite-token"),
+    );
+    expect(content.manageUrl).toMatch(
+      /\/warsztaty\/przekazanie\/invite-token$/,
+    );
+    expect(content.buttonLabel).toBe("Przyjmij miejsce");
   });
 });

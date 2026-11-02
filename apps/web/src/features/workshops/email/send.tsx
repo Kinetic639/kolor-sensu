@@ -1,6 +1,7 @@
 import { render } from "@react-email/components";
 import {
   claimWorkshopEmail,
+  getWorkshopTransfer,
   markWorkshopEmailSent,
   releaseWorkshopEmail,
   type ClaimedWorkshopEmail,
@@ -14,7 +15,11 @@ import { emailSender, sendEmail } from "@/lib/email";
 import { getBookingWindow } from "@/lib/public-data";
 import { getSiteFrame } from "@/lib/site-frame";
 import { createSecretClient } from "@/lib/supabase/secret";
-import { WITH_CALENDAR, workshopEmailContent } from "./content";
+import {
+  WITH_CALENDAR,
+  workshopEmailContent,
+  workshopTransferContent,
+} from "./content";
 
 // Sending a workshop's e-mails (server only): claimed in the database
 // first, so the webhook and the return page never both send one; Resend's
@@ -118,5 +123,38 @@ export async function claimWorkshopEmailLink(
   } catch (error) {
     console.error(`[workshops] ${kind} e-mail ${reference}:`, error);
     return null;
+  }
+}
+
+/**
+ * The invitation to take a passed-on seat, to the new person (not claimed:
+ * each offer is its own, and Resend's key keeps a retry to one). Never
+ * throws.
+ */
+export async function sendWorkshopTransferInvite(
+  token: string,
+): Promise<"sent" | "skipped" | "failed"> {
+  try {
+    const invite = await getWorkshopTransfer(createSecretClient(), token);
+    if (!invite?.open) return "skipped";
+    const options = await basics();
+    const content = workshopTransferContent(invite, token, options);
+    await sendEmail(
+      {
+        from: options.from,
+        to: invite.email,
+        subject: content.subject,
+        html: await render(
+          <ConfirmationEmail company={options.company} content={content} />,
+        ),
+        text: withCompany(content.text, options.company),
+        attachments: [],
+      },
+      `workshop-transfer:${invite.reference}:${token.slice(0, 16)}`,
+    );
+    return "sent";
+  } catch (error) {
+    console.error("[workshops] the invitation to a seat failed:", error);
+    return "failed";
   }
 }

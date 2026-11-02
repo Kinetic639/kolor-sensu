@@ -1,8 +1,8 @@
 "use server";
 
 import {
+  acceptWorkshopTransfer,
   cancelWorkshopRegistration,
-  getWorkshopRegistration,
   transferWorkshopSeat,
   WorkshopError,
   workshopRegistrationId,
@@ -11,14 +11,15 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { createSecretClient } from "@/lib/supabase/secret";
-import { sendWorkshopEmail } from "./email/send";
+import { sendWorkshopEmail, sendWorkshopTransferInvite } from "./email/send";
 import { refundRegistration } from "./refunds";
 
 // On a registration's own page (its e-mailed link; docs/product/
 // workshops-plan.md, PR 5): giving the seat (or the waitlist place) up,
 // refunded by the rules (in full until seven days before or after a new
-// date; later once the waitlist takes the seat), and passing it on to
-// someone else. The rules are the database's; the money goes back here.
+// date or leader; later once the waitlist takes the seat), and passing it
+// on to someone else, who takes it by accepting the rules from their own
+// link. The rules are the database's; the money goes back here.
 
 const TOKEN = /^[A-Za-z0-9_-]{20,100}$/;
 
@@ -81,7 +82,7 @@ const TRANSFER_PROBLEMS: Record<string, string> = {
   too_late: "Warsztat już się zaczął.",
 };
 
-/** "Przekaż miejsce": someone else takes the seat; they get its e-mails. */
+/** "Przekaż miejsce": the seat offered to someone else, by e-mail. */
 export async function transferMySeatAction(
   _previous: TransferState,
   formData: FormData,
@@ -99,9 +100,9 @@ export async function transferMySeatAction(
     !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(person.email)
   )
     return { status: "invalid", message: TRANSFER_PROBLEMS.invalid_details! };
-  const db = createSecretClient();
+  let invite: string;
   try {
-    await transferWorkshopSeat(db, token, person);
+    invite = await transferWorkshopSeat(createSecretClient(), token, person);
   } catch (error) {
     if (error instanceof WorkshopError)
       return {
@@ -112,11 +113,48 @@ export async function transferMySeatAction(
       };
     throw error;
   }
-  const registration = await getWorkshopRegistration(db, token);
-  if (registration) {
-    const kind =
-      registration.status === "confirmed" ? "confirmation" : "reserved";
-    after(() => sendWorkshopEmail(registration.reference, kind));
-  }
+  after(() => sendWorkshopTransferInvite(invite));
   redirect(page(token, "zmiana=przekazany"));
+}
+
+export type AcceptState =
+  { status: "idle" } | { status: "invalid"; message: string };
+
+const ACCEPT_PROBLEMS: Record<string, string> = {
+  consent_required:
+    "Zaznacz akceptację regulaminu i zasad przetwarzania danych.",
+  already_registered: "Ten adres e-mail jest już zapisany na ten warsztat.",
+  not_transferable: "Tego miejsca nie można już przejąć.",
+  not_found: "To zaproszenie jest już nieaktualne.",
+  too_late: "Warsztat już się zaczął.",
+};
+
+/**
+ * "Przyjmuję miejsce": the new person accepts the rules; the seat is
+ * theirs, its page by the same link, its e-mail to them.
+ */
+export async function acceptSeatAction(
+  _previous: AcceptState,
+  formData: FormData,
+): Promise<AcceptState> {
+  const token = tokenOf(formData);
+  let accepted;
+  try {
+    accepted = await acceptWorkshopTransfer(createSecretClient(), token, {
+      terms: formData.get("terms") === "on",
+      privacy: formData.get("privacy") === "on",
+    });
+  } catch (error) {
+    if (error instanceof WorkshopError)
+      return {
+        status: "invalid",
+        message:
+          ACCEPT_PROBLEMS[error.code] ??
+          "Nie udało się przyjąć miejsca. Spróbuj ponownie.",
+      };
+    throw error;
+  }
+  const kind = accepted.status === "confirmed" ? "confirmation" : "reserved";
+  after(() => sendWorkshopEmail(accepted.reference, kind));
+  redirect(page(token, "zmiana=przyjete"));
 }
