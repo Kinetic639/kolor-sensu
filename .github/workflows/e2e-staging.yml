@@ -18,7 +18,9 @@
 # Secrets (Settings → Secrets and variables → Actions):
 #   E2E_STAGING_ADMIN_EMAIL, E2E_STAGING_ADMIN_PASSWORD,
 #   E2E_STAGING_SPECIALIST_EMAIL, E2E_STAGING_SPECIALIST_PASSWORD,
-#   E2E_RESEND_API_KEY (reads the sent e-mails; without it those tests skip)
+#   E2E_RESEND_API_KEY (reads the sent e-mails; without it those tests skip),
+#   E2E_BYPASS_KEY (the same as the web app's on STAGING in Vercel: each hold
+#   then counts alone, not against one runner's 5 in 15 minutes; #345)
 name: Staging E2E
 
 on:
@@ -107,6 +109,7 @@ jobs:
       E2E_STAGING_SPECIALIST_EMAIL: ${{ secrets.E2E_STAGING_SPECIALIST_EMAIL }}
       E2E_STAGING_SPECIALIST_PASSWORD: ${{ secrets.E2E_STAGING_SPECIALIST_PASSWORD }}
       E2E_RESEND_API_KEY: ${{ secrets.E2E_RESEND_API_KEY }}
+      E2E_BYPASS_KEY: ${{ secrets.E2E_BYPASS_KEY }}
     steps:
       - uses: actions/checkout@v5
         with:

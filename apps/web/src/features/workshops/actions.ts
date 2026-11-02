@@ -31,9 +31,9 @@ import {
 } from "@repo/supabase/discount-codes";
 import {
   clientIp,
+  holdKey,
   turnstileKeys,
   verifyTurnstile,
-  visitorKey,
 } from "@/features/booking/guards";
 import { expireSession } from "@/features/booking/payment-server";
 import { signUpForNewsletter } from "@/features/newsletter/signup-server";
@@ -120,7 +120,7 @@ export async function holdSeatAction(formData: FormData) {
     const held = await holdWorkshopSeat(
       createSecretClient(),
       slug,
-      visitorKey(ip, process.env.SUPABASE_SECRET_KEY ?? ""),
+      holdKey(await headers()),
     );
     await saveSeatToken(held.accessToken);
   } catch (error) {
@@ -319,13 +319,12 @@ export async function joinWaitlistAction(
   if (!form.ok && "bot" in form) return { status: "idle" };
   if (!form.ok) return { status: "invalid", ...form };
 
-  const ip = clientIp(await headers());
   let joined: { reference: string; accessToken: string };
   try {
     joined = await joinWorkshopWaitlist(
       createSecretClient(),
       slug,
-      visitorKey(ip, process.env.SUPABASE_SECRET_KEY ?? ""),
+      holdKey(await headers()),
       form.details,
     );
   } catch (error) {
