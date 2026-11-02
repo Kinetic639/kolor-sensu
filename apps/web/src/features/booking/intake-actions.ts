@@ -9,7 +9,7 @@ import { IntakeLimitError, saveVisitIntake } from "@repo/supabase/intakes";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSecretClient } from "@/lib/supabase/secret";
-import { clientIp, visitorKey } from "./guards";
+import { holdKey } from "./guards";
 import { saveIntake } from "./intake-cookie";
 import { bookingHref, loadBookingParams } from "./search-params";
 
@@ -49,10 +49,7 @@ export async function saveIntakeAction(
       serviceId: service.id,
       answers: parsed.data,
       // At most a few from one visitor at a time (the database counts).
-      clientKey: visitorKey(
-        clientIp(await headers()),
-        process.env.SUPABASE_SECRET_KEY ?? "",
-      ),
+      clientKey: holdKey(await headers()),
     });
   } catch (failure) {
     if (failure instanceof IntakeLimitError) {
