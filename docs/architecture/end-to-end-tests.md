@@ -91,10 +91,20 @@ for DEV's database), where each test is a visitor of its own
 production build (`next build`, `next start --port 3010`): in `next dev`
 the first visit to each page compiles it, too slowly for some tests.
 
+The rest of the suite holds too (a visit, a seat, a waitlist place), more
+than 5 times in 15 minutes from one runner. So the web app on DEV and
+STAGING has `E2E_BYPASS_KEY` in Vercel (never in production), and a run
+with the same `E2E_BYPASS_KEY` (the root `.env.local`, the CI secret)
+sends it in `x-e2e-key` (`tests/e2e/support/e2e-key.ts`). The site then
+gives each of its holds a fresh visitor key (`holdKey` in
+`apps/web/src/features/booking/guards.ts`), so the limits by visitor do
+not stop the tests. The limits by e-mail and phone stay, and
+`supabase/tests` tests the limits themselves (#345).
+
 ## After every STAGING deployment
 
 `.github/workflows/e2e-staging.yml` runs the whole suite against STAGING
 once Vercel reports all three apps live with the commit at the head of
-`staging`. It needs the four `E2E_STAGING_*` secrets. A failure keeps the
+`staging`. It needs the four `E2E_STAGING_*` secrets and `E2E_BYPASS_KEY`. A failure keeps the
 report and traces as the run's `playwright-report` artifact. It can also be
 started by hand from the Actions tab.

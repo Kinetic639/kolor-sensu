@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { defineConfig } from "@playwright/test";
+import { e2eHeaders } from "./tests/e2e/support/e2e-key";
 
 // The test accounts live in the root .env.local (gitignored); in CI they
 // come from secrets, which this never overrides.
@@ -26,6 +27,10 @@ export default defineConfig({
       : /@writes-data|@holds/
     : undefined,
   use: {
+    // The sites on DEV and STAGING give each hold of a request carrying
+    // E2E_BYPASS_KEY a fresh visitor key: all tests come from one address,
+    // which the database lets hold 5 times in 15 minutes (#345).
+    extraHTTPHeaders: e2eHeaders(),
     trace: "retain-on-failure",
     locale: "pl-PL",
     timezoneId: "Europe/Warsaw",

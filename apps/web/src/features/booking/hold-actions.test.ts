@@ -65,7 +65,7 @@ vi.mock("./guards", () => ({
   clientIp: () => "203.0.113.1",
   turnstileKeys: () => ({ siteKey: "site", secretKey: "secret" }),
   verifyTurnstile: human,
-  visitorKey: () => "visitor",
+  holdKey: () => "visitor",
 }));
 vi.mock("./hold-cookie", () => hold);
 vi.mock("./intake-cookie", () => ({

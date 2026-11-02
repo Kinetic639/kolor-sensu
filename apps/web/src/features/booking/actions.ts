@@ -43,7 +43,7 @@ import {
   claimReservationEmail,
   sendVisitConfirmation,
 } from "./email/confirmation-server";
-import { clientIp, turnstileKeys, verifyTurnstile, visitorKey } from "./guards";
+import { clientIp, holdKey, turnstileKeys, verifyTurnstile } from "./guards";
 import {
   clearHoldToken,
   readHoldToken,
@@ -124,7 +124,7 @@ export async function holdTimeAction(formData: FormData) {
           ? (wizard.params.lokalizacja ?? undefined)
           : undefined,
       startsAt: chosen.startsAt,
-      clientKey: visitorKey(ip, process.env.SUPABASE_SECRET_KEY ?? ""),
+      clientKey: holdKey(await headers()),
     });
     await saveHoldToken(held.accessToken);
     // "Dokończ rezerwację" leads to the details from now on, even if the
@@ -443,14 +443,9 @@ export async function saveDetailsAction(
 async function reserveForLater(token: string): Promise<never> {
   const db = createSecretClient();
   const pending = await pendingCheckoutSession(db, token);
-  const ip = clientIp(await headers());
   let reserved: Awaited<ReturnType<typeof reserveHold>>;
   try {
-    reserved = await reserveHold(
-      db,
-      token,
-      visitorKey(ip, process.env.SUPABASE_SECRET_KEY ?? ""),
-    );
+    reserved = await reserveHold(db, token, holdKey(await headers()));
   } catch (error) {
     if (error instanceof BookingError && error.code === "pay_now_required") {
       return goToPayment(token);

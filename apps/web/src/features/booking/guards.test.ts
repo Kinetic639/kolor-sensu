@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  E2E_KEY_HEADER,
   TURNSTILE_TEST_KEYS,
   clientIp,
+  holdKey,
+  isEndToEndRun,
   turnstileKeys,
   verifyTurnstile,
   visitorKey,
@@ -26,6 +29,45 @@ describe("visitorKey", () => {
     expect(key).not.toBe(visitorKey("203.0.113.8", "secret"));
     expect(key).not.toBe(visitorKey("203.0.113.7", "other secret"));
     expect(key).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
+
+describe("holdKey", () => {
+  const key = "k".repeat(32);
+  const env = { SUPABASE_SECRET_KEY: "secret", E2E_BYPASS_KEY: key };
+  const from = (extra: Record<string, string> = {}) =>
+    new Headers({ "x-forwarded-for": "203.0.113.7", ...extra });
+
+  it("is the visitor's address key", () => {
+    expect(holdKey(from(), env)).toBe(visitorKey("203.0.113.7", "secret"));
+  });
+
+  it("is fresh each time for an end-to-end run with the key", () => {
+    const run = from({ [E2E_KEY_HEADER]: key });
+    expect(isEndToEndRun(run, env)).toBe(true);
+    const first = holdKey(run, env);
+    expect(first).toMatch(/^[0-9a-f]{64}$/);
+    expect(first).not.toBe(holdKey(run, env));
+    expect(first).not.toBe(visitorKey("203.0.113.7", "secret"));
+  });
+
+  it("ignores a wrong key, and any key where none is set (production)", () => {
+    const address = visitorKey("203.0.113.7", "secret");
+    expect(holdKey(from({ [E2E_KEY_HEADER]: "k".repeat(31) }), env)).toBe(
+      address,
+    );
+    expect(holdKey(from({ [E2E_KEY_HEADER]: "" }), env)).toBe(address);
+    expect(
+      isEndToEndRun(from({ [E2E_KEY_HEADER]: key }), {
+        ...env,
+        E2E_BYPASS_KEY: undefined,
+      }),
+    ).toBe(false);
+    expect(
+      isEndToEndRun(from({ [E2E_KEY_HEADER]: "short" }), {
+        E2E_BYPASS_KEY: "short",
+      }),
+    ).toBe(false);
   });
 });
 

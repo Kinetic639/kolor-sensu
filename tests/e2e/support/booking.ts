@@ -4,6 +4,7 @@ import {
   type BrowserContext,
   type Page,
 } from "@playwright/test";
+import { e2eHeaders } from "./e2e-key";
 import { signIn, type Credentials, webUrl } from "./target";
 
 // A guest's way through the booking wizard, shared by the booking and the
@@ -19,7 +20,9 @@ import { signIn, type Credentials, webUrl } from "./target";
  */
 export async function newVisitor(context: BrowserContext) {
   const part = () => 1 + Math.floor(Math.random() * 254);
+  // Replaces the context's headers, so the run's key goes along again.
   await context.setExtraHTTPHeaders({
+    ...e2eHeaders(),
     "x-forwarded-for": `198.51.${part()}.${part()}`,
   });
 }
