@@ -101,8 +101,33 @@ describe("SupportAreas", () => {
     const button = within(region).getByRole("button", {
       name: "Terapia dla par",
     });
-    expect(button.querySelector("img")).toBeNull();
+    expect(button.querySelector(".ks-wc__photo")).toBeNull();
+    expect(
+      button.querySelector("[data-animation='watercolor-reveal']"),
+    ).toBeInTheDocument();
+    expect(within(button).queryByRole("img")).toBeNull();
     expect(button).toHaveTextContent("Terapia dla par");
+  });
+  it("labels each photo with a paper tag without an additional painted bubble", () => {
+    const { region } = renderAreas();
+    const photoButton = within(region).getByRole("button", {
+      name: "Warsztaty i rozwój",
+    });
+    const label = photoButton.querySelector(".ks-areas__photo-caption");
+    expect(label).toHaveTextContent("Warsztaty i rozwój");
+    expect(
+      label?.querySelector(".ks-areas__caption-paper"),
+    ).toBeInTheDocument();
+    expect(label?.closest(".ks-wc__mark")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+    expect(label?.querySelector(".ks-areas__caption-underline")).toBeNull();
+    expect(photoButton.querySelector(".ks-areas__label-bubble")).toBeNull();
+    const textButton = within(region).getByRole("button", {
+      name: "Terapia dla par",
+    });
+    expect(textButton.querySelector(".ks-areas__photo-caption")).toBeNull();
   });
 
   it("places the small circles on the slots around the large one, in two depths", () => {
@@ -128,5 +153,48 @@ describe("SupportAreas", () => {
     expect(
       screen.getByRole("link", { name: "Zobacz całą ofertę" }),
     ).toHaveAttribute("href", "/oferta");
+  });
+  it("uses painted circular compositions while retaining the selected photo description", () => {
+    const { region, center } = renderAreas();
+    expect(center.querySelector(".ks-wc--circle")).toBeInTheDocument();
+    for (const button of within(region).getAllByRole("button")) {
+      expect(
+        button.querySelector(
+          ".ks-wc--circle[data-animation='watercolor-reveal']",
+        ),
+      ).toBeInTheDocument();
+    }
+    expect(within(center).getAllByRole("img")).toHaveLength(1);
+  });
+  it("staggers photo and paint-only circles with small stable delays", () => {
+    const { region } = renderAreas();
+    const delays = within(region)
+      .getAllByRole("button")
+      .map((button) =>
+        Number(
+          button
+            .querySelector("[data-animation='watercolor-reveal']")
+            ?.getAttribute("data-reveal-delay"),
+        ),
+      );
+    expect(new Set(delays).size).toBeGreaterThan(1);
+    expect(delays.every((delay) => delay >= 0.04 && delay <= 0.3)).toBe(true);
+  });
+  it("spreads fresh paint rotations across the full turn for photos and paint-only circles", () => {
+    const { region } = renderAreas();
+    const angles = within(region)
+      .getAllByRole("button")
+      .map((button) =>
+        parseFloat(
+          button
+            .querySelector<HTMLElement>(".ks-wc--circle")!
+            .style.getPropertyValue("--ks-circle-rotation"),
+        ),
+      );
+    expect(angles.every((angle) => angle >= 0 && angle < 360)).toBe(true);
+    expect(
+      new Set(angles.map((angle) => Math.floor(angle / (360 / areas.length))))
+        .size,
+    ).toBe(areas.length);
   });
 });

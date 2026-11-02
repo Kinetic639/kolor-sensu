@@ -174,6 +174,24 @@ afterEach(() => {
 });
 
 describe("WatercolorImage entrance animation", () => {
+  it("honours its stagger delay before the first paint", async () => {
+    gsap.globalTimeline.timeScale(1);
+    const { reveals, wrapper } = recordReveals();
+    render(
+      <WatercolorImage
+        {...base}
+        animationPreset="watercolor-reveal"
+        revealDelay={0.5}
+      />,
+      { wrapper },
+    );
+    await waitFor(() => expect(reveals).toHaveLength(1));
+    const timeline = reveals[0]!.timeline;
+    expect(timeline.startTime() - gsap.globalTimeline.time()).toBeGreaterThan(
+      0.2,
+    );
+    expect(timeline.time()).toBe(0);
+  });
   it("is off by default: the static composition has no reveal markers", () => {
     const { container } = render(<WatercolorImage {...base} />);
 

@@ -364,6 +364,27 @@
     filter: drop-shadow(0 1px 2px rgb(22 48 47 / 0.45));
   }
 
+  /* Circular composition: only the pigment rotates. The photo's centre
+     remains fully opaque; the tiny brush texture lives at its outer edge. */
+  .ks-wc--circle {
+    aspect-ratio: 1;
+  }
+  .ks-wc--circle .ks-wc__backdrop {
+    inset: -9%;
+    transform: rotate(var(--ks-circle-rotation, 0deg));
+    transform-origin: center;
+  }
+  .ks-wc--circle .ks-wc__backdrop img {
+    object-fit: contain;
+  }
+  .ks-wc--circle .ks-wc__photo {
+    inset: -3%;
+    mask-image: url("/watercolor/circle-concepts/photo-edge-mask-v6.png");
+  }
+  .ks-wc--circle .ks-wc__parallax {
+    inset: -9%;
+  }
+
   /* ---------------------------------------- WatercolorImage entrance reveal */
 
   /* animationPreset="watercolor-reveal" (watercolor-reveal.tsx). The layers
@@ -1694,10 +1715,9 @@
     isolation: isolate;
     display: grid;
     place-items: center;
-    width: min(100%, 22rem);
+    width: min(100%, 20rem);
     aspect-ratio: 1;
-    overflow: hidden;
-    border-radius: 50%;
+    overflow: visible;
     color: var(--color-ink);
     text-decoration: none;
     outline-offset: 6px;
@@ -1705,6 +1725,11 @@
 
   .ks-areas__center:focus-visible {
     outline: 2px solid var(--color-ring, var(--color-primary));
+  }
+
+  .ks-areas__cta {
+    justify-self: center;
+    z-index: 2;
   }
 
   .ks-areas__pictures {
@@ -1731,29 +1756,42 @@
     opacity: 1;
   }
 
-  /* A veil over a photo, so the words on it read. */
-  .ks-areas__center::after {
+  /* Both veils follow the photo matte, including its reveal. */
+  .ks-areas__picture .ks-wc__photo::after,
+  .ks-areas__dot-picture .ks-wc__photo::after {
     content: "";
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: color-mix(in oklab, var(--color-ink) 42%, transparent);
+    pointer-events: none;
+    mask-image: var(--ks-reveal-photo, var(--ks-reveal-hidden, none));
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+
+  .ks-areas__picture .ks-wc__photo::after {
+    background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  }
+
+  .ks-areas__picture .ks-wc__img {
+    filter: blur(1.5px);
+  }
+
+  .ks-areas__dot-picture .ks-wc__photo::after {
     opacity: 0;
-    transition: opacity 700ms ease;
-    pointer-events: none;
+    transition: opacity 300ms ease;
+    background: radial-gradient(
+      ellipse at center,
+      color-mix(in oklab, var(--color-ink) 40%, transparent) 0%,
+      color-mix(in oklab, var(--color-ink) 34%, transparent) 48%,
+      color-mix(in oklab, var(--color-ink) 15%, transparent) 85%
+    );
   }
 
-  .ks-areas__center:has(.ks-areas__text[data-on-photo])::after {
+  .ks-areas__dot:is(:hover, :focus-visible)
+    .ks-areas__dot-picture
+    .ks-wc__photo::after {
     opacity: 1;
-  }
-
-  .ks-areas__ring {
-    position: absolute;
-    inset: 7%;
-    z-index: 2;
-    border: 1px solid var(--color-pink);
-    border-radius: 50%;
-    pointer-events: none;
   }
 
   .ks-areas__text {
@@ -1764,11 +1802,22 @@
     gap: 0.75rem;
     max-width: 72%;
     text-align: center;
-    animation: ks-areas-text 600ms var(--ease-soft) both;
+  }
+
+  .ks-areas__text > * {
+    animation: ks-areas-text 450ms var(--ease-soft) both;
+  }
+
+  .ks-areas__text > :nth-child(2) {
+    animation-delay: 80ms;
+  }
+
+  .ks-areas__text > :nth-child(3) {
+    animation-delay: 160ms;
   }
 
   .ks-areas__text[data-on-photo] {
-    color: var(--color-on-primary);
+    color: var(--color-ink);
   }
 
   .ks-areas__title {
@@ -1801,31 +1850,12 @@
   /* Painted instead of photographed: a wash in the theme's colours on
      paper grain. */
   .ks-areas__paint {
-    background-color: var(--color-primary-soft);
-    background-image:
-      url("/watercolor/paper.svg"),
-      radial-gradient(
-        circle at 35% 30%,
-        color-mix(in oklab, var(--color-sage) 35%, white),
-        var(--color-sage) 58%,
-        color-mix(in oklab, var(--color-primary) 30%, var(--color-sage))
-      );
-    background-size:
-      180px 180px,
-      100% 100%;
-    background-blend-mode: multiply, normal;
+    background: url("/watercolor/circle-concepts/painted-circle-01.webp")
+      center / contain no-repeat;
   }
 
   .ks-areas__paint[data-paint="blush"] {
-    background-color: var(--color-pink-soft);
-    background-image:
-      url("/watercolor/paper.svg"),
-      radial-gradient(
-        circle at 35% 30%,
-        color-mix(in oklab, var(--color-blush) 35%, white),
-        var(--color-blush) 58%,
-        color-mix(in oklab, var(--color-pink) 35%, var(--color-blush))
-      );
+    background-image: url("/watercolor/circle-concepts/painted-circle-03.webp");
   }
 
   .ks-areas__orbit {
@@ -1849,10 +1879,9 @@
     width: 100%;
     height: 100%;
     padding: 0;
-    overflow: hidden;
+    overflow: visible;
     border: 0;
-    border-radius: 50%;
-    background: var(--color-surface);
+    background: transparent;
     cursor: pointer;
     outline-offset: 4px;
     transition: scale 300ms var(--ease-soft);
@@ -1867,22 +1896,29 @@
   }
 
   /* The chosen one: faded, with a hairline ring inside. */
-  .ks-areas__dot::after {
+  .ks-areas__dot::after,
+  .ks-areas__dot-picture::after {
     content: "";
     position: absolute;
+    z-index: 2;
     inset: 6%;
-    border: 1px solid var(--color-pink);
+    border: 1px solid var(--color-bg);
     border-radius: 50%;
     opacity: 0;
     transition: opacity 300ms ease;
+    pointer-events: none;
   }
 
-  .ks-areas__dot[aria-pressed="true"]::after {
+  .ks-areas__dot:has(> .ks-areas__dot-picture)::after {
+    content: none;
+  }
+
+  .ks-areas__dot[aria-pressed="true"]::after,
+  .ks-areas__dot[aria-pressed="true"] > .ks-areas__dot-picture::after {
     opacity: 1;
   }
 
-  .ks-areas__dot-picture,
-  .ks-areas__dot-paint {
+  .ks-areas__dot > .ks-wc {
     transition: opacity 400ms ease;
   }
 
@@ -1890,8 +1926,7 @@
     object-fit: cover;
   }
 
-  .ks-areas__dot[aria-pressed="true"] .ks-areas__dot-picture,
-  .ks-areas__dot[aria-pressed="true"] .ks-areas__dot-paint {
+  .ks-areas__dot[aria-pressed="true"] > .ks-wc {
     opacity: 0.3;
   }
 
@@ -1911,6 +1946,114 @@
     color: var(--color-ink);
   }
 
+  .ks-areas__paint-circle {
+    display: grid;
+    place-items: center;
+    height: 100%;
+  }
+
+  .ks-areas__paint-label {
+    position: relative;
+    width: 72%;
+    transition: opacity 160ms ease-out;
+  }
+
+  .ks-areas__dot-picture > .ks-wc__mark {
+    position: absolute;
+    z-index: 3;
+    top: auto;
+    bottom: 0.9rem;
+    left: 50%;
+    width: max-content;
+    max-width: 116%;
+    translate: -50% 50%;
+  }
+
+  .ks-areas__photo-caption {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    min-height: 2rem;
+    padding: 0.5rem 0.6rem 0.3rem;
+    color: var(--color-primary);
+    font-size: clamp(0.75rem, 1vw, 0.875rem);
+    font-weight: 500;
+    line-height: 1.25;
+    text-align: center;
+    transform: rotate(-2deg);
+    transition: transform 260ms var(--ease-soft);
+  }
+
+  .ks-areas__caption-paper {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+    filter: drop-shadow(0 3px 4px rgb(22 48 47 / 0.1));
+    pointer-events: none;
+  }
+
+  .ks-areas__dot:is(:hover, :focus-visible) .ks-areas__photo-caption {
+    transform: rotate(0) translateY(-2px);
+  }
+
+  .ks-areas__caption-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .ks-areas__dot[aria-pressed="true"] > .ks-areas__dot-picture {
+    opacity: 1;
+  }
+
+  .ks-areas__dot-picture > :is(.ks-wc__photo, .ks-wc__backdrop) {
+    transition: opacity 400ms ease;
+  }
+
+  .ks-areas__dot[aria-pressed="true"]
+    > .ks-areas__dot-picture
+    > :is(.ks-wc__photo, .ks-wc__backdrop) {
+    opacity: 1;
+  }
+
+  @media (max-width: 63.99rem) {
+    .ks-areas__orbit {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      width: 100%;
+      max-width: 26rem;
+      gap: 2rem 1.25rem;
+      padding: 0.75rem 1rem;
+    }
+
+    .ks-areas__item {
+      justify-self: center;
+      width: 5.75rem;
+    }
+
+    .ks-areas__item[data-photo] {
+      margin-bottom: 2.5rem;
+    }
+  }
+
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    .ks-areas__paint-circle[data-animation="watercolor-reveal"]:not(
+        [data-reveal="done"]
+      )
+      .ks-areas__paint-label {
+      /* Keep the label hidden through its delay and paint animation. The
+         existing no-script/late-script fallback can still show it safely. */
+      opacity: var(--ks-reveal-caption, 0);
+    }
+  }
+
   @media (min-width: 64rem) {
     .ks-areas__stage {
       display: block;
@@ -1921,7 +2064,7 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      width: clamp(20rem, 33vw, 30rem);
+      width: clamp(18rem, 30vw, 27rem);
       translate: -50% -50%;
     }
 
@@ -1930,6 +2073,14 @@
       inset: 0;
       display: block;
       pointer-events: none;
+    }
+
+    .ks-areas__cta {
+      position: absolute;
+      top: calc(50% + clamp(9rem, 15vw, 13.5rem) + 3.5rem);
+      left: 50%;
+      translate: -50% 0;
+      white-space: nowrap;
     }
 
     .ks-areas__item {
@@ -1947,6 +2098,16 @@
 
   /* The drift: near circles move a little, far ones more, while the stage
      crosses the screen (scroll-driven; where unsupported they stay put). */
+  @media (min-width: 64rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .ks-areas__dot {
+      translate: calc(var(--ks-pointer-x, 0) * var(--ks-pointer-distance, 8px))
+        calc(var(--ks-pointer-y, 0) * var(--ks-pointer-distance, 8px));
+      transition:
+        translate 650ms var(--ease-soft),
+        scale 300ms var(--ease-soft);
+    }
+  }
+
   @supports (animation-timeline: view()) {
     @media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
       .ks-areas__stage {
@@ -1966,24 +2127,24 @@
 
   @keyframes ks-areas-near {
     from {
-      translate: 0 2.5rem;
+      translate: 0 3.5rem;
     }
     to {
-      translate: 0 -2.5rem;
+      translate: 0 -3.5rem;
     }
   }
 
   @keyframes ks-areas-far {
     from {
-      translate: 0 7rem;
+      translate: 0 9.5rem;
     }
     to {
-      translate: 0 -7rem;
+      translate: 0 -9.5rem;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .ks-areas__text {
+    .ks-areas__text > * {
       animation: none;
     }
 
