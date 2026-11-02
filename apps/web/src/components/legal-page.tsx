@@ -1,6 +1,7 @@
 import type { LegalPageKey } from "@repo/contracts/cms-legal";
 import { ArrowLink, SoftCard } from "@repo/ui/public-site";
 import { RichTextRenderer } from "@repo/ui/rich-text-renderer";
+import type { ReactNode } from "react";
 import { PageIntro } from "@/components/page-intro";
 import { getLegalPage } from "@/lib/public-data";
 
@@ -8,7 +9,14 @@ import { getLegalPage } from "@/lib/public-data";
 // the CMS's header, the date it applies from and the document itself as
 // rich text, its headings under the page's h1; then a way to ask.
 
-export async function LegalPage({ page }: { page: LegalPageKey }) {
+export async function LegalPage({
+  page,
+  after,
+}: {
+  page: LegalPageKey;
+  /** Under the document, before the way to ask (the Regulamin's rules). */
+  after?: ReactNode;
+}) {
   const { intro, body, effectiveFrom } = await getLegalPage(page);
   return (
     <>
@@ -25,6 +33,7 @@ export async function LegalPage({ page }: { page: LegalPageKey }) {
             className="text-body text-ink max-w-copy [&_a]:text-primary-strong [&_blockquote]:border-primary [&_blockquote]:text-text-muted [&_h2]:font-display [&_h2]:text-h3 [&_h3]:font-display [&_h3]:text-title [&>:first-child]:mt-0 [&>:last-child]:mb-0"
             document={body}
           />
+          {after}
           <ArrowLink href="/kontakt" className="justify-self-start">
             Pytania? Napisz do nas
           </ArrowLink>

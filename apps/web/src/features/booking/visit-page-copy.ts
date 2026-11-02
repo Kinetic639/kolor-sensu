@@ -8,13 +8,16 @@ import { visitChanges, type ChangePolicy } from "./visit-changes";
 // R8): what the client may still do themselves, until when, and what
 // happens with the money. Pure, so every case is tested.
 
-export type VisitChangeDone = "przelozona" | "odwolana" | "potwierdzona";
+export type VisitChangeDone =
+  "przelozona" | "odwolana" | "potwierdzona" | "oplacona";
 
 export interface VisitPageCopy {
   /** What just changed (after a move or a cancellation). */
   notice: string | null;
   /** A cancelled visit: what happens with the money. */
   cancelledLead: string | null;
+  /** A confirmed visit whose time has come: it took place (card 9). */
+  past: boolean;
   /** A reservation not paid yet: pay it by its time. */
   pay: { text: string; href: Route } | null;
   /** Null: nothing to change (past, cancelled, not paid yet). */
@@ -27,6 +30,8 @@ const NOTICES: Record<VisitChangeDone, string> = {
   odwolana: "Wizyta została odwołana. Wysłaliśmy potwierdzenie e-mailem.",
   potwierdzona:
     "Rezerwacja potwierdzona. Termin czeka na Ciebie do czasu płatności.",
+  // The link to pay, opened again after paying (Klient · 5, card 10).
+  oplacona: "Ta wizyta jest już opłacona. Nie musisz płacić ponownie.",
 };
 
 export function visitPageCopy({
@@ -50,6 +55,7 @@ export function visitPageCopy({
     | "refundedMinor"
     | "paid"
     | "paymentDueAt"
+    | "movedByCentre"
   >;
   policy: ChangePolicy;
   timeZone: string;
@@ -119,11 +125,13 @@ export function visitPageCopy({
     ? {
         text: pay.allowed
           ? "Jeśli nie możesz przyjść, odwołaj rezerwację. Nie jest opłacona, więc nie ma nic do zwrotu."
-          : cancel.refund
-            ? `Odwołując wizytę do ${deadlineLabel(cancel.refundUntil, timeZone)}, otrzymasz pełny zwrot (${money(booking.priceMinor)}). Później odwołanie jest możliwe już bez zwrotu.`
-            : booking.paid && booking.priceMinor > 0
-              ? `Do wizyty zostało mniej niż ${policy.cancellationWindowHours} godz., więc odwołanie jest możliwe już bez zwrotu opłaty.`
-              : "Możesz odwołać wizytę, jeśli nie możesz przyjść.",
+          : cancel.refund && booking.movedByCentre
+            ? `Termin tej wizyty zmieniło centrum. Jeśli Ci nie pasuje, możesz ją odwołać do jej rozpoczęcia i otrzymasz pełny zwrot (${money(booking.priceMinor)}).`
+            : cancel.refund
+              ? `Odwołując wizytę do ${deadlineLabel(cancel.refundUntil, timeZone)}, otrzymasz pełny zwrot (${money(booking.priceMinor)}). Później odwołanie jest możliwe już bez zwrotu.`
+              : booking.paid && booking.priceMinor > 0
+                ? `Do wizyty zostało mniej niż ${policy.cancellationWindowHours} godz., więc odwołanie jest możliwe już bez zwrotu opłaty.`
+                : "Możesz odwołać wizytę, jeśli nie możesz przyjść.",
         href: `/wizyta/${token}/odwolaj` as Route,
       }
     : null;
@@ -131,6 +139,9 @@ export function visitPageCopy({
   return {
     notice: change ? NOTICES[change] : null,
     cancelledLead,
+    past:
+      booking.status === "confirmed" &&
+      now.getTime() >= Date.parse(booking.startsAt),
     pay: payCopy,
     reschedule: rescheduleCopy,
     cancel: cancelCopy,

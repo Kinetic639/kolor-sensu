@@ -151,6 +151,7 @@ export function toServiceRows(input: {
       publiclyVisible: service.publiclyVisible,
       bookingEnabled: service.bookingEnabled,
       requiresIntake: service.requiresIntake,
+      forMinors: service.forMinors,
       sortOrder: service.sortOrder,
       catalog: catalog ? { id: catalog.id, name: catalog.name } : null,
       order: index + 1,

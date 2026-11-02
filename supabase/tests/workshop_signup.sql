@@ -5,7 +5,8 @@
 -- lost; refunds are recorded; each e-mail is claimed once and its link
 -- opens the registration; visitors read public workshops with their
 -- leaders and seats; a payment too late for its seat is refunded with its
--- own e-mail (#196). Everything is rolled back at the end.
+-- own e-mail (#196); a seat keeps its price and code until it is paid,
+-- and gets back what was paid. Everything is rolled back at the end.
 
 BEGIN;
 
@@ -308,6 +309,119 @@ BEGIN
   END IF;
   IF public.record_dispute('pi_nobodys', 'du_ws_3', 'lost', 100, 'general', true, 'NO-SUCH') IS NOT NULL THEN
     RAISE EXCEPTION 'J: a dispute found a seat that is not there';
+  END IF;
+END;
+$$;
+
+-- K: sign-ups close at the time the admin set, by default 24 hours before
+-- the start, or when the admin turns them off; until then they are open
+-- (#276).
+INSERT INTO public.workshops (
+  slug, title, specialist_id, modality, starts_at, ends_at, price_minor,
+  capacity, registration_enabled, registration_closes_at, status
+)
+SELECT slug, title, specialist.id, 'online', at, at + interval '2 hours', 5000, 5, enabled, closes, 'published'
+FROM public.specialists AS specialist
+CROSS JOIN (VALUES
+  ('ws-close-open', 'Otwarty', now() + interval '10 days', true, NULL::timestamptz),
+  ('ws-close-set', 'Zamknięty przez admina', now() + interval '11 days', true, now() - interval '1 hour'),
+  ('ws-close-day', 'Jutro', now() + interval '20 hours', true, NULL::timestamptz),
+  ('ws-close-off', 'Wyłączony', now() + interval '12 days', false, NULL::timestamptz)
+) AS w(slug, title, at, enabled, closes)
+WHERE specialist.user_id = '7c000000-0000-4000-8000-000000000002';
+
+SELECT set_config('request.jwt.claims', '', true);
+SET LOCAL ROLE anon;
+DO $$
+DECLARE
+  v_open jsonb := (
+    SELECT jsonb_object_agg(slug, registration_open)
+    FROM public.list_public_workshops() WHERE slug LIKE 'ws-close-%'
+  );
+BEGIN
+  IF v_open IS DISTINCT FROM jsonb_build_object(
+    'ws-close-open', true, 'ws-close-set', false,
+    'ws-close-day', false, 'ws-close-off', false
+  ) THEN
+    RAISE EXCEPTION 'K: sign-ups were open or closed wrongly: %', v_open;
+  END IF;
+END;
+$$;
+RESET ROLE;
+
+-- L: a price is 0 zł or at least 2 zł (Warsztat · 4, card 3); a seat keeps
+-- the price it was taken at (· 4, card 4); a code
+-- stays on a seat paid later from the e-mail's link (· 4a, card 3; · 5,
+-- card 4); cancelled in time, it gets back what was paid (· 4a, card 4);
+-- an unknown, expired or not yet valid code says so and changes nothing
+-- (· 4a, card 2).
+INSERT INTO public.workshops (
+  slug, title, specialist_id, modality, starts_at, ends_at, price_minor,
+  capacity, registration_enabled, status
+)
+SELECT 'ws-signup-c', 'Warsztat C', specialist.id, 'online',
+  ((current_date + 30) + time '17:00') AT TIME ZONE 'Europe/Warsaw',
+  ((current_date + 30) + time '19:00') AT TIME ZONE 'Europe/Warsaw',
+  10000, 5, true, 'published'
+FROM public.specialists AS specialist
+WHERE specialist.user_id = '7c000000-0000-4000-8000-000000000002';
+INSERT INTO public.discount_codes (code, kind, value, scope, starts_on, ends_on)
+VALUES
+  ('STARY-KOD', 'percent', 20, 'all', current_date - 10, current_date - 1),
+  ('PRZYSZLY-KOD', 'percent', 20, 'all', current_date + 1, NULL);
+
+DO $$
+DECLARE
+  v_token text;
+  v_other text;
+  v_reg public.workshop_registrations%ROWTYPE;
+BEGIN
+  -- 0 zł or at least 2 zł (Warsztat · 4, card 3).
+  IF pg_temp.hint_of($sql$UPDATE public.workshops SET price_minor = 150 WHERE slug = 'ws-signup-c'$sql$) <> '23514' THEN
+    RAISE EXCEPTION 'L: a workshop at 1,50 zł';
+  END IF;
+
+  SELECT access_token INTO v_token FROM public.hold_workshop_seat('ws-signup-c', 'ws-signup-key-l1');
+  PERFORM public.save_workshop_registration_details(v_token, 'Lena', 'lena@example.invalid', NULL, NULL, true, true);
+  PERFORM public.apply_workshop_discount(v_token, 'warsztaty');
+
+  -- The admin raises the price after the seat was taken.
+  UPDATE public.workshops SET price_minor = 15000 WHERE slug = 'ws-signup-c';
+
+  PERFORM public.reserve_workshop_seat(v_token);
+  IF pg_temp.hint_of(format(
+       'SELECT public.attach_workshop_checkout(%L, %L, now() + interval ''31 minutes'', 15000, %L)',
+       v_token, 'cs_test_ws_l_new_price', 'pln')) <> 'amount_mismatch' THEN
+    RAISE EXCEPTION 'L: the seat was charged the new price';
+  END IF;
+  PERFORM public.attach_workshop_checkout(v_token, 'cs_test_ws_l', now() + interval '31 minutes', 5000, 'pln');
+  IF public.fulfill_workshop_checkout('cs_test_ws_l', true, 'pi_test_ws_l') <> 'confirmed' THEN
+    RAISE EXCEPTION 'L: the seat paid later from the link was not confirmed';
+  END IF;
+  SELECT * INTO v_reg FROM public.workshop_registrations
+  WHERE access_token_hash = extensions.digest(v_token, 'sha256');
+  IF (v_reg.status, v_reg.paid_minor, v_reg.discount_minor, v_reg.list_price_minor)
+     IS DISTINCT FROM ('confirmed'::public.workshop_registration_status, 5000, 5000, 10000) THEN
+    RAISE EXCEPTION 'L: the seat paid later: % paid %, discount %, list %',
+      v_reg.status, v_reg.paid_minor, v_reg.discount_minor, v_reg.list_price_minor;
+  END IF;
+
+  PERFORM public.cancel_workshop_registration(v_token);
+  IF (SELECT refund_due_minor FROM public.workshop_registrations WHERE id = v_reg.id) <> 5000 THEN
+    RAISE EXCEPTION 'L: the refund was not what was paid with the code';
+  END IF;
+
+  -- A new seat, at the new price; no code that is not usable changes it.
+  SELECT access_token INTO v_other FROM public.hold_workshop_seat('ws-signup-c', 'ws-signup-key-l2');
+  IF pg_temp.hint_of(format('SELECT public.apply_workshop_discount(%L, %L)', v_other, 'nie-ma-takiego')) <> 'code_unknown'
+     OR pg_temp.hint_of(format('SELECT public.apply_workshop_discount(%L, %L)', v_other, 'stary-kod')) <> 'code_expired'
+     OR pg_temp.hint_of(format('SELECT public.apply_workshop_discount(%L, %L)', v_other, 'przyszly-kod')) <> 'code_not_started' THEN
+    RAISE EXCEPTION 'L: a code that cannot be used did not say why';
+  END IF;
+  IF (SELECT (price_minor, discount_minor) FROM public.workshop_registrations
+      WHERE access_token_hash = extensions.digest(v_other, 'sha256'))
+     IS DISTINCT FROM (15000, 0) THEN
+    RAISE EXCEPTION 'L: an unusable code changed the price';
   END IF;
 END;
 $$;

@@ -114,6 +114,21 @@ AS $$ SELECT (p_day + p_time) AT TIME ZONE 'Europe/Warsaw'; $$;
 GRANT EXECUTE ON FUNCTION pg_temp.free_times(public.visit_mode, date, text) TO anon, service_role;
 GRANT EXECUTE ON FUNCTION pg_temp.at(date, time) TO anon, service_role;
 
+-- The guest's details as the site sends them (the whole name split, and
+-- the consents a visit within 14 days or for minors asks for, given).
+CREATE FUNCTION pg_temp.save_details(
+  p_token text, p_name text, p_email text, p_phone text, p_notes text,
+  p_terms boolean, p_privacy boolean
+)
+RETURNS void
+LANGUAGE sql
+AS $$
+  SELECT public.save_booking_details(p_token, split_part(p_name, ' ', 1),
+    nullif(substr(p_name, length(split_part(p_name, ' ', 1)) + 2), ''),
+    p_email, p_phone, p_notes, p_terms, p_privacy, true, true);
+$$;
+GRANT EXECUTE ON FUNCTION pg_temp.save_details(text, text, text, text, text, boolean, boolean) TO anon, service_role;
+
 -- A–B: anyone sees the free times, on the grid, fitting the window.
 SET LOCAL ROLE anon;
 DO $$
@@ -356,6 +371,29 @@ BEGIN
     RAISE EXCEPTION 'L: inside the notice';
   END IF;
   UPDATE public.center_settings SET min_booking_lead_minutes = 60;
+
+  -- L2: the soonest free time (#203): the first of the list, also from a
+  -- day with nothing free; none past the horizon, nor for an unknown offer.
+  IF public.next_free_slot('booking-test-consultation', 'booking-test-anna', 'online', t.monday)
+     IS DISTINCT FROM (
+       SELECT min(starts_at) FROM public.list_free_slots(
+         'booking-test-consultation', 'booking-test-anna', 'online', t.monday, t.monday + 13)
+     ) THEN
+    RAISE EXCEPTION 'L2: not the first free time';
+  END IF;
+  IF public.next_free_slot('booking-test-consultation', 'booking-test-anna', 'online', t.monday - 1)
+     IS DISTINCT FROM public.next_free_slot('booking-test-consultation', 'booking-test-anna', 'online', t.monday) THEN
+    RAISE EXCEPTION 'L2: a Sunday did not lead on to the week';
+  END IF;
+  IF public.next_free_slot('booking-test-consultation', 'booking-test-anna', 'online', current_date + 61) IS NOT NULL
+     OR public.next_free_slot('booking-test-consultation', 'no-such-specialist', 'online', t.monday) IS NOT NULL THEN
+    RAISE EXCEPTION 'L2: a time past the horizon or for no offer';
+  END IF;
+  UPDATE public.center_settings SET max_booking_horizon_days = 1;
+  IF public.next_free_slot('booking-test-consultation', 'booking-test-anna', 'online', t.tuesday) IS NOT NULL THEN
+    RAISE EXCEPTION 'L2: past a short horizon';
+  END IF;
+  UPDATE public.center_settings SET max_booking_horizon_days = 60;
 END;
 $$;
 
@@ -497,7 +535,7 @@ BEGIN
 
   -- Both consents are needed.
   BEGIN
-    PERFORM public.save_booking_details(held.access_token, 'Jan Kowalski',
+    PERFORM pg_temp.save_details(held.access_token, 'Jan Kowalski',
       'jan@example.com', '600100200', NULL, true, false);
     RAISE EXCEPTION 'P: saved without the privacy consent';
   EXCEPTION WHEN raise_exception THEN
@@ -507,7 +545,7 @@ BEGIN
   END;
   -- Details the database would not keep.
   BEGIN
-    PERFORM public.save_booking_details(held.access_token, 'Jan Kowalski',
+    PERFORM pg_temp.save_details(held.access_token, 'Jan Kowalski',
       'not-an-email', '600100200', NULL, true, true);
     RAISE EXCEPTION 'P: saved a wrong e-mail';
   EXCEPTION WHEN raise_exception THEN
@@ -516,7 +554,7 @@ BEGIN
     IF hint <> 'invalid_details' THEN RAISE EXCEPTION 'P: expected invalid_details, got %', hint; END IF;
   END;
 
-  PERFORM public.save_booking_details(held.access_token, 'Jan Kowalski',
+  PERFORM pg_temp.save_details(held.access_token, 'Jan Kowalski',
     'jan@example.com', '+48 600 100 200', 'Pierwsza wizyta', true, true);
   SELECT * INTO visit FROM public.appointments WHERE id = held.appointment_id;
   IF (visit.client_name, visit.client_email, visit.client_phone, visit.client_notes, visit.status)
@@ -534,7 +572,7 @@ BEGIN
   UPDATE public.appointments SET hold_expires_at = now() - interval '1 second'
   WHERE id = held.appointment_id;
   BEGIN
-    PERFORM public.save_booking_details(held.access_token, 'Jan Kowalski',
+    PERFORM pg_temp.save_details(held.access_token, 'Jan Kowalski',
       'jan@example.com', '600100200', NULL, true, true);
     RAISE EXCEPTION 'P: saved on an expired hold';
   EXCEPTION WHEN raise_exception THEN
@@ -550,7 +588,7 @@ SET LOCAL ROLE anon;
 DO $body$
 BEGIN
   BEGIN
-    PERFORM public.save_booking_details('x', 'a', 'a@b.pl', '600100200', NULL, true, true);
+    PERFORM pg_temp.save_details('x', 'a', 'a@b.pl', '600100200', NULL, true, true);
     RAISE EXCEPTION 'P: anon saved details';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
@@ -586,7 +624,7 @@ BEGIN
     GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
     IF hint <> 'details_required' THEN RAISE EXCEPTION 'Q: expected details_required, got %', hint; END IF;
   END;
-  PERFORM public.save_booking_details(held.access_token, 'Ewa Test', 'ewa@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Ewa Test', 'ewa@example.com',
     '600100200', NULL, true, true);
 
   -- Not for another amount than the visit's.
@@ -652,7 +690,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', 'in_person',
     pg_temp.at(t.tuesday, '10:00'), p_client_key => 'visitor-6'
   );
-  PERFORM public.save_booking_details(held.access_token, 'Ola Test', 'ola@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Test', 'ola@example.com',
     '600100200', NULL, true, true);
   PERFORM public.attach_checkout_session(held.access_token, 'cs_test_2', now() + interval '30 minutes', 25000, 'PLN');
   outcome := public.fulfill_checkout_session('cs_test_2', false, NULL);
@@ -673,7 +711,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', 'in_person',
     pg_temp.at(t.tuesday, '10:00'), p_client_key => 'visitor-7'
   );
-  PERFORM public.save_booking_details(held.access_token, 'Piotr Test', 'piotr@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Piotr Test', 'piotr@example.com',
     '600100200', NULL, true, true);
   PERFORM public.attach_checkout_session(held.access_token, 'cs_test_3', now() + interval '30 minutes', 25000, 'PLN');
   UPDATE public.appointments SET hold_expires_at = now() - interval '1 second'
@@ -709,7 +747,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', 'in_person',
     pg_temp.at(t.tuesday, '10:00'), p_client_key => 'visitor-q9'
   );
-  PERFORM public.save_booking_details(held.access_token, 'Ewa Test', 'ewa@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Ewa Test', 'ewa@example.com',
     '600100200', NULL, true, true);
   PERFORM public.attach_checkout_session(held.access_token, 'cs_test_4', now() + interval '30 minutes', 25000, 'PLN');
   -- A second session for the same visit (another tab): both get paid.
@@ -733,7 +771,7 @@ BEGIN
     pg_temp.at(t.monday, (regexp_match(pg_temp.free_times('in_person', t.monday), '(\S+)$'))[1]::time),
     p_client_key => 'visitor-q10'
   );
-  PERFORM public.save_booking_details(held.access_token, 'Jan Test', 'jan@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Jan Test', 'jan@example.com',
     '600100200', NULL, true, true);
   PERFORM public.attach_checkout_session(held.access_token, 'cs_test_6', now() + interval '30 minutes', 25000, 'PLN');
   UPDATE public.appointments SET price_minor = 30000 WHERE id = held.appointment_id;
@@ -792,7 +830,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', 'in_person',
     pg_temp.at(t.monday, '09:00'), p_client_key => 'visitor-9'
   );
-  PERFORM public.save_booking_details(held.access_token, 'Marta Test', 'marta@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Marta Test', 'marta@example.com',
     '600100200', NULL, true, true);
 
   -- Not before the visit is confirmed.
@@ -887,7 +925,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', 'in_person',
     pg_temp.at((SELECT monday + 2 FROM booking_test), p_time), p_client_key => 'visitor-' || p_name
   );
-  PERFORM public.save_booking_details(held.access_token, 'Ola Test', 'ola@example.com',
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Test', 'ola@example.com',
     '600100200', NULL, true, true);
   PERFORM public.attach_checkout_session(held.access_token, 'cs_test_' || p_name,
     now() + interval '30 minutes', 25000, 'PLN');
@@ -1863,7 +1901,7 @@ BEGIN
   IF pg_temp.hint_of(format('SELECT public.reserve_hold(%L)', held.access_token)) <> 'details_required' THEN
     RAISE EXCEPTION 'Y: reserved without the details';
   END IF;
-  PERFORM public.save_booking_details(held.access_token, 'Ola Później',
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Później',
     'ola@example.invalid', '600100200', NULL, true, true);
   SELECT * INTO r FROM public.reserve_hold(held.access_token);
   SELECT * INTO v FROM public.appointments WHERE id = held.appointment_id;
@@ -1908,7 +1946,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', 'online',
     pg_temp.at(x.day + 7, '14:00'), p_client_key => 'visitor-y'
   );
-  PERFORM public.save_booking_details(near.access_token, 'Ola Później',
+  PERFORM pg_temp.save_details(near.access_token, 'Ola Później',
     'ola@example.invalid', '600100200', NULL, true, true);
   INSERT INTO x_visits VALUES ('near', near.appointment_id, near.reference, near.access_token);
 END;
@@ -2930,7 +2968,7 @@ BEGIN
     'booking-test-consultation', 'booking-test-anna', p_mode, p_at,
     p_client_key => p_hold_key
   );
-  PERFORM public.save_booking_details(held.access_token, p_name, p_email,
+  PERFORM pg_temp.save_details(held.access_token, p_name, p_email,
     p_phone, NULL, true, true);
   SELECT * INTO r FROM public.reserve_hold(held.access_token, p_reserve_key);
   RETURN QUERY SELECT held.appointment_id, held.reference, r.outcome;
@@ -3217,6 +3255,889 @@ BEGIN
     WHERE appointment_id = v_z1 AND kind = 'payment_disputed' AND details ->> 'dispute_id' = 'du_ab'
   ) THEN
     RAISE EXCEPTION 'AB: the history does not say the payment is disputed';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- AC: the clocks change (Klient · 1). Anna's Monday 9–12 stays 9–12 Polish
+-- time in the weeks before and after the change, in March and in October;
+-- the same hour is then an hour further or nearer in UTC. (2027 is past
+-- the 60 days' horizon: two years ahead here, rolled back with the rest.)
+UPDATE public.center_settings SET max_booking_horizon_days = 730;
+DO $body$
+DECLARE
+  v_offer uuid := (
+    SELECT offer.id FROM public.specialist_services AS offer
+    JOIN public.services AS service ON service.id = offer.service_id
+    WHERE offer.specialist_id = (SELECT anna_id FROM booking_test)
+      AND service.slug = 'booking-test-consultation'
+  );
+  v_day date;
+  v_times text;
+BEGIN
+  FOREACH v_day IN ARRAY ARRAY['2027-03-22', '2027-03-29', '2027-10-25', '2027-11-01']::date[] LOOP
+    SELECT string_agg(to_char(slot.starts_at AT TIME ZONE 'Europe/Warsaw', 'HH24:MI'), ' ' ORDER BY slot.starts_at)
+    INTO v_times
+    FROM private.free_slots(v_offer, 'in_person', v_day, v_day) AS slot;
+    IF v_times IS DISTINCT FROM '09:00 10:00 11:00' THEN
+      RAISE EXCEPTION 'AC: on % the free times were %', v_day, v_times;
+    END IF;
+  END LOOP;
+  IF (SELECT min(starts_at) FROM private.free_slots(v_offer, 'in_person', '2027-03-29', '2027-03-29'))
+     - (SELECT min(starts_at) FROM private.free_slots(v_offer, 'in_person', '2027-03-22', '2027-03-22'))
+     <> interval '7 days' - interval '1 hour'
+     OR (SELECT min(starts_at) FROM private.free_slots(v_offer, 'in_person', '2027-11-01', '2027-11-01'))
+     - (SELECT min(starts_at) FROM private.free_slots(v_offer, 'in_person', '2027-10-25', '2027-10-25'))
+     <> interval '7 days' + interval '1 hour' THEN
+    RAISE EXCEPTION 'AC: 9:00 did not move with the clocks';
+  END IF;
+END;
+$body$;
+
+-- AD: one service, two prices (Klient · 1, card 4). Anna asks 250 zł and
+-- Jan 180 zł for the same consultation: each hold keeps the price of the
+-- specialist chosen, which is what the summary shows and the payment asks.
+UPDATE public.center_settings SET booking_enabled = true;
+UPDATE public.specialist_services AS offer
+SET price_minor = CASE offer.specialist_id WHEN t.anna_id THEN 25000 ELSE 18000 END,
+    active = true, supports_in_person = true, supports_online = true
+FROM booking_test AS t, public.services AS service
+WHERE service.id = offer.service_id AND service.slug = 'booking-test-consultation'
+  AND offer.specialist_id IN (t.anna_id, t.jan_id);
+-- Jan: Mondays 9–12 online.
+INSERT INTO public.specialist_availability_rules (
+  specialist_id, recurrence, weekdays, starts_at, ends_at, valid_from, mode, room_id
+)
+SELECT jan_id, 'weekly', ARRAY[1]::smallint[], '09:00', '12:00', monday, 'online', NULL
+FROM booking_test;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  v_day date := (SELECT monday + 35 FROM booking_test);
+  v_anna record;
+  v_jan record;
+BEGIN
+  SELECT * INTO v_anna FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'online',
+    pg_temp.at(v_day, '13:00'), p_client_key => 'visitor-ad-anna'
+  );
+  SELECT * INTO v_jan FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-jan', 'online',
+    pg_temp.at(v_day, '09:00'), p_client_key => 'visitor-ad-jan'
+  );
+  IF (SELECT price_minor FROM public.appointments WHERE id = v_anna.appointment_id) <> 25000 THEN
+    RAISE EXCEPTION 'AD: Anna''s hold is not at her price';
+  END IF;
+  IF (SELECT price_minor FROM public.appointments WHERE id = v_jan.appointment_id) <> 18000 THEN
+    RAISE EXCEPTION 'AD: Jan''s hold is not at his price';
+  END IF;
+  -- What the guest's pages read for each (the summary and the payment).
+  IF (SELECT price_minor FROM public.get_booking(v_jan.access_token)) <> 18000
+     OR (SELECT price_minor FROM public.get_booking(v_anna.access_token)) <> 25000 THEN
+    RAISE EXCEPTION 'AD: the guest reads another price';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- AF–AI: the details step (Klient · 3). The consents a visit asks for,
+-- one visit for one person at a time, who reads a questionnaire, and a
+-- booking left unfinished. (Bookings are on and the horizon long, AC–AD.)
+CREATE TEMP TABLE col3 (name text PRIMARY KEY, token text, appointment_id uuid);
+GRANT SELECT, INSERT ON col3 TO service_role;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  near record;
+  far record;
+  need record;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+
+  -- AF (card 15): a visit within 14 days of booking waits for the client's
+  -- request to have it before the 14 days to withdraw are over.
+  SELECT * INTO near FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-jan', 'online', pg_temp.at(t.monday, '10:00'),
+    p_client_key => 'visitor-af-near'
+  );
+  INSERT INTO col3 VALUES ('near', near.access_token, near.appointment_id);
+  SELECT * INTO need FROM public.booking_requirements(near.access_token);
+  IF NOT need.early_start OR need.guardian THEN
+    RAISE EXCEPTION 'AF: what a visit next week asks: %', row_to_json(need);
+  END IF;
+  BEGIN
+    PERFORM public.save_booking_details(near.access_token, 'Ala', 'Nowak', 'ala@example.invalid',
+      '600700800', NULL, true, true);
+    RAISE EXCEPTION 'AF: saved without the request to start early';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'A visit within 14 days needs the client''s request' THEN RAISE; END IF;
+  END;
+  PERFORM public.save_booking_details(near.access_token, 'Ala', 'Nowak', 'ala@example.invalid',
+    '600700800', NULL, true, true, p_accept_early_start => true);
+  IF (SELECT early_start_accepted_at IS NULL OR guardian_confirmed_at IS NOT NULL
+      FROM public.appointments WHERE id = near.appointment_id) THEN
+    RAISE EXCEPTION 'AF: the time of the request was not saved';
+  END IF;
+
+  -- Eight weeks ahead: no such request asked, none saved.
+  SELECT * INTO far FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person', pg_temp.at(t.monday + 56, '09:00'),
+    p_client_key => 'visitor-af-far'
+  );
+  INSERT INTO col3 VALUES ('far', far.access_token, far.appointment_id);
+  IF (SELECT early_start FROM public.booking_requirements(far.access_token)) THEN
+    RAISE EXCEPTION 'AF: a visit eight weeks ahead asked to start early';
+  END IF;
+  PERFORM public.save_booking_details(far.access_token, 'Ala', 'Nowak', 'ala@example.invalid',
+    '600700800', NULL, true, true);
+  IF (SELECT early_start_accepted_at FROM public.appointments WHERE id = far.appointment_id) IS NOT NULL THEN
+    RAISE EXCEPTION 'AF: a request saved that was not asked for';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- AF (card 16): a service for minors is booked by a parent or guardian.
+UPDATE public.services SET for_minors = true WHERE slug = 'booking-test-consultation';
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person', pg_temp.at(t.monday + 63, '09:00'),
+    p_client_key => 'visitor-af-minor'
+  );
+  IF NOT (SELECT guardian FROM public.booking_requirements(held.access_token)) THEN
+    RAISE EXCEPTION 'AF: a service for minors did not ask for the guardian';
+  END IF;
+  BEGIN
+    PERFORM public.save_booking_details(held.access_token, 'Ola', 'Rodzic', 'rodzic@example.invalid',
+      '600700801', NULL, true, true);
+    RAISE EXCEPTION 'AF: saved without the guardian''s confirmation';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'A service for minors is booked by a parent or guardian' THEN RAISE; END IF;
+  END;
+  PERFORM public.save_booking_details(held.access_token, 'Ola', 'Rodzic', 'rodzic@example.invalid',
+    '600700801', NULL, true, true, p_confirm_guardian => true);
+  IF (SELECT guardian_confirmed_at FROM public.appointments WHERE id = held.appointment_id) IS NULL THEN
+    RAISE EXCEPTION 'AF: the guardian''s confirmation was not saved';
+  END IF;
+  PERFORM public.release_hold(held.access_token);
+END;
+$body$;
+RESET ROLE;
+UPDATE public.services SET for_minors = false WHERE slug = 'booking-test-consultation';
+
+-- AG (card 17): one person, one visit at a time, by e-mail or by phone.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  first record;
+  second record;
+  v_day date;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  v_day := t.monday + 42;
+  -- Anna at 10:00 in the room, details given.
+  SELECT * INTO first FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person', pg_temp.at(v_day, '10:00'),
+    p_client_key => 'visitor-ag-1'
+  );
+  PERFORM public.save_booking_details(first.access_token, 'Ewa', 'Raz', 'ewa.raz@example.invalid',
+    '+48 600 700 900', NULL, true, true);
+  -- Jan online at the same time, for the same person: by e-mail, by phone.
+  SELECT * INTO second FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-jan', 'online', pg_temp.at(v_day, '10:00'),
+    p_client_key => 'visitor-ag-2'
+  );
+  BEGIN
+    PERFORM public.save_booking_details(second.access_token, 'Ewa', 'Raz', 'EWA.RAZ@example.invalid',
+      '500100100', NULL, true, true);
+    RAISE EXCEPTION 'AG: the same e-mail got a second visit at the same time';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'The client has another visit at this time' THEN RAISE; END IF;
+  END;
+  BEGIN
+    PERFORM public.save_booking_details(second.access_token, 'Ewa', 'Raz', 'inny@example.invalid',
+      '600700900', NULL, true, true);
+    RAISE EXCEPTION 'AG: the same phone got a second visit at the same time';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'The client has another visit at this time' THEN RAISE; END IF;
+  END;
+  -- Someone else may.
+  PERFORM public.save_booking_details(second.access_token, 'Adam', 'Inny', 'adam@example.invalid',
+    '500200300', NULL, true, true);
+  PERFORM public.release_hold(second.access_token);
+  -- The same person at another time may.
+  SELECT * INTO second FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-jan', 'online', pg_temp.at(v_day, '11:00'),
+    p_client_key => 'visitor-ag-3'
+  );
+  PERFORM public.save_booking_details(second.access_token, 'Ewa', 'Raz', 'ewa.raz@example.invalid',
+    '600700900', NULL, true, true);
+  PERFORM public.release_hold(second.access_token);
+  -- A time given back no longer counts.
+  PERFORM public.release_hold(first.access_token);
+  SELECT * INTO second FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-jan', 'online', pg_temp.at(v_day, '10:00'),
+    p_client_key => 'visitor-ag-4'
+  );
+  PERFORM public.save_booking_details(second.access_token, 'Ewa', 'Raz', 'ewa.raz@example.invalid',
+    '600700900', NULL, true, true);
+  PERFORM public.release_hold(second.access_token);
+END;
+$body$;
+RESET ROLE;
+
+-- AH (card 12): a questionnaire is read by the visit's specialist and the
+-- centre's admin, by nobody else. (The visit is Jan's, from AF.)
+INSERT INTO public.visit_intakes (token_hash, service_id, appointment_id, mood, answers, health_consent_at)
+SELECT extensions.digest('col3-intake', 'sha256'), visit.service_id, visit.id, 6, '{"q1":"tak"}', now()
+FROM public.appointments AS visit WHERE visit.id = (SELECT appointment_id FROM col3 WHERE name = 'near');
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF (SELECT count(*) FROM public.visit_intakes) <> 1 THEN
+    RAISE EXCEPTION 'AH: the visit''s specialist does not see its questionnaire';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.visit_intakes AS intake
+             WHERE intake.token_hash = extensions.digest('col3-intake', 'sha256')) THEN
+    RAISE EXCEPTION 'AH: another specialist read the questionnaire';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.visit_intakes AS intake
+                 WHERE intake.token_hash = extensions.digest('col3-intake', 'sha256')) THEN
+    RAISE EXCEPTION 'AH: the admin does not see the questionnaire';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  PERFORM 1 FROM public.visit_intakes LIMIT 1;
+  RAISE EXCEPTION 'AH: the public read a questionnaire';
+EXCEPTION WHEN insufficient_privilege THEN NULL;
+END;
+$body$;
+RESET ROLE;
+
+-- AI (card 13): the details of a booking never finished go after 30 days;
+-- younger ones, and real visits, stay; the nightly clean-up does it too.
+DO $body$
+DECLARE
+  v_old uuid := (SELECT appointment_id FROM col3 WHERE name = 'near');
+  v_young uuid := (SELECT appointment_id FROM col3 WHERE name = 'far');
+  v_kept integer := (SELECT count(*) FROM public.appointments AS visit
+                     WHERE private.shown_as_visit(visit) AND visit.client_email IS NOT NULL);
+BEGIN
+  DELETE FROM public.visit_intakes WHERE token_hash = extensions.digest('col3-intake', 'sha256');
+  UPDATE public.appointments SET status = 'expired', hold_expires_at = now() - interval '31 days'
+  WHERE id = v_old;
+  UPDATE public.appointments SET status = 'expired', hold_expires_at = now() - interval '29 days'
+  WHERE id = v_young;
+  PERFORM private.forget_abandoned_bookings();
+  IF (SELECT num_nonnulls(client_name, client_first_name, client_last_name, client_email,
+                          client_phone, client_notes)
+      FROM public.appointments WHERE id = v_old) <> 0 THEN
+    RAISE EXCEPTION 'AI: a booking left 31 days ago kept its details';
+  END IF;
+  IF (SELECT client_email FROM public.appointments WHERE id = v_young) IS NULL THEN
+    RAISE EXCEPTION 'AI: a booking left 29 days ago lost its details';
+  END IF;
+  IF (SELECT count(*) FROM public.appointments AS visit
+      WHERE private.shown_as_visit(visit) AND visit.client_email IS NOT NULL) <> v_kept THEN
+    RAISE EXCEPTION 'AI: a real visit lost its details';
+  END IF;
+  UPDATE public.appointments SET hold_expires_at = now() - interval '31 days' WHERE id = v_young;
+  PERFORM private.apply_retention();
+  IF (SELECT client_email FROM public.appointments WHERE id = v_young) IS NOT NULL THEN
+    RAISE EXCEPTION 'AI: the nightly clean-up left an unfinished booking''s details';
+  END IF;
+END;
+$body$;
+
+-- AJ–AL: paying at once (Klient · 4). The price of the moment of booking,
+-- money in another currency, and a price of 0 zł or at least 2 zł.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  outcome text;
+  hint text;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+
+  -- AJ (card 8): the admin changes the price while the client books; the
+  -- client pays the price the time was held at.
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.monday + 70, '09:00'), p_client_key => 'visitor-aj'
+  );
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Cena', 'ola.cena@example.invalid',
+    '600700100', NULL, true, true);
+  UPDATE public.specialist_services SET price_minor = 30000
+  WHERE specialist_id = t.anna_id;
+  BEGIN
+    PERFORM public.attach_checkout_session(held.access_token, 'cs_aj_new', now() + interval '30 minutes', 30000, 'PLN');
+    RAISE EXCEPTION 'AJ: a session at the new price';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'AJ:%' THEN RAISE; END IF;
+    GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
+    IF hint <> 'amount_mismatch' THEN RAISE EXCEPTION 'AJ: expected amount_mismatch, got %', hint; END IF;
+  END;
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_aj', now() + interval '30 minutes', 25000, 'PLN');
+  outcome := public.fulfill_checkout_session('cs_aj', true, 'pi_aj');
+  IF outcome <> 'confirmed'
+     OR (SELECT price_minor FROM public.appointments WHERE id = held.appointment_id) <> 25000 THEN
+    RAISE EXCEPTION 'AJ: paid % at the held price: %', outcome,
+      (SELECT price_minor FROM public.appointments WHERE id = held.appointment_id);
+  END IF;
+  UPDATE public.specialist_services SET price_minor = 25000
+  WHERE specialist_id = t.anna_id;
+END;
+$body$;
+RESET ROLE;
+
+-- AK (card 10): money in another currency than the visit's goes back and
+-- confirms nothing.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.monday + 70, '10:00'), p_client_key => 'visitor-ak'
+  );
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Waluta', 'ola.waluta@example.invalid',
+    '600700101', NULL, true, true);
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_ak', now() + interval '30 minutes', 25000, 'PLN');
+  INSERT INTO col3 VALUES ('ak', held.access_token, held.appointment_id);
+END;
+$body$;
+RESET ROLE;
+-- What Stripe reported came in euro (as the owner: the site never writes it).
+UPDATE public.payments SET currency_code = 'EUR' WHERE checkout_session_id = 'cs_ak';
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  outcome text;
+BEGIN
+  outcome := public.fulfill_checkout_session('cs_ak', true, 'pi_ak');
+  IF outcome <> 'refund_payment' THEN
+    RAISE EXCEPTION 'AK: money in euro was %, not to be refunded', outcome;
+  END IF;
+  IF (SELECT status FROM public.appointments WHERE id = (SELECT appointment_id FROM col3 WHERE name = 'ak'))
+     = 'confirmed' THEN
+    RAISE EXCEPTION 'AK: money in euro confirmed the visit';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- AL (card 9): a price is 0 zł (free) or at least 2 zł; a free visit is
+-- confirmed without a payment, with no code.
+DO $body$
+BEGIN
+  BEGIN
+    UPDATE public.specialist_services SET price_minor = 150
+    WHERE specialist_id = (SELECT anna_id FROM booking_test);
+    RAISE EXCEPTION 'AL: an offer at 1,50 zł';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  UPDATE public.specialist_services SET price_minor = 200
+  WHERE specialist_id = (SELECT anna_id FROM booking_test);
+  UPDATE public.specialist_services SET price_minor = 0
+  WHERE specialist_id = (SELECT anna_id FROM booking_test);
+END;
+$body$;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.monday + 70, '11:00'), p_client_key => 'visitor-al'
+  );
+  IF (SELECT price_minor FROM public.appointments WHERE id = held.appointment_id) <> 0 THEN
+    RAISE EXCEPTION 'AL: the free visit has a price';
+  END IF;
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Darmo', 'ola.darmo@example.invalid',
+    '600700102', NULL, true, true);
+  PERFORM public.confirm_free_booking(held.access_token);
+  IF (SELECT (status, discount_code_id IS NULL) FROM public.appointments WHERE id = held.appointment_id)
+     IS DISTINCT FROM ('confirmed'::public.appointment_status, true) THEN
+    RAISE EXCEPTION 'AL: a free visit was not confirmed without a payment';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+UPDATE public.specialist_services SET price_minor = 25000
+WHERE specialist_id = (SELECT anna_id FROM booking_test);
+-- A paid visit is still not confirmed that way.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  hint text;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.monday + 77, '09:00'), p_client_key => 'visitor-al-2'
+  );
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Płaci', 'ola.placi@example.invalid',
+    '600700103', NULL, true, true);
+  BEGIN
+    PERFORM public.confirm_free_booking(held.access_token);
+    RAISE EXCEPTION 'AL: a paid visit confirmed as free';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'AL:%' THEN RAISE; END IF;
+    GET STACKED DIAGNOSTICS hint = PG_EXCEPTION_HINT;
+    IF hint <> 'not_free' THEN RAISE EXCEPTION 'AL: expected not_free, got %', hint; END IF;
+  END;
+  PERFORM public.release_hold(held.access_token);
+END;
+$body$;
+RESET ROLE;
+
+-- AM: a visit paid with a discount code (Klient · 4a). Moving it keeps the
+-- code and the price paid (card 3); cancelling it in the window gives back
+-- what was paid, not the list price (card 8).
+UPDATE public.center_settings
+SET cancellation_window_hours = 24, reschedule_window_hours = 24, max_self_reschedules = 1;
+INSERT INTO public.discount_codes (code, kind, value) VALUES ('KUPONAM', 'percent', 20);
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  mail record;
+  moved record;
+  cancelled record;
+  v_day date;
+  v_code uuid;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  v_day := t.monday + 84;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(v_day, '09:00'), p_client_key => 'visitor-am'
+  );
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Kupon', 'ola.kupon@example.invalid',
+    '600700104', NULL, true, true);
+  PERFORM public.apply_discount_code(held.access_token, 'KUPONAM');
+  IF (SELECT (price_minor, list_price_minor, discount_minor) FROM public.appointments WHERE id = held.appointment_id)
+     IS DISTINCT FROM (20000, 25000, 5000) THEN
+    RAISE EXCEPTION 'AM: 20 %% off 250 zł: %',
+      (SELECT row_to_json(a) FROM (SELECT price_minor, list_price_minor, discount_minor
+        FROM public.appointments WHERE id = held.appointment_id) AS a);
+  END IF;
+  SELECT discount_code_id INTO v_code FROM public.appointments WHERE id = held.appointment_id;
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_am', now() + interval '30 minutes', 20000, 'PLN');
+  IF public.fulfill_checkout_session('cs_am', true, 'pi_am') <> 'confirmed' THEN
+    RAISE EXCEPTION 'AM: the visit paid with a code was not confirmed';
+  END IF;
+  SELECT * INTO mail FROM public.claim_booking_email(held.reference, 'confirmation');
+
+  -- Card 3: moved, it keeps its code and the price paid.
+  SELECT * INTO moved FROM public.reschedule_booking(mail.manage_token, pg_temp.at(v_day, '10:00'));
+  IF (SELECT (status, starts_at, price_minor) FROM public.get_booking(mail.manage_token))
+     IS DISTINCT FROM ('confirmed'::public.appointment_status, pg_temp.at(v_day, '10:00'), 20000) THEN
+    RAISE EXCEPTION 'AM: the moved visit lost its price';
+  END IF;
+  IF (SELECT (discount_code_id, discount_minor) FROM public.appointments WHERE id = held.appointment_id)
+     IS DISTINCT FROM (v_code, 5000) THEN
+    RAISE EXCEPTION 'AM: the moved visit lost its code';
+  END IF;
+
+  -- Card 8: cancelled in the window, it gives back what was paid (200 zł),
+  -- not the list price (250 zł).
+  SELECT * INTO cancelled FROM public.cancel_booking(mail.manage_token);
+  IF (cancelled.refund_minor, cancelled.payment_intent_id) IS DISTINCT FROM (20000, 'pi_am'::text) THEN
+    RAISE EXCEPTION 'AM: the refund of a visit paid with a code: %', row_to_json(cancelled);
+  END IF;
+  IF (SELECT (status, refund_due_minor) FROM public.get_booking(mail.manage_token))
+     IS DISTINCT FROM ('cancelled'::public.appointment_status, 20000) THEN
+    RAISE EXCEPTION 'AM: the cancelled visit owes another amount';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- AN: a reservation keeps the price it was made at (Klient · 5, card 14).
+-- The centre raises the offer's price after the client chose "zapłacę
+-- później"; the link still asks for the old amount, and the visit is
+-- confirmed at it.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  INSERT INTO z_visits SELECT 'an1', * FROM pg_temp.reserve_new('in_person',
+    pg_temp.at(t.monday + 91, '09:00'), 'Nina Cena', 'nina.cena@example.invalid',
+    '600700105', 'visitor-an-hold', 'visitor-an');
+  IF (SELECT outcome FROM z_visits WHERE name = 'an1') <> 'reserved' THEN
+    RAISE EXCEPTION 'AN: the visit was not reserved';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+UPDATE public.specialist_services SET price_minor = 30000
+WHERE specialist_id = (SELECT anna_id FROM booking_test);
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  c record;
+BEGIN
+  SELECT * INTO c FROM public.claim_booking_email((SELECT reference FROM z_visits WHERE name = 'an1'), 'reserved');
+  PERFORM public.accept_booking_terms(c.manage_token);
+  IF pg_temp.hint_of(format('SELECT public.attach_reservation_payment(%L, %L, 30000, %L)',
+       c.manage_token, 'cs_an_new', 'PLN')) <> 'amount_mismatch' THEN
+    RAISE EXCEPTION 'AN: the link asked for the new price';
+  END IF;
+  PERFORM public.attach_reservation_payment(c.manage_token, 'cs_an', 25000, 'PLN');
+  IF public.fulfill_checkout_session('cs_an', true, 'pi_an') <> 'confirmed' THEN
+    RAISE EXCEPTION 'AN: paid at the old price, the visit was not confirmed';
+  END IF;
+  IF (SELECT (status, price_minor) FROM public.get_booking(c.manage_token))
+     IS DISTINCT FROM ('confirmed'::public.appointment_status, 25000) THEN
+    RAISE EXCEPTION 'AN: the confirmed visit changed its price';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+UPDATE public.specialist_services SET price_minor = 25000
+WHERE specialist_id = (SELECT anna_id FROM booking_test);
+
+-- AO: the centre helps a client with no e-mail about their visit (Klient ·
+-- 6). The e-mail gives the place's directions (card 11); the link goes
+-- again, for a confirmed visit too (card 7); a bounced e-mail shows in the
+-- history (card 8).
+UPDATE public.locations SET directions = 'Wejście od podwórza, drugie piętro'
+WHERE slug = 'booking-test-location';
+CREATE TEMP TABLE ao_visits (name text PRIMARY KEY, id uuid, reference text);
+GRANT ALL ON ao_visits TO service_role, authenticated;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  mail record;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at(t.monday + 98, '09:00'), p_client_key => 'visitor-ao'
+  );
+  PERFORM pg_temp.save_details(held.access_token, 'Olga Link', 'olga.link@example.invalid',
+    '600700106', NULL, true, true);
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_ao', now() + interval '30 minutes', 25000, 'PLN');
+  IF public.fulfill_checkout_session('cs_ao', true, 'pi_ao') <> 'confirmed' THEN
+    RAISE EXCEPTION 'AO: the visit was not confirmed';
+  END IF;
+  INSERT INTO ao_visits VALUES ('paid', held.appointment_id, held.reference);
+
+  -- Card 11: the confirmation gives the directions (an online one none).
+  SELECT * INTO mail FROM public.claim_booking_email(held.reference, 'confirmation');
+  IF mail.location_directions IS DISTINCT FROM 'Wejście od podwórza, drugie piętro' THEN
+    RAISE EXCEPTION 'AO: the e-mail has no directions: %', row_to_json(mail);
+  END IF;
+  PERFORM public.mark_booking_email_sent(held.reference, 'confirmation', 'msg_ao_first');
+
+  INSERT INTO ao_visits SELECT 'reserved', appointment_id, reference
+  FROM pg_temp.reserve_new('online', pg_temp.at(t.monday + 98, '13:00'),
+    'Oskar Rezerwa', 'oskar.rezerwa@example.invalid', '600700107',
+    'visitor-ao-2-hold', 'visitor-ao-2');
+  SELECT * INTO mail FROM public.claim_booking_email(
+    (SELECT reference FROM ao_visits WHERE name = 'reserved'), 'reserved');
+  IF mail.manage_token IS NULL OR mail.location_directions IS NOT NULL THEN
+    RAISE EXCEPTION 'AO: an online reservation''s e-mail: %', row_to_json(mail);
+  END IF;
+  -- Both e-mails went out yesterday.
+  UPDATE public.booking_emails SET claimed_at = now() - interval '1 day'
+  WHERE appointment_id IN (SELECT id FROM ao_visits);
+END;
+$body$;
+RESET ROLE;
+
+-- Card 7: the admin sends the link again: the confirmation for a confirmed
+-- visit, the link to pay for a reservation; not again within five minutes,
+-- not for a cancelled visit.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  r record;
+BEGIN
+  SELECT * INTO r FROM public.centre_resend_visit_link((SELECT id FROM ao_visits WHERE name = 'paid'));
+  IF (r.reference, r.kind) IS DISTINCT FROM ((SELECT reference FROM ao_visits WHERE name = 'paid'), 'confirmation'::text) THEN
+    RAISE EXCEPTION 'AO: the confirmed visit''s link: %', row_to_json(r);
+  END IF;
+  SELECT * INTO r FROM public.centre_resend_visit_link((SELECT id FROM ao_visits WHERE name = 'reserved'));
+  IF r.kind IS DISTINCT FROM 'reserved' THEN
+    RAISE EXCEPTION 'AO: the reservation''s link: %', row_to_json(r);
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  mail record;
+BEGIN
+  SELECT * INTO mail FROM public.claim_booking_email(
+    (SELECT reference FROM ao_visits WHERE name = 'paid'), 'confirmation');
+  IF mail.manage_token IS NULL THEN
+    RAISE EXCEPTION 'AO: the confirmation could not go again';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF pg_temp.hint_of(format('SELECT public.centre_resend_visit_link(%L)',
+       (SELECT id FROM ao_visits WHERE name = 'paid'))) <> 'recently_sent' THEN
+    RAISE EXCEPTION 'AO: the link went twice in five minutes';
+  END IF;
+END;
+$body$;
+SET LOCAL ROLE service_role;
+UPDATE public.booking_emails SET claimed_at = now() - interval '6 minutes'
+WHERE appointment_id = (SELECT id FROM ao_visits WHERE name = 'paid');
+RESET ROLE;
+UPDATE public.appointments SET status = 'cancelled', cancelled_at = now(), cancelled_by = 'client'
+WHERE id = (SELECT id FROM ao_visits WHERE name = 'reserved');
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  IF pg_temp.hint_of(format('SELECT public.centre_resend_visit_link(%L)',
+       (SELECT id FROM ao_visits WHERE name = 'reserved'))) <> 'nothing_to_send' THEN
+    RAISE EXCEPTION 'AO: a link for a cancelled visit';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Jan, another specialist, cannot; Anna can, for her own.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.centre_resend_visit_link((SELECT id FROM ao_visits WHERE name = 'paid'));
+    RAISE EXCEPTION 'AO: Jan sent the link for Anna''s visit';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  r record;
+BEGIN
+  SELECT * INTO r FROM public.centre_resend_visit_link((SELECT id FROM ao_visits WHERE name = 'paid'));
+  IF r.kind IS DISTINCT FROM 'confirmation' THEN
+    RAISE EXCEPTION 'AO: Anna could not send her client the link';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- Card 8: the confirmation bounced: the history says so, once; a message
+-- not about a visit changes nothing.
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  v_id uuid := (SELECT id FROM ao_visits WHERE name = 'paid');
+BEGIN
+  -- The confirmation Anna sent again goes out as message msg_ao.
+  PERFORM public.claim_booking_email((SELECT reference FROM ao_visits WHERE name = 'paid'), 'confirmation');
+  PERFORM public.mark_booking_email_sent((SELECT reference FROM ao_visits WHERE name = 'paid'), 'confirmation', 'msg_ao');
+  IF public.mark_booking_email_bounced('msg_ao') IS DISTINCT FROM (SELECT reference FROM ao_visits WHERE name = 'paid') THEN
+    RAISE EXCEPTION 'AO: the bounce was not about the visit';
+  END IF;
+  IF public.mark_booking_email_bounced('msg_ao') IS NOT NULL
+     OR public.mark_booking_email_bounced('msg_newsletter') IS NOT NULL THEN
+    RAISE EXCEPTION 'AO: a bounce counted twice, or for another e-mail';
+  END IF;
+  IF (SELECT array_agg(details ->> 'email') FROM public.appointment_events
+      WHERE appointment_id = v_id AND kind = 'email_bounced') IS DISTINCT FROM ARRAY['confirmation'] THEN
+    RAISE EXCEPTION 'AO: the history does not say the confirmation bounced';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+SET LOCAL ROLE anon;
+DO $body$
+BEGIN
+  BEGIN
+    PERFORM public.mark_booking_email_bounced('msg_ao');
+    RAISE EXCEPTION 'AO: anon marked a bounce';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$body$;
+RESET ROLE;
+
+-- AP: the centre moved a paid visit and the new time does not suit the
+-- client (Klient · 7, card 6): cancelling from the link gives all the money
+-- back, even inside the window. A move of the client's own after the
+-- centre's ends that. Every visit here is inside the 720-hour window.
+UPDATE public.center_settings
+SET cancellation_window_hours = 720, reschedule_window_hours = 0, max_self_reschedules = 1;
+CREATE TEMP TABLE ap_visits (name text PRIMARY KEY, id uuid, reference text, link_token text);
+GRANT ALL ON ap_visits TO service_role, authenticated;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  t booking_test%ROWTYPE;
+  held record;
+  mail record;
+  v_name text;
+  v_time time;
+BEGIN
+  SELECT * INTO t FROM booking_test;
+  FOR v_name, v_time IN VALUES ('centre', '09:00'::time), ('client', '10:00'::time) LOOP
+    SELECT * INTO held FROM public.hold_slot(
+      'booking-test-consultation', 'booking-test-anna', 'in_person',
+      pg_temp.at(t.monday + 21, v_time), p_client_key => 'visitor-ap-' || v_name
+    );
+    PERFORM pg_temp.save_details(held.access_token, 'Piotr Przełożony', 'piotr.ap@example.invalid',
+      '600700108', NULL, true, true);
+    PERFORM public.attach_checkout_session(held.access_token, 'cs_ap_' || v_name,
+      now() + interval '30 minutes', 25000, 'PLN');
+    IF public.fulfill_checkout_session('cs_ap_' || v_name, true, 'pi_ap_' || v_name) <> 'confirmed' THEN
+      RAISE EXCEPTION 'AP: the % visit was not confirmed', v_name;
+    END IF;
+    SELECT * INTO mail FROM public.claim_booking_email(held.reference, 'confirmation');
+    INSERT INTO ap_visits VALUES (v_name, held.appointment_id, held.reference, mail.manage_token);
+  END LOOP;
+  IF EXISTS (SELECT 1 FROM ap_visits AS v, public.get_booking(v.link_token) AS b WHERE b.moved_by_centre) THEN
+    RAISE EXCEPTION 'AP: a visit nobody moved counts as moved by the centre';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- The admin moves both: 9:00 to 11:00, 10:00 to 12:00.
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+DO $body$
+DECLARE
+  day date := (SELECT monday + 21 FROM booking_test);
+  room uuid := (SELECT room_id FROM booking_test);
+BEGIN
+  PERFORM public.centre_reschedule_visit((SELECT id FROM ap_visits WHERE name = 'centre'),
+    pg_temp.at(day, '11:00'), 'in_person', room, 'Specjalistka choruje');
+  PERFORM public.centre_reschedule_visit((SELECT id FROM ap_visits WHERE name = 'client'),
+    pg_temp.at(day, '12:00'), 'in_person', room, 'Specjalistka choruje');
+END;
+$body$;
+RESET ROLE;
+
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  day date := (SELECT monday + 21 FROM booking_test);
+  c record;
+BEGIN
+  IF NOT (SELECT b.moved_by_centre FROM ap_visits AS v, public.get_booking(v.link_token) AS b WHERE v.name = 'centre') THEN
+    RAISE EXCEPTION 'AP: the visit page does not know the centre moved the visit';
+  END IF;
+  -- The other client moves theirs again themselves, to 10:00.
+  PERFORM public.reschedule_booking((SELECT link_token FROM ap_visits WHERE name = 'client'), pg_temp.at(day, '10:00'));
+  IF (SELECT b.moved_by_centre FROM ap_visits AS v, public.get_booking(v.link_token) AS b WHERE v.name = 'client') THEN
+    RAISE EXCEPTION 'AP: the client''s own move still counts as the centre''s';
+  END IF;
+
+  SELECT * INTO c FROM public.cancel_booking((SELECT link_token FROM ap_visits WHERE name = 'centre'));
+  IF (c.refund_minor, c.payment_intent_id) IS DISTINCT FROM (25000, 'pi_ap_centre'::text) THEN
+    RAISE EXCEPTION 'AP: the centre''s new time, cancelled: %', row_to_json(c);
+  END IF;
+  SELECT * INTO c FROM public.cancel_booking((SELECT link_token FROM ap_visits WHERE name = 'client'));
+  IF c.refund_minor <> 0 THEN
+    RAISE EXCEPTION 'AP: the client''s own time, cancelled inside the window: %', row_to_json(c);
+  END IF;
+  IF (SELECT refund_due_minor FROM public.appointments WHERE id = (SELECT id FROM ap_visits WHERE name = 'centre')) <> 25000 THEN
+    RAISE EXCEPTION 'AP: the refund owed was not recorded';
+  END IF;
+END;
+$body$;
+RESET ROLE;
+
+-- AQ: the old page Stripe returns to, opened again after the centre
+-- cancelled the visit with part of the money back (Klient · 9, card 20):
+-- nothing is confirmed or given back a second time; the part stays a part.
+CREATE TEMP TABLE aq_visit (id uuid, reference text);
+GRANT ALL ON aq_visit TO service_role, authenticated;
+SET LOCAL ROLE service_role;
+DO $body$
+DECLARE
+  held record;
+BEGIN
+  SELECT * INTO held FROM public.hold_slot(
+    'booking-test-consultation', 'booking-test-anna', 'in_person',
+    pg_temp.at((SELECT monday + 21 FROM booking_test), '09:00'), p_client_key => 'visitor-aq'
+  );
+  PERFORM pg_temp.save_details(held.access_token, 'Ewa Powrót', 'ewa.aq@example.invalid',
+    '600700109', NULL, true, true);
+  PERFORM public.attach_checkout_session(held.access_token, 'cs_aq', now() + interval '30 minutes', 25000, 'PLN');
+  IF public.fulfill_checkout_session('cs_aq', true, 'pi_aq') <> 'confirmed' THEN
+    RAISE EXCEPTION 'AQ: the visit was not confirmed';
+  END IF;
+  INSERT INTO aq_visit VALUES (held.appointment_id, held.reference);
+END;
+$body$;
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+SELECT public.centre_cancel_visit((SELECT id FROM aq_visit), 10000, 'Późne odwołanie');
+RESET ROLE;
+
+SET LOCAL ROLE service_role;
+DO $body$
+BEGIN
+  IF public.fulfill_checkout_session('cs_aq', true, 'pi_aq') <> 'already_settled' THEN
+    RAISE EXCEPTION 'AQ: the return page settled the payment again';
+  END IF;
+  IF (SELECT (status, cancelled_by, refund_due_minor) FROM public.appointments WHERE id = (SELECT id FROM aq_visit))
+     IS DISTINCT FROM ('cancelled'::public.appointment_status, 'centre'::text, 10000) THEN
+    RAISE EXCEPTION 'AQ: the visit after the return page: %',
+      (SELECT row_to_json(a) FROM public.appointments AS a WHERE id = (SELECT id FROM aq_visit));
   END IF;
 END;
 $body$;

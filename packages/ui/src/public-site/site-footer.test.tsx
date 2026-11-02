@@ -91,4 +91,38 @@ describe("SiteFooter", () => {
       screen.getByRole("form", { name: "Zapis na newsletter" }),
     ).toBeInTheDocument();
   });
+
+  it("shows the CMS's crisis numbers after navigation and before the newsletter", () => {
+    render(
+      <SiteFooter
+        navigation={[home]}
+        crisisLines={[
+          {
+            number: "123 456",
+            label: "Linia testowa",
+            detail: "Informacja testowa",
+          },
+        ]}
+        newsletter={<form aria-label="Zapis na newsletter" />}
+      />,
+    );
+    const strip = screen.getByRole("complementary", {
+      name: "Pomoc w kryzysie",
+    });
+    expect(screen.getByText("Linia testowa")).toBeVisible();
+    expect(screen.getByText("Informacja testowa")).toBeVisible();
+    // Named as it reads, the number first (label in name).
+    expect(
+      screen.getByRole("link", {
+        name: "123 456 Linia testowa Informacja testowa",
+      }),
+    ).toHaveAttribute("href", "tel:123456");
+    expect(strip.previousElementSibling).toHaveClass("ks-footer__main");
+    expect(strip.nextElementSibling).toContainElement(
+      screen.getByRole("form", { name: "Zapis na newsletter" }),
+    );
+    expect(
+      screen.getByRole("link", { name: "Pomoc w kryzysie" }),
+    ).toHaveAttribute("href", "/pomoc-w-kryzysie");
+  });
 });

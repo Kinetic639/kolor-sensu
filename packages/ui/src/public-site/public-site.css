@@ -152,23 +152,53 @@
   .ks-hand-link__label {
     position: relative;
     min-width: 0;
-    padding-bottom: 0.5rem;
+    padding-bottom: 0;
     overflow-wrap: anywhere;
   }
   .ks-hand-link__underline {
     position: absolute;
     left: -1%;
-    bottom: 0;
+    bottom: -2px;
     width: 102%;
     height: 9px;
     pointer-events: none;
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  .ks-hand-link:is(:hover, :focus-visible) .ks-hand-link__underline,
+  .ks-wk:is(:hover, :focus-within) .ks-hand-link__underline,
+  .ks-education-book:is(:hover, :focus-within) .ks-hand-link__underline,
+  .ks-education-article:is(:hover, :focus-within) .ks-hand-link__underline {
+    opacity: 1;
+    clip-path: inset(0);
   }
   .ks-hand-link__arrow {
     flex: 0 0 30px;
     width: 30px;
     height: 24px;
-    margin-top: -7px;
+    margin-top: 0;
     pointer-events: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-hand-link__underline,
+    .ks-hand-link__arrow {
+      transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .ks-hand-link__underline {
+      transition:
+        transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+        clip-path 650ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 150ms ease;
+    }
+    .ks-hand-link__arrow {
+      transform-origin: left center;
+    }
+    .ks-hand-link:is(:hover, :focus-visible) .ks-hand-link__underline {
+      transform: translateY(-2px);
+    }
+    .ks-hand-link:is(:hover, :focus-visible) .ks-hand-link__arrow {
+      transform: translateX(2px) scaleX(1.12);
+    }
   }
   @media (max-width: 69.999rem) {
     .ks-crisis {
@@ -487,6 +517,68 @@
   .ks-sp__portrait-img {
     object-fit: contain;
     object-position: 50% 0;
+    transform: translate(var(--ks-portrait-x, 0%), var(--ks-portrait-y, 0%))
+      scale(var(--ks-portrait-zoom, 1));
+    transform-origin: center center;
+  }
+
+  .ks-sp__painted,
+  .ks-sp__professional {
+    position: absolute;
+    inset: 0;
+  }
+  .ks-sp__professional {
+    transition: opacity 550ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity: 0;
+    pointer-events: none;
+    clip-path: inset(8% 2% 16% round 14px);
+  }
+  .ks-sp__professional::before {
+    content: "";
+    position: absolute;
+    inset: 8% 2% 16%;
+    background: #f1f0eb;
+    border-radius: 14px;
+  }
+  .ks-sp__art--professional:focus-visible {
+    outline: 2px solid #527b57;
+    outline-offset: 5px;
+    border-radius: 14px;
+  }
+  .ks-sp__art--professional .ks-sp__splash img {
+    opacity: var(--ks-paint-visible, 1);
+    transition: opacity 550ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .ks-sp__art--professional .ks-sp__stain img {
+    opacity: calc(0.55 * var(--ks-paint-visible, 1));
+    transition: opacity 550ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  :is(.ks-sp[data-reveal="done"], .ks-sp:not([data-animation]))
+    .ks-sp__art--professional:focus-visible {
+    --ks-paint-visible: 0;
+  }
+  :is(.ks-sp[data-reveal="done"], .ks-sp:not([data-animation]))
+    .ks-sp__art--professional:focus-visible
+    .ks-sp__professional {
+    opacity: 1;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    :is(.ks-sp[data-reveal="done"], .ks-sp:not([data-animation]))
+      .ks-sp__art--professional:hover {
+      --ks-paint-visible: 0;
+    }
+    :is(.ks-sp[data-reveal="done"], .ks-sp:not([data-animation]))
+      .ks-sp__art--professional:hover
+      .ks-sp__professional {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ks-sp__professional,
+    .ks-sp__art--professional .ks-sp__splash img,
+    .ks-sp__art--professional .ks-sp__stain img {
+      transition: none;
+    }
   }
 
   /* The splash's pigment soaking into the portrait's very bottom: the same
@@ -1288,12 +1380,107 @@
   /* PaintedStory (painted-story.tsx). Without the script, on phones and
      under reduced motion: the steps follow one another, text then picture. */
   .ks-story {
+    container-type: inline-size;
     padding-block: var(--spacing-section);
   }
 
   .ks-story__stage {
     display: grid;
     gap: clamp(2.5rem, 6vw, 4.5rem);
+  }
+
+  .ks-story__track {
+    display: contents;
+  }
+  .ks-story__gallery-nav {
+    display: none;
+  }
+  @media (max-width: 63.99rem) {
+    .ks-story__stage {
+      min-width: 0;
+      gap: 1.5rem;
+    }
+    .ks-story__track {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 100%;
+      align-items: start;
+      gap: 1.5rem;
+      min-width: 0;
+      width: calc(100% + 2rem);
+      margin-inline: -1rem;
+      padding: 1rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: 1rem;
+      scrollbar-width: none;
+    }
+    .ks-story__track::-webkit-scrollbar {
+      display: none;
+    }
+    /* A shared intrinsic row reserves the tallest slide's height, keeping
+       navigation still while the content stays aligned at the top. */
+    .ks-story__track > .ks-story__step {
+      min-width: 0;
+      align-items: start;
+      align-content: start;
+      gap: 1.5rem;
+      scroll-snap-align: start;
+    }
+    .ks-story[data-flowing] .ks-story__picture[data-rich] {
+      opacity: 1;
+    }
+    .ks-story .ks-education-book[data-mobile-primary="false"] {
+      display: none;
+    }
+    .ks-story .ks-education-book-shelf {
+      grid-template-columns: minmax(0, 1fr);
+      width: min(100%, 22rem);
+      margin-inline: auto;
+    }
+    .ks-story .ks-education-gallery-track {
+      overscroll-behavior-x: auto;
+    }
+    .ks-story__gallery-nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .ks-story__gallery-nav button {
+      display: grid;
+      place-items: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      color: var(--color-primary);
+      cursor: pointer;
+      border-radius: 50%;
+    }
+    .ks-story__gallery-nav button:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+    .ks-story__gallery-nav button:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+    .ks-story__gallery-dots {
+      display: flex;
+    }
+    .ks-story__gallery-dots button {
+      width: 2rem;
+    }
+    .ks-story__gallery-dots span {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background: var(--color-border-strong);
+      opacity: 0.45;
+    }
+    .ks-story__gallery-dots [aria-current] span {
+      background: var(--color-primary);
+      opacity: 1;
+    }
   }
 
   .ks-story__step {
@@ -1437,6 +1624,55 @@
 
   .ks-story[data-pinned] .ks-story__picture[data-shown] {
     transition-duration: 150ms;
+  }
+
+  .ks-story__media {
+    width: 100%;
+  }
+  .ks-story[data-pinned] .ks-story__picture[data-rich] {
+    align-self: stretch;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    opacity: 0;
+    translate: 0 1.75rem;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 350ms ease-out,
+      translate 350ms ease-out,
+      visibility 0s linear 350ms;
+  }
+  .ks-story[data-pinned] .ks-story__picture[data-rich][data-active] {
+    opacity: 1;
+    translate: 0 0;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      opacity 700ms var(--ease-soft) 330ms,
+      translate 900ms var(--ease-soft) 330ms,
+      visibility 0s;
+  }
+  .ks-story[data-pinned] .ks-story__media {
+    flex-shrink: 0;
+    transform: scale(var(--ks-story-media-scale, 1));
+    transform-origin: top center;
+  }
+
+  /* Article cards keep the listing's physical size even when another
+     composition needs to shrink to fit a short pinned stage. */
+  .ks-story[data-pinned] .ks-story__media:has(.ks-education-gallery) {
+    transform: none;
+  }
+
+  .ks-story[data-pinned] .ks-education-gallery-track {
+    padding-top: 0;
+  }
+
+  .ks-story[data-pinned] .ks-education-books {
+    padding-top: 1rem;
   }
 
   /* --------------------------------------------------------- Support areas */
@@ -1815,9 +2051,12 @@
      root is the title link's positioned ancestor, so the whole card is
      the click target. */
   .ks-wk {
-    --ks-wk-inset: 3.5%;
-    --ks-wk-pad: 1.5rem;
+    --ks-wk-inset: 1%;
+    --ks-wk-pad: 1.25rem;
     position: relative;
+    width: 100%;
+    max-width: 34rem;
+    justify-self: center;
     isolation: isolate;
     display: grid;
     /* The card grows to the row's height, so cards side by side line up. */
@@ -1828,26 +2067,83 @@
   .ks-wk__art {
     position: relative;
     z-index: 1;
+    width: calc(100% + 0.5rem);
+    margin-inline: -0.25rem;
   }
 
-  /* No cover: a painted wash in the painted photo's place and shape (its
-     dry-brush mask, at the photo's offsets), with a line icon cut out of
-     it in paper colour. */
+  .ks-wk[data-variant="grid"] {
+    max-width: 23rem;
+    --ks-wk-pad: 1.25rem;
+  }
+
+  .ks-wk[data-variant="grid"] .ks-wk__surface {
+    padding-top: 5.5rem;
+    gap: 0.65rem;
+  }
+
+  .ks-wk[data-variant="grid"] .ks-wk__heading {
+    font-size: clamp(1.25rem, 2vw, 1.625rem);
+  }
+
+  .ks-wk[data-variant="grid"] .ks-wk__description {
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  .ks-wk[data-variant="grid"] .ks-wk__schedule {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  .ks-wk[data-variant="grid"] .ks-wk__details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.375rem;
+  }
+
+  .ks-wk[data-variant="grid"] .ks-wk__price {
+    font-size: clamp(2rem, 2.5vw, 2.25rem);
+    line-height: 1.2;
+  }
+
+  .ks-wk__schedule,
+  .ks-wk__details {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1.25rem;
+  }
+
+  .ks-wk[data-variant="grid"] .ks-wk__footer {
+    padding-block: 0.75rem 0.25rem;
+    padding-inline: clamp(2.25rem, 16%, 3.25rem);
+    justify-content: space-between;
+  }
+
+  .ks-wk[data-variant="grid"] .ks-wk__availability {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  /* The actual WatercolorImage backdrop is independent of the photo reveal.
+     Its opaque painted centre covers the frame even before the photo loads. */
+  .ks-wk__backdrop {
+    position: absolute;
+    inset: -4.52% -8.77% -5.64% -8.64%;
+    pointer-events: none;
+  }
+
+  .ks-wk__backdrop img {
+    object-fit: cover;
+  }
+
+  /* No cover: keep the same painted silhouette and show a quiet line icon. */
   .ks-wk__wash {
     position: relative;
     display: grid;
     place-items: center;
     aspect-ratio: 3 / 2;
     color: var(--color-bg);
-  }
-
-  .ks-wk__wash-paint {
-    position: absolute;
-    inset: -6.4% -6.98% -9.88% -9.3%;
-    mask-image: url("/watercolor/photo-mask.png");
-    mask-size: 100% 100%;
-    mask-repeat: no-repeat;
-    opacity: 0.75;
   }
 
   .ks-wk__wash svg {
@@ -1866,30 +2162,223 @@
   /* The card: it slides up under the cover's lower part and is inset
      from its sides. */
   .ks-wk__body {
+    position: relative;
+    z-index: 0;
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
     margin: -4.5rem var(--ks-wk-inset) 0;
-    overflow: hidden;
-    padding: 6rem var(--ks-wk-pad) 0;
-    border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
-    border-radius: var(--radius-card-lg);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-card);
-    transition: box-shadow 300ms var(--ease-soft);
+    filter: drop-shadow(0 8px 12px rgb(22 48 47 / 0.06));
   }
 
-  .ks-wk:hover .ks-wk__body,
-  .ks-wk:focus-within .ks-wk__body {
-    box-shadow: var(--shadow-card-hover);
+  .ks-wk__surface {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: 0.75rem;
+    overflow: hidden;
+    padding: 6rem var(--ks-wk-pad) 0;
+    background: var(--color-surface);
+    mask: url("/workshops/card-pink-1-mask.svg") center / 100% 100% no-repeat;
+  }
+
+  .ks-wk__body[data-tone="sage"] .ks-wk__surface {
+    mask-image: url("/workshops/card-green-1-mask.svg");
   }
 
   /* Price and "Zapisz się" on a band of fresh sage, edge to edge along
      the card's bottom. */
   .ks-wk__footer {
+    position: relative;
     margin: auto calc(-1 * var(--ks-wk-pad)) 0;
-    padding: 1rem var(--ks-wk-pad);
-    background: var(--color-primary-soft);
+    padding: 1.25rem var(--ks-wk-pad) 0.25rem;
+  }
+
+  .ks-wk__frame {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    color: var(--color-primary);
+    pointer-events: none;
+  }
+
+  .ks-wk:is(:hover, :focus-within) .ks-wk__frame {
+    color: #d29a96;
+  }
+
+  .ks-wk__title {
+    color: #000;
+    text-decoration: none;
+  }
+
+  .ks-wk__title-label {
+    display: inline;
+    padding-bottom: 0;
+    /* Paint the paper around the glyph before drawing its ink, so the
+       close brush stroke leaves a small gap around descenders. */
+    text-shadow:
+      0 1px 0 var(--color-surface),
+      0 -1px 0 var(--color-surface),
+      1px 0 0 var(--color-surface),
+      -1px 0 0 var(--color-surface);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    background: url("/workshops/title-underline.svg") left bottom / 0% 9px
+      no-repeat;
+  }
+
+  .ks-wk__heading {
+    font-size: clamp(1.375rem, 2.2vw, 1.75rem);
+    font-weight: var(--text-h3--font-weight, 600);
+    line-height: var(--text-h3--line-height, 1.25);
+  }
+
+  .ks-wk:is(:hover, :focus-within) .ks-wk__title-label {
+    background-size: 100% 9px;
+  }
+
+  .ks-wk__price {
+    font-size: clamp(1.875rem, 2.5vw, 2.25rem);
+    line-height: 1.25;
+  }
+
+  .ks-wk__availability {
+    display: grid;
+    gap: 0.15rem;
+    margin-left: auto;
+    text-align: right;
+    line-height: 1.3;
+  }
+
+  .ks-wk__availability strong {
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  .ks-wk__seats {
+    width: fit-content;
+    margin-right: auto;
+    order: 1;
+  }
+
+  .ks-wk__signup {
+    position: relative;
+    z-index: 11;
+    isolation: isolate;
+    display: flex;
+    justify-content: center;
+    margin: -0.25rem calc(-1 * var(--ks-wk-pad)) 0;
+    padding: 0.875rem var(--ks-wk-pad) 1.75rem;
+  }
+
+  .ks-wk__signup::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0 -0.25rem -1.25rem;
+    background: url("/crisis/crisis-fill-green-2.webp") center top / 100% 100%
+      no-repeat;
+    pointer-events: none;
+  }
+
+  .ks-wk__hover-paint {
+    position: absolute;
+    z-index: -1;
+    inset: 0 -0.25rem -1.25rem;
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  .ks-wk__hover-paint[data-active] {
+    visibility: visible;
+  }
+
+  .ks-wk__hover-paint > span {
+    position: absolute;
+    inset: 0;
+    background-position: center top;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+  }
+
+  .ks-wk__paint-pink {
+    background-image: url("/crisis/crisis-fill-pink-2.webp");
+  }
+
+  .ks-wk__paint-green {
+    background-image: url("/crisis/crisis-fill-green-2.webp");
+  }
+
+  .ks-wk__hover-paint[data-tone="pink"] .ks-wk__paint-green {
+    visibility: hidden;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-wk__hover-paint[data-animation="hover-paint"][data-tone="pink"]
+      .ks-wk__paint-pink,
+    .ks-wk__hover-paint[data-animation="hover-paint"][data-tone="green"]
+      .ks-wk__paint-green {
+      mask-image: url("/watercolor/photo-mask.png");
+      mask-position: center;
+      mask-repeat: no-repeat;
+      animation: ks-wk-paint-over 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+  }
+
+  @keyframes ks-wk-paint-over {
+    from {
+      mask-size: 0% 300%;
+    }
+    to {
+      mask-size: 180% 300%;
+    }
+  }
+
+  .ks-wk__signup .ks-hand-link,
+  .ks-wk:is(:hover, :focus-within) .ks-wk__signup .ks-hand-link {
+    color: #000;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-wk:is(:hover, :focus-within) .ks-wk__signup .ks-hand-link__underline {
+      transform: translateY(-2px);
+    }
+
+    .ks-wk:is(:hover, :focus-within) .ks-wk__signup .ks-hand-link__arrow {
+      transform: translateX(2px) scaleX(1.12);
+    }
+
+    .ks-wk {
+      transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .ks-wk__body {
+      transition: filter 280ms ease;
+    }
+
+    .ks-wk:is(:hover, :focus-within) {
+      transform: translateY(-4px);
+    }
+
+    .ks-wk:is(:hover, :focus-within) .ks-wk__body {
+      filter: drop-shadow(0 12px 14px rgb(22 48 47 / 0.12));
+    }
+
+    .ks-wk__frame {
+      transition: color 280ms ease;
+    }
+
+    .ks-wk__title-label {
+      transition:
+        color 280ms ease,
+        background-size 650ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  }
+
+  .ks-home-workshops__cards {
+    display: grid;
+    justify-items: start;
+    padding-top: clamp(2rem, 4vw, 3.5rem);
   }
 
   /* ------------------------------------------------------------ First steps */
@@ -2242,81 +2731,251 @@
     }
   }
 
-  /* Home → "Zajrzyj do środka" (rooms-peek.tsx): a row of tilted prints,
-     scrolled sideways and snapping to each; its edges line up with the
-     page's gutter. */
+  .ks-peek {
+    position: relative;
+    isolation: isolate;
+    margin-block: var(--spacing-section);
+  }
+  .ks-peek__paint {
+    position: absolute;
+    z-index: -1;
+    inset: 8rem 0 2rem;
+    transform: rotate(180deg);
+    background: url("/watercolor/closing-banner-paint.webp") center / 100% 100%
+      no-repeat;
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      black 7%,
+      black 92%,
+      transparent
+    );
+    pointer-events: none;
+  }
+  .ks-peek__inner {
+    display: grid;
+    align-items: center;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    padding-block: 3rem;
+  }
+  .ks-peek__copy {
+    position: relative;
+    z-index: 1;
+    max-width: 32rem;
+  }
+  .ks-peek__gallery {
+    min-width: 0;
+  }
   .ks-peek__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--spacing-gutter);
+    scroll-snap-type: x proximity;
     scrollbar-width: none;
     cursor: grab;
-    border-radius: 0.5rem;
   }
-
   .ks-peek__row::-webkit-scrollbar {
     display: none;
   }
-
   .ks-peek__row[data-dragging] {
     cursor: grabbing;
     scroll-snap-type: none;
     user-select: none;
   }
-
-  .ks-peek__row:focus-visible {
-    outline: 2px solid var(--color-ring);
+  .ks-peek__row:focus-visible,
+  .ks-peek__print:focus-visible {
+    outline: 2px solid var(--color-primary);
     outline-offset: 4px;
   }
-
   .ks-peek__list {
+    grid-area: 1 / 1;
+    margin-left: auto;
+    position: relative;
     display: flex;
-    gap: clamp(1rem, 3vw, 2rem);
+    align-items: center;
     width: max-content;
-    padding: 1.5rem var(--spacing-gutter);
+    padding: 3rem 2rem 2.5rem;
   }
-
+  /* Every room contributes its height, even while another room is shown.
+     Hide inactive groups from interaction and horizontal scrolling only. */
+  .ks-peek__list[data-active="false"] {
+    visibility: hidden;
+    pointer-events: none;
+    width: 0;
+    padding-inline: 0;
+    overflow: hidden;
+  }
   .ks-peek__item {
-    width: min(70vw, 18rem);
-    scroll-snap-align: start;
+    --ks-peek-angle: -3deg;
+    --ks-peek-y: -0.9rem;
+    position: relative;
+    width: min(62vw, 14rem);
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    z-index: 1;
+    translate: 0 var(--ks-peek-y);
   }
-
+  .ks-peek__item + .ks-peek__item {
+    margin-left: -1rem;
+  }
   .ks-peek__print {
-    padding: 0.625rem 0.625rem 0.25rem;
+    position: relative;
+    padding: 0.4rem 0.4rem 0.75rem;
     background: var(--color-surface);
-    border-radius: 0.75rem;
-    box-shadow: 0 10px 30px -18px
-      color-mix(in oklab, var(--color-ink) 45%, transparent);
-    transition: rotate 0.4s ease;
+    border-radius: 0.25rem 0.3rem 0.2rem 0.25rem;
+    box-shadow: 0 8px 20px rgb(22 48 47 / 0.15);
+    transform-origin: 50% 50%;
+    rotate: var(--ks-peek-angle);
   }
-
-  .ks-peek__item:nth-child(3n + 1) .ks-peek__print {
-    rotate: -2.5deg;
+  .ks-peek__item:nth-child(3n + 1) {
+    --ks-peek-angle: -7deg;
+    --ks-peek-y: -0.4rem;
   }
-
-  .ks-peek__item:nth-child(3n + 2) .ks-peek__print {
-    rotate: 1.5deg;
+  .ks-peek__item:nth-child(3n + 2) {
+    --ks-peek-angle: 5deg;
+    --ks-peek-y: 0.9rem;
   }
-
-  .ks-peek__item:nth-child(3n) .ks-peek__print {
-    rotate: -1deg;
+  .ks-peek__print.ks-peek__lift {
+    position: absolute;
+    z-index: 30;
+    pointer-events: none;
+    margin: 0;
+    box-shadow: 0 16px 28px rgb(22 48 47 / 0.2);
   }
-
-  .ks-peek__item:hover .ks-peek__print {
-    rotate: 0deg;
+  .ks-peek__caption {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    color: var(--color-ink);
   }
-
+  .ks-peek__photo-caption {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 3.25rem;
+    padding-bottom: 0.625rem;
+  }
+  .ks-peek__photo-room {
+    position: absolute;
+    right: 0.4rem;
+    bottom: 0.2rem;
+    max-width: calc(100% - 0.8rem);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: block;
+    text-align: right;
+    font-size: 0.625rem;
+    line-height: 1.2;
+    color: var(--color-text-muted);
+  }
+  .ks-peek__description {
+    display: block;
+    padding-top: 0.25rem;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+  .ks-peek__controls {
+    position: relative;
+    min-height: 2.25rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
+    align-items: center;
+    padding-inline: 0;
+  }
+  .ks-peek__dots {
+    position: absolute;
+    left: 50%;
+    translate: -50% 0;
+    display: flex;
+    align-items: center;
+    max-width: min(22rem, calc(100% - 11rem));
+    overflow-x: auto;
+    padding: 0 0.25rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.32);
+    border: 1px solid rgb(255 255 255 / 0.45);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgb(22 48 47 / 0.04);
+  }
+  .ks-peek__dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 0.25rem;
+    min-width: 1.5rem;
+    flex: 0 0 auto;
+    height: 1.75rem;
+    cursor: pointer;
+    border-radius: 999px;
+  }
+  .ks-peek__dot-mark {
+    display: block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #92988f;
+    transition:
+      background-color 180ms ease,
+      transform 180ms ease;
+  }
+  .ks-peek__dot[aria-current="true"] .ks-peek__dot-mark {
+    background: var(--color-primary);
+    transform: scale(1.2);
+  }
+  .ks-peek__dot:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+  .ks-peek__arrows {
+    grid-column: 3;
+    justify-self: end;
+  }
+  @media (min-width: 64rem) {
+    .ks-peek__gallery {
+      translate: 1.5rem 0;
+    }
+    .ks-peek__copy {
+      translate: 0 4rem;
+    }
+    .ks-peek__inner {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr);
+      gap: 3rem;
+      padding-block: 0 2rem;
+    }
+    .ks-peek__item {
+      width: 14rem;
+    }
+    .ks-peek__item + .ks-peek__item {
+      margin-left: -5.5rem;
+    }
+    .ks-peek__list {
+      padding-block: 4rem 3rem;
+    }
+  }
+  @media (max-width: 63.99rem) {
+    .ks-peek__paint {
+      inset-block: 1.5rem;
+    }
+  }
   @media (prefers-reduced-motion: no-preference) {
     .ks-peek__row {
       scroll-behavior: smooth;
     }
+    .ks-peek__print {
+      transition:
+        rotate 220ms cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 200ms ease;
+    }
   }
-
   @media (prefers-reduced-motion: reduce) {
     .ks-peek__item .ks-peek__print {
       rotate: none;
-      transition: none;
+    }
+    .ks-peek__item {
+      translate: none;
     }
   }
 }
@@ -2328,6 +2987,581 @@
   inherits: true;
   initial-value: 1.25rem;
 }
+/* A brushed footer with short, progressively disclosed navigation. */
+@layer components {
+  .ks-footer {
+    position: relative;
+    isolation: isolate;
+    margin-top: 1.5rem;
+  }
+  .ks-footer__paint {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    /* Slice the real painted top separately, so its bristles stay shallow
+       even when mobile content or an expanded menu makes the footer tall. */
+    border-style: solid;
+    border-color: transparent;
+    border-width: 2.75rem 0 0;
+    background-color: #e7ebdc;
+    border-image-source: url("/crisis/crisis-fill-green-2.webp");
+    border-image-slice: 110 40 40 fill;
+    border-image-width: 2.75rem 0 0;
+    border-image-repeat: stretch;
+    mask-image:
+      url("/watercolor/footer-paint-brand-pastel-v2-edge-mask.svg"),
+      linear-gradient(white, white);
+    mask-size:
+      100% 2.75rem,
+      100% calc(100% - 2.75rem);
+    mask-position: top, bottom;
+    mask-repeat: no-repeat;
+    pointer-events: none;
+  }
+  .ks-footer__crisis {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    align-items: start;
+    gap: 0.75rem 2rem;
+    padding-block: 1.5rem;
+    margin-block: 0.25rem 1.5rem;
+    color: #813f3e;
+    font-size: 0.875rem;
+  }
+  .ks-footer__crisis-rule {
+    position: absolute;
+    left: var(--spacing-gutter);
+    right: var(--spacing-gutter);
+    width: calc(100% - 2 * var(--spacing-gutter));
+    height: 22px;
+    pointer-events: none;
+  }
+  .ks-footer__crisis-rule--top {
+    top: -8px;
+  }
+  .ks-footer__crisis-rule--bottom {
+    bottom: -8px;
+  }
+  .ks-footer__crisis-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .ks-footer__crisis-title > svg {
+    width: 1.375rem;
+    height: 1.375rem;
+    flex-shrink: 0;
+  }
+  .ks-footer__crisis-numbers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 1rem 1.25rem;
+  }
+  .ks-footer__crisis-numbers a {
+    display: grid;
+    align-content: start;
+    gap: 0.25rem;
+    min-height: 1.75rem;
+    overflow-wrap: anywhere;
+  }
+  .ks-footer__crisis-number {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .ks-footer__crisis-label {
+    color: inherit;
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+  .ks-footer__crisis-detail {
+    color: inherit;
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+  @media (min-width: 48rem) {
+    .ks-footer__crisis-numbers {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 64rem) {
+    .ks-footer__crisis {
+      grid-template-columns: 10rem minmax(0, 1fr);
+    }
+  }
+  .ks-footer__crisis a:hover,
+  .ks-footer__crisis a:focus-visible {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .ks-footer__main {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.75rem 1.5rem;
+    padding-block: 3rem 1.75rem;
+  }
+  .ks-footer__main > * {
+    min-width: 0;
+  }
+  .ks-footer__brand {
+    display: grid;
+    align-content: start;
+    gap: 0.875rem;
+    grid-column: 1 / -1;
+  }
+  .ks-footer__about {
+    max-width: 26rem;
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+    line-height: 1.65;
+  }
+  .ks-footer__social {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--color-primary-strong);
+    background: rgb(255 255 255 / 40%);
+    border-radius: 47% 53% 49% 51% / 52% 46% 54% 48%;
+    transition: background-color 180ms;
+  }
+  .ks-footer__social:hover {
+    background: rgb(255 255 255 / 80%);
+  }
+  .ks-footer__title {
+    margin-bottom: 0.75rem;
+    color: var(--color-primary-strong);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .ks-footer__links {
+    display: grid;
+    gap: 0.125rem;
+  }
+  .ks-footer__links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.75rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .ks-footer__more {
+    margin-top: 0.5rem;
+  }
+  .ks-footer__more summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 1.75rem;
+    color: var(--color-primary-strong);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+  .ks-footer__more summary::-webkit-details-marker {
+    display: none;
+  }
+  .ks-footer__more summary:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 3px;
+  }
+  .ks-footer__more[open] summary {
+    margin-bottom: 0.5rem;
+  }
+  .ks-footer__more[open] summary svg {
+    transform: rotate(180deg);
+  }
+  .ks-footer__contact {
+    grid-column: 1 / -1;
+  }
+  .ks-footer__contact address {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-wrap: anywhere;
+  }
+  .ks-footer__newsletter {
+    padding-bottom: 1.5rem;
+  }
+  .ks-newsletter-compact {
+    display: grid;
+    align-items: start;
+    gap: 1rem;
+  }
+  .ks-newsletter-compact__copy {
+    display: grid;
+    gap: 0.35rem;
+  }
+  .ks-newsletter-compact__heading {
+    font-family: var(--font-display);
+    color: var(--color-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  .ks-newsletter-compact .ks-newsletter-signup__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .ks-newsletter-compact .ks-newsletter-signup__submit button {
+    min-height: 3.25rem;
+    padding-inline: 1.25rem;
+  }
+  .ks-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    padding-block: 0.75rem 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+  .ks-footer__legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+  }
+  @media (min-width: 36rem) {
+    .ks-footer__contact address {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 48rem) {
+    .ks-footer__main {
+      padding-top: 3.5rem;
+    }
+    .ks-newsletter-compact {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.5fr);
+      gap: 2rem;
+    }
+  }
+  @media (min-width: 64rem) {
+    .ks-footer__main {
+      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+      gap: 2.5rem;
+    }
+    .ks-footer__brand,
+    .ks-footer__contact {
+      grid-column: auto;
+    }
+    .ks-footer__contact address {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+
+/* The location's contact details and local map illustration share the paper palette. */
+@layer components {
+  .ks-location {
+    padding-block: 5rem;
+  }
+  .ks-location__layout {
+    display: grid;
+    gap: 2.75rem;
+    align-items: stretch;
+  }
+  .ks-location__copy {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: 2rem;
+    min-width: 0;
+  }
+  .ks-location__details {
+    display: grid;
+    gap: 1.5rem;
+    width: 100%;
+    font-style: normal;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+  .ks-location__detail {
+    display: grid;
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
+  }
+  .ks-location__detail > svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.2rem;
+    color: var(--color-primary);
+  }
+  .ks-location__label {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--color-primary);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .ks-location__detail-action {
+    margin-top: 1.25rem;
+  }
+  .ks-location__detail a {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    transition: color 180ms;
+  }
+  .ks-location__detail a:hover,
+  .ks-location__detail a:focus-visible {
+    color: var(--color-primary);
+    text-decoration-line: none;
+  }
+  .ks-location__detail a:not(.ks-hand-link):hover,
+  .ks-location__detail a:not(.ks-hand-link):focus-visible {
+    text-decoration-line: underline;
+  }
+  .ks-location__map {
+    position: relative;
+    isolation: isolate;
+    min-width: 0;
+  }
+  .ks-location__map::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: -1rem;
+    background: url("/crisis/crisis-wash-pink-1.webp") center / 100% 100%
+      no-repeat;
+    opacity: 0.65;
+    transform: rotate(2deg);
+    pointer-events: none;
+  }
+  .ks-location-map {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 29rem;
+    overflow: hidden;
+    background: #e7edde;
+    mask-image: url("/crisis/crisis-fill-green-1.webp");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+  .ks-location-map__iframe {
+    position: absolute;
+    inset: 1.25rem;
+    width: calc(100% - 2.5rem);
+    height: calc(100% - 2.5rem);
+    border: 0;
+  }
+  .ks-location-map__placeholder {
+    position: relative;
+    display: flex;
+    min-height: inherit;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 2.75rem 1.25rem 1.25rem;
+  }
+  .ks-location-map__placeholder::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("/watercolor/closing-banner-paint.webp") center / cover;
+    opacity: 0.45;
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+  }
+  .ks-location-map__sketch {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .ks-location-map__pin {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 4.25rem;
+    height: 4.25rem;
+    color: var(--color-primary-strong);
+    background: #faf8f1;
+    border-radius: 47% 53% 51% 49% / 52% 46% 54% 48%;
+    box-shadow: 0 6px 20px rgb(82 123 87 / 10%);
+  }
+  .ks-location-map__pin svg {
+    width: 2rem;
+    height: 2rem;
+  }
+  .ks-location-map__invitation {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 1.5rem clamp(1rem, 2vw, 1.75rem);
+    text-align: center;
+    background: rgb(250 248 243 / 96%);
+    border-radius: 1.75rem 1.25rem 2rem 1.375rem;
+  }
+  .ks-location-map__title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .ks-location-map__address {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .ks-location-map__consent {
+    max-width: 25rem;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+  @media (min-width: 36rem) {
+    .ks-location-map__placeholder {
+      padding: 3rem 2rem 2rem;
+    }
+  }
+  @media (min-width: 64rem) {
+    .ks-location {
+      padding-block: 8rem;
+    }
+    .ks-location__layout {
+      grid-template-columns: minmax(0, 0.65fr) minmax(0, 1.35fr);
+      gap: clamp(3rem, 5vw, 5rem);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ks-location__detail a {
+      transition: none;
+    }
+  }
+}
+
+/* Full-width newsletter paint, with the readable content on the page grid. */
+@layer components {
+  .ks-newsletter-band {
+    position: relative;
+    isolation: isolate;
+    margin-block: 2.5rem;
+    margin-bottom: var(--spacing-section);
+  }
+
+  .ks-newsletter-band__paint {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: url("/watercolor/closing-banner-paint-mobile.webp") center /
+      100% 115% no-repeat;
+    opacity: 0.85;
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      black 9%,
+      black 91%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  .ks-newsletter-band__inner {
+    display: grid;
+    align-items: start;
+    gap: 1.75rem;
+    padding-block: 2.75rem;
+  }
+
+  .ks-newsletter-band__copy,
+  .ks-newsletter-band__signup {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .ks-newsletter-band__copy > p:last-of-type {
+    font-size: 0.9375rem;
+    line-height: 1.65;
+  }
+
+  .ks-newsletter-signup__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
+  }
+
+  .ks-newsletter-signup__row label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .ks-newsletter-signup__submit button {
+    width: 100%;
+    height: auto;
+    min-height: 3rem;
+    white-space: normal;
+    padding-block: 0.75rem;
+  }
+
+  .ks-newsletter-signup input[type="email"] {
+    background-color: rgb(255 255 255 / 78%);
+    border-radius: 1.125rem 1rem 1.25rem 0.875rem;
+  }
+
+  .ks-newsletter-signup label:has(a) {
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+
+  @media (min-width: 30rem) {
+    .ks-newsletter-signup__row {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .ks-newsletter-band__paint {
+      background-image: url("/watercolor/closing-banner-paint.webp");
+      background-size: 120% 100%;
+      background-position: right center;
+    }
+
+    .ks-newsletter-band__inner {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: clamp(2rem, 5vw, 5rem);
+      padding-block: 3rem;
+    }
+
+    .ks-newsletter-band__copy {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .ks-newsletter-band__signup {
+      grid-column: 1;
+      grid-row: 1;
+    }
+  }
+}
+
 /* The artwork stays outside the paint layer so the tall plant can rise
    above it. The mobile layout keeps the scene above the readable copy. */
 @layer components {
@@ -2454,4 +3688,1213 @@
       width: 100%;
     }
   }
+}
+
+/* Education story compositions, approved in the local design study. */
+@layer components {
+  .ks-education-article,
+  .ks-education-books,
+  .ks-education-workshop {
+    position: relative;
+    isolation: isolate;
+  }
+  .ks-education-article {
+    width: 94%;
+    margin-inline: auto;
+    border: 1px solid transparent;
+    height: 100%;
+    min-width: 0;
+    transition:
+      transform 280ms var(--ease-soft),
+      filter 280ms ease;
+  }
+  .ks-education-article:is(:hover, :focus-within) .ks-education-article-frame {
+    color: #d29a96;
+  }
+  .ks-education-article-title {
+    color: #000;
+    text-decoration: none;
+  }
+  .ks-education-article-category {
+    position: relative;
+    z-index: 11;
+  }
+  .ks-education-article-topline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+  }
+  .ks-education-article-date {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+    text-align: right;
+  }
+  .ks-education-article-author {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    min-width: 0;
+    font-size: var(--text-small);
+    line-height: 1.5;
+    color: var(--color-ink);
+  }
+  .ks-education-article-avatar {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+    object-fit: contain;
+    object-position: center bottom;
+    padding: 2px;
+    background: var(--color-cream);
+    border-radius: 50%;
+  }
+  .ks-education-article-author-copy {
+    display: grid;
+    gap: 0;
+    min-width: 0;
+  }
+  .ks-education-article-author-name {
+    font-size: 0.9375rem;
+    line-height: 1.25;
+    font-weight: 600;
+  }
+  .ks-education-article-author-title {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--color-text-muted);
+  }
+  .ks-education-article-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+  .ks-education-article:is(:hover, :focus-within) .ks-wk__title-label {
+    background-size: 100% 9px;
+  }
+  .ks-education-article:is(:hover, :focus-within) .ks-education-kicker,
+  .ks-education-article:is(:hover, :focus-within) .ks-education-meta {
+    color: #9c5754;
+  }
+  .ks-education-article .ks-education-kicker,
+  .ks-education-article .ks-education-meta,
+  .ks-education-article-frame {
+    transition: color 280ms ease;
+  }
+  .ks-education-article-foot .ks-hand-link,
+  .ks-education-article-foot .ks-hand-link:hover {
+    color: #000;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-education-article:is(:hover, :focus-within) {
+      transform: translateY(-4px);
+      filter: drop-shadow(0 12px 14px rgb(22 48 47 / 0.12));
+    }
+    .ks-education-article:is(:hover, :focus-within) .ks-hand-link__underline {
+      transform: translateY(-2px);
+    }
+    .ks-education-article:is(:hover, :focus-within) .ks-hand-link__arrow {
+      transform: translateX(2px) scaleX(1.12);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ks-education-article {
+      transition: none;
+    }
+  }
+  .ks-education-empty::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: url("/crisis/crisis-wash-green-1.webp") center / 100% 100%
+      no-repeat;
+    opacity: 0.75;
+    pointer-events: none;
+  }
+  .ks-education-article-photo {
+    position: relative;
+    z-index: 1;
+    aspect-ratio: 3 / 2;
+    margin: 0;
+  }
+  .ks-education-article-photo img {
+    object-fit: cover;
+  }
+  .ks-education-article-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--color-surface);
+    mask-image: url("/education/article-photo-framed-mask.svg");
+    mask-size: 100% 100%;
+    mask-position: center;
+    mask-repeat: no-repeat;
+  }
+  .ks-education-article-frame {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    color: #769471;
+    pointer-events: none;
+  }
+  .ks-education-gallery {
+    position: relative;
+    isolation: isolate;
+    min-width: 0;
+    width: 100%;
+    margin-inline: auto;
+  }
+  @media (min-width: 40rem) {
+    .ks-education-gallery {
+      width: calc(
+        (
+            min(100cqw, var(--container-page)) - 2 * var(--spacing-gutter) -
+              1.5rem
+          ) /
+          2
+      );
+    }
+  }
+  @media (min-width: 64rem) {
+    .ks-education-gallery {
+      width: calc(
+        (
+            min(100cqw, var(--container-page)) - 2 * var(--spacing-gutter) -
+              3rem
+          ) /
+          3
+      );
+    }
+  }
+  .ks-education-gallery-track {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 100%;
+    align-items: stretch;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-block: 2rem 1rem;
+  }
+  .ks-education-gallery-track::-webkit-scrollbar {
+    display: none;
+  }
+  .ks-education-gallery-slide {
+    min-width: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  .ks-education-gallery-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0 1.5rem;
+  }
+  .ks-education-gallery-count {
+    font-family: var(--font-display);
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+  .ks-education-gallery-count span {
+    color: var(--color-primary-strong);
+    font-size: 1.3rem;
+  }
+  .ks-education-gallery-dots,
+  .ks-education-gallery-arrows {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .ks-education-gallery-controls button {
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    background: transparent;
+    color: var(--color-ink);
+    border: 0;
+    cursor: pointer;
+  }
+  .ks-education-gallery-controls button:focus-visible {
+    outline: 2px solid var(--color-primary-strong);
+    outline-offset: 2px;
+    border-radius: 5px;
+  }
+  .ks-education-gallery-controls button:hover {
+    color: var(--color-primary-strong);
+  }
+  .ks-education-gallery-controls button:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+  .ks-education-gallery-dots button {
+    min-width: 30px;
+  }
+  .ks-education-gallery-dots span {
+    width: 7px;
+    height: 7px;
+    border-radius: 45% 55% 48% 52%;
+    background: currentColor;
+    opacity: 0.25;
+  }
+  .ks-education-gallery-dots [aria-current] span {
+    opacity: 1;
+    color: var(--color-primary-strong);
+    transform: scale(1.2);
+  }
+  .ks-education-article-body {
+    --ks-article-pad: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0.625rem;
+    padding: 1.25rem var(--ks-article-pad) 0;
+  }
+  .ks-education-kicker {
+    color: var(--color-primary-strong);
+    font-size: 0.7rem;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    margin: 0;
+  }
+  .ks-education-material-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.45rem, 2.5vw, 2rem);
+    line-height: 1.28;
+    font-weight: 400;
+    color: var(--color-ink);
+    margin: 0;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+  .ks-education-article .ks-education-kicker {
+    font-size: 0.6875rem;
+    line-height: var(--text-eyebrow--line-height);
+    font-weight: var(--text-eyebrow--font-weight);
+    letter-spacing: var(--text-eyebrow--letter-spacing);
+  }
+  .ks-education-article .ks-education-material-title {
+    font-size: clamp(1.25rem, 1.7vw, 1.5rem);
+    line-height: var(--text-h3--line-height);
+    font-weight: var(--text-h3--font-weight);
+  }
+  .ks-education-article .ks-education-excerpt {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    font-size: 0.90625rem;
+    line-height: 1.6;
+  }
+  .ks-education-excerpt {
+    color: var(--color-text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    margin: 0;
+  }
+  .ks-education-article-foot {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    align-items: center;
+    align-content: center;
+    gap: 0.375rem;
+    margin: auto calc(-1 * var(--ks-article-pad)) 0;
+    z-index: 11;
+    min-height: 7.5rem;
+    padding: 1.25rem var(--ks-article-pad) 2.5rem;
+  }
+  .ks-education-article .ks-education-meta {
+    font-size: 0.75rem;
+  }
+  .ks-education-article-foot .ks-hand-link {
+    font-size: 0.8125rem;
+  }
+  .ks-education-article-foot::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0 -0.25rem -1.25rem;
+    background: url("/crisis/crisis-fill-green-2.webp") center top / 100% 100%
+      no-repeat;
+    pointer-events: none;
+  }
+  .ks-education-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8125rem;
+    color: var(--color-primary-strong);
+  }
+  .ks-education-meta svg {
+    flex-shrink: 0;
+  }
+  .ks-education-books {
+    padding: 3rem 2rem 1.5rem;
+  }
+  .ks-education-books-paint {
+    position: absolute;
+    inset: 13% -8% 5%;
+    z-index: -1;
+    pointer-events: none;
+    mask-image: url("/crisis/crisis-wash-pink-2.webp");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    mask-position: center;
+  }
+  .ks-education-books-paint::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("/crisis/crisis-fill-green-2.webp") center / 100% 100%
+      no-repeat;
+  }
+  .ks-education-gallery::before,
+  .ks-education-workshop::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 13% -20% 5%;
+    background: url("/crisis/crisis-fill-green-2.webp") center / 100% 100%
+      no-repeat;
+    mask: url("/crisis/crisis-wash-pink-2.webp") center / 100% 100% no-repeat;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-story[data-pinned] .ks-story__text > :not(.ks-story__count) {
+      opacity: 0;
+      translate: 0 0.5rem;
+      transition:
+        opacity 200ms ease,
+        translate 200ms ease;
+    }
+    .ks-story[data-pinned] .ks-story__text > :nth-child(3) {
+      --ks-stagger: 45ms;
+    }
+    .ks-story[data-pinned] .ks-story__text > :nth-child(4) {
+      --ks-stagger: 90ms;
+    }
+    .ks-story[data-pinned]
+      .ks-story__text[data-active]
+      > :not(.ks-story__count) {
+      opacity: 1;
+      translate: 0 0;
+      transition:
+        opacity 600ms var(--ease-soft) calc(250ms + var(--ks-stagger, 0ms)),
+        translate 700ms var(--ease-soft) calc(250ms + var(--ks-stagger, 0ms));
+    }
+    .ks-story[data-pinned] .ks-story__picture .ks-education-book,
+    .ks-story[data-pinned] .ks-story__picture .ks-education-article,
+    .ks-story[data-pinned] .ks-story__picture .ks-wk {
+      opacity: 0;
+      translate: 0 0.75rem;
+      transition:
+        opacity 200ms ease,
+        translate 200ms ease,
+        transform 280ms var(--ease-soft),
+        filter 280ms ease;
+    }
+    .ks-story[data-pinned] .ks-story__picture .ks-education-book:nth-child(2) {
+      --ks-stagger: 70ms;
+    }
+    .ks-story[data-pinned] .ks-story__picture[data-active] .ks-education-book,
+    .ks-story[data-pinned]
+      .ks-story__picture[data-active]
+      .ks-education-article,
+    .ks-story[data-pinned] .ks-story__picture[data-active] .ks-wk {
+      opacity: 1;
+      translate: 0 0;
+      transition:
+        opacity 650ms var(--ease-soft) calc(330ms + var(--ks-stagger, 0ms)),
+        translate 750ms var(--ease-soft) calc(330ms + var(--ks-stagger, 0ms)),
+        transform 280ms var(--ease-soft),
+        filter 280ms ease;
+    }
+  }
+  .ks-education-book-shelf {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+    gap: 1.6rem;
+  }
+  .ks-education-book {
+    --ks-book-overlap: clamp(8rem, 12vw, 11rem);
+    min-width: 0;
+    display: grid;
+    gap: 0;
+    align-content: start;
+    position: relative;
+    isolation: isolate;
+  }
+  .ks-education-book-card {
+    position: relative;
+    z-index: 1;
+    width: calc(100% - 1rem);
+    margin: calc(-1 * var(--ks-book-overlap)) auto 0;
+    padding: calc(var(--ks-book-overlap) + 1.5rem) 1.25rem 1.5rem;
+    background: var(--color-surface);
+    border-radius: 3% 4% 3% 4% / 2% 3% 4% 3%;
+  }
+  .ks-education-book-copy {
+    display: grid;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 1;
+  }
+  .ks-education-book-frame {
+    position: absolute;
+    inset: 0;
+    color: #769471;
+    pointer-events: none;
+    transition: color 280ms ease;
+  }
+  .ks-education-book:is(:hover, :focus-within) .ks-education-book-frame {
+    color: #d29a96;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ks-education-book {
+      transition:
+        transform 280ms var(--ease-soft),
+        filter 280ms ease;
+    }
+    .ks-education-book:is(:hover, :focus-within) {
+      transform: translateY(-4px);
+      filter: drop-shadow(0 12px 14px rgb(22 48 47 / 0.12));
+    }
+    .ks-education-book:is(:hover, :focus-within) .ks-hand-link__underline {
+      transform: translateY(-2px);
+    }
+    .ks-education-book:is(:hover, :focus-within) .ks-hand-link__arrow {
+      transform: translateX(2px) scaleX(1.12);
+    }
+  }
+  .ks-education-book-tall,
+  .ks-education-book-square {
+    position: relative;
+    z-index: 2;
+    display: block;
+    margin: 0 0.2rem;
+    filter: drop-shadow(10px 15px 10px rgb(36 56 41 / 0.16));
+  }
+  .ks-education-book-tall {
+    aspect-ratio: 2 / 3;
+    transform: rotate(-5deg);
+  }
+  .ks-education-book-square {
+    aspect-ratio: 2 / 3;
+    transform: rotate(5deg);
+  }
+  .ks-education-book-tall img,
+  .ks-education-book-square img {
+    object-fit: cover;
+  }
+  .ks-education-book-tall::after {
+    content: "";
+    position: absolute;
+    left: 2.5%;
+    width: 1px;
+    inset-block: 0;
+    background: rgb(255 255 255 / 0.45);
+    box-shadow: 2px 0 4px rgb(0 0 0 / 0.15);
+  }
+  .ks-education-book-format {
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-pink-strong);
+    margin: 0;
+  }
+  .ks-education-book-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    line-height: 1.4;
+    font-weight: 400;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .ks-education-book .ks-hand-link {
+    font-size: 0.875rem;
+    min-height: 44px;
+  }
+  .ks-education-workshop {
+    width: min(100%, 23rem);
+    margin-inline: auto;
+    padding: 0.75rem 0 0;
+  }
+
+  .ks-wk[data-variant="story"] {
+    --ks-wk-pad: clamp(1.5rem, 3vw, 2.25rem);
+  }
+  .ks-wk[data-variant="story"] .ks-wk__backdrop img {
+    object-fit: contain;
+  }
+  .ks-wk[data-variant="story"] .ks-wk__surface {
+    gap: 1rem;
+  }
+  .ks-wk[data-variant="story"] .ks-wk__heading {
+    font-size: clamp(1.75rem, 2.5vw, 2.25rem);
+    line-height: 1.3;
+  }
+  .ks-wk[data-variant="story"] .ks-wk__surface > p,
+  .ks-wk[data-variant="story"] .ks-wk__surface > ul {
+    font-size: 1.125rem;
+  }
+  .ks-wk[data-variant="story"] .ks-wk__schedule,
+  .ks-wk[data-variant="story"] .ks-wk__details {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1.25rem;
+  }
+  .ks-wk[data-variant="story"] .ks-wk__surface > .ks-wk__description {
+    font-size: 1.125rem;
+    line-height: 1.65;
+  }
+  .ks-wk[data-variant="story"] .ks-wk__footer {
+    justify-content: space-between;
+    column-gap: clamp(1.25rem, 3vw, 2.5rem);
+    row-gap: 1rem;
+  }
+  .ks-wk[data-variant="story"] .ks-wk__price {
+    font-size: clamp(2rem, 3vw, 2.5rem);
+  }
+  .ks-wk[data-variant="story"] .ks-wk__availability {
+    margin-left: auto;
+    text-align: right;
+    font-size: 1rem;
+  }
+  .ks-wk[data-variant="story"] .ks-wk__availability strong {
+    font-size: 1.375rem;
+  }
+  .ks-education-empty {
+    position: relative;
+    isolation: isolate;
+    min-height: 20rem;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 1rem;
+    padding: 3rem;
+    text-align: center;
+  }
+  @media (max-width: 39.99rem) {
+    .ks-education-article-body {
+      --ks-article-pad: 1.25rem;
+      padding-top: 1.25rem;
+    }
+    .ks-education-gallery-controls {
+      padding-inline: 0.75rem;
+    }
+    .ks-education-gallery-dots button {
+      min-width: 24px;
+    }
+    .ks-education-books {
+      padding: 2rem 0.5rem 1.5rem;
+    }
+    .ks-education-book-shelf {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+    .ks-education-book-tall,
+    .ks-education-book-square {
+      width: 80%;
+      margin-inline: auto;
+    }
+    .ks-education-book-card {
+      width: calc(80% - 1rem);
+    }
+    .ks-education-book-title {
+      font-size: 1.05rem;
+    }
+    .ks-education-book .ks-hand-link {
+      font-size: 0.75rem;
+    }
+    .ks-education-workshop {
+      padding-inline: 0;
+    }
+  }
+  @media (max-width: 22rem) {
+    .ks-education-article-actions {
+      gap: 0.5rem;
+    }
+    .ks-education-article-foot .ks-hand-link {
+      font-size: 0.8125rem;
+      gap: 0.375rem;
+    }
+    .ks-education-article-foot .ks-hand-link__arrow {
+      flex-basis: 24px;
+      width: 24px;
+      height: 20px;
+    }
+    .ks-education-book-shelf {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .ks-education-book-tall,
+    .ks-education-book-square {
+      width: 80%;
+      margin-inline: auto;
+    }
+    .ks-education-book {
+      justify-items: start;
+    }
+  }
+}
+@layer components {
+  .ks-spotlight--booking .ks-spotlight__body {
+    gap: 1.25rem;
+  }
+  .ks-spotlight--booking .ks-spotlight__art {
+    max-width: 25rem;
+  }
+  .ks-spotlight__booking {
+    min-width: 0;
+    width: 100%;
+  }
+  .ks-booking-mini {
+    position: relative;
+    isolation: isolate;
+    padding: 2.25rem 1.75rem;
+    width: 100%;
+    color: var(--color-ink);
+  }
+  .ks-booking-mini::before {
+    content: "";
+    position: absolute;
+    inset: 0.25rem;
+    z-index: -1;
+    background: url("/crisis/crisis-fill-green-2.webp") center / 100% 100%
+      no-repeat;
+    opacity: 0.24;
+    pointer-events: none;
+  }
+  .ks-booking-mini > .ks-crisis__frame {
+    color: var(--color-primary);
+    opacity: 0.55;
+  }
+  .ks-booking-mini__content {
+    position: relative;
+    display: grid;
+    gap: 0.65rem;
+  }
+  .ks-booking-mini--selected {
+    padding: 16px;
+  }
+  .ks-booking-mini--selected::before {
+    inset: -8% -7% -12%;
+    background-image: url("/watercolor/booking-panel-paint.webp");
+    opacity: 0.38;
+  }
+  /* A long service list grows by tiling the paint's centre and side strips.
+     The four corners and the painted edge thickness stay independent of height. */
+  .ks-booking-mini--selected[data-active-tab="services"]::before {
+    --ks-service-paint-edge: clamp(1.25rem, 3vw, 2.5rem);
+    inset: calc(0px - var(--ks-service-paint-edge)) -7%;
+    box-sizing: border-box;
+    background: none;
+    border: var(--ks-service-paint-edge) solid transparent;
+    border-image: url("/watercolor/booking-panel-paint.webp") 15% fill / 1 / 0
+      stretch round;
+  }
+  .ks-booking-mini__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .ks-booking-mini__eyebrow {
+    color: var(--color-primary);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+  }
+  .ks-booking-mini h3 {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    line-height: 1.25;
+  }
+  .ks-booking-mini__service {
+    display: grid;
+    gap: 0.3rem;
+  }
+  .ks-booking-mini__service label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+  }
+  .ks-booking-mini select {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.25rem;
+    padding: 0.35rem 1.6rem 0.35rem 0.6rem;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    border-radius: 0.4rem 0.55rem 0.45rem 0.5rem;
+    background-color: var(--color-surface);
+    font-size: 0.8125rem;
+    text-overflow: ellipsis;
+  }
+  .ks-booking-mini__service p,
+  .ks-booking-mini__format {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+  .ks-booking-mini
+    svg:not(.ks-crisis__frame, .ks-booking-mini__offer-separator) {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+  }
+  .ks-booking-mini__modes {
+    display: flex;
+    gap: 0.4rem;
+  }
+  .ks-booking-mini__modes button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 0.4rem;
+    border-radius: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    min-height: 2.25rem;
+    font-size: 0.75rem;
+    border: 1px solid transparent;
+  }
+  .ks-booking-mini__modes button[aria-pressed="true"] {
+    background: var(--color-surface);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+  .ks-booking-mini__message {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 0.75rem;
+    min-height: 10rem;
+    padding: 1rem 0;
+    font-size: 0.8125rem;
+    text-align: center;
+  }
+  .ks-booking-mini button,
+  .ks-booking-mini select {
+    cursor: pointer;
+  }
+  .ks-booking-mini :is(a, button, select):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+  }
+  .ks-booking-mini--contact {
+    display: grid;
+    gap: 1rem;
+    font-size: 0.875rem;
+  }
+  .ks-booking-mini__tabs {
+    display: flex;
+    gap: 0.2rem;
+    padding: 0.15rem;
+    border-radius: 8px;
+    background: rgb(255 255 255 / 0.5);
+  }
+  .ks-booking-mini__tabs [role="tab"] {
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    transition:
+      background-color 180ms ease,
+      color 180ms ease;
+  }
+  .ks-booking-mini__tabs [aria-selected="true"] {
+    background: #527b57;
+    color: white;
+  }
+  .ks-booking-mini__calendar-content {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .ks-booking-mini__controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.6rem 1rem;
+  }
+  .ks-booking-mini__service-label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.15rem 0.5rem;
+  }
+  .ks-booking-mini__service-label p {
+    font-size: 0.6875rem;
+  }
+  .ks-booking-mini__format-field {
+    display: grid;
+    align-content: start;
+    gap: 0.3rem;
+  }
+  .ks-booking-mini__format-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+  }
+  .ks-booking-mini__format-field > .ks-booking-mini__format {
+    min-height: 2.25rem;
+  }
+  .ks-booking-mini__location {
+    grid-column: 1 / -1;
+  }
+  @media (min-width: 40rem) {
+    .ks-booking-mini__controls {
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    }
+  }
+  .ks-booking-mini__offers {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ks-booking-mini__offer {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding-block: 0.65rem;
+  }
+  .ks-booking-mini__offer-separator {
+    position: absolute;
+    top: -0.3rem;
+    left: 0;
+    width: 100%;
+    height: 0.6rem;
+    color: #527b57;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+  .ks-booking-mini__offer:first-child .ks-booking-mini__offer-separator {
+    display: none;
+  }
+  .ks-booking-mini__expand-service {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.25rem 0;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .ks-booking-mini__expand-service svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    flex-shrink: 0;
+    color: #527b57;
+    transition: transform 180ms ease;
+  }
+  .ks-booking-mini__expand-service[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+  .ks-booking-mini__expand-service:focus-visible {
+    outline: 2px solid #527b57;
+    outline-offset: 3px;
+  }
+  .ks-booking-mini__offer-description {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding-bottom: 0.4rem;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ks-booking-mini__expand-service svg {
+      transition: none;
+    }
+  }
+  .ks-booking-mini__offer h4 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 0;
+  }
+  .ks-booking-mini__offer-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  .ks-booking-mini__offer-meta strong {
+    color: #527b57;
+    font-size: 0.8125rem;
+  }
+  .ks-booking-mini__choose {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #355c3b;
+    background: #fffdf9;
+    border: 1px solid #a7c7a2;
+    border-radius: 0.5rem;
+    padding: 0.45rem 0.65rem;
+    min-height: 2.25rem;
+    cursor: pointer;
+    transition:
+      background-color 180ms ease,
+      border-color 180ms ease;
+  }
+  .ks-booking-mini__choose:hover {
+    background: #dcebd8;
+    border-color: #7fa87a;
+  }
+  .ks-booking-mini__choose:focus-visible {
+    outline: 2px solid #527b57;
+    outline-offset: 3px;
+  }
+  @media (max-width: 40rem) {
+    .ks-booking-mini__offer {
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 0.5rem;
+      row-gap: 0.2rem;
+    }
+    .ks-booking-mini__offer-meta {
+      grid-column: 1;
+    }
+    .ks-booking-mini__choose {
+      grid-column: 2;
+      grid-row: 1 / 3;
+    }
+  }
+
+  .ks-spotlight--booking .ks-spotlight__grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "header" "art" "summary" "facts" "calendar";
+    row-gap: 1.75rem;
+    align-items: start;
+  }
+  .ks-spotlight__rail,
+  .ks-spotlight__main {
+    display: contents;
+  }
+  .ks-spotlight--booking .ks-spotlight__header {
+    grid-area: header;
+    text-align: center;
+    justify-items: center;
+    margin-bottom: 3.5rem;
+  }
+  .ks-spotlight--booking .ks-spotlight__art {
+    grid-area: art;
+    width: 100%;
+    max-width: 20rem;
+    justify-self: center;
+  }
+  .ks-spotlight--booking .ks-spotlight__facts {
+    grid-area: facts;
+    padding-inline: 1.25rem;
+  }
+  /* The brush panel ends at the portrait's dissolve, before the facts.
+     Keep both pigment layers aligned without trimming their painted edge. */
+  .ks-spotlight--booking :is(.ks-sp__splash, .ks-sp__stain) img {
+    transform: translate(
+        var(--ks-paint-x, 0%),
+        calc(var(--ks-paint-y, 0%) + var(--ks-spotlight-paint-shift, 0%))
+      )
+      scale(var(--ks-paint-zoom, 1)) scaleY(0.94);
+    transform-origin: top center;
+  }
+  .ks-spotlight--raised-paint {
+    --ks-spotlight-paint-shift: -4%;
+  }
+  .ks-spotlight--booking .ks-spotlight__facts dd {
+    padding-left: 0.65rem;
+    gap: 0.35rem;
+  }
+  .ks-spotlight--booking .ks-spotlight__chip {
+    font-size: 0.75rem;
+    line-height: 1.35;
+    padding: 0.3rem 0.55rem;
+  }
+  .ks-spotlight--booking .ks-spotlight__body {
+    grid-area: summary;
+    padding: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .ks-spotlight__booking {
+    grid-area: calendar;
+    max-width: 32rem;
+    justify-self: center;
+  }
+  .ks-spotlight__bio-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: start;
+  }
+  .ks-spotlight__bio-row .ks-hand-link-wrap {
+    white-space: nowrap;
+    justify-self: end;
+    margin-inline-end: clamp(1rem, 3vw, 2.5rem);
+  }
+  @media (min-width: 40rem) and (max-width: 63.99rem) {
+    .ks-spotlight--booking .ks-spotlight__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+      grid-template-areas: "header header" "art summary" "facts facts" "calendar calendar";
+      column-gap: 2rem;
+    }
+    .ks-spotlight--booking .ks-spotlight__facts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .ks-spotlight__bio-row {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (min-width: 64rem) {
+    .ks-spotlight--booking .ks-spotlight__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      grid-template-areas: "header header" "rail main";
+      column-gap: clamp(2rem, 4vw, 4rem);
+      row-gap: 2.5rem;
+    }
+    .ks-spotlight--booking .ks-spotlight__header {
+      margin-bottom: 5rem;
+    }
+    .ks-spotlight__rail {
+      grid-area: rail;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+    .ks-spotlight__rail .ks-spotlight__art {
+      /* The source portrait has headroom; lift its canvas so the visible
+         crown aligns with the name while the paint can extend above it. */
+      margin-top: -15%;
+      margin-bottom: -3rem;
+    }
+    .ks-spotlight--booking .ks-spotlight__rail .ks-spotlight__facts {
+      width: 88%;
+      max-width: 18rem;
+      margin-inline: auto;
+      padding-inline: 0;
+    }
+    .ks-spotlight__main {
+      grid-area: main;
+      display: grid;
+      gap: 1.75rem;
+      min-width: 0;
+    }
+    .ks-spotlight--booking .ks-spotlight__body,
+    .ks-spotlight__booking {
+      grid-area: auto;
+    }
+    .ks-spotlight--booking .ks-spotlight__art {
+      max-width: 25rem;
+    }
+  }
+  @media (max-width: 39.99rem) {
+    .ks-spotlight--booking .ks-spotlight__facts {
+      padding-inline: 0.5rem;
+    }
+    .ks-booking-mini.ks-booking-mini--selected {
+      padding: 0.875rem;
+    }
+    .ks-booking-mini h3 {
+      font-size: 1rem;
+    }
+    .ks-booking-mini__format-label {
+      display: none;
+    }
+    .ks-spotlight__bio-row {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    .ks-spotlight--booking .ks-spotlight__chip {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+.ks-booking-mini__offer-forms {
+  margin-top: 0.5rem;
+}
+.ks-booking-mini__service-hint {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+.ks-booking-mini__choose:disabled {
+  color: #747a73;
+  background: #eceeea;
+  border-color: #c5cbc2;
+  cursor: not-allowed;
+}
+.ks-booking-mini__summary {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+.ks-booking-mini__summary:focus {
+  outline: none;
+}
+.ks-booking-mini__summary-selections {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  flex: 1 1 15rem;
+  min-width: 0;
+}
+.ks-booking-mini__summary-selections button {
+  text-align: left;
+  padding-block: 0.35rem;
+  cursor: pointer;
+}
+.ks-booking-mini__summary-selections button span {
+  color: #527b57;
+  white-space: nowrap;
+}
+.ks-booking-mini__summary-selections button:focus-visible {
+  outline: 2px solid #527b57;
+  outline-offset: 2px;
+}
+.ks-booking-mini__summary-format {
+  flex: 1 1 12rem;
+  max-width: 22rem;
+  min-width: 0;
+}
+.ks-booking-mini__summary-format select {
+  width: 100%;
+  min-width: 0;
+  min-height: 2rem;
+  background: #fffdf9;
+  border: 1px solid #a7c7a2;
+  border-radius: 0.4rem;
+  padding: 0.3rem 0.5rem;
+}
+.ks-booking-mini__summary-actions {
+  margin-left: auto;
 }

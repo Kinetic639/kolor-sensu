@@ -3,6 +3,10 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import type { PublicWorkshop } from "@repo/supabase/workshops";
 import {
+  workshopDateLabel,
+  workshopTimeLabel,
+} from "@/features/workshops/workshop-view";
+import {
   afterEach,
   beforeAll,
   beforeEach,
@@ -67,16 +71,18 @@ function workshop(patch: Partial<PublicWorkshop> = {}): PublicWorkshop {
 let picks = { serviceIds: [] as string[], articleIds: [] as string[] };
 let found: PublicWorkshop | null = workshop();
 let moved: string | null = null;
+let others: PublicWorkshop[] = [];
+let offers: { serviceName: string; serviceSlug: string }[] = [];
 vi.mock("@/lib/workshop-data", () => ({
   getWorkshop: async () => found,
-  getWorkshops: async () => (found ? [found] : []),
+  getWorkshops: async () => (found ? [found, ...others] : others),
   getWorkshopRedirect: async () => moved,
   getWorkshopPicks: async () => picks,
   workshopImageUrl: (path: string) => `https://cdn.example.invalid/${path}`,
 }));
 vi.mock("@/lib/public-data", () => ({
   getBookingWindow: async () => ({ timeZone: "Europe/Warsaw" }),
-  getSpecialistOffers: async () => [],
+  getSpecialistOffers: async () => offers,
   getWorkshopsPage: async () => ({ rules: ["Prosimy o punktualność."] }),
   getServices: async () => [
     { id: "s1", name: "Psychoterapia indywidualna", slug: "psychoterapia" },
@@ -120,17 +126,22 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: () => {}, refresh: () => {} }),
 }));
 
+let generateMetadata: (props: {
+  params: Promise<{ slug: string }>;
+}) => Promise<Record<string, unknown>>;
 let Workshop: (props: {
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string>>;
 }) => Promise<React.ReactElement>;
 beforeAll(async () => {
-  ({ default: Workshop } = (await import("./page")) as never);
+  ({ default: Workshop, generateMetadata } = (await import("./page")) as never);
 }, 60_000);
 
 beforeEach(() => {
   found = workshop();
   picks = { serviceIds: [], articleIds: [] };
+  others = [];
+  offers = [];
 });
 afterEach(cleanup);
 
@@ -197,6 +208,35 @@ describe("the description", () => {
     expect(
       screen.queryByRole("heading", { name: "Program" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("shows a photo the admin put in the description, with its text (#280)", async () => {
+    found = workshop({
+      body: {
+        type: "doc",
+        content: [
+          { type: "paragraph", content: [text("Spotkamy się w sali.")] },
+          {
+            type: "articleImage",
+            attrs: {
+              src: "workshops/0b7c2a4e-1f3d-4c5b-9a8e-2d6f7e8c9b0a.webp",
+              alt: "Sala z krzesłami w kręgu",
+              width: 1600,
+              height: 900,
+              caption: "",
+              size: "wide",
+            },
+          },
+        ],
+      },
+    });
+    await open();
+    expect(screen.getByText("Spotkamy się w sali.")).toBeVisible();
+    const photo = screen.getByRole("img", { name: "Sala z krzesłami w kręgu" });
+    // Through Next's image optimiser: the address is in its `url`.
+    expect(decodeURIComponent(photo.getAttribute("src") ?? "")).toContain(
+      "cdn.example.invalid/workshops/0b7c2a4e-1f3d-4c5b-9a8e-2d6f7e8c9b0a.webp",
+    );
   });
 });
 
@@ -306,5 +346,175 @@ describe("a draft or a wrong address", () => {
       "REDIRECT /warsztaty/uwaznosc-jesienia",
     );
     moved = null;
+  });
+});
+
+describe("the header (#276)", () => {
+  it("has the one H1, when, where, the price and the seats left", async () => {
+    await open();
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Uważność" }),
+    ).toBeVisible();
+    const when = `${workshopDateLabel(found!.startsAt, "Europe/Warsaw")}, ${workshopTimeLabel(found!.startsAt, found!.endsAt, "Europe/Warsaw")}`;
+    expect(screen.getByText(when)).toBeVisible();
+    // The price, as the site writes it (a no-break space before zł).
+    expect(document.getElementById("zapis")).toHaveTextContent(/^150\szł/);
+    expect(screen.getByText("Wolne: 8 miejsc z 12.")).toBeVisible();
+  });
+
+  it("says Potwierdzony or Czeka na komplet only with a minimum", async () => {
+    await open();
+    expect(screen.queryByText(/Potwierdzony|Czeka na komplet/)).toBeNull();
+    cleanup();
+    found = workshop({ minParticipants: 4, confirmed: true });
+    await open();
+    expect(screen.getByText(/· Potwierdzony/)).toBeVisible();
+    cleanup();
+    found = workshop({ minParticipants: 4, confirmed: false });
+    await open();
+    expect(screen.getByText(/· Czeka na komplet/)).toBeVisible();
+  });
+});
+
+describe("the way there (#276)", () => {
+  it("says how to get there and opens the maps", async () => {
+    found = workshop({ locationDirections: "Wejście od podwórza." });
+    await open();
+    expect(screen.getByText("Wejście od podwórza.")).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: /Otwórz w mapach/ }),
+    ).toHaveAttribute("href", expect.stringContaining("google.com/maps"));
+  });
+});
+
+describe("the rules' cases (#275)", () => {
+  const rules = () =>
+    screen.getByRole("heading", { name: "Zasady" }).parentElement!.textContent;
+
+  it("say the minimum", async () => {
+    found = workshop({ minParticipants: 3 });
+    await open();
+    expect(rules()).toMatch(/co najmniej 3 osoby/);
+  });
+
+  it("in the last week: pay at once, no full refund", async () => {
+    found = workshop({ startsAt: at(3), endsAt: at(3.1) });
+    await open();
+    expect(rules()).toMatch(/mniej niż tydzień: płacisz od razu/);
+    expect(rules()).not.toMatch(/pełny zwrot|zapłacić do/);
+  });
+
+  it("are not there once cancelled or over", async () => {
+    found = workshop({ status: "cancelled", registrationOpen: false });
+    await open();
+    expect(screen.queryByRole("heading", { name: "Zasady" })).toBeNull();
+    cleanup();
+    found = workshop({
+      status: "completed",
+      startsAt: at(-2),
+      endsAt: at(-1.9),
+    });
+    await open();
+    expect(screen.queryByRole("heading", { name: "Zasady" })).toBeNull();
+  });
+});
+
+describe("signing up, by the state (#276)", () => {
+  const signup = () => document.getElementById("zapis")!;
+
+  it("full: no seats, the waitlist instead", async () => {
+    found = workshop({ seatsLeft: 0 });
+    await open();
+    expect(signup()).toHaveTextContent("Brak wolnych miejsc");
+    expect(
+      screen.getByRole("button", { name: "Zapisz się na listę rezerwową" }),
+    ).toBeVisible();
+  });
+
+  it("closed, cancelled or over: why, and the way to ask", async () => {
+    const cases: [Partial<PublicWorkshop>, string][] = [
+      [{ registrationOpen: false }, "Zapisy są zamknięte."],
+      [
+        { status: "cancelled", registrationOpen: false },
+        "Ten warsztat został odwołany.",
+      ],
+      [
+        { status: "completed", startsAt: at(-2), endsAt: at(-1.9) },
+        "Ten warsztat już się odbył.",
+      ],
+    ];
+    for (const [patch, words] of cases) {
+      found = workshop(patch);
+      await open();
+      expect(signup()).toHaveTextContent(words);
+      expect(
+        screen.getByRole("link", { name: "Zapytaj o kolejne terminy" }),
+      ).toHaveAttribute("href", "/kontakt");
+      expect(screen.queryByRole("button", { name: /Zapisz się/ })).toBeNull();
+      cleanup();
+    }
+  });
+});
+
+describe("Powiązane without picks (#276)", () => {
+  it("are the leader's services and the other coming workshops", async () => {
+    offers = [{ serviceName: "Konsultacja", serviceSlug: "konsultacja" }];
+    others = [
+      workshop({
+        id: "w2",
+        slug: "oddech",
+        title: "Oddech",
+        startsAt: at(20),
+        endsAt: at(20.1),
+      }),
+    ];
+    await open();
+    expect(
+      screen.getByRole("heading", { name: "Indywidualnie: Anna Nowak" }),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "Konsultacja" })).toHaveAttribute(
+      "href",
+      "/oferta/konsultacja",
+    );
+    expect(
+      screen.getByRole("heading", { name: "Inne warsztaty" }),
+    ).toBeVisible();
+    expect(screen.getByText("Oddech")).toBeVisible();
+  });
+});
+
+describe("Google and link previews (#276)", () => {
+  const meta = () =>
+    generateMetadata({ params: Promise.resolve({ slug: "uwaznosc" }) });
+
+  it("use the workshop's SEO title and description, and its cover", async () => {
+    found = workshop({
+      seoTitle: "Uważność jesienią",
+      seoDescription: "Dwie godziny w grupie.",
+      coverPath: "workshops/okladka.webp",
+      coverAlt: "Krzesła w kręgu",
+    });
+    expect(await meta()).toMatchObject({
+      title: "Uważność jesienią",
+      description: "Dwie godziny w grupie.",
+      openGraph: {
+        title: "Uważność jesienią",
+        images: [
+          {
+            url: "https://cdn.example.invalid/workshops/okladka.webp",
+            alt: "Krzesła w kręgu",
+          },
+        ],
+      },
+    });
+  });
+
+  it("fall back to the title, the short description and the list's picture", async () => {
+    expect(await meta()).toMatchObject({
+      title: "Uważność · Warsztaty",
+      description: "Krótko",
+      openGraph: { images: [{ url: "/warsztaty/opengraph-image" }] },
+    });
   });
 });

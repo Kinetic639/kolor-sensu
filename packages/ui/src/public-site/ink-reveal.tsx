@@ -47,9 +47,22 @@ export function InkReveal({
         if (tips.length) gsap.set(tips, { opacity: 0 });
         element.dataset.inkState = "waiting";
         let observer: IntersectionObserver | undefined;
+        let activation: MutationObserver | undefined;
+        let visible = false;
         let timeline: ReturnType<typeof gsap.timeline> | undefined;
         const play = contextSafe(() => {
+          const picture = element.closest<HTMLElement>(
+            ".ks-story__picture[data-rich]",
+          );
+          const story = picture?.closest<HTMLElement>(".ks-story");
+          if (
+            !visible ||
+            (story?.hasAttribute("data-pinned") &&
+              !picture?.hasAttribute("data-active"))
+          )
+            return;
           observer?.disconnect();
+          activation?.disconnect();
           timeline = gsap.timeline({
             delay: matches("(min-width: 70rem)") ? delay : 0,
             onStart: () => {
@@ -101,14 +114,27 @@ export function InkReveal({
         if (typeof IntersectionObserver === "function") {
           observer = new IntersectionObserver(
             (entries) => {
-              if (entries.some((entry) => entry.isIntersecting)) play();
+              visible = entries.some((entry) => entry.isIntersecting);
+              if (visible) play();
             },
             { threshold: 0.25 },
           );
           observer.observe(element);
-        } else play();
+          const picture = element.closest(".ks-story__picture[data-rich]");
+          if (picture && typeof MutationObserver === "function") {
+            activation = new MutationObserver(() => play());
+            activation.observe(picture, {
+              attributes: true,
+              attributeFilter: ["data-active"],
+            });
+          }
+        } else {
+          visible = true;
+          play();
+        }
         return () => {
           observer?.disconnect();
+          activation?.disconnect();
           timeline?.kill();
           element.dataset.inkState = "complete";
         };

@@ -59,6 +59,13 @@ const parseAsLocalTime = createParser({
 
 export const BOOKING_MODES = ["stacjonarnie", "online"] as const;
 export type BookingMode = (typeof BOOKING_MODES)[number];
+export const BOOKING_EDIT_STEPS = [
+  "usluga",
+  "forma",
+  "lokalizacja",
+  "specjalista",
+  "termin",
+] as const;
 
 export const BOOKING_NOTICES = [
   "termin-zajety",
@@ -77,9 +84,19 @@ export const bookingParsers = {
   termin: parseAsLocalTime,
   /** A notice shown once, e.g. after the chosen time was taken. */
   uwaga: parseAsStringLiteral(BOOKING_NOTICES),
+  /** Edit one step without erasing the other choices. */
+  krok: parseAsStringLiteral(BOOKING_EDIT_STEPS),
+  /** Continue a preselected visit after the protected hold check. */
+  dalej: parseAsStringLiteral(["auto"]),
 };
 
-export type BookingParams = inferParserType<typeof bookingParsers>;
+export type BookingParams = Omit<
+  inferParserType<typeof bookingParsers>,
+  "krok" | "dalej"
+> & {
+  krok?: (typeof BOOKING_EDIT_STEPS)[number] | null;
+  dalej?: "auto" | null;
+};
 export type BookingParamKey = keyof BookingParams;
 
 export const loadBookingParams = createLoader(bookingParsers);
@@ -119,7 +136,7 @@ export function bookingNoticeHref(
   }) as Route;
 }
 
-/** Choose a value; any other choice drops the chosen time. */
+/** Keep the requested time; the live wizard revalidates it for the new choice. */
 export function selectBookingHref<Key extends BookingParamKey>(
   params: BookingParams,
   key: Key,
@@ -127,15 +144,19 @@ export function selectBookingHref<Key extends BookingParamKey>(
 ): Route {
   return bookingHref({
     ...params,
-    ...(key === "termin" ? {} : { termin: null }),
+    krok: null,
     [key]: value,
   });
 }
 
-/** "Zmień": clear a choice (and the chosen time) to pick it again. */
+/** Open a step for editing while preserving the remaining visit choices. */
 export function changeBookingHref(
   params: BookingParams,
-  key: BookingParamKey,
+  key: (typeof BOOKING_EDIT_STEPS)[number],
 ): Route {
-  return bookingHref({ ...params, [key]: null, tydzien: null, termin: null });
+  return bookingHref({
+    ...params,
+    krok: key,
+    ...(key === "termin" ? { termin: null } : {}),
+  });
 }

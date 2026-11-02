@@ -76,6 +76,8 @@ const KINDS: Record<string, { title: string; tone: VisitTone }> = {
     tone: "danger",
   },
   dispute_closed: { title: "Spór zakończony", tone: "neutral" },
+  // Klient · 6, card 8.
+  email_bounced: { title: "E-mail nie dotarł", tone: "danger" },
 };
 
 // A reservation is held this long until it is confirmed from its e-mail.
@@ -191,6 +193,10 @@ export function visitEventRows(
         break;
       case "email_sent":
         title = `Wysłano e-mail: ${EMAILS[String(d.email)] ?? String(d.email)}`;
+        break;
+      case "email_bounced":
+        title = `E-mail nie dotarł: ${EMAILS[String(d.email)] ?? String(d.email)}`;
+        detail = "Adres odrzucił wiadomość. Sprawdź e-mail klienta.";
         break;
     }
     // The centre's reason (R12), after what happened.

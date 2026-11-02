@@ -8,6 +8,7 @@ import { sendVisitConfirmation } from "@/features/booking/email/confirmation-ser
 import { settleSession } from "@/features/booking/payment";
 import { paymentDeps } from "@/features/booking/payment-server";
 import { RefreshWhileWaiting } from "@/features/booking/refresh-while-waiting";
+import { ResumeBooking } from "@/features/booking/remember-choices";
 import { bookingHref } from "@/features/booking/search-params";
 import { stripeServer } from "@/lib/stripe";
 
@@ -112,11 +113,16 @@ export default async function BookingConfirmationPage({
       visit={visit}
     >
       {waiting ? <RefreshWhileWaiting /> : null}
+      {/* Booked: nothing is left to finish (card 11). */}
+      {confirmed ? <ResumeBooking href={null} /> : null}
       <div className="flex flex-wrap gap-3">
         {confirmed ? (
-          <PrimaryButton arrow asChild>
-            <Link href="/">Wróć na stronę główną</Link>
-          </PrimaryButton>
+          <>
+            <PrimaryButton arrow asChild>
+              <Link href="/">Wróć na stronę główną</Link>
+            </PrimaryButton>
+            <CalendarButton />
+          </>
         ) : waiting ? null : (
           <SecondaryButton asChild>
             <Link href={bookingHref({})}>Wybierz termin</Link>
@@ -127,20 +133,42 @@ export default async function BookingConfirmationPage({
   );
 }
 
-/** A visit confirmed without a payment: its code covered the whole price. */
+/** The visit as a calendar file (Klient · 4, card 6). */
+function CalendarButton() {
+  return (
+    <SecondaryButton asChild>
+      <a download href="/umow-wizyte/potwierdzenie/kalendarz.ics">
+        Dodaj do kalendarza
+      </a>
+    </SecondaryButton>
+  );
+}
+
+/**
+ * A visit confirmed without a payment: a free service (0 zł, card 9), or
+ * a code that covered the whole price.
+ */
 async function FreeConfirmation() {
   const visit = await readGuestVisit();
   if (!visit || visit.booking.status !== "confirmed") redirect(bookingHref({}));
   return (
     <BookingStep
       current={6}
-      lead="Kod rabatowy pokrył całą cenę, więc niczego nie pobraliśmy. Potwierdzenie wyślemy na Twój adres e-mail."
+      lead={
+        visit.discount
+          ? "Kod rabatowy pokrył całą cenę, więc niczego nie pobraliśmy. Potwierdzenie wyślemy na Twój adres e-mail."
+          : "Ta wizyta jest bezpłatna, więc niczego nie pobraliśmy. Potwierdzenie wyślemy na Twój adres e-mail."
+      }
       title="Wizyta potwierdzona"
       visit={visit}
     >
-      <PrimaryButton arrow asChild>
-        <Link href="/">Wróć na stronę główną</Link>
-      </PrimaryButton>
+      <ResumeBooking href={null} />
+      <div className="flex flex-wrap gap-3">
+        <PrimaryButton arrow asChild>
+          <Link href="/">Wróć na stronę główną</Link>
+        </PrimaryButton>
+        <CalendarButton />
+      </div>
     </BookingStep>
   );
 }
@@ -166,6 +194,7 @@ function CheckEmail() {
           wiadomości? Zajrzyj do folderu spam albo oferty.
         </p>
       </div>
+      <ResumeBooking href={null} />
       <PrimaryButton arrow asChild className="justify-self-start">
         <Link href="/">Wróć na stronę główną</Link>
       </PrimaryButton>

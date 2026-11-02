@@ -437,4 +437,16 @@ describe("a workshop", () => {
       expect.objectContaining({ label: "Do decyzji" }),
     );
   });
+
+  it("an online workshop without its link: what to do, leading to it (Warsztat · 6, card 10)", () => {
+    const view = notificationView(workshop("workshop_no_link"), options);
+    expect(view).toMatchObject({
+      title: "Brak linku do spotkania",
+      tone: "warning",
+      href: "/warsztaty/w1",
+    });
+    expect(view.details).toContainEqual(
+      expect.objectContaining({ label: "Do zrobienia" }),
+    );
+  });
 });

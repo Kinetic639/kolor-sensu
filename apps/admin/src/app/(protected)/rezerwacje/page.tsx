@@ -108,7 +108,11 @@ export default async function BookingsPage({
             tab={params.karta}
             tabs={visitPanelTabs(PATH, params, { client: true })}
             toolbar={
-              <CentreVisitToolbar label={visitLabel(open.row)} row={open.row} />
+              <CentreVisitToolbar
+                client={open.client?.details ?? null}
+                label={visitLabel(open.row)}
+                row={open.row}
+              />
             }
           />
         ) : null}

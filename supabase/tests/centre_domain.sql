@@ -133,6 +133,21 @@ GRANT EXECUTE ON FUNCTION pg_temp.at(date, time) TO anon, authenticated, service
 GRANT EXECUTE ON FUNCTION pg_temp.hint_of(text) TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION pg_temp.refusal_of(text) TO anon, authenticated, service_role;
 
+-- The guest's details as the site sends them (the consents a visit within
+-- 14 days or for minors asks for, given).
+CREATE FUNCTION pg_temp.save_details(
+  p_token text, p_name text, p_email text, p_phone text, p_notes text,
+  p_terms boolean, p_privacy boolean
+)
+RETURNS void
+LANGUAGE sql
+AS $$
+  SELECT public.save_booking_details(p_token, split_part(p_name, ' ', 1),
+    nullif(substr(p_name, length(split_part(p_name, ' ', 1)) + 2), ''),
+    p_email, p_phone, p_notes, p_terms, p_privacy, true, true);
+$$;
+GRANT EXECUTE ON FUNCTION pg_temp.save_details(text, text, text, text, text, boolean, boolean) TO anon, authenticated, service_role;
+
 -- A paid visit on Monday at 9 (booked while the centre is open).
 CREATE TEMP TABLE centre_visit (id uuid, reference text);
 GRANT ALL ON centre_visit TO service_role;
@@ -144,7 +159,7 @@ BEGIN
   SELECT * INTO held FROM public.hold_slot(
     'centre-test-consultation', 'centre-test-anna', 'in_person',
     pg_temp.at((SELECT monday FROM centre_test), '09:00'), p_client_key => 'visitor-centre');
-  PERFORM public.save_booking_details(held.access_token, 'Ola Centrum', 'ola-centre@example.invalid',
+  PERFORM pg_temp.save_details(held.access_token, 'Ola Centrum', 'ola-centre@example.invalid',
     '600100200', NULL, true, true);
   PERFORM public.attach_checkout_session(held.access_token, 'cs_test_centre',
     now() + interval '30 minutes', 25000, 'PLN');
@@ -319,8 +334,9 @@ BEGIN
 END;
 $$;
 
--- D: the announcement bar. The site reads only today's, the latest
--- starting; admins manage them; links stay on the site or go to https.
+-- D: the announcement bar. The site reads only today's (not one over
+-- yesterday, nor one from tomorrow), the latest starting; admins manage
+-- them; links stay on the site or go to https.
 SELECT set_config('request.jwt.claims', '{"sub":"72000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 SET LOCAL ROLE authenticated;
 DO $$
@@ -331,7 +347,10 @@ BEGIN
   INSERT INTO public.site_announcements (message, starts_on, ends_on)
   VALUES ('Starsze ogłoszenie', t.today - 3, t.today + 3);
   INSERT INTO public.site_announcements (message, link_label, link_href, starts_on, ends_on)
-  VALUES ('Nowe godziny', 'Szczegóły', '/kontakt', t.today - 1, t.today);
+  VALUES ('Nowe godziny', 'Szczegóły', '/kontakt', t.today - 2, t.today);
+  -- Started later, but over yesterday: gone today.
+  INSERT INTO public.site_announcements (message, starts_on, ends_on)
+  VALUES ('Wczoraj się skończyło', t.today - 1, t.today - 1);
   INSERT INTO public.site_announcements (message, starts_on, ends_on)
   VALUES ('Jeszcze nie teraz', t.today + 1, t.today + 5);
 

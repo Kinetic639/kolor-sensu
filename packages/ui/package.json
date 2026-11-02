@@ -39,8 +39,10 @@
     "./portal-shell": "./src/portal-shell.tsx",
     "./full-bleed": "./src/full-bleed.tsx",
     "./public-site": "./src/public-site/index.ts",
+    "./public-site/compact-booking-calendar": "./src/public-site/compact-booking-calendar.tsx",
     "./public-site/actions": "./src/public-site/actions.tsx",
     "./public-site/cookie-consent": "./src/public-site/cookie-consent.tsx",
+    "./public-site/location-map-placeholder": "./src/public-site/location-map-placeholder.tsx",
     "./public-site.css": "./src/public-site/public-site.css",
     "./navigation-menu": "./src/navigation-menu.tsx",
     "./notifications": "./src/notifications/index.ts",
@@ -86,7 +88,10 @@
     "./textarea": "./src/textarea.tsx",
     "./toast": "./src/toast.tsx",
     "./toaster": "./src/toaster.tsx",
-    "./tooltip": "./src/tooltip.tsx"
+    "./tooltip": "./src/tooltip.tsx",
+    "./public-site/availability-calendar": "./src/public-site/availability-calendar.tsx",
+    "./public-site/availability-calendar-dates": "./src/public-site/availability-calendar-dates.ts",
+    "./public-site/handdrawn-link": "./src/public-site/handdrawn-link.tsx"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

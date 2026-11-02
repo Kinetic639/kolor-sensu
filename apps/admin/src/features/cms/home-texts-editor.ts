@@ -6,6 +6,7 @@ import {
   type HomeThoughtsContent,
 } from "@repo/contracts";
 import type { HomeStoryStepRow } from "./types";
+import { draftToLine, type TitleLineDraft } from "./header-editor";
 
 // Pure helpers for the homepage's word editors (thoughts-section.tsx,
 // story-section.tsx), so the forms stay thin.
@@ -50,6 +51,7 @@ export const emptyThoughtPair = { negative: "", positive: "" } as const;
 /** A story step's button as its form holds it: both fields may be empty. */
 export type StoryDraftStep = Omit<HomeStoryStepRow, "cta"> & {
   cta: { label: string; href: string } | null;
+  headingDraft?: TitleLineDraft;
 };
 
 /**
@@ -60,8 +62,16 @@ export function toStoryContent(
   steps: readonly StoryDraftStep[],
 ): HomeStoryContent {
   return {
-    steps: steps.map(({ imageUrl: _preview, cta, ...step }) => ({
+    steps: steps.map(({ imageUrl: _preview, headingDraft, cta, ...step }) => ({
       ...step,
+      ...(headingDraft
+        ? {
+            heading: headingDraft.text.trim(),
+            headingSegments: draftToLine(headingDraft).length
+              ? draftToLine(headingDraft)
+              : undefined,
+          }
+        : {}),
       cta: cta && (cta.label.trim() || cta.href.trim()) ? cta : null,
     })),
   };

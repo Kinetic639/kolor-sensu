@@ -371,26 +371,25 @@ export async function listVisitEvents(
 }
 
 /**
- * Sends the link to pay again (R11): lets the reservation's e-mail be
- * claimed once more; the site sends it. Throws a BookingError
- * (recently_sent, not_payable, forbidden).
+ * "Wyślij link ponownie" (Klient · 6, card 7): a reservation's link to pay,
+ * or a confirmed visit's confirmation, may be claimed once more; the site
+ * sends it. An admin for any visit, a specialist for their own. Throws a
+ * BookingError (recently_sent, nothing_to_send, forbidden).
  */
-export async function centreResendPaymentLink(
+export async function centreResendVisitLink(
   client: Client,
   appointmentId: string,
-): Promise<string> {
-  const { data, error } = await client.rpc("centre_resend_payment_link", {
+): Promise<{ reference: string; kind: "reserved" | "confirmation" }> {
+  const { data, error } = await client.rpc("centre_resend_visit_link", {
     p_appointment_id: appointmentId,
   });
-  if (error) {
-    if (error.code === "42501") {
-      throw new BookingError("forbidden", error.message);
-    }
-    throw bookingError(error);
-  }
+  if (error) throw centreError(error);
   const row = data?.[0];
   if (!row) throw new BookingError("unknown", "Nothing to send");
-  return row.reference;
+  return {
+    reference: row.reference,
+    kind: row.kind === "reserved" ? "reserved" : "confirmation",
+  };
 }
 
 function centreError(error: {

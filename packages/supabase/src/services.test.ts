@@ -12,6 +12,7 @@ import {
   listPublicOffersForSpecialist,
   saveServiceArrangement,
   serviceMappers,
+  updateService,
 } from "./services";
 
 describe("service domain schemas", () => {
@@ -39,6 +40,14 @@ describe("service domain schemas", () => {
     expect(priceMinorSchema.safeParse(25000).success).toBe(true);
     expect(priceMinorSchema.safeParse(-1).success).toBe(false);
     expect(priceMinorSchema.safeParse(25.5).success).toBe(false);
+    // 0 zł is free, a paid price at least 2 zł (Klient · 4, card 9; #256).
+    expect(priceMinorSchema.safeParse(0).success).toBe(true);
+    expect(priceMinorSchema.safeParse(200).success).toBe(true);
+    const cheap = priceMinorSchema.safeParse(199);
+    expect(cheap.success).toBe(false);
+    expect(cheap.error?.issues[0]?.message).toBe(
+      "Cena to 0 zł (bezpłatnie) albo co najmniej 2 zł.",
+    );
   });
 
   it("applies service defaults for optional fields", () => {
@@ -50,6 +59,8 @@ describe("service domain schemas", () => {
     expect(result.category).toBe("other");
     expect(result.active).toBe(true);
     expect(result.bookingEnabled).toBe(false);
+    // Not for minors unless the admin says so (Klient · 3, card 16).
+    expect(result.forMinors).toBe(false);
   });
 
   it("requires at least one modality for an active offering", () => {
@@ -130,6 +141,7 @@ describe("service domain mapping", () => {
         default_duration_minutes: 50,
         after_minutes: 10,
         requires_intake: false,
+        for_minors: false,
         active: true,
         publicly_visible: true,
         booking_enabled: false,
@@ -144,7 +156,44 @@ describe("service domain mapping", () => {
       category: "psychotherapy",
       defaultDurationMinutes: 50,
       afterMinutes: 10,
+      forMinors: false,
     });
+  });
+
+  it("saves „Usługa dla dziecka lub młodzieży” as for_minors (card 16)", async () => {
+    const single = vi.fn().mockResolvedValue({
+      data: {
+        id: "service-id",
+        name: "Terapia nastolatków",
+        slug: "terapia-nastolatkow",
+        short_description: null,
+        description: null,
+        category: "psychotherapy",
+        default_duration_minutes: 50,
+        after_minutes: 10,
+        requires_intake: false,
+        for_minors: true,
+        active: true,
+        publicly_visible: true,
+        booking_enabled: true,
+        sort_order: 0,
+        catalog_id: null,
+        created_at: "2026-09-20T00:00:00Z",
+        updated_at: "2026-09-20T00:00:00Z",
+      },
+      error: null,
+    });
+    const update = vi.fn(() => ({
+      eq: () => ({ select: () => ({ single }) }),
+    }));
+    const client = { from: () => ({ update }) } as never;
+    const saved = await updateService(client, "service-id", {
+      forMinors: true,
+    });
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ for_minors: true }),
+    );
+    expect(saved.forMinors).toBe(true);
   });
 
   it("maps specialist_services database naming into client-agnostic domain naming", () => {

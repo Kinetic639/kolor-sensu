@@ -2,11 +2,13 @@ import { describe, expect, it, vi } from "vitest";
 import {
   BookingError,
   getBooking,
+  getBookingRequirements,
   saveBookingDetails,
   getBookingWindow,
   holdSlot,
   listBookableCatalog,
   listFreeSlots,
+  nextFreeSlot,
   releaseHold,
   reserveHold,
   confirmReservation,
@@ -146,6 +148,38 @@ describe("listFreeSlots", () => {
   });
 });
 
+describe("nextFreeSlot", () => {
+  it("asks for the soonest free time from a day on, within the horizon", async () => {
+    const { client, rpc } = rpcClient("2030-01-21T08:00:00+00:00");
+    const next = await nextFreeSlot(client, {
+      serviceSlug: "konsultacja",
+      specialistSlug: "anna",
+      mode: "online",
+      from: "2030-01-07",
+    });
+    expect(rpc).toHaveBeenCalledWith("next_free_slot", {
+      p_service_slug: "konsultacja",
+      p_specialist_slug: "anna",
+      p_mode: "online",
+      p_from: "2030-01-07",
+      p_location_slug: undefined,
+    });
+    expect(next).toBe("2030-01-21T08:00:00+00:00");
+  });
+
+  it("is null when nothing is free", async () => {
+    const { client } = rpcClient(null);
+    expect(
+      await nextFreeSlot(client, {
+        serviceSlug: "konsultacja",
+        specialistSlug: "anna",
+        mode: "online",
+        from: "2030-01-07",
+      }),
+    ).toBeNull();
+  });
+});
+
 describe("holdSlot", () => {
   const input = {
     serviceSlug: "konsultacja",
@@ -266,6 +300,8 @@ describe("saveBookingDetails", () => {
     notes: null,
     acceptTerms: true as const,
     acceptPrivacy: true as const,
+    acceptEarlyStart: true,
+    confirmGuardian: false,
   };
 
   it("saves the details and consents to the held visit", async () => {
@@ -280,6 +316,8 @@ describe("saveBookingDetails", () => {
       p_notes: "",
       p_accept_terms: true,
       p_accept_privacy: true,
+      p_accept_early_start: true,
+      p_confirm_guardian: false,
     });
   });
 
@@ -366,5 +404,23 @@ describe("reservationConfirmBy", () => {
     expect(rpc).toHaveBeenCalledWith("reservation_confirm_by", {
       p_manage_token: "link",
     });
+  });
+});
+
+describe("getBookingRequirements (Klient · 3, cards 15, 16)", () => {
+  it("what the held visit asks of its client", async () => {
+    const { client, rpc } = rpcClient([{ early_start: true, guardian: false }]);
+    expect(await getBookingRequirements(client, "token")).toEqual({
+      earlyStart: true,
+      guardian: false,
+    });
+    expect(rpc).toHaveBeenCalledWith("booking_requirements", {
+      p_access_token: "token",
+    });
+  });
+
+  it("nothing held: null", async () => {
+    const { client } = rpcClient([]);
+    expect(await getBookingRequirements(client, "token")).toBeNull();
   });
 });

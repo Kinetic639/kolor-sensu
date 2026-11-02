@@ -48,6 +48,8 @@ export interface ServiceRow {
   bookingEnabled: boolean;
   /** The client fills in the questionnaire when booking it online. */
   requiresIntake: boolean;
+  /** For a child or a teenager: booked by a parent or guardian. */
+  forMinors: boolean;
   sortOrder: number;
   /** Its catalogue in the site's menu (none: on the menu's first level). */
   catalog: { id: string; name: string } | null;

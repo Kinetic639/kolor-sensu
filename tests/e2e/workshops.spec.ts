@@ -19,10 +19,14 @@ import {
 // published, priced, with seats, led by "Test Specjalista"; DEV has it.
 // Stripe is in test mode (BLIK 123456) and Turnstile passes. Each run
 // leaves one confirmed test seat behind (the other gives itself up).
+// The waitlist needs "Warsztat rezerwowy E2E" (warsztat-rezerwowy-e2e):
+// published, priced, one seat, more than a week ahead; the run gives up
+// every seat it takes, so the seat is free again.
 
 const slug = process.env.E2E_WORKSHOP_SLUG ?? "warsztat-testowy-e2e";
 const title = process.env.E2E_WORKSHOP_TITLE ?? "Warsztat testowy E2E";
 const workshopPath = `/warsztaty/${slug}`;
+const waitlistPath = `/warsztaty/${process.env.E2E_WAITLIST_SLUG ?? "warsztat-rezerwowy-e2e"}`;
 
 test.use({ reducedMotion: "reduce" });
 
@@ -32,31 +36,36 @@ async function open(page: Page, path: string) {
   expect(response?.status(), path).toBe(200);
 }
 
+/** The page as it is now: one h1, no sideways scroll, no axe violations. */
+async function checkCurrent(page: Page, label: string) {
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - window.innerWidth,
+  );
+  expect(overflow, label).toBeLessThanOrEqual(0);
+  const { violations } = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    .analyze();
+  expect(
+    violations.map(({ id, nodes }) => ({
+      id,
+      targets: nodes.map((node) => node.target.join(" ")),
+    })),
+    label,
+  ).toEqual([]);
+}
+
 async function checkPage(page: Page, path: string) {
   for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     await open(page, path);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - window.innerWidth,
-    );
-    expect(overflow, `${path} at ${width} px`).toBeLessThanOrEqual(0);
-    const { violations } = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
-    expect(
-      violations.map(({ id, nodes }) => ({
-        id,
-        targets: nodes.map((node) => node.target.join(" ")),
-      })),
-      `${path} at ${width} px`,
-    ).toEqual([]);
+    await checkCurrent(page, `${path} at ${width} px`);
   }
 }
 
 /** "Zapisz się" once the bot check passes; the details step opens. */
-async function holdSeat(page: Page) {
-  await open(page, workshopPath);
+async function holdSeat(page: Page, path = workshopPath) {
+  await open(page, path);
   const signup = page.locator("#zapis");
   await expect(signup.getByText("Gotowe. Możesz się zapisać.")).toBeVisible({
     timeout: 30_000,
@@ -64,6 +73,12 @@ async function holdSeat(page: Page) {
   await signup.getByRole("button", { name: "Zapisz się" }).click();
   await expect(
     page.getByRole("heading", { level: 1, name: "Twoje dane" }),
+  ).toBeVisible();
+  // Until when the seat waits (Warsztat · 2, card 2).
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: /Dokończ zapis do \d{1,2}:\d{2}/ }),
   ).toBeVisible();
 }
 
@@ -189,7 +204,11 @@ test("a guest reserves a seat to pay later and gives it up from its page", async
   page,
 }) => {
   test.setTimeout(180_000);
+  // On a phone, each step of the sign-up as accessible as the pages
+  // (Warsztat · 1, card 5).
+  await page.setViewportSize({ width: 390, height: 900 });
   await holdSeat(page);
+  await checkCurrent(page, "the details step on a phone");
   await fillDetails(page, "Rezygnacja E2E");
   await page
     .getByRole("button", { name: "Zarezerwuj, zapłacę później" })
@@ -203,6 +222,7 @@ test("a guest reserves a seat to pay later and gives it up from its page", async
   await expect(
     page.getByRole("button", { name: "Zapłać teraz" }),
   ).toBeVisible();
+  await checkCurrent(page, "the seat's page on a phone");
 
   await page.getByRole("button", { name: "Zrezygnuj z warsztatu" }).click();
   await expect(
@@ -212,4 +232,80 @@ test("a guest reserves a seat to pay later and gives it up from its page", async
   await expect(
     page.getByRole("heading", { level: 1, name: "Zapis anulowany" }),
   ).toBeVisible({ timeout: 30_000 });
+});
+
+/** Gives the seat (or the waitlist place) up from its page, if it is not already. */
+async function giveUp(page: Page, url: string) {
+  await page.goto(url);
+  const cancel = page.getByRole("button", {
+    name: /^(Zrezygnuj z warsztatu|Wypisz się z listy rezerwowej)$/,
+  });
+  if (!(await cancel.isVisible())) return;
+  await cancel.click();
+  await page.getByRole("button", { name: "Tak, rezygnuję" }).click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Zapis anulowany" }),
+  ).toBeVisible({ timeout: 30_000 });
+}
+
+test("a full workshop's waitlist: the freed seat goes to the first on it, who may leave (Warsztat · 6, card 12; · 7, cards 1, 2 and 4)", async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(240_000);
+  const there = await page.request.get(`${webUrl}${waitlistPath}`);
+  test.skip(
+    there.status() === 404,
+    `${waitlistPath} is not in the target's database (see the top of this file).`,
+  );
+  // The one seat, reserved to pay later.
+  await holdSeat(page, waitlistPath);
+  await fillDetails(page, "Miejsce E2E");
+  await page
+    .getByRole("button", { name: "Zarezerwuj, zapłacę później" })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Miejsce zarezerwowane, czeka na płatność",
+    }),
+  ).toBeVisible({ timeout: 30_000 });
+  const seatUrl = page.url();
+
+  const context = await browser.newContext();
+  const guest = await context.newPage();
+  let waitUrl: string | null = null;
+  try {
+    // Full: another guest joins the waitlist, first in it.
+    await open(guest, waitlistPath);
+    await fillDetails(guest, "Rezerwowa E2E");
+    await signupForm(guest)
+      .getByRole("button", { name: "Zapisz się na listę rezerwową" })
+      .click();
+    await expect(
+      guest.getByRole("heading", {
+        level: 1,
+        name: "Jesteś na liście rezerwowej",
+      }),
+    ).toBeVisible({ timeout: 30_000 });
+    waitUrl = guest.url();
+    await expect(guest.getByText("Twoje miejsce na liście: 1")).toBeVisible();
+
+    // The seat is given up: it is offered to the waitlist at once.
+    await giveUp(page, seatUrl);
+    await guest.reload();
+    await expect(
+      guest.getByRole("heading", {
+        level: 1,
+        name: "Zwolniło się miejsce dla Ciebie",
+      }),
+    ).toBeVisible();
+
+    // Leaving: the seat is free again.
+    await giveUp(guest, waitUrl);
+  } finally {
+    await giveUp(page, seatUrl).catch(() => {});
+    if (waitUrl) await giveUp(guest, waitUrl).catch(() => {});
+    await context.close();
+  }
 });

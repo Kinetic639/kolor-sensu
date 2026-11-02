@@ -13,9 +13,10 @@ import {
   SheetTrigger,
 } from "../sheet";
 import { PrimaryButton } from "./actions";
+import { CtaLink } from "./cta-link";
 import { brandTagline, SiteLogo } from "./site-logo";
 import { isCurrent } from "./site-navigation";
-import type { SiteContact, SiteLink, SiteNavItem } from "./site-types";
+import type { SiteContact, SiteCta, SiteNavItem } from "./site-types";
 
 // Phones and tablets: a round menu button opening a full-height sheet
 // (shadcn Sheet, restyled: paper, no blur behind it) with the navigation in
@@ -24,7 +25,7 @@ import type { SiteContact, SiteLink, SiteNavItem } from "./site-types";
 
 export interface SiteMobileNavProps {
   items: readonly SiteNavItem[];
-  cta?: SiteLink;
+  cta?: SiteCta;
   contact?: SiteContact;
   /** The page's path; by default the router's current path. */
   currentPath?: string;
@@ -169,7 +170,7 @@ export function SiteMobileNav({
           {cta ? (
             <SheetClose asChild>
               <PrimaryButton asChild arrow className="w-full">
-                <Link href={cta.href}>{cta.label}</Link>
+                <CtaLink cta={cta} />
               </PrimaryButton>
             </SheetClose>
           ) : null}

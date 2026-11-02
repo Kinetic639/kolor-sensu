@@ -20,7 +20,6 @@ import { readSeatNotice } from "@/features/workshops/signup-paths";
 import {
   agendaPoints,
   leadersLabel,
-  peopleWord,
   relatedServices,
   relatedWorkshops,
   seatsWord,
@@ -28,8 +27,10 @@ import {
   workshopCard,
   workshopDateLabel,
   workshopEventJsonLd,
+  workshopNoticeAt,
   workshopPlace,
   workshopPrice,
+  workshopRules,
   workshopTimeLabel,
 } from "@/features/workshops/workshop-view";
 import { specialistHref } from "@/lib/presentation";
@@ -109,11 +110,11 @@ export async function WorkshopPageView({
   const when = `${workshopDateLabel(workshop.startsAt, timeZone)}, ${workshopTimeLabel(workshop.startsAt, workshop.endsAt, timeZone)}`;
   const leaders = leadersLabel(workshop);
   const agenda = agendaPoints(workshop.agenda);
-  const noticeDate = deadlineLabel(
-    new Date(
-      new Date(workshop.startsAt).getTime() - 7 * 86_400_000,
-    ).toISOString(),
-    timeZone,
+  // None once cancelled or over; the last week's when it has begun (#275).
+  const rules = workshopRules(
+    workshop,
+    now,
+    deadlineLabel(workshopNoticeAt(workshop).toISOString(), timeZone),
   );
   const siteKey = newsletterSiteKey();
   const body = articleDocumentSchema.safeParse(workshop.body);
@@ -315,39 +316,18 @@ export async function WorkshopPageView({
         </section>
       ) : null}
 
-      <section className="px-gutter mx-auto grid w-full max-w-[46rem] gap-3">
-        <h2 className="font-display text-h2 text-ink">Zasady</h2>
-        <ul className="text-body text-ink grid list-disc gap-2 pl-6">
-          {workshop.priceMinor > 0 ? (
-            <>
-              <li>
-                Rezygnacja do {noticeDate}: pełny zwrot. Później zwracamy
-                pieniądze, gdy Twoje miejsce zajmie ktoś z listy rezerwowej;
-                możesz też przekazać miejsce innej osobie.
-              </li>
-              <li>
-                Możesz zapłacić od razu albo zarezerwować miejsce i zapłacić do{" "}
-                {noticeDate}; bez wpłaty miejsce się zwalnia.
-              </li>
-            </>
-          ) : null}
-          {workshop.minParticipants ? (
-            <li>
-              Warsztat odbędzie się, gdy zapisze się co najmniej{" "}
-              {peopleWord(workshop.minParticipants)}. Gdyby nie doszedł do
-              skutku, oddamy całą wpłatę.
-            </li>
-          ) : null}
-          <li>Gdy warsztat odwołamy my, zawsze oddajemy całą wpłatę.</li>
-          {workshop.modality === "online" ? (
-            <li>Link do spotkania wyślemy e-mailem dzień przed warsztatem.</li>
-          ) : null}
-          {/* The ones every workshop shares, from the CMS (#231). */}
-          {words.rules.map((rule) => (
-            <li key={rule}>{rule}</li>
-          ))}
-        </ul>
-      </section>
+      {rules ? (
+        <section className="px-gutter mx-auto grid w-full max-w-[46rem] gap-3">
+          <h2 className="font-display text-h2 text-ink">Zasady</h2>
+          <ul className="text-body text-ink grid list-disc gap-2 pl-6">
+            {/* The workshop's own, then the ones every workshop shares,
+                from the CMS (#231). */}
+            {[...rules, ...words.rules].map((rule) => (
+              <li key={rule}>{rule}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {pickedServices.length ? (
         <section

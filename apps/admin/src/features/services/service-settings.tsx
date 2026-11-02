@@ -51,7 +51,11 @@ import { categoryLabels, scheduleTime } from "./view-model";
 // the offer's list).
 
 type Visibility =
-  "active" | "publiclyVisible" | "bookingEnabled" | "requiresIntake";
+  | "active"
+  | "publiclyVisible"
+  | "bookingEnabled"
+  | "requiresIntake"
+  | "forMinors";
 
 const catalogSchema = z.object({
   category: serviceCategorySchema,
@@ -100,6 +104,7 @@ function VisibilitySection({ row }: { row: ServiceRow }) {
     publiclyVisible: row.publiclyVisible,
     bookingEnabled: row.bookingEnabled,
     requiresIntake: row.requiresIntake,
+    forMinors: row.forMinors,
   });
   const [confirming, setConfirming] = useState(false);
   const save = (field: Visibility, next: boolean) =>
@@ -163,6 +168,13 @@ function VisibilitySection({ row }: { row: ServiceRow }) {
           disabled={isPending || !state.bookingEnabled}
           label="Ankieta przed wizytą"
           onChange={(next) => save("requiresIntake", next)}
+        />
+        <VisibilitySwitch
+          checked={state.forMinors}
+          description="Dla dziecka lub młodzieży: rezerwuje rodzic albo opiekun prawny i potwierdza to przy rezerwacji online."
+          disabled={isPending}
+          label="Usługa dla dziecka lub młodzieży"
+          onChange={(next) => save("forMinors", next)}
         />
       </DetailSection>
     </>

@@ -13,6 +13,7 @@ const visit = {
   priceMinor: 20000,
   paid: true,
   paymentDueAt: null,
+  movedByCentre: false,
 };
 const hoursBefore = (hours: number) =>
   new Date(Date.parse(visit.startsAt) - hours * 3_600_000);
@@ -46,6 +47,18 @@ describe("visitChanges", () => {
       allowed: false,
       blockedBy: "window",
     });
+  });
+
+  it("the centre moved it: cancelling gives the money back even inside 48 hours", () => {
+    const moved = { ...visit, movedByCentre: true };
+    expect(visitChanges(moved, policy, hoursBefore(2)).cancel).toMatchObject({
+      allowed: true,
+      refund: true,
+    });
+    expect(
+      visitChanges({ ...moved, paid: false }, policy, hoursBefore(2)).cancel
+        .refund,
+    ).toBe(false);
   });
 
   it("moved once already: the next move goes through the centre", () => {

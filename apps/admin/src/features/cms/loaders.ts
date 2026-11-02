@@ -1,4 +1,5 @@
 import "server-only";
+import { defaultHomeRoomsGallery } from "@repo/contracts/rooms-peek";
 import type { LegalPageKey } from "@repo/contracts/cms-legal";
 
 import { createClient } from "@/lib/supabase/server";
@@ -26,6 +27,8 @@ import {
   getHomeHeadersAdmin,
   listServicesAdmin,
   getHomeSectionsAdmin,
+  getSpecialistPublicProfileAdmin,
+  createSpecialistMediaSignedUrl,
   listSpecialistSummariesForAdmin,
   getRoomsPageContentAdmin,
   getSupportAreasAdmin,
@@ -36,6 +39,11 @@ import {
   getSiteAppearanceAdmin,
 } from "@repo/supabase";
 import type { SeoPage } from "@repo/contracts";
+import {
+  listPublishedArticles,
+  listPublishedEbooks,
+} from "@repo/supabase/education";
+import { listPublicWorkshops } from "@repo/supabase/workshops";
 import { mapRoomsPeekModel } from "./rooms-peek";
 import { mapSiteAppearanceViewModel } from "./appearance-editor";
 import { mapPageSeoViewModel } from "./seo-editor";
@@ -75,11 +83,29 @@ export async function loadHomeSections() {
     getHomeSectionsAdmin(client),
     listSpecialistSummariesForAdmin(client),
   ]);
-  return mapHomeSectionsViewModel(
+  const model = mapHomeSectionsViewModel(
     sections,
     (path) => supportAreaImageUrl(client, path),
     specialists,
   );
+  return {
+    ...model,
+    specialists: await Promise.all(
+      model.specialists.map(async (specialist) => {
+        const profile = await getSpecialistPublicProfileAdmin(
+          client,
+          specialist.id,
+        );
+        return {
+          ...specialist,
+          portraitUrl: await createSpecialistMediaSignedUrl(
+            client,
+            profile?.portraitPhotoUrl ?? profile?.profilePhotoUrl ?? null,
+          ),
+        };
+      }),
+    ),
+  };
 }
 
 export async function loadHomeHeaders() {
@@ -119,9 +145,45 @@ export async function loadHomeThoughts() {
 
 export async function loadHomeStory() {
   const client = await createClient();
-  return mapHomeStoryViewModel(await getHomeStoryAdmin(client), (path) =>
-    supportAreaImageUrl(client, path),
-  );
+  const [story, articles, ebooks, workshops] = await Promise.all([
+    getHomeStoryAdmin(client),
+    listPublishedArticles(client),
+    listPublishedEbooks(client),
+    listPublicWorkshops(client),
+  ]);
+  return {
+    ...mapHomeStoryViewModel(story, (path) =>
+      supportAreaImageUrl(client, path),
+    ),
+    mediaOptions: {
+      articles: articles.map((one) => ({
+        id: one.id,
+        title: one.title,
+        imageUrl: supportAreaImageUrl(client, one.coverPath),
+      })),
+      ebooks: ebooks.map((one) => ({
+        id: one.id,
+        title: one.title,
+        imageUrl: supportAreaImageUrl(client, one.coverPath),
+      })),
+      workshops: workshops
+        .filter(
+          (one) =>
+            one.status === "published" && new Date(one.endsAt) > new Date(),
+        )
+        .map((one) => ({
+          id: one.id,
+          title: one.title,
+          imageUrl: one.coverPath
+            ? supportAreaImageUrl(client, one.coverPath)
+            : null,
+          detail: new Intl.DateTimeFormat("pl-PL", {
+            dateStyle: "medium",
+            timeZone: "Europe/Warsaw",
+          }).format(new Date(one.startsAt)),
+        })),
+    },
+  };
 }
 
 /**
@@ -134,7 +196,18 @@ export async function loadRoomsPeek() {
   const images = await Promise.all(
     placements.map((placement) => listRoomImages(client, placement.roomId)),
   );
-  return mapRoomsPeekModel(images.map((own) => own.length));
+  const state = await getHomeSectionsAdmin(client);
+  const content = state.draft.roomsPeek ?? defaultHomeRoomsGallery;
+  return {
+    ...mapRoomsPeekModel(images.map((own) => own.length)),
+    ...mapContentViewModel({
+      ...state,
+      draft: content,
+      published: state.published
+        ? (state.published.roomsPeek ?? defaultHomeRoomsGallery)
+        : null,
+    }),
+  };
 }
 
 export async function loadPageSeo(page: SeoPage) {

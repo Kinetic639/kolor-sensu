@@ -4,7 +4,7 @@ import { deadlineLabel, localTime, visitLabel } from "../visit-label";
 import {
   contactLineOf,
   place,
-  placeRow,
+  placeRows,
   type ConfirmationOptions,
   type VisitEmailContent,
 } from "./confirmation-content";
@@ -50,7 +50,7 @@ function visitRows(
       "Termin",
       `${visitLabel(visit.startsAt, timeZone)}–${localTime(visit.endsAt, timeZone)}`,
     ],
-    ["Miejsce", placeRow(visit)],
+    ...placeRows(visit),
   ];
 }
 
@@ -106,7 +106,8 @@ export function reservationContent(
     throw new Error("A reservation has a time to pay by");
   const due = deadlineLabel(visit.paymentDueAt, timeZone);
   const manageUrl = `${siteUrl}/wizyta/${visit.manageToken}`;
-  // A client's own reservation is confirmed from this e-mail first.
+  // A client's own reservation is confirmed from this e-mail first; whoever
+  // got it for a booking that is not theirs just leaves it (Klient · 9).
   const confirmBy =
     kind === "reserved" && visit.confirmBy
       ? deadlineLabel(visit.confirmBy, timeZone)
@@ -120,7 +121,7 @@ export function reservationContent(
   ];
   const greeting = `Dzień dobry, ${visit.clientName}!`;
   const intro = confirmBy
-    ? `Dziękujemy za rezerwację wizyty w Kolor Sensu. Potwierdź ją przyciskiem poniżej do ${confirmBy}, a termin poczeka na Ciebie; bez potwierdzenia wróci do grafiku. Potem opłać wizytę online do ${due}.`
+    ? `Dziękujemy za rezerwację wizyty w Kolor Sensu. Potwierdź ją przyciskiem poniżej do ${confirmBy}, a termin poczeka na Ciebie; bez potwierdzenia wróci do grafiku. Potem opłać wizytę online do ${due}. Jeśli to nie Ty rezerwujesz tę wizytę, nic nie rób: bez potwierdzenia rezerwacja przepadnie, a Ty nic nie zapłacisz.`
     : `${
         kind === "reserved"
           ? visit.bookedBy === "centre"
@@ -165,7 +166,9 @@ export function unpaidCancelledContent(
 ): VisitEmailContent {
   const manageUrl = `${siteUrl}/umow-wizyte`;
   const rows: [string, string][] = [
-    ...visitRows(visit, timeZone).filter(([label]) => label !== "Miejsce"),
+    ...visitRows(visit, timeZone).filter(
+      ([label]) => label !== "Miejsce" && label !== "Dojazd",
+    ),
     ["Numer rezerwacji", visit.reference],
   ];
   const greeting = `Dzień dobry, ${visit.clientName}!`;

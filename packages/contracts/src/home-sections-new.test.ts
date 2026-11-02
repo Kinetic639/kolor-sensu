@@ -147,6 +147,7 @@ describe("the homepage's headers", () => {
       "spotlight",
       "specialists",
       "rooms",
+      "workshops",
       "story",
       "newsletter",
       "location",

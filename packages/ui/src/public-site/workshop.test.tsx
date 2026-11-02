@@ -6,6 +6,55 @@ import { sampleWorkshops } from "./workshop-samples";
 const [open, few, full, cancelled] = sampleWorkshops;
 
 describe("a workshop's card", () => {
+  it("pairs the painted cover with a drawn frame and one link through its title", () => {
+    const { container } = render(
+      <WorkshopCard workshop={{ ...open!, coverUrl: "/test-cover.webp" }} />,
+    );
+    expect(container.querySelector(".ks-wc")).toBeInTheDocument();
+    expect(container.querySelector(".ks-wk__backdrop img")).toBeInTheDocument();
+    expect(
+      container.querySelector(".ks-wc .ks-wc__backdrop"),
+    ).not.toBeInTheDocument();
+    expect(
+      container.querySelector('.ks-wk__frame [data-ink-stroke="frame"]'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: open!.title })).toHaveAttribute(
+      "href",
+      open!.href,
+    );
+    expect(screen.getByRole("link", { name: "Szczegóły" })).toHaveAttribute(
+      "href",
+      open!.href,
+    );
+  });
+
+  it("keeps the same painted backdrop when the workshop has no photo", () => {
+    const { container } = render(
+      <WorkshopCard workshop={{ ...open!, coverUrl: null }} />,
+    );
+    expect(container.querySelector(".ks-wk__backdrop img")).toBeInTheDocument();
+    expect(container.querySelector(".ks-wk__wash svg")).toBeInTheDocument();
+    expect(container.querySelector(".ks-wc")).not.toBeInTheDocument();
+  });
+
+  it("shows availability even when more than a few seats remain", () => {
+    render(
+      <WorkshopCard workshop={{ ...open!, availabilityLabel: "8 z 12" }} />,
+    );
+    expect(screen.getByText("8 z 12")).toBeInTheDocument();
+    expect(screen.getByText("Wolne miejsca")).toBeInTheDocument();
+  });
+
+  it("lets visitors review a cancelled workshop without offering signup", () => {
+    render(<WorkshopCard workshop={cancelled!} />);
+    expect(screen.getByRole("link", { name: "Szczegóły" })).toHaveAttribute(
+      "href",
+      cancelled!.href,
+    );
+    expect(screen.queryByText("Zapisz się")).not.toBeInTheDocument();
+    expect(screen.getByText("Odwołany")).toBeInTheDocument();
+  });
+
   it("links by its title and says when, where and for how much", () => {
     render(<WorkshopCard headingLevel="h2" workshop={open!} />);
     expect(

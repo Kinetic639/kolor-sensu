@@ -34,6 +34,11 @@ function localDate(instant: string, timeZone: string) {
 }
 
 /** `8 października 2030, godz. 11:00` (a deadline, after "do"). */
+/** `31 października 2026`: an instant's day where the centre is. */
+export function dayLabel(instant: string, timeZone: string) {
+  return formatDate(localDate(instant, timeZone));
+}
+
 export function deadlineLabel(instant: string, timeZone: string) {
   return `${formatDate(localDate(instant, timeZone))}, godz. ${localTime(instant, timeZone)}`;
 }

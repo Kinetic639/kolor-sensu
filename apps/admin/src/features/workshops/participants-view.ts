@@ -83,6 +83,24 @@ export function canForget(
   return ended || groupOf(participant) === "anulowani";
 }
 
+/**
+ * "Wyślij link ponownie" (Warsztat · 6, card 8; the database checks it
+ * too): someone with an e-mail, signed up, reserved or on the waitlist,
+ * before the workshop ends.
+ */
+export function canResendLink(
+  participant: WorkshopParticipant,
+  { ended }: { ended: boolean },
+) {
+  return (
+    !ended &&
+    participant.email !== null &&
+    ["confirmed", "awaiting_payment", "waitlisted", "offered"].includes(
+      participant.status,
+    )
+  );
+}
+
 function csvCell(value: string) {
   return /[";\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }

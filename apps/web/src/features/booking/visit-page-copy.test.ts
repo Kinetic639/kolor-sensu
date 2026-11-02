@@ -18,6 +18,7 @@ const booking = {
   refundedMinor: 0,
   paid: true,
   paymentDueAt: null,
+  movedByCentre: false,
 };
 const input = { token, booking, policy, timeZone: "Europe/Warsaw" };
 const at = (iso: string) => new Date(iso);
@@ -35,6 +36,17 @@ describe("visitPageCopy", () => {
     });
   });
 
+  it("the centre moved it: cancelling with the money back until the visit", () => {
+    const copy = visitPageCopy({
+      ...input,
+      booking: { ...booking, movedByCentre: true },
+      now: at("2030-10-09T09:00:00Z"),
+    });
+    expect(copy.cancel?.text).toBe(
+      "Termin tej wizyty zmieniło centrum. Jeśli Ci nie pasuje, możesz ją odwołać do jej rozpoczęcia i otrzymasz pełny zwrot (200 zł).",
+    );
+  });
+
   it("inside 48 hours: moving through the centre, cancelling without a refund", () => {
     const copy = visitPageCopy({ ...input, now: at("2030-10-09T09:00:00Z") });
     expect(copy.reschedule).toEqual({
@@ -44,6 +56,16 @@ describe("visitPageCopy", () => {
     expect(copy.cancel?.text).toBe(
       "Do wizyty zostało mniej niż 48 godz., więc odwołanie jest możliwe już bez zwrotu opłaty.",
     );
+  });
+
+  it("its time has come: it took place, nothing to change (Klient · 6, card 9)", () => {
+    const copy = visitPageCopy({ ...input, now: at("2030-10-10T09:00:00Z") });
+    expect(copy.past).toBe(true);
+    expect(copy.reschedule).toBeNull();
+    expect(copy.cancel).toBeNull();
+    expect(
+      visitPageCopy({ ...input, now: at("2030-10-10T08:59:00Z") }).past,
+    ).toBe(false);
   });
 
   it("moved once already: the next move through the centre", () => {
@@ -149,5 +171,15 @@ describe("visitPageCopy", () => {
       "Wizyta została odwołana. Wysłaliśmy potwierdzenie e-mailem.",
     );
     expect(visitPageCopy({ ...input, now }).notice).toBeNull();
+  });
+
+  it("the link to pay opened after paying: already paid (Klient · 5, card 10)", () => {
+    const now = at("2030-10-01T09:00:00Z");
+    const copy = visitPageCopy({ ...input, now, change: "oplacona" });
+    expect(copy.notice).toBe(
+      "Ta wizyta jest już opłacona. Nie musisz płacić ponownie.",
+    );
+    // Nothing more to pay from the page.
+    expect(copy.pay).toBeNull();
   });
 });

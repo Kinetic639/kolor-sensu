@@ -179,8 +179,12 @@ export interface RoomTimeInterval {
   endsAt: string;
 }
 
-/** A photo of a room's public profile (at most 5, one of them the main). */
+/** A photo of a room's public profile (at most 3, one of them the main). */
+export const roomImageCaptionSchema = z.string().trim().max(200);
+
 export interface RoomImage {
+  /** Optional short caption, edited separately for each photo. */
+  caption?: string;
   id: string;
   roomId: string;
   storagePath: string;
@@ -191,7 +195,7 @@ export interface RoomImage {
   url: string;
 }
 
-export const ROOM_IMAGE_LIMIT = 5;
+export const ROOM_IMAGE_LIMIT = 3;
 
 /** Where a published room is shown on the site: its location and order. */
 export interface RoomPlacement {

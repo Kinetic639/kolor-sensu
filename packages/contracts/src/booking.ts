@@ -36,6 +36,14 @@ export const bookingDetailsSchema = z.object({
   acceptPrivacy: z.literal(true, {
     error: "Zaakceptuj politykę prywatności, aby zarezerwować wizytę.",
   }),
+  /**
+   * A visit within 14 days of booking (Klient · 3, card 15): the client asks
+   * for it before the 14 days to withdraw are over. Asked only then; the
+   * database says when (booking_requirements) and checks it again.
+   */
+  acceptEarlyStart: z.boolean().default(false),
+  /** A service for minors (card 16): booked by a parent or legal guardian. */
+  confirmGuardian: z.boolean().default(false),
 });
 
 export type BookingDetailsInput = z.input<typeof bookingDetailsSchema>;
@@ -133,14 +141,13 @@ export function centreBookingMessage(code: string | undefined) {
 const RESEND_LINK_MESSAGES: Record<string, string> = {
   recently_sent: "Link wysłano przed chwilą. Spróbuj ponownie za kilka minut.",
   not_payable: "Tej rezerwacji nie można już opłacić.",
+  nothing_to_send:
+    "Do tej wizyty nie można już wysłać linku: minęła, jest odwołana albo nie ma adresu e-mail.",
   forbidden: "Nie możesz wysłać linku do tej wizyty.",
   not_found: "Nie znaleziono wizyty.",
 };
 
-/** Why the link to pay could not go again, in Polish. */
+/** Why the visit's link (to pay, or to the visit) could not go again, in Polish. */
 export function resendLinkMessage(code: string | undefined) {
-  return (
-    RESEND_LINK_MESSAGES[code ?? ""] ??
-    "Nie udało się wysłać linku do płatności."
-  );
+  return RESEND_LINK_MESSAGES[code ?? ""] ?? "Nie udało się wysłać linku.";
 }

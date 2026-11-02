@@ -91,6 +91,26 @@ describe("before anything is published", () => {
 });
 
 describe("saving and publishing", () => {
+  it("round-trips styled crisis headings together with the unchanged phone numbers", async () => {
+    const styled = {
+      ...defaultCrisisHelp,
+      header: {
+        eyebrow: { text: "Pomoc", tone: "green" as const },
+        title: [
+          [
+            { text: "Potrzebujesz ", tone: "default" as const },
+            { text: "pomocy?", tone: "pink" as const },
+          ],
+        ],
+      },
+    };
+    expect(await updateCrisisHelpDraft(saving(styled).client, styled)).toEqual(
+      styled,
+    );
+    expect(await getPublishedCrisisHelp(reading(styled).client)).toEqual(
+      styled,
+    );
+  });
   it("writes each section under its own key", async () => {
     const whyUs = { ...defaultWhyUs, visible: true };
     const cases = [

@@ -1,10 +1,28 @@
-import { expect, type Browser, type Page } from "@playwright/test";
+import {
+  expect,
+  type Browser,
+  type BrowserContext,
+  type Page,
+} from "@playwright/test";
 import { signIn, type Credentials, webUrl } from "./target";
 
 // A guest's way through the booking wizard, shared by the booking and the
 // payment tests. It needs, in the target's database, a bookable service led
 // by the test specialist, with their hours in a room that is open; DEV and
 // STAGING have "Konsultacja testowa E2E" with "Test Specjalista".
+
+/**
+ * The browser as a visitor of its own: an address (from TEST-NET-2) the
+ * site counts holds by. Taken only by a site without a proxy in front
+ * (@holds tests, see playwright.config.ts); a deployed site counts the
+ * real address.
+ */
+export async function newVisitor(context: BrowserContext) {
+  const part = () => 1 + Math.floor(Math.random() * 254);
+  await context.setExtraHTTPHeaders({
+    "x-forwarded-for": `198.51.${part()}.${part()}`,
+  });
+}
 
 export const service =
   process.env.E2E_BOOKING_SERVICE ?? "Konsultacja testowa E2E";
@@ -43,6 +61,58 @@ async function pickSlot(page: Page) {
  * specialist, a free time, the guest's details. The visit's reference.
  */
 export async function bookUntilPayment(page: Page): Promise<string> {
+  const { reference, details } = await bookUntilDetails(page);
+  await details.getByRole("button", { name: "Zapłać teraz" }).click();
+
+  // The payment step waits for Stripe's session: some seconds at times.
+  await expect(page.getByRole("heading", { name: "Płatność" })).toBeVisible({
+    timeout: 30_000,
+  });
+  return reference;
+}
+
+/**
+ * From the wizard's start to the details given, before paying (a discount
+ * code applied first, when given): the reference, the guest's e-mail and
+ * the details step.
+ */
+export async function bookUntilDetails(
+  page: Page,
+  { code }: { code?: string } = {},
+) {
+  const timeHref = await chooseTime(page);
+  await holdChosenTime(page);
+  const details = page.getByRole("region", { name: "Twoje dane" });
+  await expect(details).toBeVisible();
+  const reference = (await details
+    .getByText(/^\d{4}-\d{3,}$/)
+    .textContent())!.trim();
+  if (code) {
+    await details.getByLabel("Kod rabatowy (opcjonalnie)").fill(code);
+    await details.getByRole("button", { name: "Zastosuj" }).click();
+    await expect(
+      page.getByRole("status").filter({ hasText: `Kod ${code}: rabat` }),
+    ).toBeVisible({ timeout: 30_000 });
+  }
+  await details.getByLabel("Imię", { exact: true }).fill("Gość");
+  await details.getByLabel("Nazwisko", { exact: true }).fill("E2E");
+  await details.getByLabel("Telefon").fill("500600700");
+  const email = `e2e-${Date.now()}@example.invalid`;
+  await details.getByLabel("E-mail").fill(email);
+  await details
+    .getByRole("checkbox", { name: "Akceptuję regulamin rezerwacji" })
+    .check();
+  await details.getByRole("checkbox", { name: /polityką prywatności/ }).check();
+  // A visit within 14 days asks for the request to start early (card 15).
+  const early = details.getByRole("checkbox", {
+    name: /Wizyta wypada w ciągu 14 dni/,
+  });
+  if ((await early.count()) > 0) await early.check();
+  return { reference, email, details, timeHref };
+}
+
+/** From the wizard's start to the free times (in person, the test specialist). */
+export async function goToTimes(page: Page) {
   await page.goto(`${webUrl}/umow-wizyte`);
   await page
     .getByRole("region", { name: "Wybierz usługę" })
@@ -56,31 +126,38 @@ export async function bookUntilPayment(page: Page): Promise<string> {
     .getByRole("region", { name: "Wybierz specjalistę" })
     .getByRole("link", { name: specialist })
     .click();
+  await expect(
+    page.getByRole("region", { name: "Wybierz termin" }),
+  ).toBeVisible();
+}
 
+/** To a free time, chosen but not held: the wizard's address with it. */
+export async function chooseTime(page: Page) {
+  await goToTimes(page);
+  return pickTime(page);
+}
+
+/** On the time step: a free time chosen; the address with it. */
+export async function pickTime(page: Page) {
   await pickSlot(page);
-  const proceed = page.getByRole("button", { name: "Przejdź dalej" });
+  await page.waitForURL(/termin=/);
+  return page.url();
+}
+
+/** "Przejdź dalej", once the check that a person books has passed. */
+export async function holdChosenTime(page: Page) {
   await expect(page.getByText("Gotowe. Możesz przejść dalej.")).toBeVisible({
     timeout: 30_000,
   });
-  await proceed.click();
+  await page.getByRole("button", { name: "Przejdź dalej" }).click();
+}
 
-  const details = page.getByRole("region", { name: "Twoje dane" });
-  await expect(details).toBeVisible();
-  const reference = (await details
-    .getByText(/^\d{4}-\d{3,}$/)
-    .textContent())!.trim();
-  await details.getByLabel("Imię", { exact: true }).fill("Gość");
-  await details.getByLabel("Nazwisko", { exact: true }).fill("E2E");
-  await details.getByLabel("Telefon").fill("500600700");
-  await details.getByLabel("E-mail").fill(`e2e-${Date.now()}@example.invalid`);
-  await details
-    .getByRole("checkbox", { name: "Akceptuję regulamin rezerwacji" })
-    .check();
-  await details.getByRole("checkbox", { name: /polityką prywatności/ }).check();
-  await details.getByRole("button", { name: "Zapłać teraz" }).click();
-
-  await expect(page.getByRole("heading", { name: "Płatność" })).toBeVisible();
-  return reference;
+/** BLIK in Stripe's Payment Element, test code 123456, and pay. */
+export async function payWithBlik(page: Page) {
+  const payment = paymentElement(page);
+  await payment.getByText("BLIK", { exact: true }).click();
+  await payment.getByLabel("Kod BLIK").fill("123456");
+  await payButton(page).click();
 }
 
 /** Stripe's Payment Element (its first frame, in our payment form). */

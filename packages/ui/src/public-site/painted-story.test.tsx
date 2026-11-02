@@ -1,7 +1,7 @@
 // PaintedStory: a short story told while scrolling. Wide screens with
 // motion pin it for its steps; phones let the steps follow one another,
 // painting each picture in; reduced motion and no script show it plainly.
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PaintedStory } from "./painted-story";
 import { loadGsap } from "./lazy-gsap";
@@ -76,6 +76,86 @@ afterEach(() => {
 });
 
 describe("PaintedStory", () => {
+  it("navigates the mobile gallery and updates its dots after a swipe", () => {
+    mockMedia({ wide: false, reduce: true });
+    const { container } = render(
+      <PaintedStory heading="Edukacja" steps={steps} />,
+    );
+    const track = container.querySelector<HTMLElement>(".ks-story__track")!;
+    Object.defineProperty(track.children[0], "offsetLeft", { value: 16 });
+    Object.defineProperty(track.children[1], "offsetLeft", { value: 390 });
+    track.scrollTo = vi.fn();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Następny slajd edukacji" }),
+    );
+    expect(track.scrollTo).toHaveBeenCalledWith({
+      left: 374,
+      behavior: "instant",
+    });
+    fireEvent.scroll(track, { target: { scrollLeft: 374 } });
+    expect(
+      screen.getByRole("button", { name: "Pokaż slajd 2 z 3" }),
+    ).toHaveAttribute("aria-current", "true");
+    expect(
+      screen.getByRole("button", { name: "Pokaż slajd 1 z 3" }),
+    ).not.toHaveAttribute("aria-current");
+  });
+  it("renders the section larger than slide titles and preserves their CMS word colours", () => {
+    mockMedia({ reduce: true });
+    render(
+      <PaintedStory
+        heading="Edukacja"
+        steps={[
+          {
+            ...steps[0]!,
+            headingSegments: [
+              { text: "Pierwsza ", tone: "green" },
+              { text: "rozmowa", tone: "pink" },
+            ],
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "Edukacja" })).toHaveClass(
+      "text-h2",
+    );
+    const heading = screen.getByRole("heading", { name: "Pierwsza rozmowa" });
+    expect(heading).toHaveClass("text-h3");
+    expect(heading.querySelector(".text-primary-strong")).toHaveTextContent(
+      "Pierwsza",
+    );
+    expect(heading.querySelector(".text-pink-strong")).toHaveTextContent(
+      "rozmowa",
+    );
+  });
+  it("keeps its header and server-rendered cards while hiding inactive slide links", async () => {
+    mockMedia({ wide: true });
+    const { container } = render(
+      <PaintedStory
+        heading="Wiedza, która wspiera"
+        steps={steps.map((step, index) => ({
+          ...step,
+          content: <a href={`/material-${index}`}>Materiał {index + 1}</a>,
+        }))}
+      />,
+    );
+    await gsapLoaded();
+    expect(
+      screen.getByRole("heading", { name: "Wiedza, która wspiera" }),
+    ).toBeInTheDocument();
+    const pictures = [
+      ...container.querySelectorAll<HTMLElement>(".ks-story__picture"),
+    ];
+    expect(pictures.map((p) => p.inert)).toEqual([false, true, true]);
+    expect(pictures.every((p) => p.dataset.rich === "true")).toBe(true);
+    expect(
+      screen.queryByRole("img", { name: "Gabinet" }),
+    ).not.toBeInTheDocument();
+    expect(pictures[0]?.querySelector("a")).toHaveAttribute(
+      "href",
+      "/material-0",
+    );
+  });
   it("tells its steps in order: a heading, a count, text, a link and a picture each", async () => {
     const { root } = await renderStory();
     expect(

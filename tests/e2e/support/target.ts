@@ -37,11 +37,10 @@ function readTarget(): Target {
 }
 
 export const target = readTarget();
-export const {
-  web: webUrl,
-  admin: adminUrl,
-  specialist: specialistUrl,
-} = targets[target];
+export const { admin: adminUrl, specialist: specialistUrl } = targets[target];
+// E2E_WEB_URL: the site elsewhere, e.g. one started by hand on another port
+// while 3000 is taken (with E2E_TARGET=dev: its database, no apps started).
+export const webUrl = process.env.E2E_WEB_URL ?? targets[target].web;
 
 export type Credentials = { email: string; password: string };
 

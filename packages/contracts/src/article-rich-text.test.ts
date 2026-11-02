@@ -119,6 +119,36 @@ describe("the article profile", () => {
     expect(result.success).toBe(false);
   });
 
+  it("takes the photos of an article, an e-book and a workshop's description (#280)", () => {
+    for (const folder of ["articles", "ebooks", "workshops"]) {
+      const attrs = {
+        ...image,
+        src: `${folder}/0b8c2f2e-5c4f-4c0a-9a1e-3f6c2d1b7a90.webp`,
+        caption: null,
+        size: "text",
+      };
+      expect(
+        articleDocumentSchema.safeParse(
+          doc({ type: "articleImage", attrs } as never),
+        ).success,
+        folder,
+      ).toBe(true);
+    }
+    expect(
+      articleDocumentSchema.safeParse(
+        doc({
+          type: "articleImage",
+          attrs: {
+            ...image,
+            src: "hero/0b8c2f2e-5c4f-4c0a-9a1e-3f6c2d1b7a90.webp",
+            caption: null,
+            size: "text",
+          },
+        } as never),
+      ).success,
+    ).toBe(false);
+  });
+
   it("refuses an image that is not one of the site's files, and a fourth width", () => {
     for (const attrs of [
       {

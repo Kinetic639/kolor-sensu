@@ -17,6 +17,7 @@ const visit = {
   roomName: "Gabinet Zielony",
   locationName: "Siedziba Główna",
   locationAddress: "Plac Wolności 18/518, 61-739 Poznań",
+  locationDirections: null,
   priceMinor: 20000,
   currencyCode: "PLN",
   clientName: "Jan Kowalski",
@@ -76,6 +77,10 @@ describe("reservationContent", () => {
     expect(content.buttonLabel).toBe("Potwierdź rezerwację");
     expect(content.intro).toContain("29 września 2030, godz. 11:30");
     expect(content.intro).toContain("30 września 2030, godz. 11:00");
+    // Someone booked on another person's address (Klient · 9, card 9).
+    expect(content.intro).toContain(
+      "Jeśli to nie Ty rezerwujesz tę wizytę, nic nie rób: bez potwierdzenia rezerwacja przepadnie, a Ty nic nie zapłacisz.",
+    );
     expect(content.rows).toContainEqual([
       "Potwierdź do",
       "29 września 2030, godz. 11:30",
@@ -120,5 +125,19 @@ describe("visitReminderContent", () => {
     );
     expect(content.manageUrl).toBe("https://kolorsensu.pl/wizyta/link-token");
     expect(content.rows).toContainEqual(["Numer rezerwacji", "3010-004"]);
+  });
+
+  it("says how to get there (Klient · 6, card 11)", () => {
+    const content = visitReminderContent(
+      {
+        ...visit,
+        paid: true,
+        paymentDueAt: null,
+        locationDirections: "Wejście od podwórza",
+      },
+      options,
+    );
+    expect(content.rows).toContainEqual(["Dojazd", "Wejście od podwórza"]);
+    expect(content.text).toContain("Dojazd: Wejście od podwórza");
   });
 });

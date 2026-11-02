@@ -13,6 +13,7 @@ export const sampleService = {
   publiclyVisible: true,
   bookingEnabled: false,
   requiresIntake: false,
+  forMinors: false,
   sortOrder: 0,
   catalogId: null,
   createdAt: "2026-01-01T00:00:00Z",

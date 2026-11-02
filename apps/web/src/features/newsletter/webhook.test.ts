@@ -22,10 +22,12 @@ const contact = {
 
 async function run(event: unknown) {
   const stop = vi.fn(async () => true);
+  const bounced = vi.fn(async () => null);
   const stopped = await handleResendEvent(event as WebhookEventPayload, {
     stop,
+    bounced,
   });
-  return { stop, stopped };
+  return { stop, bounced, stopped };
 }
 
 describe("handleResendEvent", () => {
@@ -78,6 +80,38 @@ describe("handleResendEvent", () => {
     });
     expect(passing.stop).not.toHaveBeenCalled();
     expect(visit.stop).not.toHaveBeenCalled();
+  });
+
+  it("a visit's e-mail bounced for good: its history says so, the list is left alone (Klient · 6, card 8)", async () => {
+    const visit = await run({
+      type: "email.bounced",
+      created_at: "",
+      data: {
+        ...email,
+        bounce: { type: "Permanent", subType: "General", message: "" },
+      },
+    });
+    expect(visit.bounced).toHaveBeenCalledWith("e1");
+    expect(visit.stop).not.toHaveBeenCalled();
+    const passing = await run({
+      type: "email.bounced",
+      created_at: "",
+      data: {
+        ...email,
+        bounce: { type: "Transient", subType: "MailboxFull", message: "" },
+      },
+    });
+    const newsletter = await run({
+      type: "email.bounced",
+      created_at: "",
+      data: {
+        ...email,
+        broadcast_id: "b1",
+        bounce: { type: "Permanent", subType: "General", message: "" },
+      },
+    });
+    expect(passing.bounced).not.toHaveBeenCalled();
+    expect(newsletter.bounced).not.toHaveBeenCalled();
   });
 
   it("stops an address that reported the confirmation e-mail as spam", async () => {

@@ -136,6 +136,8 @@ export type Database = {
           specialist_service_id: string;
           status: Database["public"]["Enums"]["appointment_status"];
           terms_accepted_at: string | null;
+          early_start_accepted_at: string | null;
+          guardian_confirmed_at: string | null;
           updated_at: string;
         };
         Insert: {
@@ -179,6 +181,8 @@ export type Database = {
           specialist_service_id: string;
           status?: Database["public"]["Enums"]["appointment_status"];
           terms_accepted_at?: string | null;
+          early_start_accepted_at?: string | null;
+          guardian_confirmed_at?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -222,6 +226,8 @@ export type Database = {
           specialist_service_id?: string;
           status?: Database["public"]["Enums"]["appointment_status"];
           terms_accepted_at?: string | null;
+          early_start_accepted_at?: string | null;
+          guardian_confirmed_at?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -265,6 +271,7 @@ export type Database = {
       booking_emails: {
         Row: {
           appointment_id: string;
+          bounced_at: string | null;
           claimed_at: string;
           kind: string;
           provider_message_id: string | null;
@@ -272,6 +279,7 @@ export type Database = {
         };
         Insert: {
           appointment_id: string;
+          bounced_at?: string | null;
           claimed_at?: string;
           kind: string;
           provider_message_id?: string | null;
@@ -279,6 +287,7 @@ export type Database = {
         };
         Update: {
           appointment_id?: string;
+          bounced_at?: string | null;
           claimed_at?: string;
           kind?: string;
           provider_message_id?: string | null;
@@ -1154,6 +1163,7 @@ export type Database = {
       };
       room_images: {
         Row: {
+          caption: string;
           created_at: string;
           id: string;
           is_main: boolean;
@@ -1163,6 +1173,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          caption?: string;
           created_at?: string;
           id?: string;
           is_main?: boolean;
@@ -1172,6 +1183,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          caption?: string;
           created_at?: string;
           id?: string;
           is_main?: boolean;
@@ -1369,6 +1381,7 @@ export type Database = {
           name: string;
           publicly_visible: boolean;
           requires_intake: boolean;
+          for_minors: boolean;
           short_description: string | null;
           slug: string;
           sort_order: number;
@@ -1387,6 +1400,7 @@ export type Database = {
           name: string;
           publicly_visible?: boolean;
           requires_intake?: boolean;
+          for_minors?: boolean;
           short_description?: string | null;
           slug: string;
           sort_order?: number;
@@ -1405,6 +1419,7 @@ export type Database = {
           name?: string;
           publicly_visible?: boolean;
           requires_intake?: boolean;
+          for_minors?: boolean;
           short_description?: string | null;
           slug?: string;
           sort_order?: number;
@@ -2063,8 +2078,10 @@ export type Database = {
           id: number;
           kind: string;
           message_id: string | null;
+          bounced_at: string | null;
           registration_id: string;
           sent_at: string | null;
+          superseded_at: string | null;
           token_hash: string;
         };
         Insert: {
@@ -2072,8 +2089,10 @@ export type Database = {
           id?: never;
           kind: string;
           message_id?: string | null;
+          bounced_at?: string | null;
           registration_id: string;
           sent_at?: string | null;
+          superseded_at?: string | null;
           token_hash: string;
         };
         Update: {
@@ -2081,8 +2100,10 @@ export type Database = {
           id?: never;
           kind?: string;
           message_id?: string | null;
+          bounced_at?: string | null;
           registration_id?: string;
           sent_at?: string | null;
+          superseded_at?: string | null;
           token_hash?: string;
         };
         Relationships: [];
@@ -2172,6 +2193,7 @@ export type Database = {
           client_last_name: string | null;
           client_notes: string | null;
           client_phone: string | null;
+          email_bounced_at: string | null;
           confirmed_at: string | null;
           created_at: string;
           currency_code: string;
@@ -2208,6 +2230,7 @@ export type Database = {
           client_last_name?: string | null;
           client_notes?: string | null;
           client_phone?: string | null;
+          email_bounced_at?: string | null;
           confirmed_at?: string | null;
           created_at?: string;
           currency_code: string;
@@ -2244,6 +2267,7 @@ export type Database = {
           client_last_name?: string | null;
           client_notes?: string | null;
           client_phone?: string | null;
+          email_bounced_at?: string | null;
           confirmed_at?: string | null;
           created_at?: string;
           currency_code?: string;
@@ -2297,6 +2321,7 @@ export type Database = {
           long_description: string | null;
           min_participants: number | null;
           minimum_reminded_at: string | null;
+          link_reminded_at: string | null;
           modality: Database["public"]["Enums"]["workshop_modality"];
           price_minor: number;
           registration_closes_at: string | null;
@@ -2330,6 +2355,7 @@ export type Database = {
           long_description?: string | null;
           min_participants?: number | null;
           minimum_reminded_at?: string | null;
+          link_reminded_at?: string | null;
           modality?: Database["public"]["Enums"]["workshop_modality"];
           price_minor: number;
           registration_closes_at?: string | null;
@@ -2363,6 +2389,7 @@ export type Database = {
           long_description?: string | null;
           min_participants?: number | null;
           minimum_reminded_at?: string | null;
+          link_reminded_at?: string | null;
           modality?: Database["public"]["Enums"]["workshop_modality"];
           price_minor?: number;
           registration_closes_at?: string | null;
@@ -2486,6 +2513,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      specialist_availability: {
+        Args: {
+          p_specialist_slug: string;
+          p_service_slug?: string;
+          p_from?: string;
+          p_to?: string;
+          p_nearest?: boolean;
+        };
+        Returns: Json;
+      };
       claim_newsletter_issue: {
         Args: { p_id: string; p_send_at: string };
         Returns: undefined;
@@ -2775,6 +2812,10 @@ export type Database = {
         }[];
       };
       remind_workshop_minimums: {
+        Args: never;
+        Returns: number;
+      };
+      remind_missing_workshop_links: {
         Args: never;
         Returns: number;
       };
@@ -3209,6 +3250,13 @@ export type Database = {
         };
         Returns: undefined;
       };
+      booking_requirements: {
+        Args: { p_access_token: string };
+        Returns: {
+          early_start: boolean;
+          guardian: boolean;
+        }[];
+      };
       booking_window: {
         Args: never;
         Returns: {
@@ -3315,6 +3363,20 @@ export type Database = {
           reference: string;
         }[];
       };
+      centre_resend_visit_link: {
+        Args: { p_appointment_id: string };
+        Returns: {
+          kind: string;
+          reference: string;
+        }[];
+      };
+      centre_resend_workshop_link: {
+        Args: { p_registration_id: string };
+        Returns: {
+          kind: string;
+          reference: string;
+        }[];
+      };
       centre_settle_visit: {
         Args: { p_appointment_id: string };
         Returns: {
@@ -3336,6 +3398,7 @@ export type Database = {
           currency_code: string;
           ends_at: string;
           location_address: string;
+          location_directions: string | null;
           location_name: string;
           manage_token: string | null;
           mode: Database["public"]["Enums"]["visit_mode"];
@@ -3401,6 +3464,7 @@ export type Database = {
           hold_expires_at: string;
           location_name: string;
           mode: Database["public"]["Enums"]["visit_mode"];
+          moved_by_centre: boolean;
           paid: boolean;
           payment_due_at: string | null;
           price_minor: number;
@@ -3515,6 +3579,16 @@ export type Database = {
           ends_at: string;
           starts_at: string;
         }[];
+      };
+      next_free_slot: {
+        Args: {
+          p_from: string;
+          p_location_slug?: string;
+          p_mode: Database["public"]["Enums"]["visit_mode"];
+          p_service_slug: string;
+          p_specialist_slug: string;
+        };
+        Returns: string | null;
       };
       list_public_room_locations: {
         Args: never;
@@ -3712,6 +3786,14 @@ export type Database = {
           first_name: string | null;
           last_name: string | null;
         }[];
+      };
+      mark_booking_email_bounced: {
+        Args: { p_message_id: string };
+        Returns: string | null;
+      };
+      mark_workshop_email_bounced: {
+        Args: { p_message_id: string };
+        Returns: string | null;
       };
       mark_booking_email_sent: {
         Args: { p_kind: string; p_message_id: string; p_reference: string };
@@ -4013,9 +4095,11 @@ export type Database = {
       };
       save_booking_details: {
         Args: {
+          p_accept_early_start?: boolean;
           p_accept_privacy: boolean;
           p_accept_terms: boolean;
           p_access_token: string;
+          p_confirm_guardian?: boolean;
           p_email: string;
           p_first_name: string;
           p_last_name: string;
@@ -4104,6 +4188,10 @@ export type Database = {
           changed_at: string;
           total_count: number;
         }[];
+      };
+      update_room_image_caption: {
+        Args: { p_room_id: string; p_image_id: string; p_caption: string };
+        Returns: undefined;
       };
       set_room_main_image: { Args: { p_image_id: string }; Returns: undefined };
       set_specialist_color: {

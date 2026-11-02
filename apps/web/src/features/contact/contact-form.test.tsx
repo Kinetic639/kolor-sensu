@@ -69,6 +69,20 @@ describe("the contact form", () => {
     ).toHaveAttribute("href", "/pomoc-w-kryzysie");
   });
 
+  it("starts with the message a link brought, and is found by #formularz (#203)", () => {
+    window.history.replaceState(
+      null,
+      "",
+      `/kontakt?wiadomosc=${encodeURIComponent("Dzień dobry, szukam terminu: Konsultacja.")}`,
+    );
+    const { container } = render(<ContactForm {...props} />);
+    expect(screen.getByLabelText(/Wiadomość/)).toHaveValue(
+      "Dzień dobry, szukam terminu: Konsultacja.",
+    );
+    expect(container.querySelector("#formularz")).not.toBeNull();
+    window.history.replaceState(null, "", "/kontakt");
+  });
+
   it("can be sent only once Turnstile has checked", () => {
     render(<ContactForm {...props} />);
     const send = screen.getByRole("button", { name: "Wyślij wiadomość" });

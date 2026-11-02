@@ -1,7 +1,9 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
+import { visitRows } from "@repo/scheduling";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { sampleVisits } from "../visit-list.samples";
 import { parseColumnLayout } from "./columns";
 import { VisitFilterBar } from "./visit-filter-bar";
 import { VisitPanel } from "./visit-panel";
@@ -427,6 +429,35 @@ describe("VisitPanel", () => {
     expect(
       within(panel).getByRole("link", { name: "Zamknij szczegóły wizyty" }),
     ).toHaveAttribute("href", "/kalendarz");
+  });
+
+  it("what the client typed shows as text, never as HTML (Klient · 9, card 14)", () => {
+    const typed = {
+      name: '<img src="x" onerror="alert(1)">Jan',
+      notes: "<script>alert(1)</script> rano",
+    };
+    const [row] = visitRows(
+      [
+        {
+          ...sampleVisits[0]!,
+          client: { ...sampleVisits[0]!.client, ...typed },
+        },
+      ],
+      { timeZone: "Europe/Warsaw", now: new Date("2030-10-01T08:00:00Z") },
+    );
+    const { container } = render(
+      <VisitPanel
+        closeHref="/kalendarz"
+        events={null}
+        row={row!}
+        tab="szczegoly"
+        tabs={panelTabs}
+      />,
+    );
+    const panel = screen.getByRole("complementary", { name: typed.name });
+    expect(panel).toHaveTextContent(typed.name);
+    expect(panel).toHaveTextContent(typed.notes);
+    expect(container.querySelector("img, script")).toBeNull();
   });
 
   it("the questionnaire before a consultation, where there is one", () => {

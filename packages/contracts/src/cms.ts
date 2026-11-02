@@ -1,7 +1,9 @@
 import { z } from "zod";
+import { homeRoomsGallerySchema } from "@repo/contracts/rooms-peek";
 import {
   plainHeader,
   sectionHeaderSchema,
+  titleLineSchema,
 } from "@repo/contracts/section-header";
 import {
   pageHeader,
@@ -173,6 +175,35 @@ export type SupportAreasContent = z.infer<typeof supportAreasContentSchema>;
  * profile photo). Its header (eyebrow, title, description) is among the
  * homepage's headers (homeHeadersContentSchema).
  */
+export const specialistBackgroundIds = [
+  "01",
+  "02",
+  "03",
+  "04",
+  "05",
+  "06",
+  "06b",
+] as const;
+export const spotlightFramingSchema = z.strictObject({
+  x: z.number().min(-25).max(25),
+  y: z.number().min(-25).max(25),
+  zoom: z.number().min(0.65).max(1.6),
+});
+export type SpotlightFraming = z.infer<typeof spotlightFramingSchema>;
+export type SpecialistBackground = (typeof specialistBackgroundIds)[number];
+export const specialistBackgroundOptions: readonly {
+  id: SpecialistBackground;
+  label: string;
+}[] = [
+  { id: "01", label: "01 · Miękki obrys ramion" },
+  { id: "02", label: "02 · Asymetryczna plama" },
+  { id: "03", label: "03 · Lekko przechylona kompozycja" },
+  { id: "04", label: "04 · Łagodne pociągnięcia" },
+  { id: "05", label: "05 · Lekki, nieregularny obrys" },
+  { id: "06", label: "06 · Faktura płaskiego pędzla" },
+  { id: "06b", label: "06b · Bez górnego wcięcia" },
+];
+
 export const homeSpotlightSchema = z
   .strictObject({
     visible: z.boolean(),
@@ -180,6 +211,10 @@ export const homeSpotlightSchema = z
     /** A photo for this section, in the public site-media bucket. */
     imagePath: z.string().trim().min(1).max(300).nullable().default(null),
     imageAlt: z.string().trim().max(200).default(""),
+    /** Omitted in older content; the site uses 06b. */
+    background: z.enum(specialistBackgroundIds).optional(),
+    portraitFraming: spotlightFramingSchema.optional(),
+    backgroundFraming: spotlightFramingSchema.optional(),
   })
   .refine((spotlight) => !spotlight.visible || spotlight.specialistId, {
     message: "Wybierz specjalistę, aby pokazać sekcję",
@@ -189,6 +224,8 @@ export const homeSpotlightSchema = z
 export type HomeSpotlight = z.infer<typeof homeSpotlightSchema>;
 
 export const homeSectionsContentSchema = z.strictObject({
+  /** Home room banner; absent in older content. */
+  roomsPeek: homeRoomsGallerySchema.optional(),
   /** "Poznaj nasz zespół": the specialists' cards. */
   showSpecialists: z.boolean(),
   /** "Z kim porozmawiasz": one specialist. */
@@ -333,6 +370,8 @@ const phoneNumberSchema = z
  * are dialled as written.
  */
 export const crisisHelpContentSchema = z.strictObject({
+  /** Optional for older published payloads; shares the other sections' palette. */
+  header: sectionHeaderSchema.pick({ eyebrow: true, title: true }).optional(),
   eyebrow: z.string().trim().max(60).default("Pomoc w kryzysie"),
   heading: z.string().trim().min(1).max(80),
   text: z.string().trim().max(200),
@@ -490,23 +529,93 @@ export const defaultHomeThoughts: HomeThoughtsContent = {
 
 export const HOME_STORY_STEPS_MAX = 4;
 
-export const homeStoryStepSchema = z.strictObject({
-  heading: z.string().trim().min(1).max(80),
-  text: z.string().trim().min(1).max(400),
-  /** Where the step's button leads (none: no button). */
-  cta: z
-    .strictObject({
-      label: z.string().trim().min(1).max(40),
-      href: sitePathSchema,
-    })
-    .nullable()
-    .default(null),
-  /** The photo, a file in the public site-media bucket (none: the site's). */
-  imagePath: z.string().trim().min(1).max(300).nullable().default(null),
-  imageAlt: z.string().trim().max(200).default(""),
-});
+const storyCollection = <T extends "articles" | "ebooks" | "workshops">(
+  type: T,
+  max: number,
+) =>
+  z.strictObject({
+    type: z.literal(type),
+    source: z.enum(["auto", "manual"]),
+    ids: z
+      .array(z.uuid())
+      .max(max)
+      .refine(
+        (ids) => new Set(ids).size === ids.length,
+        "Nie wybieraj tego samego materiału dwa razy.",
+      ),
+  });
+
+export const homeStoryMediaSchema = z
+  .discriminatedUnion("type", [
+    z.strictObject({ type: z.literal("image") }),
+    storyCollection("articles", 3),
+    storyCollection("ebooks", 2).extend({
+      mobilePrimaryId: z.uuid().nullable().optional(),
+    }),
+    storyCollection("workshops", 1),
+  ])
+  .refine(
+    (media) =>
+      media.type === "image" ||
+      media.source !== "manual" ||
+      media.ids.length > 0,
+    "Wybierz przynajmniej jeden materiał.",
+  )
+  .refine(
+    (media) =>
+      media.type !== "ebooks" ||
+      media.source !== "manual" ||
+      !media.mobilePrimaryId ||
+      media.ids.includes(media.mobilePrimaryId),
+    "Główny e-book musi należeć do wybranych materiałów.",
+  );
+export type HomeStoryMedia = z.infer<typeof homeStoryMediaSchema>;
+
+export const homeStoryStepSchema = z
+  .strictObject({
+    /** Absent on older payloads; their existing education links identify the content. */
+    media: homeStoryMediaSchema.optional(),
+    heading: z.string().trim().min(1).max(80),
+    /** Optional coloured runs; plain headings from older content still work. */
+    headingSegments: titleLineSchema.optional(),
+    text: z.string().trim().min(1).max(400),
+    /** Where the step's button leads (none: no button). */
+    cta: z
+      .strictObject({
+        label: z.string().trim().min(1).max(40),
+        href: sitePathSchema,
+      })
+      .nullable()
+      .default(null),
+    /** The photo, a file in the public site-media bucket (none: the site's). */
+    imagePath: z.string().trim().min(1).max(300).nullable().default(null),
+    imageAlt: z.string().trim().max(200).default(""),
+  })
+  .refine(
+    (step) =>
+      !step.headingSegments ||
+      step.headingSegments.map((part) => part.text).join("") === step.heading,
+    {
+      path: ["headingSegments"],
+      message: "Kolorowe słowa muszą odpowiadać tytułowi.",
+    },
+  );
 
 export type HomeStoryStep = z.infer<typeof homeStoryStepSchema>;
+
+export function storyMediaOf(
+  step: Pick<HomeStoryStep, "media" | "cta">,
+): HomeStoryMedia {
+  if (step.media) return step.media;
+  const path = step.cta?.href;
+  if (path === "/edukacja/artykuly")
+    return { type: "articles", source: "auto", ids: [] };
+  if (path === "/edukacja/ebooki")
+    return { type: "ebooks", source: "auto", ids: [] };
+  if (path === "/warsztaty")
+    return { type: "workshops", source: "auto", ids: [] };
+  return { type: "image" };
+}
 
 /** Home → "Opowieść przy przewijaniu": one to four steps, in order. */
 export const homeStoryContentSchema = z.strictObject({
@@ -547,6 +656,12 @@ export const defaultHomeStory: HomeStoryContent = {
  * action; @repo/contracts/section-header), one per section in the page's
  * order. Words and colours only: each section's markup is code's.
  */
+const defaultHomeWorkshopsHeader = plainHeader({
+  eyebrow: "Warsztaty",
+  title: "Najbliższe warsztaty",
+  cta: { label: "Więcej warsztatów", href: "/warsztaty", style: "arrow" },
+});
+
 export const HOME_HEADER_SECTIONS = [
   { key: "supportAreas", label: "Obszary wsparcia" },
   { key: "whyUs", label: "Dlaczego my" },
@@ -554,7 +669,8 @@ export const HOME_HEADER_SECTIONS = [
   { key: "spotlight", label: "Z kim porozmawiasz" },
   { key: "specialists", label: "Poznaj nasz zespół" },
   { key: "rooms", label: "Przestrzeń, która wspiera" },
-  { key: "story", label: "Jak zacząć" },
+  { key: "workshops", label: "Warsztaty" },
+  { key: "story", label: "Edukacja" },
   { key: "newsletter", label: "Newsletter" },
   { key: "location", label: "Gdzie jesteśmy" },
 ] as const;
@@ -568,6 +684,7 @@ export const homeHeadersContentSchema = z.strictObject({
   spotlight: sectionHeaderSchema,
   specialists: sectionHeaderSchema,
   rooms: sectionHeaderSchema,
+  workshops: sectionHeaderSchema.default(defaultHomeWorkshopsHeader),
   story: sectionHeaderSchema,
   newsletter: sectionHeaderSchema,
   location: sectionHeaderSchema,
@@ -613,13 +730,14 @@ export const defaultHomeHeaders: HomeHeadersContent = {
       "Jasne, przytulne gabinety stworzone z myślą o Twoim komforcie i poczuciu bezpieczeństwa.",
     cta: { label: "Zobacz nasze gabinety", href: "/gabinety", style: "arrow" },
   }),
+  workshops: defaultHomeWorkshopsHeader,
   story: plainHeader({
     eyebrow: "Jak zacząć",
     title: "Twoja droga do lepszego samopoczucia",
   }),
   newsletter: plainHeader({
     eyebrow: "Newsletter",
-    title: "Bądźmy w kontakcie",
+    title: ["Bądźmy", "w kontakcie"],
     description: "Artykuły, warsztaty i nowości z centrum, raz w miesiącu.",
   }),
   location: plainHeader({

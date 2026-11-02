@@ -106,6 +106,11 @@ export interface VisitRow {
   paymentDue: string | null;
   /** Its link to pay can be e-mailed again (still payable, has an e-mail). */
   resendable: boolean;
+  /**
+   * A confirmed visit still ahead, with an e-mail: its confirmation (with
+   * the visit's link) can go again (Klient · 6, card 7).
+   */
+  linkResendable: boolean;
   /** Admins: what is left of the payment to give back (0: nothing). */
   refundableMinor: number;
   /** Admins: a refund promised that has not gone back (0: none). */
@@ -248,6 +253,10 @@ function rowOf(visit: VisitLike, timeZone: string, now: Date): VisitRow {
     resendable:
       reservation !== null &&
       new Date(reservation) > now &&
+      Boolean(visit.client.email),
+    linkResendable:
+      visit.status === "confirmed" &&
+      new Date(visit.startsAt) > now &&
       Boolean(visit.client.email),
     // A refund promised and not gone back yet is not given again: it is
     // owed (settled on its own), and what is left is past it.

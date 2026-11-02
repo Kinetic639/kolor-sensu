@@ -42,7 +42,9 @@ export type NotificationKind =
   | "workshop_signup"
   | "workshop_cancelled"
   | "workshop_full"
-  | "workshop_minimum";
+  | "workshop_minimum"
+  /** An online workshop soon without its meeting link. */
+  | "workshop_no_link";
 
 export interface NotificationDetails {
   reference: string | null;

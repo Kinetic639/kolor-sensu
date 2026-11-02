@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" fill="none">
+  <defs>
+    <path
+      id="paint"
+      d="M 44 25 C 104 13 161 31 224 22 C 291 12 350 27 415 20 C 482 12 548 29 612 20 C 681 10 747 25 816 20 C 847 18 867 29 874 52 C 884 86 871 123 880 161 C 888 198 874 234 880 273 C 886 315 876 350 882 391 C 887 435 872 469 878 511 C 883 543 867 568 838 573 C 788 582 734 570 681 578 C 626 586 575 572 521 579 C 462 587 410 575 353 582 C 294 589 243 574 189 580 C 139 586 96 572 57 576 C 33 578 20 561 23 537 C 27 494 15 455 23 414 C 32 371 18 332 25 292 C 32 253 16 215 24 175 C 33 132 19 96 26 60 C 29 42 31 29 44 25 Z"
+    />
+    <filter id="soft" x="-5%" y="-5%" width="110%" height="110%">
+      <feGaussianBlur stdDeviation="2.4" />
+    </filter>
+    <filter id="wash" x="-5%" y="-5%" width="110%" height="110%">
+      <feGaussianBlur stdDeviation="5" />
+    </filter>
+  </defs>
+  <!-- Broad, flowing paint contours with a soft wash, without granular noise. -->
+  <use
+    href="#paint"
+    fill="white"
+    stroke="white"
+    stroke-width="12"
+    opacity=".3"
+    filter="url(#wash)"
+  />
+  <use href="#paint" fill="white" filter="url(#soft)" />
+</svg>

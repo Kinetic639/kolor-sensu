@@ -64,7 +64,7 @@ export default async function WorkshopsPage({
       <PageIntro header={words.intro} />
       <section
         aria-labelledby="nadchodzace"
-        className="max-w-page px-gutter mx-auto grid gap-6"
+        className="max-w-page px-gutter mx-auto grid gap-12"
       >
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h2 className="font-display text-h2 text-ink" id="nadchodzace">
@@ -115,7 +115,7 @@ export default async function WorkshopsPage({
       {past.length ? (
         <section
           aria-labelledby="minione"
-          className="max-w-page px-gutter mx-auto mt-16 grid gap-6"
+          className="max-w-page px-gutter mx-auto mt-16 grid gap-12"
         >
           <h2 className="font-display text-h2 text-ink" id="minione">
             Minione warsztaty

@@ -49,6 +49,7 @@ const SAMPLE: ClaimedBookingEmail & { manageToken: string } = {
   roomName: "Gabinet Zielony",
   locationName: "Kolor Sensu",
   locationAddress: "ul. Przykładowa 1, 61-001 Poznań",
+  locationDirections: "Wejście od podwórza, domofon 18",
   priceMinor: 24_000,
   currencyCode: "PLN",
   clientName: "Joanna Kowalska",
@@ -151,9 +152,22 @@ export function clientEmails(options: CatalogueOptions): CatalogueEmail[] {
       key: "rescheduled",
       group: "Zmiany i odwołania",
       name: "Nowy termin",
-      when: "Gdy klient lub centrum przełoży wizytę.",
+      when: "Gdy klient sam przełoży wizytę.",
       attachment: "Plik kalendarza przenoszący wizytę (.ics)",
       build: () => rescheduledContent(SAMPLE, change),
+    },
+    {
+      key: "changed-by-centre",
+      group: "Zmiany i odwołania",
+      name: "Zmiana wizyty przez centrum",
+      when: "Gdy centrum zmieni termin, formę albo gabinet wizyty.",
+      attachment: "Plik kalendarza aktualizujący wizytę (.ics)",
+      build: () =>
+        rescheduledContent(SAMPLE, {
+          ...change,
+          byCentre: true,
+          reason: "Zmiana gabinetu",
+        }),
     },
     {
       key: "cancelled-refund",

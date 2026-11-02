@@ -1,4 +1,6 @@
+import { markBookingEmailBounced } from "@repo/supabase";
 import { stopNewsletterSubscription } from "@repo/supabase/newsletter";
+import { markWorkshopEmailBounced } from "@repo/supabase/workshops";
 import type { WebhookEventPayload } from "resend";
 import { handleResendEvent } from "@/features/newsletter/webhook";
 import { resend } from "@/lib/email";
@@ -7,7 +9,9 @@ import { createSecretClient } from "@/lib/supabase/secret";
 // Resend's webhook (Resend → Webhooks, events contact.updated,
 // contact.deleted, email.bounced, email.complained): the raw body, its
 // signature checked with RESEND_WEBHOOK_SECRET; unsubscribes, bounces and
-// complaints stop the address on the list (features/newsletter/webhook.ts).
+// complaints stop the address on the list (features/newsletter/webhook.ts);
+// a visit's e-mail that bounced shows in the visit's history, a workshop
+// seat's by its participant in the admin portal.
 // Handling an event twice changes nothing; a failure answers 500, so
 // Resend retries.
 
@@ -45,6 +49,9 @@ export async function POST(request: Request) {
     await handleResendEvent(event, {
       stop: (email, reason) =>
         stopNewsletterSubscription(client, email, reason),
+      bounced: async (messageId) =>
+        (await markBookingEmailBounced(client, messageId)) ??
+        markWorkshopEmailBounced(client, messageId),
     });
   } catch (error) {
     console.error(`[resend] ${event.type} failed:`, error);

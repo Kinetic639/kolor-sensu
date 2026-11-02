@@ -1,7 +1,12 @@
 import Image from "next/image";
 import { cn } from "../lib/utils";
 import { PageLink } from "./page-link";
-import { SoftCard } from "./surfaces";
+import { Clock3 } from "lucide-react";
+import { InkReveal } from "./ink-reveal";
+import { CrisisCardFrame } from "./crisis-card-frame";
+import { HanddrawnLink } from "./handdrawn-link";
+import { HoverPaint } from "./hover-paint";
+import { educationStyles as styles } from "./education-styles";
 
 // Edukacja's article cards (the lists, a category, related articles, an
 // author's or a service's articles): the cover, the category, the title as
@@ -17,6 +22,8 @@ export interface ArticleCardData {
   coverAlt: string;
   category: { name: string; href: string } | null;
   author: string;
+  authorAvatarUrl?: string | null;
+  authorTitle?: string | null;
   /** `21 października 2026` */
   date: string;
   /** The ISO date, for <time>. */
@@ -30,16 +37,20 @@ export function ArticleCard({
   headingLevel = "h3",
   priority = false,
 }: {
-  article: ArticleCardData;
+  article: Omit<ArticleCardData, "author" | "date" | "dateTime"> &
+    Partial<Pick<ArticleCardData, "author" | "date" | "dateTime">>;
   headingLevel?: "h2" | "h3";
   /** The first card above the fold: its cover loads first. */
   priority?: boolean;
 }) {
   const Heading = headingLevel;
   return (
-    <SoftCard asChild interactive>
-      <article className="group grid grid-rows-[auto_1fr] overflow-hidden">
-        <div className="bg-cream relative aspect-[3/2]">
+    <article className={styles.article}>
+      <InkReveal className={styles.articleFrame}>
+        <CrisisCardFrame index={1} />
+      </InkReveal>
+      <div className={styles.articleContent}>
+        <div className={cn(styles.articlePhoto, "bg-cream")}>
           {article.coverUrl ? (
             <Image
               alt=""
@@ -51,36 +62,76 @@ export function ArticleCard({
             />
           ) : null}
         </div>
-        <div className="flex flex-col gap-3 p-5 lg:p-6">
-          {article.category ? (
-            <p className="text-eyebrow text-primary-strong relative z-10 uppercase">
-              <PageLink
-                className="focus-visible:outline-ring hover:underline focus-visible:outline-2"
-                href={article.category.href}
+        <div className={styles.articleBody}>
+          <div className="ks-education-article-topline">
+            <span className={styles.meta}>
+              <Clock3 size={15} aria-hidden="true" />
+              {article.reading.replace(/\s+czytania\s*$/, "")}
+            </span>
+            {article.date ? (
+              <time
+                className="ks-education-article-date"
+                dateTime={article.dateTime}
               >
-                {article.category.name}
-              </PageLink>
+                {article.date}
+              </time>
+            ) : null}
+          </div>
+          {article.category ? (
+            <p className={styles.kicker}>
+              {article.category.href ? (
+                <PageLink
+                  className="ks-education-article-category focus-visible:outline-ring hover:underline focus-visible:outline-2"
+                  href={article.category.href}
+                >
+                  {article.category.name}
+                </PageLink>
+              ) : (
+                article.category.name
+              )}
             </p>
           ) : null}
-          <Heading className="font-display text-h3 text-ink text-balance">
+          <Heading className={styles.materialTitle}>
             <PageLink
-              className="focus-visible:outline-ring group-hover:underline after:absolute after:inset-0 after:content-[''] focus-visible:outline-2"
+              className="ks-education-article-title focus-visible:outline-ring after:absolute after:inset-0 after:z-10 after:content-[''] focus-visible:outline-2"
               href={article.href}
             >
-              {article.title}
+              <span className="ks-wk__title-label">{article.title}</span>
             </PageLink>
           </Heading>
-          <p className="text-body text-text-muted line-clamp-3">
-            {article.lead}
-          </p>
-          <p className="text-small text-text-muted mt-auto">
-            {article.author} ·{" "}
-            <time dateTime={article.dateTime}>{article.date}</time> ·{" "}
-            {article.reading}
-          </p>
+          <p className={styles.excerpt}>{article.lead}</p>
+          <div className={styles.articleFoot}>
+            <HoverPaint />
+            {article.author ? (
+              <div className="ks-education-article-author">
+                {article.authorAvatarUrl ? (
+                  <Image
+                    src={article.authorAvatarUrl}
+                    alt=""
+                    width={44}
+                    height={44}
+                    className="ks-education-article-avatar"
+                  />
+                ) : null}
+                <span className="ks-education-article-author-copy">
+                  <span className="ks-education-article-author-name">
+                    {article.author}
+                  </span>
+                  {article.authorTitle ? (
+                    <span className="ks-education-article-author-title">
+                      {article.authorTitle}
+                    </span>
+                  ) : null}
+                </span>
+              </div>
+            ) : null}
+            <div className="ks-education-article-actions">
+              <HanddrawnLink href={article.href}>Przeczytaj</HanddrawnLink>
+            </div>
+          </div>
         </div>
-      </article>
-    </SoftCard>
+      </div>
+    </article>
   );
 }
 

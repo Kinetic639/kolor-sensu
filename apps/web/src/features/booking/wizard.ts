@@ -38,6 +38,11 @@ export interface WizardInput {
   horizonDays: number;
   /** The shown week's free times (the time step only). */
   slots: FreeSlot[];
+  /**
+   * With an empty week: the soonest free time within the horizon, or null
+   * for none (#203); undefined when not looked for.
+   */
+  nextFree?: FreeSlot | null;
 }
 
 export interface WizardCard {
@@ -74,6 +79,8 @@ export type WizardPanel =
 
 export interface WizardView {
   stepIndex: number;
+  /** Why an earlier choice was dropped, e.g. a form the specialist lacks. */
+  notice?: string;
   steps: StepperStep[];
   summary: WizardSummaryRow[];
   panel: WizardPanel;
@@ -113,7 +120,7 @@ export function bookingWeek(params: BookingParams, today: string) {
 }
 
 /** `czwartek, 10 stycznia 2030, godz. 13:00` */
-function slotLabel(slot: FreeSlot) {
+function slotLabel(slot: Pick<FreeSlot, "date" | "localTime">) {
   return `${formatWeekday(slot.date)}, ${formatDate(slot.date)}, godz. ${slot.localTime}`;
 }
 
@@ -146,14 +153,14 @@ function servicesPanel({
           priceLabel(ofService),
         ],
         tags: modeTags(ofService),
-        selected: false,
+        selected: params.usluga === service.slug,
       };
     }),
   };
 }
 
 function modesPanel({ params, selection }: WizardInput): WizardPanel {
-  if (selection.mode === "stacjonarnie") {
+  if (selection.step === "lokalizacja") {
     return {
       kind: "choices",
       title: "Wybierz miejsce",
@@ -167,7 +174,7 @@ function modesPanel({ params, selection }: WizardInput): WizardPanel {
           undefined,
         facts: [],
         tags: [],
-        selected: false,
+        selected: selection.location?.slug === location.slug,
       })),
     };
   }
@@ -185,7 +192,7 @@ function modesPanel({ params, selection }: WizardInput): WizardPanel {
           : "Spotkanie przez internet, z dowolnego miejsca.",
       facts: [],
       tags: [],
-      selected: false,
+      selected: selection.mode === mode,
     })),
   };
 }
@@ -221,7 +228,7 @@ function specialistsPanel({
           formatDuration(choice.effectiveDurationMinutes),
         ],
         tags: [],
-        selected: false,
+        selected: selection.specialist === choice.specialistPublicSlug,
       };
     }),
   };
@@ -255,6 +262,42 @@ export function weekOfSlots(
   });
 }
 
+/** Kontakt, its message naming the visit sought (#203). */
+function contactHref(input: WizardInput) {
+  const { params, selection, offers } = input;
+  const specialist = offers.find(
+    (offer) => offer.specialistPublicSlug === params.specjalista,
+  )?.specialistName;
+  const parts = [
+    selection.service?.name,
+    specialist,
+    params.forma === "online" ? "online" : "w gabinecie",
+  ].filter(Boolean);
+  const message = `Dzień dobry, szukam terminu: ${parts.join(", ")}.`;
+  return `/kontakt?wiadomosc=${encodeURIComponent(message)}#formularz`;
+}
+
+function nothingFree(input: WizardInput) {
+  const { params, slots, nextFree, horizonDays } = input;
+  if (slots.length > 0 || nextFree === undefined) return undefined;
+  if (nextFree === null) {
+    return {
+      kind: "none" as const,
+      days: horizonDays,
+      contactHref: contactHref(input),
+    };
+  }
+  return {
+    kind: "later" as const,
+    label: `${formatWeekday(nextFree.date)}, ${formatDayMonth(nextFree.date)}`,
+    href: bookingHref({
+      ...params,
+      tydzien: mondayOf(nextFree.date),
+      termin: null,
+    }),
+  };
+}
+
 function slotsPanel(input: WizardInput, chosen: FreeSlot | null): WizardPanel {
   const { params, today, horizonDays, slots } = input;
   const week = bookingWeek(params, today);
@@ -264,8 +307,14 @@ function slotsPanel(input: WizardInput, chosen: FreeSlot | null): WizardPanel {
 
   return {
     kind: "slots",
-    title: "Wybierz termin",
-    lead: "Poniżej znajdziesz wolne terminy u wybranego specjalisty.",
+    title: chosen
+      ? params.dalej === "auto" && !params.uwaga
+        ? "Przechodzimy do Twoich danych"
+        : "Termin wybrany"
+      : "Wybierz termin",
+    lead: chosen
+      ? "Sprawdź podsumowanie wizyty i przejdź dalej do swoich danych."
+      : "Poniżej znajdziesz wolne terminy u wybranego specjalisty. Godziny podajemy w czasie polskim.",
     chosen: chosen
       ? { startsAt: chosen.start.toISOString(), label: slotLabel(chosen) }
       : null,
@@ -285,6 +334,7 @@ function slotsPanel(input: WizardInput, chosen: FreeSlot | null): WizardPanel {
         (value) => selectBookingHref(keep, "termin", value),
         params.termin,
       ),
+      nothingFree: nothingFree(input),
     },
   };
 }
@@ -307,13 +357,18 @@ export function buildWizardView(input: WizardInput): WizardView {
           (slot) => `${slot.date}T${slot.localTime}` === params.termin,
         ) ?? null)
       : null;
-  const chosenOffer = selection.offer
-    ? offers.find(
-        (one) =>
-          one.serviceSlug === selection.offer!.serviceSlug &&
-          one.specialistPublicSlug === selection.offer!.specialistPublicSlug,
-      )
-    : undefined;
+  const chosenOffer = offers.find(
+    (one) =>
+      one.serviceSlug === selection.service?.slug &&
+      one.specialistPublicSlug === selection.specialist,
+  );
+  const pendingTime =
+    step !== "termin" && params.termin
+      ? slotLabel({
+          date: params.termin.slice(0, 10),
+          localTime: params.termin.slice(11),
+        })
+      : undefined;
 
   const formValue = selection.mode
     ? [
@@ -329,13 +384,17 @@ export function buildWizardView(input: WizardInput): WizardView {
       key: "usluga",
       label: "Usługa",
       value: selection.service?.name,
+      // The chosen specialist's price and length (card 4).
+      detail: chosenOffer
+        ? `${formatPrice(chosenOffer)} · ${formatDuration(chosenOffer.effectiveDurationMinutes)}`
+        : undefined,
       placeholder: "Wybierz usługę",
       changeHref: changeBookingHref(params, "usluga"),
     },
     {
       key: "forma",
       label: "Forma",
-      value: stepIndex > 1 ? formValue : undefined,
+      value: formValue,
       placeholder: "Wybierz formę spotkania",
       changeHref: changeBookingHref(params, "forma"),
     },
@@ -350,9 +409,12 @@ export function buildWizardView(input: WizardInput): WizardView {
     {
       key: "termin",
       label: "Termin",
-      value: chosenSlot ? slotLabel(chosenSlot) : undefined,
+      value: chosenSlot ? slotLabel(chosenSlot) : pendingTime,
+      detail: pendingTime
+        ? "Dostępność potwierdzimy po uzupełnieniu wyborów."
+        : undefined,
       placeholder: "Wybierz termin",
-      changeHref: bookingHref({ ...params, termin: null }),
+      changeHref: changeBookingHref(params, "termin"),
     },
   ];
 
@@ -368,11 +430,20 @@ export function buildWizardView(input: WizardInput): WizardView {
     changeBookingHref(params, "usluga"),
     changeBookingHref(params, "forma"),
     changeBookingHref(params, "specjalista"),
+    changeBookingHref(params, "termin"),
   ];
   const steps = labels.map((label, index) => ({
     key: label,
     label,
     href: back[index],
+    completed:
+      [
+        !!selection.service,
+        !!selection.mode &&
+          (selection.mode === "online" || !!selection.location),
+        !!selection.specialist,
+        step === "termin" ? !!chosenSlot : !!params.termin,
+      ][index] ?? false,
   }));
 
   const panel =
@@ -384,5 +455,33 @@ export function buildWizardView(input: WizardInput): WizardView {
           ? specialistsPanel(input)
           : slotsPanel(input, chosenSlot);
 
-  return { stepIndex, steps, summary, panel };
+  return {
+    stepIndex,
+    steps,
+    summary,
+    panel,
+    notice:
+      droppedNotice(input) ??
+      (step === "termin" && params.termin && !chosenSlot
+        ? "Wybrany termin nie jest już dostępny dla tych ustawień wizyty. Wybierz inną godzinę lub zmień wcześniejsze wybory."
+        : undefined),
+  };
+}
+
+const MODE_PHRASES: Record<BookingMode, string> = {
+  stacjonarnie: "stacjonarnie, w gabinecie",
+  online: "online",
+};
+
+/** Why the form asked for is gone, and what to choose (card 13). */
+function droppedNotice({ selection, offers }: WizardInput) {
+  const { droppedMode, service, specialist } = selection;
+  if (!droppedMode || !service) return undefined;
+  const name = offers.find(
+    (offer) => offer.specialistPublicSlug === specialist,
+  )?.specialistName;
+  const why = name
+    ? `${name} nie prowadzi usługi „${service.name}” ${MODE_PHRASES[droppedMode]}.`
+    : `Usługa „${service.name}” nie odbywa się ${MODE_PHRASES[droppedMode]}.`;
+  return `${why} Wybierz, proszę, formę spotkania ponownie.`;
 }

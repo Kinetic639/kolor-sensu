@@ -4,7 +4,31 @@
  * row (apps/web/src/lib/rooms-peek.ts); the admin's CMS says how many
  * photos it will show. Both use this rule, so they cannot disagree.
  */
+import { z } from "zod";
+
 export const ROOMS_PEEK_PHOTOS_MAX = 12;
+
+export const homeRoomsGallerySchema = z.strictObject({
+  visible: z.boolean(),
+  source: z.enum(["auto", "manual"]),
+  photos: z
+    .array(
+      z.strictObject({
+        source: z.enum(["room", "upload"]),
+        imagePath: z.string().trim().min(1).max(2048),
+        imageAlt: z.string().trim().min(1).max(200),
+        caption: z.string().trim().min(1).max(100),
+        description: z.string().trim().max(200).default(""),
+      }),
+    )
+    .max(ROOMS_PEEK_PHOTOS_MAX),
+});
+export type HomeRoomsGallery = z.infer<typeof homeRoomsGallerySchema>;
+export const defaultHomeRoomsGallery: HomeRoomsGallery = {
+  visible: true,
+  source: "auto",
+  photos: [],
+};
 
 /**
  * How many photos the section shows, given each published room's photo

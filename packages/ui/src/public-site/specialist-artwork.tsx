@@ -1,4 +1,6 @@
 import Image, { type ImageProps } from "next/image";
+import type { CSSProperties } from "react";
+import type { SpotlightFraming } from "@repo/contracts/cms";
 
 // The organic, open visual of a specialist card. Server-safe: no hooks, no
 // browser APIs. Three layers in one 3 : 4 box (the ratio of every splash
@@ -52,6 +54,11 @@ export interface SpecialistArtworkProps {
   portraitSrc: ImageProps["src"];
   portraitAlt: string;
   splash: SpecialistSplash;
+  /** Optional brush artwork, shared by the background and pigment overlay. */
+  backdropSrc?: ImageProps["src"];
+  portraitFraming?: SpotlightFraming;
+  backgroundFraming?: SpotlightFraming;
+  professionalHover?: boolean;
   sizes: string;
   priority?: boolean;
 }
@@ -60,21 +67,25 @@ export function SpecialistArtwork({
   portraitSrc,
   portraitAlt,
   splash,
+  backdropSrc,
+  portraitFraming,
+  backgroundFraming,
+  professionalHover = false,
   sizes,
   priority = false,
 }: SpecialistArtworkProps) {
   const loading = priority ? "eager" : "lazy";
   const splashImage = (
     <Image
-      src={specialistSplashes[splash]}
+      src={backdropSrc ?? specialistSplashes[splash]}
       alt=""
       fill
       sizes={sizes}
       loading={loading}
     />
   );
-  return (
-    <div className="ks-sp__art">
+  const painted = (
+    <>
       <div className="ks-sp__splash" aria-hidden="true">
         {splashImage}
       </div>
@@ -93,6 +104,43 @@ export function SpecialistArtwork({
           {splashImage}
         </div>
       </div>
+    </>
+  );
+  const style = {
+    "--ks-portrait-x": `${portraitFraming?.x ?? 0}%`,
+    "--ks-portrait-y": `${portraitFraming?.y ?? 0}%`,
+    "--ks-portrait-zoom": portraitFraming?.zoom ?? 1,
+    "--ks-paint-x": `${backgroundFraming?.x ?? 0}%`,
+    "--ks-paint-y": `${backgroundFraming?.y ?? 0}%`,
+    "--ks-paint-zoom": backgroundFraming?.zoom ?? 1,
+  } as CSSProperties;
+  return (
+    <div
+      className={
+        professionalHover ? "ks-sp__art ks-sp__art--professional" : "ks-sp__art"
+      }
+      style={style}
+      tabIndex={professionalHover ? 0 : undefined}
+    >
+      {professionalHover ? (
+        <>
+          <div className="ks-sp__painted">{painted}</div>
+          <div className="ks-sp__professional" aria-hidden="true">
+            <div className="ks-sp__portrait-frame">
+              <Image
+                src={portraitSrc}
+                alt=""
+                fill
+                sizes={sizes}
+                loading={loading}
+                className="ks-sp__portrait-img"
+              />
+            </div>
+          </div>
+        </>
+      ) : (
+        painted
+      )}
     </div>
   );
 }

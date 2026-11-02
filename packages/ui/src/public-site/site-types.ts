@@ -8,6 +8,21 @@ export interface SiteLink {
 }
 
 /**
+ * A booking begun and left: the cookie keeping the link back to it (only
+ * a link into `under` is followed), and the action's label meanwhile.
+ */
+export interface SiteResume {
+  cookie: string;
+  under: string;
+  label: string;
+}
+
+/** The header's action ("Umów wizytę"), optionally leading back. */
+export interface SiteCta extends SiteLink {
+  resume?: SiteResume;
+}
+
+/**
  * A link of a dropdown ("Oferta"): a page, or a group of them (a
  * catalogue) opening beside it on desktop and folding out on phones; its
  * own `href` is the group's place on the list page.

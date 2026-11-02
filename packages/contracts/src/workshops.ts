@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FREE_OR_TWO_ZLOTY, isFreeOrTwoZloty } from "./services";
 import { personNameFields } from "./person-name";
 
 // A workshop as the admin portal's form holds it (docs/product/
@@ -60,7 +61,8 @@ export const workshopInputSchema = z
       .number()
       .int()
       .min(0, "Cena nie może być ujemna.")
-      .max(10_000_000, "Za wysoka cena."),
+      .max(10_000_000, "Za wysoka cena.")
+      .refine(isFreeOrTwoZloty, FREE_OR_TWO_ZLOTY),
     capacity: z
       .number()
       .int("Podaj liczbę miejsc.")
@@ -168,6 +170,9 @@ export const WORKSHOP_ADMIN_PROBLEMS: Record<string, string> = {
     "Dane usuniesz po warsztacie albo po anulowaniu zapisu, gdy nie czeka zwrot.",
   already_forgotten: "Dane tej osoby są już usunięte.",
   invalid_message: "Wpisz temat i treść wiadomości.",
+  recently_sent: "Link poszedł przed chwilą. Spróbuj za kilka minut.",
+  nothing_to_send:
+    "Nie ma czego wysłać: zapis jest anulowany, minął albo warsztat już się odbył.",
   not_found: "Nie ma takiego warsztatu.",
 };
 

@@ -112,6 +112,7 @@ const base = {
   publiclyVisible: true,
   bookingEnabled: true,
   requiresIntake: false,
+  forMinors: false,
   durationMinutes: 50,
   afterMinutes: 10,
 };

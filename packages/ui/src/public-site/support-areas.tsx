@@ -16,7 +16,7 @@ import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { type CSSProperties, type ReactNode, useId, useState } from "react";
 import { cn } from "../lib/utils";
-import { ArrowLink } from "./actions";
+import { HanddrawnLink } from "./handdrawn-link";
 import { PageLink } from "./page-link";
 import { EditorialHeading, SectionEyebrow } from "./typography";
 import type { SectionHeaderContent } from "@repo/contracts/section-header";
@@ -197,9 +197,9 @@ export function SupportAreas({
         </div>
 
         {cta ? (
-          <ArrowLink href={cta.href} className="justify-self-center">
+          <HanddrawnLink href={cta.href} className="justify-self-center">
             {cta.label}
-          </ArrowLink>
+          </HanddrawnLink>
         ) : null}
       </div>
     </section>

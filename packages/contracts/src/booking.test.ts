@@ -35,6 +35,8 @@ describe("bookingDetailsSchema", () => {
       notes: null,
       acceptTerms: true,
       acceptPrivacy: true,
+      acceptEarlyStart: false,
+      confirmGuardian: false,
     });
   });
 
@@ -49,6 +51,27 @@ describe("bookingDetailsSchema", () => {
     });
     expect(errors({ phone: "600-100-200x" })).toEqual({
       phone: "Podaj numer telefonu (9–15 cyfr).",
+    });
+  });
+
+  it("takes names and notes with emoji and Polish letters, as written", () => {
+    const parsed = bookingDetailsSchema.parse({
+      ...valid,
+      firstName: "Zoë 🌿",
+      lastName: "Żółć-Łęcka",
+      notes: "Pierwsza wizyta 🙂",
+    });
+    expect(parsed.firstName).toBe("Zoë 🌿");
+    expect(parsed.lastName).toBe("Żółć-Łęcka");
+    expect(parsed.notes).toBe("Pierwsza wizyta 🙂");
+  });
+
+  it("keeps names short", () => {
+    expect(errors({ firstName: "a".repeat(101) })).toEqual({
+      firstName: "Imię może mieć najwyżej 100 znaków.",
+    });
+    expect(errors({ lastName: "a".repeat(101) })).toEqual({
+      lastName: "Nazwisko może mieć najwyżej 100 znaków.",
     });
   });
 
@@ -138,8 +161,7 @@ describe("centreBookingMessage", () => {
 describe("resendLinkMessage", () => {
   it("says why in Polish, with a fallback", () => {
     expect(resendLinkMessage("recently_sent")).toMatch(/przed chwilą/);
-    expect(resendLinkMessage(undefined)).toBe(
-      "Nie udało się wysłać linku do płatności.",
-    );
+    expect(resendLinkMessage("nothing_to_send")).toMatch(/minęła/);
+    expect(resendLinkMessage(undefined)).toBe("Nie udało się wysłać linku.");
   });
 });

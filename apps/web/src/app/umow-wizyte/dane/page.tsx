@@ -1,4 +1,4 @@
-import { getBooking } from "@repo/supabase";
+import { getBooking, getBookingRequirements } from "@repo/supabase";
 import { HoldNotice } from "@repo/ui/booking";
 import { SecondaryButton } from "@repo/ui/public-site";
 import type { Metadata } from "next";
@@ -6,9 +6,15 @@ import { releaseHoldAction } from "@/features/booking/actions";
 import { BookingStep, requireLiveHold } from "@/features/booking/booking-step";
 import { DetailsForm } from "@/features/booking/details-form";
 import { DiscountForm } from "@/features/booking/discount-form";
+import { ResumeBooking } from "@/features/booking/remember-choices";
+import { StartOverForm } from "@/features/booking/start-over-form";
 import { readFormerHoldToken } from "@/features/booking/hold-cookie";
 import { payLaterUntil } from "@/features/booking/pay-later";
-import { deadlineLabel, localTime } from "@/features/booking/visit-label";
+import {
+  deadlineLabel,
+  localTime,
+  visitLabel,
+} from "@/features/booking/visit-label";
 import { newsletterController } from "@/features/newsletter/signup-server";
 import { getBookingWindow, getNewsletterBand } from "@/lib/public-data";
 import { createSecretClient } from "@/lib/supabase/secret";
@@ -23,13 +29,18 @@ export const metadata: Metadata = {
 // later (R11), or, when the code covers it all, confirms it. The newsletter
 // is offered while the CMS shows it. After "Zmień termin", the details
 // given for the time given back are filled in again (#164).
-export default async function BookingDetailsPage() {
+export default async function BookingDetailsPage({
+  searchParams,
+}: PageProps<"/umow-wizyte/dane">) {
+  const otherTab = (await searchParams)["inna-karta"] === "1";
   const visit = await requireLiveHold();
   const { booking, timeZone, discount } = visit;
-  const [window, newsletter, former] = await Promise.all([
+  const [window, newsletter, former, needs] = await Promise.all([
     getBookingWindow(),
     getNewsletterBand(),
     booking.details ? null : formerDetails(),
+    // The consents this visit asks for besides the two (Klient · 3).
+    getBookingRequirements(createSecretClient(), visit.token).catch(() => null),
   ]);
   const until = payLaterUntil(booking.startsAt, window?.paymentDueHours);
 
@@ -40,10 +51,23 @@ export default async function BookingDetailsPage() {
       title="Twoje dane"
       visit={visit}
     >
+      {otherTab ? (
+        // Card 7: the details were sent from a tab showing another time.
+        <p
+          className="rounded-card-sm bg-pink-soft text-small text-ink mb-6 p-4"
+          role="alert"
+        >
+          W innej karcie wybrano inny termin, więc obowiązuje ta rezerwacja:{" "}
+          {visitLabel(booking.startsAt, timeZone)}. Sprawdź, proszę, dane i
+          zapisz je jeszcze raz.
+        </p>
+      ) : null}
       <div className="border-border/70 mb-6 border-b pb-6">
         <DiscountForm applied={discount} />
       </div>
       <DetailsForm
+        reference={booking.reference}
+        needs={needs ?? undefined}
         free={booking.priceMinor === 0}
         newsletterController={
           newsletter.visible ? await newsletterController() : null
@@ -61,14 +85,15 @@ export default async function BookingDetailsPage() {
             : null
         }
       />
-      <form
-        action={releaseHoldAction}
-        className="border-border/70 mt-8 border-t pt-6"
-      >
-        <SecondaryButton size="sm" type="submit">
-          Zmień termin
-        </SecondaryButton>
-      </form>
+      <div className="border-border/70 mt-8 flex flex-wrap gap-3 border-t pt-6">
+        <form action={releaseHoldAction}>
+          <SecondaryButton size="sm" type="submit">
+            Zmień termin
+          </SecondaryButton>
+        </form>
+        <StartOverForm />
+      </div>
+      <ResumeBooking href="/umow-wizyte/dane" />
     </BookingStep>
   );
 }

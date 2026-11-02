@@ -1,57 +1,97 @@
 import { plainHeader } from "@repo/contracts/section-header";
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { RoomsPeek } from "./rooms-peek";
-
 const header = plainHeader({
   eyebrow: "Nasze gabinety",
   title: "Zajrzyj do środka",
-  cta: { label: "Zobacz nasze gabinety", href: "/gabinety", style: "arrow" },
 });
-
 const photos = [
-  { url: "/a.webp", alt: "Gabinet Zielony, fotel", room: "Gabinet Zielony" },
-  { url: "/b.webp", alt: "Gabinet Różowy, okno", room: "Gabinet Różowy" },
-  { url: "/c.webp", alt: "Gabinet Różowy, regał", room: "Gabinet Różowy" },
+  { url: "/a.webp", alt: "Zielony, fotel", room: "Zielony", roomId: "a" },
+  {
+    url: "/b.webp",
+    alt: "Różowy, okno",
+    room: "Różowy",
+    roomId: "b",
+    description: "Widok okna",
+  },
+  { url: "/c.webp", alt: "Różowy, regał", room: "Różowy", roomId: "b" },
 ];
-
-beforeEach(() => {
-  Element.prototype.scrollBy = vi.fn();
-});
-
 describe("RoomsPeek", () => {
-  it("is a section named by its title, linking to the rooms page", () => {
-    render(<RoomsPeek header={header} photos={photos} />);
-    const section = screen.getByRole("region", { name: "Zajrzyj do środka" });
+  it("keeps inactive room dimensions available without exposing their photos or focus targets", () => {
+    const { container } = render(<RoomsPeek header={header} photos={photos} />);
+    expect(container.querySelectorAll(".ks-peek__list")).toHaveLength(2);
+    const inactive = container.querySelector(
+      '.ks-peek__list[data-active="false"]',
+    );
+    expect(inactive).toHaveAttribute("aria-hidden", "true");
+    expect(inactive).toHaveAttribute("inert");
     expect(
-      within(section).getByRole("link", { name: /Zobacz nasze gabinety/ }),
-    ).toHaveAttribute("href", "/gabinety");
-  });
-
-  it("shows every photo with its description and the room's name", () => {
-    render(<RoomsPeek header={header} photos={photos} />);
-    const list = screen.getByRole("list", { name: "Zdjęcia gabinetów" });
-    const items = within(list).getAllByRole("listitem");
-    expect(items).toHaveLength(3);
+      screen.getAllByRole("list", { name: "Zdjęcia gabinetów" }),
+    ).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Następny gabinet" }));
     expect(
-      within(items[1]!).getByRole("img", { name: "Gabinet Różowy, okno" }),
-    ).toBeInTheDocument();
-    expect(within(items[1]!).getByText("Gabinet Różowy")).toBeInTheDocument();
+      screen.getAllByRole("list", { name: "Zdjęcia gabinetów" }),
+    ).toHaveLength(1);
+    expect(
+      screen.queryByRole("img", { name: "Zielony, fotel" }),
+    ).not.toBeInTheDocument();
   });
-
-  it("moves along with its buttons and the arrow keys", () => {
+  it("switches complete rooms using buttons and arrow keys", () => {
     render(<RoomsPeek header={header} photos={photos} />);
-    const scroller = screen.getByRole("list", {
+    const row = screen.getByRole("list", {
       name: "Zdjęcia gabinetów",
     }).parentElement!;
-    fireEvent.click(screen.getByRole("button", { name: "Następne zdjęcia" }));
-    fireEvent.click(screen.getByRole("button", { name: "Poprzednie zdjęcia" }));
-    fireEvent.keyDown(scroller, { key: "ArrowRight" });
-    expect(scroller.scrollBy).toHaveBeenCalledTimes(3);
-    expect(scroller).toHaveAttribute("tabindex", "0");
+    expect(screen.getAllByRole("img")).toHaveLength(1);
+    expect(
+      screen.getByRole("button", { name: "Pokaż gabinet: Zielony" }),
+    ).toHaveAttribute("aria-current", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Następny gabinet" }));
+    expect(screen.getAllByRole("img")).toHaveLength(2);
+    expect(
+      screen.getByRole("img", { name: "Różowy, regał" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: "Zielony, fotel" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Poprzedni gabinet" }));
+    expect(screen.getAllByRole("img")).toHaveLength(1);
+    fireEvent.keyDown(row, { key: "ArrowLeft" });
+    expect(screen.getAllByRole("img")).toHaveLength(2);
+    expect(
+      screen.getByRole("button", { name: "Pokaż gabinet: Różowy" }),
+    ).toHaveAttribute("aria-current", "true");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Pokaż gabinet: Zielony" }),
+    );
+    expect(screen.getAllByRole("img")).toHaveLength(1);
+    expect(
+      screen.getByRole("button", { name: "Pokaż gabinet: Różowy" }),
+    ).not.toHaveAttribute("aria-current");
   });
-
-  it("shows nothing without photos", () => {
+  it("hides arrows for one room even with several photos", () => {
+    render(<RoomsPeek header={header} photos={photos.slice(1)} />);
+    expect(screen.getAllByRole("img")).toHaveLength(2);
+    expect(screen.getAllByTitle("Różowy")).toHaveLength(2);
+    expect(screen.getAllByText("Widok okna")).toHaveLength(1);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+  it("distinguishes rooms with the same name by ID", () => {
+    render(
+      <RoomsPeek
+        header={header}
+        photos={photos
+          .slice(1)
+          .map((photo, i) => ({ ...photo, roomId: String(i) }))}
+      />,
+    );
+    expect(screen.getAllByRole("img")).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Następny gabinet" }));
+    expect(
+      screen.getByRole("img", { name: "Różowy, regał" }),
+    ).toBeInTheDocument();
+  });
+  it("renders nothing without photos", () => {
     const { container } = render(<RoomsPeek header={header} photos={[]} />);
     expect(container).toBeEmptyDOMElement();
   });

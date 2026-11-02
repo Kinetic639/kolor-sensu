@@ -133,8 +133,8 @@ async function HomePage() {
     settle("pomoc w kryzysie", loadCrisisHelp),
     settle("gdzie jesteśmy", loadHomeLocation),
     settle("myśli", loadHomeThoughts),
-    settle("jak zacząć", loadHomeStory),
-    // Not a section's content: how many room photos the site shows.
+    settle("edukacja", loadHomeStory),
+    // The room banner's gallery settings and available published room photos.
     settle("zdjęcia gabinetów", loadRoomsPeek),
     loadSeo("glowna"),
   ]);
@@ -150,6 +150,7 @@ async function HomePage() {
     location,
     thoughts,
     story,
+    roomsPeek,
     seo,
   ].filter((one) => one !== null);
   // A section's header block, when the headers loaded. Keyed: it is made
@@ -206,10 +207,20 @@ async function HomePage() {
       ) : (
         <UnavailableSection title={ROOMS_PEEK_TITLE} />
       )}
+      <CmsSection
+        title="Warsztaty"
+        note="Najbliższe wydarzenia; widoczność i wydarzenia ustawiasz w Warsztatach."
+      >
+        {headers ? (
+          header("workshops")
+        ) : (
+          <UnavailableSection title="Nagłówek warsztatów" />
+        )}
+      </CmsSection>
       {story ? (
         <StorySection header={header("story")} model={story} />
       ) : (
-        <UnavailableSection title="Jak zacząć" />
+        <UnavailableSection title="Edukacja" />
       )}
       {newsletter ? (
         <NewsletterBandSection

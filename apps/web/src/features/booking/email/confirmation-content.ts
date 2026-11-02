@@ -1,6 +1,11 @@
 import type { ClaimedBookingEmail } from "@repo/supabase";
 import { formatPrice } from "@/lib/format";
-import { localTime, ONLINE_LINK_NOTE, visitLabel } from "../visit-label";
+import {
+  dayLabel,
+  localTime,
+  ONLINE_LINK_NOTE,
+  visitLabel,
+} from "../visit-label";
 import { visitIcs } from "./ics";
 
 // What the confirmation e-mail says (docs/product/booking-plan.md, R7),
@@ -15,6 +20,8 @@ export interface ConfirmationOptions {
   contact: { phone?: string; email?: string };
   /** The company in one line (its name, address, NIP), at the foot. */
   company?: string | null;
+  /** When it is sent: as soon as the payment is confirmed, its day. */
+  now?: Date;
 }
 
 /** The plain text with the company at its foot (when it is set). */
@@ -61,6 +68,19 @@ export function placeRow(visit: ClaimedBookingEmail) {
   return visit.mode === "online" ? `Online. ${ONLINE_LINK_NOTE}` : place(visit);
 }
 
+/**
+ * The e-mail's place, and how to get there for a visit in person, as the
+ * centre wrote it for the place (Klient · 6, card 11).
+ */
+export function placeRows(visit: ClaimedBookingEmail): [string, string][] {
+  return [
+    ["Miejsce", placeRow(visit)],
+    ...(visit.mode === "in_person" && visit.locationDirections
+      ? [["Dojazd", visit.locationDirections] as [string, string]]
+      : []),
+  ];
+}
+
 /** `+48 600 100 200 · kontakt@kolorsensu.pl`, or null. */
 export function contactLineOf(contact: ConfirmationOptions["contact"]) {
   return [contact.phone, contact.email].filter(Boolean).join(" · ") || null;
@@ -68,7 +88,7 @@ export function contactLineOf(contact: ConfirmationOptions["contact"]) {
 
 export function confirmationContent(
   visit: ClaimedBookingEmail & { manageToken: string },
-  { siteUrl, timeZone, contact }: ConfirmationOptions,
+  { siteUrl, timeZone, contact, now = new Date() }: ConfirmationOptions,
 ): ConfirmationContent {
   const when = visitLabel(visit.startsAt, timeZone);
   const manageUrl = `${siteUrl}/wizyta/${visit.manageToken}`;
@@ -78,9 +98,15 @@ export function confirmationContent(
       ? [["Specjalista", visit.specialistName] as [string, string]]
       : []),
     ["Termin", `${when}–${localTime(visit.endsAt, timeZone)}`],
-    ["Miejsce", placeRow(visit)],
+    ...placeRows(visit),
     ...(visit.paid
-      ? [["Zapłacono", formatPrice(visit)] as [string, string]]
+      ? [
+          // The amount and the day it was paid (Klient · 4, card 7).
+          [
+            "Zapłacono",
+            `${formatPrice(visit)}, ${dayLabel(now.toISOString(), timeZone)}`,
+          ] as [string, string],
+        ]
       : []),
     ["Numer rezerwacji", visit.reference],
   ];

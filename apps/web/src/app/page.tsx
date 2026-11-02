@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { SpecialistBooking } from "@/features/booking/specialist-booking";
 import {
   CrisisStrip,
   FirstSteps,
@@ -23,7 +25,8 @@ import {
   hero,
   storyImages,
 } from "@/content/site";
-import { toStorySteps, withHomeContent } from "@/lib/home-content";
+import { withHomeContent } from "@/lib/home-content";
+import { educationStorySteps } from "@/features/education/home-story";
 import { toSpecialistCard } from "@/lib/presentation";
 import {
   getCrisisHelp,
@@ -94,7 +97,8 @@ export default async function Home() {
   ]);
   const newsletterKey = newsletter.visible ? newsletterSiteKey() : null;
   const spotlight = toSpotlight(sections, specialists);
-  const roomPhotos = toRoomsPeekPhotos(roomGroups);
+  const roomPhotos = toRoomsPeekPhotos(roomGroups, sections.roomsPeek);
+  const storySteps = await educationStorySteps(story, storyImages, watercolor);
 
   return (
     <>
@@ -106,6 +110,9 @@ export default async function Home() {
         animationPreset="watercolor-reveal"
       />
       <ThoughtsLens {...thoughts} />
+      {whyUs.visible ? (
+        <WhyUsSection header={headers.whyUs} facts={whyUs.facts} />
+      ) : null}
       <SupportAreas
         header={headers.supportAreas}
         areas={toSupportAreaItems(
@@ -115,9 +122,6 @@ export default async function Home() {
         )}
         cta={{ href: "/oferta", label: "Zobacz całą ofertę" }}
       />
-      {whyUs.visible ? (
-        <WhyUsSection header={headers.whyUs} facts={whyUs.facts} />
-      ) : null}
       {firstSteps.visible ? (
         <FirstSteps header={headers.firstSteps} steps={firstSteps.steps} />
       ) : null}
@@ -125,6 +129,20 @@ export default async function Home() {
         <SpecialistSpotlight
           {...spotlight}
           header={headers.spotlight}
+          bookingPanel={
+            <Suspense
+              fallback={
+                <div className="ks-booking-mini__message">
+                  Przygotowujemy kalendarz…
+                </div>
+              }
+            >
+              <SpecialistBooking
+                specialistSlug={spotlight.specialist.href.split("/").pop()!}
+                specialistName={spotlight.specialist.name}
+              />
+            </Suspense>
+          }
           booking={bookingCta}
           animationPreset="splash-reveal"
         />
@@ -139,10 +157,10 @@ export default async function Home() {
       {roomPhotos.length > 0 ? (
         <RoomsPeek header={headers.rooms} photos={roomPhotos} />
       ) : null}
-      <HomeWorkshops />
+      <HomeWorkshops header={headers.workshops} />
       <PaintedStory
         header={headers.story}
-        steps={toStorySteps(story, storyImages)}
+        steps={storySteps}
         watercolor={watercolor}
       />
       {newsletterKey ? (
@@ -155,6 +173,7 @@ export default async function Home() {
         </NewsletterBand>
       ) : null}
       <CrisisStrip
+        header={crisis.header}
         eyebrow={crisis.eyebrow}
         heading={crisis.heading}
         text={crisis.text}
@@ -164,10 +183,10 @@ export default async function Home() {
           label: crisis.moreLabel,
         }}
       />
+      <ClosingCta words={closing} />
       {location.visible && frame.contact ? (
         <HomeLocation header={headers.location} contact={frame.contact} />
       ) : null}
-      <ClosingCta words={closing} />
     </>
   );
 }

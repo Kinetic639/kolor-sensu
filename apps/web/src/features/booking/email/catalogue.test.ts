@@ -22,6 +22,7 @@ describe("clientEmails", () => {
       "unpaid-cancelled",
       "visit-reminder",
       "rescheduled",
+      "changed-by-centre",
       "cancelled-refund",
       "cancelled-late",
       "cancelled-unpaid",

@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
-import { defaultClosingCta, defaultWorkshopsPage } from "@repo/contracts";
+import {
+  defaultClosingCta,
+  defaultWorkshopsPage,
+  pageHeader,
+} from "@repo/contracts";
 import type { PublicWorkshop } from "@repo/supabase/workshops";
 import {
   afterEach,
@@ -56,6 +60,7 @@ function workshop(patch: Partial<PublicWorkshop> = {}): PublicWorkshop {
 }
 
 let workshops: PublicWorkshop[] = [];
+let words = defaultWorkshopsPage;
 vi.mock("@/lib/workshop-data", () => ({
   getWorkshops: async () => workshops,
   workshopImageUrl: (path: string) => path,
@@ -64,7 +69,7 @@ vi.mock("@/lib/public-data", () => ({
   getBookingWindow: async () => ({ timeZone: "Europe/Warsaw" }),
   getClosingCta: async () => defaultClosingCta,
   getWatercolorLook: async () => ({}),
-  getWorkshopsPage: async () => defaultWorkshopsPage,
+  getWorkshopsPage: async () => words,
 }));
 vi.mock("@/lib/page-metadata", () => ({ pageMetadata: async () => ({}) }));
 
@@ -77,6 +82,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   workshops = [];
+  words = defaultWorkshopsPage;
 });
 afterEach(cleanup);
 
@@ -136,5 +142,70 @@ describe("the form filter", () => {
     expect(
       within(coming()).getByRole("link", { name: "Pokaż wszystkie" }),
     ).toHaveAttribute("href", "/warsztaty");
+  });
+});
+
+describe("the past ones (#276)", () => {
+  it("are in their own section, Zakończony, without signing up", async () => {
+    workshops = [
+      workshop({ startsAt: at(-5), endsAt: at(-4.9) }),
+      workshop({ id: "w2", slug: "oddech", title: "Oddech" }),
+    ];
+    await open();
+    const past = screen.getByRole("region", { name: "Minione warsztaty" });
+    expect(within(past).getByText("Uważność")).toBeVisible();
+    expect(within(past).getByText("Zakończony")).toBeVisible();
+    expect(within(past).queryByText(/z 12/)).toBeNull();
+    expect(within(coming()).getByText("Oddech")).toBeVisible();
+    expect(within(coming()).queryByText("Uważność")).toBeNull();
+  });
+});
+
+describe("the top from the CMS (#276)", () => {
+  it("shows the title and the lead the centre wrote", async () => {
+    words = {
+      ...defaultWorkshopsPage,
+      intro: pageHeader({
+        title: "Spotkania w grupie",
+        lead: "Uczymy się razem, w małych grupach.",
+      }),
+      emptyText: "Wkrótce nowe terminy.",
+    };
+    await open();
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(
+      screen.getByRole("heading", { level: 1, name: /Spotkania w grupie/ }),
+    ).toBeVisible();
+    expect(
+      screen.getByText("Uczymy się razem, w małych grupach."),
+    ).toBeVisible();
+    expect(within(coming()).getByText("Wkrótce nowe terminy.")).toBeVisible();
+  });
+});
+
+describe("the form filter's links (#276)", () => {
+  it("keep the choice in the address and mark the one chosen", async () => {
+    workshops = [
+      workshop(),
+      workshop({
+        id: "w2",
+        slug: "oddech",
+        title: "Oddech",
+        modality: "online",
+      }),
+    ];
+    await open({ forma: "online" });
+    const filter = screen.getByRole("navigation", { name: "Forma warsztatów" });
+    expect(
+      within(filter).getByRole("link", { name: "Wszystkie" }),
+    ).toHaveAttribute("href", "/warsztaty");
+    expect(
+      within(filter).getByRole("link", { name: "Stacjonarnie" }),
+    ).toHaveAttribute("href", "/warsztaty?forma=stacjonarnie");
+    const online = within(filter).getByRole("link", { name: "Online" });
+    expect(online).toHaveAttribute("href", "/warsztaty?forma=online");
+    expect(online).toHaveAttribute("aria-current", "page");
+    expect(within(coming()).getByText("Oddech")).toBeVisible();
+    expect(within(coming()).queryByText("Uważność")).toBeNull();
   });
 });

@@ -91,6 +91,7 @@ export async function sendChangeEmail(
           : rescheduledContent(visit, {
               ...options,
               sequence: change.sequence,
+              byCentre: change.manageToken === null,
             });
     const { id } = await deps.send(
       {

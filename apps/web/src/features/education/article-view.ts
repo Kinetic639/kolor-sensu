@@ -118,6 +118,8 @@ export interface ArticleCardView {
   coverAlt: string;
   category: { name: string; href: Route } | null;
   author: string;
+  authorAvatarUrl: string | null;
+  authorTitle: string | null;
   date: string;
   dateTime: string;
   reading: string;
@@ -140,6 +142,8 @@ export function articleCard(
       ? { name: category.name, href: categoryHref(category.slug) }
       : null,
     author: articleAuthor(article, people).name,
+    authorAvatarUrl: articleAuthor(article, people).photoUrl,
+    authorTitle: articleAuthor(article, people).title,
     date: articleDate(article.publishedAt),
     dateTime: article.publishedAt,
     reading: readingLabel(article.body),

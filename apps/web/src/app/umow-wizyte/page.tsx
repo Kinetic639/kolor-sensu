@@ -4,8 +4,11 @@ import { BookingWizard } from "@/features/booking/booking-wizard";
 import { turnstileKeys } from "@/features/booking/guards";
 import { loadWizard } from "@/features/booking/load-wizard";
 import { readIntake } from "@/features/booking/intake-cookie";
-import { RememberChoices } from "@/features/booking/remember-choices";
-import { memoryValue } from "@/features/booking/wizard-memory";
+import {
+  RememberChoices,
+  ResumeBooking,
+} from "@/features/booking/remember-choices";
+import { memoryValue, resumeValue } from "@/features/booking/wizard-memory";
 import { sendToIntake } from "@/features/booking/intake-gate";
 import {
   intakeHref,
@@ -28,6 +31,7 @@ export default async function BookingPage({
   searchParams,
 }: PageProps<"/umow-wizyte">) {
   const params = await loadBookingParams(searchParams);
+  if (params.termin && !params.forma && !params.dalej) params.dalej = "auto";
   const wizard = await loadWizard(params);
   if (!wizard) return <BookingContact specjalista={params.specjalista} />;
   // A service that asks for the questionnaire: it first, then the rest.
@@ -48,6 +52,7 @@ export default async function BookingPage({
   return (
     <>
       <RememberChoices value={memoryValue(wizard.params)} />
+      <ResumeBooking href={resumeValue(wizard.params)} />
       <BookingWizard
         params={wizard.params}
         turnstileSiteKey={turnstileKeys().siteKey}

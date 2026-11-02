@@ -23,6 +23,11 @@ export interface BookingSelection {
   location: PublicLocation | null;
   specialist: string | null;
   offer: PublicSpecialistOffer | null;
+  /**
+   * The form the address asked for that the service (with the chosen
+   * specialist) is not given in: dropped, and the visitor told why.
+   */
+  droppedMode: BookingMode | null;
   /** The options of the current and earlier steps. */
   services: PublicService[];
   modes: BookingMode[];
@@ -64,9 +69,10 @@ export function resolveBookingSelection(
       ? params.specjalista
       : null;
 
-  const ofSpecialist = specialist
-    ? bookable.filter((offer) => offer.specialistPublicSlug === specialist)
-    : bookable;
+  const ofSpecialist =
+    specialist && params.krok !== "specjalista"
+      ? bookable.filter((offer) => offer.specialistPublicSlug === specialist)
+      : bookable;
 
   const services = catalog.services.filter((one) =>
     ofSpecialist.some((offer) => offer.serviceSlug === one.slug),
@@ -80,6 +86,8 @@ export function resolveBookingSelection(
   );
   const mode =
     params.forma && modes.includes(params.forma) ? params.forma : null;
+  const droppedMode =
+    params.forma && !mode && modes.length > 0 ? params.forma : null;
 
   const locations = mode === "stacjonarnie" ? catalog.locations : [];
   const location =
@@ -89,13 +97,15 @@ export function resolveBookingSelection(
 
   const offers = mode
     ? forService.filter((offer) => supports(offer, mode))
-    : [];
+    : params.krok === "specjalista"
+      ? forService
+      : [];
   const offer =
     (specialist &&
       offers.find((one) => one.specialistPublicSlug === specialist)) ||
     null;
 
-  const step: BookingStep = !service
+  const requiredStep: BookingStep = !service
     ? "usluga"
     : !mode
       ? "forma"
@@ -104,6 +114,15 @@ export function resolveBookingSelection(
         : !offer
           ? "specjalista"
           : "termin";
+  const editable: Record<BookingStep, boolean> = {
+    usluga: true,
+    forma: !!service,
+    lokalizacja: !!service && mode === "stacjonarnie",
+    specjalista: !!service,
+    termin: !!offer && (mode === "online" || !!location),
+  };
+  const step =
+    params.krok && editable[params.krok] ? params.krok : requiredStep;
 
   return {
     step,
@@ -112,6 +131,7 @@ export function resolveBookingSelection(
     location,
     specialist,
     offer,
+    droppedMode,
     services,
     modes,
     locations,

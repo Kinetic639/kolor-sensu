@@ -2,7 +2,12 @@
 
 import { SaveRow } from "@/features/center/fields";
 import { useSave } from "@/lib/use-save";
-import { HOME_STORY_STEPS_MAX, homeStoryContentSchema } from "@repo/contracts";
+import {
+  HOME_STORY_STEPS_MAX,
+  homeStoryContentSchema,
+  storyMediaOf,
+} from "@repo/contracts";
+import { StoryMediaFields, type StoryMediaOptions } from "./story-media-fields";
 import { DETAIL_BUTTON } from "@repo/ui/detail-page";
 import { toast } from "@repo/ui/toast";
 import { Plus } from "lucide-react";
@@ -14,6 +19,8 @@ import { addItem, moveItem, removeItem } from "./list-editor";
 import { ListItemControls } from "./list-item-controls";
 import { SiteImageField } from "./site-image-field";
 import { TextField } from "./text-field";
+import { TitleField } from "./header-block";
+import { lineToDraft } from "./header-editor";
 import type { ContentViewModel, HomeStoryStepRow } from "./types";
 
 // Home → "Jak zacząć", the story told while scrolling: its header (the
@@ -34,13 +41,21 @@ export function StorySection({
   model,
   header,
 }: {
-  model: ContentViewModel<{ steps: HomeStoryStepRow[] }>;
+  model: ContentViewModel<{ steps: HomeStoryStepRow[] }> & {
+    mediaOptions?: StoryMediaOptions;
+  };
   header?: ReactNode;
 }) {
   const { isPending, run } = useSave();
   const initial: StoryDraftStep[] = model.content.steps.map((step) => ({
     ...step,
-    cta: step.cta ?? { label: "", href: "" },
+    media: storyMediaOf(step),
+    cta:
+      !step.media &&
+      storyMediaOf(step).type === "articles" &&
+      step.cta?.label === "Czytaj artykuły"
+        ? { ...step.cta, label: "Więcej artykułów" }
+        : (step.cta ?? { label: "", href: "" }),
   }));
   const [steps, setStepsState] = useState<StoryDraftStep[]>(initial);
   const [saved, setSaved] = useState<StoryDraftStep[]>(initial);
@@ -63,7 +78,7 @@ export function StorySection({
     });
 
   return (
-    <CmsSection note="historia malowana przy przewijaniu" title="Jak zacząć">
+    <CmsSection note="slajdy zmieniające się przy przewijaniu" title="Edukacja">
       {header}
       <form
         noValidate
@@ -100,7 +115,7 @@ export function StorySection({
                 <fieldset className="grid gap-2.5 rounded-[5px] border border-[var(--border)] p-2.5 sm:grid-cols-2">
                   <div className="flex items-center justify-between gap-2 sm:col-span-2">
                     <legend className="px-1 text-[0.75rem] font-semibold text-[var(--text-muted)]">
-                      Krok {index + 1}
+                      Slajd {index + 1}
                     </legend>
                     <ListItemControls
                       canMoveDown={index < steps.length - 1}
@@ -111,14 +126,46 @@ export function StorySection({
                       onRemove={() => setSteps(removeItem(steps, index, 1))}
                     />
                   </div>
-                  <TextField
-                    className="sm:col-span-2"
-                    id={`cms-story-${index}-heading`}
-                    invalid={problems[`${at}.heading`]}
-                    label="Tytuł"
-                    maxLength={80}
-                    onChange={(heading) => setStep(index, { heading })}
-                    value={step.heading}
+                  <div className="sm:col-span-2">
+                    <TitleField
+                      id={`cms-story-${index}-heading`}
+                      singleLine
+                      maxLength={80}
+                      lines={[
+                        step.headingDraft ??
+                          (step.headingSegments
+                            ? lineToDraft(step.headingSegments)
+                            : { text: step.heading, tones: [] }),
+                      ]}
+                      onChange={([line]) => {
+                        if (!line) return;
+                        setStep(index, {
+                          heading: line.text,
+                          headingDraft: line,
+                        });
+                      }}
+                    />
+                    {problems[`${at}.heading`] ||
+                    problems[`${at}.headingSegments`] ? (
+                      <p role="alert" className="text-sm text-red-700">
+                        Uzupełnij tytuł slajdu (do 80 znaków).
+                      </p>
+                    ) : null}
+                  </div>
+                  <StoryMediaFields
+                    id={`cms-story-${index}-media`}
+                    value={storyMediaOf(step)}
+                    options={
+                      model.mediaOptions ?? {
+                        articles: [],
+                        ebooks: [],
+                        workshops: [],
+                      }
+                    }
+                    onChange={(media) => setStep(index, { media })}
+                    invalid={Object.keys(problems).some((path) =>
+                      path.startsWith(`${at}.media`),
+                    )}
                   />
                   <TextField
                     className="sm:col-span-2"
@@ -153,7 +200,11 @@ export function StorySection({
                     folder="story"
                     hint="Bez niego: jedno ze zdjęć strony."
                     id={`cms-story-${index}-image`}
-                    label="Zdjęcie"
+                    label={
+                      storyMediaOf(step).type === "image"
+                        ? "Zdjęcie"
+                        : "Zdjęcie zastępcze"
+                    }
                     onChange={(patch) => setStep(index, patch)}
                     value={step}
                   />
@@ -172,7 +223,7 @@ export function StorySection({
             type="button"
           >
             <Plus aria-hidden="true" />
-            Dodaj krok
+            Dodaj slajd
           </button>
           <div className="flex-1">
             <SaveRow dirty={dirty} pending={isPending}>

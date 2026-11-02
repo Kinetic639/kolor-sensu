@@ -38,6 +38,7 @@ const booking: GuestBooking = {
   bookedBy: "client",
   paid: true,
   paymentDueAt: null,
+  movedByCentre: false,
 };
 
 describe("checkoutSessionParams", () => {
@@ -132,6 +133,8 @@ const session = {
   payment_status: "paid",
   payment_intent: "pi_1",
   amount_total: 20000,
+  currency: "pln",
+  customer_email: "jan@example.invalid",
 };
 
 describe("handleStripeEvent", () => {
@@ -200,8 +203,8 @@ describe("handleStripeEvent", () => {
     expect(waiting.onConfirmed).not.toHaveBeenCalled();
   });
 
-  it("refunds money for a time that was lost meanwhile", async () => {
-    const d = deps("slot_lost" as never);
+  it("refunds money for a time that was lost meanwhile, and tells the client why (Klient · 4, card 17)", async () => {
+    const d = { ...deps("slot_lost" as never), onSlotLost: vi.fn() };
     await handleStripeEvent(event("checkout.session.completed", session), d);
     expect(d.refundPayment).toHaveBeenCalledWith(
       "cs_1",
@@ -209,6 +212,21 @@ describe("handleStripeEvent", () => {
       20000,
       "KS-20301002-6422",
     );
+    expect(d.onSlotLost).toHaveBeenCalledWith({
+      reference: "KS-20301002-6422",
+      amountMinor: 20000,
+      currencyCode: "pln",
+      to: "jan@example.invalid",
+      sessionId: "cs_1",
+    });
+  });
+
+  it("no such e-mail for a second payment of a visit paid, nor for a confirmed one", async () => {
+    for (const outcome of ["refund_payment", "confirmed"]) {
+      const d = { ...deps(outcome as never), onSlotLost: vi.fn() };
+      await handleStripeEvent(event("checkout.session.completed", session), d);
+      expect(d.onSlotLost).not.toHaveBeenCalled();
+    }
   });
 
   it("refunds a second payment for a visit already paid", async () => {

@@ -17,13 +17,23 @@
 
 import type { ScrollTrigger as ScrollTriggerInstance } from "gsap/ScrollTrigger";
 import type { ImageProps } from "next/image";
-import { type CSSProperties, type ReactNode, useRef } from "react";
+import {
+  type CSSProperties,
+  type ReactNode,
+  useId,
+  useRef,
+  useState,
+} from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { type GsapInstance, useLazyGsap } from "./lazy-gsap";
 import { cn } from "../lib/utils";
-import { ArrowLink } from "./actions";
+import { HanddrawnLink } from "./handdrawn-link";
 import { matches, svgMasksSupported, watchReveal } from "./reveal-support";
 import { EditorialHeading, SectionEyebrow } from "./typography";
-import type { SectionHeaderContent } from "@repo/contracts/section-header";
+import type {
+  SectionHeaderContent,
+  TitleSegment,
+} from "@repo/contracts/section-header";
 import { SectionHeader } from "./section-header";
 import { revealProperties } from "./watercolor-reveal";
 import { WatercolorImage, type WatercolorLook } from "./watercolor-image";
@@ -34,7 +44,10 @@ import {
 } from "./watercolor-paint-matte";
 
 export interface PaintedStoryStep {
+  /** Server-rendered educational composition; the image remains its fallback. */
+  content?: ReactNode;
   heading: ReactNode;
+  headingSegments?: readonly TitleSegment[];
   text: ReactNode;
   cta?: { href: string; label: ReactNode };
   image: {
@@ -108,8 +121,24 @@ export function PaintedStory({
   className,
 }: PaintedStoryProps) {
   const ref = useRef<HTMLElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const trackId = useId();
+  const [mobileStep, setMobileStep] = useState(0);
   const total = steps.length;
+  const composed = steps.some((step) => !!step.content);
   const numbered = (value: number) => String(value).padStart(2, "0");
+  const goToSlide = (index: number) => {
+    const track = trackRef.current;
+    const first = track?.children[0] as HTMLElement | undefined;
+    const next = track?.children[index] as HTMLElement | undefined;
+    if (!track || !first || !next) return;
+    track.scrollTo({
+      left: next.offsetLeft - first.offsetLeft,
+      behavior: matches("(prefers-reduced-motion: reduce)")
+        ? "instant"
+        : "smooth",
+    });
+  };
 
   useLazyGsap(
     ({ gsap, ScrollTrigger }) => {
@@ -152,6 +181,9 @@ export function PaintedStory({
               stops.delete(at);
               delete picture.dataset.shown;
             }
+            if (at === index) picture.dataset.active = "true";
+            else delete picture.dataset.active;
+            picture.inert = at !== index;
           });
           texts.forEach((text, at) => {
             if (at === index) text.dataset.active = "true";
@@ -174,6 +206,37 @@ export function PaintedStory({
         // after that, scrolling chooses the step.
         texts[0]!.dataset.active = "true";
         texts.forEach((text, at) => (text.inert = at !== 0));
+        pictures.forEach((picture, at) => {
+          picture.inert = at !== 0;
+          if (at === 0) picture.dataset.active = "true";
+        });
+        // Every rich slide shares the same stage. Scale the entire composition
+        // uniformly when a short screen cannot fit the tallest card.
+        const resizeMedia = () => {
+          const content = pictures.flatMap((picture) => [
+            ...picture.querySelectorAll<HTMLElement>(".ks-story__media"),
+          ]);
+          const tallest = Math.max(
+            0,
+            ...content.map((node) => node.offsetHeight),
+          );
+          const available = pictures[0]?.clientHeight ?? 0;
+          root.style.setProperty(
+            "--ks-story-media-scale",
+            String(tallest && available ? Math.min(1, available / tallest) : 1),
+          );
+        };
+        const resizeObserver =
+          typeof ResizeObserver === "function"
+            ? new ResizeObserver(resizeMedia)
+            : null;
+        pictures.forEach((picture) => {
+          resizeObserver?.observe(picture);
+          picture
+            .querySelectorAll(".ks-story__media")
+            .forEach((node) => resizeObserver?.observe(node));
+        });
+        resizeMedia();
         count(0);
         let started = false;
         const stopWatch = watchReveal(root, {
@@ -197,6 +260,8 @@ export function PaintedStory({
         });
 
         return () => {
+          resizeObserver?.disconnect();
+          root.style.removeProperty("--ks-story-media-scale");
           stopWatch();
           trigger.kill();
           stops.forEach((stop) => stop());
@@ -249,13 +314,13 @@ export function PaintedStory({
         {header ? (
           <SectionHeader
             content={header}
-            size="h3"
+            size="h2"
             className="ks-story__intro"
           />
         ) : (
           <div className="ks-story__intro grid gap-3">
             {eyebrow ? <SectionEyebrow>{eyebrow}</SectionEyebrow> : null}
-            <EditorialHeading size="h3">{heading}</EditorialHeading>
+            <EditorialHeading size="h2">{heading}</EditorialHeading>
           </div>
         )}
         {/* The pinned story's one counter (each step's own count, below,
@@ -275,42 +340,133 @@ export function PaintedStory({
             {numbered(total)}
           </span>
         </div>
-        {steps.map((step, index) => (
-          <div key={index} className="ks-story__step">
-            <div className="ks-story__text grid gap-4">
-              <p
-                className="ks-story__count font-display text-pink-strong"
-                aria-hidden="true"
+        <div
+          className="ks-story__track"
+          id={trackId}
+          ref={trackRef}
+          onScroll={(event) => {
+            const track = event.currentTarget;
+            const first = track.children[0] as HTMLElement | undefined;
+            const second = track.children[1] as HTMLElement | undefined;
+            if (!first || !second) return;
+            const distance = second.offsetLeft - first.offsetLeft;
+            if (distance > 0)
+              setMobileStep(
+                Math.max(
+                  0,
+                  Math.min(total - 1, Math.round(track.scrollLeft / distance)),
+                ),
+              );
+          }}
+        >
+          {steps.map((step, index) => (
+            <div key={index} className="ks-story__step">
+              <div className="ks-story__text grid gap-4">
+                <p
+                  className="ks-story__count font-display text-pink-strong"
+                  aria-hidden="true"
+                >
+                  {numbered(index + 1)}
+                  <span className="text-text-muted">
+                    {" / "}
+                    {numbered(total)}
+                  </span>
+                </p>
+                {step.headingSegments?.length ? (
+                  <EditorialHeading
+                    as="h3"
+                    size="h3"
+                    aria-label={step.headingSegments
+                      .map((part) => part.text)
+                      .join("")}
+                  >
+                    {step.headingSegments.map((part, at) => (
+                      <span
+                        key={at}
+                        className={
+                          part.tone === "green"
+                            ? "text-primary-strong"
+                            : part.tone === "pink"
+                              ? "text-pink-strong"
+                              : undefined
+                        }
+                      >
+                        {part.text}
+                      </span>
+                    ))}
+                  </EditorialHeading>
+                ) : (
+                  <EditorialHeading as="h3" size="h3">
+                    {step.heading}
+                  </EditorialHeading>
+                )}
+                <p className="max-w-copy text-body text-text-muted">
+                  {step.text}
+                </p>
+                {step.cta ? (
+                  <HanddrawnLink
+                    href={step.cta.href}
+                    className="justify-self-start"
+                  >
+                    {step.cta.label}
+                  </HanddrawnLink>
+                ) : null}
+              </div>
+              <div
+                className="ks-story__picture"
+                data-rich={composed ? "true" : undefined}
               >
-                {numbered(index + 1)}
-                <span className="text-text-muted">
-                  {" / "}
-                  {numbered(total)}
-                </span>
-              </p>
-              <EditorialHeading as="h3" size="h2">
-                {step.heading}
-              </EditorialHeading>
-              <p className="max-w-copy text-body text-text-muted">
-                {step.text}
-              </p>
-              {step.cta ? (
-                <ArrowLink href={step.cta.href} className="justify-self-start">
-                  {step.cta.label}
-                </ArrowLink>
-              ) : null}
+                <div className="ks-story__media">
+                  {step.content ?? (
+                    <WatercolorImage
+                      src={step.image.src}
+                      alt={step.image.alt}
+                      objectPosition={step.image.objectPosition}
+                      {...watercolor}
+                      sizes="(min-width: 1024px) 62vw, calc(117vw - 3rem)"
+                    />
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="ks-story__picture">
-              <WatercolorImage
-                src={step.image.src}
-                alt={step.image.alt}
-                objectPosition={step.image.objectPosition}
-                {...watercolor}
-                sizes="(min-width: 1024px) 62vw, calc(117vw - 3rem)"
-              />
+          ))}
+        </div>
+        {total > 1 ? (
+          <nav className="ks-story__gallery-nav" aria-label="Slajdy edukacji">
+            <button
+              type="button"
+              aria-label="Poprzedni slajd edukacji"
+              aria-controls={trackId}
+              disabled={mobileStep === 0}
+              onClick={() => goToSlide(mobileStep - 1)}
+            >
+              <ChevronLeft size={18} aria-hidden="true" />
+            </button>
+            <div className="ks-story__gallery-dots">
+              {steps.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  aria-label={`Pokaż slajd ${index + 1} z ${total}`}
+                  aria-current={mobileStep === index ? "true" : undefined}
+                  aria-controls={trackId}
+                  onClick={() => goToSlide(index)}
+                >
+                  <span />
+                </button>
+              ))}
             </div>
-          </div>
-        ))}
+            <button
+              type="button"
+              aria-label="Następny slajd edukacji"
+              aria-controls={trackId}
+              disabled={mobileStep === total - 1}
+              onClick={() => goToSlide(mobileStep + 1)}
+            >
+              <ChevronRight size={18} aria-hidden="true" />
+            </button>
+          </nav>
+        ) : null}
       </div>
     </section>
   );

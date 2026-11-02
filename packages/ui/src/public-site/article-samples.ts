@@ -23,6 +23,7 @@ export const sampleArticles: ArticleCardData[] = [
       href: "/edukacja/artykuly/kategoria/dzieci",
     },
     author: "Anna Nowak",
+    authorTitle: "Psycholożka, psychoterapeutka",
     date: "21 października 2026",
     dateTime: "2026-10-21T10:00:00Z",
     reading: "6 min czytania",

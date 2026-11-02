@@ -4,6 +4,7 @@ import { ArrowLink } from "@repo/ui/public-site";
 import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
 import { visitByLinkToken } from "@/features/booking/guest-visit";
+import { centrePhone } from "@/features/booking/centre-phone";
 import { PaymentForm } from "@/features/booking/payment-form";
 import { ReservationPaymentForm } from "@/features/booking/reservation-payment-form";
 import { visitChanges } from "@/features/booking/visit-changes";
@@ -32,6 +33,10 @@ export default async function ReservationPaymentPage({
   const { booking, timeZone, policy } = visit;
   const back = `/wizyta/${token}` as Route;
   const { pay } = visitChanges(booking, policy);
+  // Paid already (the e-mail's link again): the visit's page says so.
+  if (booking.paid && booking.status === "confirmed") {
+    redirect(`${back}?zmiana=oplacona` as Route);
+  }
   if (!pay.allowed || !pay.until) redirect(back);
 
   const sessionId = await pendingReservationPayment(
@@ -67,6 +72,7 @@ export default async function ReservationPaymentPage({
             <PaymentForm
               clientSecret={open.client_secret!}
               payLabel={`Zapłać ${formatPrice(booking)}`}
+              phone={await centrePhone()}
             />
           ) : (
             <ReservationPaymentForm

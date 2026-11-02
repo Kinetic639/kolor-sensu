@@ -19,6 +19,28 @@ const steps = [
 ];
 
 describe("BookingStepper", () => {
+  it("marks a preselected specialist complete even while the form step is still current", () => {
+    render(
+      <BookingStepper
+        current={1}
+        steps={steps.map((step, index) =>
+          index === 2
+            ? {
+                ...step,
+                completed: true,
+                href: "/umow-wizyte?krok=specjalista",
+              }
+            : step,
+        )}
+      />,
+    );
+    expect(
+      screen.getByRole("link", { name: "Krok 3: Specjalista (ukończony)" }),
+    ).toHaveAttribute("href", "/umow-wizyte?krok=specjalista");
+    expect(
+      screen.getByRole("group", { name: "Krok 2: Forma" }),
+    ).toHaveAttribute("aria-current", "step");
+  });
   it("marks steps done, current and ahead; done steps link back", () => {
     render(<BookingStepper current={2} steps={steps} />);
     const nav = screen.getByRole("navigation", { name: "Kroki rezerwacji" });
@@ -202,6 +224,49 @@ describe("SlotPicker", () => {
     expect(
       screen.getByText("W tym tygodniu nie ma wolnych terminów."),
     ).toBeVisible();
+  });
+
+  it("leads to the soonest free time when this week has none (#203)", () => {
+    render(
+      <SlotPicker
+        days={days.map((day) => ({ ...day, slots: [] }))}
+        nothingFree={{
+          kind: "later",
+          label: "czwartek, 24 stycznia",
+          href: "?tydzien=2030-01-21",
+        }}
+        weekLabel="7–13 stycznia 2030"
+      />,
+    );
+    expect(screen.getByText(/Najbliższy wolny termin/)).toHaveTextContent(
+      "Najbliższy wolny termin: czwartek, 24 stycznia.",
+    );
+    expect(
+      screen.getByRole("link", { name: "Pokaż ten tydzień" }),
+    ).toHaveAttribute("href", "?tydzien=2030-01-21");
+  });
+
+  it("offers Kontakt when nothing is free in the whole horizon (#203)", () => {
+    render(
+      <SlotPicker
+        days={days.map((day) => ({ ...day, slots: [] }))}
+        nothingFree={{
+          kind: "none",
+          days: 60,
+          contactHref: "/kontakt?temat=x",
+        }}
+        weekLabel="7–13 stycznia 2030"
+      />,
+    );
+    expect(
+      screen.getByText(/nie mamy wolnych terminów w najbliższych 60 dniach/),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "Skontaktuj się z nami" }),
+    ).toHaveAttribute("href", "/kontakt?temat=x");
+    expect(
+      screen.queryByText("W tym tygodniu nie ma wolnych terminów."),
+    ).toBeNull();
   });
 });
 

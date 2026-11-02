@@ -8,6 +8,12 @@ import {
 import { BookingField, ConsentCheckbox } from "@repo/ui/booking/fields";
 import { cn } from "@repo/ui/lib/utils";
 import { PrimaryButton } from "@repo/ui/public-site/actions";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@repo/ui/tooltip";
 import { useActionState, useId, useState } from "react";
 import { TurnstileWidget } from "@/features/booking/turnstile-widget";
 import { subscribeToNewsletterAction } from "./actions";
@@ -57,7 +63,7 @@ export function NewsletterSignup({
   const headingId = useId();
 
   const heading = compact ? (
-    <h2 className="text-eyebrow text-text-muted uppercase" id={headingId}>
+    <h2 className="ks-newsletter-compact__heading" id={headingId}>
       Newsletter
     </h2>
   ) : null;
@@ -78,33 +84,83 @@ export function NewsletterSignup({
   const email = "email" in result ? result.email : undefined;
   const errors = result.status === "invalid" ? result.errors : {};
   const failure = FAILURE[result.status];
+  const disabled = pending || !verified;
+  const disabledReason = pending
+    ? "Trwa zapisywanie adresu. Poczekaj chwilę."
+    : "Zapis będzie dostępny po zakończeniu weryfikacji bezpieczeństwa. Kliknij pole e-mail, aby ją uruchomić, i poczekaj na potwierdzenie pod formularzem.";
+  const submitButton = (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            aria-label={
+              disabled ? "Dlaczego zapis jest niedostępny?" : undefined
+            }
+            className={cn(
+              "inline-flex max-w-full",
+              "w-full",
+              disabled && "cursor-help",
+            )}
+            role={disabled ? "group" : undefined}
+            tabIndex={disabled ? 0 : undefined}
+          >
+            <PrimaryButton
+              className="disabled:bg-[#dedede] disabled:text-[#606060] disabled:opacity-100 disabled:shadow-none"
+              disabled={disabled}
+              type="submit"
+            >
+              {pending ? "Zapisywanie…" : "Zapisz się"}
+            </PrimaryButton>
+          </span>
+        </TooltipTrigger>
+        {disabled ? (
+          <TooltipContent className="bg-ink text-surface font-body max-w-72 rounded-xl text-sm leading-relaxed">
+            {disabledReason}
+          </TooltipContent>
+        ) : null}
+      </Tooltip>
+    </TooltipProvider>
+  );
 
   return (
-    <div className={cn("grid gap-3", className)}>
-      {heading}
+    <div
+      className={cn(
+        compact ? "ks-newsletter-compact" : "grid gap-3",
+        className,
+      )}
+    >
       {compact ? (
-        <p className="text-small text-text-muted">
-          Artykuły, warsztaty i nowości z centrum, mniej więcej raz w miesiącu.
-        </p>
-      ) : null}
+        <div className="ks-newsletter-compact__copy">
+          {heading}
+          <p className="text-small text-text-muted">
+            Artykuły i nowości z centrum. Raz w miesiącu.
+          </p>
+        </div>
+      ) : (
+        heading
+      )}
       <form
         action={send}
         aria-labelledby={compact ? headingId : undefined}
         aria-label={compact ? undefined : "Zapis na newsletter"}
-        className="grid gap-4"
+        className="ks-newsletter-signup grid gap-4"
         noValidate
         onFocus={() => setArmed(true)}
       >
         <input name="source" type="hidden" value={source} />
-        <BookingField
-          autoComplete="email"
-          defaultValue={email}
-          error={errors.email}
-          label="Adres e-mail"
-          name="email"
-          required
-          type="email"
-        />
+        <div className="ks-newsletter-signup__row">
+          <BookingField
+            autoComplete="email"
+            defaultValue={email}
+            error={errors.email}
+            label="Adres e-mail"
+            placeholder="Adres e-mail"
+            name="email"
+            required
+            type="email"
+          />
+          <div className="ks-newsletter-signup__submit">{submitButton}</div>
+        </div>
         {/* For bots only: people never see or fill it. */}
         <div aria-hidden="true" className="hidden">
           <label>
@@ -116,14 +172,16 @@ export function NewsletterSignup({
             />
           </label>
         </div>
-        <ConsentCheckbox
-          defaultChecked={false}
-          error={errors.consent}
-          linkHref="/polityka-prywatnosci"
-          linkLabel={NEWSLETTER_CONSENT_LINK_LABEL}
-          name="consent"
-          text={newsletterConsentLead(controller)}
-        />
+        {!compact || armed ? (
+          <ConsentCheckbox
+            defaultChecked={false}
+            error={errors.consent}
+            linkHref="/polityka-prywatnosci"
+            linkLabel={NEWSLETTER_CONSENT_LINK_LABEL}
+            name="consent"
+            text={newsletterConsentLead(controller)}
+          />
+        ) : null}
         {armed ? (
           <TurnstileWidget
             onError={() => setVerified(false)}
@@ -137,11 +195,6 @@ export function NewsletterSignup({
             {failure}
           </p>
         ) : null}
-        <div>
-          <PrimaryButton disabled={pending || !verified} type="submit">
-            {pending ? "Zapisywanie…" : "Zapisz się"}
-          </PrimaryButton>
-        </div>
       </form>
     </div>
   );

@@ -7,7 +7,7 @@ import {
 } from "@stripe/react-stripe-js/checkout";
 import { loadStripe } from "@stripe/stripe-js";
 import { PrimaryButton } from "@repo/ui/public-site/actions";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 // Step 6: Stripe's Payment Element inside our own step (card, BLIK,
 // Przelewy24, wallets, as set in the Stripe Dashboard). Stripe.js comes
@@ -33,26 +33,56 @@ const appearance = {
   },
 };
 
-function PayButton({ label }: { label: string }) {
+/** The centre's phone, to call when the payment cannot load (card 15). */
+export interface PaymentPhone {
+  /** As dialled, "+48123456789". */
+  phone: string;
+  /** As shown, "123 456 789". */
+  label: string;
+}
+
+function PayButton({
+  label,
+  phone,
+}: {
+  label: string;
+  phone: PaymentPhone | null;
+}) {
   const checkout = useCheckoutElements();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A second press before the button turns off confirms nothing more.
+  const paying = useRef(false);
 
   async function pay(event: FormEvent) {
     event.preventDefault();
-    if (checkout.type !== "success") return;
+    if (checkout.type !== "success" || paying.current) return;
+    paying.current = true;
     setPending(true);
     setError(null);
-    // On success Stripe goes to the return page; we only see errors.
-    const result = await checkout.checkout.confirm();
-    if (result.type === "error") setError(result.error.message);
-    setPending(false);
+    try {
+      // On success Stripe goes to the return page; we only see errors.
+      const result = await checkout.checkout.confirm();
+      if (result.type === "error") setError(result.error.message);
+    } finally {
+      paying.current = false;
+      setPending(false);
+    }
   }
 
   if (checkout.type === "error") {
     return (
       <p className="text-small text-pink-strong" role="alert">
-        Nie udało się wczytać płatności. Odśwież stronę albo zadzwoń do nas.
+        Nie udało się wczytać płatności. Odśwież stronę albo zadzwoń do nas
+        {phone ? (
+          <>
+            :{" "}
+            <a className="font-semibold underline" href={`tel:${phone.phone}`}>
+              {phone.label}
+            </a>
+          </>
+        ) : null}
+        .
       </p>
     );
   }
@@ -80,17 +110,19 @@ function PayButton({ label }: { label: string }) {
 export function PaymentForm({
   clientSecret,
   payLabel,
+  phone = null,
 }: {
   clientSecret: string;
   /** "Zapłać 200 zł" */
   payLabel: string;
+  phone?: PaymentPhone | null;
 }) {
   return (
     <CheckoutElementsProvider
       options={{ clientSecret, elementsOptions: { appearance } }}
       stripe={stripePromise}
     >
-      <PayButton label={payLabel} />
+      <PayButton label={payLabel} phone={phone} />
     </CheckoutElementsProvider>
   );
 }

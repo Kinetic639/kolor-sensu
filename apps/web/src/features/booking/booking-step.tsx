@@ -6,6 +6,8 @@ import {
 import { BookingStepper, BookingSummary } from "@repo/ui/booking";
 import { CalendarDays, FileText, House, UserRound } from "lucide-react";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { toFreeSlots } from "@repo/scheduling";
 import type { ReactNode } from "react";
 import { getBookingWindow } from "@/lib/public-data";
 import { createSecretClient } from "@/lib/supabase/secret";
@@ -15,7 +17,11 @@ import {
   bookingHref,
   bookingNoticeHref,
   loadBookingParams,
+  changeBookingHref,
+  type BookingParams,
 } from "./search-params";
+import { readMemory, MEMORY_COOKIE } from "./wizard-memory";
+import { monday } from "@repo/ui/public-site/availability-calendar-dates";
 import { ONLINE_LINK_NOTE, visitLabel } from "./visit-label";
 
 // The steps after a time is held (Dane, Płatność, Potwierdzenie): the
@@ -41,6 +47,8 @@ export interface GuestVisit {
   timeZone: string;
   /** Its discount code, if one is applied. */
   discount: BookingDiscount | null;
+  /** Only live holds may go back to editing; confirmed visits have their own flow. */
+  editParams?: BookingParams;
 }
 
 /** The guest's visit, or null (no cookie, a wrong one, nothing found). */
@@ -61,7 +69,27 @@ export async function readGuestVisit(): Promise<GuestVisit | null> {
     }),
   ]);
   const timeZone = window?.timeZone ?? "Europe/Warsaw";
-  return { token, booking, timeZone, discount };
+  let editParams: BookingParams | undefined;
+  if (
+    booking.status === "held" &&
+    booking.holdExpiresAt &&
+    new Date(booking.holdExpiresAt) > new Date()
+  ) {
+    const remembered = readMemory((await cookies()).get(MEMORY_COOKIE)?.value);
+    const local = toFreeSlots(
+      [{ starts_at: booking.startsAt, ends_at: booking.endsAt }],
+      timeZone,
+    )[0]!;
+    editParams = {
+      ...loadBookingParams(new URLSearchParams()),
+      ...remembered,
+      forma: booking.mode === "online" ? "online" : "stacjonarnie",
+      termin: `${local.date}T${local.localTime}`,
+      dalej: "auto",
+      tydzien: monday(local.date),
+    };
+  }
+  return { token, booking, timeZone, discount, editParams };
 }
 
 /** The guest's live hold; otherwise back to the wizard. */
@@ -94,7 +122,8 @@ export function BookingStep({
   aside?: ReactNode;
   children: ReactNode;
 }) {
-  const { booking, timeZone, discount } = visit;
+  const { booking, timeZone, discount, editParams } = visit;
+  const keys = ["usluga", "forma", "specjalista", "termin"] as const;
   return (
     <div className="max-w-page px-gutter pb-section-sm mx-auto grid gap-8 pt-8 lg:pt-12">
       <div className="flex flex-wrap items-end justify-between gap-6">
@@ -102,7 +131,15 @@ export function BookingStep({
         <BookingStepper
           className="w-full max-w-2xl"
           current={current}
-          steps={STEPS}
+          steps={STEPS.map((step, index) => ({
+            ...step,
+            href:
+              editParams && keys[index]
+                ? changeBookingHref(editParams, keys[index]!)
+                : editParams && index === 4
+                  ? "/umow-wizyte/dane"
+                  : undefined,
+          }))}
         />
       </div>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
@@ -133,6 +170,9 @@ export function BookingStep({
               label: "Usługa",
               value: booking.serviceName,
               detail: priceWithDiscount(booking.priceMinor, discount),
+              changeHref: editParams
+                ? changeBookingHref(editParams, "usluga")
+                : undefined,
             },
             {
               key: "forma",
@@ -145,18 +185,27 @@ export function BookingStep({
                       .filter(Boolean)
                       .join(" · ") || "Stacjonarnie",
               detail: booking.mode === "online" ? ONLINE_LINK_NOTE : undefined,
+              changeHref: editParams
+                ? changeBookingHref(editParams, "forma")
+                : undefined,
             },
             {
               key: "specjalista",
               icon: <UserRound />,
               label: "Specjalista",
               value: booking.specialistName ?? undefined,
+              changeHref: editParams
+                ? changeBookingHref(editParams, "specjalista")
+                : undefined,
             },
             {
               key: "termin",
               icon: <CalendarDays />,
               label: "Termin",
               value: visitLabel(booking.startsAt, timeZone),
+              changeHref: editParams
+                ? changeBookingHref(editParams, "termin")
+                : undefined,
             },
           ]}
         >

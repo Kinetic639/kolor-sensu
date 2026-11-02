@@ -29,6 +29,8 @@ describe("readDetailsForm", () => {
         notes: null,
         acceptTerms: true,
         acceptPrivacy: true,
+        acceptEarlyStart: false,
+        confirmGuardian: false,
       },
       newsletter: false,
     });
@@ -55,9 +57,43 @@ describe("readDetailsForm", () => {
         email: "jan@",
         acceptTerms: true,
         acceptPrivacy: false,
+        acceptEarlyStart: false,
+        confirmGuardian: false,
         newsletter: false,
       },
     });
+  });
+
+  it("asks for the request to start early only for a visit within 14 days (card 15)", () => {
+    const near = { earlyStart: true, guardian: false };
+    expect(readDetailsForm(form(filled), near)).toMatchObject({
+      ok: false,
+      errors: {
+        acceptEarlyStart:
+          "Zaznacz, że chcesz wizyty przed upływem 14 dni od rezerwacji, albo wybierz późniejszy termin.",
+      },
+    });
+    expect(
+      readDetailsForm(form({ ...filled, acceptEarlyStart: "on" }), near),
+    ).toMatchObject({ ok: true, details: { acceptEarlyStart: true } });
+    // Not asked: a ticked box from elsewhere counts for nothing.
+    expect(
+      readDetailsForm(form({ ...filled, acceptEarlyStart: "on" })),
+    ).toMatchObject({ ok: true, details: { acceptEarlyStart: false } });
+  });
+
+  it("asks a parent or guardian to confirm for a service for minors (card 16)", () => {
+    const minors = { earlyStart: false, guardian: true };
+    expect(readDetailsForm(form(filled), minors)).toMatchObject({
+      ok: false,
+      errors: {
+        confirmGuardian:
+          "Tę usługę rezerwuje rodzic lub opiekun prawny: potwierdź to, aby zarezerwować wizytę.",
+      },
+    });
+    expect(
+      readDetailsForm(form({ ...filled, confirmGuardian: "on" }), minors),
+    ).toMatchObject({ ok: true, details: { confirmGuardian: true } });
   });
 
   it("turns away a bot that filled the hidden field", () => {
