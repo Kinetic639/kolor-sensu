@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   canForget,
   canResendLink,
+  disputeLabel,
   participantGroups,
   participantsCsv,
   paymentLabel,
@@ -36,6 +37,7 @@ function participant(
     createdAt: "2030-10-01T10:00:00Z",
     forgottenAt: null,
     emailBouncedAt: null,
+    paymentDisputeStatus: null,
     ...patch,
   };
 }
@@ -123,5 +125,47 @@ describe("a workshop's participants", () => {
     expect(canResendLink(participant({ email: null }), { ended: false })).toBe(
       false,
     );
+  });
+});
+
+describe("columns 8 to 10 in the portal", () => {
+  it("say a refund Stripe refused is still under way (Warsztat · 8, card 5)", () => {
+    expect(
+      paymentLabel(
+        participant({
+          paidMinor: 15000,
+          refundDueMinor: 15000,
+          refundedMinor: 0,
+        }),
+        (minor) => `${minor / 100} zł`,
+      ),
+    ).toBe("150 zł, zwrot w toku");
+  });
+
+  it("show a disputed payment until the centre wins it (Warsztat · 10, card 5)", () => {
+    expect(disputeLabel(participant())).toBeNull();
+    expect(
+      disputeLabel(participant({ paymentDisputeStatus: "needs_response" })),
+    ).toBe("Płatność sporna");
+    expect(disputeLabel(participant({ paymentDisputeStatus: "lost" }))).toBe(
+      "Spór przegrany",
+    );
+    expect(
+      disputeLabel(participant({ paymentDisputeStatus: "won" })),
+    ).toBeNull();
+  });
+
+  it("never let a cell become a formula, but keep a phone number (Warsztat · 10, card 7)", () => {
+    const [, row] = participantsCsv([
+      participant({
+        name: '=HYPERLINK("http://x","klik")',
+        phone: "+48 500 600 700",
+        notes: "@SUM(A1)",
+      }),
+    ]).split("\r\n");
+    const cells = row!.split(";");
+    expect(row).toContain(`"'=HYPERLINK(`);
+    expect(cells[3]).toBe("+48 500 600 700");
+    expect(cells.at(-1)).toBe("'@SUM(A1)");
   });
 });

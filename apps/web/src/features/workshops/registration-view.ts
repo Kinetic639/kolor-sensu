@@ -67,7 +67,7 @@ export function refundRule(
   timeZone: string,
 ) {
   if (registration.refundAnyTime)
-    return "Termin warsztatu się zmienił, więc przy rezygnacji oddamy całą wpłatę w każdej chwili przed warsztatem.";
+    return "Zmienił się termin albo prowadzenie warsztatu, więc przy rezygnacji oddamy całą wpłatę w każdej chwili przed warsztatem.";
   return `Pełny zwrot przy rezygnacji do ${deadlineLabel(registration.fullRefundUntil, timeZone)}.`;
 }
 
@@ -77,7 +77,10 @@ export const CHANGE_NOTICES: Record<string, string> = {
     "Zapis anulowany. Wysłaliśmy Ci e-mail z potwierdzeniem; jeśli należy się zwrot, pieniądze wrócą w kilka dni roboczych.",
   "zwrot-pozniej":
     "Zapis anulowany. Zwrot zrobimy w ciągu kilkunastu minut; napiszemy, gdy pieniądze wyjdą.",
-  przekazany: "Miejsce przekazane. Nowa osoba dostała e-mail z potwierdzeniem.",
+  przekazany:
+    "Wysłaliśmy zaproszenie. Miejsce jest Twoje, dopóki nowa osoba nie zaakceptuje regulaminu; potem przejdzie na nią, a ten link przestanie działać.",
+  przyjete:
+    "Miejsce jest Twoje. Wysłaliśmy Ci e-mail z potwierdzeniem; ten link prowadzi do Twojego zapisu.",
   "za-pozno": "Warsztat już się zaczął, więc nie można zrezygnować.",
   niedostepna: "Tej zmiany nie da się już zrobić.",
 };

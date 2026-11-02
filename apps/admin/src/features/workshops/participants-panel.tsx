@@ -35,6 +35,7 @@ import {
 import {
   canForget,
   canResendLink,
+  disputeLabel,
   participantGroups,
   participantState,
   paymentLabel,
@@ -220,6 +221,9 @@ export function ParticipantsPanel({
                               <Tag tone={state.tone}>{state.label}</Tag>
                               {one.emailBouncedAt ? (
                                 <Tag tone="danger">Mail nie dotarł</Tag>
+                              ) : null}
+                              {disputeLabel(one) ? (
+                                <Tag tone="danger">{disputeLabel(one)}</Tag>
                               ) : null}
                             </span>
                           </td>

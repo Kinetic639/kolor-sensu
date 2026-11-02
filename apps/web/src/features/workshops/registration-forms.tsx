@@ -1,17 +1,20 @@
 "use client";
 
-import { BookingField } from "@repo/ui/booking/fields";
+import { BookingField, ConsentCheckbox } from "@repo/ui/booking/fields";
 import { PrimaryButton, SecondaryButton } from "@repo/ui/public-site/actions";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
+  acceptSeatAction,
   cancelMySeatAction,
   transferMySeatAction,
+  type AcceptState,
   type TransferState,
 } from "./registration-actions";
 
 // A registration's page: giving the seat up (after a second, explicit
-// press, with what happens to the money said first) and passing it on.
+// press, with what happens to the money said first) and passing it on;
+// and the invitation's page, where the new person accepts the rules.
 
 function ConfirmCancel() {
   const { pending } = useFormStatus();
@@ -79,8 +82,9 @@ export function TransferSeatForm({ token }: { token: string }) {
     <form action={action} className="grid gap-4" noValidate>
       <input name="token" type="hidden" value={token} />
       <p className="text-small text-text-muted">
-        Miejsce przejdzie na tę osobę (bez zwrotu); to ona dostanie
-        potwierdzenie i przypomnienia.
+        Wyślemy tej osobie zaproszenie. Miejsce przejdzie na nią (bez zwrotu),
+        gdy zaakceptuje regulamin; od tego czasu to ona dostanie potwierdzenie i
+        przypomnienia.
       </p>
       {state.status === "invalid" ? (
         <p
@@ -128,6 +132,54 @@ export function TransferSeatForm({ token }: { token: string }) {
         <SecondaryButton onClick={() => setOpen(false)} type="button">
           Anuluj
         </SecondaryButton>
+      </div>
+    </form>
+  );
+}
+
+function AcceptButton() {
+  const { pending } = useFormStatus();
+  return (
+    <PrimaryButton disabled={pending} type="submit">
+      {pending ? "Przyjmujemy…" : "Przyjmuję miejsce"}
+    </PrimaryButton>
+  );
+}
+
+/** "Przyjmuję miejsce", with the rules and the privacy notice accepted. */
+export function AcceptSeatForm({ token }: { token: string }) {
+  const [state, action] = useActionState<AcceptState, FormData>(
+    acceptSeatAction,
+    { status: "idle" },
+  );
+  return (
+    <form action={action} className="grid gap-4" noValidate>
+      <input name="token" type="hidden" value={token} />
+      {state.status === "invalid" ? (
+        <p
+          className="rounded-card-sm bg-pink-soft text-small text-ink p-3"
+          role="alert"
+        >
+          {state.message}
+        </p>
+      ) : null}
+      <fieldset className="grid gap-3">
+        <legend className="sr-only">Zgody</legend>
+        <ConsentCheckbox
+          linkHref="/regulamin"
+          linkLabel="regulamin (także zasady warsztatów)"
+          name="terms"
+          text="Akceptuję"
+        />
+        <ConsentCheckbox
+          linkHref="/polityka-prywatnosci"
+          linkLabel="polityką prywatności"
+          name="privacy"
+          text="Zapoznałem(-am) się z"
+        />
+      </fieldset>
+      <div>
+        <AcceptButton />
       </div>
     </form>
   );

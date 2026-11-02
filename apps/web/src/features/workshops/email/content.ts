@@ -1,6 +1,7 @@
 import type {
   ClaimedWorkshopEmail,
   WorkshopEmailKind,
+  WorkshopTransfer,
 } from "@repo/supabase/workshops";
 import {
   contactLineOf,
@@ -16,9 +17,10 @@ import { workshopDateLabel, workshopTimeLabel } from "../workshop-view";
 // 5), apart from how they look (the visits' template): the confirmation,
 // the reservation to pay later, the waitlist place, a seat offered from
 // the waitlist, the payment reminder, the reminder a day before (with the
-// online link), a cancellation, a new date and a refund. Each links to
-// the registration's page by its own token; those about the date carry the
-// calendar file. Pure, so it is tested without sending.
+// online link), a cancellation, a new date, a new leader and a refund;
+// and the invitation to take a seat someone passes on. Each links to its
+// page by its own token; those about the date carry the calendar file.
+// Pure, so it is tested without sending.
 
 export function workshopRegistrationUrl(siteUrl: string, token: string) {
   return `${siteUrl}/warsztaty/zapis/${token}`;
@@ -195,6 +197,16 @@ export function workshopEmailContent(
       button: "Zobacz swój zapis",
       note: "W załączniku jest plik z nowym terminem do kalendarza.",
     },
+    leader_changed: {
+      subject: `Zmiana prowadzenia warsztatu – ${email.workshopTitle}`,
+      heading: "Warsztat poprowadzi ktoś inny",
+      intro:
+        email.waitlistPosition || email.offerExpiresAt
+          ? "Zmieniła się osoba prowadząca warsztat (prowadzi: poniżej). Możesz zostać na liście rezerwowej albo się z niej wypisać na stronie zapisu."
+          : "Zmieniła się osoba prowadząca warsztat (prowadzi: poniżej). Jeśli wolisz zrezygnować, zrób to na stronie zapisu: oddamy całą wpłatę, w każdej chwili przed warsztatem.",
+      button: "Zobacz swój zapis",
+      note: null,
+    },
     refunded: {
       subject: `Zwrot za warsztat ${email.reference}`,
       heading: "Oddaliśmy Twoją wpłatę",
@@ -213,7 +225,17 @@ export function workshopEmailContent(
       note: null,
     },
   };
-  const words = copy[kind];
+  // Someone signed up with another's address (Warsztat · 10, card 6).
+  const notYou =
+    "Jeśli to nie Ty zapisujesz się na ten warsztat, zrezygnuj na stronie zapisu; bez płatności nic Cię to nie kosztuje.";
+  const unpaid =
+    kind === "reserved" ||
+    kind === "waitlisted" ||
+    kind === "offered" ||
+    (kind === "confirmation" && email.paidMinor === 0 && !email.paidOutside);
+  const words = unpaid
+    ? { ...copy[kind], intro: `${copy[kind].intro} ${notYou}` }
+    : copy[kind];
 
   const contactLine = contactLineOf(contact);
   const greeting = `Dzień dobry, ${email.clientName}!`;
@@ -260,5 +282,58 @@ export function workshopEmailContent(
       // A new date updates the same event in calendars.
       sequence: kind === "rescheduled" ? 1 : 0,
     }),
+  };
+}
+
+/** The invitation to take a seat someone passes on (Warsztat · 8, card 4). */
+export function workshopTransferUrl(siteUrl: string, token: string) {
+  return `${siteUrl}/warsztaty/przekazanie/${token}`;
+}
+
+export function workshopTransferContent(
+  invite: WorkshopTransfer,
+  token: string,
+  { siteUrl, timeZone, contact }: ConfirmationOptions,
+): VisitEmailContent {
+  const when = `${workshopDateLabel(invite.startsAt, timeZone)}, ${workshopTimeLabel(invite.startsAt, invite.endsAt, timeZone)}`;
+  const url = workshopTransferUrl(siteUrl, token);
+  const from = invite.fromName ?? "Uczestnik warsztatu";
+  const intro = `${from} przekazuje Ci swoje miejsce na warsztacie. Żeby je przyjąć, zaakceptuj przed warsztatem regulamin warsztatów i zasady przetwarzania danych; do tego czasu miejsce zostaje przy osobie, która je przekazuje. Jeśli nie chcesz go przyjąć, nic nie rób.`;
+  const rows: Row[] = [
+    ["Warsztat", invite.workshopTitle],
+    ["Termin", when],
+    ["Forma", invite.modality === "online" ? "Online" : "Stacjonarnie"],
+    ["Numer zapisu", invite.reference],
+  ];
+  const contactLine = contactLineOf(contact);
+  const greeting = `Dzień dobry, ${invite.firstName} ${invite.lastName}!`;
+  const button = "Przyjmij miejsce";
+  return {
+    subject: `${from} przekazuje Ci miejsce – ${invite.workshopTitle}`,
+    preview: `${invite.workshopTitle}, ${when}`,
+    heading: "Ktoś przekazuje Ci miejsce na warsztacie",
+    greeting,
+    intro,
+    rows,
+    manageUrl: url,
+    buttonLabel: button,
+    note: null,
+    contactLine,
+    text: [
+      greeting,
+      "",
+      intro,
+      "",
+      ...rows.map(([label, value]) => `${label}: ${value}`),
+      "",
+      `${button}: ${url}`,
+      ...(contactLine
+        ? ["", `W razie pytań skontaktuj się z nami: ${contactLine}`]
+        : []),
+      "",
+      "Do zobaczenia,",
+      "Kolor Sensu",
+    ].join("\n"),
+    ics: "",
   };
 }
