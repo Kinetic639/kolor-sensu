@@ -10,8 +10,12 @@ export async function createDiscountCode(browser: Browser): Promise<string> {
   const page = await context.newPage();
   await signIn(page, adminUrl, adminAccount!);
   await page.goto(`${adminUrl}/kody-rabatowe`);
-  await page.getByRole("button", { name: "Nowy kod" }).click();
+  // With no codes yet the page opens on the new code's form, without the
+  // button.
   const form = page.getByRole("region", { name: "Nowy kod rabatowy" });
+  const button = page.getByRole("button", { name: "Nowy kod" });
+  await expect(form.or(button).first()).toBeVisible();
+  if (!(await form.isVisible())) await button.click();
   await form.getByLabel("Kod", { exact: true }).fill(code);
   await form.getByLabel("Rabat (%)").fill("20");
   await form.getByLabel("Limit użyć").fill("1");

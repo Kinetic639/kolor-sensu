@@ -22,9 +22,13 @@ test("the home page has one h1, the crisis strip and the closing invitation", as
   await openHome(page);
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
 
-  const crisis = page.getByRole("complementary").filter({
-    has: page.locator('a[href^="tel:"]'),
-  });
+  // In main: the footer has its own crisis block.
+  const crisis = page
+    .getByRole("main")
+    .getByRole("complementary")
+    .filter({
+      has: page.locator('a[href^="tel:"]'),
+    });
   await expect(crisis).toHaveCount(1);
   await expect(crisis.locator('a[href="tel:112"]')).toBeVisible();
 
