@@ -48,6 +48,10 @@ import {
   svgMasksSupported,
   watchReveal,
 } from "./reveal-support";
+import {
+  circularPaintMap,
+  type CircularPaintOptions,
+} from "./circular-paint-matte";
 
 export type ReducedMotionMode = "static" | "simple-fade";
 
@@ -76,6 +80,8 @@ export const WatercolorRevealDebugContext =
   createContext<WatercolorRevealDebug | null>(null);
 
 export interface WatercolorRevealProps {
+  delay?: number;
+  circularPaint?: CircularPaintOptions;
   as: "div" | "figure";
   reducedMotionMode: ReducedMotionMode;
   /**
@@ -113,6 +119,8 @@ export function WatercolorReveal({
   className,
   style,
   children,
+  circularPaint,
+  delay = 0,
 }: WatercolorRevealProps) {
   const ref = useRef<HTMLElement>(null);
   const debug = useContext(WatercolorRevealDebugContext);
@@ -139,7 +147,8 @@ export function WatercolorReveal({
       const reduce = matches("(prefers-reduced-motion: reduce)");
       // The photo is painted in too, unless it is already showing.
       const paintsPhoto =
-        root.dataset.photoAtOnce === undefined || matches(FULL_REVEAL_QUERY);
+        !!root.querySelector(".ks-wc__photo") &&
+        (root.dataset.photoAtOnce === undefined || matches(FULL_REVEAL_QUERY));
 
       let cancelled = false;
       let timer: ReturnType<typeof setTimeout> | undefined;
@@ -190,7 +199,7 @@ export function WatercolorReveal({
       // it plays, so until then the layers stay unpainted.
       let timeline: GsapTimeline | undefined;
       const build = contextSafe(() => {
-        matte = createPaintMatte(root);
+        matte = createPaintMatte(root, circularPaint);
         timeline = createPaintTimeline(matte, {
           gsap,
           caption,
@@ -198,6 +207,7 @@ export function WatercolorReveal({
           paused: true,
           onComplete: finish,
         });
+        timeline.delay(delay);
         animation = timeline;
       });
 
@@ -208,10 +218,12 @@ export function WatercolorReveal({
           root.style.setProperty(revealProperties.photo, matte!.photo.url);
         }
         setState("playing");
-        debug?.onReveal?.({ matte: matte!, timeline: timeline! });
+        if (matte) debug?.onReveal?.({ matte, timeline: timeline! });
         const frozen = debug?.freezeAt;
         if (frozen !== undefined) timeline!.time(frozen);
-        else timeline!.play();
+        // A paused timeline's play() skips its initial delay. Restart with
+        // includeDelay so independently scheduled circles keep their stagger.
+        else timeline!.restart(true);
       });
 
       // Load and decode the images and the stroke atlases, then build the
@@ -221,7 +233,17 @@ export function WatercolorReveal({
         (prepared ??= (async () => {
           const loaded = Promise.all([
             ...Array.from(root.querySelectorAll("img"), decoded),
-            ...(reduce ? [] : paintMatteUrls.map(preload)),
+            ...(reduce
+              ? []
+              : (circularPaint
+                  ? [
+                      ...new Set([
+                        circularPaintMap(circularPaint, "backdrop"),
+                        circularPaintMap(circularPaint, "photo"),
+                      ]),
+                    ]
+                  : paintMatteUrls
+                ).map(preload)),
           ]);
           const timeout = new Promise((resolve) => {
             timer = setTimeout(resolve, LOAD_TIMEOUT);
@@ -272,6 +294,7 @@ export function WatercolorReveal({
       className={className}
       style={style}
       data-animation="watercolor-reveal"
+      data-reveal-delay={delay || undefined}
       data-reduced-motion={reducedMotionMode}
       data-photo-at-once={photoAtOnceOnPhones ? "narrow" : undefined}
     >

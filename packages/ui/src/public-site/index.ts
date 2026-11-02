@@ -149,6 +149,8 @@ export { SpecialistsSection } from "./specialists-section";
 export type { SpecialistsSectionProps } from "./specialists-section";
 export { defaultWatercolorSrc, WatercolorImage } from "./watercolor-image";
 export type { WatercolorImageProps, WatercolorLook } from "./watercolor-image";
+export { CircularWatercolorImage } from "./watercolor-circle";
+export type { CircularWatercolorImageProps } from "./watercolor-circle";
 export { ArticleCard, ArticleGrid } from "./article-cards";
 export type { ArticleCardData } from "./article-cards";
 export {

@@ -176,7 +176,7 @@ describe("the homepage", () => {
       parallaxSrc: "/media/drops.png",
     };
     const { container } = render(await Home());
-    const pictures = container.querySelectorAll(".ks-wc");
+    const pictures = container.querySelectorAll(".ks-wc:not(.ks-wc--circle)");
     expect(pictures.length).toBeGreaterThan(1);
     for (const picture of pictures) {
       expect(
@@ -185,6 +185,13 @@ describe("the homepage", () => {
       expect(
         picture.querySelector(".ks-wc__parallax img")?.getAttribute("src"),
       ).toContain("drops.png");
+    }
+    const circles = container.querySelectorAll(".ks-wc--circle");
+    expect(circles.length).toBeGreaterThan(0);
+    for (const circle of circles) {
+      expect(
+        circle.querySelector(".ks-wc__backdrop img")?.getAttribute("src"),
+      ).toContain("painted-circle-");
     }
   });
 
