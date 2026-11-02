@@ -15,6 +15,12 @@ import { CmsSection } from "./cms-section";
 import { addItem, moveItem, removeItem } from "./list-editor";
 import { ListItemControls } from "./list-item-controls";
 import type { ContentViewModel } from "./types";
+import { WHY_US_ICONS } from "@repo/contracts/cms";
+import {
+  DEFAULT_WHY_US_ICONS,
+  WHY_US_ICON_LABELS,
+  WhyUsIconMark,
+} from "@repo/ui/public-site/why-us-icons";
 
 // Home → "Dlaczego my": its header (the block above the form), whether it
 // shows and its two to four facts, each a title and a sentence. Saved as a
@@ -98,6 +104,44 @@ export function WhyUsSection({
                         setFacts(removeItem(facts, index, FACTS_MIN))
                       }
                     />
+                  </div>
+                  <div className="grid gap-2">
+                    <span
+                      id={`cms-why-${index}-icon-label`}
+                      className="text-sm font-medium"
+                    >
+                      Ikona karty
+                    </span>
+                    <div
+                      role="group"
+                      aria-labelledby={`cms-why-${index}-icon-label`}
+                      className="grid grid-cols-6 gap-1.5"
+                    >
+                      {WHY_US_ICONS.map((icon) => (
+                        <button
+                          key={icon}
+                          type="button"
+                          aria-label={WHY_US_ICON_LABELS[icon]}
+                          title={WHY_US_ICON_LABELS[icon]}
+                          aria-pressed={
+                            (fact.icon ??
+                              DEFAULT_WHY_US_ICONS[
+                                index % DEFAULT_WHY_US_ICONS.length
+                              ]) === icon
+                          }
+                          className="grid min-h-10 place-items-center rounded-md border border-[var(--border)] p-2 transition-colors hover:bg-[var(--surface-raised)] aria-pressed:border-[var(--accent)] aria-pressed:bg-[var(--surface-raised)] [&_svg]:size-5"
+                          onClick={() =>
+                            setFacts(
+                              facts.map((one, at) =>
+                                at === index ? { ...one, icon } : one,
+                              ),
+                            )
+                          }
+                        >
+                          <WhyUsIconMark name={icon} />
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <Label htmlFor={`cms-why-${index}-title`}>Tytuł</Label>
                   <Input

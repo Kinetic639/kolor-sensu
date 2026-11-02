@@ -140,7 +140,10 @@ export function OfferReveal({
 
       // Back to the server markup: no inline styles left behind.
       const clear = () => {
-        for (const target of Object.values(targets)) {
+        const children = targets.content?.hasAttribute("data-stagger-content")
+          ? (Array.from(targets.content.children) as HTMLElement[])
+          : [];
+        for (const target of [...Object.values(targets), ...children]) {
           if (!target) continue;
           gsap.set(target, { clearProps: "opacity,transform,translate" });
           target.style.removeProperty("mask-image");

@@ -295,6 +295,22 @@ export const defaultFirstSteps: FirstStepsContent = {
  * Its header is among the homepage's headers. Hidden until the admin
  * publishes facts the centre stands by.
  */
+export const WHY_US_ICONS = [
+  "shield-check",
+  "heart-handshake",
+  "graduation-cap",
+  "badge-check",
+  "users",
+  "heart",
+  "leaf",
+  "lock-keyhole",
+  "messages-square",
+  "sparkles",
+  "book-open",
+  "hand-heart",
+] as const;
+export type WhyUsIcon = (typeof WHY_US_ICONS)[number];
+
 export const whyUsContentSchema = z.strictObject({
   visible: z.boolean(),
   facts: z
@@ -302,6 +318,7 @@ export const whyUsContentSchema = z.strictObject({
       z.strictObject({
         title: z.string().trim().min(1).max(60),
         text: z.string().trim().min(1).max(200),
+        icon: z.enum(WHY_US_ICONS).optional(),
       }),
     )
     .min(2)

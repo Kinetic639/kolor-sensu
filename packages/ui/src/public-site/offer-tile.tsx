@@ -60,6 +60,10 @@ export interface OfferTileProps extends OfferService {
   headingLevel?: "h2" | "h3" | "h4";
   sizes?: string;
   className?: string;
+  paintSrc?: string;
+  paintMaskSrc?: string;
+  paintAccents?: ReactNode;
+  staggerContent?: boolean;
 }
 
 // The patch's painted area (fractions of its file) stretched onto the tile.
@@ -90,6 +94,10 @@ export function OfferTile({
   headingLevel: Heading = "h3",
   sizes = "(min-width: 48rem) 14rem, 45vw",
   className,
+  paintSrc,
+  paintMaskSrc,
+  paintAccents,
+  staggerContent = false,
 }: OfferTileProps) {
   const classes = cn("ks-of group/of", className);
   const content = (
@@ -97,15 +105,28 @@ export function OfferTile({
       <div className="ks-of__paint" aria-hidden="true">
         <div className="ks-of__paint-frame" style={frameStyle(paint)}>
           <Image
-            src={offerMatte.paints[paint].src}
+            src={paintSrc ?? offerMatte.paints[paint].src}
             alt=""
             fill
             sizes={sizes}
             loading="lazy"
+            style={
+              paintMaskSrc
+                ? {
+                    maskImage: `url("${paintMaskSrc}")`,
+                    maskSize: "100% 100%",
+                    maskRepeat: "no-repeat",
+                  }
+                : undefined
+            }
           />
         </div>
+        {paintAccents}
       </div>
-      <div className="ks-of__content">
+      <div
+        className="ks-of__content"
+        data-stagger-content={staggerContent || undefined}
+      >
         {icon ? (
           <span aria-hidden="true" className="ks-of__icon">
             {icon}
@@ -119,13 +140,19 @@ export function OfferTile({
             >
               {title}
             </Link>
+          ) : staggerContent ? (
+            <span className="ks-of__ink-text">{title}</span>
           ) : (
             title
           )}
         </Heading>
         {description ? (
           <p className="ks-of__description text-ink/80 text-balance">
-            {description}
+            {staggerContent ? (
+              <span className="ks-of__ink-text">{description}</span>
+            ) : (
+              description
+            )}
           </p>
         ) : null}
       </div>
