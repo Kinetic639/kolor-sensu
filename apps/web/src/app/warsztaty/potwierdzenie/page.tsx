@@ -28,7 +28,19 @@ export const metadata: Metadata = {
 export default async function SeatConfirmationPage({
   searchParams,
 }: PageProps<"/warsztaty/potwierdzenie">) {
-  const { sesja, bezplatna } = await searchParams;
+  const { sesja, bezplatna, sprawdz } = await searchParams;
+
+  // A seat to pay later, or a free one, waiting for its confirming from
+  // the e-mail (#269); the browser holds no link to it.
+  if (sprawdz === "1")
+    return (
+      <Message
+        lead="Wysłaliśmy Ci e-mail z linkiem. Otwórz go i kliknij „Potwierdzam zapis” w ciągu 30 minut. Bez potwierdzenia miejsce wróci do puli. Nie widzisz wiadomości? Zajrzyj do folderu ze spamem."
+        title="Sprawdź skrzynkę e-mail"
+        workshop={null}
+      />
+    );
+
   const seat = await readHeldSeat();
 
   if (bezplatna === "1") {

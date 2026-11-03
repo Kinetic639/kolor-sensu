@@ -114,6 +114,21 @@ function csvCell(value: string) {
   return /[";\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
+/**
+ * A seat its participant has not confirmed from the e-mail yet (#269): it
+ * lapses by itself at confirmBy unless confirmed.
+ */
+export function awaitingConfirmation(
+  participant: WorkshopParticipant,
+  now = new Date(),
+) {
+  return (
+    participant.confirmBy !== null &&
+    new Date(participant.confirmBy) > now &&
+    (participant.status === "held" || participant.status === "awaiting_payment")
+  );
+}
+
 /** A disputed card payment (chargeback), unless the centre won it. */
 export function disputeLabel(participant: WorkshopParticipant) {
   const status = participant.paymentDisputeStatus;

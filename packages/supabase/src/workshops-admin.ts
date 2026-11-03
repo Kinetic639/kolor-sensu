@@ -344,6 +344,8 @@ export interface WorkshopParticipant {
   emailBouncedAt: string | null;
   /** A card payment's dispute (chargeback): Stripe's state, or null. */
   paymentDisputeStatus: string | null;
+  /** Until when the seat waits for its confirming from the e-mail (#269). */
+  confirmBy: string | null;
 }
 
 /**
@@ -357,7 +359,7 @@ export async function listWorkshopParticipants(
   const { data, error } = await client
     .from("workshop_registrations")
     .select(
-      "id, reference, status, booked_by, client_name, client_email, client_phone, client_notes, price_minor, paid_minor, refund_due_minor, refunded_minor, paid_outside, payment_due_at, offer_expires_at, hold_expires_at, waitlisted_at, attended, cancelled_by, cancelled_at, created_at, forgotten_at, email_bounced_at, payment_dispute_status",
+      "id, reference, status, booked_by, client_name, client_email, client_phone, client_notes, price_minor, paid_minor, refund_due_minor, refunded_minor, paid_outside, payment_due_at, offer_expires_at, hold_expires_at, waitlisted_at, attended, cancelled_by, cancelled_at, created_at, forgotten_at, email_bounced_at, payment_dispute_status, confirm_by",
     )
     .eq("workshop_id", workshopId)
     .order("created_at");
@@ -389,6 +391,7 @@ export async function listWorkshopParticipants(
       forgottenAt: row.forgotten_at,
       emailBouncedAt: row.email_bounced_at,
       paymentDisputeStatus: row.payment_dispute_status,
+      confirmBy: row.confirm_by,
     }));
 }
 

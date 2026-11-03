@@ -14,6 +14,8 @@ export const SEAT_NOTICES = {
     "Ktoś właśnie zajął ostatnie miejsce. Możesz zapisać się na listę rezerwową.",
   zamkniete: "Zapisy na ten warsztat są zamknięte.",
   "za-duzo-prob": "Za dużo prób naraz. Spróbuj ponownie za kilkanaście minut.",
+  niepotwierdzone:
+    "Masz już dwa zapisy, które czekają na potwierdzenie. Potwierdź je linkami z e-maili (albo odczekaj 30 minut) i zapisz się ponownie.",
   weryfikacja:
     "Nie udało się potwierdzić, że zapisuje się człowiek. Spróbuj ponownie.",
   wygaslo:

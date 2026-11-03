@@ -1,6 +1,7 @@
 import type { WorkshopParticipant } from "@repo/supabase/workshops-admin";
 import { describe, expect, it } from "vitest";
 import {
+  awaitingConfirmation,
   canForget,
   canResendLink,
   disputeLabel,
@@ -38,6 +39,7 @@ function participant(
     forgottenAt: null,
     emailBouncedAt: null,
     paymentDisputeStatus: null,
+    confirmBy: null,
     ...patch,
   };
 }
@@ -167,5 +169,35 @@ describe("columns 8 to 10 in the portal", () => {
     expect(row).toContain(`"'=HYPERLINK(`);
     expect(cells[3]).toBe("+48 500 600 700");
     expect(cells.at(-1)).toBe("'@SUM(A1)");
+  });
+});
+
+describe("a seat not confirmed from its e-mail (#269)", () => {
+  const now = new Date("2030-10-01T10:00:00Z");
+
+  it("shows until it lapses, and only while held or reserved", () => {
+    const waiting = { confirmBy: "2030-10-01T10:30:00Z" };
+    expect(
+      awaitingConfirmation(
+        participant({ ...waiting, status: "awaiting_payment" }),
+        now,
+      ),
+    ).toBe(true);
+    expect(
+      awaitingConfirmation(participant({ ...waiting, status: "held" }), now),
+    ).toBe(true);
+    expect(
+      awaitingConfirmation(
+        participant({ ...waiting, status: "confirmed" }),
+        now,
+      ),
+    ).toBe(false);
+    expect(
+      awaitingConfirmation(
+        participant({ confirmBy: "2030-10-01T09:59:00Z", status: "held" }),
+        now,
+      ),
+    ).toBe(false);
+    expect(awaitingConfirmation(participant(), now)).toBe(false);
   });
 });

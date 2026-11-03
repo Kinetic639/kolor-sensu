@@ -1,5 +1,8 @@
 import { fullName } from "@repo/contracts/person-name";
-import { getWorkshopRegistration } from "@repo/supabase/workshops";
+import {
+  getWorkshopRegistration,
+  workshopSeatConfirmBy,
+} from "@repo/supabase/workshops";
 import {
   PrimaryButton,
   SecondaryButton,
@@ -10,7 +13,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deadlineLabel } from "@/features/booking/visit-label";
-import { payReservedSeatAction } from "@/features/workshops/actions";
+import {
+  confirmSeatAction,
+  payReservedSeatAction,
+} from "@/features/workshops/actions";
 import {
   CancelSeatForm,
   TransferSeatForm,
@@ -60,9 +66,10 @@ export default async function RegistrationPage({
   const { token } = await params;
   const query = await searchParams;
   if (!/^[A-Za-z0-9_-]{20,100}$/.test(token)) notFound();
-  const [registration, window] = await Promise.all([
+  const [registration, window, confirmBy] = await Promise.all([
     getWorkshopRegistration(createSecretClient(), token).catch(() => null),
     getBookingWindow(),
+    workshopSeatConfirmBy(createSecretClient(), token).catch(() => null),
   ]);
   if (!registration) notFound();
   const timeZone = window?.timeZone ?? "Europe/Warsaw";
@@ -105,7 +112,7 @@ export default async function RegistrationPage({
           Zapis {registration.reference}
         </p>
         <h1 className="font-display text-display text-ink">
-          {STATUS[registration.status]}
+          {confirmBy ? "Potwierdź swój zapis" : STATUS[registration.status]}
         </h1>
         {lead ? (
           <p className="text-body text-text-muted max-w-2xl">{lead}</p>
@@ -135,7 +142,23 @@ export default async function RegistrationPage({
           </p>
         ) : null}
 
-        {payable && due ? (
+        {confirmBy ? (
+          // Waiting for its confirming from this e-mail's link (#269).
+          <SoftCard className="grid gap-4 p-6" tone="cream">
+            <p className="text-body text-ink">
+              Potwierdź zapis do {deadlineLabel(confirmBy, timeZone)}. Bez
+              potwierdzenia miejsce wróci do puli.
+            </p>
+            <form action={confirmSeatAction}>
+              <input name="token" type="hidden" value={token} />
+              <PrimaryButton arrow type="submit">
+                Potwierdzam zapis
+              </PrimaryButton>
+            </form>
+          </SoftCard>
+        ) : null}
+
+        {payable && due && !confirmBy ? (
           <SoftCard className="grid gap-4 p-6" tone="cream">
             <p className="text-body text-ink">
               Do zapłaty: <strong>{seatPrice(registration)}</strong>, do{" "}
@@ -188,7 +211,7 @@ export default async function RegistrationPage({
             </Link>
           </SecondaryButton>
         </div>
-        {choices.cancel || choices.transfer ? (
+        {(choices.cancel || choices.transfer) && !confirmBy ? (
           <section
             aria-labelledby="zmiany"
             className="border-border/70 grid gap-4 border-t pt-6"

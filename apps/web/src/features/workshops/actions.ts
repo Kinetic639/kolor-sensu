@@ -4,6 +4,7 @@ import {
   applyWorkshopDiscount,
   cancelWorkshopRegistration,
   confirmFreeWorkshopSeat,
+  confirmWorkshopSeat,
   getWorkshopRegistration,
   holdWorkshopSeat,
   joinWorkshopWaitlist,
@@ -69,6 +70,7 @@ const REFUSAL_NOTICES: Partial<Record<string, SeatNotice>> = {
   registration_closed: "zamkniete",
   not_found: "zamkniete",
   too_many_holds: "za-duzo-prob",
+  too_many_unconfirmed: "niepotwierdzone",
   hold_expired: "wygaslo",
 };
 
@@ -206,34 +208,89 @@ export async function saveSeatDetailsAction(
   return goToPayment(slug, token);
 }
 
-/** A free seat (free, or a code covering it): confirmed, nothing to pay. */
+/**
+ * A free seat (free, or a code covering it): nothing to pay. Taken in this
+ * browser, it waits 30 minutes for its confirming from the e-mail (#269);
+ * from an e-mail's link, it is confirmed at once.
+ */
 async function confirmFree(
   slug: string,
   token: string,
   reference: string,
 ): Promise<never> {
+  let confirmBy: string | null;
   try {
-    await confirmFreeWorkshopSeat(createSecretClient(), token);
+    ({ confirmBy } = await confirmFreeWorkshopSeat(
+      createSecretClient(),
+      token,
+      holdKey(await headers()),
+    ));
   } catch (error) {
     refused(slug, error);
   }
+  if (confirmBy) return checkEmail(reference);
   after(() => sendWorkshopEmail(reference, "confirmation"));
   redirect("/warsztaty/potwierdzenie?bezplatna=1" as Route);
 }
 
-/** "Zapłacę później": the seat waits for the money until seven days before. */
+/**
+ * "Zapłacę później": the seat waits for the money until seven days before,
+ * once confirmed from the e-mail (#269). With two unpaid seats already (by
+ * e-mail, phone or browser), or too close to the workshop, it is paid now.
+ */
 async function reserveLater(slug: string, token: string): Promise<never> {
-  let reference: string;
+  let reserved: Awaited<ReturnType<typeof reserveWorkshopSeat>>;
   try {
-    ({ reference } = await reserveWorkshopSeat(createSecretClient(), token));
+    reserved = await reserveWorkshopSeat(
+      createSecretClient(),
+      token,
+      holdKey(await headers()),
+    );
   } catch (error) {
     if (error instanceof WorkshopError && error.code === "pay_now_required")
       return goToPayment(slug, token);
     refused(slug, error);
   }
-  const link = await claimWorkshopEmailLink(reference, "reserved");
+  if (reserved.outcome === "pay_now") return goToPayment(slug, token);
+  if (reserved.confirmBy) return checkEmail(reserved.reference);
+  const link = await claimWorkshopEmailLink(reserved.reference, "reserved");
   await clearSeatToken();
   redirect(`/warsztaty/zapis/${link ?? token}?zarezerwowano=1` as Route);
+}
+
+/**
+ * A seat waiting for its confirming: the link goes by e-mail only (the
+ * browser never gets it, so a made-up address confirms nothing).
+ */
+async function checkEmail(reference: string): Promise<never> {
+  await sendWorkshopEmail(reference, "reserved");
+  await clearSeatToken();
+  redirect("/warsztaty/potwierdzenie?sprawdz=1" as Route);
+}
+
+/** "Potwierdzam zapis", on the seat's page opened from its e-mail. */
+export async function confirmSeatAction(formData: FormData) {
+  const token = String(formData.get("token") ?? "");
+  if (!/^[A-Za-z0-9_-]{20,100}$/.test(token)) redirect("/warsztaty" as Route);
+  const page = `/warsztaty/zapis/${token}`;
+  let outcome: Awaited<ReturnType<typeof confirmWorkshopSeat>> = null;
+  try {
+    outcome = await confirmWorkshopSeat(createSecretClient(), token);
+  } catch (error) {
+    if (error instanceof WorkshopError && error.code === "already_registered")
+      redirect(`${page}?zmiana=juz-zapisany` as Route);
+    console.error("[workshops] confirming a seat failed:", error);
+  }
+  if (!outcome) redirect(page as Route);
+  if (outcome === "confirmed") {
+    const registration = await getWorkshopRegistration(
+      createSecretClient(),
+      token,
+    ).catch(() => null);
+    if (registration)
+      after(() => sendWorkshopEmail(registration.reference, "confirmation"));
+  }
+  redirect(`${page}?zmiana=potwierdzony` as Route);
 }
 
 async function goToPayment(slug: string, token: string): Promise<never> {

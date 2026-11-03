@@ -35,6 +35,7 @@ import {
 import {
   canForget,
   canResendLink,
+  awaitingConfirmation,
   disputeLabel,
   participantGroups,
   participantState,
@@ -221,6 +222,11 @@ export function ParticipantsPanel({
                               <Tag tone={state.tone}>{state.label}</Tag>
                               {one.emailBouncedAt ? (
                                 <Tag tone="danger">Mail nie dotarł</Tag>
+                              ) : null}
+                              {awaitingConfirmation(one) ? (
+                                <Tag tone="warning">
+                                  Czeka na potwierdzenie adresu
+                                </Tag>
                               ) : null}
                               {disputeLabel(one) ? (
                                 <Tag tone="danger">{disputeLabel(one)}</Tag>

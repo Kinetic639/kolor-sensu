@@ -44,7 +44,9 @@ export type NotificationKind =
   | "workshop_full"
   | "workshop_minimum"
   /** An online workshop soon without its meeting link. */
-  | "workshop_no_link";
+  | "workshop_no_link"
+  /** A third unpaid workshop seat by one person: paid at once (admins). */
+  | "workshop_unpaid_limit";
 
 export interface NotificationDetails {
   reference: string | null;
