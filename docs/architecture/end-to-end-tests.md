@@ -7,22 +7,24 @@ the admin portal and the specialist portal. The tests live in `tests/e2e`.
 
 `E2E_TARGET` picks the sites (`tests/e2e/support/target.ts`):
 
-| Target            | Sites                                             | Accounts (env)                                    |
-| ----------------- | ------------------------------------------------- | ------------------------------------------------- |
-| `local` (default) | Playwright starts the apps on localhost:3000–3002 | `E2E_ANNA_*` (admin), `E2E_SPECIALIST_*`          |
-| `dev`             | `ks-dev*.ambrasystem.eu`                          | as `local`                                        |
-| `staging`         | `ks-staging*.ambrasystem.eu`                      | `E2E_STAGING_ADMIN_*`, `E2E_STAGING_SPECIALIST_*` |
+| Target            | Sites                                             | Accounts (env)                           |
+| ----------------- | ------------------------------------------------- | ---------------------------------------- |
+| `local` (default) | Playwright starts the apps on localhost:3000–3002 | `E2E_ANNA_*` (admin), `E2E_SPECIALIST_*` |
+| `dev`             | `ks-dev*.ambrasystem.eu`                          | as `local`                               |
 
-An account holding both roles is optional (`E2E_DUAL_ROLE_*`, or
-`E2E_STAGING_DUAL_ROLE_*`); without it, that one test is skipped.
+Never STAGING: it is the client's own environment, for trying the portals
+on their own data, so no test leaves anything there.
+
+An account holding both roles is optional (`E2E_DUAL_ROLE_*`); without it,
+that one test is skipped.
 Each account is `*_EMAIL` plus `*_PASSWORD`. Locally they come from the root
 `.env.local` (gitignored, loaded by `playwright.config.ts`); in CI from
 secrets. A test whose account is missing is skipped, not failed.
 
 ```bash
 pnpm test:e2e                          # local
-E2E_TARGET=staging pnpm test:e2e       # bash
-$env:E2E_TARGET='staging'; pnpm test:e2e   # PowerShell
+E2E_TARGET=dev pnpm test:e2e           # bash
+$env:E2E_TARGET='dev'; pnpm test:e2e   # PowerShell
 ```
 
 ## What they need in the database
@@ -30,8 +32,7 @@ $env:E2E_TARGET='staging'; pnpm test:e2e   # PowerShell
 The booking test (`booking.spec.ts`) books "Konsultacja testowa E2E" with
 "Test Specjalista" (both overridable: `E2E_BOOKING_SERVICE`,
 `E2E_BOOKING_SPECIALIST`): a bookable service, the test specialist leading
-it in person, their weekly hours in a room that is open then. DEV and
-STAGING have it. Stripe is in test mode there (BLIK code `123456`) and
+it in person, their weekly hours in a room that is open then. DEV has it. Stripe is in test mode there (BLIK code `123456`) and
 Turnstile uses Cloudflare's always-pass test keys.
 
 Each run of the booking test leaves one confirmed test visit, in a week
@@ -40,15 +41,15 @@ picked at random so runs do not all take the same hours.
 The payment tests (`payments.spec.ts`) walk the same wizard
 (`support/booking.ts`) and pay with Stripe's test cards (a card, one asking
 for 3D Secure, a declined one) and with Przelewy24. They run only with
-`E2E_PAYMENTS=1`: on STAGING by hand, Actions → Staging E2E → Run workflow
-with "payments" ticked. Once they have passed there, the gate goes and they
-join every release's run.
+`E2E_PAYMENTS=1`: on DEV by hand, Actions → E2E → Run workflow with
+"payments" ticked. Once they have passed there, the gate goes and they join
+every run.
 
 The workshop test (`workshops.spec.ts`) needs "Warsztat testowy E2E"
 (`warsztat-testowy-e2e`; overridable: `E2E_WORKSHOP_SLUG`,
 `E2E_WORKSHOP_TITLE`): published, online, priced (10 zł), with plenty of
 seats (500), months ahead, led by "Test Specjalista". The admin makes it
-under Warsztaty → Nowy warsztat. DEV and STAGING have it. It checks
+under Warsztaty → Nowy warsztat. DEV has it. It checks
 Warsztaty and the workshop's page
 (one h1, 390 and 1280 px, axe, the Event data for Google), a guest signing
 up and paying with BLIK (then the admin and the leader see them), and a
@@ -92,8 +93,8 @@ production build (`next build`, `next start --port 3010`): in `next dev`
 the first visit to each page compiles it, too slowly for some tests.
 
 The rest of the suite holds too (a visit, a seat, a waitlist place), more
-than 5 times in 15 minutes from one runner. So the web app on DEV and
-STAGING has `E2E_BYPASS_KEY` in Vercel (never in production), and a run
+than 5 times in 15 minutes from one runner. So the web app on DEV has
+`E2E_BYPASS_KEY` in Vercel (never in production), and a run
 with the same `E2E_BYPASS_KEY` (the root `.env.local`, the CI secret)
 sends it in `x-e2e-key` (`tests/e2e/support/e2e-key.ts`). The site then
 gives each of its holds a fresh visitor key (`holdKey` in
@@ -101,10 +102,10 @@ gives each of its holds a fresh visitor key (`holdKey` in
 not stop the tests. The limits by e-mail and phone stay, and
 `supabase/tests` tests the limits themselves (#345).
 
-## After every STAGING deployment
+## After every DEV deployment
 
-`.github/workflows/e2e-staging.yml` runs the whole suite against STAGING
-once Vercel reports all three apps live with the commit at the head of
-`staging`. It needs the four `E2E_STAGING_*` secrets and `E2E_BYPASS_KEY`. A failure keeps the
+`.github/workflows/e2e.yml` runs the whole suite against DEV once Vercel
+reports all three apps live with the commit at the head of `develop`. It
+needs the `E2E_ANNA_*` and `E2E_SPECIALIST_*` secrets and `E2E_BYPASS_KEY`. A failure keeps the
 report and traces as the run's `playwright-report` artifact. It can also be
 started by hand from the Actions tab.
