@@ -1,6 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import {
+  missingResendKey,
+  resendKey,
+  workshopLinkFromEmail,
+} from "./support/mail";
+import {
   adminAccount,
   adminUrl,
   missingAccount,
@@ -14,7 +19,8 @@ import {
 // page as a visitor sees them (one h1, no sideways scroll on a phone or a
 // computer, no axe violations, the Event data for Google); a guest signs
 // up and pays with BLIK, and the admin and the leader see them; a guest
-// reserves to pay later and gives the seat up again. It needs, in the
+// reserves to pay later, confirms it from the e-mail (read back from
+// Resend: ./support/mail.ts) and gives the seat up again. It needs, in the
 // target's database, "Warsztat testowy E2E" (warsztat-testowy-e2e): online,
 // published, priced, with seats, led by "Test Specjalista"; DEV has it.
 // Stripe is in test mode (BLIK 123456) and Turnstile passes. Each run
@@ -88,7 +94,7 @@ const signupForm = (page: Page) =>
     .locator("form")
     .filter({ has: page.getByLabel("Nazwisko", { exact: true }) });
 
-/** `name` is the first name, a space, the last name. */
+/** `name` is the first name, a space, the last name; the e-mail given. */
 async function fillDetails(page: Page, name: string) {
   const form = signupForm(page);
   const space = name.indexOf(" ");
@@ -96,10 +102,43 @@ async function fillDetails(page: Page, name: string) {
   await form
     .getByLabel("Nazwisko", { exact: true })
     .fill(name.slice(space + 1));
-  await form.getByLabel("Telefon").fill("500600700");
-  await form.getByLabel("E-mail").fill(`e2e-${Date.now()}@example.invalid`);
+  // A phone and an address of its own: one person has at most two unpaid
+  // seats (#269), and runs that stopped halfway leave theirs.
+  const stamp = String(Date.now()).slice(-8);
+  const email = `e2e-${Date.now()}@example.invalid`;
+  await form.getByLabel("Telefon").fill(`5${stamp}`);
+  await form.getByLabel("E-mail").fill(email);
   await form.getByRole("checkbox", { name: /^Akceptuję regulamin/ }).check();
   await form.getByRole("checkbox", { name: /polityką prywatności/ }).check();
+  return email;
+}
+
+/**
+ * "Zarezerwuj, zapłacę później", then the seat confirmed from its e-mail's
+ * link (#269: the browser never gets it); the seat's page.
+ */
+async function reserveToPayLater(page: Page, email: string) {
+  await page
+    .getByRole("button", { name: "Zarezerwuj, zapłacę później" })
+    .click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Sprawdź skrzynkę e-mail" }),
+  ).toBeVisible({ timeout: 30_000 });
+  await page.goto(await workshopLinkFromEmail(email, "Potwierdź zapis"));
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Potwierdź swój zapis" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Potwierdzam zapis" }).click();
+  await expect(
+    page.getByText("Dziękujemy, zapis jest potwierdzony."),
+  ).toBeVisible({ timeout: 30_000 });
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Miejsce zarezerwowane, czeka na płatność",
+    }),
+  ).toBeVisible();
+  return page.url();
 }
 
 async function payWithBlik(page: Page) {
@@ -203,22 +242,15 @@ test("a guest signs up for a workshop, pays with BLIK, and the admin and the lea
 test("a guest reserves a seat to pay later and gives it up from its page", async ({
   page,
 }) => {
-  test.setTimeout(180_000);
+  test.skip(!resendKey, missingResendKey);
+  test.setTimeout(240_000);
   // On a phone, each step of the sign-up as accessible as the pages
   // (Warsztat · 1, card 5).
   await page.setViewportSize({ width: 390, height: 900 });
   await holdSeat(page);
   await checkCurrent(page, "the details step on a phone");
-  await fillDetails(page, "Rezygnacja E2E");
-  await page
-    .getByRole("button", { name: "Zarezerwuj, zapłacę później" })
-    .click();
-  await expect(
-    page.getByRole("heading", {
-      level: 1,
-      name: "Miejsce zarezerwowane, czeka na płatność",
-    }),
-  ).toBeVisible({ timeout: 30_000 });
+  const email = await fillDetails(page, "Rezygnacja E2E");
+  await reserveToPayLater(page, email);
   await expect(
     page.getByRole("button", { name: "Zapłać teraz" }),
   ).toBeVisible();
@@ -252,7 +284,8 @@ test("a full workshop's waitlist: the freed seat goes to the first on it, who ma
   page,
   browser,
 }) => {
-  test.setTimeout(240_000);
+  test.skip(!resendKey, missingResendKey);
+  test.setTimeout(300_000);
   const there = await page.request.get(`${webUrl}${waitlistPath}`);
   test.skip(
     there.status() === 404,
@@ -260,17 +293,8 @@ test("a full workshop's waitlist: the freed seat goes to the first on it, who ma
   );
   // The one seat, reserved to pay later.
   await holdSeat(page, waitlistPath);
-  await fillDetails(page, "Miejsce E2E");
-  await page
-    .getByRole("button", { name: "Zarezerwuj, zapłacę później" })
-    .click();
-  await expect(
-    page.getByRole("heading", {
-      level: 1,
-      name: "Miejsce zarezerwowane, czeka na płatność",
-    }),
-  ).toBeVisible({ timeout: 30_000 });
-  const seatUrl = page.url();
+  const email = await fillDetails(page, "Miejsce E2E");
+  const seatUrl = await reserveToPayLater(page, email);
 
   const context = await browser.newContext();
   const guest = await context.newPage();

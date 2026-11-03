@@ -241,6 +241,9 @@ BEGIN
   IF v_due <> (SELECT t30 FROM ws) - interval '7 days' THEN
     RAISE EXCEPTION 'G: the payment was not due seven days before';
   END IF;
+  -- (Confirmed from its e-mail: workshop_confirm_address.sql.)
+  UPDATE public.workshop_registrations SET payment_due_at = v_due, confirm_by = NULL
+  WHERE access_token_hash = extensions.digest(v_token, 'sha256');
 
   -- The second seat: the same e-mail is refused; a paid seat is not free.
   SELECT access_token INTO v_token FROM public.hold_workshop_seat('ws-reg-main', 'visitor-key-2');
@@ -378,6 +381,11 @@ BEGIN
     RAISE EXCEPTION 'O: the link showed before the seat was confirmed';
   END IF;
   PERFORM public.confirm_free_workshop_seat(v_token);
+  IF (SELECT meeting_url FROM public.get_workshop_registration(v_token)) IS NOT NULL THEN
+    RAISE EXCEPTION 'O: the link showed before the address was confirmed';
+  END IF;
+  PERFORM public.confirm_workshop_seat((SELECT manage_token FROM public.claim_workshop_email(
+    (SELECT reference FROM public.get_workshop_registration(v_token)), 'reserved')));
   IF (SELECT meeting_url FROM public.get_workshop_registration(v_token)) IS DISTINCT FROM 'https://meet.example.invalid/ws-reg' THEN
     RAISE EXCEPTION 'O: a confirmed participant did not get the link';
   END IF;
@@ -412,7 +420,8 @@ BEGIN
   SELECT access_token INTO v_token FROM public.hold_workshop_seat('ws-reg-main', 'visitor-key-9');
   PERFORM public.save_workshop_registration_details(v_token, 'Dora', 'dora@example.invalid', NULL, NULL, true, true);
   PERFORM public.reserve_workshop_seat(v_token);
-  UPDATE public.workshop_registrations SET payment_due_at = now() - interval '1 minute'
+  -- Confirmed from its e-mail, then not paid in time.
+  UPDATE public.workshop_registrations SET payment_due_at = now() - interval '1 minute', confirm_by = NULL
   WHERE access_token_hash = extensions.digest(v_token, 'sha256');
   PERFORM public.run_workshop_jobs();
   IF (SELECT status::text || '/' || cancelled_by FROM public.workshop_registrations

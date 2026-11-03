@@ -42,6 +42,7 @@ const REFUSALS = [
   "code_too_big",
   "code_used_up",
   "too_many_attempts",
+  "too_many_unconfirmed",
 ] as const;
 
 export type WorkshopRefusal = (typeof REFUSALS)[number] | "unknown";
@@ -286,25 +287,75 @@ export async function saveWorkshopDetails(
   if (error) throw refusal(error);
 }
 
-/** "Zapłacę później": due seven days before. Refusal: pay_now_required. */
-export async function reserveWorkshopSeat(secretClient: Client, token: string) {
+/**
+ * "Zapłacę później": due seven days before. Taken by the browser's own
+ * token, the seat waits until `confirmBy` for its confirming from the
+ * e-mail's link (20261103090000); "pay_now" when the person has two unpaid
+ * seats already. Refusal: pay_now_required.
+ */
+export async function reserveWorkshopSeat(
+  secretClient: Client,
+  token: string,
+  clientKey: string | null = null,
+) {
   const { data, error } = await secretClient.rpc("reserve_workshop_seat", {
     p_access_token: token,
+    p_client_key: clientKey ?? undefined,
   });
   if (error) throw refusal(error);
   const row = data![0]!;
-  return { reference: row.reference, paymentDueAt: row.payment_due_at };
+  return {
+    reference: row.reference,
+    paymentDueAt: row.payment_due_at,
+    confirmBy: row.confirm_by,
+    outcome: row.outcome as "reserved" | "pay_now",
+  };
 }
 
+/**
+ * A free seat: confirmed at once from an e-mail's link, otherwise waiting
+ * until `confirmBy` for its confirming. Refusals: payment_required,
+ * too_many_unconfirmed.
+ */
 export async function confirmFreeWorkshopSeat(
   secretClient: Client,
   token: string,
-): Promise<string> {
+  clientKey: string | null = null,
+): Promise<{ reference: string; confirmBy: string | null }> {
   const { data, error } = await secretClient.rpc("confirm_free_workshop_seat", {
     p_access_token: token,
+    p_client_key: clientKey ?? undefined,
   });
   if (error) throw refusal(error);
-  return data;
+  const row = data![0]!;
+  return { reference: row.reference, confirmBy: row.confirm_by };
+}
+
+/**
+ * "Potwierdzam zapis", from the e-mail's link only: "reserved" (to pay by
+ * seven days before), "confirmed" (free), or null (nothing to confirm).
+ */
+export async function confirmWorkshopSeat(
+  secretClient: Client,
+  token: string,
+): Promise<"reserved" | "confirmed" | null> {
+  const { data, error } = await secretClient.rpc("confirm_workshop_seat", {
+    p_token: token,
+  });
+  if (error) throw refusal(error);
+  return (data as "reserved" | "confirmed" | null) ?? null;
+}
+
+/** Until when the seat waits for its confirming, or null. */
+export async function workshopSeatConfirmBy(
+  secretClient: Client,
+  token: string,
+): Promise<string | null> {
+  const { data, error } = await secretClient.rpc("workshop_seat_confirm_by", {
+    p_token: token,
+  });
+  if (error) throw refusal(error);
+  return data ?? null;
 }
 
 export async function joinWorkshopWaitlist(
@@ -618,6 +669,8 @@ export interface ClaimedWorkshopEmail {
   /** The online meeting's link, once the seat is confirmed. */
   meetingUrl: string | null;
   paidOutside: boolean;
+  /** Until when the seat waits for its confirming from this e-mail. */
+  confirmBy: string | null;
 }
 
 /** Claims an e-mail nobody sent yet: what it says and its link token. */
@@ -661,6 +714,7 @@ export async function claimWorkshopEmail(
     refundWhenReplaced: row.refund_when_replaced,
     meetingUrl: row.meeting_url,
     paidOutside: row.paid_outside,
+    confirmBy: row.confirm_by,
   };
 }
 

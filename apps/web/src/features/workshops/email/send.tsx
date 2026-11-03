@@ -57,15 +57,17 @@ async function deliver(
           <ConfirmationEmail company={options.company} content={content} />,
         ),
         text: withCompany(content.text, options.company),
-        attachments: !WITH_CALENDAR.has(kind)
-          ? []
-          : [
-              {
-                filename: `warsztat-${email.reference}.ics`,
-                contentType: "text/calendar; charset=utf-8; method=PUBLISH",
-                content: content.ics,
-              },
-            ],
+        // Not before the address is confirmed (#269).
+        attachments:
+          !WITH_CALENDAR.has(kind) || email.confirmBy
+            ? []
+            : [
+                {
+                  filename: `warsztat-${email.reference}.ics`,
+                  contentType: "text/calendar; charset=utf-8; method=PUBLISH",
+                  content: content.ics,
+                },
+              ],
       },
       `workshop-${kind}:${email.reference}:${email.manageToken.slice(0, 16)}`,
     );

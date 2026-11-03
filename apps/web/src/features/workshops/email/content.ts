@@ -75,7 +75,15 @@ export function workshopEmailContent(
   const extra: Row[] = [];
   if (kind === "confirmation" && email.paidMinor > 0)
     extra.push(["Zapłacono", money(email.paidMinor)]);
-  if (kind === "reserved" || kind === "payment_reminder") {
+  // A seat waiting for its confirming from this e-mail (#269).
+  const confirmUntil = email.confirmBy
+    ? deadlineLabel(email.confirmBy, timeZone)
+    : null;
+  if (kind === "reserved" && confirmUntil) {
+    if (email.priceMinor > 0)
+      extra.push(["Do zapłaty", money(email.priceMinor)]);
+    extra.push(["Potwierdź do", confirmUntil]);
+  } else if (kind === "reserved" || kind === "payment_reminder") {
     extra.push(["Do zapłaty", money(email.priceMinor)]);
     if (due) extra.push(["Termin płatności", due]);
   }
@@ -233,9 +241,23 @@ export function workshopEmailContent(
     kind === "waitlisted" ||
     kind === "offered" ||
     (kind === "confirmation" && email.paidMinor === 0 && !email.paidOutside);
-  const words = unpaid
-    ? { ...copy[kind], intro: `${copy[kind].intro} ${notYou}` }
-    : copy[kind];
+  const toConfirm = {
+    subject: `Potwierdź zapis ${email.reference} – ${email.workshopTitle}`,
+    heading: "Potwierdź swój zapis",
+    intro: `Otwórz swój zapis i kliknij „Potwierdzam zapis” do ${confirmUntil}. Bez potwierdzenia miejsce wróci do puli.${
+      email.priceMinor > 0
+        ? " Potem opłać miejsce najpóźniej 7 dni przed warsztatem."
+        : ""
+    } Jeśli to nie Ty zapisujesz się na ten warsztat, zignoruj tę wiadomość.`,
+    button: "Potwierdź zapis",
+    note: null,
+  };
+  const words =
+    kind === "reserved" && confirmUntil
+      ? toConfirm
+      : unpaid
+        ? { ...copy[kind], intro: `${copy[kind].intro} ${notYou}` }
+        : copy[kind];
 
   const contactLine = contactLineOf(contact);
   const greeting = `Dzień dobry, ${email.clientName}!`;

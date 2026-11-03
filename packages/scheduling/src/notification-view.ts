@@ -121,6 +121,11 @@ const WORKSHOP_KINDS: Record<
   workshop_full: ["Warsztat ma komplet", "success", "paid"],
   workshop_minimum: ["Za mało chętnych", "warning", "closing"],
   workshop_no_link: ["Brak linku do spotkania", "warning", "closing"],
+  workshop_unpaid_limit: [
+    "Za dużo nieopłaconych zapisów",
+    "warning",
+    "reserved",
+  ],
 };
 
 /** Stripe's dispute reasons, as the centre reads them. */
@@ -276,6 +281,15 @@ export function notificationView(
       details: [
         ...(d.serviceName ? [{ label: "Warsztat", value: d.serviceName }] : []),
         ...(when ? [{ label: "Termin", value: when }] : []),
+        ...(kind === "workshop_unpaid_limit"
+          ? [
+              {
+                label: "Co się stało",
+                value:
+                  "Ta osoba (ten sam e-mail, telefon albo urządzenie) ma już dwa nieopłacone zapisy na warsztaty, więc to miejsce musi opłacić od razu. Wiele takich prób może oznaczać zajmowanie miejsc.",
+              },
+            ]
+          : []),
         ...(kind === "workshop_minimum"
           ? [
               {

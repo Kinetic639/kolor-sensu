@@ -67,3 +67,16 @@ describe("the page Stripe returns to after a seat's payment", () => {
     expect(html).not.toContain("odświeżam");
   });
 });
+
+describe("a seat waiting for its confirming (#269)", () => {
+  it("sends the guest to their inbox, with no link to the seat", async () => {
+    const page = await Page({
+      searchParams: Promise.resolve({ sprawdz: "1" }),
+    } as never);
+    const html = renderToStaticMarkup(page);
+    expect(html).toContain("Sprawdź skrzynkę e-mail");
+    expect(html).toContain("w ciągu 30 minut");
+    expect(html).not.toContain("/warsztaty/zapis/");
+    expect(stripe.retrieve).not.toHaveBeenCalled();
+  });
+});

@@ -43,6 +43,20 @@ export async function visitLinkFromEmail(
 }
 
 /**
+ * A workshop seat's own link (/warsztaty/zapis/…) from the newest e-mail
+ * to `to` whose subject has `subject` in it; waits for it to be sent.
+ */
+export async function workshopLinkFromEmail(
+  to: string,
+  subject: string,
+): Promise<string> {
+  const html = await emailTo(to, subject);
+  const link = /href="([^"]*\/warsztaty\/zapis\/[^"/?#]+)"/.exec(html)?.[1];
+  if (!link) throw new Error(`The e-mail "${subject}" has no seat link.`);
+  return link.replaceAll("&amp;", "&");
+}
+
+/**
  * The HTML of the newest e-mail to `to` whose subject has `subject` in it;
  * waits for it to be sent.
  */

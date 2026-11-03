@@ -81,6 +81,9 @@ export const CHANGE_NOTICES: Record<string, string> = {
     "Wysłaliśmy zaproszenie. Miejsce jest Twoje, dopóki nowa osoba nie zaakceptuje regulaminu; potem przejdzie na nią, a ten link przestanie działać.",
   przyjete:
     "Miejsce jest Twoje. Wysłaliśmy Ci e-mail z potwierdzeniem; ten link prowadzi do Twojego zapisu.",
+  potwierdzony: "Dziękujemy, zapis jest potwierdzony.",
+  "juz-zapisany":
+    "Ten adres e-mail jest już zapisany na ten warsztat, więc tego zapisu nie potwierdziliśmy.",
   "za-pozno": "Warsztat już się zaczął, więc nie można zrezygnować.",
   niedostepna: "Tej zmiany nie da się już zrobić.",
 };

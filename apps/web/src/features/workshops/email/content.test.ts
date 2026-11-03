@@ -34,6 +34,7 @@ const email: ClaimedWorkshopEmail = {
   refundWhenReplaced: false,
   meetingUrl: null,
   paidOutside: false,
+  confirmBy: null,
 };
 
 const options = {
@@ -261,5 +262,47 @@ describe("a workshop's e-mails, columns 8 to 10", () => {
       /\/warsztaty\/przekazanie\/invite-token$/,
     );
     expect(content.buttonLabel).toBe("Przyjmij miejsce");
+  });
+});
+
+describe("a seat waiting for its confirming (#269, Warsztat · 5, card 5)", () => {
+  it("asks to confirm it by its time, then to pay, with no calendar file", () => {
+    const content = workshopEmailContent(
+      "reserved",
+      {
+        ...email,
+        paidMinor: 0,
+        paymentDueAt: "2030-11-01T10:30:00Z",
+        confirmBy: "2030-11-01T10:30:00Z",
+      },
+      options,
+    );
+    expect(content.subject).toBe("Potwierdź zapis W2611-004 – Uważność");
+    expect(content.buttonLabel).toBe("Potwierdź zapis");
+    expect(content.rows).toContainEqual([
+      "Potwierdź do",
+      "1 listopada 2030, godz. 11:30",
+    ]);
+    expect(content.rows.map(([label]) => label)).not.toContain(
+      "Termin płatności",
+    );
+    expect(content.intro).toContain("Bez potwierdzenia miejsce wróci do puli.");
+    expect(content.intro).toContain("7 dni przed warsztatem");
+    expect(content.note).toBeNull();
+  });
+
+  it("says nothing of money for a free seat", () => {
+    const content = workshopEmailContent(
+      "reserved",
+      {
+        ...email,
+        priceMinor: 0,
+        paidMinor: 0,
+        confirmBy: "2030-11-01T10:30:00Z",
+      },
+      options,
+    );
+    expect(content.rows.map(([label]) => label)).not.toContain("Do zapłaty");
+    expect(content.intro).not.toContain("opłać");
   });
 });

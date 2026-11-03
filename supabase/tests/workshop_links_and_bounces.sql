@@ -84,6 +84,9 @@ BEGIN
   INSERT INTO tokens VALUES ('ewa', v_token);
   PERFORM public.save_workshop_registration_details(v_token, 'Ewa', 'ewa@example.invalid', NULL, NULL, true, true);
   PERFORM public.confirm_free_workshop_seat(v_token);
+  -- Confirmed from its first e-mail's link (20261103090000).
+  PERFORM public.confirm_workshop_seat((SELECT manage_token FROM public.claim_workshop_email(
+    (SELECT reference FROM public.get_workshop_registration(v_token)), 'reserved')));
 END;
 $$;
 

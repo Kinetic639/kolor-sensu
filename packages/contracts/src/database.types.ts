@@ -2230,6 +2230,8 @@ export type Database = {
           leader_changed_at: string | null;
           payment_disputed_at: string | null;
           payment_dispute_status: string | null;
+          confirm_by: string | null;
+          reserved_by_key: string | null;
           confirmed_at: string | null;
           created_at: string;
           currency_code: string;
@@ -2270,6 +2272,8 @@ export type Database = {
           leader_changed_at?: string | null;
           payment_disputed_at?: string | null;
           payment_dispute_status?: string | null;
+          confirm_by?: string | null;
+          reserved_by_key?: string | null;
           confirmed_at?: string | null;
           created_at?: string;
           currency_code: string;
@@ -2310,6 +2314,8 @@ export type Database = {
           leader_changed_at?: string | null;
           payment_disputed_at?: string | null;
           payment_dispute_status?: string | null;
+          confirm_by?: string | null;
+          reserved_by_key?: string | null;
           confirmed_at?: string | null;
           created_at?: string;
           currency_code?: string;
@@ -2699,12 +2705,25 @@ export type Database = {
         Returns: undefined;
       };
       reserve_workshop_seat: {
-        Args: { p_access_token: string };
-        Returns: { reference: string; payment_due_at: string }[];
+        Args: { p_access_token: string; p_client_key?: string };
+        Returns: {
+          reference: string;
+          payment_due_at: string | null;
+          confirm_by: string | null;
+          outcome: string;
+        }[];
       };
       confirm_free_workshop_seat: {
-        Args: { p_access_token: string };
-        Returns: string;
+        Args: { p_access_token: string; p_client_key?: string };
+        Returns: { reference: string; confirm_by: string | null }[];
+      };
+      confirm_workshop_seat: {
+        Args: { p_token: string };
+        Returns: string | null;
+      };
+      workshop_seat_confirm_by: {
+        Args: { p_token: string };
+        Returns: string | null;
       };
       join_workshop_waitlist: {
         Args: {
@@ -2839,6 +2858,7 @@ export type Database = {
           meeting_url: string | null;
           paid_outside: boolean;
           location_directions: string | null;
+          confirm_by: string | null;
         }[];
       };
       list_due_workshop_emails: {

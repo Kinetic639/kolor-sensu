@@ -39,6 +39,7 @@ const email: ClaimedWorkshopEmail = {
   refundWhenReplaced: false,
   meetingUrl: "https://meet.example.invalid/uwaznosc",
   paidOutside: false,
+  confirmBy: null,
 };
 
 const KINDS: WorkshopEmailKind[] = [
