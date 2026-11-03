@@ -99,6 +99,16 @@ async function chooseTime() {
   );
 }
 describe("specialist panel hands incomplete appointments to the wizard", () => {
+  it("leaves the focus where it is when the page loads (#359)", async () => {
+    render(<SpecialistBookingClient {...props} />);
+    await screen.findByRole("button", { name: /09:00, wolny termin/ });
+    expect(document.activeElement).toBe(document.body);
+  });
+  it("moves the focus to the tab the panel switches to", async () => {
+    render(<SpecialistBookingClient {...props} />);
+    await chooseTime();
+    expect(screen.getByRole("tab", { name: "Usługi" })).toHaveFocus();
+  });
   it("supports time first and opens the wizard after choosing a compatible service without asking for a form", async () => {
     render(<SpecialistBookingClient {...props} />);
     await chooseTime();

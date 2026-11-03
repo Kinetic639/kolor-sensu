@@ -55,6 +55,15 @@ describe("a workshop's card", () => {
     expect(screen.getByText("Odwołany")).toBeInTheDocument();
   });
 
+  it("names the cover's link with the status it shows (#360)", () => {
+    render(<WorkshopCard workshop={cancelled!} />);
+    expect(
+      screen.getByRole("link", {
+        name: `Zobacz warsztat: ${cancelled!.title} (Odwołany)`,
+      }),
+    ).toHaveAttribute("href", cancelled!.href);
+  });
+
   it("links by its title and says when, where and for how much", () => {
     render(<WorkshopCard headingLevel="h2" workshop={open!} />);
     expect(

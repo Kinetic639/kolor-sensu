@@ -57,7 +57,12 @@ export function SpecialistBookingClient({
     observer.observe(root.current);
     return () => observer.disconnect();
   }, []);
+  // The focus follows a switch of tab, never the first render: on load it
+  // stays at the top of the page, where "Przejdź do treści" is (#359).
+  const shownTab = useRef(tab);
   useEffect(() => {
+    if (shownTab.current === tab) return;
+    shownTab.current = tab;
     root.current
       ?.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')
       ?.focus({ preventScroll: true });

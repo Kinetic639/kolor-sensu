@@ -87,7 +87,10 @@ export function WorkshopCard({
       <PageLink
         className="ks-wk__art"
         href={workshop.href}
-        aria-label={`Zobacz warsztat: ${workshop.title}`}
+        // The status shows on the cover, so its name says it too (#360).
+        aria-label={`Zobacz warsztat: ${workshop.title}${
+          workshop.statusLabel ? ` (${workshop.statusLabel})` : ""
+        }`}
         tabIndex={-1}
       >
         <div className="ks-wk__backdrop" aria-hidden="true">
