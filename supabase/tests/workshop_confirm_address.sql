@@ -43,25 +43,25 @@ VALUES
   ('7f200000-0000-4000-8000-000000000001', 'admin'),
   ('7f200000-0000-4000-8000-000000000002', 'specialist');
 
--- Paid workshops p1 to p4 and free ones f1 to f3, all weeks ahead.
+-- Paid workshops p1 to p3 and free ones f1 to f3, all weeks ahead.
 INSERT INTO public.workshops (
   slug, title, short_description, specialist_id, modality, starts_at, ends_at,
   price_minor, capacity, registration_enabled, status
 )
+-- (One a day: the leader leads one at a time.)
 SELECT w.slug, w.title, 'Krótko', specialist.id, 'online',
-  ((current_date + 30) + time '17:00') AT TIME ZONE 'Europe/Warsaw',
-  ((current_date + 30) + time '19:00') AT TIME ZONE 'Europe/Warsaw',
+  ((current_date + 30 + w.day) + time '17:00') AT TIME ZONE 'Europe/Warsaw',
+  ((current_date + 30 + w.day) + time '19:00') AT TIME ZONE 'Europe/Warsaw',
   w.price, w.seats, true, 'published'
 FROM public.specialists AS specialist
 CROSS JOIN (VALUES
-  ('ws-conf-p1', 'Płatny 1', 10000, 3),
-  ('ws-conf-p2', 'Płatny 2', 10000, 3),
-  ('ws-conf-p3', 'Płatny 3', 10000, 3),
-  ('ws-conf-p4', 'Płatny 4', 10000, 1),
-  ('ws-conf-f1', 'Bezpłatny 1', 0, 3),
-  ('ws-conf-f2', 'Bezpłatny 2', 0, 3),
-  ('ws-conf-f3', 'Bezpłatny 3', 0, 3)
-) AS w(slug, title, price, seats)
+  ('ws-conf-p1', 'Płatny 1', 10000, 3, 0),
+  ('ws-conf-p2', 'Płatny 2', 10000, 3, 1),
+  ('ws-conf-p3', 'Płatny 3', 10000, 3, 2),
+  ('ws-conf-f1', 'Bezpłatny 1', 0, 3, 3),
+  ('ws-conf-f2', 'Bezpłatny 2', 0, 3, 4),
+  ('ws-conf-f3', 'Bezpłatny 3', 0, 3, 5)
+) AS w(slug, title, price, seats, day)
 WHERE specialist.user_id = '7f200000-0000-4000-8000-000000000002';
 
 -- A seat held with details (a fresh hold key each time: five an hour).
