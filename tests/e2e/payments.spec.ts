@@ -15,9 +15,9 @@ import { adminAccount, adminUrl, missingAccount } from "./support/target";
 // confirmed test visit behind; the declined one leaves a hold that runs
 // out by itself.
 //
-// They run only with E2E_PAYMENTS=1 (Actions → Staging E2E → Run workflow,
-// "payments"), until they have passed against STAGING once; then they join
-// every release's run.
+// They run only with E2E_PAYMENTS=1 (Actions → E2E → Run workflow,
+// "payments"), until they have passed against DEV once; then they join
+// every run.
 
 test.skip(
   !process.env.E2E_PAYMENTS,

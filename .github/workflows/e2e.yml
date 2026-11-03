@@ -1,27 +1,27 @@
-# After STAGING is deployed, the end-to-end tests run against the live
-# sites (tests/e2e, E2E_TARGET=staging): a guest books and pays with BLIK,
-# the visit shows in both portals, the portals sign in and out, the public
-# API keeps its fields to itself; from the e-mails' links (read back from
-# Resend), a visit paid later, moved and cancelled with a refund. Each run
-# leaves a few test visits behind.
+# After DEV is deployed, the end-to-end tests run against the live sites
+# (tests/e2e, E2E_TARGET=dev): a guest books and pays with BLIK, the visit
+# shows in both portals, the portals sign in and out, the public API keeps
+# its fields to itself; from the e-mails' links (read back from Resend), a
+# visit paid later, moved and cancelled with a refund. Each run leaves a
+# few test visits behind, so it runs on DEV only: STAGING is the client's
+# own, without test data.
 #
 # Vercel reports each app's deployment to GitHub (by commit, not branch),
 # so this starts on those reports and goes on only once all three apps
-# are live with the commit at the head of `staging`, and only for the last
-# of the three, so a release is tested once. It can be started by hand too
-# (Actions → Staging E2E → Run workflow); started by hand, it can also run
-# the payment tests alone (tests/e2e/payments.spec.ts: card, 3D Secure, a
-# declined card, Przelewy24): with the rest they would make more than the
-# five bookings one browser may make in 15 minutes. Started by hand, it
-# runs the tests of the head of `staging`, not of the branch chosen.
+# are live with the commit at the head of `develop`, and only for the last
+# of the three, so a change is tested once. It can be started by hand too
+# (Actions → E2E → Run workflow); started by hand, it can also run the
+# payment tests alone (tests/e2e/payments.spec.ts: card, 3D Secure, a
+# declined card, Przelewy24). Started by hand, it runs the tests of the
+# head of `develop`, not of the branch chosen.
 #
 # Secrets (Settings → Secrets and variables → Actions):
-#   E2E_STAGING_ADMIN_EMAIL, E2E_STAGING_ADMIN_PASSWORD,
-#   E2E_STAGING_SPECIALIST_EMAIL, E2E_STAGING_SPECIALIST_PASSWORD,
+#   E2E_ANNA_EMAIL, E2E_ANNA_PASSWORD (DEV's admin),
+#   E2E_SPECIALIST_EMAIL, E2E_SPECIALIST_PASSWORD,
 #   E2E_RESEND_API_KEY (reads the sent e-mails; without it those tests skip),
-#   E2E_BYPASS_KEY (the same as the web app's on STAGING in Vercel: each hold
+#   E2E_BYPASS_KEY (the same as the web app's on DEV in Vercel: each hold
 #   then counts alone, not against one runner's 5 in 15 minutes; #345)
-name: Staging E2E
+name: E2E
 
 on:
   deployment_status:
@@ -38,7 +38,7 @@ permissions:
 
 jobs:
   ready:
-    name: Is STAGING deployed?
+    name: Is DEV deployed?
     if: github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -55,7 +55,7 @@ jobs:
           DEPLOYMENT: ${{ github.event.deployment.id }}
         run: |
           set -euo pipefail
-          head=$(gh api "repos/$REPO/commits/staging" --jq .sha)
+          head=$(gh api "repos/$REPO/commits/develop" --jq .sha)
           if [ "$EVENT" = workflow_dispatch ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
             echo "sha=$head" >> "$GITHUB_OUTPUT"
@@ -63,7 +63,7 @@ jobs:
           fi
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           if [ "$SHA" != "$head" ]; then
-            echo "::notice::$SHA is not the head of staging: nothing to test."
+            echo "::notice::$SHA is not the head of develop: nothing to test."
             echo "run=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -83,31 +83,31 @@ jobs:
             fi
           done
           if [ "$latest" != "$DEPLOYMENT" ]; then
-            echo "::notice::Another app went live last; its run tests this release."
+            echo "::notice::Another app went live last; its run tests this change."
             echo "run=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "run=true" >> "$GITHUB_OUTPUT"
 
   e2e:
-    name: End-to-end on STAGING
+    name: End-to-end on DEV
     needs: ready
     if: needs.ready.outputs.run == 'true'
     # Only here, not on the whole workflow: every deployment report (of
-    # pull requests and develop too) starts it, and a later one waiting in
-    # the same group would cancel the release's run while one is going.
+    # staging too) starts it, and a later one waiting in the same group
+    # would cancel the change's run while one is going.
     concurrency:
-      group: e2e-staging
+      group: e2e-dev
       cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      E2E_TARGET: staging
+      E2E_TARGET: dev
       E2E_PAYMENTS: ${{ inputs.payments && '1' || '' }}
-      E2E_STAGING_ADMIN_EMAIL: ${{ secrets.E2E_STAGING_ADMIN_EMAIL }}
-      E2E_STAGING_ADMIN_PASSWORD: ${{ secrets.E2E_STAGING_ADMIN_PASSWORD }}
-      E2E_STAGING_SPECIALIST_EMAIL: ${{ secrets.E2E_STAGING_SPECIALIST_EMAIL }}
-      E2E_STAGING_SPECIALIST_PASSWORD: ${{ secrets.E2E_STAGING_SPECIALIST_PASSWORD }}
+      E2E_ANNA_EMAIL: ${{ secrets.E2E_ANNA_EMAIL }}
+      E2E_ANNA_PASSWORD: ${{ secrets.E2E_ANNA_PASSWORD }}
+      E2E_SPECIALIST_EMAIL: ${{ secrets.E2E_SPECIALIST_EMAIL }}
+      E2E_SPECIALIST_PASSWORD: ${{ secrets.E2E_SPECIALIST_PASSWORD }}
       E2E_RESEND_API_KEY: ${{ secrets.E2E_RESEND_API_KEY }}
       E2E_BYPASS_KEY: ${{ secrets.E2E_BYPASS_KEY }}
     steps:
@@ -121,7 +121,7 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
       - name: Accounts
         run: |
-          for name in E2E_STAGING_ADMIN_EMAIL E2E_STAGING_ADMIN_PASSWORD E2E_STAGING_SPECIALIST_EMAIL E2E_STAGING_SPECIALIST_PASSWORD; do
+          for name in E2E_ANNA_EMAIL E2E_ANNA_PASSWORD E2E_SPECIALIST_EMAIL E2E_SPECIALIST_PASSWORD; do
             if [ -z "${!name}" ]; then
               echo "::error::The $name secret is missing."
               exit 1

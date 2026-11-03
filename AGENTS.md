@@ -20,7 +20,7 @@ and `docs/architecture/`; each app has its own `AGENTS.md` (read
 ```
 feature branch ──PR──▶ develop ──release PR──▶ staging ──▶ main (production, later)
                           │                       │
-                    deploys DEV             deploys STAGING + Staging E2E
+                  deploys DEV + E2E      deploys STAGING (the client's)
 ```
 
 - Branch from `develop`; open the PR **to `develop`** (never to `main`).
@@ -45,11 +45,14 @@ feature branch ──PR──▶ develop ──release PR──▶ staging ─�
   with one of these prefixes: a PR then has no preview deployment and no
   Vercel checks. `develop`, `staging` and `main` build as before. A preview
   of one branch can be started by hand from the Vercel dashboard.
-- A release is a PR from `develop` to `staging`. Once all three apps are live
-  on STAGING, `e2e-staging.yml` runs the Playwright suite against it
-  (`docs/architecture/end-to-end-tests.md`). A change to a flow the tests
-  walk (booking, sign-in) must keep `tests/e2e` passing:
+- Once all three apps are live on DEV, `e2e.yml` runs the Playwright suite
+  against it (`docs/architecture/end-to-end-tests.md`). A change to a flow
+  the tests walk (booking, sign-in) must keep `tests/e2e` passing:
   `E2E_TARGET=dev pnpm test:e2e`.
+- A release is a PR from `develop` to `staging`, once E2E on DEV is green.
+  STAGING is the client's environment for trying the portals on their own
+  data: no tests and no test data there; check a release by looking, not
+  by booking.
 - CodeRabbit (free plan) only summarises: read what it says, but review the
   diff yourself.
 
@@ -62,7 +65,7 @@ feature branch ──PR──▶ develop ──release PR──▶ staging ─�
 
 Never link the repository to a production project. Stripe and Turnstile are
 in test mode on DEV and STAGING (BLIK code `123456`). Leave test data on DEV
-unless asked; if a browser is shared with the owner, use an own, isolated
+unless asked, and never make any on STAGING; if a browser is shared with the owner, use an own, isolated
 tab.
 
 ## Database changes
@@ -91,12 +94,12 @@ board in one batch; keep the copy in step with every change
 Kinetic639`). **Order list** is the owner's queue: take work from its top.
   Move the card as the work goes:
 
-  | When                                   | Status                             |
-  | -------------------------------------- | ---------------------------------- |
-  | work starts                            | In progress                        |
-  | PR open                                | In review                          |
-  | merged to `develop` and checked on DEV | Ready (issue stays open)           |
-  | released to STAGING, Staging E2E green | close the issue with a note → Done |
+  | When                                           | Status                             |
+  | ---------------------------------------------- | ---------------------------------- |
+  | work starts                                    | In progress                        |
+  | PR open                                        | In review                          |
+  | merged to `develop`, checked on DEV, E2E green | Ready (issue stays open)           |
+  | released to STAGING                            | close the issue with a note → Done |
 
   GitHub closes `Closes #N` only on merges to `main`, so closing is done by
   hand. Set the Priority field from the label.

@@ -6,7 +6,7 @@ import { e2eHeaders } from "./tests/e2e/support/e2e-key";
 // come from secrets, which this never overrides.
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
-// E2E_TARGET=dev|staging runs the same tests against the deployed sites
+// E2E_TARGET=dev runs the same tests against the deployed sites
 // (see tests/e2e/support/target.ts); locally Playwright starts the apps.
 const remote = (process.env.E2E_TARGET ?? "local") !== "local";
 
