@@ -36,11 +36,11 @@ async function open(page: Page, path: string) {
 /** The first link under `list` to a page of its own, if there is one. */
 async function firstOf(page: Page, list: string) {
   await open(page, list);
-  return page
-    .locator(`main a[href^="${list}/"]`)
-    .first()
-    .getAttribute("href", { timeout: 5_000 })
-    .catch(() => null);
+  // Null at once where the list is empty (STAGING before the client adds
+  // anything), not after waiting for a link.
+  const link = page.locator(`main a[href^="${list}/"]`).first();
+  if ((await link.count()) === 0) return null;
+  return link.getAttribute("href");
 }
 
 /** Every page here, with the first service's and workshop's pages. */
@@ -67,6 +67,8 @@ test("the first Tab on every page skips to its content", async ({ page }) => {
 test("nothing the keyboard reaches hides under the cookie notice", async ({
   page,
 }) => {
+  // 40 Tabs on each of 16 pages: near the 30 s limit from a slower link.
+  test.slow();
   for (const path of await pages(page)) {
     await open(page, path);
     const notice = page.getByRole("region", { name: "Pliki cookies" });

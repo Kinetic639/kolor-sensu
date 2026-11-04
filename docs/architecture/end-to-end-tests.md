@@ -11,9 +11,15 @@ the admin portal and the specialist portal. The tests live in `tests/e2e`.
 | ----------------- | ------------------------------------------------- | ---------------------------------------- |
 | `local` (default) | Playwright starts the apps on localhost:3000–3002 | `E2E_ANNA_*` (admin), `E2E_SPECIALIST_*` |
 | `dev`             | `ks-dev*.ambrasystem.eu`                          | as `local`                               |
+| `staging`         | `ks-staging*.ambrasystem.eu`                      | none                                     |
 
-Never STAGING: it is the client's own environment, for trying the portals
-on their own data, so no test leaves anything there.
+STAGING is the client's own environment, for trying the portals on their
+own data, so no test may leave anything there. With `staging` only the
+specs listed in `tests/e2e/support/read-only.ts` run (pages, links, axe,
+the keyboard, the portals' sign-in pages, the public API), and no account
+is read, so every test that signs in is skipped. A spec goes on that list
+only if it never books, signs up, signs in, saves a questionnaire or sends
+a message.
 
 An account holding both roles is optional (`E2E_DUAL_ROLE_*`); without it,
 that one test is skipped.
@@ -102,10 +108,16 @@ gives each of its holds a fresh visitor key (`holdKey` in
 not stop the tests. The limits by e-mail and phone stay, and
 `supabase/tests` tests the limits themselves (#345).
 
-## After every DEV deployment
+## After every deployment
 
 `.github/workflows/e2e.yml` runs the whole suite against DEV once Vercel
-reports all three apps live with the commit at the head of `develop`. It
-needs the `E2E_ANNA_*` and `E2E_SPECIALIST_*` secrets and `E2E_BYPASS_KEY`. A failure keeps the
+reports all three apps live with the commit at the head of `develop`, and
+the read-only specs against STAGING once they are live with the head of
+`staging` (a release). DEV's run needs the `E2E_ANNA_*` and
+`E2E_SPECIALIST_*` secrets and `E2E_BYPASS_KEY`.
+
+A release pull request (to `staging`) goes red unless "End-to-end on DEV"
+passed for its commit (`.github/workflows/release-gate.yml`); if the tests
+were still running when it opened, re-run the check once they are green. A failure keeps the
 report and traces as the run's `playwright-report` artifact. It can also be
 started by hand from the Actions tab.

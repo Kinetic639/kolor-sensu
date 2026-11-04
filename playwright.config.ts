@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { defineConfig } from "@playwright/test";
 import { e2eHeaders } from "./tests/e2e/support/e2e-key";
+import { READ_ONLY_SPECS } from "./tests/e2e/support/read-only";
 
 // The test accounts live in the root .env.local (gitignored); in CI they
 // come from secrets, which this never overrides.
@@ -8,10 +9,13 @@ if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 // E2E_TARGET=dev runs the same tests against the deployed sites
 // (see tests/e2e/support/target.ts); locally Playwright starts the apps.
+// E2E_TARGET=staging runs only the specs that look (support/read-only.ts).
 const remote = (process.env.E2E_TARGET ?? "local") !== "local";
+const readOnly = process.env.E2E_TARGET === "staging";
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  testMatch: readOnly ? READ_ONLY_SPECS : undefined,
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,

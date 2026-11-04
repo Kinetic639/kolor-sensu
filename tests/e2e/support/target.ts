@@ -3,11 +3,13 @@ import type { Page } from "@playwright/test";
 // Where the end-to-end tests run, chosen by E2E_TARGET:
 //   local   (default) the three apps started by Playwright on localhost
 //   dev     the deployed DEV sites (ks-dev*.ambrasystem.eu)
-// Never STAGING: it is the client's, without test data.
+//   staging the deployed STAGING sites (ks-staging*.ambrasystem.eu), the
+//           client's, without test data: only the specs that look
+//           (support/read-only.ts) and no accounts, so nothing signs in
 // The test accounts come from the environment (the root .env.local, or the
 // CI secrets), never from the repository.
 
-export type Target = "local" | "dev";
+export type Target = "local" | "dev" | "staging";
 
 const targets: Record<
   Target,
@@ -23,12 +25,17 @@ const targets: Record<
     admin: "https://ks-dev-admin.ambrasystem.eu",
     specialist: "https://ks-dev-specjalista.ambrasystem.eu",
   },
+  staging: {
+    web: "https://ks-staging.ambrasystem.eu",
+    admin: "https://ks-staging-admin.ambrasystem.eu",
+    specialist: "https://ks-staging-specjalista.ambrasystem.eu",
+  },
 };
 
 function readTarget(): Target {
   const value = process.env.E2E_TARGET ?? "local";
-  if (value === "local" || value === "dev") return value;
-  throw new Error(`E2E_TARGET must be local or dev, not "${value}".`);
+  if (value === "local" || value === "dev" || value === "staging") return value;
+  throw new Error(`E2E_TARGET must be local, dev or staging, not "${value}".`);
 }
 
 export const target = readTarget();
@@ -40,6 +47,8 @@ export const webUrl = process.env.E2E_WEB_URL ?? targets[target].web;
 export type Credentials = { email: string; password: string };
 
 function credentials(prefix: string): Credentials | null {
+  // STAGING has no test accounts: the tests that sign in are skipped.
+  if (target === "staging") return null;
   const email = process.env[`${prefix}_EMAIL`];
   const password = process.env[`${prefix}_PASSWORD`];
   return email && password ? { email, password } : null;
