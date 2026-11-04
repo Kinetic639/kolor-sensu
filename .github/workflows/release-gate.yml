@@ -1,0 +1,40 @@
+# A release (a pull request to `staging`) goes red unless the end-to-end
+# tests passed on DEV for the commit it brings (e2e.yml, "End-to-end on
+# DEV"): STAGING has no full tests of its own any more, so DEV's are the
+# last full check before the client sees a change. The free GitHub plan
+# cannot stop a red pull request from being merged; this says not to.
+#
+# If the tests are still running when the pull request opens, this fails;
+# re-run it (the check's "Re-run") once they are green.
+name: Release gate
+
+on:
+  pull_request:
+    branches: [staging]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  e2e-on-dev:
+    name: E2E passed on DEV
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          runs=$(gh api -X GET "repos/$REPO/actions/workflows/e2e.yml/runs" -f head_sha="$SHA" -f event=deployment_status --jq '.workflow_runs[].id')
+          for run in $runs; do
+            passed=$(gh api "repos/$REPO/actions/runs/$run/jobs" --jq '[.jobs[] | select(.name == "End-to-end on DEV" and .conclusion == "success")] | length')
+            if [ "$passed" -gt 0 ]; then
+              echo "E2E passed on DEV for $SHA: $GITHUB_SERVER_URL/$REPO/actions/runs/$run"
+              exit 0
+            fi
+          done
+          echo "::error::No green \"End-to-end on DEV\" for $SHA yet. Wait for E2E on DEV (Actions → E2E), then re-run this check."
+          exit 1

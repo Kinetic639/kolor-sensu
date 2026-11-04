@@ -3,17 +3,22 @@
 # shows in both portals, the portals sign in and out, the public API keeps
 # its fields to itself; from the e-mails' links (read back from Resend), a
 # visit paid later, moved and cancelled with a refund. Each run leaves a
-# few test visits behind, so it runs on DEV only: STAGING is the client's
-# own, without test data.
+# few test visits behind.
+#
+# After STAGING is deployed (a release), only the tests that look run
+# against it (E2E_TARGET=staging, tests/e2e/support/read-only.ts): the
+# pages, links, axe, the keyboard, the portals' sign-in pages and the
+# public API. STAGING is the client's own, so nothing there books, signs
+# up or signs in; this only says the release is up and its setup sound.
 #
 # Vercel reports each app's deployment to GitHub (by commit, not branch),
 # so this starts on those reports and goes on only once all three apps
-# are live with the commit at the head of `develop`, and only for the last
-# of the three, so a change is tested once. It can be started by hand too
-# (Actions → E2E → Run workflow); started by hand, it can also run the
-# payment tests alone (tests/e2e/payments.spec.ts: card, 3D Secure, a
-# declined card, Przelewy24). Started by hand, it runs the tests of the
-# head of `develop`, not of the branch chosen.
+# are live with the commit at the head of `develop` or `staging`, and only
+# for the last of the three, so a commit is tested once. It can be started
+# by hand too (Actions → E2E → Run workflow) for either; started by hand,
+# it runs the tests of that branch's head, not of the branch chosen, and
+# for DEV it can run the payment tests alone (tests/e2e/payments.spec.ts:
+# card, 3D Secure, a declined card, Przelewy24).
 #
 # Secrets (Settings → Secrets and variables → Actions):
 #   E2E_ANNA_EMAIL, E2E_ANNA_PASSWORD (DEV's admin),
@@ -27,8 +32,13 @@ on:
   deployment_status:
   workflow_dispatch:
     inputs:
+      target:
+        description: "Where: DEV (everything) or STAGING (only the tests that look)"
+        type: choice
+        options: [dev, staging]
+        default: dev
       payments:
-        description: "Also the payment tests (card, 3D Secure, declined card, Przelewy24)"
+        description: "DEV: only the payment tests (card, 3D Secure, declined card, Przelewy24)"
         type: boolean
         default: false
 
@@ -38,32 +48,39 @@ permissions:
 
 jobs:
   ready:
-    name: Is DEV deployed?
+    name: Is it deployed?
     if: github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       run: ${{ steps.check.outputs.run }}
       sha: ${{ steps.check.outputs.sha }}
+      target: ${{ steps.check.outputs.target }}
     steps:
       - id: check
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           EVENT: ${{ github.event_name }}
+          CHOSEN: ${{ inputs.target }}
           SHA: ${{ github.event.deployment.sha }}
           DEPLOYMENT: ${{ github.event.deployment.id }}
         run: |
           set -euo pipefail
-          head=$(gh api "repos/$REPO/commits/develop" --jq .sha)
           if [ "$EVENT" = workflow_dispatch ]; then
+            branch=$([ "$CHOSEN" = staging ] && echo staging || echo develop)
             echo "run=true" >> "$GITHUB_OUTPUT"
-            echo "sha=$head" >> "$GITHUB_OUTPUT"
+            echo "target=$CHOSEN" >> "$GITHUB_OUTPUT"
+            echo "sha=$(gh api "repos/$REPO/commits/$branch" --jq .sha)" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
-          if [ "$SHA" != "$head" ]; then
-            echo "::notice::$SHA is not the head of develop: nothing to test."
+          if [ "$SHA" = "$(gh api "repos/$REPO/commits/develop" --jq .sha)" ]; then
+            echo "target=dev" >> "$GITHUB_OUTPUT"
+          elif [ "$SHA" = "$(gh api "repos/$REPO/commits/staging" --jq .sha)" ]; then
+            echo "target=staging" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::$SHA is not the head of develop or staging: nothing to test."
             echo "run=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -83,27 +100,27 @@ jobs:
             fi
           done
           if [ "$latest" != "$DEPLOYMENT" ]; then
-            echo "::notice::Another app went live last; its run tests this change."
+            echo "::notice::Another app went live last; its run tests this commit."
             echo "run=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "run=true" >> "$GITHUB_OUTPUT"
 
   e2e:
-    name: End-to-end on DEV
+    name: ${{ needs.ready.outputs.target == 'staging' && 'Read-only on STAGING' || 'End-to-end on DEV' }}
     needs: ready
     if: needs.ready.outputs.run == 'true'
-    # Only here, not on the whole workflow: every deployment report (of
-    # staging too) starts it, and a later one waiting in the same group
-    # would cancel the change's run while one is going.
+    # Only here, not on the whole workflow: every deployment report starts
+    # it, and a later one waiting in the same group would cancel the
+    # commit's run while one is going.
     concurrency:
-      group: e2e-dev
+      group: e2e-${{ needs.ready.outputs.target }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      E2E_TARGET: dev
-      E2E_PAYMENTS: ${{ inputs.payments && '1' || '' }}
+      E2E_TARGET: ${{ needs.ready.outputs.target }}
+      E2E_PAYMENTS: ${{ inputs.payments && needs.ready.outputs.target == 'dev' && '1' || '' }}
       E2E_ANNA_EMAIL: ${{ secrets.E2E_ANNA_EMAIL }}
       E2E_ANNA_PASSWORD: ${{ secrets.E2E_ANNA_PASSWORD }}
       E2E_SPECIALIST_EMAIL: ${{ secrets.E2E_SPECIALIST_EMAIL }}
@@ -120,6 +137,7 @@ jobs:
       - name: Browser
         run: pnpm exec playwright install --with-deps chromium
       - name: Accounts
+        if: needs.ready.outputs.target == 'dev'
         run: |
           for name in E2E_ANNA_EMAIL E2E_ANNA_PASSWORD E2E_SPECIALIST_EMAIL E2E_SPECIALIST_PASSWORD; do
             if [ -z "${!name}" ]; then
@@ -128,7 +146,7 @@ jobs:
             fi
           done
       - name: Tests
-        run: pnpm test:e2e ${{ inputs.payments && 'tests/e2e/payments.spec.ts' || '' }}
+        run: pnpm test:e2e ${{ env.E2E_PAYMENTS && 'tests/e2e/payments.spec.ts' || '' }}
       - if: failure()
         uses: actions/upload-artifact@v4
         with:

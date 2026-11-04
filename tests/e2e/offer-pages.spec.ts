@@ -35,11 +35,11 @@ async function settle(page: Page) {
 
 async function firstService(page: Page) {
   await open(page, "/oferta");
-  return page
-    .locator('main a[href^="/oferta/"]')
-    .first()
-    .getAttribute("href")
-    .catch(() => null);
+  // Null at once where none is published (STAGING before the client adds
+  // any), not after waiting the whole test's time for one.
+  const link = page.locator('main a[href^="/oferta/"]').first();
+  if ((await link.count()) === 0) return null;
+  return link.getAttribute("href");
 }
 
 async function checkPage(page: Page, path: string) {

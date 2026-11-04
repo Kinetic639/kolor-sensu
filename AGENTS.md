@@ -20,7 +20,7 @@ and `docs/architecture/`; each app has its own `AGENTS.md` (read
 ```
 feature branch ──PR──▶ develop ──release PR──▶ staging ──▶ main (production, later)
                           │                       │
-                  deploys DEV + E2E      deploys STAGING (the client's)
+                  deploys DEV + E2E   deploys STAGING (the client's) + read-only E2E
 ```
 
 - Branch from `develop`; open the PR **to `develop`** (never to `main`).
@@ -49,9 +49,11 @@ feature branch ──PR──▶ develop ──release PR──▶ staging ─�
   against it (`docs/architecture/end-to-end-tests.md`). A change to a flow
   the tests walk (booking, sign-in) must keep `tests/e2e` passing:
   `E2E_TARGET=dev pnpm test:e2e`.
-- A release is a PR from `develop` to `staging`, once E2E on DEV is green.
-  STAGING is the client's environment for trying the portals on their own
-  data: no tests and no test data there; check a release by looking, not
+- A release is a PR from `develop` to `staging`, once E2E on DEV is green
+  (`release-gate.yml` turns the PR red otherwise). STAGING is the client's
+  environment for trying the portals on their own data: no test data
+  there. After a release only the tests that look run against it
+  (`tests/e2e/support/read-only.ts`); check anything more by looking, not
   by booking.
 - CodeRabbit (free plan) only summarises: read what it says, but review the
   diff yourself.
@@ -99,7 +101,7 @@ Kinetic639`). **Order list** is the owner's queue: take work from its top.
   | work starts                                    | In progress                        |
   | PR open                                        | In review                          |
   | merged to `develop`, checked on DEV, E2E green | Ready (issue stays open)           |
-  | released to STAGING                            | close the issue with a note → Done |
+  | released to STAGING, read-only E2E green       | close the issue with a note → Done |
 
   GitHub closes `Closes #N` only on merges to `main`, so closing is done by
   hand. Set the Priority field from the label.
