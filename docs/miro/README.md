@@ -40,8 +40,18 @@ Stan na 24.10.2026, po weryfikacji kartek z kodem i testami (także po wydaniu n
   także ramka „Admin · Kupony zniżkowe: elementy”, plik
   `svg/admin-kupony.svg`.
 
-Nie ma tu portalu specjalisty (poza warsztatami) ani ramki „Audyt
-płatności 22.10”.
+- [`portal-admina/`](portal-admina/README.md) i
+  [`portal-specjalisty/`](portal-specjalisty/README.md): od 25.11.2026 każdy
+  portal ma osobną tablicę (portal admina:
+  <https://miro.com/app/board/uXjVEKFU52A=/>, portal specjalisty:
+  <https://miro.com/app/board/uXjVEKFW10A=/>), bo jedna tablica byłaby za
+  duża. Foldery mają całą treść map i ramek, z kolorem, „Co ma się dziać”
+  i „Czym sprawdzone” przy każdej kartce, oraz `ids.json` z identyfikatorami
+  map i ramek. Skróty testów: [`portale-skroty-testow.md`](portale-skroty-testow.md).
+  Stare ramki portali na tej tablicy zostają bez zmian, ale aktualna wersja
+  jest na nowych tablicach.
+
+Nie ma tu ramki „Audyt płatności 22.10”.
 
 ## Kolory
 
